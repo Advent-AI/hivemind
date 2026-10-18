@@ -1,0 +1,163 @@
+/* Hivemind design system for the review pages. Copied from ../tn-hivemind web/v4/app.css as it stands uncommitted in
+   that working tree on 2026-10-15: the cream paper's tokens, the base and the shared components. Review pages are
+   opened from disk on a desktop browser, so the dark twin, the theme switch and the narrow-screen rules stay in
+   web/v4 and are not copied. The fonts come from fonts-embedded.css (embed_fonts.py), since file:// refuses font files.
+
+   Black, white and neutral greys only, sentence case throughout. A state is written, not coded: a pill or a label
+   carries the word, and the fill only repeats it. Every colour is a token below. */
+
+:root {
+  --paper: #f5f2eb;
+  --wash: #ebe9e2;
+  --wash-strong: #e3e0d9;
+  --rule: #dfddd6;
+  --rule-strong: #c9c7c0;
+  --ink: #0f140d;
+  --ink-2: #393d36;
+  --ink-3: #6a6c65;
+  --ink-4: #9f9f98;
+  --bear-fill: #d1cfc8;
+  --neutral-fill: #c6c4bd;
+  --scrim: rgba(245, 242, 235, 0.72);
+  --shadow: 0 1px 2px rgba(15, 20, 13, 0.04), 0 12px 32px rgba(15, 20, 13, 0.10);
+
+  --sans: "Geist", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: "Geist Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --gutter: 40px;
+  --control-height: 30px;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------ base */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink-2);
+  font: 400 14px/22px var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, p, dl, dd { margin: 0; }
+
+button { font: inherit; color: inherit; }
+
+a { color: inherit; }
+
+::selection { background: var(--ink); color: var(--paper); }
+
+:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+
+[hidden] { display: none !important; }
+
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.text-button {
+  appearance: none; border: 0; background: none; padding: 4px 0; cursor: pointer;
+  font: 500 13px/16px var(--sans); color: var(--ink-3);
+}
+.text-button:hover { color: var(--ink); }
+
+.section-title { font: 600 15px/22px var(--sans); color: var(--ink); letter-spacing: -0.01em; }
+
+/* Pills: the one shape for stance and status, everywhere. */
+.pill {
+  display: inline-flex; align-items: center; height: 24px; padding: 0 10px;
+  border-radius: 999px; border: 1px solid transparent;
+  font: 500 12px/1 var(--sans); white-space: nowrap;
+  background: var(--wash); color: var(--ink-2);
+}
+.pill--quiet { background: var(--wash); border-color: var(--rule); }
+.pill--strong { background: var(--paper); border-color: var(--ink); color: var(--ink); }
+.pill--bullish { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.pill--bearish { background: var(--bear-fill); border-color: var(--bear-fill); color: var(--ink); }
+.pill--mixed { background: var(--paper); border: 1px dashed var(--ink); color: var(--ink); }
+.pill--neutral { background: var(--paper); border-color: var(--ink-4); color: var(--ink-2); }
+
+/* ------------------------------------------------------------------ top bar */
+
+.bar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 32px;
+  height: 56px; padding: 0 var(--gutter);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+.wordmark {
+  font: 600 15px/1 var(--sans); letter-spacing: -0.01em; color: var(--ink); text-decoration: none;
+  padding-right: 32px; border-right: 1px solid var(--rule); height: 20px; display: flex; align-items: center;
+}
+
+.tickers { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+.tickers::-webkit-scrollbar { display: none; }
+
+.ticker {
+  position: relative; padding: 18px 10px; text-decoration: none; white-space: nowrap;
+  font: 500 13px/20px var(--mono); color: var(--ink-3);
+}
+.ticker:hover { color: var(--ink); }
+.ticker[aria-current="page"] { color: var(--ink); }
+.ticker[aria-current="page"]::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: var(--ink);
+}
+.ticker--empty { color: var(--ink-4); }
+
+.bar__tools { display: flex; align-items: center; gap: 12px; }
+
+/* ------------------------------------------------------------------ filters */
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter {
+  appearance: none; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px;
+  border-radius: 999px; border: 1px solid var(--rule-strong); background: var(--paper); cursor: pointer;
+  font: 500 12px/1 var(--sans); color: var(--ink-2);
+  transition: background-color 120ms var(--ease), border-color 120ms var(--ease);
+}
+.filter:hover { border-color: var(--ink); color: var(--ink); }
+.filter__count { font: 400 11px/1 var(--mono); color: var(--ink-3); }
+.filter[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.filter[aria-pressed="true"] .filter__count { color: var(--paper); }
+
+/* ------------------------------------------------------------------ blocks, facts and lists */
+
+.block { padding-top: 40px; }
+.block__head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; }
+.block__title { font: 600 15px/22px var(--sans); color: var(--ink); letter-spacing: -0.01em; }
+.block__note { font-size: 13px; color: var(--ink-3); }
+.prose { color: var(--ink); font-size: 15.5px; line-height: 26px; max-width: 68ch; }
+.prose--quiet { color: var(--ink-2); font-size: 14.5px; line-height: 24px; max-width: 68ch; }
+
+.facts { display: grid; grid-template-columns: 110px 1fr; gap: 12px 20px; }
+.facts dt { color: var(--ink-3); }
+.facts dd { color: var(--ink-2); }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.list > li { padding: 18px 0; border-top: 1px solid var(--rule); }
+.list > li:first-child { border-top: 0; padding-top: 4px; }
+
+/* ------------------------------------------------------------------ sheet: a panel over the page */
+
+.sheet { position: fixed; inset: 0; z-index: 30; }
+.sheet__scrim { position: absolute; inset: 0; background: var(--scrim); animation: fade 160ms var(--ease); }
+.sheet__panel {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(680px, 100%);
+  background: var(--paper); box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
+  animation: enter 220ms var(--ease);
+}
+.sheet__panel:focus { outline: none; }
+.sheet__top {
+  display: flex; justify-content: space-between; align-items: center;
+  height: 56px; padding: 0 28px; border-bottom: 1px solid var(--rule); flex: none;
+}
+.sheet__top .label { font-size: 13px; color: var(--ink-3); }
+.sheet__body { overflow-y: auto; padding: 28px 28px 64px; }
+
+@keyframes enter { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
