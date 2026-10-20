@@ -173,6 +173,7 @@ A later decision that changes one names the one it replaces.
   `docs/system-design/new-universe.js`.
 - Changed by D18: each theme lists the tags it tracks; companies, crypto and commodities have a default per kind.
 - Changed by D26: a stock is linked to a theme through the premise of its view, which names a theme view.
+- Changed by D38: a company reaches a theme through a dependency on a theme view (premises are not used).
 
 ## D12 · 2026-10-16 · No current-day clock in the system
 
@@ -521,6 +522,8 @@ A later decision that changes one names the one it replaces.
 - Changed by D33: matching and writing what extraction hands over run in the views database.
 - Wording aligned 2026-10-18: an object view's "利好还是利空" is the driver's direction of effect on the object, not a
   buy or sell stance (AGENTS section 8: a stance is weighed against what is priced).
+- Changed by D38: the structure is rebuilt (a view is a question, a five-rung ladder and a due date; drivers,
+  claims, horizon classes, conditions and premises are not used).
 
 ## D27 · 2026-10-18 · Extraction reads the whole item by category, then matches it against the drivers
 
@@ -554,6 +557,7 @@ A later decision that changes one names the one it replaces.
 - Changed by D32: the open item is settled (one release per item; no separate XBRL; no price-specific rule).
 - Changed by D33: extraction is reading and checking sources; the evidence merge, candidate drivers, matching,
   deciding and verdict triggers run in the views database.
+- Changed by D39: matching against drivers (steps 2–5) is replaced by matching candidates to open views.
 
 ## D28 · 2026-10-18 · Financial reports stream again
 
@@ -582,6 +586,7 @@ A later decision that changes one names the one it replaces.
 - Wording aligned 2026-10-18: "only conditions plus 'happened' evidence" governs closing as confirmed or falsified;
   expiry at the due date is not a judgment of right or wrong. The premise statuses that send dependents at once
   include "no longer tracked".
+- Changed by D41: the final verdict is an old draft to be redone on the rebuilt views database (D38).
 
 ## D30 · 2026-10-18 · Conflicting sources and the consensus
 
@@ -598,6 +603,8 @@ A later decision that changes one names the one it replaces.
   evidence. The consensus of a view is computed by code from the latest stance of each independent third-party source;
   the view may state where it differs.
 - Enforced: `TIERS` and `CONFLICT_RULES` of `docs/system-design/new-facts.js`; `docs/prd/06-views.md`.
+- Changed by D38: tiers and counting by original source stay; add-only conditions, the conflict trigger and the
+  consensus by code are replaced (the consensus is open again).
 
 ## D31 · 2026-10-18 · Order, one writer, and the link between the levels
 
@@ -619,6 +626,13 @@ A later decision that changes one names the one it replaces.
 - Enforced: `PROPAGATION_TREE` and `ORDER_RULES` of `docs/system-design/new-facts.js`; `DISPATCH_TREE` and `TREE_NOTES` of
   `docs/system-design/new-config.js`; the dispatch node of `docs/system-design/new-design.js`;
   `docs/prd/04-dispatch.md`, `docs/prd/06-views.md`.
+- Changed by D38 and D39: dependencies replace premises (pinned years, chains); a late item is re-judged when it
+  arrives and does not read the versions of its publication day.
+- Changed back by D45: the change of the late-item rule by D38 and D39 is a proposal Alex has not decided; this
+  rule stands: a late item reads the state of its publication day and is written with its real date, and a view
+  whose object leaves the universe is kept as no longer tracked and not judged at its due date.
+- Changed by D46: the late-item rule is replaced by D46 item 13 (the timeline only grows forward); the rule for a
+  view whose object leaves the universe stands.
 
 ## D32 · 2026-10-18 · Table data comes one release at a time; XBRL is not pushed again
 
@@ -651,7 +665,9 @@ A later decision that changes one names the one it replaces.
 - Enforced: `EXTRACT_STEPS`, `WRITE_STEPS`, `EXTRACT_EXAMPLE_TREE` and `WRITE_EXAMPLE_TREE` of
   `docs/system-design/new-facts.js`; the extract, views and config nodes and the overview edges of
   `docs/system-design/new-design.js`; `docs/prd/05-extraction.md`, `docs/prd/06-views.md`.
-
+- Changed by D39: after extraction the views database matches candidates to open views (D39), not to drivers.
+- Changed by D42: extraction attaches each piece of evidence to an existing view it was shown, or to a candidate view,
+  as it reads; it still never changes the database, and matching stays in the views database.
 ## D34 · 2026-10-18 · An SEC filing is dated by the day SEC makes it public
 
 - By: Alex ("ok 可以", to Claude's proposal on classification time rule 4).
@@ -710,6 +726,7 @@ A later decision that changes one names the one it replaces.
   and 股票代码 replaces ticker in prose; 代码 also covers code not yet written or to be changed. No rule changed.
 - Enforced: `AVOIDED_WORDS` and `wording_scope` in `docs/check.py` scan the in-scope page data and PRDs (the glossary
   section itself excluded) and fail on any avoided word, with a control sentence the check must catch.
+- Changed by D41: the wording scope also covers the views database and the labels node.
 
 ## D37 · 2026-10-18 · Freeze v1 of the input side and extraction
 
@@ -721,3 +738,474 @@ A later decision that changes one names the one it replaces.
   and pull mode is partly decided; the work moves on to them as Alex takes them up.
 - Enforced: the six nodes' `status` in `docs/system-design/new-design.js` (the page marks each 已冻结), the status
   lines of their PRDs and of `docs/prd/README.md`; 已冻结 replaces 定稿 in the glossary and the wording check.
+- Changed by D41: extraction, Config, the universe and the review pool were changed for the rebuilt views database.
+
+## D38 · 2026-10-20 · The views database rebuilt: a view is a question with a five-rung ladder and a due date
+
+- By: Alex, over the rebuild discussion logged in `docs/views-rebuild-log.md` (steps 1–13). On the unit: "这个 hypo 更像是一个
+  thesis with a state"; on rungs: "我们用 5 个 state 吧 very bullish, bullish, neutral, bearish, very bearish"; on kinds: "有些事情不一定对所有人都是
+  bull / bear，有可能完全相反！……这个需要明确分开来看"; on one layer: "一条观点一定是有一个明确的 ladder 和到期日，这样才构成一个观点呀";
+  on periods: "这个肯定要写清楚日期", then yes to one view per year (this year and next); on chains: "是不是用 linked list 来存储 lineage 就好";
+  on the reading rule and the remaining fixes: "looks right".
+- Decides:
+  - A view is one question, a ladder of five fixed rungs and a due date, never rewritten. It looks at one number (which
+    year, whether a period amount or a point-in-time value, and the source it is answered from) or the state of one
+    thing (scope and stage). An object view's identity is its object plus what it looks at; a theme view's identity is
+    only what it looks at (the theme is where it is filed), so theme views are compared across all themes. A view looks
+    at one thing: a question that needs a number and an event is two views joined by a dependency; a question whose
+    parts can move in opposite directions is two views, joined only if one really depends on the other.
+  - Object views (companies, crypto, commodities) have the rungs strongly bullish to strongly bearish, meaning good or
+    bad for the business, fixed at creation. Theme views have five outcomes on one axis, named by outcome, with no
+    bull or bear; each dependent object view's arrow says which end is bullish for it. The stance on the price is our
+    state against the consensus, which is not designed yet.
+  - Each rung is an observable yes-or-no condition; rungs do not overlap, cover every outcome, and exactly one holds at
+    the due date; there is no "partial". A number ladder is ranges of one number in its stated year, judged by code;
+    an event ladder is the states one thing can be in on the due date, judged by the model from "happened" evidence
+    only, citing it. The model sets the rungs when the view is created; they do not change before the due date.
+  - The due date is when the debate is settled, usually 6–12 months out; a number's due date is the day it is
+    published; quarterly reports in between are evidence. Number views carry their year (fiscal year for companies,
+    calendar year otherwise) and at most this year's and next year's are open at once. The year counts from the latest
+    publication day among the items processed so far, which only moves forward (never the wall clock); a year whose
+    period has ended gets no new view. An event view is one open view per thing. (Claude's reading of "this year", to be
+    confirmed by Alex.)
+  - Two positions on a ladder: where it is now (a fact; only "happened" evidence moves it; a point-in-time number takes
+    the latest published value, a period amount has none before it is published) and the state (where we think it
+    lands; re-judged by the model each time from all of the view's evidence and its dependencies' current state, never
+    stepped from the last state; citations checked by code; temperature set in Config). A replay reads the stored
+    judgements; it does not call the model again.
+  - Evidence is a sentence or number, stored once, with its source and tier (happened, said by a party, third-party
+    view, rumour); independent sources are counted by original source; the direction it pushes is written on the link
+    between evidence and view by each re-judgement.
+  - A dependency B → A carries one direction (which end of A is bullish for B; between themes, same or opposite). A
+    relation that looks good-then-bad means a middle view is missing. Notices pass, evidence never does; code marks
+    B's evidence that is also linked to A. A number dependency is pinned to its year (a closed A is read by its answer;
+    an A not yet created is waited for and connected when created; an unanswerable A is a missing input, never
+    neutral); an event dependency follows A's chain. A new view may depend on theme views (found by search) or on
+    another object's views (supply chain). B is told when A changes rung, when what B reads changes, or when A cannot
+    be answered. No cycles, checked on the graph each
+    round reads. A new theme view that succeeds nothing is checked against every open view for missing arrows.
+  - Succession: the next view on the same thing succeeds the last one, forming a chain that holds the lineage; no
+    forks; the successor keeps the rung orientation; a wrong succession is revoked by an appended record; a successor
+    proposes its predecessor's dependencies one year on.
+  - A view ends answered (the first published value from its stated source; the score compares it with the last state
+    committed before the item carrying the answer was processed), unanswerable (with its reason, not scored; a
+    processing failure is retried, not unanswerable) or merged. A view whose object leaves the universe is closed as
+    unanswerable for now; whether it is scored is open.
+    A number view past its period and waiting for its answer does not count against the two open years.
+- Replaces: D26's structure (object → driver → view with a claim, direction, horizon class, confirm and falsify
+  conditions and a premise); D30's add-only conditions, conflict trigger and consensus-by-code (open again); D31's
+  premise links with a seen version.
+- Enforced: `VIEW_TREE`, `VIEW_KINDS`, `KIND_NOTE`, `LADDER_EXAMPLES`, `LADDER_RULES`, `POSITIONS`, `TIERS`, `TIER_RULES`,
+  `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `CHAIN_RULES`, `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `EVIDENCE_FIELDS`
+  of `docs/system-design/new-facts.js`; the views node of `docs/system-design/new-design.js`; `docs/prd/06-views.md`.
+- Changed by D42: a yes-or-no question has two rungs; a re-judgement reads the view's evidence that has not been
+  replaced, and a round that brought only repeats and no dependency change does not re-judge; "replaced" also covers a
+  later statement by the same speaker and an official confirmation or denial of a rumour; a dependency links only an
+  input (B's answer uses A's answer), and a cycle is rewritten.
+- Changed by D45: what stands is what points to Alex's words or an earlier decision: a view as a question, a
+  ladder of five rungs (two for yes or no) and a due date where the debate resolves; object and theme views; the
+  state judged by the model from all evidence not replaced and from the dependencies; evidence stored once with its
+  push on the link; tiers (D30); dependencies with arrows read by kind; succession as a chain; this year's and next
+  year's number. Where it is now, how rungs are written and judged, answer sources, how the years are counted, the
+  details of log step 13, unanswered and waiting views, and how answers are scored are proposals (D45).
+## D39 · 2026-10-20 · Writing into the views database: match by where a candidate belongs, then one round of re-judging
+
+- By: Alex ("已经存在的观点就 merge，日期遵照之前已经存在的期限"; "我们来深度聊一下 thesis 被抽取之后我们怎么和现有的数据结构做对比和整体的纳入、合并机制";
+  "it's very similar to like a search engine … then what is the best judge"; steps 11, 14 and 15 of the log).
+- Research: `reports/观点库重建 去重 证据 血缘（Codex 调研）.md`, `reports/观点库重建 接续 依赖 到期（Codex 调研）.md`, and the two
+  D27 reports, which still hold: identity sits on a key and similarity only finds candidates; choosing from a few
+  candidates beats judging pairs; "new" is the harder half; small sets given whole beat retrieval.
+- Decides: one item is one round, in dispatch order. Code checks sources; stores evidence once (a retry reuses it, a
+  corrected version replaces the old one, which is kept and marked replaced); matches by key (a number candidate with
+  the same answer source and year as an open view is that view); builds the list (all open views of the tagged
+  objects plus each chain's last closed view; for themes, five more from a keyword and embedding search over all open
+  theme views; number candidates beyond next year dropped; an empty list still goes to the model, which only decides
+  new view or not opened). One model
+  call without the document decides, for each candidate, attach to #k (the same thing or a part of it), succeed #k,
+  new view, not opened (too broad), or unsure, with a reason, and for each piece of evidence which views it pushes.
+  Code accepts only listed ids, the succession rules and the open-view limits. Each object's queue writes its own
+  views, themes first; a list that changed before the write is matched again. New views pick their dependencies
+  (model; code checks cycles). Then every touched view is re-judged once, upstream before downstream; a change of rung
+  passes on. Merges happen three ways: attach (at matching), succeed (at matching), merge (a daily duplicate check
+  started by pull mode: the later view closes as merged into the earlier one, its links are added there and arrows
+  follow the merge). Evidence that links to no view is not stored; the processing record notes it. Records are
+  append-only: matching, re-judging, succession, closing, merging and labels each add a record with the dispatch
+  number, so any past day can be replayed from the records. An item reads the state left by items with smaller
+  numbers plus what its own round has already written (upstream views judged earlier in the round). A late item is
+  re-judged when it arrives and does not rewrite past states. A corrected item touches every view linked to its old or
+  new evidence. A merge re-checks the direction of the arrows it redirects against the kept view's rungs, and cycles. Storage is one relational database with append-only tables; full-text and vector indexes live in
+  it and can be rebuilt; no separate vector or graph database; the product is chosen at build time.
+- Open: what to do with "unsure" (create and let the duplicate check merge, or attach to the closest view).
+- Replaces: D27's steps 2–5 (candidate drivers, matching to a driver, deciding by direction and horizon class) and
+  D33's list of what the views database does after extraction; D31's rule that a late item reads the versions of its
+  publication day.
+- Enforced: `INTAKE_STEPS`, `MATCH_OUTCOMES`, `MATCH_NOTES`, `MERGE_KINDS`, `INTAKE_EXAMPLE_TREE`, `ORDER_RULES`, `STORE_NOTE`
+  of `docs/system-design/new-facts.js`; the views node and the overview edges of `docs/system-design/new-design.js`;
+  `docs/prd/06-views.md`.
+- Changed by D42: evidence arrives attached to the views it bears on, or to a candidate view, so matching no longer
+  decides which views a piece pushes; the same call instead compares each piece with the evidence its view holds
+  (repeat, replacement, new evidence); a repeat is one more source of the piece it repeats; a corrected version changes
+  only its own source, so "its evidence replaces the old version's" holds only when the item is itself the original
+  source.
+- Changed by D44: no key is matched by code. Whether a candidate is an open view, a part of it or its next period is
+  decided only by the model in the matching call; code builds the list and accepts only listed ids and the succession
+  rules. "One open view per thing" is the rule the model applies when matching, not a code check.
+- Changed by D45: matching searches a few existing views and the model decides the same view, its next period or a
+  new view (no match, or only a weak one, is new). How the list is made, the year filter, the outcomes "part of an open
+  view" and "not opened", the daily duplicate check, the "already counted" mark, the order inside a round,
+  re-judging a late item on arrival and the storage are proposals.
+## D40 · 2026-10-20 · The matching judge: a general model first, every match recorded, humans label, a small model later
+
+- By: Alex ("let's do a general LLM at this point because we need to make it work first and … for the traces that we collect
+  essentially that just have a logging system so that we can do RLHF in the process to human label and then use that data
+  to train a small model classifier that's faster in the future for this purpose").
+- Research: LLM-labelled training sets train small matchers about as well as hand-labelled ones, at 34–459 times less
+  inference time (Steiner and Bizer 2026, arXiv 2606.28823); fine-tuned matchers reach high F1 with labelled pairs
+  (Ditto); selecting among candidates suffers position bias as the list grows (ComEM).
+- Decides: matching (step 5 of D39) uses a general model through Config's matching setting. Every match writes a
+  matching record: the item, the candidates as handed over, the list in the order shown and how each entry got there,
+  who decided (code, the general model, later the small model, or a person), the request, the raw answer and the Config
+  version, the decision with reasons and code's checks, what was written, and later records pointing back (a merge by
+  the duplicate check, a human label that differs). Code samples records for labelling: every unsure one, every one a
+  later merge reversed, every one code refused, and a weekly random sample started by pull mode. A person labels with the same options plus
+  "can't tell", with a reason; Alex sets the standard on a first batch. Labels for the test set are made without seeing
+  the model's answer; the test set is fixed and scored once per change of judge. Labels measure the matching (precision
+  and recall of "new", wrong attachments, order sensitivity) and, with the model's own decisions, train a small
+  matcher; it decides only where it is confident and its agreement with human labels on the test set passes a bar Alex
+  sets, and the general model decides the rest. Labelling never blocks the stream and never changes the database
+  directly; duplicates it finds go to the duplicate check. This is human labelling and supervised training; no
+  reinforcement learning is needed. Requests and answers of the other model calls are recorded too; only matching is
+  labelled in v1.
+- Open: who labels, how many are sampled each week, the labelling screen, the bar for the small model.
+- Enforced: the labels node and its edge in `docs/system-design/new-design.js`; `JUDGE_STEPS`, `TRACE_FIELDS`, `LABEL_RULES`
+  of `docs/system-design/new-facts.js`; `docs/prd/06-views.md`.
+- Changed by D42: matching and its labels also cover the evidence outcomes (repeat, replacement, new evidence).
+- Changed by D44: code never decides a match; "who decided" is the general model, later the small model, or a
+  person.
+- Changed by D45: the general model, the records, human labels and a small model later stand; which records are
+  sampled, the test set, measuring with labels, the training data and "no reinforcement learning" are proposals.
+## D41 · 2026-10-20 · What the rebuilt views database changes outside it
+
+- By: Alex ("you need to add it to the current PRD, you need to add it to the current system design … put everything into context").
+- Why: D38–D40 change what extraction hands over, which model settings Config holds, how the universe describes macro
+  links, what the review pool receives, and make the final verdict and pull mode drafts obsolete. Leaving them would
+  leave the page and the PRDs saying two things.
+- Decides:
+  - Extraction (frozen, D37): a candidate view now carries its object, kind, what it looks at, the question, five rungs,
+    due date and answer source; evidence carries when the thing happened and which candidate or existing view it
+    belongs to (or neither; matching decides). Prompt part 1 adds the writing rules for views (one thing; a number's
+    year and answer source; a theme view's scope set by the rule or decision that governs it). Prompt part 5 gives the
+    objects' existing views (question and what they look at, no state or evidence) instead of driver names.
+    The category reads no longer mention conditions (T1, T10, T12, T14), and the example shows a theme view and an
+    object view, with the filing's own English sentences as the checked quotes.
+  - Config (frozen): the views database has one setting per model call (matching, picking dependencies, re-judging,
+    the duplicate check); a setting includes the temperature; every model call records the Config version.
+  - Universe (frozen): rule 8 says macro and geopolitics reach a company through dependencies.
+  - Review pool (frozen): from the views database it receives the themes proposed when a candidate is about something
+    in the world with no theme in the universe, and failed items; unsure matches no longer go there. A candidate about a
+    company outside the universe is not built and only noted in the processing record.
+  - The final verdict and pull mode are old drafts to be redone when Alex takes them up; until then their pages carry
+    the note. Pull mode's role in the rebuilt design is the due date, the daily duplicate check and the periodic labelling sample.
+  - The wording scope (D36) covers the views database and the labels node; the retired words are 驱动, 检验条件 (证实条件,
+    证伪条件), 前提, 期限档, 主题层 and 对象层, 主张, 已证实 and 已证伪, and 分发序号 (the glossary's word is 顺序号).
+- Enforced: `TEMPLATE`, `PROMPT_EXAMPLE`, `CATEGORY_READS`, `CATEGORY_NOTE`, `EXTRACT_STEPS`, `SOURCE_NOTES`,
+  `EXTRACT_EXAMPLE_TREE` of `docs/system-design/new-facts.js`; `CONFIG_SCHEMA` of `docs/system-design/new-config.js`; `RULES`
+  of `docs/system-design/new-universe.js`; the extract, config, review, verdict, pull nodes and the summary of
+  `docs/system-design/new-design.js`; `AVOIDED_WORDS`, `VIEWS_CONSTANTS` and `wording_scope` of `docs/check.py`; the glossary in
+  `docs/prd/00-system.md`; `docs/prd/00-system.md`, `01-universe.md`, `03-config.md`, `05-extraction.md`, `07-final-verdict.md`,
+  `08-pull-mode.md`, `09-review-pool.md`, `README.md`.
+- Changed by D42: the last prompt part also lists the views the related objects' views depend on; evidence is attached
+  to a view on that list or to a candidate view, never to neither; universe rule 8 links a company to a theme view whose
+  answer its own answer uses.
+- Changed by D45: Config has no duplicate-check setting while the duplicate check is a proposal; extraction's prompt
+  asks for one thing per view and a number's year, not for answer sources or a theme view's scope; how complete a
+  candidate view is when extraction hands it over is open.
+## D42 · 2026-10-20 · Extraction hands over evidence and candidate views as two things; evidence is matched to what its view already holds
+
+- By: Alex, over steps 17–30 of `docs/views-rebuild-log.md`. On attaching evidence: "evidence 怎么在抽取的时候不挂钩
+  thesis？这怎么可能。"; on two rungs: "如果只有是否就不用硬分，可以 binary"; on cycles: "我觉得这个应该是 thesis 的定义问题"; on the evidence path: "It's
+  not clear to me how this logic is similar to thesis", then "我觉得差不多了"; on writing it up: "抽取现在分成了 evidence / thesis,
+  你要特别分开讨论和解释这部分的设计". The first write-up grew new words and rules for edge cases raised in review
+  ("卡片又是什么。。。你为什么又给自己加了一堆戏？"); the cut-back then dropped four rules that real cases need ("那你本来提的一些东西难道都没用吗？"). Kept:
+  what he decided, plus those four ("可以吧"); log steps 31–33.
+- Research: `reports/观点库重建 抽取后的证据和观点怎么进库（Codex 调研）.md`, `reports/观点库重建 证据和观点的逻辑仿真（Codex）.md`,
+  `reports/观点库重建 对抗式审查：做不到和说不通的地方（Codex）.md`, `reports/观点库重建 证据怎么作用到库里（Codex 调研）.md`; a count on a stored run of the old
+  system (log step 30): of 2,499 numbers it read, 383 matched one already read, 214 of them elsewhere in the same
+  document. Reviews of the first write-up: `reports/观点库重建 D42 审稿第 1 轮（Codex）.md` to `第 5 轮`.
+- Decides:
+  - Extraction (frozen; changes D41's hand-over). Prompt part 5 lists the related objects' open views and the views they
+    depend on (question and what each looks at, no state or evidence). One read hands over two things, each with its
+    source: evidence, attached to the views on that list it bears on or to a candidate view of the same item; and
+    candidate views, for important matters none of those views covers, written as D41 has it and carrying the evidence
+    that raised them. The same thing said in several places of one item (text and table) is one piece with several
+    sources. Evidence attached to nothing is not extracted; code checks the attachments.
+  - Views database (changes D39 and D40). The one matching call also compares each piece of evidence with the evidence
+    its view holds that has not been replaced; a piece attached to several views is stored once and compared once. A
+    repeat (a reprint, the same number in text and table, the same speaker saying it again) adds one more source to that
+    piece. A replacement (two statements of the same thing: the same speaker's later number or wording, an official
+    confirmation or denial of a rumour, the original source's own corrected sentence) keeps the one said later, by the
+    day it was said, and marks the earlier replaced, kept as history, so a late older statement goes straight into
+    history; views still linked to the replaced piece are linked to the new one too. Anything else, and anything unsure,
+    is new evidence. An upstream corrected version changes only its own source: a corrected reprint leaves the piece it
+    reprinted alone; the original source's corrected version replaces a changed sentence through matching and marks a
+    deleted one replaced. Matching records and labels cover these outcomes.
+  - Re-judging (changes D38). A re-judgement reads the view's evidence that has not been replaced, each piece with the
+    one it replaced, and its dependencies' current state; a round that brought only repeats and no dependency change
+    does not re-judge the view.
+  - Ladders (changes D38). A yes-or-no question has two rungs: bullish and bearish for an object view, named by outcome
+    for a theme view.
+  - Dependencies (changes D38). B depends on A only when B's answer uses A's answer; the other side's reaction to what
+    has already happened is evidence. Two questions that are each other's input are badly cut and are rewritten; code
+    refuses an arrow that closes a cycle.
+  - Wording: 重复, 替代, 新证据 and 被替代 enter the glossary; a ladder has five rungs or two; 个股 is written 公司; a bare 候选 had two
+    meanings and is split into 候选观点 and 清单; prompt part 5 is 第 5 块 (not 最后一块). 五格的梯子, 个股 and a bare 候选 are checked by
+    `docs/check.py`.
+- Not decided (PRD 05 and 06 under 还没定的): opening views when an object starts empty (a start-of-coverage step that sets
+  two or three key debates); changes inside a rung that do not reach dependents; whether theme views take companies'
+  views of the macro; sampling extraction's attachments for review. The other questions raised in steps 25–27 stay in
+  the log.
+- Enforced: the extraction and views constants and pages of `docs/system-design/new-facts.js`; `RULES` of
+  `docs/system-design/new-universe.js`; the summary and the extract, views, labels and universe nodes of
+  `docs/system-design/new-design.js`; `AVOIDED_WORDS` and the generated blocks of `docs/check.py`; the glossary in
+  `docs/prd/00-system.md`; `docs/prd/00-system.md`, `01-universe.md`, `05-extraction.md`, `06-views.md`, `README.md`.
+- Changed by D45: the dependency definition (only an input; a cycle is rewritten) is a proposal; Alex said a cycle
+  is a problem of how the theses are defined.
+
+## D43 · 2026-10-20 · A second stable version of the design is sealed
+
+- By: Alex ("完整的刷一遍，我要又一个稳定版本的html fe system design and prd").
+- Decides: after a full reasoning refresh of every module in the D22 order and `python3 docs/check.py` passing, the
+  design page, its data, the PRDs, DECISIONS, CURRENT_STATE and the views rebuild log are copied to
+  `docs/archive/2026-10-20-v2/` with `SHA256SUMS`; the archived page opens from that folder. Module statuses do not
+  change: the input side and extraction stay frozen v1 as amended by D41 and D42, the views database stays in design
+  with D38–D42 decided, the final verdict and pull mode stay old drafts to redo. Like v1, the sealed copy is never
+  edited; a later stable version gets a new dated copy.
+- Enforced: `docs/archive/2026-10-20-v2/` and its `SHA256SUMS`; the status in `docs/CURRENT_STATE.md`.
+- Changed by D44: v2 still shows a key matched by code before the model; the current stable version is v3
+  (`docs/archive/2026-10-20-v3/`).
+## D44 · 2026-10-20 · Matching is the model's alone: no key matched by code
+
+- By: Alex, at log step 16 ("let's do a general LLM at this point because we need to make it work first"), and after v2
+  was sealed ("I just want LLM to do the matching? Why is it still matching by the key with code? … I told you to make
+  it easy so that we can prototype in the beginning").
+- Why: the key was Claude's proposal in log step 15 (four layers: a key matched by code, the list, the model as judge, a
+  small model later). Alex's answer chose the general model to make the system work first; D39 still wrote the key as
+  a code step before the model, and its check on open-view limits needs the same key to tell "the same number" or "the
+  same thing". In log step 26 Claude found the key does not hold (one answer source serves different questions, an
+  amount and a growth rate; one number gets two names) and proposed dropping it; the step stayed through steps 31–33
+  and v2 (D43) was sealed with it.
+- Decides: whether a candidate view is an open view, a part of it or its next period is decided only by the model in
+  the matching call, from the short list. Code builds the list (as in D39) and accepts only listed ids and the
+  succession rules. "One open view per thing (a number: this year and next)" is the rule the model applies when
+  matching, not a code check. Writing into the views database has eight steps; matching is step 4. The matching
+  record's "who decided" is the general model, later the small model, or a person. A number view keeps its answer
+  source: it says where the answer is read at the due date.
+- Seals: the corrected design is sealed as v3 in `docs/archive/2026-10-20-v3/` with `SHA256SUMS`, as D43 sealed v2;
+  v2 stays as sealed and is superseded.
+- Enforced: `INTAKE_STEPS` and `TRACE_FIELDS` of `docs/system-design/new-facts.js`; the views and labels nodes of
+  `docs/system-design/new-design.js`; `docs/prd/00-system.md` (principle 7, the glossary), `docs/prd/06-views.md`;
+  `docs/check.py` fails on the word "钥匙".
+- Changed by D45: the answer source of a number view is a proposal (who judges a rung, and how), not decided.
+## D45 · 2026-10-20 · Only what Alex said or decided is decided; Claude's proposals are listed apart
+
+- By: Alex ("我明明就很清楚的告诉你了我过去所有的讨论和思路，你不要 diverge and make shit up, review this shit"; to the
+  rule "写成‘已定’的，每一条都要指得到你的一句原话；指不到的，一律放进‘没确认的’": "要，我们重点搞定观点库模块好吧，
+  然后抽取 thesis /edvdence 在前面的逻辑分清楚，把这两个干 solid").
+- Why: checked against his 46 messages of the views rebuild (`reports/观点库 设计和 Alex 原话对照（2026-10-20）.md`),
+  D38–D44 wrote as decided proposals he had answered in part or not at all, details from Codex reviews, and log lines
+  recording his agreement where he had said "ok" and asked for a recap. Applying the rule also found that D39 had
+  replaced D31's late-item rule without him.
+- Decides: in the views database and in what extraction hands to it, a rule is decided only when it points to Alex's
+  own words, his reply to that question, or a decision in force from before the rebuild (D11, D14, D16, D30, D31,
+  D33, D37). Everything else is a proposal: the page and `docs/prd/06-views.md` list Claude's 17 proposals apart
+  ("Claude 提的、Alex 还没定的"), and none is built until he decides it. On his words: a candidate that matches nothing,
+  or only weakly, is a new view, so there is no "unsure" outcome; evidence tiers and counting by original source stand
+  (D30), and only "happened" evidence settles which rung holds; a late item reads the state of its publication day and
+  is written with its real date, and a view whose object leaves the universe is kept as no longer tracked (D31). The
+  proposals: where it is now; how rungs are written; who judges a rung, with answer sources; how this year and next are
+  counted, with a code filter; how the list is made and a theme view's identity; the outcomes "part of an open view"
+  and "not opened"; dependency as input only, with the cycle refusal; the succession and notice details of log step
+  13; the order inside a round; unanswered and waiting views; the daily duplicate check (with Config's setting for it
+  and pull mode's daily start); the "already counted" mark; the code check on cited evidence and replay; how answers
+  are scored; re-judging a late item on arrival; the labelling details; the storage. Open in extraction: how complete a
+  candidate view is when extraction hands it over (log step 30's object, what it looks at and evidence, or D41's
+  question, ladder and due date); the prompt no longer asks for answer sources or a theme view's scope.
+- Changes: D31 (its late-item rule stands again), D38, D39, D40, D41, D42, D44 (notes under each).
+- Checked: Codex read-only against the same 46 messages; six sentences still pointing past Alex's words were fixed
+  (the calendar year for numbers other than a company's, searching only open views, re-judging once per round, "which
+  item comes first does not shape the view", the late February report in the example, and examples that assumed a
+  complete candidate view); none of the 17 proposals turned out to be something he had agreed to.
+- Seals: the design is sealed as v4 in `docs/archive/2026-10-20-v4/` with `SHA256SUMS`, as D43 sealed v2.
+- Enforced: `VIEWS_PROPOSED`, the views constants, `TEMPLATE`, `EXTRACT_TWO`, `EXTRACT_SORT_TREE`, `EXTRACT_EXAMPLE_TREE`
+  and `EXTRACT_OPEN` of `docs/system-design/new-facts.js`; the summary, the extract, views, labels, config and pull
+  nodes and the overview edges of `docs/system-design/new-design.js`; `docs/system-design/new-config.js`;
+  `docs/prd/00-system.md`, `03-config.md`, `05-extraction.md`, `06-views.md`, `08-pull-mode.md`, `README.md`;
+  `docs/check.py` renders the proposals into `06-views.md`.
+- Changed by D46: Alex settled the proposals one by one; the ones he decided are in D46, the three about due dates,
+  unanswered views and the daily duplicate check wait for pull mode, and the rest stay listed apart.
+## D46 · 2026-10-20 · Alex decides Claude's views proposals one by one
+
+- By: Alex, asked item by item. (1) "A thesis has a state. That's it … There's only one state." (2) "ok". (3) "Just
+  use the … model and right now we're only talking about data streaming in … the next financials come in, it will
+  basically have evidence that will validate or invalidate that thesis … We're talking about like push mode, streaming
+  data, not the pull mode that we have that has not been designed yet." (4) "when they say by this year, it just means
+  by this … year, December 31st. If it's next year, just next year, December 31st." (5) "It's going to trigger a search
+  engine that is overlaid on top of this database. It's going to return maybe like top n, n being 5 or 10 … semantic
+  search … Elasticsearch. And then you basically let the model check which one is the matching thesis or relevant
+  evidence"; "Yes, and the recall criteria or the search criteria needs to be designed … this is the final decision."
+- Decides:
+  1. A view has one state: where it sits on its ladder, our view, pushed toward bullish or bearish by evidence and
+     judged by the model on facts. There is no second position.
+  2. How a ladder is written: each rung a result that can be checked, rungs neither overlapping nor leaving gaps, so
+     exactly one holds at the due date; no vague "partial" rung, a partial outcome is spelled out as its own rung;
+     neutral says what it is compared with; one ladder holds one kind of thing, and a question needing a number and
+     an event is two views linked by a dependency.
+  3. The model reads the information that brings an answer like any other evidence; there is no answer source and no
+     code judging a rung. Due dates and answers belong to pull mode, not designed yet; the proposals on unanswered
+     and waiting views, the daily duplicate check and how answers are scored wait for it.
+  4. A number view names its year: this year is the year the item comes in, to December 31, and next year the one
+     after; a company's numbers follow its fiscal year (the one the item falls in is this year). At most this year's
+     and next year's are open; a candidate beyond that is not opened. No code filter.
+  5. Matching: a search engine over the views database (like Elasticsearch; semantic, keyword or both is to be
+     designed) searches the
+     whole database, open and closed views, for a candidate view and returns the top N (N in Config, 10 to start); the
+     model decides the same view (evidence attached, ladder and due date kept), its next period (succession), or a new
+     view (no match, or only a weak one). A piece of evidence searches only the evidence of the view it is attached to,
+     top N, and the model decides repeat, replacement or new evidence. How the search ranks is to be designed.
+  6. A candidate that is a part of an open view goes into that view ("H20 in China" into "China revenue"). Alex: "行
+     但是这个观点的颗粒度我们需要之后明确，例如 nv 中国区收入就很关键肯定不能 bundle 到总收入；而且如果太粗那你会
+     发现所有观点都基本是财务指标这是不行的". How big a view is stays open, with a research task: what a thesis looks
+     like from a hedge fund's side, what to combine and what to carve out.
+  7. A candidate that bundles several things that may move in opposite directions is not opened; its evidence counts
+     only where it is also attached to a specific view. Alex: "Yes, I think it's okay … make note that the granularity
+     of these theses matters … we need to run a full research on what a thesis actually looks like from a hedge fund
+     perspective."
+  8. Dependencies: the model decides, like an analyst, which views' conclusions a new view needs and in which
+     direction; what has already happened is evidence, not a dependency. Code keeps the graph free of loops: an arrow
+     that would close a loop (a new arrow, or one moving to the next period) is refused and sent back to the model,
+     which decides how to rewrite it.
+     Alex: "这个的判断不是 LLM 来吗？…hedge fund analyst 会怎么做？"; "你自己要有 circular dependency avoidance 机制".
+  9. Succession: one view has at most one next period, and the next period keeps the ladder's direction (thresholds may
+     change). The other succession details Claude proposed are dropped. Alex: "可以".
+  10. One item's changes are one round: upstream views are judged first, then downstream ones, which read the upstream
+      state judged in this round; each view is judged once per round. Alex: "global thesis is impact everything …
+      like a celebrity … it connects to everyone."
+  11. Views relate in one way only: B refers to A's conclusion (its state and reasons), which is not stored as B's
+      evidence, so the system cannot prove itself with its own judgements. A message counts once: about A, it is A's
+      evidence and reaches B through A's conclusion; about B, it is B's; if B does not refer to A, a message about A
+      is B's evidence too. Whom a view refers to is set when it is built. The "already counted" mark is dropped. Alex:
+      "我觉得什么特殊处理代码这种都是非常 dirty 的解法，你现在给我想清楚 what is the best way"; "可以".
+  12. Every judgement cites its evidence by number in a fixed answer field; code looks each number up (it belongs to
+      this view and is not replaced); if one fails, the judgement is not written, the reason is recorded and the model
+      judges again. What was judged on a past day is read from the stored records, never asked again. Alex: "就是有
+      source 注解和 lookup 对吧，那你要写明白这个机制".
+  13. The timeline only grows forward, in the order we learned things. A late message about a matter that already has
+      a newer statement does not count: it is not added to the view, only noted in the processing record; a late
+      message about something we did not know counts, with its real date. This replaces D31's late-item rule. Alex:
+      "if data is coming in out of order … it shouldn't be appended … Think about this entire relation of building a
+      time lineage"; "go ahead".
+  14. Labels: every match is recorded; people label two kinds, the ones code refused and a few drawn at random from
+      time to time; the rest is filled in later. Alex: "是，之后细节在补，把这个模块画出来就好".
+  15. Where the data is stored is decided when the build starts. Alex: "可以".
+  Still Claude's proposals, for pull mode: unanswered and waiting views, the daily duplicate check, how answers are
+  scored at the due date.
+  Checked by Codex against the 76 messages: the rewrite of a loop is left to the model; the search method is open
+  (N starts at 10); a view also re-judges when a view it waits for is built (log step 13's tree); prompt part 5
+  says who refers to whom, so extraction can keep a message about A off B.
+  16. Extraction writes a candidate view in full on the spot: question, ladder and due date, with its evidence; the
+      model has the whole document then, and new views are few. Alex: "写全".
+- Seals: the design is sealed as v5 in `docs/archive/2026-10-20-v5/` with `SHA256SUMS`.
+- Changes: D45's list of proposals (settled except three for pull mode); D3 and D41 (Config also holds the
+  search size N).
+  D31 (the late-item rule is replaced by item 13).
+- Enforced: `LADDER_RULES`, `POSITIONS`, `VIEW_TREE`, `INTAKE_STEPS`, `INTAKE_SHAPE`, `MATCH_NOTES`, `EVIDENCE_NOTES`,
+  `TRACE_FIELDS`, `VIEWS_OPEN`, `VIEWS_PROPOSED` of `docs/system-design/new-facts.js`; the views and config nodes of
+  `docs/system-design/new-design.js`; `docs/system-design/new-config.js`; `docs/prd/00-system.md`, `03-config.md`,
+  `06-views.md`; `docs/check.py` rules out 检索 for 搜索.
+## D47 · 2026-10-20 · End-to-end consistency from the universe to the views database
+
+- By: Alex ("now you have everything, you have every log … do end-to-end consistency test … up until the model db
+  module … make sure the terms, the usage, the logic, the details … consistently reflected in the PRD and in the front
+  end HTML … in multiple rounds. Fire codex sub-agents to check for you, and you also review holistically yourself and
+  just make it work").
+- How: three Codex read-only reviews (wording, logic with two worked examples, page against PRD against DECISIONS)
+  and Claude's own read of every in-scope PRD and the page; every finding was checked against the text before a fix.
+- Decides, wording (one word per concept): the attach word is split by its three senses: evidence 连到 a view, a
+  candidate view 并进 an open view, a view 属于 an object (classification: an object is 标 on an item), and `docs/check.py`
+  rules the old word out; views relate only by 依赖 (the everyday 参考 is gone from the documents); the rules written
+  this round say 证据 or 信息, not 消息; evidence repeats are 转述 (a whole reprint is merged by classification and never
+  reaches the views database); the state is 我们的判断 (看法 is what authors say) and is pushed to either end of the
+  ladder; a rung is a result that can be checked (能核对); 答案 is only the rung at the due date; the whole item is not
+  stored, evidence keeps its one sentence; "one layer" reads "not split into periods"; 链 covers replacements too; the
+  view field is "开着还是关了"; the item duplicate in dispatch is "重复的信息"; the glossary gains 并进, 共识, 出处, 原始来源,
+  一句话说清; an upstream id names one version (an update is a new item that says which one it replaces).
+- Decides, logic: evidence carried by a candidate view is compared after the candidate's place is known (one more
+  model call when it goes into an open view); a judgement may cite the views it depends on, which code checks against
+  its dependencies; two candidates from one item: a sentence goes to the one it is about; prompt part 5 says who
+  depends on whom; the Reuters examples are Reuters' own stories retelling the filing; the universe sends unknown
+  identifiers and themes outside the universe to the review pool, not known companies outside it; Config holds the
+  choices a person makes (model settings and the search size); T1 and the category note no longer speak of 判卷, and
+  T14 no longer of 催化剂.
+- Enforced: the page data (`new-facts.js`, `new-design.js`, `new-config.js`, `new-universe.js`, `new-classification.js`),
+  `docs/prd/00`–`06`, `README.md`, `docs/CURRENT_STATE.md`; `docs/check.py` rules out 挂 and 消息.
+- Second round (Codex, one combined review): rung boundaries say which side each edge falls on; a replacement
+  re-judges and a dropped late statement does not; step 4 is one call plus one more only for a candidate that goes
+  into an open view; the state is pushed to either end of the ladder everywhere; Config's table names the search
+  size beside the model settings; D31 notes that D46 replaced its late-item rule; 转述 in every example; 消息 becomes
+  说法 (T7, the rumour tier) and 报道 (classification's example); classification and dispatch show the D47 wording change.
+- Third round: the review pool takes themes outside the universe (as suggested themes) and leaves out known
+  companies, crypto assets and commodities outside it; classification's rule 13 says the system's own output is not
+  accepted (不合格), as its first rule does; a judgement's cited sources include the views it depends on in the
+  acceptance and the source notes; the universe node and the extraction page show D47.
+- Fourth round: the export-licence ladder's rungs exclude each other (none issued / issued, some with conditions /
+  issued, none with conditions); the hand-over table says part 5 shows who depends on whom; the review pool's
+  exclusion says only what stays out (known items); dependents read A's state and reasons, not a separate "现状";
+  the AMD example says the item is about AMD; classification's cross-reference points to the first step of its
+  order. "Usually 6–12 months" stays: Alex agreed to it in log step 10.
+- Fifth round: "not opened" also covers a number view beyond next year; an item reads the state left by earlier
+  items plus what its own round has written; the review pool leaves out known companies, crypto assets and
+  commodities outside the universe (themes outside it come in); the review-pool, Config and extraction statuses show
+  the later decisions.
+- Sixth round: one finding, CURRENT_STATE's order line now includes what an item's own round has written. The
+  rounds found 20+, 11, 4, 6, 4 and 1 issues; the pass ends here.
+## D48 · 2026-10-20 · The views database, with match labelling, is frozen as version 1
+
+- By: Alex ("现在这个 db 模块算是 freeze 了吗还是你需要最后 review"; "Is there any inconsistencies and can we freeze? You
+  need to change the front-end module to be frozen, right? … you need to read overall end-to-end because we added a
+  lot of details and stuff, so you need to make sure").
+- Decides: after the six rounds of D47 and a last read of the system diagram and the front-page summary, the views
+  database and match labelling are frozen as v1 in their current text; a change needs a new decision. What
+  `docs/prd/06-views.md` lists under 还没定的 stays open (the granularity of a view, to be researched first; big changes
+  inside a rung that do not reach dependents; opening views when an object starts empty; consensus; …), and the
+  three pull-mode proposals wait for pull mode. The diagram now shows search in the views step, part 5 as questions,
+  what each looks at and who depends on whom, failed items from the views database to the review pool, the
+  classification result "并到原来那条", frozen statuses on the views and labels nodes, and the final verdict and pull
+  mode as old drafts to redo.
+- Enforced: the statuses of the views, labels, verdict and pull nodes, the caption, two edges, the summary and the
+  classification subtitle in `docs/system-design/new-design.js`; the views page status in `new-facts.js`;
+  `docs/prd/06-views.md`, `00-system.md`, `README.md`; `docs/CURRENT_STATE.md`; the sealed copy
+  `docs/archive/2026-10-20-v6/`.
+## D49 · 2026-10-20 · Code review of the frozen views database: contradictions fixed, no new mechanism
+
+- By: Alex ("你可以 freeze 然后 run code review and clean up then push").
+- How: a code review of the whole diff against the last commit (the `code-review` skill, run as a separate agent);
+  every finding was checked against the text. It fixes only contradictions with decided rules and slips; a finding
+  that would need a new mechanism is listed as open, and two that Alex had dropped stay dropped.
+- Fixed: another queue's change reaches a view as a notice on its own queue, with that item's sequence number (D31's
+  hand-off, lost in the rewrite); the search result counts as something an item reads, so a change before commit
+  redoes the work (D31); this year and next count from the item's publication day, never the clock (D12, the
+  glossary); prompt part 1 carries the decided rules for writing a view (ladder, due date, year), since extraction
+  writes candidates in full; only an open view takes a merge, a closed one can only be succeeded (log step 10); a
+  candidate about something outside the universe is not opened (a missing theme goes to the review pool as a suggested
+  theme, a known company is only noted; D16, D41, universe rule 7); code checks a dependency names a view that exists
+  or a year it waits for; a refused retry follows the failure rule; the labelling sample is the matching answers code
+  refused; an upstream id names one version everywhere; the final verdict's note and the diagram no longer say who
+  sets an answer; the wording check's message for "NVDA 层" points to 对象观点（NVDA）, and each newer ruled-out word has a
+  control pair that must be caught and a corrected sentence that must pass (16 pairs, shown to catch a broken rule).
+- Opened instead of built: a waiting arrow can count a sentence twice (the claim that it cannot is removed); which views
+  the model chooses dependencies from.
+- Left as Alex decided: no notice when a dependency closes or moves to its next period (dropped in D46 item 9); no
+  same-day order between two statements (dropped in log step 32).
+- Notes: `MERGE_KINDS` and `LABEL_RULES`, named by D39 and D40, were removed by D45 and D46; older "Enforced" lines name
+  constants of their time.
+- Seals: v7 in `docs/archive/2026-10-20-v7/` with `SHA256SUMS`, the version pushed.

@@ -9,10 +9,10 @@
 | 02-classification.md | 分类（上游完成） | 第一版已冻结 |
 | 03-config.md | Config | 第一版已冻结 |
 | 04-dispatch.md | 分发 | 第一版已冻结 |
-| 05-extraction.md | 抽取（只读） | 第一版已冻结（没定的：每一类提示词的具体写法） |
-| 06-views.md | 观点库（thesis · ladder · evidence） | 设计中 |
-| 07-final-verdict.md | 最终判定 | 设计中 |
-| 08-pull-mode.md | Pull 模式 | 部分确定 |
+| 05-extraction.md | 抽取（只读） | 第一版已冻结（没定的：每一类提示词的具体写法）；D41、D42、D45–D47 改过交给观点库的东西（证据连到已有观点上，和候选观点分开交；候选观点当场写全） |
+| 06-views.md | 观点库（thesis · ladder · evidence），含对上标注 | 第一版已冻结 · 2026-10-20（D48；还没定的见 PRD） |
+| 07-final-verdict.md | 最终判定 | 旧稿，要按观点库的新设计重做（D41） |
+| 08-pull-mode.md | Pull 模式 | 旧稿，要按观点库的新设计重做（D41） |
 | 09-review-pool.md | 人工复核池 | 第一版已冻结（只定了哪些东西会进来，输出先不设计） |
 
 ## 规矩

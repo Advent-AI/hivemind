@@ -24,6 +24,7 @@ PRD = DOCS / "prd"
 
 EXTRACT = r"""
 const fs = require('fs');
+const VIEWS_CONSTANTS = __VIEWS_CONSTANTS__;
 function consts(file, names) {
   const text = fs.readFileSync(file, 'utf8');
   const out = {};
@@ -39,10 +40,10 @@ console.log(JSON.stringify({
     'OBJECT_RULES', 'TIME_RULES', 'RULES', 'LOOKUP_TABLES', 'LOOKUP_RULES', 'NOT_SOURCES']),
   config: consts('new-config.js', ['CONFIG_SCHEMA', 'DISPATCH_TREE', 'TREE_NOTES', 'RULES', 'OPEN']),
   universe: consts('new-universe.js', ['OBJECT_KINDS', 'TRACKING_DEFAULTS', 'THEME_LIBRARY', 'TRACKING_EXAMPLES', 'RULES']),
-  extraction: consts('new-facts.js', ['TEMPLATE', 'PROMPT_EXAMPLE', 'PROMPT_NOTES', 'CATEGORY_READS', 'CATEGORY_NOTE', 'EXTRACT_STEPS', 'WRITE_STEPS', 'DECIDE_TREE',
-    'DECIDE_NOTES', 'SOURCE_TREE', 'SOURCE_NOTES', 'EXTRACT_EXAMPLE_TREE', 'WRITE_EXAMPLE_TREE', 'EXAMPLE_NOTE', 'VIEW_TREE', 'OBJECT_EXAMPLES', 'VIEW_FIELDS',
-    'EVIDENCE_FIELDS', 'TIERS', 'LEVEL_RULES', 'LEVEL_TREE', 'PROPAGATION_TREE', 'ORDER_RULES', 'CONFLICT_RULES',
+  extraction: consts('new-facts.js', ['TEMPLATE', 'PROMPT_EXAMPLE', 'PROMPT_NOTES', 'CATEGORY_READS', 'CATEGORY_NOTE', 'EXTRACT_STEPS',
+    'EXTRACT_TWO', 'EXTRACT_SORT_TREE', 'SOURCE_TREE', 'SOURCE_NOTES', 'EXTRACT_EXAMPLE_TREE', 'EXAMPLE_NOTE', 'EXTRACT_OPEN',
     'VERDICT_TRIGGERS', 'VERDICT_TREE', 'VERDICT_RULES']),
+  views: consts('new-facts.js', VIEWS_CONSTANTS),
 }));
 """
 
@@ -90,13 +91,13 @@ console.log(JSON.stringify({ nodes: ids.length, detailPages: Object.keys(design.
 FORM = {"两者": "文字和表格", "文本": "文字", "结构化": "表格"}
 
 
-# Wording: one word per concept in the universe, classification, dispatch and extraction (glossary in
-# docs/prd/00-system.md, decision D36). Each entry is a pattern that must not appear in their text, and the word to use.
+# Wording: one word per concept in the universe, classification, dispatch, extraction and the views database (glossary in
+# docs/prd/00-system.md, decisions D36, D41 and D42). Each entry is a pattern that must not appear in their text, and the word to use.
 AVOIDED_WORDS = [
     (r"原件", "原来那条"), (r"不算信息", "不算材料"), (r"发布那天", "发布日"), (r"发布日期", "发布时间"),
     (r"讲谁", "讲的是谁"), (r"讲的是哪家公司", "讲的是谁"), (r"讲的是哪些公司", "讲的是谁"),
     (r"上游给的编号", "上游编号"), (r"被拒", "不合格"), (r"数据记录", "表格数据"), (r"SEC 文件", "SEC 申报"),
-    (r"申报文件", "申报"), (r"表格代码", "申报代码"), (r"(?<!人工)复核池", "人工复核池"), (r"NVDA 层", "对象层（NVDA）"),
+    (r"申报文件", "申报"), (r"表格代码", "申报代码"), (r"(?<!人工)复核池", "人工复核池"), (r"NVDA 层", "对象观点（NVDA）"),
     (r"(?<!提示词)(?<!上传)模板", "提示词模板或上传模板"), (r"发布方", "作者"), (r"(?<!数据)接口", "数据接口"),
     (r"文档", "文件"), (r"12 个大类", "12 组"), (r"作者的观点", "作者的看法"), (r"观点和估计", "看法和估计"),
     (r"每份文件整份", "每条信息整份"), (r"读文件|原文件|每一类文件|文件编号", "信息、或写明是哪张表"),
@@ -106,31 +107,58 @@ AVOIDED_WORDS = [
     (r"作者的种类|作者是哪种|默认类型", "作者类型"), (r"(?<!作者)类型", "类别"), (r"分析师身份", "分析师角色"),
     (r"原表格|持股类表格", "申报"), (r"官方行为", "官方行动"),
     (r"加密(?!货币)", "加密货币"), (r"定稿", "已冻结"), (r"(?i)ticker", "股票代码"), (r"一只股票|只新股票|这只股票|股票要看|股票、加密", "公司"),
+    (r"驱动", "看的是什么（观点的身份）"), (r"检验条件|证实条件|证伪条件", "梯子"), (r"前提", "依赖"), (r"期限档", "到期日"),
+    (r"主题层|对象层", "主题观点、对象观点"), (r"主张", "问题（观点写成一个问题）"), (r"已证实|已证伪", "出答案"),
+    (r"分发序号", "顺序号"),
+    (r"个股", "公司"), (r"五格的梯子|固定五格", "梯子（五格；只有是或否的问题两格）"),
+    (r"候选(?!观点)", "候选观点（抽取交的）或清单（对上时找来比的）"),
+    (r"钥匙", "不用：是不是同一样东西，由模型在对上时判（D44）"),
+    (r"检索", "搜索"),
+    (r"消息", "说法（各方说的）、证据或信息"),
+    (r"挂(?!钩)", "连到（证据连到观点）、并进（候选观点并进已有的）或属于（观点属于对象）"),
 ]
+# Each newer ruled-out word with the sentence it must catch and the corrected sentence it must pass.
+WORD_CONTROLS = [
+    ("这条观点的驱动", "这条观点看的是什么"), ("写下检验条件", "写下梯子"), ("前提变了", "依赖变了"),
+    ("按期限档开观点", "按到期日开观点"), ("对象层的观点", "对象观点"), ("这条主张", "这个问题"),
+    ("观点已证实", "观点出了答案"), ("编分发序号", "编顺序号"), ("盯一只个股", "盯一家公司"),
+    ("五格的梯子", "五格，只有是或否的问题两格"), ("候选进来", "候选观点进来"), ("先对钥匙", "由模型对上"),
+    ("检索几条", "搜索几条"), ("消息从哪来", "说法从哪来"), ("证据挂到观点上", "证据连到观点上，不挂钩"),
+    ("看 NVDA 层", "看对象观点（NVDA）"),
+]
+# The views database's page data (D38-D42): rendered into docs/prd/06-views.md and read by the wording check.
+VIEWS_CONSTANTS = ["VIEW_TREE", "VIEW_KINDS", "KIND_NOTE", "LADDER_EXAMPLES", "LADDER_RULES", "POSITIONS", "TIERS", "TIER_RULES",
+                   "STATE_RULES", "DEPENDENCY_TREE", "DEPENDENCY_RULES", "CHAIN_RULES", "INTAKE_SHAPE", "INTAKE_STEPS", "MATCH_OUTCOMES",
+                   "MATCH_NOTES", "EVIDENCE_OUTCOMES", "EVIDENCE_NOTES", "INTAKE_EXAMPLE_TREE", "EVIDENCE_EXAMPLE",
+                   "EVIDENCE_EXAMPLE_NOTE", "JUDGE_STEPS", "TRACE_FIELDS", "LIFECYCLE_TREE", "LIFECYCLE_NOTES",
+                   "VIEW_FIELDS", "EVIDENCE_FIELDS", "ORDER_RULES", "STORE_NOTE", "VIEWS_OPEN", "VIEWS_PROPOSED"]
 EXTRACTION_CONSTANTS = ["TEMPLATE", "PROMPT_EXAMPLE", "PROMPT_NOTES", "CATEGORY_READS", "CATEGORY_NOTE", "EXTRACT_STEPS",
-                        "SOURCE_TREE", "SOURCE_NOTES", "EXTRACT_EXAMPLE_TREE", "EXAMPLE_NOTE", "EXTRACT_OPEN"]
+                        "EXTRACT_TWO", "EXTRACT_SORT_TREE", "SOURCE_TREE", "SOURCE_NOTES", "EXTRACT_EXAMPLE_TREE", "EXAMPLE_NOTE",
+                        "EXTRACT_OPEN"]
 
 
 def wording_scope():
-    """{place: text} of the in-scope wording: the four modules' PRDs and page data, and the boundary sentences."""
+    """{place: text} of the in-scope wording: the modules' PRDs and page data, and the boundary sentences."""
     places = {f"prd/{name}": re.sub(r"## 用词[\s\S]*?(?=\n## )", "", (PRD / name).read_text(encoding="utf-8")) for name in
               ["00-system.md", "01-universe.md", "02-classification.md", "03-config.md", "04-dispatch.md",
-               "05-extraction.md", "09-review-pool.md"]}
+               "05-extraction.md", "06-views.md", "09-review-pool.md"]}
     for name in ["new-universe.js", "new-classification.js", "new-config.js"]:
         places[name] = (DESIGN / name).read_text(encoding="utf-8")
     design = (DESIGN / "new-design.js").read_text(encoding="utf-8")
     places["new-design.js summary"] = design[design.index("  summary:"):design.index("  repositoryRoot:")]
-    for node in ["classify", "dispatch", "extract", "universe", "config", "review"]:
+    for node in ["classify", "dispatch", "extract", "views", "labels", "universe", "config", "review"]:
         start = design.index(f"    {node}: {{")
         places[f"new-design.js {node}"] = design[start:design.index("\n    },\n", start)]
     facts = (DESIGN / "new-facts.js").read_text(encoding="utf-8")
-    for name in EXTRACTION_CONSTANTS:
+    for name in EXTRACTION_CONSTANTS + VIEWS_CONSTANTS:
         match = re.search(r"\n  const " + name + r" = [\s\S]*?;\n", facts)
         if not match:
             raise SystemExit(f"wording check: {name} not found in new-facts.js")
         places[f"new-facts.js {name}"] = match.group(0)
     start = facts.index("  design.drilldowns.extract = {")
     places["new-facts.js extract page"] = facts[start:facts.index("  design.drilldowns.views = {")]
+    start = facts.index("  design.drilldowns.views = {")
+    places["new-facts.js views page"] = facts[start:facts.index("  design.drilldowns.verdict = {")]
     return places
 
 
@@ -139,6 +167,7 @@ def avoided_words(text):
 
 
 def run_node(script):
+    script = script.replace("__VIEWS_CONSTANTS__", json.dumps(VIEWS_CONSTANTS))
     result = subprocess.run(["node", "-e", script], cwd=DESIGN, capture_output=True, text=True)
     if result.returncode != 0:
         raise SystemExit(f"node failed:\n{result.stderr}")
@@ -205,7 +234,8 @@ def step_flow(start, steps):
 
 def blocks(data):
     """{(PRD file, block name): Markdown} of every generated block."""
-    classification, config, universe, extraction = data["classification"], data["config"], data["universe"], data["extraction"]
+    classification, config, universe, extraction, views = (data["classification"], data["config"], data["universe"],
+                                                            data["extraction"], data["views"])
     tags = classification["TAGS"]
     order = sorted(tags, key=lambda code: int(code[1:]))
     family = {code: branch["label"] for branch in classification["TREE"]["children"] for code in branch["tags"]}
@@ -242,6 +272,10 @@ def blocks(data):
         ("04-dispatch.md", "tree"): "\n".join([root] + tree_children(tree, 1)),
         ("04-dispatch.md", "notes"): bullets(config["TREE_NOTES"]),
         ("05-extraction.md", "steps"): step_flow("一条信息进来（带类别和顺序号）", extraction["EXTRACT_STEPS"]),
+        ("05-extraction.md", "two"): table(["", "证据", "候选观点（thesis）"],
+                                           [[row["aspect"], row["evidence"], row["candidate"]] for row in extraction["EXTRACT_TWO"]])
+        + "\n\n" + ascii_tree(extraction["EXTRACT_SORT_TREE"]),
+        ("05-extraction.md", "open"): bullets(extraction["EXTRACT_OPEN"]),
         ("05-extraction.md", "example"): ascii_tree(extraction["EXTRACT_EXAMPLE_TREE"]) + "\n\n" + extraction["EXAMPLE_NOTE"],
         ("05-extraction.md", "template"): table(["部分", "写什么", "从哪来"],
                                                 [[row["part"], row["content"], row["source"]] for row in extraction["TEMPLATE"]]),
@@ -251,19 +285,36 @@ def blocks(data):
                                                   [[f"{code} {tags[code]['label']}", extraction["CATEGORY_READS"][code]["read"],
                                                     extraction["CATEGORY_READS"][code]["tier"]] for code in order])
         + "\n\n" + extraction["CATEGORY_NOTE"],
-        ("06-views.md", "write"): step_flow("抽取交来的候选观点和证据", extraction["WRITE_STEPS"]),
-        ("06-views.md", "decide"): ascii_tree(extraction["DECIDE_TREE"]) + "\n\n" + bullets(extraction["DECIDE_NOTES"]),
-        ("06-views.md", "write-example"): ascii_tree(extraction["WRITE_EXAMPLE_TREE"]),
-        ("06-views.md", "structure"): ascii_tree(extraction["VIEW_TREE"]),
-        ("06-views.md", "levels"): ascii_tree(extraction["LEVEL_TREE"]) + "\n\n" + bullets(extraction["LEVEL_RULES"]),
-        ("06-views.md", "objects"): table(["对象", "主题层观点", "对象层观点", "证据从哪来"],
-                                          [[row["kind"], row["theme"], row["object"], row["evidence"]] for row in extraction["OBJECT_EXAMPLES"]]),
-        ("06-views.md", "propagation"): ascii_tree(extraction["PROPAGATION_TREE"]),
-        ("06-views.md", "tiers"): table(["哪一层", "例子", "能做什么"], [[row["tier"], row["examples"], row["counts"]] for row in extraction["TIERS"]]),
-        ("06-views.md", "conflicts"): bullets(extraction["CONFLICT_RULES"]),
-        ("06-views.md", "fields"): table(["部分", "写什么", "例子"], [[row["part"], row["meaning"], row["example"]] for row in extraction["VIEW_FIELDS"]]),
-        ("06-views.md", "evidence"): table(["部分", "写什么"], [[row["part"], row["meaning"]] for row in extraction["EVIDENCE_FIELDS"]]),
-        ("06-views.md", "order"): bullets(extraction["ORDER_RULES"]),
+        ("06-views.md", "structure"): ascii_tree(views["VIEW_TREE"]),
+        ("06-views.md", "kinds"): table(["种类", "属于什么", "梯子的格", "例子"],
+                                        [[row["kind"], row["on"], row["rungs"], row["example"]] for row in views["VIEW_KINDS"]])
+        + "\n\n" + views["KIND_NOTE"],
+        ("06-views.md", "ladder"): ascii_tree(views["LADDER_EXAMPLES"]) + "\n\n" + bullets(views["LADDER_RULES"], numbered=True),
+        ("06-views.md", "positions"): table(["", "是什么", "谁来判", "例子"],
+                                            [[row["position"], row["means"], row["moves"], row["example"]] for row in views["POSITIONS"]]) + "\n\n" + bullets(views["STATE_RULES"]),
+        ("06-views.md", "tiers"): table(["哪一层", "例子", "能做什么"], [[row["tier"], row["examples"], row["counts"]] for row in views["TIERS"]])
+        + "\n\n" + bullets(views["TIER_RULES"]),
+        ("06-views.md", "dependencies"): ascii_tree(views["DEPENDENCY_TREE"]) + "\n\n" + bullets(views["DEPENDENCY_RULES"]),
+        ("06-views.md", "chain"): bullets(views["CHAIN_RULES"]),
+        ("06-views.md", "shape"): table(["", "候选观点", "证据"], [[row["aspect"], row["views"], row["evidence"]] for row in views["INTAKE_SHAPE"]]),
+        ("06-views.md", "intake"): step_flow("抽取交来的证据和候选观点（一条信息一轮）", views["INTAKE_STEPS"]),
+        ("06-views.md", "outcomes"): table(["去向", "什么时候", "写什么"], [[row["outcome"], row["when"], row["writes"]] for row in views["MATCH_OUTCOMES"]])
+        + "\n\n" + bullets(views["MATCH_NOTES"]),
+        ("06-views.md", "evidence-outcomes"): table(["去向", "什么时候", "写什么"],
+                                                     [[row["outcome"], row["when"], row["writes"]] for row in views["EVIDENCE_OUTCOMES"]])
+        + "\n\n" + bullets(views["EVIDENCE_NOTES"]),
+        ("06-views.md", "intake-example"): ascii_tree(views["INTAKE_EXAMPLE_TREE"]),
+        ("06-views.md", "evidence-example"): table(["信息", "对上证据", "库里", "重判"],
+                                                    [[row["item"], row["matched"], row["store"], row["rejudge"]] for row in views["EVIDENCE_EXAMPLE"]])
+        + "\n\n" + views["EVIDENCE_EXAMPLE_NOTE"],
+        ("06-views.md", "judge"): step_flow("第一版：通用大模型做对上", views["JUDGE_STEPS"]),
+        ("06-views.md", "trace"): table(["部分", "记什么"], [[row["part"], row["meaning"]] for row in views["TRACE_FIELDS"]]),
+        ("06-views.md", "lifecycle"): ascii_tree(views["LIFECYCLE_TREE"]) + "\n\n" + bullets(views["LIFECYCLE_NOTES"]),
+        ("06-views.md", "fields"): table(["部分", "写什么", "例子"], [[row["part"], row["meaning"], row["example"]] for row in views["VIEW_FIELDS"]]),
+        ("06-views.md", "evidence"): table(["部分", "写什么"], [[row["part"], row["meaning"]] for row in views["EVIDENCE_FIELDS"]]),
+        ("06-views.md", "order"): bullets(views["ORDER_RULES"]) + "\n\n" + views["STORE_NOTE"],
+        ("06-views.md", "open"): bullets(views["VIEWS_OPEN"]),
+        ("06-views.md", "proposed"): bullets(views["VIEWS_PROPOSED"], numbered=True),
         ("07-final-verdict.md", "triggers"): table(["触发", "谁发现"], [[row["trigger"], row["who"]] for row in extraction["VERDICT_TRIGGERS"]]),
         ("07-final-verdict.md", "verdict"): ascii_tree(extraction["VERDICT_TREE"]),
         ("07-final-verdict.md", "rules"): bullets(extraction["VERDICT_RULES"], numbered=True),
@@ -296,6 +347,12 @@ def main():
 
     if len(avoided_words("并到原件；见复核池；按模板")) != 3:
         problems.append("the wording check misses its own control sentence")
+    for caught, passed in WORD_CONTROLS:
+        if not avoided_words(caught):
+            problems.append(f"the wording check misses its control sentence {caught!r}")
+        if avoided_words(passed):
+            problems.append(f"the wording check flags the corrected sentence {passed!r}: {avoided_words(passed)}")
+    print(f"wording controls: {len(WORD_CONTROLS)} pairs checked")
     places = wording_scope()
     misused = [f"{place}: {word} (use {use})" for place, body in places.items() for word, use in avoided_words(body)]
     print(f"wording: {len(places)} places read, {len(misused)} avoided words")

@@ -1,5 +1,5 @@
 // The New design's Config module (the model settings a person chooses) and the dispatch step, the system's single entry.
-// Edit the data at the top; the two drill-downs render it. Decisions D2-D4, D17, D18, D25, D27, D29 and D31 in docs/DECISIONS.md. The texts
+// Edit the data at the top; the two drill-downs render it. Decisions D2-D4, D17, D18, D25, D27, D29, D31 and D41 in docs/DECISIONS.md. The texts
 // are for a reader who did not follow the discussion: plain words, no field names.
 (function () {
   'use strict';
@@ -7,8 +7,8 @@
   // What Config records: a version, its checksum and the model settings for reading text.
   const CONFIG_SCHEMA = [
     { item: '版本号', meaning: '每改一次设置，就是一个新版本。', source: '改设置时生成' },
-    { item: '校验码', meaning: '由整份设置算出来的一串码。处理过的每条信息、每次最终判定，记录里都写下它，事后能查到当时用的是哪一版。', source: '系统自动算' },
-    { item: '模型设置', meaning: '分三种：抽取读信息时每个类别一套（用哪个模型、哪一版提示词、想得多深）；观点库“对上”一套；最终判定一套。提示词里写什么，在抽取、观点库和最终判定模块里。一套定下来就不再改，要改就换一套新的。', source: '人来定' },
+    { item: '校验码', meaning: '由整份设置算出来的一串码。每次模型调用（读信息、对上、重判、最终判定……）的记录里都写下它，事后能查到当时用的是哪一版。', source: '系统自动算' },
+    { item: '模型设置、搜索取前几条', meaning: '模型设置分三种：抽取读信息时每个类别一套（用哪个模型、哪一版提示词、想得多深、温度）；观点库每一种模型调用各一套（对上、连依赖、重判），还有观点库搜索取前几条（先定 10）；最终判定一套。提示词里写什么，在抽取、观点库和最终判定模块里。一套定下来就不再改，要改就换一套新的。', source: '人来定' },
   ];
 
   // The dispatch tree. A branch asks one question; each child is one answer (`answer`). A child without children is
@@ -18,7 +18,7 @@
     children: [
       { answer: '不完整', label: '退回', note: '这是上游的问题，同时放进人工复核池' },
       {
-        answer: '完整', label: '查处理记录', question: '以前处理过吗？', note: '同一个上游编号、同一个版本',
+        answer: '完整', label: '查处理记录', question: '以前处理过吗？', note: '同一个上游编号；更新版是新的一条，有自己的编号',
         children: [
           { answer: '处理过', label: '跳过', note: '上游重发或测试重跑时，不重复花钱' },
           {
@@ -26,7 +26,7 @@
             children: [
               { answer: '不合格', label: '不处理', note: '写明原因；对照表里查不到的，放进人工复核池' },
               { answer: '不算材料', label: '不处理', note: '比如别人算好、我们自己就能算出来的指标，文件目录' },
-              { answer: '重复', label: '并到原来那条', note: '算原来那条的另一个出处，不再处理一遍' },
+              { answer: '重复的信息', label: '并到原来那条', note: '算原来那条的另一个出处，不再处理一遍' },
               { answer: '属于某一类', label: '交给抽取', note: '带上它的类别和顺序号；抽取按类别用不同的读法', act: true },
             ],
           },
@@ -45,7 +45,7 @@
   ];
 
   const RULES = [
-    'Config 只管模型设置。信息本身的情况（属于哪一类、哪天发的、讲的是谁）由上游分类给出；做事的顺序、失败了怎么办，由代码决定；研究什么、每样看哪几类信息，由研究对象名单决定。',
+    'Config 只管人要亲自选的设置：模型设置，加上观点库搜索取前几条。信息本身的情况（属于哪一类、哪天发的、讲的是谁）由上游分类给出；做事的顺序、失败了怎么办，由代码决定；研究什么、每样看哪几类信息，由研究对象名单决定。',
     '不设预算和并发上限。',
     '改任何一处都生成新版本，旧版本原样保留，不在旧版本上叠加修改。',
     '设定里引用了不存在的模型设置，或者缺了必填的内容，整个版本不能用，也不会拿它去处理任何信息。',
@@ -111,8 +111,8 @@
 
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">Config：抽取、对上和最终判定用的模型设置</h2>
-          <p class="drill__intro">Config 只管模型设置：抽取读信息时每个类别一套，观点库“对上”一套，最终判定一套。每一类读出什么、提示词模板怎么拼，在抽取模块里；研究什么、看哪几类信息，在研究对象名单里。</p>
+          <h2 class="drill__title">Config：抽取、观点库和最终判定用的模型设置</h2>
+          <p class="drill__intro">Config 只管人要亲自选的设置：抽取读信息时每个类别一套模型设置，观点库每一种模型调用各一套（对上、连依赖、重判），还有观点库搜索取前几条，最终判定一套。每一类读出什么、提示词模板怎么拼，在抽取模块里；研究什么、看哪几类信息，在研究对象名单里。</p>
           <div class="drill__columns drill__columns--schema">
             <section>
               <h3 class="drill__heading">记了什么</h3>
