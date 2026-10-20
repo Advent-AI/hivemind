@@ -1209,3 +1209,18 @@ A later decision that changes one names the one it replaces.
 - Notes: `MERGE_KINDS` and `LABEL_RULES`, named by D39 and D40, were removed by D45 and D46; older "Enforced" lines name
   constants of their time.
 - Seals: v7 in `docs/archive/2026-10-20-v7/` with `SHA256SUMS`, the version pushed.
+## D50 · 2026-10-20 · Clean-up after the freeze
+
+- By: Alex ("都做掉，然后提交推送", to Claude's list: the repository README, the superseded sealed copies, the stale
+  end of the views rebuild log, the duplicated constant lists in `docs/check.py`, the local page server).
+- Decides: the repository `README.md` describes the current design (the flow up to the views database, one state per
+  view, dependencies, the module statuses with the views database frozen, D1–D50). The sealed copies v2–v6
+  (`docs/archive/2026-10-20-v2` to `-v6`) are removed from the tree; each is kept in commit `94622a5` and can be
+  restored from it. `docs/archive/` keeps v1 (the earlier design, 2026-10-16) and v7 (the current design, D49); D43's
+  rule that a sealed copy is never edited stands, and this removal is the one exception, made at Alex's request. The
+  views rebuild log's "合成" and "暂时放着的问题" sections, not updated since log step 16, are replaced by a pointer to
+  the page, the PRDs and DECISIONS. `docs/check.py` writes each page-data file's constant list once (`PAGE_CONSTANTS`,
+  passed into the embedded script) and fails when `new-facts.js` defines a constant no list names, since the wording
+  check reads that file one constant at a time.
+- Enforced: `README.md`; `docs/archive/`; `docs/views-rebuild-log.md`; `PAGE_CONSTANTS` and `unlisted_constants` in
+  `docs/check.py`; `docs/CURRENT_STATE.md`.

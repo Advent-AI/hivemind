@@ -24,7 +24,7 @@ PRD = DOCS / "prd"
 
 EXTRACT = r"""
 const fs = require('fs');
-const VIEWS_CONSTANTS = __VIEWS_CONSTANTS__;
+const PAGE_CONSTANTS = __PAGE_CONSTANTS__;
 function consts(file, names) {
   const text = fs.readFileSync(file, 'utf8');
   const out = {};
@@ -35,16 +35,8 @@ function consts(file, names) {
   }
   return out;
 }
-console.log(JSON.stringify({
-  classification: consts('new-classification.js', ['TAGS', 'TREE', 'ROUTING', 'INPUT_SCHEMA', 'OUTPUT_FIELDS',
-    'OBJECT_RULES', 'TIME_RULES', 'RULES', 'LOOKUP_TABLES', 'LOOKUP_RULES', 'NOT_SOURCES']),
-  config: consts('new-config.js', ['CONFIG_SCHEMA', 'DISPATCH_TREE', 'TREE_NOTES', 'RULES', 'OPEN']),
-  universe: consts('new-universe.js', ['OBJECT_KINDS', 'TRACKING_DEFAULTS', 'THEME_LIBRARY', 'TRACKING_EXAMPLES', 'RULES']),
-  extraction: consts('new-facts.js', ['TEMPLATE', 'PROMPT_EXAMPLE', 'PROMPT_NOTES', 'CATEGORY_READS', 'CATEGORY_NOTE', 'EXTRACT_STEPS',
-    'EXTRACT_TWO', 'EXTRACT_SORT_TREE', 'SOURCE_TREE', 'SOURCE_NOTES', 'EXTRACT_EXAMPLE_TREE', 'EXAMPLE_NOTE', 'EXTRACT_OPEN',
-    'VERDICT_TRIGGERS', 'VERDICT_TREE', 'VERDICT_RULES']),
-  views: consts('new-facts.js', VIEWS_CONSTANTS),
-}));
+console.log(JSON.stringify(Object.fromEntries(
+  Object.entries(PAGE_CONSTANTS).map(([key, [file, names]]) => [key, consts(file, names)]))));
 """
 
 PAGE_CHECK = r"""
@@ -135,6 +127,25 @@ VIEWS_CONSTANTS = ["VIEW_TREE", "VIEW_KINDS", "KIND_NOTE", "LADDER_EXAMPLES", "L
 EXTRACTION_CONSTANTS = ["TEMPLATE", "PROMPT_EXAMPLE", "PROMPT_NOTES", "CATEGORY_READS", "CATEGORY_NOTE", "EXTRACT_STEPS",
                         "EXTRACT_TWO", "EXTRACT_SORT_TREE", "SOURCE_TREE", "SOURCE_NOTES", "EXTRACT_EXAMPLE_TREE", "EXAMPLE_NOTE",
                         "EXTRACT_OPEN"]
+# The old final-verdict draft, still read for 07-final-verdict.md; it stays outside the wording check.
+VERDICT_CONSTANTS = ["VERDICT_TRIGGERS", "VERDICT_TREE", "VERDICT_RULES", "VERDICT_EXAMPLE_NOTE"]
+# Every constant the page data defines, by the key the checks read it under; the one place these lists are written.
+PAGE_CONSTANTS = {
+    "classification": ("new-classification.js", ["TAGS", "TREE", "ROUTING", "INPUT_SCHEMA", "OUTPUT_FIELDS", "OBJECT_RULES",
+                                                 "TIME_RULES", "RULES", "LOOKUP_TABLES", "LOOKUP_RULES", "NOT_SOURCES"]),
+    "config": ("new-config.js", ["CONFIG_SCHEMA", "DISPATCH_TREE", "TREE_NOTES", "RULES", "OPEN"]),
+    "universe": ("new-universe.js", ["OBJECT_KINDS", "TRACKING_DEFAULTS", "THEME_LIBRARY", "TRACKING_EXAMPLES", "RULES"]),
+    "extraction": ("new-facts.js", EXTRACTION_CONSTANTS + VERDICT_CONSTANTS),
+    "views": ("new-facts.js", VIEWS_CONSTANTS),
+}
+
+
+def unlisted_constants():
+    """Constants new-facts.js defines that no list above names. The wording check reads that file one constant at a
+    time, so an unlisted constant would never be read; the other page-data files are read whole."""
+    listed = {name for file_name, names in PAGE_CONSTANTS.values() if file_name == "new-facts.js" for name in names}
+    defined = re.findall(r"\n  const ([A-Z_]+) = ", (DESIGN / "new-facts.js").read_text(encoding="utf-8"))
+    return [f"new-facts.js: {name}" for name in defined if name not in listed]
 
 
 def wording_scope():
@@ -167,7 +178,7 @@ def avoided_words(text):
 
 
 def run_node(script):
-    script = script.replace("__VIEWS_CONSTANTS__", json.dumps(VIEWS_CONSTANTS))
+    script = script.replace("__PAGE_CONSTANTS__", json.dumps(PAGE_CONSTANTS))
     result = subprocess.run(["node", "-e", script], cwd=DESIGN, capture_output=True, text=True)
     if result.returncode != 0:
         raise SystemExit(f"node failed:\n{result.stderr}")
@@ -353,6 +364,9 @@ def main():
         if avoided_words(passed):
             problems.append(f"the wording check flags the corrected sentence {passed!r}: {avoided_words(passed)}")
     print(f"wording controls: {len(WORD_CONTROLS)} pairs checked")
+    missing = unlisted_constants()
+    print(f"page constants: {sum(len(names) for _, names in PAGE_CONSTANTS.values())} listed, {len(missing)} unlisted")
+    problems += [f"page constant not listed in check.py: {item}" for item in missing]
     places = wording_scope()
     misused = [f"{place}: {word} (use {use})" for place, body in places.items() for word, use in avoided_words(body)]
     print(f"wording: {len(places)} places read, {len(misused)} avoided words")

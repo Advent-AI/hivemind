@@ -1,13 +1,13 @@
 # Current state
 
-As of 2026-10-20. The design lives in `docs/system-design.html` (New tab); decisions D1–D49 in `docs/DECISIONS.md`.
+As of 2026-10-20. The design lives in `docs/system-design.html` (New tab); decisions D1–D50 in `docs/DECISIONS.md`.
 The work is an architecture POC: the design page, a PRD per module and DECISIONS; no code.
 
 ## Status
 
-- Sealed copies: v1 `docs/archive/2026-10-16-v1/`; v2 `docs/archive/2026-10-20-v2/` (D43; superseded: it still shows
-  a key matched by code); v3 `docs/archive/2026-10-20-v3/` (D44); v4 `docs/archive/2026-10-20-v4/` (D45); v5 `docs/archive/2026-10-20-v5/` (D46); v6 `docs/archive/2026-10-20-v6/` (D48); v7 `docs/archive/2026-10-20-v7/` (D49),
-  the current stable version, after the code review of the frozen views database. Each has `SHA256SUMS` and is never edited.
+- Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design) and v7 `docs/archive/2026-10-20-v7/` (D49), the
+  current stable version with the views database frozen. Each has `SHA256SUMS` and is never edited. The superseded
+  v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
 - PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
 - After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
   `docs/prd/README.md`); `python3 docs/check.py` is only the last, mechanical step.
