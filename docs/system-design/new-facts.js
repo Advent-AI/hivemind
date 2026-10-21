@@ -499,15 +499,26 @@
     return `<p class="drill__status"><span class="pill pill--mixed">${escapeHtml(pill)}</span>${escapeHtml(note)}</p>`;
   }
 
-  // A row of cards joined by a separator; a card is { code?, title, who?, note?, strong? }.
+  // Step cards; a card is { code?, title, who?, note?, strong? }. Joined by '→' (steps in order) or '+' (parts put
+  // together) the cards stack top to bottom; joined by '·' they sit side by side. A short `who` is a tag, a sentence
+  // is plain text.
   function flow(cards, separator, escapeHtml) {
-    return '<div class="flow">' + cards.map((card) => `<div class="flow__card${card.strong ? ' flow__card--strong' : ''}">`
-      + '<div class="flow__top">'
-      + (card.code !== undefined ? `<span class="org-tag__code">${escapeHtml(card.code)}</span>` : '')
-      + `<span class="flow__title">${escapeHtml(card.title)}</span></div>`
-      + (card.who ? `<span class="flow__who">${escapeHtml(card.who)}</span>` : '')
-      + (card.note ? `<span class="flow__note">${escapeHtml(card.note)}</span>` : '')
-      + '</div>').join(`<span class="flow__arrow">${escapeHtml(separator)}</span>`) + '</div>';
+    const code = (card) => (card.code !== undefined ? `<span class="flow__code">${escapeHtml(card.code)}</span>` : '');
+    const who = (card) => (card.who
+      ? `<span class="flow__who${card.who.length > 6 ? ' flow__who--text' : ''}">${escapeHtml(card.who)}</span>` : '');
+    const cardClass = (card) => `flow__card${card.strong ? ' flow__card--strong' : ''}`;
+    if (separator === '·') {
+      return '<div class="flow flow--set">' + cards.map((card) => `<div class="${cardClass(card)}">`
+        + `<div class="flow__top">${code(card)}<span class="flow__title">${escapeHtml(card.title)}</span></div>`
+        + who(card)
+        + (card.note ? `<p class="flow__note">${escapeHtml(card.note)}</p>` : '')
+        + '</div>').join('') + '</div>';
+    }
+    return `<ol class="flow flow--steps${separator === '+' ? ' flow--parts' : ''}">` + cards.map((card) => `<li class="${cardClass(card)}">`
+      + `${code(card) || '<span></span>'}`
+      + `<div class="flow__head"><span class="flow__title">${escapeHtml(card.title)}</span>${who(card)}</div>`
+      + `<p class="flow__note">${escapeHtml(card.note || '')}</p>`
+      + '</li>').join('') + '</ol>';
   }
 
   function renderBranch(branch, escapeHtml, isRoot) {
@@ -682,14 +693,13 @@
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
-      const triggerCards = VERDICT_TRIGGERS.map((trigger) => ({ title: trigger.trigger, who: trigger.who }));
       container.innerHTML = `
         <div class="drill">
           <h2 class="drill__title">最终判定：一条观点还成立吗</h2>
           <p class="drill__intro">一条观点要不要关，不由一条证据或一个条件直接决定，而是先送到这里，由模型把整条观点和它的全部证据完整看一遍再判。</p>
           ${status('旧稿 · 要重做', '观点库已按 D38–D40 重建，这里写的检验条件、证实和证伪、前提都不再用；关掉之前要不要经过这里，重做时定（D41）。', escapeHtml)}
           <h3 class="drill__heading drill__heading--spaced">这些情况会把观点送来</h3>
-          ${flow(triggerCards, '·', escapeHtml)}
+          ${table(['触发', '谁发现'], VERDICT_TRIGGERS.map((trigger) => [trigger.trigger, trigger.who]), escapeHtml)}
           <h3 class="drill__heading drill__heading--spaced">判出什么</h3>
           ${tree(VERDICT_TREE, escapeHtml)}
           <div class="drill__columns">

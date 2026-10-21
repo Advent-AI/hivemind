@@ -60,6 +60,7 @@
     sheetScrim: document.getElementById('sheetScrim'),
     sheetPanel: document.getElementById('sheetPanel'),
     sheetKicker: document.getElementById('sheetKicker'),
+    sheetActions: document.getElementById('sheetActions'),
     sheetClose: document.getElementById('sheetClose'),
     sheetBody: document.getElementById('sheetBody'),
   };
@@ -247,9 +248,11 @@
 
   // ------------------------------------------------------------------ a view
 
+  // A design with one view has nothing to switch between, so its tabs stay hidden.
   function renderViewTabs() {
     const design = currentDesign();
     const view = currentView();
+    elements.viewTabs.hidden = design.views.length < 2;
     elements.viewTabs.innerHTML = design.views.map((candidate) => (
       `<button class="filter" type="button" data-view="${escapeHtml(candidate.id)}" aria-pressed="${candidate.id === view.id}">`
       + `${escapeHtml(candidate.title)}<span class="filter__count">${candidate.order.length}</span></button>`
@@ -494,13 +497,16 @@
       }).join('');
       return `<section class="migration__group"><h3 class="migration__view">${escapeHtml(view.title)}</h3><ul class="migration__list">${items}</ul></section>`;
     }).join('');
+    // Folded by default: the list serves the move from Old, not the reading of New.
     elements.migration.innerHTML = `
-      <div class="block__head">
-        <h2 class="block__title">迁移清单</h2>
-        <p class="block__note">Old 共 ${Object.keys(designs.old.nodes).length} 个组件 · 已迁入 ${counts.carried} · 不迁 ${counts.dropped} · 未决定 ${counts.open}</p>
-      </div>
-      <p class="migration__lead">每个 Old 组件只列在它第一次出现的视图下。点一下切到 Old 并选中它。</p>
-      <div class="migration__groups">${groups}</div>`;
+      <details class="migration__fold">
+        <summary>
+          <h2 class="block__title">迁移清单</h2>
+          <p class="block__note">Old 共 ${Object.keys(designs.old.nodes).length} 个组件 · 已迁入 ${counts.carried} · 不迁 ${counts.dropped} · 未决定 ${counts.open}</p>
+        </summary>
+        <p class="migration__lead">每个 Old 组件只列在它第一次出现的视图下。点一下切到 Old 并选中它。</p>
+        <div class="migration__groups">${groups}</div>
+      </details>`;
   }
 
   function renderDocuments() {
@@ -596,11 +602,11 @@
       referenceLinks: (references) => referenceLinks(design, references),
       escapeHtml,
     });
+    elements.sheetBody.scrollTop = 0;
     const node = design.nodes[nodeId];
-    if (node && node.prd) {
-      elements.sheetBody.insertAdjacentHTML('afterbegin', '<div class="sheet__links">'
-        + `<button class="action action--quiet" type="button" data-prd-path="${escapeHtml(node.prd)}" data-prd-title="${escapeHtml(node.title)}">查看这个模块的 PRD ↗</button></div>`);
-    }
+    elements.sheetActions.innerHTML = node && node.prd
+      ? `<button class="action action--quiet" type="button" data-prd-path="${escapeHtml(node.prd)}" data-prd-title="${escapeHtml(node.title)}">查看这个模块的 PRD ↗</button>`
+      : '';
     elements.sheet.hidden = false;
     elements.sheetPanel.focus();
   }
@@ -616,10 +622,10 @@
     elements.sheet.hidden = false;
     elements.sheetPanel.focus();
     const backTo = Object.keys(design.nodes || {}).find((id) => design.nodes[id].prd === path && (design.drilldowns || {})[id]);
-    const back = backTo
-      ? `<div class="sheet__links"><button class="action action--quiet" type="button" data-drilldown="${escapeHtml(backTo)}">← 回到展开页</button></div>` : '';
+    elements.sheetActions.innerHTML = backTo
+      ? `<button class="action action--quiet" type="button" data-drilldown="${escapeHtml(backTo)}">← 回到展开页</button>` : '';
     const show = (markdown, fromBundle) => {
-      elements.sheetBody.innerHTML = back + `<p class="prd__source">来源：<code>${escapeHtml(path)}</code>${fromBundle ? '（打包副本）' : ''}</p>`
+      elements.sheetBody.innerHTML = `<p class="prd__source">来源：<code>${escapeHtml(path)}</code>${fromBundle ? '（打包副本）' : ''}</p>`
         + `<article class="prd">${window.HIVEMIND_MARKDOWN.render(markdown)}</article>`;
       elements.sheetBody.scrollTop = 0;
     };
@@ -702,13 +708,15 @@
   elements.zoomOut.addEventListener('click', () => { state.zoom = Math.max(ZOOM_MIN, state.zoom - 0.1); applyZoom(); });
   elements.zoomFit.addEventListener('click', () => { fitZoom(); applyZoom(); });
 
-  // Links inside the sheet: a detail page opens its module's PRD, and a PRD goes back to its detail page.
-  elements.sheetBody.addEventListener('click', (event) => {
+  // Links in the sheet's top bar and body: a detail page opens its module's PRD, and a PRD goes back to its detail page.
+  function followSheetLink(event) {
     const prdButton = event.target.closest('[data-prd-path]');
     if (prdButton) { openPrd(prdButton.dataset.prdPath, prdButton.dataset.prdTitle); return; }
     const drilldownButton = event.target.closest('[data-drilldown]');
     if (drilldownButton) openDrilldown(drilldownButton.dataset.drilldown);
-  });
+  }
+  elements.sheetBody.addEventListener('click', followSheetLink);
+  elements.sheetActions.addEventListener('click', followSheetLink);
   elements.sheetClose.addEventListener('click', closeSheet);
   elements.sheetScrim.addEventListener('click', closeSheet);
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSheet(); });
