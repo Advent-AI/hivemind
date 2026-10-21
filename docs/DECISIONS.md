@@ -605,7 +605,7 @@ A later decision that changes one names the one it replaces.
 - Enforced: `TIERS` and `CONFLICT_RULES` of `docs/system-design/new-facts.js`; `docs/prd/06-views.md`.
 - Changed by D38: tiers and counting by original source stay; add-only conditions, the conflict trigger and the
   consensus by code are replaced (the consensus is open again).
-
+- Changed by D51: consensus is not part of the design at all; third-party views stay evidence of their tier.
 ## D31 · 2026-10-18 · Order, one writer, and the link between the levels
 
 - By: Alex ("你觉得公司层级link 到宏观thesis 的方式是类似symbolic link 还是怎么处理两者之间可能存在的async /sync 关系？";
@@ -808,6 +808,8 @@ A later decision that changes one names the one it replaces.
   push on the link; tiers (D30); dependencies with arrows read by kind; succession as a chain; this year's and next
   year's number. Where it is now, how rungs are written and judged, answer sources, how the years are counted, the
   details of log step 13, unanswered and waiting views, and how answers are scored are proposals (D45).
+- Changed by D51: B is re-judged when what it reads changed (its evidence, or a dependency's conclusion marked
+  changed), not only when A changes rung.
 ## D39 · 2026-10-20 · Writing into the views database: match by where a candidate belongs, then one round of re-judging
 
 - By: Alex ("已经存在的观点就 merge，日期遵照之前已经存在的期限"; "我们来深度聊一下 thesis 被抽取之后我们怎么和现有的数据结构做对比和整体的纳入、合并机制";
@@ -920,6 +922,8 @@ A later decision that changes one names the one it replaces.
 - Changed by D45: Config has no duplicate-check setting while the duplicate check is a proposal; extraction's prompt
   asks for one thing per view and a number's year, not for answer sources or a theme view's scope; how complete a
   candidate view is when extraction hands it over is open.
+- Changed by D51: the views database has two model settings in Config (matching, re-judging); dependencies are
+  chosen in the matching call.
 ## D42 · 2026-10-20 · Extraction hands over evidence and candidate views as two things; evidence is matched to what its view already holds
 
 - By: Alex, over steps 17–30 of `docs/views-rebuild-log.md`. On attaching evidence: "evidence 怎么在抽取的时候不挂钩
@@ -1122,6 +1126,8 @@ A later decision that changes one names the one it replaces.
   `TRACE_FIELDS`, `VIEWS_OPEN`, `VIEWS_PROPOSED` of `docs/system-design/new-facts.js`; the views and config nodes of
   `docs/system-design/new-design.js`; `docs/system-design/new-config.js`; `docs/prd/00-system.md`, `03-config.md`,
   `06-views.md`; `docs/check.py` rules out 检索 for 搜索.
+- Changed by D51: item 9's re-judging on succession comes back as a case of the one re-judging rule; Config's
+  views settings are matching and re-judging.
 ## D47 · 2026-10-20 · End-to-end consistency from the universe to the views database
 
 - By: Alex ("now you have everything, you have every log … do end-to-end consistency test … up until the model db
@@ -1185,6 +1191,7 @@ A later decision that changes one names the one it replaces.
   classification subtitle in `docs/system-design/new-design.js`; the views page status in `new-facts.js`;
   `docs/prd/06-views.md`, `00-system.md`, `README.md`; `docs/CURRENT_STATE.md`; the sealed copy
   `docs/archive/2026-10-20-v6/`.
+- Changed by D51: Alex settled Claude's open items of the frozen views database (2026-10-21).
 ## D49 · 2026-10-20 · Code review of the frozen views database: contradictions fixed, no new mechanism
 
 - By: Alex ("你可以 freeze 然后 run code review and clean up then push").
@@ -1209,6 +1216,8 @@ A later decision that changes one names the one it replaces.
 - Notes: `MERGE_KINDS` and `LABEL_RULES`, named by D39 and D40, were removed by D45 and D46; older "Enforced" lines name
   constants of their time.
 - Seals: v7 in `docs/archive/2026-10-20-v7/` with `SHA256SUMS`, the version pushed.
+- Changed by D51: the two open items it added are settled (dependencies chosen from the views shown; the double
+  count through a waiting arrow does not occur).
 ## D50 · 2026-10-20 · Clean-up after the freeze
 
 - By: Alex ("都做掉，然后提交推送", to Claude's list: the repository README, the superseded sealed copies, the stale
@@ -1224,3 +1233,58 @@ A later decision that changes one names the one it replaces.
   check reads that file one constant at a time.
 - Enforced: `README.md`; `docs/archive/`; `docs/views-rebuild-log.md`; `PAGE_CONSTANTS` and `unlisted_constants` in
   `docs/check.py`; `docs/CURRENT_STATE.md`.
+## D51 · 2026-10-21 · Claude's open items settled: one re-judging rule, dependencies chosen in the matching call, no consensus
+
+- By: Alex, item by item. Asked which items were his to decide, he had Claude re-check the twelve open items Claude
+  had written in, against the latest design ("for yourself to reiterate the issue in case you made stupid mistakes that
+  are not issues anymore in the latest version"). Then: "好，一个一个来问我" (the nine no longer issues dropped); on
+  re-judging, "A 可以但是设计逻辑要干净点；你思考下和我说", then "ok"; on which views dependencies are chosen from,
+  "ok"; on consensus, "What … is a consensus that you're talking about … Every time the evidence updates or whatever,
+  the ladder needs to be run by the model to determine whether it's going to shift from neutral to bearish or from
+  neutral to bullish … That's the logic"; then "可以你再仔细的对齐一次逻辑". On the page: "那你 FE 为什么写定稿了，这不是瞎写吗？"
+- Decides:
+  1. Re-judging has one rule: a view is re-judged when what it reads changed. It reads its own evidence and the
+     conclusions (state and reasons) of the views it depends on. Its evidence changed when new evidence came or
+     evidence was replaced (a repeat alone does not count); a dependency's conclusion changed when that view's
+     judgement says so. Every judgement answers "结论变不变" in its fixed form: changed when the rung moved or a key fact
+     or number behind the state changed (AMZN's capex guidance from +12% to +25% inside one rung), unchanged when the
+     same thing is said again. Code checks only that a judgement that moved a rung, and the first judgement of a new
+     view, say changed. This gives Alex's "如果美联储有重大的改动……确实需要重判" (log step 10) to the model and
+     replaces the notice on a rung change only. A waiting view just built, and a dependency moving to its successor,
+     are cases of the same rule, so B is re-judged when its arrow moves to the next period (one of the details dropped
+     in D46 item 9, back as a case of this rule, as Claude told Alex before his "ok").
+  2. A new view's dependencies are chosen in the matching call (step 4), from the views the model already has in front
+     of it: the search results, the views listed in prompt part 5, and the views new in the same item; there is no
+     other search. In step 5 code checks that each is one of the views shown (or a year it waits for) and that no loop
+     forms. Writing into the views database has seven steps. Config holds two settings for the views database's model
+     calls (matching, re-judging), no longer a separate one for dependencies. A dependency on a view in none of the three
+     is missed, like a match the search misses; the records and the labels show it.
+  3. Consensus is not part of the design: a view has one state, judged by the model from its evidence whenever that
+     evidence changes (D46 item 1). The glossary row, the views notes and extraction's "用来算共识" go. Third-party views
+     stay evidence of their tier.
+  4. Open items are only what Alex deferred: how search ranks; the granularity of views, researched first (how many
+     questions per object is part of it); the labelling details (with how to check evidence that extraction attached
+     wrongly or missed); who sets an answer at the due date (with pull mode and the final verdict). Removed as no
+     longer issues on the current design: when an event counts as a successor (the model decides in matching); dates
+     between now and a due date (the stream reads no dates; what happens on them arrives as evidence); futures on rates,
+     currencies and indices (theme views whose rungs are outcome ranges); measuring before the build (a build practice,
+     AGENTS.md); a double count through a waiting arrow (a sentence about A counts only on A, so once or not at all);
+     opening views on an empty database (stored history streams through the same path); companies' macro opinions
+     crowding a theme view (tiers and counting by original source, D30); a hard-coded notice on rung change only
+     (settled by item 1); which views dependencies are chosen from (settled by item 2).
+  5. The design page tags a module 已冻结 only for a frozen status; the final verdict and pull mode carry a `draft` line
+     and a 旧稿 tag. D48 had given them a status line, which the page drew as 已冻结.
+- Changes: D30, D38, D41, D46 item 9, D49; the frozen views database (D48) and the frozen Config, extraction and
+  universe (D37), through this decision.
+- Review: Codex read the change read-only and found three, all fixed: the list check in step 5 and the acceptance
+  criteria covered every id, which would refuse a dependency on a view from prompt part 5 or new in the same item (the
+  list check now covers where a candidate or a piece of evidence goes; dependencies have their own); extraction's node
+  still listed the two removed open items; a re-judgement did not see the view's last conclusion, so "结论变不变" had
+  nothing to compare with (the model now compares with the last conclusion, used only for the comparison, never as a
+  base to add to). The labels' "refused by code" now reads "failed step 5's check".
+- Seals: v8 in `docs/archive/2026-10-21-v8/` with `SHA256SUMS`.
+- Enforced: `STATE_RULES`, `POSITIONS`, `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `INTAKE_STEPS`, `INTAKE_EXAMPLE_TREE`, `JUDGE_STEPS`,
+  `TRACE_FIELDS`, `LIFECYCLE_TREE`, `ORDER_RULES`, `VIEW_FIELDS`, `KIND_NOTE`, `VIEWS_OPEN`, `CATEGORY_READS`,
+  `EXTRACT_OPEN` of `docs/system-design/new-facts.js`; the views, extract, config and universe nodes and the `draft`
+  field of `docs/system-design/new-design.js` and `render.js`; `new-config.js`; rule 8 of `new-universe.js`; the
+  glossary of `docs/prd/00-system.md` (结论 added, 共识 removed); `docs/prd/01`, `03`, `05`, `06`; `README.md`.

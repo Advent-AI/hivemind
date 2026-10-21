@@ -340,6 +340,7 @@
   function nodeMarkers(design, nodeId, node) {
     const markers = [];
     if (node.status) markers.push('<span class="pill pill--tiny pill--strong">已冻结</span>');
+    if (node.draft) markers.push('<span class="pill pill--tiny pill--mixed">旧稿</span>');
     const issueCount = openIssueCount(design, node);
     if (issueCount) {
       markers.push(`<span class="pill pill--tiny pill--neutral" title="${issueCount} 个未解决问题">问题 ${issueCount}</span>`);
@@ -454,7 +455,7 @@
         <span class="num detail__count">${index + 1} / ${view.order.length}</span>
         <button class="text-button" type="button" data-step="1"${index === view.order.length - 1 ? ' disabled' : ''}>下一个 →</button>
       </div>
-      ${node.kind ? `<div class="detail__pills"><span class="pill pill--quiet"><i class="glyph glyph--${node.kind}"></i>${escapeHtml(KINDS[node.kind] || node.kind)}</span>${node.status ? `<span class="pill pill--strong">${escapeHtml(node.status)}</span>` : ''}</div>` : ''}
+      ${node.kind ? `<div class="detail__pills"><span class="pill pill--quiet"><i class="glyph glyph--${node.kind}"></i>${escapeHtml(KINDS[node.kind] || node.kind)}</span>${node.status ? `<span class="pill pill--strong">${escapeHtml(node.status)}</span>` : ''}${node.draft ? `<span class="pill pill--mixed">${escapeHtml(node.draft)}</span>` : ''}</div>` : ''}
       <h2 class="detail__title">${escapeHtml(node.title)}</h2>
       ${node.subtitle ? `<p class="detail__subtitle">${escapeHtml(node.subtitle)}</p>` : ''}
       ${node.purpose ? `<p class="detail__purpose">${escapeHtml(node.purpose)}</p>` : ''}

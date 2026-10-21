@@ -1,19 +1,19 @@
 # Current state
 
-As of 2026-10-20. The design lives in `docs/system-design.html` (New tab); decisions D1–D50 in `docs/DECISIONS.md`.
+As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D51 in `docs/DECISIONS.md`.
 The work is an architecture POC: the design page, a PRD per module and DECISIONS; no code.
 
 ## Status
 
-- Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design) and v7 `docs/archive/2026-10-20-v7/` (D49), the
-  current stable version with the views database frozen. Each has `SHA256SUMS` and is never edited. The superseded
+- Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49) and v8
+  `docs/archive/2026-10-21-v8/` (D51), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
   v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
 - PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
 - After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
   `docs/prd/README.md`); `python3 docs/check.py` is only the last, mechanical step.
 - Frozen v1 (D19, D37, 2026-10-18): the research universe, classification, Config, dispatch, extraction and the
-  human review pool, in their current text; a change needs a new decision. D41, D42 and D45–D47 (2026-10-20) changed
-  them for the rebuilt views database: extraction's hand-over and prompt part 5, Config's views settings, the
+  human review pool, in their current text; a change needs a new decision. D41, D42, D45–D47 (2026-10-20) and D51 (2026-10-21)
+  changed them for the rebuilt views database: extraction's hand-over and prompt part 5, Config's views settings, the
   universe's macro rule, the review pool's views inputs. Open inside them is what each PRD lists
   under "还没定的", among them the themes in the theme library, upstream supply, the review pool's output, each category's prompt wording.
 - Boundary (D10): the system consumes a stream of classified items; dispatch is the single entry (D17). Upstream
@@ -21,7 +21,8 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 - Two modes (D14): stream mode, driven by arriving information and never by the calendar (D12, D13); pull mode, the
   only place time triggers work: in the rebuilt design, due dates; not designed yet.
 - Frozen v1 (D48, 2026-10-20): the views database with match labelling, after the six-round consistency pass
-  (D47), cleaned up after a code review (D49); a change needs a new decision.
+  (D47), cleaned up after a code review (D49); a change needs a new decision. On 2026-10-21 Alex settled the open
+  items Claude had added (D51): one re-judging rule, dependencies chosen in the matching call, no consensus.
 - Rule for the views database (D45): only what Alex said or decided is written as decided. On 2026-10-20 he went
   through Claude's proposals one by one (D46); what is left of them is three items for pull mode.
 - Core, rebuilt (D38, D42, D45, D46): a view is one question, a ladder and a due date, never rewritten; the ladder has
@@ -31,11 +32,14 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
   state: where it sits on its ladder, pushed by evidence and judged by the model on facts; every judgement cites its
   evidence by number and code looks the numbers up. Evidence is stored once with its source and tier (D30). Views
   relate in one way: a view refers to another's conclusion (state and reasons), chosen by the model, never stored as
-  evidence; code keeps these links free of loops. A message counts once, on the view it is about. The discussion is
+  evidence; code keeps these links free of loops. A message counts once, on the view it is about. A view is re-judged
+  only when what it reads changed: its own evidence (new or replaced) or the conclusion of a view it depends on;
+  every judgement marks its conclusion changed or unchanged, and a moved rung must be marked changed (D51). The discussion is
   in `docs/views-rebuild-log.md`.
-- Writing into the views database (D39, D42, D44–D46): one round per item, eight steps. A candidate view searches
+- Writing into the views database (D39, D42, D44–D46): one round per item, seven steps. A candidate view searches
   the whole views database (a search engine, how it ranks is to be designed; top N, N in Config, 10 to start); the model decides
-  the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad).
+  the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad);
+  in the same call it chooses a new view's dependencies from the views it was shown (D51).
   Evidence searches the evidence of its own view; the model decides repeat, replacement or new evidence. Upstream
   views are judged before downstream ones, each once per round. The timeline only grows forward: a late statement
   on a matter that already has a newer one does not count. Records are append-only; storage is chosen at build time.
@@ -66,8 +70,8 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 ## Next task
 
 Research, as Alex asked: what a thesis looks like from a hedge fund's side, so that the granularity of views is
-neither too big nor too small (what to combine, what to carve out; a key part such as NVDA's China revenue stays its
-own view; views must not all be financial-statement lines). Then the open items of the views database, the most
-important being changes inside a rung that do not reach the views that refer to it, and opening views when an object
-starts empty. Then pull mode and the final verdict are designed on the new views database, as Alex takes them up
-(three of Claude's proposals wait for that). Deferred by Alex: upstream supply; the review pool's output.
+neither too big nor too small (what to combine, what to carve out; how many questions per object; a key part such as
+NVDA's China revenue stays its own view; views must not all be financial-statement lines). Then pull mode and the final
+verdict are designed on the new views database, as Alex takes them up (three of Claude's proposals wait for that). How
+search ranks and the labelling details are settled when the build starts. Deferred by Alex: upstream supply; the review
+pool's output.
