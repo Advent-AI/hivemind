@@ -4,10 +4,11 @@
 // views or to a candidate view, and candidate views for what none of them covers. There a view is a question with a
 // ladder and a due date; the model matches each candidate to views found by search (the same view, its next period, or
 // a new view) and each piece of evidence to the evidence its view already holds (repeat, replacement, or new evidence);
-// evidence pushes the view's state, and views are linked by dependencies and chained by succession. Only what Alex said
-// or decided is written as decided (D45); Claude's proposals he has not decided are kept apart in VIEWS_PROPOSED. The
-// final verdict is still the old draft and is to be redone (D41). Edit the data at the top; the three drill-downs
-// render it. The texts are for a reader who did not follow the discussion: plain words and an example, no field names.
+// evidence pushes the view's state, which is frozen at the due date (D54), and views are linked by dependencies and
+// chained by succession. Only what Alex said or decided is written as decided (D45); Claude's proposals he has not
+// decided are kept apart in VIEWS_PROPOSED. The final verdict is still the old draft and is to be redone with pull mode
+// (D41, D54). Edit the data at the top; the three drill-downs render it. The texts are for a reader who did not follow
+// the discussion: plain words and an example, no field names.
 (function () {
   'use strict';
 
@@ -43,7 +44,7 @@
     T16: { read: '研究对象默认不看', tier: '—' },
   };
 
-  const CATEGORY_NOTE = '每份文件都整份交给模型，里面的表格一起读；表格数据一次发布算一条，也整批交给模型。申报里的 XBRL 数字不另外推，文件本身已经有这些数。到期时要不要另外去查准确的数，等 Pull 模式按新设计重做时定。';
+  const CATEGORY_NOTE = '每份文件都整份交给模型，里面的表格一起读；表格数据一次发布算一条，也整批交给模型。申报里的 XBRL 数字不另外推，文件本身已经有这些数。到期时要不要另外去查准确的数，等以后设计 Pull 模式时定。';
 
   // Every category has its own prompt: the same template with that category's parts. One assembled example.
   const PROMPT_EXAMPLE = {
@@ -242,7 +243,7 @@
         answer: '数字的观点', label: '读那一年的那条', note: '例：JPM 2027 全年净利息收入 → 美联储 2027 年末利率',
         children: [
           { answer: 'A 开着', label: '读 A 的状态和理由', act: true },
-          { answer: 'A 出了答案', label: '读 A 的答案', note: '答案就是 B 要用的，B 接着读这个答案', act: true },
+          { answer: 'A 到期定格了', label: '读 A 定格的状态和理由', note: '这就是 B 要用的，B 接着读它', act: true },
           { answer: 'A 还没建', label: '箭头先等着', note: 'A 建出来时连上，B 重判一次' },
         ],
       },
@@ -251,7 +252,7 @@
         children: [
           { answer: 'A 开着', label: '读 A 的状态和理由', act: true },
           { answer: 'A 关了，有接续的', label: '读接续的那条', note: '记一笔；接续的那条建出来，B 读的东西变了，重判一次', act: true },
-          { answer: 'A 关了，没有接续', label: '读 A 的答案，标“只是历史”' },
+          { answer: 'A 关了，没有接续', label: '读 A 定格的状态和理由，标“只是历史”' },
         ],
       },
     ],
@@ -387,13 +388,13 @@
     label: '一条观点', question: '到哪一步了？',
     children: [
       { answer: '开着', label: '读的东西变了（证据变了，或者依赖的观点结论变了），就重判一次', note: '同一样东西同时只开一条；数字的同一个数，今年、明年各一条' },
-      { answer: '到期，出了答案', label: '关掉', note: '答案怎么定，等最终判定按新设计重做时定；要接着看，就开一条新观点接续它', act: true },
+      { answer: '到期', label: '状态定格，关掉', note: '到期那天状态停在哪一格，就是这条观点的结论；要接着看，就开一条新观点接续它', act: true },
       { answer: '对象被移出名单', label: '留着，标“不再跟踪”', note: '到期不判' },
     ],
   };
 
   const LIFECYCLE_NOTES = [
-    '到期由 Pull 模式发起；事件观点的答案由谁来定、要不要先经最终判定，等最终判定按新设计重做时定。',
+    '定格由 Pull 模式做：它在每天结束时、或按定时任务的间隔主动跑，把到期的观点状态定格、关掉；信息流这一边不管时间。Pull 模式以后设计。',
   ];
 
   const VIEW_FIELDS = [
@@ -407,7 +408,7 @@
     { part: '依赖', meaning: '指向哪几条观点，各带一个方向', example: '→ 这一档芯片对华出口许可：放松那头看多' },
     { part: '接续', meaning: '接着哪一条；可以没有', example: '接着 FY26 那条' },
     { part: '从哪来', meaning: '从哪条信息建的', example: '2026-02-25 NVDA FY26 年报的业绩发布（示意）' },
-    { part: '开着还是关了', meaning: '开着，或者到期出了答案关掉；对象移出名单的，标“不再跟踪”', example: '开着' },
+    { part: '开着还是关了', meaning: '开着，或者到期定格、关掉；对象移出名单的，标“不再跟踪”', example: '开着' },
   ];
 
   const EVIDENCE_FIELDS = [
@@ -439,14 +440,13 @@
     '搜索怎么搜：用语义搜索、关键词还是两样一起，怎么排先后；建的时候在存下的信息上试过再定。前几条先定 10，试的时候再调。',
     '观点的颗粒度，也就是一条观点管多大的范围，还没定，要专门定。现在只定了：是已有观点的一部分，就归入那条；太大太杂的不开。要紧的那一块要单独成一条（NVDA 中国区收入很关键，不能归入总收入）；太粗的话，观点会全变成财务指标，这不行；要让模型清楚知道这样抽是错的。先做一次完整的调研：从对冲基金的角度看，一条观点到底长什么样，什么该合、什么该拆，每个对象盯几个问题（现实里每家公司只盯 2–3 个）。',
     '标注的细节以后再补：谁来标、标多少、用什么界面；怎么考小模型准不准、训练怎么用标好的数据；小模型什么时候接手；抽取连错、漏掉的证据怎么查，也在这里一起补。',
-    '到期时谁定事件观点的答案、要不要先经最终判定：最终判定和 Pull 模式按新设计重做时定。',
+    'Pull 模式以后设计：每天结束时、或按定时任务怎么跑，怎样把观点整体过一遍；最终判定还要不要单独一步，一起定。',
   ];
 
   // Claude's proposals that Alex has not decided (D45). None of them is built until he decides it.
   const VIEWS_PROPOSED = [
-    'Pull 模式的事，设计 Pull 模式时再谈：除了到期出答案，另外两种情况，答不出（不再披露这个数、事情本身没了，不算准不准；依赖它的观点标“缺这个输入”）和等答案（数字的观点期末已过、答案还没公布）。',
+    'Pull 模式的事，设计 Pull 模式时再谈：除了到期定格，另外两种情况，答不出（不再披露这个数、事情本身没了；依赖它的观点标“缺这个输入”）和等公布（数字的观点期末已过、这个数还没公布）。',
     'Pull 模式的事，设计 Pull 模式时再谈：每天查重，Pull 模式每天发起，同一对象开着的观点两两比；后建的合并到先建的，连线和箭头搬过去，查环，重判；Config 里多一套“查重”的设置。',
-    'Pull 模式的事，设计 Pull 模式时再谈：到期怎么定答案，用第一次公布的值，后来的修订不改；拿来打分的，是带来答案的那条信息进来之前的最后状态；等发布日不晚于到期日的信息都处理完再定。',
   ];
 
   // ------------------------------------------------------------------ final verdict (old draft, to be redone: D41)
@@ -574,7 +574,7 @@
         <div class="drill">
           <h2 class="drill__title">抽取：每一类信息怎么读成证据和候选观点</h2>
           <p class="drill__intro">抽取只做一件事：每条信息整份交给模型，用资深对冲基金分析师的视角、按这一类的提示词，对着这些对象已有的观点读完，交出两样东西。一是证据：支持或削弱观点的话和数，连到已有观点上，或者这次的候选观点上。二是候选观点：已有观点管不到、又要紧的事，带着提出它的证据。每条带出处，交给观点库；怎么和库里已有的比、写进去，是观点库的事。</p>
-          <p class="drill__status"><span class="pill pill--strong">第一版已冻结 · 2026-10-18</span>定下：整份交给模型；每一类一份提示词，拼法相同；观点是模型的判断，证据是客观的；每条都带出处；抽取只读。2026-10-20 按 D41、D42、D45–D47 改了交给观点库的东西：证据连到已有观点上，和候选观点分开交；候选观点当场写全；2026-10-21 按 D51–D53 改过。没定：每一类提示词的具体写法，建的时候试过再定。</p>
+          <p class="drill__status"><span class="pill pill--strong">第一版已冻结 · 2026-10-18</span>定下：整份交给模型；每一类一份提示词，拼法相同；观点是模型的判断，证据是客观的；每条都带出处；抽取只读。2026-10-20 按 D41、D42、D45–D47 改了交给观点库的东西：证据连到已有观点上，和候选观点分开交；候选观点当场写全；2026-10-21 按 D51–D54 改过。没定：每一类提示词的具体写法，建的时候试过再定。</p>
           <h3 class="drill__heading drill__heading--spaced">一条信息，一步一步</h3>
           <p class="flow-legend">黑框是模型做的，灰框是代码做的。</p>
           ${flow(stepCards, '→', escapeHtml)}
@@ -620,8 +620,8 @@
       container.innerHTML = `
         <div class="drill">
           <h2 class="drill__title">观点库</h2>
-          <p class="drill__intro">系统做的事，就是在这里建观点、更新观点、关掉观点。一条观点是一个问题、一把梯子和一个到期日：证据把我们的判断往两头推，到期拿答案对一下，就知道判得准不准。抽取交来两样东西，都是先搜、再由模型比：候选观点和搜出来的几条已有观点比，判是归入已有的、接续、开新的，还是不开；证据和它那条观点下搜出来的证据比，判是重复、替代还是新证据。只是重复的，不重判。每条证据都带出处；记录只加不改。</p>
-          <p class="drill__status"><span class="pill pill--strong">第一版已冻结 · 2026-10-20</span>只写 Alex 说过或定过的（D45、D46）；要改，先记一条新决定（D48）；2026-10-21 按 D51–D53 改过。还没定的、和 3 条 Pull 模式的事，单列在最后。</p>
+          <p class="drill__intro">系统做的事，就是在这里建观点、更新观点、关掉观点。一条观点是一个问题、一把梯子和一个到期日：证据把它的状态往两头推，到期那天状态定格。抽取交来两样东西，都是先搜、再由模型比：候选观点和搜出来的几条已有观点比，判是归入已有的、接续、开新的，还是不开；证据和它那条观点下搜出来的证据比，判是重复、替代还是新证据。只是重复的，不重判。每条证据都带出处；记录只加不改。</p>
+          <p class="drill__status"><span class="pill pill--strong">第一版已冻结 · 2026-10-20</span>只写 Alex 说过或定过的（D45、D46）；要改，先记一条新决定（D48）；2026-10-21 按 D51–D54 改过。还没定的、和 2 条 Pull 模式的事，单列在最后。</p>
           <h3 class="drill__heading drill__heading--spaced">结构</h3>
           ${tree(VIEW_TREE, escapeHtml)}
           <h3 class="drill__heading drill__heading--spaced">两种观点：结构一样，梯子的格意思不一样</h3>
@@ -695,9 +695,9 @@
       const escapeHtml = context.escapeHtml;
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">最终判定：一条观点还成立吗</h2>
-          <p class="drill__intro">一条观点要不要关，不由一条证据或一个条件直接决定，而是先送到这里，由模型把整条观点和它的全部证据完整看一遍再判。</p>
-          ${status('旧稿 · 要重做', '观点库已按 D38–D40 重建，这里写的检验条件、证实和证伪、前提都不再用；关掉之前要不要经过这里，重做时定（D41）。', escapeHtml)}
+          <h2 class="drill__title">最终判定（旧稿）：一条观点还成立吗</h2>
+          <p class="drill__intro">现在：到期那天，观点的状态停在哪一格就定格、关掉，由 Pull 模式做（D54）；最终判定还要不要单独一步，以后和 Pull 模式一起定。下面是旧稿：一条观点要不要关，不由一条证据或一个条件直接决定，而是先送到这里，由模型把整条观点和它的全部证据完整看一遍再判。</p>
+          ${status('旧稿 · 要重做', '观点库已按 D38–D40 重建，这里写的检验条件、证实和证伪、前提都不再用（D41）。已经定了：一条观点只有一个状态，到期那天状态定格就关掉，不另外定别的；Pull 模式每天结束时或按定时任务跑，不另外等（D54）。其余以后和 Pull 模式一起重做。', escapeHtml)}
           <h3 class="drill__heading drill__heading--spaced">这些情况会把观点送来</h3>
           ${table(['触发', '谁发现'], VERDICT_TRIGGERS.map((trigger) => [trigger.trigger, trigger.who]), escapeHtml)}
           <h3 class="drill__heading drill__heading--spaced">判出什么</h3>

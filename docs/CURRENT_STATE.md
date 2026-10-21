@@ -1,13 +1,13 @@
 # Current state
 
-As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D53 in `docs/DECISIONS.md`.
+As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D54 in `docs/DECISIONS.md`.
 The work is an architecture POC: the design page, a PRD per module and DECISIONS; no code.
 
 ## Status
 
 - Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49), v8
   `docs/archive/2026-10-21-v8/` (D51), v9 `docs/archive/2026-10-21-v9/` (D52), v10 `docs/archive/2026-10-21-v10/`
-  (D53, rounds 1–5) and v11 `docs/archive/2026-10-21-v11/` (D53, rounds 6–9), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
+  (D53, rounds 1–5) and v11 `docs/archive/2026-10-21-v11/` (D53, rounds 6–9), the last sealed version (D54 came after it). Each has `SHA256SUMS` and is never edited. The superseded
   v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
 - PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
 - After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
@@ -20,12 +20,13 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 - Boundary (D10): the system consumes a stream of classified items; dispatch is the single entry (D17). Upstream
   supply and classification are outside. Testing is a test feeder streaming a test database through the same path.
 - Two modes (D14): stream mode, driven by arriving information and never by the calendar (D12, D13); pull mode, the
-  only place time triggers work: in the rebuilt design, due dates; not designed yet.
+  only place time triggers work: it runs at the end of the day or on a cron interval, goes through the views
+  proactively and freezes the state of the views due that day (D54); the rest is designed later.
 - Frozen v1 (D48, 2026-10-20): the views database with match labelling, after the six-round consistency pass
   (D47), cleaned up after a code review (D49); a change needs a new decision. On 2026-10-21 Alex settled the open
   items Claude had added (D51): one re-judging rule, dependencies chosen in the matching call, no consensus.
 - Rule for the views database (D45): only what Alex said or decided is written as decided. On 2026-10-20 he went
-  through Claude's proposals one by one (D46); what is left of them is three items for pull mode.
+  through Claude's proposals one by one (D46); what is left of them is two items for pull mode.
 - Core, rebuilt (D38, D42, D45, D46): a view is one question, a ladder and a due date, never rewritten; the ladder has
   five rungs, or two for a yes-or-no question, each rung a result that can be checked, rungs neither overlapping nor
   leaving gaps. One open view per thing (a number: this year and next, counted from the item's own year). Object
@@ -52,7 +53,10 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
   views they depend on. It hands over evidence, each piece on the view it is about, and candidate views written in
   full (question, ladder, due date) for important matters those views do not cover. Financial reports stream again
   (D28). Table data comes one release per item and a filing's XBRL numbers are not pushed again (D32).
-- Final verdict (D29) and pull mode: old drafts written for the previous views design; to be redone on D38–D40 (D41).
+- Due date (D54): a view has one state and no answer apart from it; at the due date the state is frozen where it
+  stands and the view closes; nothing waits for that day's items. Stream mode handles no timing.
+- Final verdict (D29) and pull mode: old drafts written for the previous views design (D41), to be redone together
+  later; whether the final verdict stays a step of its own is open (D54).
 - Order and sync (D31, D46): numbers in arrival order, one writer per view (themes first), reads only what earlier
   items wrote plus what its own round has written; the timeline only grows forward (D46 replaced D31's late-item rule).
 - Wording (D36, D41, D42, D44–D47, D52, D53): plain words a reader outside the discussion understands; one word per concept in the universe, classification, dispatch, extraction and the views
@@ -78,6 +82,6 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 Research, as Alex asked: what a thesis looks like from a hedge fund's side, so that the granularity of views is
 neither too big nor too small (what to combine, what to carve out; how many questions per object; a key part such as
 NVDA's China revenue stays its own view; views must not all be financial-statement lines). Then pull mode and the final
-verdict are designed on the new views database, as Alex takes them up (three of Claude's proposals wait for that). How
+verdict are designed on the new views database, as Alex takes them up (two of Claude's proposals wait for that). How
 search ranks and the labelling details are settled when the build starts. Deferred by Alex: upstream supply; the review
 pool's output.

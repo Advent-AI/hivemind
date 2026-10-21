@@ -1597,6 +1597,14 @@ Alex：“再 review 几轮你做的不够仔细需要完整的全部看过。�
 
 Alex：“继续，跑完几轮再提交推送。”第六、七轮换了六个角度（一条信息从头走到尾、用词表逐词、数字和清单、新读者答题、对照决定、Claude 自己改过的句子），报了 5 处和 2 处，其中最实在的一处：NVDA 例子里的英文引文词序被改过，原件里没有这句，照我们自己的核对规则这条证据会被退掉。第八轮用词那一路复查没有问题；第九轮五路再从头到尾通读一遍，没有问题。封成 v11。
 
+## 第 45 步：到期那天状态定格（D54）
+
+Alex 问最终判定按新设计还成不成立。Claude 对照后说旧稿的触发和结果大多挂在已经拆掉的东西上，又把“状态”和“答案”分成两样，提议到期另调一次模型定答案、拿答案给状态打分，还问要不要等到期日当天的信息都处理完再关。这把 D46 第 1 条拿掉的“两个位置”又带了回来。
+
+Alex：“为什么会有状态和答案的区别？最后到期日的状态就定格就好，为什么会有答案？”“为什么要等？不合理啊。”“just like run it at the end of the day … the other mode will proactively run through theses and update holistically by end of day, or like a certain cron job with a certain time interval. All you're dealing with right now is streaming data … you don't need to care about this.”“pull再做啊，记录起来。”
+
+定了（D54）：一条观点只有一个状态，没有另外的答案；让争论见分晓的那条信息照常作为证据进来、推状态；到期那天状态停在哪一格就定格，观点关掉，依赖它的读它定格的状态。Pull 模式在每天结束时、或按定时任务的间隔主动跑，把观点整体过一遍，到期的定格，不另外等。信息流那一边不管时间。Claude 提的“到期怎么定答案、怎么打分、要等”那一条拿掉；“答案”改叫“定格”，检查脚本不再让用“答案”。Pull 模式和最终判定以后一起设计。
+
 ## 现在的设计在哪
 
-讨论到第 44 步为止。现在的设计以设计页、PRD 和 DECISIONS 为准：用词看 `docs/prd/00-system.md` 的用词表，观点库看 `docs/prd/06-views.md`（还没定的也在那里），决定看 D38–D53。这一份只记讨论过程，不另写一份现状。
+讨论到第 45 步为止。现在的设计以设计页、PRD 和 DECISIONS 为准：用词看 `docs/prd/00-system.md` 的用词表，观点库看 `docs/prd/06-views.md`（还没定的也在那里），决定看 D38–D54。这一份只记讨论过程，不另写一份现状。

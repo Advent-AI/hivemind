@@ -212,6 +212,8 @@ A later decision that changes one names the one it replaces.
 - Enforced: the summary, the thesis and pull nodes and the overview view of `docs/system-design/new-design.js`.
 - Changed by D29 and D31: pull mode sends due views to the final verdict, re-checks views whose weakened premise
   was not seen within 7 days, and periodically merges and splits drivers.
+- Changed by D54: pull mode runs at the end of the day or on a cron interval, goes through the views proactively
+  and freezes the state of the views due that day.
 
 ## D15 · 2026-10-16 · Macro, political and economic material in the classification
 
@@ -587,6 +589,8 @@ A later decision that changes one names the one it replaces.
   expiry at the due date is not a judgment of right or wrong. The premise statuses that send dependents at once
   include "no longer tracked".
 - Changed by D41: the final verdict is an old draft to be redone on the rebuilt views database (D38).
+- Changed by D54: at the due date the state is frozen and the view closes, with no answer apart from it; nothing
+  waits for the items published on or before the due date.
 
 ## D30 · 2026-10-18 · Conflicting sources and the consensus
 
@@ -1129,6 +1133,8 @@ A later decision that changes one names the one it replaces.
   `06-views.md`; `docs/check.py` rules out 检索 for 搜索.
 - Changed by D51: item 9's re-judging on succession comes back as a case of the one re-judging rule; Config's
   views settings are matching and re-judging.
+- Changed by D54: there is no answer apart from the state, which is frozen at the due date; the proposal on how
+  answers are scored is dropped.
 ## D47 · 2026-10-20 · End-to-end consistency from the universe to the views database
 
 - By: Alex ("now you have everything, you have every log … do end-to-end consistency test … up until the model db
@@ -1290,6 +1296,8 @@ A later decision that changes one names the one it replaces.
   `EXTRACT_OPEN` of `docs/system-design/new-facts.js`; the views, extract, config and universe nodes and the `draft`
   field of `docs/system-design/new-design.js` and `render.js`; `new-config.js`; rule 8 of `new-universe.js`; the
   glossary of `docs/prd/00-system.md` (结论 added, 共识 removed); `docs/prd/01`, `03`, `05`, `06`; `README.md`.
+- Changed by D54: item 4's "who sets an answer at the due date" is settled: the state is frozen at the due date.
+
 ## D52 · 2026-10-21 · Plain, consistent wording across the design page and PRDs
 
 - By: Alex ("you gotta write in a consistent manner that's more understandable across … You have a lot of like
@@ -1381,3 +1389,44 @@ A later decision that changes one names the one it replaces.
   sample is a single XBRL fact, which is not pushed in; one branch treats a same-issuer, same-day item as a copy.
 - Seals: v10 in `docs/archive/2026-10-21-v10/` with `SHA256SUMS`.
 - Seals: v11 in `docs/archive/2026-10-21-v11/` with `SHA256SUMS`, after rounds 6–9.
+
+## D54 · 2026-10-21 · A view's state is frozen at its due date; pull mode runs at the end of the day
+
+- By: Alex. Asked how the final verdict fits the rebuilt views database, Claude set an "answer" apart from the
+  state and asked whether to wait for the due date's items before closing. Alex: "为什么会有状态和答案的区别？最后到期日的
+  状态就定格就好，为什么会有答案？"; "为什么要等？不合理啊"; "just like run it at the end of the day … the other mode
+  will proactively run through theses and update holistically by end of day, or like a certain cron job with a
+  certain time interval. All you're dealing with right now is streaming data … you don't need to care about this";
+  "pull再做啊，记录起来".
+- Decides:
+  1. A view has one state (D46 item 1) and no answer apart from it. At the due date the state is frozen where it
+     stands: that rung is the view's conclusion, and the view closes. What settles the debate (the annual report,
+     the official action) comes in as evidence and moves the state like any other (D46 item 3). A view that depends
+     on a closed view reads its frozen state.
+  2. Pull mode runs at the end of the day, or on a cron interval: it goes through the views proactively and updates
+     them as a whole. Freezing the views due that day is part of that run. Nothing waits for the day's items.
+  3. Stream mode handles no timing: due dates, freezing and when pull mode runs are pull mode's (D14). Pull mode,
+     with what is left of the final verdict, is designed later.
+- Dropped: Claude's pull-mode proposal on how an answer is set at the due date (the first published value; scoring
+  the state before the item that brought the answer; waiting for every item published on or before the due date),
+  since there is no answer apart from the state and nothing waits; D29's wait for those items; the sentence "到期拿答案
+  对一下，就知道判得准不准", which read as scoring against a separate answer (scoring was Claude's proposal, D45).
+- Open, for pull mode: how its run works (D14); Claude's two remaining proposals (views that cannot be answered or
+  wait for a number to be published; the daily duplicate check); whether the final verdict stays a step of its own
+  (Claude proposed folding it into pull mode, since every re-judgement already reads all of a view's evidence; not
+  confirmed). Config's one setting for the final verdict (D29, frozen) stands until that is decided.
+- Wording: 定格 replaces 答案 (the glossary's row; `docs/check.py` rules out 答案, with a control pair); Claude's
+  proposal "等答案" is called 等公布.
+- Changes: D14, D29, D46, D51 item 4 (who sets an answer at the due date is settled); the frozen views database (D48)
+  through this decision.
+- Pages: the final verdict and pull mode PRDs lead with what D54 decided and keep the old draft in a section of its
+  own; on the system map pull mode points to the views database (freezing) and to the final verdict (whether it stays a
+  step is open). "收盘后" in a first draft was corrected to the end of the day, as Alex said.
+- Checked: Codex read the change read-only (every in-scope file in full) and found three, all fixed: two places
+  explained "no wait" as if the settling item were always processed before freezing; the final verdict page opened
+  with the old flow as the current one; the system overview's module table left D54 out of the views status.
+- Enforced: `DEPENDENCY_TREE`, `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `VIEWS_OPEN`, `VIEWS_PROPOSED`, the views
+  page's introduction and the verdict page's status line in `docs/system-design/new-facts.js`; the summary, the views,
+  verdict and pull nodes and the system view of `docs/system-design/new-design.js`; `docs/prd/00-system.md`,
+  `05-extraction.md`, `06-views.md`, `07-final-verdict.md`, `08-pull-mode.md`; `AVOIDED_WORDS` and `WORD_CONTROLS` of
+  `docs/check.py`.
