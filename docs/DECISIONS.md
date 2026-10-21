@@ -1359,6 +1359,19 @@ A later decision that changes one names the one it replaces.
   says the view must still be open; its 出处 includes a table cell; the README example sets the dependency in the views
   database, not in extraction. A fifth read of those files found nothing. Every in-scope file has now been read in
   full by a review that found nothing.
+- Round 6, six cross-cutting reviews (one item followed end to end; the glossary word by word; every number and
+  list; a new reader answering sixteen questions; the rules against the decisions; Claude's own D52 and D53 edits):
+  the new-reader and own-edits reviews found nothing. Fixed: the NVDA example quoted "charges of up to approximately
+  $5.5 billion", which the 8-K does not say (it says "up to approximately $5.5 billion of charges"), so by the
+  extraction check that evidence would have been refused; "留下的状态" for what earlier items wrote, where 状态 means
+  a rung; an English "upstream views" left in CURRENT_STATE; the identifiers field marked as used in classifying; the
+  review pool row in the views PRD names crypto and commodities too. Not changed: D40's request and raw answer are
+  required for matching records, not for every model call, so Config's acceptance line stands.
+- Round 7, the same six reviews: five found nothing; the glossary review found two, fixed ("状态" for how far a
+  matter has got, in the replacement row; "template" for a category's prompt in CURRENT_STATE). Round 8, the glossary
+  review again: nothing.
+- Round 9, a final full line-by-line read by five reviews: nothing (two reviews were rerun after the model was
+  at capacity).
 - Not changed in round 2: missing fields go back to upstream and wrong identifiers are not valid, as the rules say,
   so the review pool's "信息缺东西 → 退回" stands; the simulation's 13F sample joins the open defects.
 - Not changed: dispatch's completeness check lists what dispatch itself needs; the required fields are checked in
@@ -1367,3 +1380,4 @@ A later decision that changes one names the one it replaces.
   copy without looking at the replaces-version field; it does not check fields required only in some cases; one
   sample is a single XBRL fact, which is not pushed in; one branch treats a same-issuer, same-day item as a copy.
 - Seals: v10 in `docs/archive/2026-10-21-v10/` with `SHA256SUMS`.
+- Seals: v11 in `docs/archive/2026-10-21-v11/` with `SHA256SUMS`, after rounds 6–9.

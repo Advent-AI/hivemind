@@ -82,7 +82,7 @@
     { group: '分类', field: 'series', meaning: '发布系列，任何作者都可能有（官方或民间）：FOMC 声明、褐皮书、ISM PMI、世界经济展望……；在发布系列表里登记过才起作用，没登记的放进人工复核池', required: '可选（没有就看作者）', classify: true },
     { group: '内容', field: 'media_type', meaning: '文件格式：网页、PDF、JSON、XML、CSV、Excel、音频、视频、图片', required: '必填' },
     { group: '内容', field: 'language', meaning: '语言', required: '必填' },
-    { group: '对象', field: 'object_identifiers', meaning: '渠道给的对象标识，每个写三样：哪种标识（CIK、股票代码、公司名、加密货币代码、商品代码、主题编号）、标识本身、为什么标在这条上（申报对象、申报人、数据字段、渠道标签、上游为这个对象推来的、上传时写明的）；可以没有', required: '可选' },
+    { group: '对象', field: 'object_identifiers', classify: true, meaning: '渠道给的对象标识，每个写三样：哪种标识（CIK、股票代码、公司名、加密货币代码、商品代码、主题编号）、标识本身、为什么标在这条上（申报对象、申报人、数据字段、渠道标签、上游为这个对象推来的、上传时写明的）；可以没有', required: '可选' },
   ];
 
   const OUTPUT_FIELDS = '分类结果（一个类别；或者并到原来那条；或者“不算材料”；或者不合格并写明原因）；归了类的，再加上相关对象（对象编号、种类、为什么标在这条上）和查不到的标识（原样留着）';

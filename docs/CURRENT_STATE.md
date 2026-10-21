@@ -6,8 +6,8 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 ## Status
 
 - Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49), v8
-  `docs/archive/2026-10-21-v8/` (D51), v9 `docs/archive/2026-10-21-v9/` (D52) and v10 `docs/archive/2026-10-21-v10/`
-  (D53), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
+  `docs/archive/2026-10-21-v8/` (D51), v9 `docs/archive/2026-10-21-v9/` (D52), v10 `docs/archive/2026-10-21-v10/`
+  (D53, rounds 1–5) and v11 `docs/archive/2026-10-21-v11/` (D53, rounds 6–9), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
   v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
 - PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
 - After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
@@ -42,19 +42,19 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
   the whole views database (a search engine, how it ranks is to be designed; top N, N in Config, 10 to start); the model decides
   the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad, a number beyond this year and next, or an object outside the universe);
   in the same call it chooses a new view's dependencies from the views it was shown (D51).
-  Evidence searches the evidence of its own view; the model decides repeat, replacement or new evidence. Upstream
-  views are judged before downstream ones, each once per round. The timeline only grows forward: a late statement
+  Evidence searches the evidence of its own view; the model decides repeat, replacement or new evidence. A view
+  is judged after the views it depends on, each once per round. The timeline only grows forward: a late statement
   on a matter that already has a newer one does not count. Records are append-only; storage is chosen at build time.
 - Matching judge (D40, D44, D46): the model alone decides; a general model first; every match recorded; people label
   the ones code refused and a few drawn at random; the labels later train a smaller, faster model.
-- Extraction (D27, D33, D35, D37, D41, D42, D46; v1 frozen): only reads. Every item goes whole to the model, read by
-  its category's template as a senior hedge fund analyst; prompt part 5 lists the related objects' open views and the
+- Extraction (D27, D33, D35, D37, D41, D42, D46; v1 frozen): only reads. Every item goes whole to the model, read with
+  its category's prompt as a senior hedge fund analyst; prompt part 5 lists the related objects' open views and the
   views they depend on. It hands over evidence, each piece on the view it is about, and candidate views written in
   full (question, ladder, due date) for important matters those views do not cover. Financial reports stream again
   (D28). Table data comes one release per item and a filing's XBRL numbers are not pushed again (D32).
 - Final verdict (D29) and pull mode: old drafts written for the previous views design; to be redone on D38–D40 (D41).
-- Order and sync (D31, D46): numbers in arrival order, one writer per view (themes first), reads only the state left
-  by earlier items plus what its own round has written; the timeline only grows forward (D46 replaced D31's late-item rule).
+- Order and sync (D31, D46): numbers in arrival order, one writer per view (themes first), reads only what earlier
+  items wrote plus what its own round has written; the timeline only grows forward (D46 replaced D31's late-item rule).
 - Wording (D36, D41, D42, D44–D47, D52, D53): plain words a reader outside the discussion understands; one word per concept in the universe, classification, dispatch, extraction and the views
   database; the glossary is in `docs/prd/00-system.md` and `docs/check.py` fails on an avoided word.
 - Research behind extraction and matching: `reports/SEC 财报 代码抽取 开源方案.md`, `reports/观点库 向量检索 去重匹配.md`,

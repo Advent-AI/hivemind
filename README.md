@@ -83,7 +83,7 @@ git clone https://github.com/Advent-AI/hivemind.git
 | `docs/CURRENT_STATE.md` | 现状、已知问题、下一步 |
 | `docs/views-rebuild-log.md` | 观点库重建的讨论过程（第 1–44 步） |
 | `docs/check.py` | 改完设计后跑的检查 |
-| `docs/archive/` | 封存的稳定版本：v1（旧设计，2026-10-16）、v7（2026-10-20）、v8、v9 和 v10（现在的设计，都是 2026-10-21）；中间的 v2–v6 在 git 历史里 |
+| `docs/archive/` | 封存的稳定版本：v1（旧设计，2026-10-16）、v7（2026-10-20）、v8、v9、v10 和 v11（现在的设计，都是 2026-10-21）；中间的 v2–v6 在 git 历史里 |
 | `reports/`、`research_notes/` | 设计背后的调研报告、审稿记录和笔记 |
 | `AGENTS.md` | 协作规矩（`CLAUDE.md` 指向它） |
 
