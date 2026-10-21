@@ -1,12 +1,13 @@
 # Current state
 
-As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D52 in `docs/DECISIONS.md`.
+As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D53 in `docs/DECISIONS.md`.
 The work is an architecture POC: the design page, a PRD per module and DECISIONS; no code.
 
 ## Status
 
 - Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49), v8
-  `docs/archive/2026-10-21-v8/` (D51) and v9 `docs/archive/2026-10-21-v9/` (D52), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
+  `docs/archive/2026-10-21-v8/` (D51), v9 `docs/archive/2026-10-21-v9/` (D52) and v10 `docs/archive/2026-10-21-v10/`
+  (D53), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
   v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
 - PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
 - After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
@@ -32,13 +33,14 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
   state: where it sits on its ladder, pushed by evidence and judged by the model on facts; every judgement cites its
   evidence by number and code looks the numbers up. Evidence is stored once with its source and tier (D30). Views
   relate in one way: a view refers to another's conclusion (state and reasons), chosen by the model, never stored as
-  evidence; code keeps these links free of loops. A message counts once, on the view it is about. A view is re-judged
+  evidence; code keeps these links free of loops. A sentence may be evidence for several views, but when B depends on
+  A, a sentence about A counts only as A's evidence and reaches B through A's conclusion. A view is re-judged
   only when what it reads changed: its own evidence (new or replaced) or the conclusion of a view it depends on;
   every judgement marks its conclusion changed or unchanged, and a moved rung must be marked changed (D51). The discussion is
   in `docs/views-rebuild-log.md`.
 - Writing into the views database (D39, D42, D44–D46): one round per item, seven steps. A candidate view searches
   the whole views database (a search engine, how it ranks is to be designed; top N, N in Config, 10 to start); the model decides
-  the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad);
+  the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad, a number beyond this year and next, or an object outside the universe);
   in the same call it chooses a new view's dependencies from the views it was shown (D51).
   Evidence searches the evidence of its own view; the model decides repeat, replacement or new evidence. Upstream
   views are judged before downstream ones, each once per round. The timeline only grows forward: a late statement
@@ -53,7 +55,7 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 - Final verdict (D29) and pull mode: old drafts written for the previous views design; to be redone on D38–D40 (D41).
 - Order and sync (D31, D46): numbers in arrival order, one writer per view (themes first), reads only the state left
   by earlier items plus what its own round has written; the timeline only grows forward (D46 replaced D31's late-item rule).
-- Wording (D36, D41, D42, D44–D47, D52): plain words a reader outside the discussion understands; one word per concept in the universe, classification, dispatch, extraction and the views
+- Wording (D36, D41, D42, D44–D47, D52, D53): plain words a reader outside the discussion understands; one word per concept in the universe, classification, dispatch, extraction and the views
   database; the glossary is in `docs/prd/00-system.md` and `docs/check.py` fails on an avoided word.
 - Research behind extraction and matching: `reports/SEC 财报 代码抽取 开源方案.md`, `reports/观点库 向量检索 去重匹配.md`,
   `reports/观点库匹配 业界做法对比.md`, `reports/观点库重建 去重 证据 血缘（Codex 调研）.md`,
@@ -65,7 +67,11 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 
 - `simulate_classification.py` resolves a ticker on the UTC date of `published_at`; the page says the New York
   publication day (D9). It does not model the SEC filing day (D34), and has no cases for the macro rules (D15) or for
-  crypto, commodity and theme objects (D11). The script is not changed at the POC stage.
+  crypto, commodity and theme objects (D11). It merges a copy without looking at `supersedes`, so an update that names
+  the version it replaces is merged instead of classified as a new version; it does not check fields required only
+  in some cases (`has_readable_text` for text, `period` for reports and data, a text's genre); one sample is a single
+  XBRL fact, which is not pushed in (D32); one branch treats a same-issuer, same-day item as a copy without comparing
+  content; a 13F sample checks the related company of one split holding row, though a whole 13F is one item (D53). The script is not changed at the POC stage.
 
 ## Next task
 

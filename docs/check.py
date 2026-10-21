@@ -291,7 +291,7 @@ def blocks(data):
         ("04-dispatch.md", "tree"): "\n".join([root] + tree_children(tree, 1)),
         ("04-dispatch.md", "notes"): bullets(config["TREE_NOTES"]),
         ("05-extraction.md", "steps"): step_flow("一条信息进来（带类别和顺序号）", extraction["EXTRACT_STEPS"]),
-        ("05-extraction.md", "two"): table(["", "证据", "候选观点（thesis）"],
+        ("05-extraction.md", "two"): table(["", "证据", "候选观点"],
                                            [[row["aspect"], row["evidence"], row["candidate"]] for row in extraction["EXTRACT_TWO"]])
         + "\n\n" + ascii_tree(extraction["EXTRACT_SORT_TREE"]),
         ("05-extraction.md", "open"): bullets(extraction["EXTRACT_OPEN"]),

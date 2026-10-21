@@ -1324,3 +1324,46 @@ A later decision that changes one names the one it replaces.
 - Enforced: `docs/check.py` rules out 对上, 并进, 血缘, 写入者, 只追加, 一条轴上 (22 control pairs); the page data, the
   in-scope PRDs and `README.md`.
 - Seals: v9 in `docs/archive/2026-10-21-v9/` with `SHA256SUMS`.
+## D53 · 2026-10-21 · A full line-by-line read of the page and PRDs, in rounds
+
+- By: Alex ("再 review 几轮你做的不够仔细需要完整的全部看过").
+- How: each round splits the in-scope files among five read-only Codex reviews; each reads its files from the first
+  line to the last and reports the line ranges it read, checking wording, consistency, logic, examples and anything
+  not decided. Claude reads every PRD in full in the same round. Every finding is checked against the text first; a
+  round follows a round until one finds nothing that would make a reader do the wrong thing or fail to understand.
+- Round 1: five reviews and Claude's read found about a hundred items. Changed, no rule added: a view's dependents read
+  its conclusion (state and reasons), not its state alone; the glossary's 依赖 covers two theme views (same or opposite
+  direction) and dependencies are not only from object to theme views; prompt part 1 says company numbers follow the
+  fiscal year; the ladder is written by extraction and kept when the view opens; the late February report in the AMZN
+  example drops only its outdated forecast; a correction of an item is described without an ambiguous "it"; the
+  matching call is said to also choose dependencies wherever the labels describe it; classification's time rule
+  says processing follows the sequence number, not the publication time; T2 includes exchanges' quarterly reports; an
+  IR deck marked as results is T1, other IR decks T5; T9 sends company-hosted talks to T4 by organizer, as rule 7 says;
+  rule 12 is about views and analysis; the measurement split T11/T15 applies to activity measurements only; scans
+  with a text layer are classified by the rules; "不算材料的东西" is titled for what it holds; companies, crypto and
+  commodities outside the universe are all kept out of the review pool; a re-sent item is skipped only when processing
+  finished; Config's settings cell is split into sentences; the system diagram no longer shows the final verdict
+  "writing back"; English labels on the page are Chinese; decision numbers left the explanatory text; the
+  classification page and node say what the simulation does and does not cover.
+- Round 2: five reviews found 24. Two were Claude's own slips in round 1, now fixed: a correction re-judged every
+  view linked to the item's evidence, also where only a relayed source changed (now only views linked to changed or
+  deleted sentences); and extraction's check named only a sentence, which would refuse evidence from a table cell
+  (now a sentence or a table cell). Also: the views node lists every case not opened and that a candidate joins only
+  an open view; the structure tree gives a theme-to-theme dependency its same or opposite direction; the state check
+  is described as checking the citations against those rules, not their mere existence; a number dependency reads
+  that year's view; four classification fields are marked as used in classifying; Config's summary separates the
+  search size from the three model settings; labels on the page are Chinese.
+- Round 3: three of five reviews found nothing; two items fixed (the current state lists every case not opened;
+  extraction stores the cited sentence or table cell).
+- Round 4: four of five reviews found nothing; the system overview's review found three, fixed: the glossary's 归入
+  says the view must still be open; its 出处 includes a table cell; the README example sets the dependency in the views
+  database, not in extraction. A fifth read of those files found nothing. Every in-scope file has now been read in
+  full by a review that found nothing.
+- Not changed in round 2: missing fields go back to upstream and wrong identifiers are not valid, as the rules say,
+  so the review pool's "信息缺东西 → 退回" stands; the simulation's 13F sample joins the open defects.
+- Not changed: dispatch's completeness check lists what dispatch itself needs; the required fields are checked in
+  classification's first step, so the two do not conflict.
+- Found in the simulation script, which is not changed at the POC stage (CURRENT_STATE, open defects): it merges a
+  copy without looking at the replaces-version field; it does not check fields required only in some cases; one
+  sample is a single XBRL fact, which is not pushed in; one branch treats a same-issuer, same-day item as a copy.
+- Seals: v10 in `docs/archive/2026-10-21-v10/` with `SHA256SUMS`.
