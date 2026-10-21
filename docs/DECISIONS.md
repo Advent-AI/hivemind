@@ -727,7 +727,8 @@ A later decision that changes one names the one it replaces.
 - Enforced: `AVOIDED_WORDS` and `wording_scope` in `docs/check.py` scan the in-scope page data and PRDs (the glossary
   section itself excluded) and fail on any avoided word, with a control sentence the check must catch.
 - Changed by D41: the wording scope also covers the views database and the labels node.
-
+- Changed by D52: 对上 → 比对 (比对记录, 比对标注), 并进 → 归入, and the pull-mode proposal's 并入 → 合并; ruled out with
+  control pairs.
 ## D37 · 2026-10-18 · Freeze v1 of the input side and extraction
 
 - By: Alex ("好你把写完的freeze了在html 上……我们要继续move on").
@@ -1174,6 +1175,7 @@ A later decision that changes one names the one it replaces.
   the later decisions.
 - Sixth round: one finding, CURRENT_STATE's order line now includes what an item's own round has written. The
   rounds found 20+, 11, 4, 6, 4 and 1 issues; the pass ends here.
+- Changed by D52: a plain-language pass over the same scope.
 ## D48 · 2026-10-20 · The views database, with match labelling, is frozen as version 1
 
 - By: Alex ("现在这个 db 模块算是 freeze 了吗还是你需要最后 review"; "Is there any inconsistencies and can we freeze? You
@@ -1288,3 +1290,37 @@ A later decision that changes one names the one it replaces.
   `EXTRACT_OPEN` of `docs/system-design/new-facts.js`; the views, extract, config and universe nodes and the `draft`
   field of `docs/system-design/new-design.js` and `render.js`; `new-config.js`; rule 8 of `new-universe.js`; the
   glossary of `docs/prd/00-system.md` (结论 added, 共识 removed); `docs/prd/01`, `03`, `05`, `06`; `README.md`.
+## D52 · 2026-10-21 · Plain, consistent wording across the design page and PRDs
+
+- By: Alex ("you gotta write in a consistent manner that's more understandable across … You have a lot of like
+  AI-ish shit jargon that is just very hard for humans to comprehend"; "don't add any additional shit that was not
+  intended … need to scrub everything clean"; review with several Codex sub-agents).
+- How: four read-only Codex reviews over the universe, classification, Config, dispatch, extraction, the views
+  database with match labelling, the review pool, the system overview and the repository README: wording of the views
+  database, wording of the rest, logic, and rules not traceable to Alex's words or a decision. The final verdict and
+  pull mode are old drafts and were left out. Every finding was checked against the text before a change. The
+  traceability review found nothing written as decided that Alex had not decided.
+- Renamed, one word per concept: 对上 → 比对 (比对记录, 比对标注; "对上" implied a match even when the result is a new
+  view or not opened); 并进 → 归入 (a candidate view joins an existing one), and the pull-mode proposal's 并入 → 合并, so
+  the three no longer sound alike (classification's 并到 stays for duplicates); "upstream / downstream" for views →
+  被依赖的观点 / 依赖它的 (上游 stays the data supplier only); 血缘 → 前后期关系 or 查来历; 写入者 → 由一个队列来写;
+  只追加 → 只加不改; 一条轴上的结果 → 从一头排到另一头的结果; the module title drops "thesis · ladder · evidence";
+  table cells are 单元格 and output fields 栏, so 格 means a rung only; 新指标 → 没登记的发布系列. Kept, being explained
+  where first used: 格, 层 (the four tiers are ordered), 接续, 连线, 一轮, 顺序号, and 颗粒度 (Alex's word).
+- Fixed, no rule changed: the dependency check and acceptance criteria now also allow a year a view waits for; the
+  views node's re-judging said only evidence, now evidence and the dependencies' conclusions; the PRD's "重大改动才重判"
+  bullet read as the condition for all re-judging, now it is the condition for a dependency and the one rule follows;
+  the first classification check refuses a missing readable text only for text items; a correction that names the
+  version it replaces (for example only the category changed) is a new version, not a duplicate; step 4 says plainly
+  what the one call judges and that a candidate joining a view gets one more call for its evidence; the Reuters example
+  relays NVDA's 8-K; decision numbers are taken out of rule sentences (status lines and decision lists keep them).
+- Second round: two more read-only Codex reviews of the result found fourteen, all checked and fixed. Two were
+  Claude's own slips in this pass: a time rule rewritten as "排先后、算日期只看发布日", which contradicted processing in
+  sequence-number order (now "每条信息只用一个日期：它的发布日", ordering untouched); and the not-a-duplicate case fixed in one
+  rule but not in the first check and the field table (now in all three, and `supersedes` is used in classification).
+  The rest were wording: a few 格 still meaning a table cell, 官方动作 / 官方行动, "叠在观点库上", 答不出 / 等答案 / 合并 listed
+  differently in two places, the PRD index title, an example's subject.
+  A third, short Codex check of those fixes found one more place, the `copy_of` field, now with the same condition.
+- Enforced: `docs/check.py` rules out 对上, 并进, 血缘, 写入者, 只追加, 一条轴上 (22 control pairs); the page data, the
+  in-scope PRDs and `README.md`.
+- Seals: v9 in `docs/archive/2026-10-21-v9/` with `SHA256SUMS`.

@@ -103,20 +103,28 @@ AVOIDED_WORDS = [
     (r"主题层|对象层", "主题观点、对象观点"), (r"主张", "问题（观点写成一个问题）"), (r"已证实|已证伪", "出答案"),
     (r"分发序号", "顺序号"),
     (r"个股", "公司"), (r"五格的梯子|固定五格", "梯子（五格；只有是或否的问题两格）"),
-    (r"候选(?!观点)", "候选观点（抽取交的）或清单（对上时找来比的）"),
-    (r"钥匙", "不用：是不是同一样东西，由模型在对上时判（D44）"),
+    (r"候选(?!观点)", "候选观点（抽取交的）或清单（比对时找来比的）"),
+    (r"钥匙", "不用：是不是同一样东西，由模型在比对时判（D44）"),
     (r"检索", "搜索"),
     (r"消息", "说法（各方说的）、证据或信息"),
-    (r"挂(?!钩)", "连到（证据连到观点）、并进（候选观点并进已有的）或属于（观点属于对象）"),
+    (r"挂(?!钩)", "连到（证据连到观点）、归入（候选观点归入已有的）或属于（观点属于对象）"),
+    (r"对上(?!游)", "比对（D52）"),
+    (r"并进", "归入（候选观点归入已有的观点，D52）"),
+    (r"血缘", "前后期关系，或查来历（D52）"),
+    (r"写入者", "由哪个队列来写（D52）"),
+    (r"只追加", "只加不改（D52）"),
+    (r"一条轴上", "从一头排到另一头（D52）"),
 ]
 # Each newer ruled-out word with the sentence it must catch and the corrected sentence it must pass.
 WORD_CONTROLS = [
     ("这条观点的驱动", "这条观点看的是什么"), ("写下检验条件", "写下梯子"), ("前提变了", "依赖变了"),
     ("按期限档开观点", "按到期日开观点"), ("对象层的观点", "对象观点"), ("这条主张", "这个问题"),
     ("观点已证实", "观点出了答案"), ("编分发序号", "编顺序号"), ("盯一只个股", "盯一家公司"),
-    ("五格的梯子", "五格，只有是或否的问题两格"), ("候选进来", "候选观点进来"), ("先对钥匙", "由模型对上"),
+    ("五格的梯子", "五格，只有是或否的问题两格"), ("候选进来", "候选观点进来"), ("先对钥匙", "由模型比对"),
     ("检索几条", "搜索几条"), ("消息从哪来", "说法从哪来"), ("证据挂到观点上", "证据连到观点上，不挂钩"),
     ("看 NVDA 层", "看对象观点（NVDA）"),
+    ("第 4 步对上", "第 4 步比对"), ("候选观点并进已有的", "候选观点归入已有的"), ("链存的是血缘", "链记下前后期关系"),
+    ("只有一个写入者", "只由一个队列来写"), ("记录只追加", "记录只加不改"), ("一条轴上的结果", "从一头排到另一头的结果"),
 ]
 # The views database's page data (D38-D42): rendered into docs/prd/06-views.md and read by the wording check.
 VIEWS_CONSTANTS = ["VIEW_TREE", "VIEW_KINDS", "KIND_NOTE", "LADDER_EXAMPLES", "LADDER_RULES", "POSITIONS", "TIERS", "TIER_RULES",
@@ -315,10 +323,10 @@ def blocks(data):
                                                      [[row["outcome"], row["when"], row["writes"]] for row in views["EVIDENCE_OUTCOMES"]])
         + "\n\n" + bullets(views["EVIDENCE_NOTES"]),
         ("06-views.md", "intake-example"): ascii_tree(views["INTAKE_EXAMPLE_TREE"]),
-        ("06-views.md", "evidence-example"): table(["信息", "对上证据", "库里", "重判"],
+        ("06-views.md", "evidence-example"): table(["信息", "比对证据", "库里", "重判"],
                                                     [[row["item"], row["matched"], row["store"], row["rejudge"]] for row in views["EVIDENCE_EXAMPLE"]])
         + "\n\n" + views["EVIDENCE_EXAMPLE_NOTE"],
-        ("06-views.md", "judge"): step_flow("第一版：通用大模型做对上", views["JUDGE_STEPS"]),
+        ("06-views.md", "judge"): step_flow("第一版：通用大模型做比对", views["JUDGE_STEPS"]),
         ("06-views.md", "trace"): table(["部分", "记什么"], [[row["part"], row["meaning"]] for row in views["TRACE_FIELDS"]]),
         ("06-views.md", "lifecycle"): ascii_tree(views["LIFECYCLE_TREE"]) + "\n\n" + bullets(views["LIFECYCLE_NOTES"]),
         ("06-views.md", "fields"): table(["部分", "写什么", "例子"], [[row["part"], row["meaning"], row["example"]] for row in views["VIEW_FIELDS"]]),

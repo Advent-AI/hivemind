@@ -1,12 +1,12 @@
 # Current state
 
-As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D51 in `docs/DECISIONS.md`.
+As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D52 in `docs/DECISIONS.md`.
 The work is an architecture POC: the design page, a PRD per module and DECISIONS; no code.
 
 ## Status
 
-- Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49) and v8
-  `docs/archive/2026-10-21-v8/` (D51), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
+- Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49), v8
+  `docs/archive/2026-10-21-v8/` (D51) and v9 `docs/archive/2026-10-21-v9/` (D52), the current stable version. Each has `SHA256SUMS` and is never edited. The superseded
   v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
 - PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
 - After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
@@ -53,7 +53,7 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
 - Final verdict (D29) and pull mode: old drafts written for the previous views design; to be redone on D38–D40 (D41).
 - Order and sync (D31, D46): numbers in arrival order, one writer per view (themes first), reads only the state left
   by earlier items plus what its own round has written; the timeline only grows forward (D46 replaced D31's late-item rule).
-- Wording (D36, D41, D42, D44–D47): one word per concept in the universe, classification, dispatch, extraction and the views
+- Wording (D36, D41, D42, D44–D47, D52): plain words a reader outside the discussion understands; one word per concept in the universe, classification, dispatch, extraction and the views
   database; the glossary is in `docs/prd/00-system.md` and `docs/check.py` fails on an avoided word.
 - Research behind extraction and matching: `reports/SEC 财报 代码抽取 开源方案.md`, `reports/观点库 向量检索 去重匹配.md`,
   `reports/观点库匹配 业界做法对比.md`, `reports/观点库重建 去重 证据 血缘（Codex 调研）.md`,
