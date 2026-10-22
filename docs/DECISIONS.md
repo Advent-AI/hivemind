@@ -1648,3 +1648,26 @@ A later decision that changes one names the one it replaces.
 - Enforced: the page data (`new-facts.js`, `new-design.js`, `new-universe.js`); `docs/prd/00`, `01`, `05`, `06`,
   `README.md`; `docs/CURRENT_STATE.md`, `README.md`.
 - Seals: v14 in `docs/archive/2026-10-22-v14/` with `SHA256SUMS`.
+
+## D61 · 2026-10-22 · Clean-up: a code review, bloat removed, superseded seals out of the tree
+
+- By: Alex ("你跑一个code reveiw 移除不必要的垃圾和bloat, 更新好所有文档，readme, agents.md 然后push").
+- How: three read-only Codex reviews (code, text bloat, the repository); each finding checked against the files; a
+  read-only review of the result for meaning lost or changed.
+- Decides (no rule changed):
+  1. Sealed copies v7–v14 leave the tree; v1 (the earlier design) and v15 (the frozen design) stay. Each removed copy
+     is in Git: v2–v7 in `94622a5`, v8 `7830a18`, v9 `267c89d`, v10 `8d617c7`, v11 `35bb392`, v12–v14 `3da83a9`. D50
+     called its removal of v2–v6 a one-time exception; this is a second, at Alex's request.
+  2. Text: status lines keep the frozen date and what is open, the change history being in each PRD's decision list
+     and here; the front summary is shortened; summaries point to the one re-judging rule and to the memo note
+     instead of restating them, and the glossary's 重判 points to the rule; a sentence the map caption said twice is
+     said once; `docs/CURRENT_STATE.md` keeps the status, the open defects and the next task and points to the PRDs
+     for the design.
+  3. Code: styles and two colour tokens no page uses (`design-system.css`); edge label coordinates `render.js`
+     computed and never read; the font script's note on a `fonts.css` that does not exist.
+  4. `AGENTS.md`: the sentence on scripts made true; three lessons written at their decisions: bring Alex only the
+     choices that change what the system does; a rule's text has one owner and other places point to it; before a
+     freeze, review in rounds by angle until a round finds nothing.
+- Not changed: `copy_old_design.py` copies 113 configuration fields the Old tab never reads; trimming them needs a rerun
+  against the old repository's snapshot to save 5 KB, so they stay.
+- Seals: v15 in `docs/archive/2026-10-22-v15/` with `SHA256SUMS`, the design as frozen after D58–D61.

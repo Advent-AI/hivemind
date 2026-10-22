@@ -306,38 +306,38 @@
       startY = from.y + view.nodeHeight;
       endY = to.y + view.nodeHeight;
       const laneY = Math.min(view.height - 13, Math.max(startY, endY) + 26);
-      return { d: `M${startX},${startY} V${laneY} H${endX} V${endY}`, labelX: (startX + endX) / 2, labelY: laneY - 6 };
+      return { d: `M${startX},${startY} V${laneY} H${endX} V${endY}` };
     }
     if (edge.route === 'left') {
       startX = from.x; endX = to.x;
       const laneX = 8;
-      return { d: `M${startX},${startY} H${laneX} V${endY} H${endX}`, labelX: laneX + 10, labelY: (startY + endY) / 2 };
+      return { d: `M${startX},${startY} H${laneX} V${endY} H${endX}` };
     }
     if (edge.route === 'right') {
       startX = from.x + NODE_WIDTH; endX = to.x + NODE_WIDTH;
       const laneX = view.width - 9;
-      return { d: `M${startX},${startY} H${laneX} V${endY} H${endX}`, labelX: laneX - 95, labelY: (startY + endY) / 2 };
+      return { d: `M${startX},${startY} H${laneX} V${endY} H${endX}` };
     }
     if (Math.abs(deltaY) < 5) {
       startX = deltaX > 0 ? from.x + NODE_WIDTH : from.x;
       endX = deltaX > 0 ? to.x : to.x + NODE_WIDTH;
-      return { d: `M${startX},${startY} L${endX},${endY}`, labelX: (startX + endX) / 2, labelY: startY - 9 };
+      return { d: `M${startX},${startY} L${endX},${endY}` };
     }
     if (Math.abs(deltaX) < 5) {
       startY = deltaY > 0 ? from.y + view.nodeHeight : from.y;
       endY = deltaY > 0 ? to.y : to.y + view.nodeHeight;
-      return { d: `M${startX},${startY} L${endX},${endY}`, labelX: startX + 8, labelY: (startY + endY) / 2 };
+      return { d: `M${startX},${startY} L${endX},${endY}` };
     }
     if (edge.route === 'down' || Math.abs(deltaY) > Math.abs(deltaX)) {
       startY = deltaY > 0 ? from.y + view.nodeHeight : from.y;
       endY = deltaY > 0 ? to.y : to.y + view.nodeHeight;
       const middleY = (startY + endY) / 2;
-      return { d: `M${startX},${startY} V${middleY} H${endX} V${endY}`, labelX: (startX + endX) / 2, labelY: middleY - 7 };
+      return { d: `M${startX},${startY} V${middleY} H${endX} V${endY}` };
     }
     startX = deltaX > 0 ? from.x + NODE_WIDTH : from.x;
     endX = deltaX > 0 ? to.x : to.x + NODE_WIDTH;
     const middleX = (startX + endX) / 2;
-    return { d: `M${startX},${startY} H${middleX} V${endY} H${endX}`, labelX: middleX + 6, labelY: (startY + endY) / 2 };
+    return { d: `M${startX},${startY} H${middleX} V${endY} H${endX}` };
   }
 
   function nodeMarkers(design, nodeId, node) {

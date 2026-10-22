@@ -21,6 +21,8 @@ becomes a new rule only when no rule covers that decision.
   recorded as a decision before any work departs from the document.
 - Do what was asked. A review or census is a set of findings, not a work order: the mechanisms it names go to Alex as a
   short list with one structural rule each, and one is built when Alex picks it. Never start what only Alex can launch.
+  Bring Alex only the choices that change what the system does, each with its options and a lean; settle wording,
+  placement and where a rule is written yourself, and say so in the report.
 - Work, review and edit only the modules Alex has taken up, and tell every reviewer (Codex, a subagent) what is out of
   scope: a gap in a module he has not taken up is not a finding and is written into no document. A frozen module
   (`docs/DECISIONS.md` D19, D37) changes only through a new decision.
@@ -207,7 +209,9 @@ Verify at the point the change touches, at the sharpest level that shows it work
 ## 11. The design phase
 
 The work is an architecture POC: the design page, one PRD per module and the decisions. No product code and no data
-files until Alex starts the build; `docs/check.py` is the one script, and it only checks.
+files until Alex starts the build. `docs/check.py` checks (and rebuilds the PRD bundle the page reads from disk); the
+only other scripts generate page assets (`build_bundle.py`, `copy_old_design.py`, `embed_fonts.py`) or simulate
+classification (`simulate_classification.py`, not changed at this stage).
 
 - The design page is `docs/system-design.html` with its data in `docs/system-design/new-*.js`; each module's PRD is in
   `docs/prd/` (index `README.md`). The page data is the one source: a PRD block marked `generated` comes from it and
@@ -219,8 +223,16 @@ files until Alex starts the build; `docs/check.py` is the one script, and it onl
   D28).
 - Write for a reader who did not follow the discussion: plain Chinese, one concrete example, processes as step cards
   and decisions as trees; every detail page links to its PRD.
+- A rule is written in full in one place, its owner; summaries, other modules and the glossary name it or point to
+  it without restating its conditions, so a change lands once. A finding that one sentence missed a change is a
+  class: count every place that states the same thing before the first edit (§1).
 - Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`.
   The prompt names the scope, the governing documents and what is out of scope; its report is a lead (§1).
+- Before a freeze, review in rounds. Each round runs read-only reviews by angle: an end-to-end simulation of
+  realistic items, state-by-event tables, wording against the glossary, whether an engineer could build each step
+  from the text, every rule against the decisions, an attack on Claude's own findings, a new reader answering
+  questions, every change read in context, and line-by-line reads by module. Each finding is checked against the
+  text before a change; rounds go on until one finds nothing; then the freeze is recorded and the design sealed.
 
 ## Before finishing a slice
 
