@@ -187,6 +187,8 @@ A later decision that changes one names the one it replaces.
 - Seal note (2026-10-16): the receive node became dispatch's first two questions (D17).
 - Changed by D31: processing an item may read the state left by earlier items (a smaller number and a publication
   day not after its own); it still never reads the wall clock. Pull mode's "now" is an input (D29).
+- Changed by D56: classification's time rule 2 says the stream has no "today"; pull mode, the only place that acts
+  on time, gets its "now" as an input (D14, D54).
 
 ## D13 · 2026-10-16 · The system is driven by information, not by the calendar
 
@@ -637,6 +639,8 @@ A later decision that changes one names the one it replaces.
   whose object leaves the universe is kept as no longer tracked and not judged at its due date.
 - Changed by D46: the late-item rule is replaced by D46 item 13 (the timeline only grows forward); the rule for a
   view whose object leaves the universe stands.
+- Changed by D55: a view whose object is taken off the list (by hand) is flagged no longer tracked and no longer
+  updated; "not judged at its due date", written for the old final verdict, is replaced by that.
 
 ## D32 · 2026-10-18 · Table data comes one release at a time; XBRL is not pushed again
 
@@ -979,6 +983,8 @@ A later decision that changes one names the one it replaces.
   `docs/prd/00-system.md`; `docs/prd/00-system.md`, `01-universe.md`, `05-extraction.md`, `06-views.md`, `README.md`.
 - Changed by D45: the dependency definition (only an input; a cycle is rewritten) is a proposal; Alex said a cycle
   is a problem of how the theses are defined.
+- Changed by D58: prompt part 5 also gives each view's due date; a view covers what happens up to its due date, and
+  what happens after it goes in as a candidate view, so a closed view a dependent still points to is succeeded.
 
 ## D43 · 2026-10-20 · A second stable version of the design is sealed
 
@@ -1015,6 +1021,8 @@ A later decision that changes one names the one it replaces.
   `docs/system-design/new-design.js`; `docs/prd/00-system.md` (principle 7, the glossary), `docs/prd/06-views.md`;
   `docs/check.py` fails on the word "钥匙".
 - Changed by D45: the answer source of a number view is a proposal (who judges a rung, and how), not decided.
+- Changed by D58: "one open view per thing" is the rule matching keeps when it opens views; a view a person reopens
+  by hand is outside it.
 ## D45 · 2026-10-20 · Only what Alex said or decided is decided; Claude's proposals are listed apart
 
 - By: Alex ("我明明就很清楚的告诉你了我过去所有的讨论和思路，你不要 diverge and make shit up, review this shit"; to the
@@ -1135,6 +1143,9 @@ A later decision that changes one names the one it replaces.
   views settings are matching and re-judging.
 - Changed by D54: there is no answer apart from the state, which is frozen at the due date; the proposal on how
   answers are scored is dropped.
+- Changed by D58: item 4 limits which years a candidate may open (this year and next, one view per year); last
+  year's view stays open until its due date. Item 8: a dependent theme view writes whether the two ladders run the
+  same way or opposite.
 ## D47 · 2026-10-20 · End-to-end consistency from the universe to the views database
 
 - By: Alex ("now you have everything, you have every log … do end-to-end consistency test … up until the model db
@@ -1297,6 +1308,9 @@ A later decision that changes one names the one it replaces.
   field of `docs/system-design/new-design.js` and `render.js`; `new-config.js`; rule 8 of `new-universe.js`; the
   glossary of `docs/prd/00-system.md` (结论 added, 共识 removed); `docs/prd/01`, `03`, `05`, `06`; `README.md`.
 - Changed by D54: item 4's "who sets an answer at the due date" is settled: the state is frozen at the due date.
+- Changed by D58: an existing piece newly linked to a view counts as its evidence changing; a piece that only gains a
+  source does not by itself trigger re-judging; "changed or unchanged" compares with the conclusion before this
+  round, retries included.
 
 ## D52 · 2026-10-21 · Plain, consistent wording across the design page and PRDs
 
@@ -1430,3 +1444,207 @@ A later decision that changes one names the one it replaces.
   verdict and pull nodes and the system view of `docs/system-design/new-design.js`; `docs/prd/00-system.md`,
   `05-extraction.md`, `06-views.md`, `07-final-verdict.md`, `08-pull-mode.md`; `AVOIDED_WORDS` and `WORD_CONTROLS` of
   `docs/check.py`.
+
+## D55 · 2026-10-22 · The final verdict checked against the rebuilt views database; a removed object's views stop updating
+
+- By: Alex. He asked "最终判定模块已经定稿了吗？你来review 一下和我们最新改的模块的consistency", then "你一个一个和我核对，讲人话".
+  On a view whose object leaves the list: "这个我自己定就好了，我们manual改名单，如果不update的name 就放个flag 不要继续更新即可".
+  On the other two findings: "可以".
+- Decides:
+  1. The research list is edited by hand. A view whose object is taken off it is kept, flagged no longer tracked, and
+     no longer updated. This replaces D31's "not judged at its due date", written when the old final verdict judged
+     every view at its due date; since D54 nothing is judged then. Claude's "not frozen at the due date either" is not
+     written: no longer updated covers it. The D31 rule was Claude's addition, not Alex's words.
+  2. The final verdict card's inputs, outputs and checks start with "旧稿：", as its purpose does: they still name
+     premises and conditions.
+  3. The final verdict PRD's opening note, and the same list on the page (the card's open item, the detail page's
+     status line), name every part of the old draft no longer used, adding the 7-day backstop for a weakened premise
+     (already retired in the pull mode PRD) and sending a view on a disagreement within a tier (replaced by D38).
+- Checked: Claude read the final verdict, pull mode, views database, system overview and Config against D51 and D54.
+  The final verdict is not final: only D54's freezing is decided, and whether it stays a step waits for pull mode
+  (D54). Each trigger of the old draft has a place in the rebuilt design (re-judging, D51; freezing, D54; the rule for
+  corrected items); nothing is decided from that. Three inconsistencies were found and gone through with Alex one by
+  one; all three are fixed. No mechanism is added.
+- Changes: D31 (the rule for a view whose object leaves the list); the frozen views database (D48) through this
+  decision.
+- Enforced: `LIFECYCLE_TREE`, `VIEW_FIELDS` and the verdict page's status line in `docs/system-design/new-facts.js`;
+  the views and verdict nodes of `docs/system-design/new-design.js`; `docs/prd/00-system.md`, `06-views.md`,
+  `07-final-verdict.md`, `README.md`.
+- Changed by D57: "no longer tracked" is gone; a view has one switch, open or closed, and a person closes or
+  reopens it by hand.
+
+## D56 · 2026-10-22 · A full sweep before sealing v12
+
+- By: Alex ("你准备freeze 但是完整扫一遍"), then, as Claude went through the findings one by one: "可以", "ok",
+  "可以", "ok".
+- How: seven read-only Codex reviews, five split by module as in D53's rounds, one on the final verdict and pull
+  mode's current parts, one on every change since v11 (`git diff 35bb392`: the UI redo 9886c79, D54, D55); Claude
+  read every PRD and the repository README in full. Three reviews found nothing; the diff review confirmed the UI
+  redo changed no text. Four findings remained after checking each against the text.
+- Decides:
+  1. Only open views are re-judged: a view frozen at its due date or flagged no longer tracked is not re-judged when
+     what it reads changes. This follows D54 (frozen) and D55 (no longer updated); the rule said "a view is re-judged
+     when what it reads changes" without the scope, so a correction or a dependency's change would have re-judged a
+     frozen view. Written in the re-judging rule, intake step 7, the views acceptance criteria and the glossary's 重判.
+     Changed by D57: the scope reads "only open views"; closed covers both frozen and closed by hand.
+  2. The decision lists that still described old-draft content as current now say so: the final verdict PRD's D30
+     (conditions, replaced by D38) and D31 (premises, replaced by dependencies), the system overview's D29. D55 item 3
+     had fixed only the final verdict PRD's opening note; these lines are the same class.
+  3. Classification's time rule 2 says the stream has no "today"; pull mode, the only place that acts on time, gets
+     its "now" as an input. "系统里没有‘今天是哪天’" read as if pull mode could not act on dates (D14, D54).
+  4. The repository README follows D54 and D55: the decision range, the log's step count, pull mode's run and
+     freezing, the final verdict and pull mode statuses, and v12 as the current sealed design. D54 had left it out.
+- No mechanism is added.
+- Changes: D12's enforcement in classification (frozen, D19, D37) and the frozen views database (D48), through this
+  decision.
+- Enforced: `DEPENDENCY_RULES` and `INTAKE_STEPS` of `docs/system-design/new-facts.js`; `TIME_RULES` of
+  `docs/system-design/new-classification.js`; the views node of `docs/system-design/new-design.js`;
+  `docs/prd/00-system.md`, `02-classification.md`, `06-views.md`, `07-final-verdict.md`, `docs/prd/README.md`; the
+  repository `README.md`.
+
+## D57 · 2026-10-22 · A view has one switch: open or closed
+
+- By: Alex, when Claude asked where to write "only open views are re-judged": "So, a thesis basically can have like
+  an active and inactive flag. That's it. … It's very simple system design. The active flag can be turned on and off
+  by me if … the asset gets delisted."
+- Decides:
+  1. A view has one switch, open (active) or closed (inactive), and nothing else; D55's "no longer tracked" label is
+     gone. The design's existing words 开着 and 关了 name the two positions; no new word.
+  2. Only open views are updated: a closed view is not re-judged, keeps the state it had when it closed, and stays in
+     the database, searchable. A view that depends on it reads that state and its reasons.
+  3. At the due date pull mode freezes the state and closes the view (D54). A person can close or reopen a view by
+     hand, for example when the asset is delisted; the research list is edited by hand too (D55).
+- Not changed: when a superseded piece of evidence is still linked to a closed view, the new piece is linked there
+  too; a link is a record, not an update of the view's state, and adding a refusal would be a new mechanism.
+- Checked: the second round of Codex reviews (five, on the files D56 touched) found the "only open views" scope
+  missing in five more places: the views node, the system overview's two-modes table, the README, and the rules for
+  superseded evidence and for corrections. All five now say open views; Claude's question on where to write the scope
+  is answered by the one switch. Two of the five reviews found nothing.
+- Wording: 开着、关了 gets a glossary row; `docs/check.py` rules out 不再跟踪, with a control pair.
+- Changes: D55 item 1, D56 item 1; the frozen views database (D48) through this decision.
+- Enforced: `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `INTAKE_STEPS`,
+  `EVIDENCE_NOTES`, `ORDER_RULES` of `docs/system-design/new-facts.js`; the views node of
+  `docs/system-design/new-design.js`; `docs/prd/00-system.md`, `06-views.md`, `docs/prd/README.md`; the repository
+  `README.md`; `AVOIDED_WORDS` and `WORD_CONTROLS` of `docs/check.py`.
+- Changed by D58: each manual close or reopen is a record (who, after which item number); the rule that every
+  change carries a source covers the changes items cause.
+- Seals: v12 in `docs/archive/2026-10-22-v12/` with `SHA256SUMS`: the design after D54–D57 and the full sweep of D56.
+
+## D58 · 2026-10-22 · A deep review before freezing everything but pull mode
+
+- By: Alex ("你为什么不跑一个非常长且细致的 overall read and reasoning of this system deisgn so far - consistency in
+  wording - consistency in logic - specifity in writing and description - system design flow and state 你自己要超级深度的研究以及多轮的反攻来自洽。
+  不要自己加戏，我们当前的设计需要完整的freeze (除了 pull mode) 你现在就深入的review，直到你自己满意可以定稿，不要偷懒或是不真的读代码，做仿真").
+- How: Claude read every PRD, the page data, the renderer's visible text and D38–D57, traced items through the stream
+  and wrote down eight candidate problems of its own. Eight rounds of read-only Codex reviews followed, by angle: an
+  end-to-end simulation of eighteen items (dispatch, extraction, the seven intake steps, the due date and manual
+  switches); state-by-event tables for a view, a piece of evidence, a candidate and an item; wording against the
+  glossary; whether an engineer could build each step from the text; every decided rule against Alex's words and the
+  decisions; an attack on Claude's own candidates; the input side with `simulate_classification.py` run; a new reader
+  answering seventeen questions; every change since v11 read in context; and line-by-line reads split by module.
+  Each finding was checked against the text before a change. The rounds found about 20, 7, 5, 7, 3, 2, 1 and 1;
+  in the last two rounds eight of nine reviews found nothing, and the last finding was a cross-reference.
+- Decides (written out, no mechanism added; each follows a decision in force):
+  1. A dependent object view writes which end of the other view is bullish for it; a dependent theme view writes
+     whether the two ladders run the same way or opposite (it was written only for two theme views).
+  2. A waiting arrow records which chain (that of a view shown to the model) and which year; it connects when that
+     year's view is succeeded on that chain.
+  3. A view covers what happens up to its due date. Prompt part 5 gives each listed view's question, what it looks
+     at and its due date (no state or evidence); what happens after the due date goes in as a candidate view, so a
+     closed view a dependent still points to is succeeded rather than given evidence it will not use.
+  4. Matching shows each existing view's question, what it looks at, ladder, due date and whether it is open. A
+     candidate that is the same thing and period as a closed view is not opened ("a closed view can only be
+     succeeded"). A successor's ladder runs the way its predecessor's did, with the candidate's thresholds.
+  5. Evidence linked to a candidate view, even if also linked to existing views, is compared once, after the
+     candidate's place is known, under every existing view it links to; evidence only on a new view is new.
+  6. Re-judging: only open views; an existing piece newly linked to a view counts as its evidence changing; a piece
+     that only gains a source does not by itself trigger re-judging; "changed or unchanged" compares with the
+     conclusion before this round, retries included. Writing puts themes before objects; judging follows the
+     dependencies. Universe rule 8 says dependents still open are re-judged.
+  7. "This year and next" limits which years a candidate may open, one view per year; last year's view stays open
+     until its due date (counting all open views would close it before its due date, against D54).
+  8. A conclusion is a state with its reasons: at the due date the rung and its reasons are the view's last
+     conclusion, and dependents read the state and reasons a closed view had when it closed.
+  9. Each manual close or reopen is a record (who, after which item number); the rule that every change carries a
+     source covers the changes items cause. "One open view per thing" is the rule matching keeps when it opens views
+     (D44); a view a person reopens is outside it.
+  10. Wording: 官方行动, not 官方动作; decision numbers out of body text; the headings 一条观点开着还是关了 and 已经定的;
+      the page's open items are called 还没定的, as in the PRDs; the map edge between extraction and the views
+      database says what goes each way; pull mode "only decided when it runs"; 并进 out of the final verdict and pull
+      mode.
+- Rejected after review: Claude's own idea to list only open views in prompt part 5 (it changes D42's input; the due
+  date answers the case instead); adding a dependency to the AMD example (the model chooses, and #3 is judged as new
+  anyway); a pull-mode open item on number views whose publication day is not known yet (pull mode is not designed).
+  Kept as is: a manually closed view whose source is later corrected loses the old sentence and does not take the
+  new one (closed views are not updated).
+- Recorded, not changed (the script is not changed at this stage): three gaps in `simulate_classification.py`, in
+  `docs/CURRENT_STATE.md` under open defects.
+- Open, for Alex (in extraction's 还没定的): how a candidate view names its object when the item's tags do not carry
+  it (a theme not tagged, another company named in the text), since step 5 checks the object is in the universe;
+  and what a candidate view read from his own memo does without other evidence, since classification counts the memo
+  as a view to track, not evidence, and a candidate view carries at least one piece of evidence.
+- Freeze: every module except pull mode and the final verdict, which is designed with it, is frozen in this text; a
+  change needs a new decision.
+- Changes: D42, D44, D46, D51, D57 (notes under each); the frozen universe, extraction and views database through this
+  decision.
+- Enforced: the page data (`new-facts.js`, `new-design.js`, `new-universe.js`), `render.js`; `docs/prd/00`, `01`, `05`,
+  `06`, `07`, `08`, `README.md`; `docs/CURRENT_STATE.md`, `README.md`.
+- Seals: v13 in `docs/archive/2026-10-22-v13/` with `SHA256SUMS`.
+- Changed by D59: Alex answered both open questions; the freeze holds, with D59's text.
+
+## D59 · 2026-10-22 · How a candidate view names its object; a view from Alex's own memo
+
+- By: Alex, to the two questions D58 left open, each with two options and Claude's lean: "1 选 A，2 选 A，然后再做一次".
+- Decides:
+  1. A candidate view names its object as follows. Prompt part 3 carries the item's related objects and, appended,
+     every theme in the research universe (a few dozen); a candidate about a theme picks it from that list. A company,
+     crypto asset or commodity is written by ticker, crypto symbol, commodity code or name, and code looks it up the
+     way classification looks up object identifiers. What is found but outside the universe, what is not found, and a
+     theme not in the universe keep their existing outcomes (noted only; the review pool; a suggested theme). Step 5
+     checks the object this way.
+  2. Alex's own memo (T8 with him as the author): its judgements are read as candidate views, not as evidence (as
+     classification says). Such a candidate may carry no evidence; once opened, its state is "还没判" until evidence
+     first links to it, when it is judged for the first time; a view that depends on it reads "还没判" until then. The
+     code check that a judgement says "changed" now covers a view's first judgement, whenever that comes.
+- Changes: D42 and D46 item 16 (a candidate carries evidence, except one read from Alex's own memo); the frozen
+  universe (its themes also go to extraction), extraction and views database, through this decision.
+- Enforced: `TEMPLATE`, `PROMPT_EXAMPLE`, `PROMPT_NOTES`, `EXTRACT_TWO`, `EXTRACT_OPEN`, `STATE_RULES`,
+  `DEPENDENCY_RULES`, `INTAKE_STEPS`, `VIEW_FIELDS` of `docs/system-design/new-facts.js`; the extract, views and
+  universe nodes and an edge from the universe to extraction in `docs/system-design/new-design.js`;
+  `docs/prd/00-system.md` (the glossary's 状态, the side lines), `01-universe.md`, `05-extraction.md`, `06-views.md`.
+- Changed by D60: written out wherever it applies (the second deep review); the code-or-name lookup follows registered
+  names in the reference data.
+
+## D60 · 2026-10-22 · The deep review again, after D59
+
+- By: Alex ("1 选 A，2 选 A，然后再做一次").
+- How: as D58, from the top, with D59's cases added: the flow simulation took 21 items (a theme the tags do not
+  carry, another company named in the text, a memo of Alex's with no facts, then evidence for it, a view depending
+  on a view still "还没判"); the state tables took the state "还没判"; the new reader answered two more questions;
+  one review attacked only what D59 had written. Five rounds: 13, 8, 7, 6 and 7 read-only Codex reviews, each
+  finding checked against the text first. They found about 8, 5, 3, 1 and 0; the last round's seven reviews found
+  nothing.
+- Decides (no mechanism added; D59 written out where it applies, and wording):
+  1. Alex's memo: its judgements all go in as candidate views, may carry no evidence and are not evidence. This is
+     now in prompt part 1, extraction step 2, the hand-over table, the "读到一句话或一个数" tree (memo judgements do
+     not go through it), the extraction page, the nodes, the glossary and the summaries; "only what the views do not
+     cover" governs other items.
+  2. A candidate's object: a theme from the universe's themes in part 3, or written out when the universe has none;
+     a company, crypto asset or commodity by code or name, as Alex chose, looked up in the reference data, a name
+     only as registered (as classification does for company names). A first-round narrowing to company names only
+     was Claude's slip, reverted.
+  3. "还没判" is in the state's definitions; a closed view keeps the state it had; the lifecycle and the re-judging
+     summaries say a memo view without evidence is not judged. Universe rule 8 now says dependents are re-judged by
+     the views database's rule rather than restating its conditions, so they live in one place.
+  4. Matching shows each existing view's object too; code checks whether a cited piece is marked replaced (which
+     also covers deleted sentences); writing puts theme views before object views, and an object view is written by
+     its company's, crypto asset's or commodity's queue; a manual switch counts "after the item with which sequence
+     number"; only the sentence or cell a view's or a piece's source cites is stored.
+  5. On the map the universe → extraction edge (themes) and the views → review pool edge run between the rows,
+     not through other modules.
+- Recorded, not changed: the classification simulation reads related objects from an old field name, so its pass
+  does not test the current field (`docs/CURRENT_STATE.md`, open defects).
+- The freeze of D58 holds, now with D59 and this text.
+- Enforced: the page data (`new-facts.js`, `new-design.js`, `new-universe.js`); `docs/prd/00`, `01`, `05`, `06`,
+  `README.md`; `docs/CURRENT_STATE.md`, `README.md`.
+- Seals: v14 in `docs/archive/2026-10-22-v14/` with `SHA256SUMS`.

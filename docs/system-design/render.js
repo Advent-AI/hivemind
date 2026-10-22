@@ -467,7 +467,7 @@
       ${facts ? `<dl class="facts detail__facts">${facts}</dl>` : ''}
       ${(node.inspect || []).length ? `<h3 class="detail__heading">检查顺序</h3><ol class="detail__steps">${node.inspect.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ol>` : ''}
       ${(node.verified || []).length ? `<h3 class="detail__heading">验证</h3><ul class="detail__steps">${node.verified.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
-      ${(node.open || []).length ? `<h3 class="detail__heading">未决事项</h3><ul class="detail__steps">${node.open.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
+      ${(node.open || []).length ? `<h3 class="detail__heading">还没定的</h3><ul class="detail__steps">${node.open.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
       ${connections ? `<h3 class="detail__heading">本视图中的连接</h3><ul class="connections">${connections}</ul>` : ''}
       ${(node.refs || []).length ? `<h3 class="detail__heading">代码位置</h3><div class="refs">${referenceLinks(design, node.refs)}</div>` : ''}
       ${issues ? `<h3 class="detail__heading">已记录的问题</h3><ul class="issues">${issues}</ul>` : ''}

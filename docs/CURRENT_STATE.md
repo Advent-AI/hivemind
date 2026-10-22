@@ -1,14 +1,21 @@
 # Current state
 
-As of 2026-10-21. The design lives in `docs/system-design.html` (New tab); decisions D1–D54 in `docs/DECISIONS.md`.
+As of 2026-10-22. The design lives in `docs/system-design.html` (New tab); decisions D1–D60 in `docs/DECISIONS.md`.
 The work is an architecture POC: the design page, a PRD per module and DECISIONS; no code.
 
 ## Status
 
 - Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49), v8
   `docs/archive/2026-10-21-v8/` (D51), v9 `docs/archive/2026-10-21-v9/` (D52), v10 `docs/archive/2026-10-21-v10/`
-  (D53, rounds 1–5) and v11 `docs/archive/2026-10-21-v11/` (D53, rounds 6–9), the last sealed version (D54 came after it). Each has `SHA256SUMS` and is never edited. The superseded
+  (D53, rounds 1–5), v11 `docs/archive/2026-10-21-v11/` (D53, rounds 6–9), v12 `docs/archive/2026-10-22-v12/`
+  (D54–D57, after the full sweep of D56) v13 `docs/archive/2026-10-22-v13/` (D58, the deep review before the
+  freeze) and v14 `docs/archive/2026-10-22-v14/` (D59, D60, the second deep review), the last sealed version. Each has `SHA256SUMS` and is never edited. The superseded
   v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
+- Freeze (D58, 2026-10-22): after eight rounds of review every module except pull mode and the final verdict is frozen
+  in its current text; a change needs a new decision. Alex answered the two questions it left (D59): a candidate's
+  theme is picked from the universe's themes in prompt part 3, other objects are looked up as classification does;
+  a view from his own memo may open without evidence, its state "还没判" until evidence first links to it. The
+  second deep review (D60, five rounds, the last finding nothing) wrote D59 out wherever it applies; the freeze holds.
 - PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
 - After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
   `docs/prd/README.md`); `python3 docs/check.py` is only the last, mechanical step.
@@ -29,19 +36,22 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
   through Claude's proposals one by one (D46); what is left of them is two items for pull mode.
 - Core, rebuilt (D38, D42, D45, D46): a view is one question, a ladder and a due date, never rewritten; the ladder has
   five rungs, or two for a yes-or-no question, each rung a result that can be checked, rungs neither overlapping nor
-  leaving gaps. One open view per thing (a number: this year and next, counted from the item's own year). Object
+  leaving gaps. One open view per thing when matching opens views (a number: this year and next, counted from the item's own
+  year); a view a person reopens by hand is outside that rule. Object
   views rank strongly bullish to strongly bearish for the business; theme views name their outcomes. A view has one
   state: where it sits on its ladder, pushed by evidence and judged by the model on facts; every judgement cites its
   evidence by number and code looks the numbers up. Evidence is stored once with its source and tier (D30). Views
   relate in one way: a view refers to another's conclusion (state and reasons), chosen by the model, never stored as
   evidence; code keeps these links free of loops. A sentence may be evidence for several views, but when B depends on
   A, a sentence about A counts only as A's evidence and reaches B through A's conclusion. A view is re-judged
-  only when what it reads changed: its own evidence (new or replaced) or the conclusion of a view it depends on;
-  every judgement marks its conclusion changed or unchanged, and a moved rung must be marked changed (D51). The discussion is
+  only when what it reads changed: its own evidence (new, replaced, or an existing piece newly linked to it) or the conclusion of a view it depends on;
+  every judgement marks its conclusion changed or unchanged, and a moved rung must be marked changed (D51). A view has
+  one switch, open or closed; only open views are updated and re-judged (D56, D57). The discussion is
   in `docs/views-rebuild-log.md`.
 - Writing into the views database (D39, D42, D44–D46): one round per item, seven steps. A candidate view searches
   the whole views database (a search engine, how it ranks is to be designed; top N, N in Config, 10 to start); the model decides
-  the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad, a number beyond this year and next, or an object outside the universe);
+  the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad, a number beyond this year and next, the same period as a closed view, or an object outside
+  the universe);
   in the same call it chooses a new view's dependencies from the views it was shown (D51).
   Evidence searches the evidence of its own view; the model decides repeat, replacement or new evidence. A view
   is judged after the views it depends on, each once per round. The timeline only grows forward: a late statement
@@ -50,13 +60,17 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
   the ones code refused and a few drawn at random; the labels later train a smaller, faster model.
 - Extraction (D27, D33, D35, D37, D41, D42, D46; v1 frozen): only reads. Every item goes whole to the model, read with
   its category's prompt as a senior hedge fund analyst; prompt part 5 lists the related objects' open views and the
-  views they depend on. It hands over evidence, each piece on the view it is about, and candidate views written in
-  full (question, ladder, due date) for important matters those views do not cover. Financial reports stream again
+  views they depend on (question, what each looks at and its due date; no state or evidence). It hands over evidence, each piece on the view it is about, and candidate views written in
+  full (question, ladder, due date) for important matters those views do not cover, and for every judgement in
+  Alex's own memo (D59). Financial reports stream again
   (D28). Table data comes one release per item and a filing's XBRL numbers are not pushed again (D32).
 - Due date (D54): a view has one state and no answer apart from it; at the due date the state is frozen where it
   stands and the view closes; nothing waits for that day's items. Stream mode handles no timing.
 - Final verdict (D29) and pull mode: old drafts written for the previous views design (D41), to be redone together
-  later; whether the final verdict stays a step of its own is open (D54).
+  later; whether the final verdict stays a step of its own is open (D54). Checked against the rebuilt views database
+  on 2026-10-22 (D55): each old trigger has a place in the rebuilt design; the pages label every old-draft part.
+- Open or closed (D55, D57): pull mode closes a view at its due date; a person closes or reopens a view by hand,
+  for example when the asset is delisted, and edits the research list by hand.
 - Order and sync (D31, D46): numbers in arrival order, one writer per view (themes first), reads only what earlier
   items wrote plus what its own round has written; the timeline only grows forward (D46 replaced D31's late-item rule).
 - Wording (D36, D41, D42, D44–D47, D52, D53): plain words a reader outside the discussion understands; one word per concept in the universe, classification, dispatch, extraction and the views
@@ -75,7 +89,14 @@ The work is an architecture POC: the design page, a PRD per module and DECISIONS
   the version it replaces is merged instead of classified as a new version; it does not check fields required only
   in some cases (`has_readable_text` for text, `period` for reports and data, a text's genre); one sample is a single
   XBRL fact, which is not pushed in (D32); one branch treats a same-issuer, same-day item as a copy without comparing
-  content; a 13F sample checks the related company of one split holding row, though a whole 13F is one item (D53). The script is not changed at the POC stage.
+  content; a 13F sample checks the related company of one split holding row, though a whole 13F is one item (D53). It counts a 6-K
+  exhibit as fiscal results only when its description says "results" (the rule asks only that it says it is the
+  period's results; one sample); it returns two text-version ownership filings (Form 4, SC 13G) as T13, though T13
+  takes the structured version; and it reports the one data interface that returns text and a listing as "not an
+  input" instead of splitting it (D58). It reads related objects from an old field name, `company_identifiers`, while
+  the contract's field is `object_identifiers`, so its pass does not test the current field (read under the current
+  name, 392 of 411 stored items lose their related objects; second deep review, D60). The script is not changed at the
+  POC stage.
 
 ## Next task
 

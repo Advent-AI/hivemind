@@ -115,6 +115,7 @@ AVOIDED_WORDS = [
     (r"只追加", "只加不改（D52）"),
     (r"一条轴上", "从一头排到另一头（D52）"),
     (r"答案", "定格（到期那天状态停在哪一格，D54）"),
+    (r"不再跟踪", "关了（一条观点只有开着、关了一个开关，D57）"),
 ]
 # Each newer ruled-out word with the sentence it must catch and the corrected sentence it must pass.
 WORD_CONTROLS = [
@@ -127,6 +128,7 @@ WORD_CONTROLS = [
     ("第 4 步对上", "第 4 步比对"), ("候选观点并进已有的", "候选观点归入已有的"), ("链存的是血缘", "链记下前后期关系"),
     ("只有一个写入者", "只由一个队列来写"), ("记录只追加", "记录只加不改"), ("一条轴上的结果", "从一头排到另一头的结果"),
     ("到期出了答案就关掉", "到期那天状态定格就关掉"),
+    ("观点标“不再跟踪”", "观点关掉"),
 ]
 # The views database's page data (D38-D42): rendered into docs/prd/06-views.md and read by the wording check.
 VIEWS_CONSTANTS = ["VIEW_TREE", "VIEW_KINDS", "KIND_NOTE", "LADDER_EXAMPLES", "LADDER_RULES", "POSITIONS", "TIERS", "TIER_RULES",

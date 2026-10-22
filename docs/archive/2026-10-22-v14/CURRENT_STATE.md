@@ -1,0 +1,108 @@
+# Current state
+
+As of 2026-10-22. The design lives in `docs/system-design.html` (New tab); decisions D1–D60 in `docs/DECISIONS.md`.
+The work is an architecture POC: the design page, a PRD per module and DECISIONS; no code.
+
+## Status
+
+- Sealed copies: v1 `docs/archive/2026-10-16-v1/` (the earlier design), v7 `docs/archive/2026-10-20-v7/` (D49), v8
+  `docs/archive/2026-10-21-v8/` (D51), v9 `docs/archive/2026-10-21-v9/` (D52), v10 `docs/archive/2026-10-21-v10/`
+  (D53, rounds 1–5), v11 `docs/archive/2026-10-21-v11/` (D53, rounds 6–9), v12 `docs/archive/2026-10-22-v12/`
+  (D54–D57, after the full sweep of D56) v13 `docs/archive/2026-10-22-v13/` (D58, the deep review before the
+  freeze) and v14 `docs/archive/2026-10-22-v14/` (D59, D60, the second deep review), the last sealed version. Each has `SHA256SUMS` and is never edited. The superseded
+  v2–v6 were removed from the tree (D50) and are in commit `94622a5`.
+- Freeze (D58, 2026-10-22): after eight rounds of review every module except pull mode and the final verdict is frozen
+  in its current text; a change needs a new decision. Alex answered the two questions it left (D59): a candidate's
+  theme is picked from the universe's themes in prompt part 3, other objects are looked up as classification does;
+  a view from his own memo may open without evidence, its state "还没判" until evidence first links to it. The
+  second deep review (D60, five rounds, the last finding nothing) wrote D59 out wherever it applies; the freeze holds.
+- PRDs (D20): one per module in `docs/prd/` (index `README.md`), viewable from each module on the design page.
+- After any change, Claude refreshes everything by reasoning, module by module (D22, procedure in
+  `docs/prd/README.md`); `python3 docs/check.py` is only the last, mechanical step.
+- Frozen v1 (D19, D37, 2026-10-18): the research universe, classification, Config, dispatch, extraction and the
+  human review pool, in their current text; a change needs a new decision. D41, D42, D45–D47 (2026-10-20) and D51 (2026-10-21)
+  changed them for the rebuilt views database: extraction's hand-over and prompt part 5, Config's views settings, the
+  universe's macro rule, the review pool's views inputs. Open inside them is what each PRD lists
+  under "还没定的", among them the themes in the theme library, upstream supply, the review pool's output, each category's prompt wording.
+- Boundary (D10): the system consumes a stream of classified items; dispatch is the single entry (D17). Upstream
+  supply and classification are outside. Testing is a test feeder streaming a test database through the same path.
+- Two modes (D14): stream mode, driven by arriving information and never by the calendar (D12, D13); pull mode, the
+  only place time triggers work: it runs at the end of the day or on a cron interval, goes through the views
+  proactively and freezes the state of the views due that day (D54); the rest is designed later.
+- Frozen v1 (D48, 2026-10-20): the views database with match labelling, after the six-round consistency pass
+  (D47), cleaned up after a code review (D49); a change needs a new decision. On 2026-10-21 Alex settled the open
+  items Claude had added (D51): one re-judging rule, dependencies chosen in the matching call, no consensus.
+- Rule for the views database (D45): only what Alex said or decided is written as decided. On 2026-10-20 he went
+  through Claude's proposals one by one (D46); what is left of them is two items for pull mode.
+- Core, rebuilt (D38, D42, D45, D46): a view is one question, a ladder and a due date, never rewritten; the ladder has
+  five rungs, or two for a yes-or-no question, each rung a result that can be checked, rungs neither overlapping nor
+  leaving gaps. One open view per thing when matching opens views (a number: this year and next, counted from the item's own
+  year); a view a person reopens by hand is outside that rule. Object
+  views rank strongly bullish to strongly bearish for the business; theme views name their outcomes. A view has one
+  state: where it sits on its ladder, pushed by evidence and judged by the model on facts; every judgement cites its
+  evidence by number and code looks the numbers up. Evidence is stored once with its source and tier (D30). Views
+  relate in one way: a view refers to another's conclusion (state and reasons), chosen by the model, never stored as
+  evidence; code keeps these links free of loops. A sentence may be evidence for several views, but when B depends on
+  A, a sentence about A counts only as A's evidence and reaches B through A's conclusion. A view is re-judged
+  only when what it reads changed: its own evidence (new, replaced, or an existing piece newly linked to it) or the conclusion of a view it depends on;
+  every judgement marks its conclusion changed or unchanged, and a moved rung must be marked changed (D51). A view has
+  one switch, open or closed; only open views are updated and re-judged (D56, D57). The discussion is
+  in `docs/views-rebuild-log.md`.
+- Writing into the views database (D39, D42, D44–D46): one round per item, seven steps. A candidate view searches
+  the whole views database (a search engine, how it ranks is to be designed; top N, N in Config, 10 to start); the model decides
+  the same view or a part of it, its next period, a new view (no match or a weak one), or not opened (too broad, a number beyond this year and next, the same period as a closed view, or an object outside
+  the universe);
+  in the same call it chooses a new view's dependencies from the views it was shown (D51).
+  Evidence searches the evidence of its own view; the model decides repeat, replacement or new evidence. A view
+  is judged after the views it depends on, each once per round. The timeline only grows forward: a late statement
+  on a matter that already has a newer one does not count. Records are append-only; storage is chosen at build time.
+- Matching judge (D40, D44, D46): the model alone decides; a general model first; every match recorded; people label
+  the ones code refused and a few drawn at random; the labels later train a smaller, faster model.
+- Extraction (D27, D33, D35, D37, D41, D42, D46; v1 frozen): only reads. Every item goes whole to the model, read with
+  its category's prompt as a senior hedge fund analyst; prompt part 5 lists the related objects' open views and the
+  views they depend on (question, what each looks at and its due date; no state or evidence). It hands over evidence, each piece on the view it is about, and candidate views written in
+  full (question, ladder, due date) for important matters those views do not cover, and for every judgement in
+  Alex's own memo (D59). Financial reports stream again
+  (D28). Table data comes one release per item and a filing's XBRL numbers are not pushed again (D32).
+- Due date (D54): a view has one state and no answer apart from it; at the due date the state is frozen where it
+  stands and the view closes; nothing waits for that day's items. Stream mode handles no timing.
+- Final verdict (D29) and pull mode: old drafts written for the previous views design (D41), to be redone together
+  later; whether the final verdict stays a step of its own is open (D54). Checked against the rebuilt views database
+  on 2026-10-22 (D55): each old trigger has a place in the rebuilt design; the pages label every old-draft part.
+- Open or closed (D55, D57): pull mode closes a view at its due date; a person closes or reopens a view by hand,
+  for example when the asset is delisted, and edits the research list by hand.
+- Order and sync (D31, D46): numbers in arrival order, one writer per view (themes first), reads only what earlier
+  items wrote plus what its own round has written; the timeline only grows forward (D46 replaced D31's late-item rule).
+- Wording (D36, D41, D42, D44–D47, D52, D53): plain words a reader outside the discussion understands; one word per concept in the universe, classification, dispatch, extraction and the views
+  database; the glossary is in `docs/prd/00-system.md` and `docs/check.py` fails on an avoided word.
+- Research behind extraction and matching: `reports/SEC 财报 代码抽取 开源方案.md`, `reports/观点库 向量检索 去重匹配.md`,
+  `reports/观点库匹配 业界做法对比.md`, `reports/观点库重建 去重 证据 血缘（Codex 调研）.md`,
+  `reports/观点库重建 接续 依赖 到期（Codex 调研）.md`, and for the evidence path the four 2026-10-20 reports named in D42;
+  Codex reviewed the first D42 write-up in five read-only rounds (`reports/观点库重建 D42 审稿第 1–5 轮（Codex）.md`); the
+  rules added for review edge cases were removed, four that real cases need were kept (log steps 32–33).
+
+## Open defects
+
+- `simulate_classification.py` resolves a ticker on the UTC date of `published_at`; the page says the New York
+  publication day (D9). It does not model the SEC filing day (D34), and has no cases for the macro rules (D15) or for
+  crypto, commodity and theme objects (D11). It merges a copy without looking at `supersedes`, so an update that names
+  the version it replaces is merged instead of classified as a new version; it does not check fields required only
+  in some cases (`has_readable_text` for text, `period` for reports and data, a text's genre); one sample is a single
+  XBRL fact, which is not pushed in (D32); one branch treats a same-issuer, same-day item as a copy without comparing
+  content; a 13F sample checks the related company of one split holding row, though a whole 13F is one item (D53). It counts a 6-K
+  exhibit as fiscal results only when its description says "results" (the rule asks only that it says it is the
+  period's results; one sample); it returns two text-version ownership filings (Form 4, SC 13G) as T13, though T13
+  takes the structured version; and it reports the one data interface that returns text and a listing as "not an
+  input" instead of splitting it (D58). It reads related objects from an old field name, `company_identifiers`, while
+  the contract's field is `object_identifiers`, so its pass does not test the current field (read under the current
+  name, 392 of 411 stored items lose their related objects; second deep review, D60). The script is not changed at the
+  POC stage.
+
+## Next task
+
+Research, as Alex asked: what a thesis looks like from a hedge fund's side, so that the granularity of views is
+neither too big nor too small (what to combine, what to carve out; how many questions per object; a key part such as
+NVDA's China revenue stays its own view; views must not all be financial-statement lines). Then pull mode and the final
+verdict are designed on the new views database, as Alex takes them up (two of Claude's proposals wait for that). How
+search ranks and the labelling details are settled when the build starts. Deferred by Alex: upstream supply; the review
+pool's output.
