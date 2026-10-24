@@ -1,0 +1,32 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_d150_projection_cannot_hide_invalid_input[extra_field] __________
+
+breach = 'extra_field'
+
+    @pytest.mark.parametrize('breach', ['empty_basis', 'extra_field', 'old_field', 'unknown', 'duplicate', 'empty'])
+    def test_d150_projection_cannot_hide_invalid_input(breach):
+        """New path/old checks: reject malformed new output and keep all old ID constraints."""
+        record = json.loads((SOURCE / 'sample-2-retained/item3-extract.json').read_text())
+        offered = json.loads(record['request']['messages'][1]['content'])['existing_subjects']
+        raw = wire_fixture(record['answer'])
+        candidate = raw['candidates'][0]
+        if breach == 'empty_basis':
+            candidate['memberships'][0]['basis'] = '  '
+        elif breach == 'extra_field':
+            candidate['memberships'][0]['extra'] = 'must be rejected before projection'
+        elif breach == 'old_field':
+            candidate['thread_ids'] = ['g1']
+        elif breach == 'unknown':
+            candidate['memberships'][0]['thread_id'] = 'g999'
+        elif breach == 'duplicate':
+            candidate['memberships'].append(copy.deepcopy(candidate['memberships'][0]))
+        else:
+            candidate['memberships'] = []
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+test_membership_basis.py:62: Failed
+=========================== short test summary info ============================
+FAILED test_membership_basis.py::test_d150_projection_cannot_hide_invalid_input[extra_field]
+1 failed in 0.04s

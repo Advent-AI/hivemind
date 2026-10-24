@@ -1,0 +1,29 @@
+.....F.                                                                  [100%]
+=================================== FAILURES ===================================
+________ test_d143_unknown_reference_refuses_and_rolls_back_whole_write ________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-253/test_d143_unknown_reference_re0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x108b14d30>
+
+    def test_d143_unknown_reference_refuses_and_rolls_back_whole_write(tmp_path, monkeypatch):
+        """Atomicity: a failure after group and thesis inserts leaves the previous committed state intact."""
+        items = json.loads((SOURCE / 'items.json').read_text())
+        calls = StoredAnswers(1)
+        conn = handoff.open_db(tmp_path / 'views.sqlite')
+        uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+        handoff.process(conn, calls, uni, items[0], 1)
+        before = conn.execute('select count(*) from views').fetchone()[0]
+        original = handoff.write_associations
+        def fail(*args, **kwargs):
+            original(*args, **kwargs)
+            raise RuntimeError('Simulated failure after association writes')
+        monkeypatch.setattr(handoff, 'write_associations', fail)
+        with pytest.raises(RuntimeError), conn:
+            handoff.process(conn, calls, uni, items[1], 2)
+>       assert conn.execute('select count(*) from views').fetchone()[0] == before
+E       assert 4 == 3
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpmngt185u/test_relation_handoff.py:119: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpmngt185u/test_relation_handoff.py::test_d143_unknown_reference_refuses_and_rolls_back_whole_write
+1 failed, 6 passed in 0.24s

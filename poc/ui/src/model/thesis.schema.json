@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivemind.local/schemas/thesis-ui-v1.json",
+  "title": "Hivemind Thesis UI dataset v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "thesis-ui/1"
+    },
+    "as_of": {
+      "$ref": "#/$defs/day"
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/day"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "theses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/thesis"
+      }
+    }
+  },
+  "required": ["schema_version", "as_of", "days", "theses"],
+  "$defs": {
+    "day": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "uri": {
+          "type": ["string", "null"]
+        },
+        "publication_day": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/day"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["title", "publisher", "category", "uri", "publication_day"]
+    },
+    "rung": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "score": {
+          "enum": ["+2", "+1", "0", "\u22121", "\u22122", "Yes", "No"]
+        },
+        "label": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string"
+        },
+        "condition_zh": {
+          "type": "string"
+        }
+      },
+      "required": ["position", "score", "label", "condition"]
+    },
+    "judgement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+        },
+        "day": {
+          "$ref": "#/$defs/day"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rung": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "why_changed": {
+          "type": "string"
+        },
+        "reasons": {
+          "type": "string"
+        },
+        "cited": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": ["id", "day", "seq", "rung", "changed", "why_changed", "reasons", "cited"]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+        },
+        "one_line": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "tier": {
+          "enum": ["Fact", "Party statement", "Third-party view", "Rumour"]
+        },
+        "speaker": {
+          "type": "string"
+        },
+        "original_who": {
+          "type": "string"
+        },
+        "day": {
+          "$ref": "#/$defs/day"
+        },
+        "arrival_day": {
+          "$ref": "#/$defs/day"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "outlets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replaced_by": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "new_evidence_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "said_day": {
+                  "$ref": "#/$defs/day"
+                }
+              },
+              "required": ["new_evidence_id", "said_day"]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replaces": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "one_line",
+        "quote",
+        "tier",
+        "speaker",
+        "original_who",
+        "day",
+        "arrival_day",
+        "seq",
+        "source",
+        "outlets",
+        "replaced_by",
+        "replaces"
+      ]
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "depends_on": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+        },
+        "direction": {
+          "type": "string"
+        },
+        "wait_year": {
+          "type": ["string", "null"]
+        },
+        "day": {
+          "$ref": "#/$defs/day"
+        }
+      },
+      "required": ["depends_on", "direction", "wait_year", "day"]
+    },
+    "switch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "$ref": "#/$defs/day"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["day", "seq", "open", "reason"]
+    },
+    "thesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+        },
+        "object": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": ["Company thesis", "Theme thesis"]
+        },
+        "looks_at": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "due_day": {
+          "$ref": "#/$defs/day"
+        },
+        "created_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "created_day": {
+          "$ref": "#/$defs/day"
+        },
+        "created_from": {
+          "$ref": "#/$defs/source"
+        },
+        "rungs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rung"
+          },
+          "minItems": 2,
+          "maxItems": 5
+        },
+        "judgements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/judgement"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "switches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/switch"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "object",
+        "kind",
+        "looks_at",
+        "question",
+        "due_day",
+        "created_seq",
+        "created_day",
+        "created_from",
+        "rungs",
+        "judgements",
+        "evidence",
+        "dependencies",
+        "switches"
+      ]
+    }
+  }
+}

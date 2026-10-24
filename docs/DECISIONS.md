@@ -1671,3 +1671,515 @@ A later decision that changes one names the one it replaces.
 - Not changed: `copy_old_design.py` copies 113 configuration fields the Old tab never reads; trimming them needs a rerun
   against the old repository's snapshot to save 5 KB, so they stay.
 - Seals: v15 in `docs/archive/2026-10-22-v15/` with `SHA256SUMS`, the design as frozen after D58–D61.
+
+## D62 · 2026-10-23 · The POC build: Alex's choices, in his words
+
+- Build started on the frozen design (2026-10-23): "数据准备好了之后，你清洗干净就可以准备开始去建这个 POC 的管线", "尽量按照那个系统设计来……当然没有这么复杂……做简洁一点". The simplifications are listed in `docs/poc/pipeline-plan.md`; nothing in the frozen PRDs changed.
+- No cap on the number of views: "不一定要二到四个问题啊". The model decides; code checks only the shape (ladder, due day, quarter, year).
+- The corpus first, whole and original: "先建好这个素材库……再尝试来建构这个管线"; "要像是原始数据……不能是你自己已经处理过的". Industry, macro, geopolitics and noise added: "起码多两倍的数据".
+- Test small before any full run: "你最好小范围的测试下不要全部跑完然后完全不 work 或是质量有问题再全部重跑". The first week, then August: "你别全跑，到 8 月底先。我们来完整的看下结果".
+- Extraction variance is fixed in the prompt, not by sampling several times: "太浪费钱和时间了，那你的 prompt 就应该改成可以抽的出来的方式". The v2 extraction prompt replaces taste words and the company-specific line with rules checkable against the material (the firm's total and largest-segment full-year numbers, every full-year number the firm guides, dated pending events); measured on the same transcript three times, the core set is stable (`docs/poc/pipeline-plan.md`).
+- Model: gpt-6-luna stays: "那我觉得还是用 luna 吧，记录这个比较结果". The comparison with DeepSeek-V4.1-Flash-1017 (the `deepseek-flash` endpoint) is in `docs/poc/pipeline-plan.md`: the only way to get schema-valid JSON from it was a strict tool call with thinking off (3/3; json_object 2/3 and 1/3; thinking-mode forbids a forced tool_choice); about five times cheaper (≈$0.01 against ≈$0.05 per transcript), 18–22 s against 26–31 s, three times more evidence, the candidate set a little less stable; matching and re-judging were not tested on it.
+
+## D63 · 2026-10-24 · Re-judging once a day; the first window ends on 2026-08-15
+
+- Alex, shown that re-judging was half the cost (a hot view re-judged after every item, each call carrying all its evidence): "是的应该要一天一次". Re-judging moves from each item's round to one round per day: the day's items are extracted, matched and written in sequence as before; after the last item, and before pull mode freezes the views due that day, one judging round runs over every open view whose reading changed that day, dependencies first, each view once, dependants added when a dependency's conclusion changed. The judgement is recorded under the day's own processing record (`day:<date>`) at the day's last sequence number. This amends 06-views step 7 / D51 for the POC; the design text is updated when Alex takes the module up. The stream still never reads the calendar: the day comes from the replay (in production, from pull mode).
+- Reasoning effort stays medium: "可以之后试试看比较质量，这次先别改".
+- The window: "嗯改成 8/15 吧；然后已有的结果封存，然后改一下重判的设置，然后继续跑完剩下的". The results through the last completed day are sealed in `poc/data/sealed-2026-10-24-run3-through-0728/` with `SHA256SUMS`; the same views database continues from the next day to 2026-08-15 with daily re-judging.
+
+## D64 · 2026-10-24 · Hide the mock header's date label
+
+- Alex: "remove this", pointing to the "As of 2026-08-15" label. Remove that label from the mock header; replay dates and the stored data window stay as they are.
+
+## D65 · 2026-10-24 · Remove black focus outlines from the mock
+
+- Alex: "remove this pattern from the UI", pointing to the black outline around the claim slider while dragging. Disable focus outlines throughout the mock, including both sliders and buttons, in its own stylesheet.
+
+## D66 · 2026-10-24 · Remove the canvas hint and shorten the search field
+
+- Alex asked to remove the bottom canvas hint and make the search bar shorter. Remove the hint and cap the input at 480px, allowing it to shrink when space is limited.
+
+## D67 · 2026-10-24 · Simplify the view card headers
+
+- Alex asked to remove the unnecessary counters and questioned the "Thesis view" / "Factor" badges. Remove the rounds, evidence and facts counters and both role badges from canvas card headers. The underlying relationships and detail-panel history remain available.
+
+## D68 · 2026-10-24 · Put the current judgment in the card header
+
+- Alex asked to move the score and label, such as "+1 Bullish", into an upper-right pill on the card. Move the existing state display into the header; replay continues to update it.
+- Alex then asked for centered, consistent pills. Use equal padding and a common height; hide an empty label so a Yes/No state has no spare gap beside its text.
+
+## D69 · 2026-10-24 · Use matching score circles on charts and state pills
+
+- Alex specified black-filled number circles for +2/+1, grey for neutral, and white-filled circles for bearish scores. The chart axes and current-state pills share the same icon and palette, including in the detail panel. Chart rows have enough room for separate circles. Yes/No remains text.
+- Superseded by D70 after Alex rejected how the circles looked.
+
+## D70 · 2026-10-24 · Simplify the score display after visual review
+
+- Alex rejected the stacked circles and tiny circle inside the header pill, asking for a better design. The axis now uses quiet score labels and highlights only the current state. The header uses a single badge with a readable score and a separated label. The current axis marker and badge share black for positive, grey for neutral, and outlined white for negative; Yes/No uses the neutral treatment. This replaces D69's circles on both the canvas and detail chart.
+
+## D71 · 2026-10-24 · Use black for Yes and white for No
+
+- Alex specified that binary states use black for Yes and white for No. The shared state palette applies this to both the header badge and highlighted axis label, including the detail panel, replacing D70's neutral treatment of binary states.
+
+## D72 · 2026-10-24 · Remove redundant card footer tags
+
+- Alex called the object and view-kind tags redundant. Remove these two tags from canvas view cards; retain the due date. Object and kind remain available in the detail panel.
+
+## D73 · 2026-10-24 · Use one title style across canvas cards
+
+- Alex asked for consistent card-title font sizes. Thesis and view titles share one CSS rule: 16px, weight 500, 22px line height; card-specific size overrides are removed.
+
+## D74 · 2026-10-24 · Remove the change-summary line from view cards
+
+- Alex called the "1 change | since…" line redundant. Remove it, including the "no change since…" form, from canvas view cards. The chart and detail panel retain the change history.
+
+## D75 · 2026-10-24 · Give daily evidence volume its own chart band
+
+- Alex asked for a clearer X axis and more height for the evidence bars. Canvas cards now separate the state history from a 52px evidence band labelled "Evidence / day". Each bar counts the stored evidence records arriving that day, with a labelled zero and upper count scale; it does not count distinct real-world events. A single set of aligned month-and-day labels serves both plots. The replay reveals both plots together. Cards are 392px tall to fit the band, and binary views use the same plot height as five-state views.
+
+## D76 · 2026-10-24 · Hivemind is a database with a search engine on top; the caller chooses
+
+- Alex: "我们不要这样 POC，我觉得把我们的 poc 现在打包成一个 MCP 或是 API" … "现在我们的观点库上面需要 overlay 一个 search engine interface 能解析语意，返回例如 top-10 对应观点之类的，然后让 llm 分析看选那几个" … "agent 调用这个工具，返回的是观点，他自己选择要那些观点不就完事了吗" … "hivemind 就是一个数据库上面有个搜索引擎，你理解 scope 了吗？写好，然后让 codex subagent review".
+- Decided: the views ledger gets a read-only service: `search` (semantic top-k over each view's own text; evidence is anchored under the view and is not indexed), readers (`views`, `view`, `history`, `evidence`, `record`, `changes`) and `evaluate` (a threshold against the judged band), all as of a calendar day (D12, D13). Hivemind does not pick or arrange views for the caller (no issue-tree tool), does not know users and stores no theses; the agent that calls it does that. Two thin fronts: MCP (stdio) and HTTP (127.0.0.1). The search index is a derived file beside the ledger, never a write to it. Design: `docs/poc/service.md`.
+- An idea no view covers: settled in D91 (null).
+
+## D77 · 2026-10-24 · Label the state chart
+
+- Alex asked for an "AI score" title above the top chart, matching "Evidence / day". Both titles use one shared style and align to the same left edge.
+
+## D78 · 2026-10-24 · Name the user input Idea and stored questions Thesis
+
+- Alex: "these should be called Thesis not view, the initial card is called Idea" and "now scrub the FE and logic". Apply Idea to the input card and Thesis to matched questions throughout frontend labels, placeholders, empty states, tooltips, detail headings, judgment display text, CSS and helper names. A single frontend adapter maps the existing ledger's `views`, `view_id` and kind values into the UI terminology; the service's wire format stays compatible. This clarifies D76's wording: Hivemind stores the questions now displayed as theses, not user ideas.
+
+## D79 · 2026-10-24 · Align plot headings to the number column
+
+- Alex asked to left-align "AI score" and "Evidence / day" with the chart numbers. Both titles start at the left edge of the number-label column, and the evidence scale uses that same edge.
+
+## D80 · 2026-10-24 · Give the due date a separate card footer
+
+- Alex asked for the due date below a divider matching the header. Thesis cards have a dedicated 40px footer with a full-width top border; the date is outside the chart body. Cards are 408px tall to retain the plot space.
+
+## D81 · 2026-10-24 · Simplify the thesis detail panel
+
+- Alex asked for a clean, minimal detail panel following the canvas design. The old panel put metadata, counters, score definitions, the full history, repeated reasons and all evidence into one scroll. The mock contains 42 theses, 375 assessments and 1,089 evidence links; the new layout applies to all of them.
+- The header shows the thesis question, current score and assessment date. The due date belongs to the footer. Overview shows the current band, a four-line assessment preview and at most three recent cited records. Full explanations and source quotes expand on request. Metadata and related theses are collapsed.
+- Evidence has text search, a type filter and 20 records at a time. History has a calendar chart shared with the canvas, a selector for every assessment, previous/next controls and expandable reasons, citations and score definitions. The old independent chart and duplicate rendering paths are removed.
+
+| Event | Result |
+|---|---|
+| Open a thesis | Pause replay, capture its date, show Overview using only assessments and evidence available by that date. |
+| Switch tab | Show the selected panel; initialize Evidence or History once for this opening. |
+| Search or change evidence type | Reset the visible limit to 20 and filter the same dated evidence snapshot. |
+| Show more evidence | Reveal the next 20 matching records. |
+| Select an assessment | Update its date, score, explanation and citations without changing the current-score header. |
+| Open before the first assessment | Show that no assessment is available; History and Evidence handle an empty snapshot. |
+| Close or open a related thesis | Close the panel, or open a fresh snapshot for the related thesis at the same replay date. |
+
+## D82 · 2026-10-24 · Use the same font for dates and labels
+
+- Alex: "所有的日期和pill 内日期字体不要用特殊的font, just use the same throughout". The mock uses its regular sans-serif font for dates, numeric labels, pills, charts and detail text; monospace overrides are removed.
+
+## D83 · 2026-10-24 · Center the fan-out and animate connected edges on hover
+
+- Alex asked for the tree to grow symmetrically above and below the middle, with connections at the midpoints of card edges. The Idea and primary Thesis share the vertical center of the supporting-card group. Child cards keep their 24px gap; horizontal spacing leaves room for curves.
+- Every connector records its source and target. Hovering any card highlights all directly connected incoming and outgoing edges with moving black dashes; unrelated edges stay quiet. The Idea participates in the same hover behavior.
+- Layout verification covers zero through four child cards; stored-data browser checks cover two- and three-child fan-outs, midpoint endpoints, no-match layout, and root/parent/child hover behavior.
+
+## D84 · 2026-10-24 · Use right-angle connectors
+
+- Alex asked for more right-angled connectors. Replace the sweeping curves with horizontal–vertical–horizontal paths and small rounded elbows. He then clarified that branches should leave the parent at separate positions, as in the reference: space the outgoing ports 24px apart around the parent’s middle, rather than sharing one point. Child inputs remain at their midpoints; centered fan-out and hover animation stay the same. This amends D83’s shared midpoint for outgoing branches.
+
+## D85 · 2026-10-24 · Thin connectors with directional arrowheads
+
+- Alex asked for thinner lines and arrowheads at their endpoints. Connectors use a 1px stroke in both normal and hover states, with a 10px arrowhead pointing into the destination card (enlarged at Alex’s follow-up request); the arrow follows the line color and the hover dashes keep moving.
+
+## D86 · 2026-10-24 · Replace Idea and Thesis header icons
+
+- Alex asked to redo both icons. Idea uses an outline light bulb; Thesis uses an outline document. Both use the same 16px size, rounded joins and 1.5px stroke.
+
+## D87 · 2026-10-24 · Hover highlights only the path into a card
+
+- Alex clarified that hovering a card must highlight only its preceding connection hierarchy, never outgoing branches. Follow incoming edges recursively back to the Idea. Hovering the Idea highlights no edges; hovering the primary Thesis highlights only Idea → Thesis; hovering a supporting Thesis highlights that full upstream path. Clear the highlight on pointer exit. This replaces D83’s incoming-and-outgoing rule.
+
+## D88 · 2026-10-24 · Refine detail controls, dates and source presentation
+
+- Alex asked for the Thesis icon in the panel header, an X close control, and "Last updated:" followed by a full date. The header uses the existing Thesis icon and an accessible icon-only close button.
+- Replace the moving "Full assessment" disclosure with one paragraph and a button underneath it. The button stays after the text and switches between "Read more" with a down chevron and "Read less" with an up chevron. The Overview and History use the same renderer.
+- Evidence dates show month, day and year. Expanded records put the quoted text in an italic, light-grey block. One "Source document" group contains the publisher and linked title; a separate "Original source" row names the cited original where it differs. Remove the repeated source title, loose attribution and separate "Open source" link.
+
+## D89 · 2026-10-24 · Give the detail panel a clear visual hierarchy
+
+- Alex asked for an overall hierarchy rather than similarly styled headings, prose and controls. The detail title is 20px semibold, section headings 16px semibold, body and evidence text 14px with 24px line height, and metadata 12px. Shared local font tokens keep body, action and metadata roles consistent across Overview, Evidence and History.
+- The current assessment has a light background; sections have consistent spacing and dividing rules. Read more/Read less, navigation and links use one restrained blue accent, making actions distinct from text. This adds an interaction color to the mock; black/grey/white score meanings stay unchanged.
+
+## D91 · 2026-10-24 · An idea the library holds no view on gets null
+
+- Alex, asked what Hivemind returns for an idea no view covers: "没有观点就返回null 啊，然后就代表我们没有记录观点".
+- Decided: `search` answers `results: null` when the library holds no view on anything the idea names as of that day: none of the companies or themes the universe lists is named in it, and the ledger's own text index matches no view. Null means "Hivemind has no recorded view on this". Otherwise the ranked list comes back whole and the caller judges which views, if any, correspond (D76). The envelope (`as_of`, `mode`) stays, so the caller knows which day and which mode said so.
+- Measured before building, on 25 sentences (the four examples, the 16 day-0 sentences, five unrelated ones): a similarity cutoff cannot draw the line, because "NVDA 的 logo 比 AMD 好看" scores 0.49 while real theses on CUDA or China re-opening score 0.35–0.40. The name-or-text rule nulls six of the nine no-view sentences (Tesla, Apple, Bitcoin, a house, the Fed, "黄仁勋是个天才") and none of the sixteen with a view; the three nonsense ideas that name NVDA (a logo, a dream, a split) get NVDA's views back for the caller to reject.
+
+## D92 · 2026-10-24 · Keep the existing monochrome theme
+
+- Alex rejected the added blue and required the existing theme colors only. D89’s typography, spacing and section grouping stay; actions use the existing charcoal tokens with underlines, and neutral backgrounds use theme tokens. This supersedes D89’s blue accent.
+
+## D93 · 2026-10-24 · Simplify detail sections and move the due date
+
+- Alex asked to remove "Browse evidence", remove extra dividers at the bottoms of sections, and move the due date to the right of "Last updated". Remove the duplicate evidence shortcut and its handler. Keep separators only between evidence rows, not after the last row; section and related-thesis boundaries use spacing. The detail footer is removed, and the due date appears beside the update date in the header. Canvas card footers are unchanged.
+
+## D94 · 2026-10-24 · Merge the current assessment and its reasoning
+
+- Alex asked for one unboxed "Current assessment" section: the current assessment is the first, bold sentence, followed by the reasoning and its Read more/Read less control. Remove the separate "Why this assessment" heading. The first cited evidence and first related-thesis item use the same 12px heading-to-content gap as prose sections, without extra row padding.
+
+## D95 · 2026-10-24 · Keep one divider at each section boundary
+
+- Alex clarified D93: keep dividers between sections and between list items; remove only the extra bottom border on the final item that doubled the next section’s divider. Section boundaries use a top border, and list rows use a top border only after the first row. The last row has no bottom border, in both collapsed and expanded states.
+
+## D96 · 2026-10-24 · Present the current assessment as a quote
+
+- Alex asked for the leading assessment sentence to look like a Markdown `>` quote. Use a bold blockquote with a slim grey left border and no surrounding box, followed by the reasoning in the same section.
+
+## D97 · 2026-10-24 · Make the lower detail sections consistent accordions
+
+- Alex asked for Recent evidence cited, Related theses and About this thesis to share the same heading size and expand/collapse behavior. All use the same 16px semibold disclosure heading, spacing and single section divider, and start closed. Remove nested "Depends on" / "Used by" headings; related theses form one deduplicated navigable list.
+
+## D98 · 2026-10-24 · Highlight the assessment row with a quote accent
+
+- Alex asked for a light-grey highlight across the assessment row, then clarified that the left line should fill its height from top to bottom. Use the existing wash color, bold text and a full-height vertical accent; no surrounding card border.
+
+## D99 · 2026-10-24 · Put the related-thesis arrow before the title
+
+- Alex asked for the navigation arrow on the left as an icon, not appended to the question. Each related-thesis row starts with a small outline arrow, aligned with its first text line.
+
+## D100 · 2026-10-24 · Animate all detail expansions consistently
+
+- Alex asked for smooth show/hide transitions for Read more/Read less and every dropdown. Use one 240ms eased height transition for assessment text and all detail/evidence disclosures, with matching chevron motion. Controls stay after their content; the final height returns to automatic sizing.
+- A repeated click cancels the running transition and continues from its visible height toward the new target. Closing a parent settles any running child transition first. The operating system's reduced-motion preference skips the animation.
+
+## D101 · 2026-10-24 · Separate the header dates with vertical bars
+
+- Alex requested "| Last updated: xxx | Due: xxxx". Put each separator with its date label so it stays together if the metadata row wraps.
+
+## D102 · 2026-10-24 · Shorten the evidence heading and use solid disclosure triangles
+
+- Alex asked for "Recent evidence" and solid triangle indicators on section dropdowns. All detail-section headings share a filled triangle pointing right when closed and down when open, preserving the existing smooth rotation and monochrome theme.
+
+## D103 · 2026-10-24 · Align detail labels and values at one readable size
+
+- Alex rejected the smaller labels and loose stacked layout in About this thesis. Definition lists use compact, aligned label/value rows: both 14px with 24px line height, labels semibold, values regular, and a 12px row gap. The shared layout also keeps Score definitions consistent.
+
+## D105 · 2026-10-24 · Animate disclosure content without moving its heading
+
+- Alex reported that Related theses and About this thesis still opened abruptly. The shared handler covered seven disclosure templates, but opened the native details contents before animating the whole details element. Its open-only heading margin and expanded evidence-summary height changed at the same time.
+- Each disclosure now wraps its contents in a clipped region and animates that region from zero to its natural height, keeping the heading and its spacing fixed. Evidence summaries animate their own height when the text expands. Closing keeps contents mounted until the transition ends; repeated clicks and parent/child transitions retain D100's behavior. Disable scroll anchoring inside the detail viewport so the browser does not reposition it during an expansion.
+- Browser verification on About this thesis kept the heading at y=692 through opening and closing; content height was observed at 6.75px while opening toward 108px and 102.14px while closing toward zero. Related theses, keyboard activation, and closing a parent during a nested evidence transition were also exercised.
+
+## D104 · 2026-10-24 · A theme holds a document only if it can move a thesis; Commerce anti-dumping notices do not
+
+- Asked why Commerce anti-dumping and countervailing notices on Chinese goods are not filed under 中美关税, Alex gave the test instead of a ruling: "你自己评价下是不是会有影响的 thesis".
+- Applied on stored data: 89 Commerce notices naming China in the corpus (29 in the run window); none mentions semiconductor, server, data center, GPU, chip, NVIDIA or printed circuit (the one "heat sink" is the aluminum-extrusions scope clause); in the sealed ledger their evidence sits only under five procedural views ("will Commerce publish X by date Y": v44, v64, v65, v66, v85; 0 dependants) and under no view of the 15 companies or other themes.
+- Decided: the rule stays (`official_objects`: the Commerce feed carries no object). The test is general: a document belongs to a theme when it can move a thesis of the universe, not when a case number or keyword matches.
+
+## D106 · 2026-10-24 · Reserve scrollbar space without a track divider
+
+- Alex asked for dropdowns to leave the assessment width and text wrapping unchanged. The shared detail viewport always reserves the same scrollbar gutter across Overview, Evidence and History. Its track is transparent and borderless; only a slim neutral thumb appears when scrolling is possible.
+- Browser verification: opening Recent evidence and its first quote increased scroll height from 602px to 795px while the viewport stayed 709px wide and the assessment text stayed 653px wide. The computed track background is transparent and its border is 0px.
+
+## D107 · 2026-10-24 · Put expanded evidence dates after its sources
+
+- Alex asked to place the date below Original source when an evidence row is expanded and enclose the quoted passage in “ ”. The shared evidence renderer keeps date/type metadata beneath the summary when collapsed, shows it after the source details when expanded, and adds the quotation marks while retaining the existing quote styling.
+
+## D108 · 2026-10-24 · Combine source, type and date on one attribution line
+
+- Alex asked for "Goldman Sachs | Third-party view | date" on the Original source row instead of a separate date line. Expanded evidence appends type and full date to its original-source attribution; where no separate original source exists, it appends them to the source publisher. Collapsed rows keep their existing metadata line.
+
+## D109 · 2026-10-24 · Show the source in collapsed evidence rows too
+
+- Alex asked for the collapsed metadata to include Goldman Sachs or the relevant source. Both states now use source, type and full date in the same order. Prefer the recorded original source; otherwise use the source publisher. The shared evidence renderer applies this across Overview, Evidence and History.
+
+## D110 · 2026-10-24 · Show thesis status in a pill
+
+- Alex asked for Open, Closed and other thesis statuses to use a pill. About this thesis now renders the existing status value in the shared neutral outlined chip; status calculation is unchanged.
+
+## D111 · 2026-10-24 · Use an in-page evidence type menu
+
+- Alex rejected the native operating-system menu for All types. Replace that menu with a white, bordered list directly below the control, using existing theme colors and typography. The selected row has a checkmark, and opening uses a short transition.
+- States: closed → trigger click or arrow key opens; open → option selection writes the existing `detail.tier`, resets pagination and redraws evidence, then closes; outside click, focus leaving, Tab or Escape closes without changing the filter. Escape closes this menu before the drawer. Arrow keys and Home/End move through the options; Enter/Space selects. Accepted values stay exactly All types (empty) plus the tiers already present in this thesis. Only `drawEvidence` reads the chosen tier; data and filter rules do not change.
+
+## D112 · 2026-10-24 · The service runs in Docker; the FE asks it to read an idea; the user's thesis is the idea card
+
+- Alex: "我们来这样做，你用 docker 起一个 mcp /api service, 然后我们的 FE 就是一个调用 luna 然后去访问这个 endpoint 来做出我们现在的 FE" … "我们需要的返回其实是这些 thesis 的各种信息可以 overlay 在 FE 上面" … "还有 user thesis 要能够变成一个 idea card" … "这边有蛮多需要思考和你先自己测试的，我们开始做吧".
+- Decided: the HTTP and MCP fronts run as two services of one Docker image (local ports only). One new route, `POST /ideas`: the service searches (D76, D91), luna reads the top-k and chooses the views that bear on the idea with one line why each and a short reading, code evaluates a number the idea states, and the answer carries the chosen views in the FE's existing data shape so the FE overlays them under the idea card. The model key stays in the service (the credentials file mounted read-only), never in the browser. Hivemind still stores no idea (D76). Design and tables: `docs/poc/idea-card.md`.
+- Measured first, before the FE is wired: the example theses and the day-0 sentences through the route once (cost, seconds, chosen views against the leads).
+
+## D113 · 2026-10-24 · Add the colon to canvas due dates
+
+- Alex requested "Due:" on canvas card footers, matching the detail header label. Date values and formatting stay unchanged.
+
+## D114 · 2026-10-24 · Present score definitions as a table
+
+- Alex asked to replace the loose score-definition list with a table. History now uses aligned Score, State and Definition columns, a neutral header and thin row separators. When the score already names the state (Yes/No), omit the redundant State column. The underlying rungs and their order are unchanged. About this thesis keeps its compact label/value rows.
+
+## D115 · 2026-10-24 · Use a uniform Score change heading
+
+- Alex asked for the history change section to be titled "Score change" consistently. Both previous heading variants use that title; the explanation remains in the body.
+
+## D116 · 2026-10-24 · Simplify history navigation to two right-aligned buttons
+
+- Alex asked to remove the long assessment selector and keep only left/right buttons at the lower right. Place Previous and Next together below the chart, aligned to its right edge. The selected date and score remain in the assessment heading. Buttons still visit every stored assessment and disable at the first/last record; chart selection is unchanged.
+
+## D117 · 2026-10-24 · Strengthen chart headings and separate the two plots
+
+- Alex asked for larger AI score and Evidence / day headings and more space between their plots. The shared chart uses 14px semibold titles and a 36px inter-plot gap (previously 11px medium and 24px). Canvas cards gain the same 12px of height, to 420px, keeping the plot and footer spacing intact. Data, scales and date alignment are unchanged.
+
+## D118 · 2026-10-24 · Keep canvas chart subtitles smaller than detail headings
+
+- Alex clarified that the larger chart titles are too big on the main canvas cards. Canvas AI score and Evidence / day titles use 11px medium; detail-panel chart headings stay 14px semibold. The increased spacing between plots remains.
+
+## D119 · 2026-10-24 · Inspect and anchor history by date
+
+- Alex asked for a hover crosshair and click-to-anchor state in History. Hover previews the calendar date, the last assessment on or before that date, and that day's evidence count; it never changes the selected assessment. A vertical guide spans both plots, with a horizontal guide and dot at the score when one exists.
+- Clicking pins the date and selects that assessment; leaving the chart restores the pinned preview. Previous/Next selects and pins the corresponding assessment date. A date before the first assessment shows "No assessment" rather than borrowing a future state; Next moves to the first assessment. Arrow keys/Home/End move the preview and Enter/Space pins it. Opening another thesis starts without a pinned crosshair. Only History changes; canvas charts and stored data do not.
+
+## D120 · 2026-10-24 · Remove the History hover label and navigation buttons
+
+- Alex asked to remove the floating date/score/evidence label and the Previous/Next buttons. Remove those elements and their unused styling and handlers; retain crosshair hover, click-to-pin and keyboard date selection. The selected assessment date and score remain in the content below the chart, and the chart's accessible value still describes the inspected date.
+
+## D121 · 2026-10-24 · Make quiet-day History selection explicit
+
+- Alex rejected the persistent right-edge crosshair and the confusing behavior between dated events. History omits the canvas replay playhead and the separate assessment marker; its only inspection crosshair is the hovered or pinned date.
+- A click anchors the exact calendar day, even without a new assessment. The content heading shows that day and the active score; a quiet-day note names the assessment date carried forward, and says "No new evidence on this date" only when the selected day's stored evidence count is zero. Dates before the first assessment retain the explicit no-assessment state. Canvas replay stays unchanged.
+
+## D122 · 2026-10-24 · Lock clicked History anchors and keep endpoint dots whole
+
+- Alex clarified that a click must leave a visible vertical dashed line and dot, a quiet-day click should select the closest earlier assessment, and the latest dot needs more right-side room. Pointer movement previously reused and moved the clicked guide. The final clip boundary also passed through the last dot's center (observed x=643 and clip width=643, radius=3.5).
+- Hover previews until a click pins an assessment. After a click, pointer movement does not move that anchor; another click selects a new one. Snap both guide and dot to the last assessment on or before the clicked date, and show that assessment date below. Dates before the first assessment still show no assessment. Use a dark dashed guide and a filled pinned dot.
+- Increase the chart's right inset from 10px to 18px. At the final date, extend the clip to the SVG edge so the whole endpoint circle fits; intermediate canvas replay frames retain their time cutoff. This supersedes D121's exact quiet-day anchor and carried-forward note.
+
+## D123 · 2026-10-24 · Remove the current-date dashed line from canvas cards
+
+- Alex asked to remove the rightmost current-state dashed line from the outer cards too. Canvas charts omit the replay playhead and the final-date vertical grid line; the endpoint dot, date label and intermediate grid lines remain. Replay still updates the score, clip and dot without a vertical cursor.
+
+## D124 · 2026-10-24 · Remove canvas card footers
+
+- Alex asked to remove the due-date pill and the entire bottom footer from the main cards. Remove the footer markup and its unused styles, and reduce card height by its 40px to 380px so no empty footer space remains. Due dates remain in the detail header. Chart dimensions and centered fan-out layout are preserved.
+
+## D125 · 2026-10-24 · Center the initial graph in the usable canvas
+
+- Alex asked for newly created cards to appear around the middle of the canvas rather than at its top. Fit now measures the actual card bounds and centers them horizontally and vertically inside the viewport, reserving space above for the replay toolbar and 24px at the other edges. The Fit control uses the same calculation.
+- First creation is fitted even when only an unmatched Idea card exists. A different matched graph is fitted again; updates to the same graph preserve the user's pan. The parent-centered fan-out inside the graph is unchanged.
+
+## D126 · 2026-10-24 · Add the black TrueNorth mark beside Hivemind
+
+- Alex asked for the black TrueNorth logo to the left of Hivemind in the header. Reuse `web/hivemind-logo.svg`, which matches the old repository's TrueNorth mark, display it at 20px with a 9px gap, and render it black through a local style. The shared source asset is unchanged.
+
+## D127 · 2026-10-24 · Balance the Hivemind wordmark with its logo
+
+- Alex asked for slightly larger Hivemind text to match the 20px logo. Increase the mock header wordmark from 15px to 18px, retaining its weight and alignment.
+
+## D128 · 2026-10-24 · Enlarge and center canvas navigation controls
+
+- Alex asked for larger zoom buttons and larger centered icons. Use 44px square buttons with 22px outline SVG icons, centered with grid layout, and 6px spacing. Zoom in, Zoom out and Fit to view keep their existing actions and receive explicit accessible labels.
+
+## D129 · 2026-10-24 · Keep only Full and Last 30 days
+
+- Alex asked to remove the From Jul 24 range. The replay range control now offers only Full and Last 30 days, using their existing date calculations.
+
+## D130 · 2026-10-24 · Modular Thesis UI with a versioned data contract
+
+- Alex asked to clean and modularize the Thesis components for data returned by an agent/MCP, leaving the Idea card for later. Use one versioned, closed schema, one adapter for existing bundles, pure dated selectors, and separate card/chart/detail/canvas components. Keep the agreed visual design. Components take data and callbacks and own their event cleanup; no UI component calls a model or reads global application state.
+- Source uses ES modules. The existing standalone mock remains a generated artifact; esbuild bundles the modules and Ajv compiles the JSON schema at build time, avoiding a hand-written bundler or schema engine. These are build-only dependencies. Scope, state/reader tables and budgets: `docs/poc/thesis-ui.md`.
+- The existing bundle writer now includes stable judgement IDs and event dates. `thesis_bundles` (MCP) and `GET /thesis-bundles?ids=...` expose that same complete read-only envelope, so the agent need not reconstruct UI inputs from partial reads. No model call or write is added. ESLint and Prettier provide development checks only.
+
+## D131 · 2026-10-24 · Remove native hover text from card UI
+
+- Alex asked to remove the repeated full-title tooltip that appears over a card. Card titles remain visible and clickable, but have no native title tooltip. The shared chart and navigation controls use accessible labels instead of native hover-title text.
+
+## D132 · 2026-10-24 · Probing the idea route: aliases from the universe, Chinese text terms, a floor under null
+
+- Alex: "do more matching of how an idea could use the endpoints to go about finding the right theses … see where, for example, the search engine retrieval may be lacking". 49 realistic ideas were run through search and the model (`docs/research/2026-10-24-idea-probes/findings.md`).
+- Decided (implementation of D76 search and D91 null, not a change to either decision): an object is named only by its id, its full name or an alias the universe lists (`poc/universe.json` now carries product and Chinese names per company and theme; single words of a name are never aliases); the ledger's text index is asked for Latin words and three-character Chinese windows; `results` is null only when no object is named, no view text matches and the top similarity is below 0.30 (measured: every idea with a view scores 0.33 or more; a house purchase 0.19). Ideas above the floor that name nothing go to the model, which answers "none".
+- Open, for Alex (findings §Choices): k above 10 or a per-object cap; evaluating percent, gigawatt and count ladders; the card naming objects without a view; a role per chosen view.
+
+## D133 · 2026-10-24 · Everything in data and code is English from now on, natively
+
+- Alex: "从现在开始所有数据和代码里面的各种都要是英文" … "不要再做什么转译。原生全部是英文理解了不".
+- Decided: code (identifiers, strings, comments, docstrings), everything the system writes (ledger text, answers, labels, card fields) and every model output are English, written in English at the source. No translation layer anywhere: a Chinese text is not turned into English after the fact. The sealed ledger of 2026-10-24 is Chinese and is not rebuilt (Alex, same evening: "千万不要 rebuild 这个 db"); it stays as it is, and the page shows its text as stored, until the next run writes English natively. That run needs the pipeline's prompts to ask for English (role, categories, matching, judging), a new config version, and the service's ladder parser to read English conditions; it is a paid run Alex launches. The design documents stay in plain Chinese for Alex (AGENTS §11).
+
+## D134 · 2026-10-24 · The idea is read by an agent that calls Hivemind, the way a fresh Luna with the MCP would
+
+- Alex: "imagine it's just like a fresh Luna loaded with the MCP of HiveMind … what the users ask as an idea, how to break it down into mapping theses … it's going to break down into a couple ways, which … are basically just query endpoints or whatever API or MCP calls to the HiveMind to retrieve whatever is necessary so that the agent can actually determine what are the final theses that need to go in to support the idea … That's the flow." Earlier the same evening: "你现在映射的观点都比较少，这个也是一个问题" and "idea 的拆解，映射这个可能有一定的系统提示词需求，可以写在这个 mcp 或是我们 api loading 时候就给到的系统提示词".
+- Decided: `POST /ideas` runs that flow inside the service: luna gets the same tools the MCP front offers (search, view, evaluate) plus finish, and a system prompt (`prompts/idea-v4.txt`) that says how to work: break the idea into two to four parts (the thing itself, its drivers, what could break it), search for each part, read what matters, map each part to every view that answers or moves it, evaluate a dollar number, finish with the reading. Code runs the tools, remembers which views the agent has actually seen (a finish may name no other), evaluates the claim itself, and archives every turn so a card replays for $0. The MCP front's instructions carry the same recipe for an external agent. Measured before this change: one call over the top-10 of one search mapped a median of one view per idea (49 probes); the two-step prompt over 20 candidates mapped a median of two.
+
+## D136 · 2026-10-24 · Slide the Thesis detail drawer open and closed
+
+- Alex asked for smooth slide-in and slide-out when opening and closing a Thesis. Use a shared 280ms drawer motion controller: the panel slides from the right while the scrim fades, and stays mounted until the closing motion finishes.
+- X, scrim and Escape use the same close path. Reopening during a close reverses from the current visual position; repeated closes do not restart it. Focus returns after the exit finishes. Dataset replacement and destruction cancel pending motion; reduced-motion preference skips it.
+
+## D135 · 2026-10-24 · The service does the looking up; the model is asked twice
+
+- Alex, after the agent version was measured (27,000 input tokens per idea, a quarter of them a catalog re-sent every turn, the same mapped count as one call): "But isn't this return very, very inefficient in terms of the context bloat? … Measure it and realistically tell me if this is the right way." Then, shown the split: "不是本来就应该这样做吗？"
+- Decided: `POST /ideas` asks the model twice and nothing else. Call 1 breaks the idea into two to four typed parts (object from the library's object list, what to look for, period, a search query) and reads a dollar claim. The service searches once per part (8 candidates each, id + what it looks at + judged position), follows the ledger's dependency graph from the first part's views to their upstream and downstream views, and evaluates the claim. Call 2 maps each part to its candidates and writes the summary; the service admits only candidate ids. The agent loop (D134) is removed from the service; the MCP front keeps the recipe for an external agent, with the object list instead of a catalog. Measured on the first three ideas: 2,640–2,750 input tokens per idea against 27,000.
+- Confirmed by Alex after the 49-probe comparison (5 views mapped per idea against 2, 2,704 input tokens against 27,048): "可以，你确认这个方向是对的，先定论，然后再继续想要怎么优化 1. 速度 2. 成本 3. 质量和稳定的结果". The split is the design; what follows is tuning, each change measured against a fresh control on the same ideas.
+
+## D137 · 2026-10-24 · Keep card connectors separate and attached to their cards
+
+- Alex asked for the reference's rounded orthogonal routes, without overlapping lines or attachment points outside a card. This amends D84's fixed 24px outgoing-port spacing: 24px is the maximum; compress the spacing to keep the ports at least 24px inside the top and bottom corners. Each path begins exactly on the source's right edge and ends on the target's left midpoint. Keep D85's arrows and D87's incoming-path highlight.
+- Diagnosis: the three stored Idea response fixtures contain one 12-child graph, with 30 overlapping vertical-segment pairs; the other two are empty. The 42 stored default graphs have no overlapping branch pairs because their fan-outs are smaller. Every route currently turns at the same horizontal midpoint; with 17 or more children the fixed port spacing also exceeds the 380px card height. Card-only entry translation briefly detaches connectors from their cards.
+- Route ownership is `poc/ui/src/components/connectors.js`: order destinations vertically, nest the outer destinations' turns nearest the source, and give successive turns 12px lanes. Upper and lower routes can reuse a lane only where their vertical spans do not touch. Increase the inter-column gap when the lanes need it. Fade cards into place without translating them independently of their lines.
+
+| State / event | Result |
+|---|---|
+| Empty / zero destinations | No paths. |
+| Render / one or many destinations | Measure unscaled card rectangles, assign bounded ports and nested lanes, then draw rounded paths. |
+| Replay or range change | Preserve the same graph attachments; a graph redraw recomputes from its card rectangles. |
+| Pan, zoom, fit | Cards and paths share the world transform; attachments stay aligned. |
+| Replace data or graph | Rebuild paths with the new card set; retain no old lanes. |
+| Destroy | Existing canvas cleanup removes cards, paths and handlers. |
+
+| Value / writer | Readers and checks |
+|---|---|
+| Card rectangles / canvas placement | Shared route function; source and destination edge assertions. |
+| Bounded ports, lanes and rounded path / route function | SVG renderer, stored-fixture and all 0–93 child-count intersection checks. |
+| Expanded column gap / route function | Supporting-card placement and fit bounds; existing pan, zoom and hover handlers. |
+
+- Before implementation, the proposed geometry was replayed over every 1–93 child fan-out supported by the 94-thesis ledger: no intersections and no ports outside the source. The browser check must exercise the stored 12-child response and compare real path endpoints to card bounds. No schema, data, model prompt or thesis relationship changes.
+
+## D138 · 2026-10-24 · Idea cards share the Thesis header and connect every mapped thesis directly
+
+- Alex asked to match the Thesis header, remove the redundant decomposition list, and explain/fix why every thesis was drawn after the first. The stored response has three analysis parts, eight distinct chosen theses and five related theses. Its third part maps to none. Across the three stored response fixtures, one has this graph and two have no chosen theses. The FE made the first chosen thesis the parent of the other seven and all five related theses; four of the five related paths ignored their actual `via` source. The backend already supplies each related source, so no backend or model change is needed.
+- The Idea and Thesis use one header renderer and a non-shrinking 40px header. Remove the decomposition rows and their IDs from the Idea card; keep its question, verdict and reading. `reading.parts` stays in the response for analysis, not as card rows.
+- All distinct `reading.chosen` IDs are peer roots directly connected to the Idea. Only `related` entries connect after a root, using their supplied `via`; neither list order nor the first chosen thesis creates a dependency. Keep related nodes in separate, vertically reserved groups after their actual source. Null/empty responses still show the Idea alone. This replaces the first-thesis-as-parent UI rule recorded in D112/D135 integration notes; it does not change which theses the service chooses.
+
+| State / event | Result |
+|---|---|
+| Pending, failed, null, or no chosen theses | One Idea card, shared header, no invented thesis or edge. |
+| Answer with chosen theses and related entries | One direct edge per chosen thesis; one related edge from its supplied `via`. |
+| Replay or time-range redraw | Keep the explicit graph; update the same dated card contents. |
+| New answer or dataset | Validate known IDs before rendering; retire graph nodes no longer loaded. |
+| Pan, zoom, hover, detail open/close | Preserve attachments and incoming-path highlighting for each branch. |
+
+| Value / owner | Readers and checks |
+|---|---|
+| `rootIds` and `branches[{sourceId,targetId}]` / Idea graph adapter | Shared graph validation, layout and canvas; stored response must map each chosen ID and `related.via` exactly. |
+| Card rectangles and edges / pure graph layout | Renderer and connector planner; reserve each source's related group, bounded ports, no overlapping routes. |
+| Header HTML / shared primitives | Both card renderers; browser compares height, padding and icon placement. |
+
+- Existing standalone `primaryId`/`supportingIds` callers are normalized into the same layout. The new explicit graph accepts only loaded, unique root IDs and single-parent related nodes with a root source; malformed graphs fail before replacing the visible graph. D130's data contract, D137's attachments, and the existing empty/replay/instance checks remain in force. Uneven groups need lanes based on the actual upward/downward routes, rather than assuming half the roots lie on each side of the Idea.
+
+## D139 · 2026-10-24 · Evaluate overarching main theses before building the next layer
+
+- Alex clarified that the desired result is an overarching main thesis exposed to agents, with linked supporting theses underneath, potentially spanning companies and industries. He asked for small POCs of the different approaches on existing NVIDIA data and a written technical proposal before implementation.
+- Scope authorized: isolated experiment code and new dated outputs. Do not rebuild the sealed ledger, change production extraction, or switch the UI while evaluating. The experiment compares vector density, recorded-graph communities, global LLM grouping, incremental grouping, and a separately declared argument-first approach; a targeted revisit diagnostic checks the observed orphaning mechanism.
+- Plan, raw-output locations, findings and proposed interfaces are in `docs/research/2026-10-24-hierarchy-poc/`. This decision authorizes research, not adoption of a production grouping method, main-thesis ladder, or scoring rule. The draft uses supported/challenged qualitative arguments without a new numerical score; that choice remains a product decision.
+
+## D140 · 2026-10-24 · Validate only two main-thesis update paths
+
+- Alex: “开始实验，不要随便乱加戏，scope creep. 好好的做好核心验证.” The authorized follow-up is only Rubin commercialization and cloud capex → NVIDIA revenue, replayed over three stored historical snapshots with three independent samples and fresh-generation controls.
+- This is an isolated research follow-up to D139. No extraction, production schema, MCP, UI, automatic clustering, identity discovery, or recursive hierarchy is added. Invalid results are retained without repair or replacement sampling; dependent update chains stop.
+- Results: 25 completed requests, estimated $0.546144 under repository prices; 14 of 23 synthesis outputs rejected for real evidence IDs paired with the wrong view. The only complete Rubin update chain omitted supplied delay risk. Findings: `docs/research/2026-10-24-main-thesis-replay/findings.md`. No production approach is adopted; the proposed citation-representation follow-up is not implemented.
+
+## D141 · 2026-10-24 · Validate code-owned sources and current evidence before summaries
+
+- Alex authorized the follow-up after the failure analysis: “好你思考清楚了就下手跑验证”. Scope remains the same two questions, three historical snapshots, same model, and three independent samples. No production or UI changes.
+- The experiment gives each real source one immutable reference with code-owned origin paths. It assesses every current source before a final summary, without reading old summary text; fresh direct-synthesis controls share the same source format. Both final cards are read by an agent.
+- Completed 42 requests, estimated $1.059854 at repository prices. All 822 source-assessment instances and all 24 summary/reader outputs passed structural checks. Rubin's delay risk reached the summaries and readers in all three samples of both methods. Full basis processing did not show better core outcomes than direct synthesis; its final-round cost was 2.52 times as high. Findings: `docs/research/2026-10-24-main-thesis-basis/findings.md`.
+- This records research, not production adoption. The recommendation is to prefer code-owned provenance and synthesis from current material, without making a full per-source basis table mandatory yet. Automatic clustering, stable main-thesis matching and bounded streaming updates remain outside the experiment.
+
+## D142 · 2026-10-24 · Test organization inside ingestion, not after extraction
+
+- Alex corrected the research direction: thesis associations should emerge during extraction and streaming ingestion. He authorized a short original-article replay through extraction, matching and writing, with no separate full-library clustering pass.
+- The isolated POC uses three original articles, three independent samples and ordinary-ingestion controls. New grouping fields are part of existing extraction/matching calls; original checks and writer are reused. No sealed database, production prompt, MCP or UI changes.
+- Completed 37 requests, estimated $0.512881. All three extraction samples linked the new SK deployment thesis to the existing Rubin shipment thesis, but all three matching answers placed them in separate narrow groups. A zero-call replay resolves and retains those three extracted relations. This diagnoses the duplicated relationship decision; it does not adopt a production group hierarchy.
+- The experiment's affected-group bookkeeping defect was fixed and verified by replaying all 37 identical requests without network calls. Findings: `docs/research/2026-10-24-ingestion-groups/findings.md`.
+
+## D143 · 2026-10-24 · Test one owner for ingestion relationships
+
+- Alex asked which PRD must change, for a clean end-to-end repair, a logical simulation, then another POC. Amend the extraction and views PRDs with an explicitly experimental relationship contract. This authorizes the isolated experiment, not a production rollout.
+- Extraction proposes the shared research question, members and source evidence. Matching resolves thesis identity without rewriting group membership. The writer resolves all temporary references and saves the group, members and provenance in the same transaction as the original thesis/evidence writes. A new group requires two distinct resolved theses; a single thesis stays independent. Group membership does not create a causal dependency or a scored parent thesis.
+- Keep the same three original articles, three fresh paired samples, existing model/settings, and a total ceiling of 48 calls/$8 estimated. The control is D142's grouping path. No sealed-data rebuild, production prompt change, extra clustering call, summary, MCP or UI work. Plan and acceptance: `docs/research/2026-10-24-relation-handoff/design.md`.
+
+- Result: all six streams completed; 36 requests, estimated $0.561000, no extra clustering calls. Fresh automatic shipment/deployment grouping succeeded in 1/3 new samples and 1/3 controls. New-arm risk evidence reached the original shipment thesis in 3/3 samples, but reached a shared group in only 1/3. Acceptance failed; no production adoption or further arm. Findings: `docs/research/2026-10-24-relation-handoff/findings.md`.
+
+## D144 · 2026-10-25 · Research continuing subject identity inside ingestion
+
+- Alex rejected the two failed grouping attempts as an unclean design and explicitly asked for deeper research and another run within the current pipeline. Scope remains isolated research, not production adoption.
+- Proposed experiment: extraction gives every candidate thesis a required reference to a continuing business subject; the existing matching call separately resolves subject identity and thesis identity. Code preserves those references when writing. A subject can start with one thesis; membership is not an optional afterthought or causal claim. This replaces D143's experimental two-member creation condition, not the frozen production schema.
+- Keep the three original articles, three fresh paired samples against D143, the same model/settings, and the existing maximum of 48 calls/$8 estimated. If the three new core grouping samples pass, use one predetermined additional Rubin customer-deployment article per new stream (as late arrival) to test another milestone; no new comparison claim. Full contract, prior decisions, research sources and fixed criteria: `docs/research/2026-10-25-ingestion-threads/plan.md`.
+
+- Result: 23 attempts, 22 returned and one extraction timeout. Both returned new-arm first-article match answers used self-targets for all six local threads and were rejected by the registered identity contract; none of the three new streams reached the later grouping test. All three D143 controls completed but formed no shared group. Returned-call estimated cost was $0.315563; the timeout has unknown usage and retains a $0.2327375 budget reservation. No extra article or replacement samples ran.
+- A zero-call diagnostic changed only those six self-targets to the required empty new-target representation; both first articles then wrote three theses and three threads. This isolates a format-boundary failure, not successful automatic grouping. No production adoption. A proposal to replace local pointer chains with direct identity groups remains unimplemented and needs a revised experiment contract. Findings: `docs/research/2026-10-25-ingestion-threads/findings.md`.
+
+## D145 · 2026-10-25 · The idea card keeps the full mapping contract
+
+- Alex, after the night's tuning report (13 measured iterations, `docs/poc/idea-tuning-log.md`): "用完整版吧". The
+  service's mapping call keeps the per-part reason (prompt idea-v7, the `MAP` schema), at reasoning effort none:
+  `poc/config/poc-v9.json` is the default of the API and the scripts. The lean contracts (idea-v8: no reason, each
+  candidate once; idea-v9: no reason, full briefs) stay in `CONTRACTS` as measured arms, not as the product.
+- Why (measured): the reason the page never shows is what steadies the mapping. 8 ideas × 3 fresh samples, canvas
+  overlap median: with the reason 0.58 and 0.65, without it 0.55 and 0.50; first view 8 of 8 against 7 of 8. The
+  reason costs ≈ 2 s and ≈ $0.003 per idea (10.9 s and $0.0098 against 8.6 s and $0.0070).
+- Kept with it, all code: direct / driver / context tiers with at most three drivers per part; the direct pick made
+  among the model's direct views in search order with the year check; the market-price guard; the English re-ask;
+  the canonical second query per part; one embeddings round trip per idea.
+- Next arms, in order, each measured the same way (49 probes, 8 × 3 stability, serial timing): the reason capped
+  at twelve words; six candidates per part instead of eight. Target $0.005; the 6 s target is below the floor of
+  two serial calls on this network and is not pursued.
+
+
+## D147 · 2026-10-25 · Continue grouping POCs with direct subject identity results
+
+- Alex explicitly asked to keep testing from different angles, read the system design and code, and improve barriers within the existing pipeline. This authorizes continued isolated diagnosis and development POCs; no production, sealed ledger, Idea, UI, deploy or model/provider change.
+- Replace D144's model-authored local pointer graph with direct groups of local subject IDs whose destination is either new or a displayed stored subject ID. Keep extraction-owned required thesis membership, original thesis identity/evidence rules, and one transaction. Schema restricts destinations; code resolves final IDs without recursion.
+- Three fresh paired original-article streams against D144, followed by the predetermined extra deployment article only after correct core grouping; same gpt-6-luna/settings, shared maximum 48 calls/$8 estimated. Preserve failed variants and fixed measurements; do not silently replace samples. Plan, state tables and scope: `docs/research/2026-10-25-direct-subjects/plan.md`.
+
+- The first direct-group variant completed 20 requests ($0.334354 estimated). One new stream omitted its required groups; two completed but treated the customer deployment as a different subject from Rubin and split it. All three D144 controls failed subject-count checks. The displayed old group was present in both split cases, so retrieval was not the cause.
+- Continue within the same 48-request/$8 ceiling with extraction-owned membership: retrieve existing group descriptions before reading the full article, require every candidate to cite a shown old group or declared new group, and remove group identity decisions from matching entirely. Matching still resolves the thesis and evidence identities. This asks whether a thesis belongs under a business process, not whether two business processes are identical. The narrower required-output-format draft is not implemented because it would leave this semantic defect intact. Contract and tables: `docs/research/2026-10-25-direct-subjects/extraction-membership-plan.md`.
+- Extraction-owned membership reached the old Rubin group in all three second-article answers, but all returned duplicate g1 references and an unused local t1, so all three were rejected. Nine new calls brought the shared total to 29 ($0.447565 estimated). Continue with a strictly equivalent reference-schema spelling, without changing the prompt, accepted values or local checks; fresh second-article calls use copies of their successful first-article states. This is a representation diagnostic, not proof of a provider defect. Contract: `docs/research/2026-10-25-direct-subjects/flat-reference-plan.md`.
+- The equivalent single-pattern schema produced valid distinct old/new references in all three second-article samples. Two completed the core relation/risk path; one valid old-group assignment was rejected solely for an unused proposed new-group definition. Remove that redundant rejection: unreferenced definitions already never reach the writer. Keep nonempty, unique and valid membership references, unique definition IDs, and all original evidence checks. This changes the experimental input contract, not the semantic acceptance criteria. Replay identical stored requests into new databases, call only missing steps, and keep the same shared ceiling; 38 requests/$0.560701 estimated have been used. Contract and census: `retained-membership-plan.md`, `unused-census.json` in the D147 research directory.
+- Final core result: all three recorded streams preserve separate shipment and SK-deployment theses in the same Rubin group and route later supply risk to it. The three preselected satellite continuations also reuse that group without changing historical snapshots or removing the earlier risk. The code-only final correction replayed original answers; it did not obtain three replacement samples. Total: 47 returned requests, estimated $0.641424. 121 tests and targeted mutants passed. No production adoption; overall group counts (1, 4, 3), large-library recall, cross-company boundaries and an argued main-thesis layer remain unvalidated. Findings: `docs/research/2026-10-25-direct-subjects/findings.md`.
+
+## D146 · 2026-10-25 · The idea gold set: twenty ideas judged as an analyst, authored by Claude, sealed
+
+- Alex, asked for twenty gold ideas with the right views written beside each: "做。然后3.的标准就是hedge fund analyst
+  /investor 会看的观点，你来进入角色做golden 然后封存". The standard is the views a hedge-fund analyst or investor would
+  want to see for the idea; Claude writes the gold in that role, from the view texts of the sealed ledger as judged on
+  2026-08-15, and seals it.
+- The file: `poc/eval/gold/idea-gold-2026-10-25.json`, digest in `poc/eval/gold/SHA256SUMS`, never edited; a revision
+  is a new dated file. Twenty ideas: six on NVIDIA, seven on other companies (TSMC, Meta, CoreWeave ×2, AMD,
+  Microsoft, Intel), six on themes (hyperscaler capex, Big Tech AI spend, H100 prices, the AI trade, 232 tariffs,
+  data-center demand), two in Chinese, two the library does not cover (232 tariffs on semiconductors, chip export
+  controls and NVIDIA's China revenue), whose right card shows no direct view. Each idea carries the accepted direct
+  views, the one a stated amount is judged against, the drivers an analyst wants beside it, acceptable neighbours,
+  and traps (a view that looks like the answer and is not: total revenue for a segment, total expenses for capex,
+  TSMC revenue for TSMC capex).
+- Labelled model-authored gold (AGENTS §7): it measures the service against an analyst's reading written by the same
+  model family, not against Alex's hand; a disagreement with Alex's own reading is settled by a new dated file.
+- `scripts/idea_gold.py` scores a configuration against it: direct view right, traps shown as direct, driver recall,
+  canvas noise, claims right; it refuses a gold file whose digest is not the sealed one.
+
+
+## D148 · 2026-10-25 · Check grouping consistency by research meaning, not identical group counts
+
+- Alex asks to keep working on grouping consistency while Claude Code works on Idea consistency: results need not match exactly every time, but must not be far off. Keep grouping and Idea work separate until their findings can be combined.
+- First replay the three completed D147 streams from stored answers and separate extraction coverage from membership variation. Keep distinct questions and their real evidence links; names, local identifiers and extra small groups alone are not errors. Do not add a group-count target or delete small groups to make the counts agree.
+- Run the unchanged D147 process on two previously unused full articles, one about AMD growth and one about Google Cloud's Rubin deployment, starting from copies of the three different D147 states. Report missing connections, unrelated memberships, extraction gaps and rejected calls separately. This is descriptive boundary research with assistant-authored semantic checks, not a new overall quality acceptance threshold or a claim that the method improved.
+- New bounded continuation experiment: at most 18 requests/$2 estimated, same model/provider/settings. The completed D147 budget and artifacts stay unchanged. No production, Idea, UI, summary or separate clustering-call change. A failure is retained and reported without replacement samples. Contract and scope handoff: `docs/research/2026-10-25-grouping-consistency/plan.md`.
+- Before paid calls, source-level review corrected an earlier classification: sample 2's OpenAI deployment explicitly uses Rubin but belongs only to its new OpenAI group. This is one real missed membership among ten reviewed Rubin-related thesis instances, alongside two samples that did not extract that extra thesis. Pause the new-article continuation and first test the narrower cause: D147 stopped showing existing theses' stored group memberships. Run three fresh unchanged controls and three fresh requests that add only those already-stored membership IDs to the displayed theses, through the original matching/writing path, within the same 18-request/$2 ceiling. Preserve the earlier plan and review; no new prompt, schema, production rule or acceptance target.
+- Result: all six samples completed in 12 fresh requests, estimated $0.202629. Context samples preserved the OpenAI-to-Rubin link in 3/3, but one also placed the unrelated PC thesis in Rubin and another omitted delay evidence. Controls showed an omitted extraction, a rejected altered quote, and an OpenAI membership in the SK-specific group. Both controls that actually proposed OpenAI already referenced Rubin, so the original missed-membership mechanism is not proven repaired. The context variant is not adopted. All history/resend checks pass; the known semantic defects remain explicit. Findings and the proposed joint review with Claude's Idea work: `docs/research/2026-10-25-grouping-consistency/`.
+
+## D149 · 2026-10-25 · Group association is required during extraction
+
+- Alex asks to refresh the relevant PRDs so group association is implicitly needed during extraction. Organization is part of reading incoming information, not an optional later whole-library clustering step. Every proposed thesis carries structured membership in a continuing business subject; evidence-only updates follow the existing thesis memberships.
+- Preserve the D33 responsibility boundary: extraction decides membership while reading the full source; matching resolves thesis/evidence identity and dependencies without deciding membership again; the views writer preserves the association against final thesis IDs. The complete target contract is owned by `06-views.md`, with extraction's responsibility in `05-extraction.md` and summaries in the system overview and design page.
+- A group organizes related questions, including across companies, without turning them into the same question or automatically making one a scored parent. A single thesis can start a group. The longer-term overarching investment thesis for agents remains separate work, not a capability delivered by this refresh. D148's tolerance for minor naming or optional subgroup differences remains; wrong members and missing core connections still matter.
+- This changes the documented target, not the running pipeline. Keep D147's isolated handover implementation visibly separate from the required behavior and D148's rejected context variant. No production prompt/schema change, stored-data migration, new paid run, group-summary generation, MCP or UI change is authorized by this documentation slice. Adding a short reason for each membership remains an unvalidated proposal.
+- Record current implementation gaps in `docs/poc/pipeline-plan.md`; refresh status and the PRD bundle. Change census and reasoning refresh: `docs/research/2026-10-25-grouping-doc-refresh.md`.
+
+## D150 · 2026-10-25 · Test a source-based membership explanation within extraction
+
+- Alex asks to continue working on a clean grouping-consistency solution while Claude works on Idea. Continue isolated grouping research; do not change Idea or the default pipeline.
+- The census is 18 saved extraction answers, 19 candidates and 27 membership references. Wrong PC→Rubin and OpenAI→SK references are already in raw extraction; matching and storage retain them. Test whether requiring a short source-to-scope explanation before each chosen group ID reduces these errors. This is a hypothesis, not an adopted fix.
+- Keep the full original article, fixed two-article prefix, original model/settings, and original identity/source checks. Three fresh controls and three fresh explanation samples; only if the registered development conditions hold, measure the predefined Google article once with three samples per arm. New independent maximum: 24 HTTP attempts/$1 estimated; prior study budgets and records are untouched. Stop without replacement samples or automatic new arms.
+- The new output is validated before projection to the old membership IDs; explanations are archived, never treated as evidence or sent to identity matching. No separate clustering call, group-count target, production schema migration, or claim that rationale helps because Claude used it. Claude's latest per-driver rationale arm did not improve consistency.
+- Contract, state/event and value/reader tables, unchanged measurement definitions and read-only review: `docs/research/2026-10-25-grouping-basis/plan.md`.
+- Result: 12 fresh calls, estimated $0.199548. The basis arm had one correct OpenAI→Rubin result, one omission, and one PC→Rubin error; controls repeated OpenAI→SK and also produced PC→SK. No adoption or conditional Google run. Across D147/D148/D150, five wrong references and one missed membership remain visible; three wrong-reference answers also declare an appropriate new group but reference a different old one. A zero-call one-ID correction confirms the writer preserves the supplied reference. This does not establish why the model selected it or validate the next representation. All 135 tests and targeted mutants pass; source, history and resend checks pass. Findings: `docs/research/2026-10-25-grouping-basis/findings.md`.

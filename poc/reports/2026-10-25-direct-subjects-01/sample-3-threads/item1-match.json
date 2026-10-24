@@ -1,0 +1,199 @@
+{
+  "status": "complete",
+  "request": {
+    "model": "gpt-6-luna",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Place the supplied candidate theses and evidence using only the supplied lists.\nFor each candidate choose existing (same object, outcome and period, including a part of that question), successor\n(next period of the same question), new (a distinct question), or discard (unsupported object, closed same-period\nquestion, or an excessively broad combination). Similar business context alone does not make two questions identical.\nFor new/successor theses, choose dependencies only when the outcome requires another shown thesis's outcome.\nUse shown thesis IDs or candidates retained in this answer; avoid cycles. Dependency direction states which end\nsupports the candidate, or whether two theme ladders move together. An observed fact is evidence, not a dependency.\nFor every supplied evidence/view pair choose duplicate, replace or new. Duplicate means the same original speaker,\ndate and statement, even across media. Replace means a later revision of the same statement by the original source;\nnew covers different events, periods or speakers. Targets must come from that pair's provided evidence list.\nUse empty strings for absent targets. Answer every candidate and listed evidence pair. English prose only. Also group descriptions of the same continuing business subject in subject_identity.\nReuse a displayed stored subject when it is the same development; otherwise create a new one. Separate metrics,\ncustomer deployments and dates within a product rollout or program retain its identity. A shared company alone\nis insufficient. Thesis memberships are already assigned; decide only which subject descriptions are identical."
+      },
+      {
+        "role": "user",
+        "content": "{\"item\": {\"input_id\": \"truenorth:transcript:NVDA:2026-02-25\", \"publication_day\": \"2026-02-25\", \"category\": \"T4\"}, \"candidates\": [{\"id\": \"C1\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"Whether Vera Rubin production shipments commence during the stated second half of calendar 2026.\", \"question\": \"Will NVIDIA commence Vera Rubin production shipments by December 31, 2026?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"NVIDIA commences Vera Rubin production shipments on or before 2026-12-31.\"}, {\"label\": \"no\", \"condition\": \"NVIDIA has not commenced Vera Rubin production shipments by 2026-12-31.\"}], \"due_day\": \"2026-12-31\", \"year\": \"2026\", \"evidence_ids\": [\"E1\", \"E2\", \"E3\"]}], \"candidate_lists\": {\"C1\": []}, \"shown_views\": [], \"evidence\": [{\"id\": \"E1\", \"quote\": \"We shipped our first Vera Rubin samples to customers earlier this week, and we remain on track to commence production shipments in the second half of the year.\", \"one_line\": \"NVIDIA reported shipping initial Vera Rubin samples and stated that production shipments remained on track for H2 2026.\", \"speaker\": \"Colette Kress, NVIDIA CFO\", \"original_who\": \"NVIDIA\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Initial samples shipped earlier in the week of 2026-02-25; production shipments targeted for H2 2026.\", \"links\": [\"C1\"]}, {\"id\": \"E2\", \"quote\": \"We expect every cloud model builder to deploy Vera Rubin.\", \"one_line\": \"NVIDIA expects every cloud model builder to deploy Vera Rubin; this is a company expectation, not a completed deployment.\", \"speaker\": \"Colette Kress, NVIDIA CFO\", \"original_who\": \"NVIDIA\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Future; no specific deployment date stated.\", \"links\": [\"C1\"]}, {\"id\": \"E3\", \"quote\": \"We do expect pretty much every single customer to be purchasing Vera Rubin.\", \"one_line\": \"NVIDIA said it expects nearly all customers to purchase Vera Rubin, while noting that timing of market availability and customer installation remained uncertain.\", \"speaker\": \"Colette Kress, NVIDIA CFO\", \"original_who\": \"NVIDIA\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Future; no specific date stated.\", \"links\": [\"C1\"]}], \"evidence_pairs\": [], \"subject_identity\": {\"local_descriptions\": [{\"id\": \"t1\", \"name\": \"Vera Rubin platform rollout\", \"scope\": \"The Vera Rubin rollout, from customer sampling toward production shipments and customer deployments; this thread covers the dated production-shipment milestone.\"}], \"stored_subjects\": [], \"eligible_stored_ids\": {\"t1\": []}}}"
+      }
+    ],
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "hierarchy_result",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "candidates",
+            "evidence",
+            "subject_groups"
+          ],
+          "properties": {
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "outcome",
+                  "target_view_id",
+                  "reason",
+                  "dependencies"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "existing",
+                      "successor",
+                      "new",
+                      "discard"
+                    ]
+                  },
+                  "target_view_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "dependencies": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "view_id",
+                        "wait_chain_view_id",
+                        "wait_year",
+                        "direction"
+                      ],
+                      "properties": {
+                        "view_id": {
+                          "type": "string"
+                        },
+                        "wait_chain_view_id": {
+                          "type": "string"
+                        },
+                        "wait_year": {
+                          "type": "string"
+                        },
+                        "direction": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "view_id",
+                  "outcome",
+                  "target_evidence_id",
+                  "said_day",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "view_id": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "duplicate",
+                      "replace",
+                      "new"
+                    ]
+                  },
+                  "target_evidence_id": {
+                    "type": "string"
+                  },
+                  "said_day": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "subject_groups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "local_ids",
+                  "destination",
+                  "reason"
+                ],
+                "properties": {
+                  "local_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "t1"
+                      ]
+                    },
+                    "minItems": 1
+                  },
+                  "destination": {
+                    "type": "string",
+                    "enum": [
+                      "new"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "max_completion_tokens": 12000,
+    "reasoning_effort": "medium"
+  },
+  "reserved_usd": 0.12785,
+  "answer": {
+    "candidates": [
+      {
+        "id": "C1",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "This is a distinct, date-bounded question about whether Vera Rubin production shipments commence by December 31, 2026. No shown views are available to match it to.",
+        "dependencies": []
+      }
+    ],
+    "evidence": [],
+    "subject_groups": [
+      {
+        "local_ids": [
+          "t1"
+        ],
+        "destination": "new",
+        "reason": "No stored subject is provided for the Vera Rubin platform rollout, so create a new subject."
+      }
+    ]
+  },
+  "input_tokens": 1236,
+  "output_tokens": 233,
+  "estimated_usd": 0.003875,
+  "seconds": 4.088,
+  "call_id": 2,
+  "request_sha256": "cb64969c03f3f0402934164ac672d3a88fae9de9923600a823f0ccd62911c8df",
+  "cached": false
+}

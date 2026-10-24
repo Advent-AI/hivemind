@@ -1,0 +1,59 @@
+F.....F..F.                                                              [100%]
+=================================== FAILURES ===================================
+________ test_d144_full_ingestion_reuses_subject_and_routes_later_risk _________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-261/test_d144_full_ingestion_reuse0')
+
+    def test_d144_full_ingestion_reuses_subject_and_routes_later_risk(tmp_path):
+        """State table: first subject, separate milestone, evidence-only update, dated read and resend."""
+        conn, calls, uni, items, first = run_first(tmp_path / "views.sqlite")
+        second = threads.process(conn, calls, uni, items[1], 2)
+        third = threads.process(conn, calls, uni, items[2], 3)
+>       assert [r["thread_id"] for r in third["threads"]] == ["g1"]
+E       AssertionError: assert ['g1', 'g2'] == ['g1']
+E         Left contains one more item: 'g2'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:82: AssertionError
+____________ test_d144_same_batch_aliases_and_closed_search_targets ____________
+
+    def test_d144_same_batch_aliases_and_closed_search_targets():
+        """Identity table: same-batch descriptions share a root; loops and unseen targets refuse."""
+        local = [thread("t1"), thread("t2")]
+        answer = {"candidates":[], "evidence":[], "thread_matches":[
+            {"id":"t1", "target_thread_id":"t2", "reason":"Same development."},
+            {"id":"t2", "target_thread_id":"g8", "reason":"Existing development."}]}
+        offered = {"t1":[], "t2":[{"thread_id":"g8"}]}
+>       assert threads.resolve_threads(answer, local, offered) == {"t1":"g8", "t2":"g8"}
+E       AssertionError: assert {'t1': 't1', 't2': 't2'} == {'t1': 'g8', 't2': 'g8'}
+E         Differing items:
+E         {'t1': 't1'} != {'t1': 'g8'}
+E         {'t2': 't2'} != {'t2': 'g8'}
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:114: AssertionError
+______ test_d144_reader_uses_actual_links_and_excludes_replaced_evidence _______
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-261/test_d144_reader_uses_actual_l0')
+
+    def test_d144_reader_uses_actual_links_and_excludes_replaced_evidence(tmp_path):
+        """Provenance table: membership is no source claim; only dated, current evidence links count."""
+        conn, calls, uni, items, first = run_first(tmp_path / "views.sqlite")
+        threads.process(conn, calls, uni, items[1], 2)
+        threads.process(conn, calls, uni, items[2], 3)
+        conn.execute("insert into replacements(old_evidence_id,new_evidence_id,said_day,seq) values('e1','e3','2026-08-12',4)")
+        assert [e["evidence_id"] for e in threads.thread_detail(conn, "g1", 4)["members"][0]["evidence"]] == ["e3"]
+        source = calls.raw[0]["candidates"][0]
+        store.create_view(conn, view_id="v3", object_id="NVDA", object_kind="company", kind="company",
+            looks_at=source["looks_at"], question=source["question"], due_day=source["due_day"], year=source["year"],
+            rungs=source["rungs"], seq=4, input_id=items[2]["input_id"], created_at="2026-08-12T12:00:00")
+        conn.execute("insert into thread_members values('g1','v3',4,?)", (items[2]["input_id"],))
+>       assert threads.thread_detail(conn, "g1", 4)["members"][2]["evidence"] == []
+E       IndexError: list index out of range
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:167: IndexError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_full_ingestion_reuses_subject_and_routes_later_risk
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_same_batch_aliases_and_closed_search_targets
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_reader_uses_actual_links_and_excludes_replaced_evidence
+3 failed, 8 passed in 0.18s

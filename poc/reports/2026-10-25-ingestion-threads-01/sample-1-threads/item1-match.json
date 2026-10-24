@@ -1,0 +1,212 @@
+{
+  "status": "complete",
+  "request": {
+    "model": "gpt-6-luna",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Place the supplied candidate theses and evidence using only the supplied lists.\nFor each candidate choose existing (same object, outcome and period, including a part of that question), successor\n(next period of the same question), new (a distinct question), or discard (unsupported object, closed same-period\nquestion, or an excessively broad combination). Similar business context alone does not make two questions identical.\nFor new/successor theses, choose dependencies only when the outcome requires another shown thesis's outcome.\nUse shown thesis IDs or candidates retained in this answer; avoid cycles. Dependency direction states which end\nsupports the candidate, or whether two theme ladders move together. An observed fact is evidence, not a dependency.\nFor every supplied evidence/view pair choose duplicate, replace or new. Duplicate means the same original speaker,\ndate and statement, even across media. Replace means a later revision of the same statement by the original source;\nnew covers different events, periods or speakers. Targets must come from that pair's provided evidence list.\nUse empty strings for absent targets. Answer every candidate and listed evidence pair. English prose only. Resolve each business subject to the same continuing development in the thread search\nresults, or create one. Different milestones, customer deployments and dates within a product rollout or program\nretain its identity while remaining distinct theses. A shared company alone is insufficient. Local descriptions\nof one development may resolve to one another. Use an offered g-ID, a local t-ID, or empty for a new thread."
+      },
+      {
+        "role": "user",
+        "content": "{\"item\": {\"input_id\": \"truenorth:transcript:NVDA:2026-02-25\", \"publication_day\": \"2026-02-25\", \"category\": \"T4\"}, \"candidates\": [{\"id\": \"C1\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"Whether NVIDIA begins Vera Rubin production shipments during the stated launch window.\", \"question\": \"Will NVIDIA commence Vera Rubin production shipments by 2026-12-31?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"NVIDIA commences production shipments by 2026-12-31.\"}, {\"label\": \"no\", \"condition\": \"NVIDIA has not commenced production shipments by 2026-12-31.\"}], \"due_day\": \"2026-12-31\", \"year\": \"2026\", \"evidence_ids\": [\"E1\"], \"thread_ids\": [\"t1\"]}, {\"id\": \"C2\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"Whether the unresolved NVIDIA–OpenAI partnership agreement is reached.\", \"question\": \"Will NVIDIA and OpenAI enter a partnership agreement by 2027-01-31?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"NVIDIA and OpenAI enter a partnership agreement by 2027-01-31.\"}, {\"label\": \"no\", \"condition\": \"They have not entered a partnership agreement by 2027-01-31.\"}], \"due_day\": \"2027-01-31\", \"year\": \"2027\", \"evidence_ids\": [\"E2\"], \"thread_ids\": [\"t2\"]}, {\"id\": \"C3\", \"object\": \"chip-export-controls\", \"kind\": \"theme\", \"looks_at\": \"Whether H200 imports into China are allowed by the end of the next fiscal year.\", \"question\": \"Will any NVIDIA H200 products be allowed to be imported into China by 2027-01-31?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"At least some NVIDIA H200 products are allowed to be imported into China by 2027-01-31.\"}, {\"label\": \"no\", \"condition\": \"No NVIDIA H200 products are allowed to be imported into China by 2027-01-31.\"}], \"due_day\": \"2027-01-31\", \"year\": \"2027\", \"evidence_ids\": [\"E3\"], \"thread_ids\": [\"t3\"]}], \"candidate_lists\": {\"C1\": [], \"C2\": [], \"C3\": []}, \"shown_views\": [], \"evidence\": [{\"id\": \"E1\", \"quote\": \"We shipped our first Vera Rubin samples to customers earlier this week, and we remain on track to commence production shipments in the second half of the year.\", \"one_line\": \"NVIDIA says customer samples have shipped and production shipments are on track for H2 2026.\", \"speaker\": \"Colette Kress, NVIDIA CFO\", \"original_who\": \"Colette Kress\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Production shipments planned for H2 2026\", \"links\": [\"C1\"]}, {\"id\": \"E2\", \"quote\": \"We continue to work with OpenAI toward a partnership agreement and believe we are close.\", \"one_line\": \"NVIDIA says it is still working toward an OpenAI partnership agreement.\", \"speaker\": \"Jen-Hsun Huang, NVIDIA CEO\", \"original_who\": \"Jen-Hsun Huang\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Agreement unresolved as of 2026-02-25\", \"links\": [\"C2\"]}, {\"id\": \"E3\", \"quote\": \"While small amounts of H200 products for China-based customers were approved by the U.S. government, we have yet to generate any revenue. And we do not know whether any imports will be allowed into China.\", \"one_line\": \"NVIDIA reports U.S. approval for small H200 quantities, no resulting revenue yet, and uncertainty over imports into China.\", \"speaker\": \"Colette Kress, NVIDIA CFO\", \"original_who\": \"Colette Kress\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Status as of 2026-02-25; future imports unresolved\", \"links\": [\"C3\"]}], \"evidence_pairs\": [], \"threads\": [{\"id\": \"t1\", \"name\": \"Vera Rubin platform rollout\", \"scope\": \"The Vera Rubin launch process, from customer sampling through the planned start of production shipments in H2 2026.\"}, {\"id\": \"t2\", \"name\": \"NVIDIA–OpenAI partnership process\", \"scope\": \"The unresolved process of negotiating and entering the partnership agreement between NVIDIA and OpenAI.\"}, {\"id\": \"t3\", \"name\": \"U.S. H200 export permissions and China imports\", \"scope\": \"The policy process governing whether approved H200 quantities can be imported into China and support NVIDIA sales there.\"}], \"thread_candidates\": {\"t1\": [], \"t2\": [], \"t3\": []}}"
+      }
+    ],
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "hierarchy_result",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "candidates",
+            "evidence",
+            "thread_matches"
+          ],
+          "properties": {
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "outcome",
+                  "target_view_id",
+                  "reason",
+                  "dependencies"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "existing",
+                      "successor",
+                      "new",
+                      "discard"
+                    ]
+                  },
+                  "target_view_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "dependencies": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "view_id",
+                        "wait_chain_view_id",
+                        "wait_year",
+                        "direction"
+                      ],
+                      "properties": {
+                        "view_id": {
+                          "type": "string"
+                        },
+                        "wait_chain_view_id": {
+                          "type": "string"
+                        },
+                        "wait_year": {
+                          "type": "string"
+                        },
+                        "direction": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "view_id",
+                  "outcome",
+                  "target_evidence_id",
+                  "said_day",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "view_id": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "duplicate",
+                      "replace",
+                      "new"
+                    ]
+                  },
+                  "target_evidence_id": {
+                    "type": "string"
+                  },
+                  "said_day": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "thread_matches": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "target_thread_id",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^t[1-9][0-9]*$"
+                  },
+                  "target_thread_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "max_completion_tokens": 12000,
+    "reasoning_effort": "medium"
+  },
+  "reserved_usd": 0.12970125,
+  "answer": {
+    "candidates": [
+      {
+        "id": "C1",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "No shown view or candidate covers whether Vera Rubin production shipments commence by the stated deadline.",
+        "dependencies": []
+      },
+      {
+        "id": "C2",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "No shown view or candidate covers whether NVIDIA and OpenAI enter a partnership agreement by the stated deadline.",
+        "dependencies": []
+      },
+      {
+        "id": "C3",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "No shown view or candidate covers whether H200 products are allowed to be imported into China by the stated deadline.",
+        "dependencies": []
+      }
+    ],
+    "evidence": [],
+    "thread_matches": [
+      {
+        "id": "t1",
+        "target_thread_id": "t1",
+        "reason": "The question concerns the Vera Rubin rollout milestone already covered by this thread."
+      },
+      {
+        "id": "t2",
+        "target_thread_id": "t2",
+        "reason": "The question concerns the unresolved NVIDIA–OpenAI partnership process covered by this thread."
+      },
+      {
+        "id": "t3",
+        "target_thread_id": "t3",
+        "reason": "The question concerns whether H200 products can be imported into China, within the policy process covered by this thread."
+      }
+    ]
+  },
+  "input_tokens": 1665,
+  "output_tokens": 316,
+  "estimated_usd": 0.005241,
+  "seconds": 4.77,
+  "call_id": 2,
+  "request_sha256": "638f5321fef1fa2bbc59da1ab105ac43eea1f10d76eacccc6e63e5ebbe16a5f6",
+  "cached": false
+}

@@ -1,0 +1,11 @@
+No serious blockers found in the experiment plan. For example, the PC→Rubin mistake appears in the original model answer and survives unchanged into storage; it is not a writer error.
+
+- **Diagnosis checks out.** I counted all 18 saved answers: 19 candidates, 27 membership references, 33 evidence records and 15 group declarations. The PC→Rubin and OpenAI→SK errors, and D147’s missing OpenAI→Rubin link, match the [plan’s diagnosis](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-basis/plan.md:7).
+
+- **The proposed comparison can test the narrow hypothesis.** Fresh controls, a fixed prefix and unchanged source/context isolate the proposed membership explanation. The rules correctly prevent missing extraction from counting as correct exclusion. This remains a small development test, not proof of general consistency. Claude’s latest per-driver explanation arm actually worsened consistency, so it supplies no positive evidence for this proposal. [Plan](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-basis/plan.md:19), [Idea evidence](/Users/lchingen/hivemind/docs/poc/idea-tuning-log.md:26).
+
+- **Ownership and old checks remain intact in the design.** Validating before projection preserves malformed-output detection. Passing only the projected IDs downstream preserves extraction’s ownership of membership; matching does not reconsider it. All 18 original answers pass the current membership validator. The new adapter and its promised tests remain unimplemented, so their preservation claim is not yet verified. [Existing path](/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:31).
+
+- **State, recovery and budget rules are coherent.** The plan covers refusal, crash, committed-result recovery, changed inputs, concurrent writers and resend. Its separate 24-request/$1 ceiling may leave the conditional Google comparison incomplete if third calls are needed; it explicitly requires stopping without replacement samples. [State and budget contract](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-basis/plan.md:35).
+
+No files changed and no model calls made.

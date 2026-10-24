@@ -1,0 +1,96 @@
+.FF                                                                      [100%]
+=================================== FAILURES ===================================
+___________ test_d148_own_cap_stops_before_external_service[budget0] ___________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-289/test_d148_own_cap_stops_before0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x109522230>
+budget = {'attempts': [{}, {}, {}, {}, {}, {}, ...], 'estimated_spent': 0}
+
+    @pytest.mark.parametrize('budget', [
+        {'attempts': [{}] * 18, 'estimated_spent': 0},
+        {'attempts': [], 'estimated_spent': 2},
+    ])
+    def test_d148_own_cap_stops_before_external_service(tmp_path, monkeypatch, budget):
+        """Budget row: both the request and money bounds refuse before the model is invoked."""
+        out = tmp_path / 'experiment'
+        diagnostic.prepare(out, SOURCE)
+        study.write_json(out / 'budget.json', budget)
+        conn = threads.open_db(out / 'prefix.sqlite')
+        calls = diagnostic.Calls(out, '1-control', conn, SOURCE / 'sample-2-retained')
+        def external_service(*args, **kwargs):
+            raise AssertionError('External service was reached')
+        monkeypatch.setattr(study.model, 'call', external_service)
+        with pytest.raises(diagnostic.BudgetReached):
+>           calls.stage('item3-extract', 'Unchanged test prompt', {}, study.obj({}), calls.cfg.matching)
+
+test_grouping_consistency.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+grouping_consistency.py:55: in stage
+    return super().stage(name, prompt, payload, schema, setting)
+../../../hierarchy_study/ingestion_groups.py:244: in stage
+    return self.call(name, prompt, payload, schema)
+grouping_consistency.py:66: in call
+    return super().call(step, prompt, payload, schema)
+../../../hierarchy_study/study.py:300: in call
+    answer = model.call(self.archive, self.cfg, self.setting, prompt, user, schema, 'hierarchy_result', step, transport=transport)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<hivemind.model.Archive object at 0x10948fb20>, Config(version='retained-membership-v1', checksum='1029121efcf64826',...Unchanged test prompt', '{}', {'additionalProperties': False, 'properties': {}, 'required': [], 'type': 'object'}, ...)
+kwargs = {'transport': <function Calls.call.<locals>.transport at 0x1095bdc60>}
+
+    def external_service(*args, **kwargs):
+>       raise AssertionError('External service was reached')
+E       AssertionError: External service was reached
+
+test_grouping_consistency.py:50: AssertionError
+----------------------------- Captured stdout call -----------------------------
+START sample=1-control step=item3-extract reserved=$0.1205
+___________ test_d148_own_cap_stops_before_external_service[budget1] ___________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-289/test_d148_own_cap_stops_before1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x109753b80>
+budget = {'attempts': [], 'estimated_spent': 2}
+
+    @pytest.mark.parametrize('budget', [
+        {'attempts': [{}] * 18, 'estimated_spent': 0},
+        {'attempts': [], 'estimated_spent': 2},
+    ])
+    def test_d148_own_cap_stops_before_external_service(tmp_path, monkeypatch, budget):
+        """Budget row: both the request and money bounds refuse before the model is invoked."""
+        out = tmp_path / 'experiment'
+        diagnostic.prepare(out, SOURCE)
+        study.write_json(out / 'budget.json', budget)
+        conn = threads.open_db(out / 'prefix.sqlite')
+        calls = diagnostic.Calls(out, '1-control', conn, SOURCE / 'sample-2-retained')
+        def external_service(*args, **kwargs):
+            raise AssertionError('External service was reached')
+        monkeypatch.setattr(study.model, 'call', external_service)
+        with pytest.raises(diagnostic.BudgetReached):
+>           calls.stage('item3-extract', 'Unchanged test prompt', {}, study.obj({}), calls.cfg.matching)
+
+test_grouping_consistency.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+grouping_consistency.py:55: in stage
+    return super().stage(name, prompt, payload, schema, setting)
+../../../hierarchy_study/ingestion_groups.py:244: in stage
+    return self.call(name, prompt, payload, schema)
+grouping_consistency.py:66: in call
+    return super().call(step, prompt, payload, schema)
+../../../hierarchy_study/study.py:300: in call
+    answer = model.call(self.archive, self.cfg, self.setting, prompt, user, schema, 'hierarchy_result', step, transport=transport)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<hivemind.model.Archive object at 0x1097523b0>, Config(version='retained-membership-v1', checksum='1029121efcf64826',...Unchanged test prompt', '{}', {'additionalProperties': False, 'properties': {}, 'required': [], 'type': 'object'}, ...)
+kwargs = {'transport': <function Calls.call.<locals>.transport at 0x1097060e0>}
+
+    def external_service(*args, **kwargs):
+>       raise AssertionError('External service was reached')
+E       AssertionError: External service was reached
+
+test_grouping_consistency.py:50: AssertionError
+----------------------------- Captured stdout call -----------------------------
+START sample=1-control step=item3-extract reserved=$0.1205
+=========================== short test summary info ============================
+FAILED test_grouping_consistency.py::test_d148_own_cap_stops_before_external_service[budget0]
+FAILED test_grouping_consistency.py::test_d148_own_cap_stops_before_external_service[budget1]
+2 failed, 1 passed in 0.15s

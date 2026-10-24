@@ -1,0 +1,24 @@
+.......F...                                                              [100%]
+=================================== FAILURES ===================================
+__________ test_d144_failure_after_writes_rolls_back_all_new_records ___________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-263/test_d144_failure_after_writes0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1099992d0>
+
+    def test_d144_failure_after_writes_rolls_back_all_new_records(tmp_path, monkeypatch):
+        """Transaction table: original thesis and subject writes share the same commit boundary."""
+        conn, calls, uni, items, first = run_first(tmp_path / "views.sqlite")
+        original = threads.write_threads
+        def fail(*args, **kwargs):
+            original(*args, **kwargs)
+            raise RuntimeError("Simulated failure after membership insert")
+        monkeypatch.setattr(threads, "write_threads", fail)
+        with pytest.raises(RuntimeError), conn:
+            threads.process(conn, calls, uni, items[1], 2)
+>       assert conn.execute("select count(*) from views").fetchone()[0] == 1
+E       assert 2 == 1
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:133: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_failure_after_writes_rolls_back_all_new_records
+1 failed, 10 passed in 0.19s

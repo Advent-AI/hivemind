@@ -1,0 +1,102 @@
+F......F...FF                                                            [100%]
+=================================== FAILURES ===================================
+_________ test_d147_membership_survives_thesis_matching_and_later_risk _________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-275/test_d147_membership_survives_0')
+
+    def test_d147_membership_survives_thesis_matching_and_later_risk(tmp_path):
+        """State rows: empty library, later milestone, evidence-only update, historical read and resend."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite')
+        results = [membership.process(conn, calls, uni, item, i) for i, item in enumerate(items, 1)]
+        assert len(results[-1]['threads']) == 1
+>       assert {m['view_id'] for m in results[-1]['memberships']} == {'v1', 'v2'}
+E       AssertionError: assert {'v1'} == {'v1', 'v2'}
+E         Extra items in the right set:
+E         'v2'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py:51: AssertionError
+_____________ test_d147_thesis_can_belong_to_old_and_new_subjects ______________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-275/test_d147_thesis_can_belong_to0')
+
+    def test_d147_thesis_can_belong_to_old_and_new_subjects(tmp_path):
+        """Multiple scopes row: preserve both explicit memberships without collapsing their subjects."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite')
+        membership.process(conn, calls, uni, items[0], 1)
+        calls.raw[1]['threads'] = [thread('t1', 'SK Telecom AI factory deployment')]
+        calls.raw[1]['candidates'][0]['thread_ids'].append('t1')
+        result = membership.process(conn, calls, uni, items[1], 2)
+>       assert {(m['thread_id'], m['view_id']) for m in result['memberships']} == {('g1', 'v1'), ('g1', 'v2'), ('g2', 'v2')}
+E       AssertionError: assert {('g1', 'v1'), ('g2', 'v2')} == {('g1', 'v1')... ('g2', 'v2')}
+E         Extra items in the right set:
+E         ('g1', 'v2')
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py:83: AssertionError
+__ test_d147_real_split_can_be_written_as_direct_extraction_membership[2-g3] ___
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-275/test_d147_real_split_can_be_wr0')
+sample = 2, target = 'g3'
+
+    @pytest.mark.parametrize('sample, target', [(2, 'g3'), (3, 'g1')])
+    def test_d147_real_split_can_be_written_as_direct_extraction_membership(tmp_path, sample, target):
+        """Cheapest proof: only the stored membership is changed; all real thesis/evidence answers remain."""
+        root = study.ROOT / 'poc/reports/2026-10-25-direct-subjects-01'
+        folder = root / f'sample-{sample}-threads'
+        class Saved:
+            cfg = study.config.load(str(study.ROOT / 'poc/config/poc-v7.json'))
+            def stage(self, name, prompt, payload, schema, setting):
+                answer = json.loads((folder / (name + '.json')).read_text())['answer']
+                if name == 'item2-extract':
+                    assert target in {g['thread_id'] for g in payload['existing_subjects']}
+                    answer['threads'] = []
+                    answer['candidates'][0]['thread_ids'] = [target]
+                answer.pop('subject_groups', None)
+                return answer
+        items = json.loads((root / 'items.json').read_text())
+        conn = legacy.open_db(tmp_path / 'views.sqlite')
+        uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+        for i, item in enumerate(items[:2], 1):
+            membership.process(conn, Saved(), uni, item, i)
+>       assert len(legacy.thread_detail(conn, target, 2)['members']) == 2
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([{'evidence': [{'evidence_id': 'e3', 'original_day': '2026-02-25', 'quote': 'We shipped our first Vera Rubin samples t...:2026-02-25', 'question': 'Will NVIDIA commence Vera Rubin production shipments by December 31, 2026?', 'seq': 1, ...}])
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py:144: AssertionError
+__ test_d147_real_split_can_be_written_as_direct_extraction_membership[3-g1] ___
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-275/test_d147_real_split_can_be_wr1')
+sample = 3, target = 'g1'
+
+    @pytest.mark.parametrize('sample, target', [(2, 'g3'), (3, 'g1')])
+    def test_d147_real_split_can_be_written_as_direct_extraction_membership(tmp_path, sample, target):
+        """Cheapest proof: only the stored membership is changed; all real thesis/evidence answers remain."""
+        root = study.ROOT / 'poc/reports/2026-10-25-direct-subjects-01'
+        folder = root / f'sample-{sample}-threads'
+        class Saved:
+            cfg = study.config.load(str(study.ROOT / 'poc/config/poc-v7.json'))
+            def stage(self, name, prompt, payload, schema, setting):
+                answer = json.loads((folder / (name + '.json')).read_text())['answer']
+                if name == 'item2-extract':
+                    assert target in {g['thread_id'] for g in payload['existing_subjects']}
+                    answer['threads'] = []
+                    answer['candidates'][0]['thread_ids'] = [target]
+                answer.pop('subject_groups', None)
+                return answer
+        items = json.loads((root / 'items.json').read_text())
+        conn = legacy.open_db(tmp_path / 'views.sqlite')
+        uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+        for i, item in enumerate(items[:2], 1):
+            membership.process(conn, Saved(), uni, item, i)
+>       assert len(legacy.thread_detail(conn, target, 2)['members']) == 2
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([{'evidence': [{'evidence_id': 'e1', 'original_day': '2026-02-25', 'quote': 'We shipped our first Vera Rubin samples t...:2026-02-25', 'question': 'Will NVIDIA commence Vera Rubin production shipments by December 31, 2026?', 'seq': 1, ...}])
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py:144: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py::test_d147_membership_survives_thesis_matching_and_later_risk
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py::test_d147_thesis_can_belong_to_old_and_new_subjects
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py::test_d147_real_split_can_be_written_as_direct_extraction_membership[2-g3]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py::test_d147_real_split_can_be_written_as_direct_extraction_membership[3-g1]
+4 failed, 9 passed in 0.25s

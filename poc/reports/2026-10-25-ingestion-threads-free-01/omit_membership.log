@@ -1,0 +1,77 @@
+F......F.FF                                                              [100%]
+=================================== FAILURES ===================================
+________ test_d144_full_ingestion_reuses_subject_and_routes_later_risk _________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-262/test_d144_full_ingestion_reuse0')
+
+    def test_d144_full_ingestion_reuses_subject_and_routes_later_risk(tmp_path):
+        """State table: first subject, separate milestone, evidence-only update, dated read and resend."""
+        conn, calls, uni, items, first = run_first(tmp_path / "views.sqlite")
+        second = threads.process(conn, calls, uni, items[1], 2)
+        third = threads.process(conn, calls, uni, items[2], 3)
+        assert [r["thread_id"] for r in third["threads"]] == ["g1"]
+>       assert {r["view_id"] for r in third["memberships"]} == {"v1", "v2"}
+E       AssertionError: assert set() == {'v1', 'v2'}
+E         Extra items in the right set:
+E         'v2'
+E         'v1'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:83: AssertionError
+__________ test_d144_failure_after_writes_rolls_back_all_new_records ___________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-262/test_d144_failure_after_writes0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1066d07f0>
+
+    def test_d144_failure_after_writes_rolls_back_all_new_records(tmp_path, monkeypatch):
+        """Transaction table: original thesis and subject writes share the same commit boundary."""
+        conn, calls, uni, items, first = run_first(tmp_path / "views.sqlite")
+        original = threads.write_threads
+        def fail(*args, **kwargs):
+            original(*args, **kwargs)
+            raise RuntimeError("Simulated failure after membership insert")
+        monkeypatch.setattr(threads, "write_threads", fail)
+        with pytest.raises(RuntimeError), conn:
+            threads.process(conn, calls, uni, items[1], 2)
+        assert conn.execute("select count(*) from views").fetchone()[0] == 1
+>       assert conn.execute("select count(*) from thread_members").fetchone()[0] == 1
+E       assert 0 == 1
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:134: AssertionError
+______ test_d144_reader_uses_actual_links_and_excludes_replaced_evidence _______
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-262/test_d144_reader_uses_actual_l0')
+
+    def test_d144_reader_uses_actual_links_and_excludes_replaced_evidence(tmp_path):
+        """Provenance table: membership is no source claim; only dated, current evidence links count."""
+        conn, calls, uni, items, first = run_first(tmp_path / "views.sqlite")
+        threads.process(conn, calls, uni, items[1], 2)
+        threads.process(conn, calls, uni, items[2], 3)
+        conn.execute("insert into replacements(old_evidence_id,new_evidence_id,said_day,seq) values('e1','e3','2026-08-12',4)")
+>       assert [e["evidence_id"] for e in threads.thread_detail(conn, "g1", 4)["members"][0]["evidence"]] == ["e3"]
+E       IndexError: list index out of range
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:161: IndexError
+_________ test_d144_existing_view_keeps_membership_without_new_update __________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-262/test_d144_existing_view_keeps_0')
+
+    def test_d144_existing_view_keeps_membership_without_new_update(tmp_path):
+        """Value table: merged candidates resolve to existing IDs; unchanged membership is not an update."""
+        conn, calls, uni, items, first = run_first(tmp_path / "views.sqlite")
+        handover = base.sift(calls.raw[0], items[0], [])
+        checked = matching.Checked({"c1":(matching.OUTCOMES[0], "v1", [])}, {}, [], {})
+        records, affected = threads.write_threads(conn, [thread()], {"t1":"g1"}, handover, checked,
+                                                   writing.Written(set(), {}, {}, []), 2, items[1])
+>       assert records == [{"candidate_id":"c1", "view_id":"v1", "thread_id":"g1", "new_membership":False}]
+E       AssertionError: assert [] == [{'candidate_...ew_id': 'v1'}]
+E         Right contains one more item: {'candidate_id': 'c1', 'new_membership': False, 'thread_id': 'g1', 'view_id': 'v1'}
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py:178: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_full_ingestion_reuses_subject_and_routes_later_risk
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_failure_after_writes_rolls_back_all_new_records
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_reader_uses_actual_links_and_excludes_replaced_evidence
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpvs_462te/test_ingestion_threads.py::test_d144_existing_view_keeps_membership_without_new_update
+4 failed, 7 passed in 0.18s

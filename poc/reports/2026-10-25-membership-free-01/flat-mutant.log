@@ -1,0 +1,26 @@
+F...                                                                     [100%]
+=================================== FAILURES ===================================
+____________ test_d147_flat_schema_keeps_the_accepted_reference_set ____________
+
+    def test_d147_flat_schema_keeps_the_accepted_reference_set():
+        """Closed-set row: one pattern accepts the same local IDs and displayed old IDs as the union."""
+        for old_ids in [[], ['g1'], ['g1', 'g12']]:
+            offered = [{'thread_id': x} for x in old_ids]
+            original = membership.extraction_schema(offered)
+            before = copy.deepcopy(original)
+            new = flat.wire_schema(original, offered)
+            pattern = new['properties']['candidates']['items']['properties']['thread_ids']['items']['pattern']
+            for value in ['t1', 't999', 't0', 't-1', 'g1', 'g12', 'g99', '', ' t1', 't1\n']:
+>               assert bool(re.fullmatch(pattern, value)) == (bool(re.fullmatch(r't[1-9][0-9]*', value)) or value in old_ids)
+E               AssertionError: assert False == ((False or 'g1' in ['g1']))
+E                +  where False = bool(None)
+E                +    where None = <function fullmatch at 0x1047396c0>('^(?:t[1-9][0-9]*)$', 'g1')
+E                +      where <function fullmatch at 0x1047396c0> = re.fullmatch
+E                +  and   False = bool(None)
+E                +    where None = <function fullmatch at 0x1047396c0>('t[1-9][0-9]*', 'g1')
+E                +      where <function fullmatch at 0x1047396c0> = re.fullmatch
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpv8ren6qi/test_flat_membership.py:24: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpv8ren6qi/test_flat_membership.py::test_d147_flat_schema_keeps_the_accepted_reference_set
+1 failed, 3 passed in 0.11s

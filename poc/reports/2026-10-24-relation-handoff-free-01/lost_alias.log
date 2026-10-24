@@ -1,0 +1,24 @@
+...F...                                                                  [100%]
+=================================== FAILURES ===================================
+____________ test_d143_merged_quote_id_keeps_accepted_relationship _____________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-254/test_d143_merged_quote_id_keep0')
+
+    def test_d143_merged_quote_id_keeps_accepted_relationship(tmp_path):
+        """Review gap: original evidence ID -> surviving identical quote -> persistent evidence ID."""
+        def duplicate(answer):
+            association = answer['associations'][0]
+            source = next(e for e in answer['evidence'] if e['id'] == association['evidence_ids'][0])
+            answer['evidence'].append(dict(source, id='alias_evidence'))
+            association['evidence_ids'] = ['alias_evidence']
+        conn, _, results = replay(tmp_path / 'views.sqlite', 1, duplicate)
+        decision = results[1]['association_decisions'][0]
+>       assert decision['status'] == 'written'
+E       AssertionError: assert 'skipped' == 'written'
+E         - written
+E         + skipped
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpnibxqq0v/test_relation_handoff.py:86: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpnibxqq0v/test_relation_handoff.py::test_d143_merged_quote_id_keeps_accepted_relationship
+1 failed, 6 passed in 0.23s

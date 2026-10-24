@@ -1,0 +1,88 @@
+FFF...F                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_d143_stored_relations_form_real_shared_groups_and_survive_later_items[1] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-252/test_d143_stored_relations_for0')
+sample = 1
+
+    @pytest.mark.parametrize('sample', [1, 2, 3])
+    def test_d143_stored_relations_form_real_shared_groups_and_survive_later_items(tmp_path, sample):
+        """Acceptance: known 3/3 lost links now persist as shared groups without merging distinct questions."""
+        conn, calls, results = replay(tmp_path / 'views.sqlite', sample)
+        assert results[0]['groups'] == []
+        second, third = results[1:]
+        assert len(second['groups']) == 1
+        gid = second['groups'][0]['group_id']
+>       assert second['affected_groups'] == [gid]
+E       AssertionError: assert [] == ['g1']
+E         Right contains one more item: 'g1'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py:65: AssertionError
+_ test_d143_stored_relations_form_real_shared_groups_and_survive_later_items[2] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-252/test_d143_stored_relations_for1')
+sample = 2
+
+    @pytest.mark.parametrize('sample', [1, 2, 3])
+    def test_d143_stored_relations_form_real_shared_groups_and_survive_later_items(tmp_path, sample):
+        """Acceptance: known 3/3 lost links now persist as shared groups without merging distinct questions."""
+        conn, calls, results = replay(tmp_path / 'views.sqlite', sample)
+        assert results[0]['groups'] == []
+        second, third = results[1:]
+        assert len(second['groups']) == 1
+        gid = second['groups'][0]['group_id']
+>       assert second['affected_groups'] == [gid]
+E       AssertionError: assert [] == ['g1']
+E         Right contains one more item: 'g1'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py:65: AssertionError
+_ test_d143_stored_relations_form_real_shared_groups_and_survive_later_items[3] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-252/test_d143_stored_relations_for2')
+sample = 3
+
+    @pytest.mark.parametrize('sample', [1, 2, 3])
+    def test_d143_stored_relations_form_real_shared_groups_and_survive_later_items(tmp_path, sample):
+        """Acceptance: known 3/3 lost links now persist as shared groups without merging distinct questions."""
+        conn, calls, results = replay(tmp_path / 'views.sqlite', sample)
+        assert results[0]['groups'] == []
+        second, third = results[1:]
+        assert len(second['groups']) == 1
+        gid = second['groups'][0]['group_id']
+>       assert second['affected_groups'] == [gid]
+E       AssertionError: assert [] == ['g1']
+E         Right contains one more item: 'g1'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py:65: AssertionError
+_____________ test_d143_identity_collapse_and_existing_membership ______________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-252/test_d143_identity_collapse_an0')
+
+    def test_d143_identity_collapse_and_existing_membership(tmp_path):
+        """Identity is resolved before cardinality; unchanged membership alone never dirties its group."""
+        conn, _, results = replay(tmp_path / 'views.sqlite', 1)
+        decision = results[1]['association_decisions'][0]
+        members, sources = decision['members'], decision['evidence_ids']
+        proposal = {'index': 0, 'skip_reason': '', 'group_id': '', 'question': 'Shared question?',
+                    'member_ids': ['c1', 'c2'], 'evidence_ids': ['e_alias'], 'reason': 'Supported relation.'}
+        checked = matching.Checked({c: (matching.OUTCOMES[0], members[0], []) for c in ['c1', 'c2']}, {}, [], {})
+        written = writing.Written(set(), {}, {'e_alias': sources[0]}, [])
+        decisions, affected = handoff.write_associations(conn, [proposal], checked, written, 4, {'input_id': 'collapse'})
+        assert decisions[0]['reason'] == 'fewer than two distinct resolved theses'
+        assert affected == []
+        proposal.update(group_id=decision['group_id'], question='', member_ids=members)
+        decisions, affected = handoff.write_associations(conn, [proposal], checked, written, 4, {'input_id': 'same-members'})
+        assert decisions[0]['status'] == 'written' and affected == []
+>       assert conn.execute('select count(*) from group_members').fetchone()[0] == 2
+E       assert 0 == 2
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py:145: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py::test_d143_stored_relations_form_real_shared_groups_and_survive_later_items[1]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py::test_d143_stored_relations_form_real_shared_groups_and_survive_later_items[2]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py::test_d143_stored_relations_form_real_shared_groups_and_survive_later_items[3]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpm_sb_tii/test_relation_handoff.py::test_d143_identity_collapse_and_existing_membership
+4 failed, 3 passed in 0.24s

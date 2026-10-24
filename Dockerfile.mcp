@@ -1,0 +1,16 @@
+# The Hivemind MCP front (scripts/hivemind_mcp.py) over streamable HTTP. The build network here cannot reach PyPI,
+# so the mcp package and its dependencies are installed from wheels downloaded on the host into build/wheels:
+#   python3 -m pip download mcp==1.26.0 --dest build/wheels --only-binary=:all: \
+#     --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --platform any \
+#     --python-version 3.12 --implementation cp --abi cp312 --abi abi3 --abi none
+FROM python:3.12-slim
+WORKDIR /app
+COPY build/wheels/ /wheels/
+RUN pip install --no-cache-dir --no-index --find-links=/wheels mcp && rm -rf /wheels
+COPY src/ /app/src/
+COPY scripts/hivemind_api.py scripts/hivemind_mcp.py /app/scripts/
+COPY poc/universe.json /app/poc/universe.json
+COPY poc/config/ /app/poc/config/
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8789
+CMD ["python3", "scripts/hivemind_mcp.py", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8789"]

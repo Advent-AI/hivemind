@@ -1,0 +1,28 @@
+F..                                                                      [100%]
+=================================== FAILURES ===================================
+____________ test_d148_visible_memberships_follow_the_stored_prefix ____________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-288/test_d148_visible_memberships_0')
+
+    def test_d148_visible_memberships_follow_the_stored_prefix(tmp_path):
+        """Value/reader row: add real displayed memberships without changing the old payload."""
+        out = tmp_path / 'experiment'
+        diagnostic.prepare(out, SOURCE)
+        conn = threads.open_db(out / 'prefix.sqlite')
+        calls = diagnostic.Calls(out, '1-control', conn, SOURCE / 'sample-2-retained')
+        uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+        for i, item in enumerate(json.loads((out / 'items.json').read_text())[:2], 1):
+            retained.process(conn, calls, uni, item, i)
+        record = json.loads((SOURCE / 'sample-2-retained/item3-extract.json').read_text())
+        payload = json.loads(record['request']['messages'][1]['content'])
+        original = copy.deepcopy(payload)
+        enriched = diagnostic.membership_context(conn, payload)
+>       assert [t.get('thread_ids') for t in enriched['existing_theses']] == [['g1'], ['g1', 'g2']]
+E       AssertionError: assert [None, None] == [['g1'], ['g1', 'g2']]
+E         At index 0 diff: None != ['g1']
+E         Use -v to get more diff
+
+test_grouping_consistency.py:29: AssertionError
+=========================== short test summary info ============================
+FAILED test_grouping_consistency.py::test_d148_visible_memberships_follow_the_stored_prefix
+1 failed, 2 passed in 0.11s

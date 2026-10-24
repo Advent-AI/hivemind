@@ -1,0 +1,26 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_d150_all_stored_answers_project_without_altering_any_value ________
+
+    def test_d150_all_stored_answers_project_without_altering_any_value():
+        """Value/reader row: all 18 saved answers retain every original field, value and order."""
+        paths = sorted(SOURCE.glob('sample-*-retained/item*-extract.json'))
+        paths += sorted(CONTEXT.glob('sample-*/item3-extract.json'))
+        assert len(paths) == 18
+        for path in paths:
+            record = json.loads(path.read_text())
+            offered = json.loads(record['request']['messages'][1]['content'])['existing_subjects']
+            wire = wire_fixture(record['answer'])
+            before = copy.deepcopy(wire)
+>           assert experiment.project(wire, offered) == record['answer'], path
+E           AssertionError: PosixPath('/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item2-extract.json')
+E           assert {'candidates'...milestone.'}]} == {'candidates'...milestone.'}]}
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'candidates': [{'due_day': '2027-12-31', 'evidence_ids': ['e1', 'e2'], 'id': 'c1', 'kind': 'company', ...}]} != {'candidates': [{'due_day': '2027-12-31', 'evidence_ids': ['e1', 'e2'], 'id': 'c1', 'kind': 'company', ...}]}
+E             Use -v to get more diff
+
+test_membership_basis.py:39: AssertionError
+=========================== short test summary info ============================
+FAILED test_membership_basis.py::test_d150_all_stored_answers_project_without_altering_any_value
+1 failed in 0.05s

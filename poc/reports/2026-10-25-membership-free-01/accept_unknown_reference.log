@@ -1,0 +1,46 @@
+...FF........                                                            [100%]
+=================================== FAILURES ===================================
+________________ test_d147_references_are_closed[unknown_local] ________________
+
+breach = 'unknown_local'
+
+    @pytest.mark.parametrize('breach', ['missing', 'empty', 'unknown_local', 'unknown_stored', 'duplicate', 'unused'])
+    def test_d147_references_are_closed(breach):
+        """Closed-set row: each candidate references only declared locals or displayed stored subjects."""
+        _, raw = fixtures()
+        answer = raw[0]
+        refs = answer['candidates'][0]
+        if breach == 'missing': del refs['thread_ids']
+        if breach == 'empty': refs['thread_ids'] = []
+        if breach == 'unknown_local': refs['thread_ids'] += ['t9']
+        if breach == 'unknown_stored': refs['thread_ids'] += ['g9']
+        if breach == 'duplicate': refs['thread_ids'] += ['t1']
+        if breach == 'unused': answer['threads'] += [thread('t2')]
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py:72: Failed
+_______________ test_d147_references_are_closed[unknown_stored] ________________
+
+breach = 'unknown_stored'
+
+    @pytest.mark.parametrize('breach', ['missing', 'empty', 'unknown_local', 'unknown_stored', 'duplicate', 'unused'])
+    def test_d147_references_are_closed(breach):
+        """Closed-set row: each candidate references only declared locals or displayed stored subjects."""
+        _, raw = fixtures()
+        answer = raw[0]
+        refs = answer['candidates'][0]
+        if breach == 'missing': del refs['thread_ids']
+        if breach == 'empty': refs['thread_ids'] = []
+        if breach == 'unknown_local': refs['thread_ids'] += ['t9']
+        if breach == 'unknown_stored': refs['thread_ids'] += ['g9']
+        if breach == 'duplicate': refs['thread_ids'] += ['t1']
+        if breach == 'unused': answer['threads'] += [thread('t2')]
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py:72: Failed
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py::test_d147_references_are_closed[unknown_local]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py::test_d147_references_are_closed[unknown_stored]
+2 failed, 11 passed in 0.24s

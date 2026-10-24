@@ -1,0 +1,141 @@
+FFF.....                                                                 [100%]
+=================================== FAILURES ===================================
+____________ test_d147_same_raw_answer_writes_only_referenced_group ____________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-284/test_d147_same_raw_answer_writ0')
+
+    def test_d147_same_raw_answer_writes_only_referenced_group(tmp_path):
+        """Decisive case: unchanged q1 -> g1 is retained, unused t1 never becomes an empty group."""
+        root = study.ROOT / 'poc/reports/2026-10-25-direct-subjects-01'
+        raw = json.loads((root / 'sample-1-flat/item2-extract.json').read_text())['answer']
+        items = json.loads((root / 'items.json').read_text())
+        first = json.loads((root / 'sample-1-flat/item1-extract.json').read_text())['answer']
+        calls = Answers([first, raw])
+        conn = legacy.open_db(tmp_path / 'views.sqlite')
+        uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+        retained.process(conn, calls, uni, items[0], 1)
+>       result = retained.process(conn, calls, uni, items[1], 2)
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/retained_membership.py:65: in process
+    validate_extraction(raw, offered)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = {'candidates': [{'due_day': '2027-12-31', 'evidence_ids': ['e1'], 'id': 'q1', 'kind': 'company', ...}], 'evidence': [{... AI factory using NVIDIA DSX and Vera Rubin, including the announced first-factory commissioning milestone in 2027.'}]}
+offered = [{'name': 'NVIDIA Vera Rubin platform rollout', 'scope': 'Vera Rubin platform rollout, including customer sampling and the planned start of production shipments.', 'thread_id': 'g1'}]
+
+    def validate_extraction(raw, offered):
+        """Only displayed stored IDs and this answer's declared local IDs can own a candidate."""
+        errors = study.model.check_schema(raw, extraction_schema(offered))
+        if errors:
+            raise ValueError('Membership extraction shape: ' + '; '.join(errors))
+        ids = [t['id'] for t in raw['threads']]
+        if any(re.fullmatch(legacy.LOCAL_ID['pattern'], ident) is None for ident in ids):
+            raise ValueError('New subject IDs must use t followed by a positive integer')
+        if len(ids) != len(set(ids)) or any(not t['name'].strip() or not t['scope'].strip() for t in raw['threads']):
+            raise ValueError('Subjects need unique local IDs, names and scope')
+        offered_ids = {row['thread_id'] for row in offered}
+        for candidate in raw['candidates']:
+            refs = candidate['thread_ids']
+            if not refs or len(refs) != len(set(refs)) or set(refs) - set(ids) - offered_ids:
+                raise ValueError('Each candidate needs nonempty unique declared or offered subject references')
+    
+        if {t['id'] for t in raw['threads']} - {r for c in raw['candidates'] for r in c['thread_ids']}:
+>           raise ValueError('Every new subject must be used by a candidate')
+E           ValueError: Every new subject must be used by a candidate
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/retained_membership.py:48: ValueError
+________ test_d147_preserves_original_checks_history_and_resend[False] _________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-284/test_d147_preserves_original_c0')
+merge = False
+
+    @pytest.mark.parametrize('merge', [False, True])
+    def test_d147_preserves_original_checks_history_and_resend(tmp_path, merge):
+        """State table: new versus existing thesis, evidence-only update, historical read and resend."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite', merge=merge)
+        calls.raw[0]['threads'].append(thread('t2', 'Unused proposed subject'))
+>       results = [retained.process(conn, calls, uni, item, i) for i, item in enumerate(items, 1)]
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py:36: in <listcomp>
+    results = [retained.process(conn, calls, uni, item, i) for i, item in enumerate(items, 1)]
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/retained_membership.py:65: in process
+    validate_extraction(raw, offered)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = {'candidates': [{'due_day': '2026-12-31', 'evidence_ids': ['e1'], 'id': 'c1', 'kind': 'company', ...}], 'evidence': [{..., 'name': 'Unused proposed subject', 'scope': 'Product readiness, shipments and customer deployments of Vera Rubin.'}]}
+offered = []
+
+    def validate_extraction(raw, offered):
+        """Only displayed stored IDs and this answer's declared local IDs can own a candidate."""
+        errors = study.model.check_schema(raw, extraction_schema(offered))
+        if errors:
+            raise ValueError('Membership extraction shape: ' + '; '.join(errors))
+        ids = [t['id'] for t in raw['threads']]
+        if any(re.fullmatch(legacy.LOCAL_ID['pattern'], ident) is None for ident in ids):
+            raise ValueError('New subject IDs must use t followed by a positive integer')
+        if len(ids) != len(set(ids)) or any(not t['name'].strip() or not t['scope'].strip() for t in raw['threads']):
+            raise ValueError('Subjects need unique local IDs, names and scope')
+        offered_ids = {row['thread_id'] for row in offered}
+        for candidate in raw['candidates']:
+            refs = candidate['thread_ids']
+            if not refs or len(refs) != len(set(refs)) or set(refs) - set(ids) - offered_ids:
+                raise ValueError('Each candidate needs nonempty unique declared or offered subject references')
+    
+        if {t['id'] for t in raw['threads']} - {r for c in raw['candidates'] for r in c['thread_ids']}:
+>           raise ValueError('Every new subject must be used by a candidate')
+E           ValueError: Every new subject must be used by a candidate
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/retained_membership.py:48: ValueError
+_________ test_d147_preserves_original_checks_history_and_resend[True] _________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-284/test_d147_preserves_original_c1')
+merge = True
+
+    @pytest.mark.parametrize('merge', [False, True])
+    def test_d147_preserves_original_checks_history_and_resend(tmp_path, merge):
+        """State table: new versus existing thesis, evidence-only update, historical read and resend."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite', merge=merge)
+        calls.raw[0]['threads'].append(thread('t2', 'Unused proposed subject'))
+>       results = [retained.process(conn, calls, uni, item, i) for i, item in enumerate(items, 1)]
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py:36: in <listcomp>
+    results = [retained.process(conn, calls, uni, item, i) for i, item in enumerate(items, 1)]
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/retained_membership.py:65: in process
+    validate_extraction(raw, offered)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = {'candidates': [{'due_day': '2026-12-31', 'evidence_ids': ['e1'], 'id': 'c1', 'kind': 'company', ...}], 'evidence': [{..., 'name': 'Unused proposed subject', 'scope': 'Product readiness, shipments and customer deployments of Vera Rubin.'}]}
+offered = []
+
+    def validate_extraction(raw, offered):
+        """Only displayed stored IDs and this answer's declared local IDs can own a candidate."""
+        errors = study.model.check_schema(raw, extraction_schema(offered))
+        if errors:
+            raise ValueError('Membership extraction shape: ' + '; '.join(errors))
+        ids = [t['id'] for t in raw['threads']]
+        if any(re.fullmatch(legacy.LOCAL_ID['pattern'], ident) is None for ident in ids):
+            raise ValueError('New subject IDs must use t followed by a positive integer')
+        if len(ids) != len(set(ids)) or any(not t['name'].strip() or not t['scope'].strip() for t in raw['threads']):
+            raise ValueError('Subjects need unique local IDs, names and scope')
+        offered_ids = {row['thread_id'] for row in offered}
+        for candidate in raw['candidates']:
+            refs = candidate['thread_ids']
+            if not refs or len(refs) != len(set(refs)) or set(refs) - set(ids) - offered_ids:
+                raise ValueError('Each candidate needs nonempty unique declared or offered subject references')
+    
+        if {t['id'] for t in raw['threads']} - {r for c in raw['candidates'] for r in c['thread_ids']}:
+>           raise ValueError('Every new subject must be used by a candidate')
+E           ValueError: Every new subject must be used by a candidate
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/retained_membership.py:48: ValueError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py::test_d147_same_raw_answer_writes_only_referenced_group
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py::test_d147_preserves_original_checks_history_and_resend[False]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp6c5qibli/test_retained_membership.py::test_d147_preserves_original_checks_history_and_resend[True]
+3 failed, 5 passed in 0.17s

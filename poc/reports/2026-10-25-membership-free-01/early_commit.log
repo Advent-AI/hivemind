@@ -1,0 +1,25 @@
+..........F..                                                            [100%]
+=================================== FAILURES ===================================
+______________ test_d147_rollback_includes_original_thesis_writes ______________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-277/test_d147_rollback_includes_or0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d530190>
+
+    def test_d147_rollback_includes_original_thesis_writes(tmp_path, monkeypatch):
+        """Failure row: no partial thesis, evidence or membership survives a failed group write."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite')
+        membership.process(conn, calls, uni, items[0], 1)
+        original = legacy.write_threads
+        def fail(*args):
+            original(*args)
+            raise RuntimeError('Failure after membership write')
+        monkeypatch.setattr(legacy, 'write_threads', fail)
+        with pytest.raises(RuntimeError), conn:
+            membership.process(conn, calls, uni, items[1], 2)
+>       assert conn.execute('select count(*) from views').fetchone()[0] == 1
+E       assert 2 == 1
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py:118: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpo1g9sri5/test_extraction_membership.py::test_d147_rollback_includes_original_thesis_writes
+1 failed, 12 passed in 0.25s

@@ -1,0 +1,44 @@
+.....FF.....                                                             [100%]
+=================================== FAILURES ===================================
+____________ test_d146_closed_destination_and_partition[duplicate] _____________
+
+breach = 'duplicate'
+
+    @pytest.mark.parametrize('breach', ['self', 'unseen', 'duplicate', 'missing', 'empty'])
+    def test_d146_closed_destination_and_partition(breach):
+        """Closed-set row: a model cannot send a temporary ID as destination or silently omit a subject."""
+        answer = {'candidates': [], 'evidence': [], 'subject_groups': [
+            {'local_ids': ['t1'], 'destination': 'new', 'reason': 'Product rollout.'}]}
+        group = answer['subject_groups'][0]
+        if breach == 'self': group['destination'] = 't1'
+        if breach == 'unseen': group['destination'] = 'g9'
+        if breach == 'duplicate': group['local_ids'] = ['t1', 't1']
+        if breach == 'missing': answer['subject_groups'] = []
+        if breach == 'empty': group['local_ids'] = []
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py:101: Failed
+_____________ test_d146_closed_destination_and_partition[missing] ______________
+
+breach = 'missing'
+
+    @pytest.mark.parametrize('breach', ['self', 'unseen', 'duplicate', 'missing', 'empty'])
+    def test_d146_closed_destination_and_partition(breach):
+        """Closed-set row: a model cannot send a temporary ID as destination or silently omit a subject."""
+        answer = {'candidates': [], 'evidence': [], 'subject_groups': [
+            {'local_ids': ['t1'], 'destination': 'new', 'reason': 'Product rollout.'}]}
+        group = answer['subject_groups'][0]
+        if breach == 'self': group['destination'] = 't1'
+        if breach == 'unseen': group['destination'] = 'g9'
+        if breach == 'duplicate': group['local_ids'] = ['t1', 't1']
+        if breach == 'missing': answer['subject_groups'] = []
+        if breach == 'empty': group['local_ids'] = []
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py:101: Failed
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py::test_d146_closed_destination_and_partition[duplicate]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py::test_d146_closed_destination_and_partition[missing]
+2 failed, 10 passed in 0.19s

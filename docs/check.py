@@ -135,10 +135,10 @@ VIEWS_CONSTANTS = ["VIEW_TREE", "VIEW_KINDS", "KIND_NOTE", "LADDER_EXAMPLES", "L
                    "STATE_RULES", "DEPENDENCY_TREE", "DEPENDENCY_RULES", "CHAIN_RULES", "INTAKE_SHAPE", "INTAKE_STEPS", "MATCH_OUTCOMES",
                    "MATCH_NOTES", "EVIDENCE_OUTCOMES", "EVIDENCE_NOTES", "INTAKE_EXAMPLE_TREE", "EVIDENCE_EXAMPLE",
                    "EVIDENCE_EXAMPLE_NOTE", "JUDGE_STEPS", "TRACE_FIELDS", "LIFECYCLE_TREE", "LIFECYCLE_NOTES",
-                   "VIEW_FIELDS", "EVIDENCE_FIELDS", "ORDER_RULES", "STORE_NOTE", "VIEWS_OPEN", "VIEWS_PROPOSED"]
+                   "VIEW_FIELDS", "EVIDENCE_FIELDS", "ORDER_RULES", "STORE_NOTE", "VIEWS_OPEN", "VIEWS_PROPOSED", "GROUP_RELATIONS"]
 EXTRACTION_CONSTANTS = ["TEMPLATE", "PROMPT_EXAMPLE", "PROMPT_NOTES", "CATEGORY_READS", "CATEGORY_NOTE", "EXTRACT_STEPS",
                         "EXTRACT_TWO", "EXTRACT_SORT_TREE", "SOURCE_TREE", "SOURCE_NOTES", "EXTRACT_EXAMPLE_TREE", "EXAMPLE_NOTE",
-                        "EXTRACT_OPEN"]
+                        "EXTRACT_OPEN", "EXTRACT_RELATIONS"]
 # The old final-verdict draft, still read for 07-final-verdict.md; it stays outside the wording check.
 VERDICT_CONSTANTS = ["VERDICT_TRIGGERS", "VERDICT_TREE", "VERDICT_RULES", "VERDICT_EXAMPLE_NOTE"]
 # Every constant the page data defines, by the key the checks read it under; the one place these lists are written.
@@ -294,6 +294,8 @@ def blocks(data):
         ("03-config.md", "open"): bullets(config["OPEN"]),
         ("04-dispatch.md", "tree"): "\n".join([root] + tree_children(tree, 1)),
         ("04-dispatch.md", "notes"): bullets(config["TREE_NOTES"]),
+        ("05-extraction.md", "relations"): bullets(extraction["EXTRACT_RELATIONS"]),
+        ("06-views.md", "relations"): bullets(views["GROUP_RELATIONS"]),
         ("05-extraction.md", "steps"): step_flow("一条信息进来（带类别和顺序号）", extraction["EXTRACT_STEPS"]),
         ("05-extraction.md", "two"): table(["", "证据", "候选观点"],
                                            [[row["aspect"], row["evidence"], row["candidate"]] for row in extraction["EXTRACT_TWO"]])

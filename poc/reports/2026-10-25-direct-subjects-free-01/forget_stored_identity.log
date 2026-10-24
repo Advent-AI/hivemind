@@ -1,0 +1,54 @@
+FFF.........                                                             [100%]
+=================================== FAILURES ===================================
+____ test_d146_three_articles_preserve_separate_theses_one_subject_and_risk ____
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-269/test_d146_three_articles_prese0')
+
+    def test_d146_three_articles_preserve_separate_theses_one_subject_and_risk(tmp_path):
+        """State rows: initial identity, later milestone, evidence-only update and idempotent resend."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite')
+        events = [direct.process(conn, calls, uni, item, index) for index, item in enumerate(items, 1)]
+>       assert len(events[-1]['threads']) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([{'input_id': 'truenorth:transcript:NVDA:2026-02-25', 'name': 'Vera Rubin rollout', 'scope': 'Product readiness, shipm...in customer adoption', 'scope': 'Product readiness, shipments and customer deployments of Vera Rubin.', 'seq': 2, ...}])
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py:55: AssertionError
+________ test_d146_merged_candidate_runs_original_second_evidence_pass _________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-269/test_d146_merged_candidate_run0')
+
+    def test_d146_merged_candidate_runs_original_second_evidence_pass(tmp_path):
+        """Old-check table: resolving a candidate to an old thesis must still compare its evidence."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite', merge=True)
+        direct.process(conn, calls, uni, items[0], 1)
+        result = direct.process(conn, calls, uni, items[1], 2)
+        assert calls.names[-1] == 'item2-match-evidence'
+>       assert result['new_views'] == {} and len(result['memberships']) == 1
+E       AssertionError: assert ({} == {}
+E         Use -v to get more diff and 2 == 1)
+E        +  where 2 = len([{'input_id': 'truenorth:transcript:NVDA:2026-02-25', 'seq': 1, 'thread_id': 'g1', 'view_id': 'v1'}, {'input_id': 'nvi...d-strategic-partnership-across-ai-factories-and-next-generation-memory', 'seq': 2, 'thread_id': 'g2', 'view_id': 'v1'}])
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py:71: AssertionError
+_______ test_d146_local_descriptions_consolidate_without_a_pointer_graph _______
+
+    def test_d146_local_descriptions_consolidate_without_a_pointer_graph():
+        """Same-batch row: order of returned local IDs cannot change the canonical new description."""
+        subjects = [thread('t1'), thread('t2')]
+        candidates = {'t1': [{'thread_id': 'g8'}], 't2': [{'thread_id': 'g8'}]}
+        answer = {'candidates': [], 'evidence': [], 'subject_groups': [
+            {'local_ids': ['t2', 't1'], 'destination': 'new', 'reason': 'The same product rollout.'}]}
+        assert direct.resolve_groups(answer, subjects, candidates) == {'t1': 't1', 't2': 't1'}
+        answer['subject_groups'][0]['destination'] = 'g8'
+>       assert direct.resolve_groups(answer, subjects, candidates) == {'t1': 'g8', 't2': 'g8'}
+E       AssertionError: assert {'t1': 't2', 't2': 't2'} == {'t1': 'g8', 't2': 'g8'}
+E         Differing items:
+E         {'t2': 't2'} != {'t2': 'g8'}
+E         {'t1': 't2'} != {'t1': 'g8'}
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py:84: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py::test_d146_three_articles_preserve_separate_theses_one_subject_and_risk
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py::test_d146_merged_candidate_runs_original_second_evidence_pass
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py::test_d146_local_descriptions_consolidate_without_a_pointer_graph
+3 failed, 9 passed in 0.23s

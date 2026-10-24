@@ -1,0 +1,205 @@
+{
+  "status": "complete",
+  "request": {
+    "model": "gpt-6-luna",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Place the supplied candidate theses and evidence using only the supplied lists.\nFor each candidate choose existing (same object, outcome and period, including a part of that question), successor\n(next period of the same question), new (a distinct question), or discard (unsupported object, closed same-period\nquestion, or an excessively broad combination). Similar business context alone does not make two questions identical.\nFor new/successor theses, choose dependencies only when the outcome requires another shown thesis's outcome.\nUse shown thesis IDs or candidates retained in this answer; avoid cycles. Dependency direction states which end\nsupports the candidate, or whether two theme ladders move together. An observed fact is evidence, not a dependency.\nFor every supplied evidence/view pair choose duplicate, replace or new. Duplicate means the same original speaker,\ndate and statement, even across media. Replace means a later revision of the same statement by the original source;\nnew covers different events, periods or speakers. Targets must come from that pair's provided evidence list.\nUse empty strings for absent targets. Answer every candidate and listed evidence pair. English prose only."
+      },
+      {
+        "role": "user",
+        "content": "{\"item\": {\"input_id\": \"truenorth:transcript:NVDA:2026-02-25\", \"publication_day\": \"2026-02-25\", \"category\": \"T4\"}, \"candidates\": [{\"id\": \"c1\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"NVIDIA FY2027 total revenue\", \"question\": \"What will NVIDIA's total revenue be in FY2027?\", \"rungs\": [{\"label\": \"strongly_bullish\", \"condition\": \"At least $400 billion\"}, {\"label\": \"bullish\", \"condition\": \"At least $350 billion and less than $400 billion\"}, {\"label\": \"neutral\", \"condition\": \"At least $300 billion and less than $350 billion\"}, {\"label\": \"bearish\", \"condition\": \"At least $250 billion and less than $300 billion\"}, {\"label\": \"strongly_bearish\", \"condition\": \"Less than $250 billion\"}], \"due_day\": \"2027-02-24\", \"year\": \"FY2027\", \"evidence_ids\": [\"e2\", \"e4\", \"e15\"]}, {\"id\": \"c2\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"NVIDIA FY2027 data-center revenue\", \"question\": \"What will NVIDIA's data-center revenue be in FY2027?\", \"rungs\": [{\"label\": \"strongly_bullish\", \"condition\": \"At least $300 billion\"}, {\"label\": \"bullish\", \"condition\": \"At least $250 billion and less than $300 billion\"}, {\"label\": \"neutral\", \"condition\": \"At least $200 billion and less than $250 billion\"}, {\"label\": \"bearish\", \"condition\": \"At least $150 billion and less than $200 billion\"}, {\"label\": \"strongly_bearish\", \"condition\": \"Less than $150 billion\"}], \"due_day\": \"2027-02-24\", \"year\": \"FY2027\", \"evidence_ids\": [\"e1\", \"e2\", \"e5\"]}, {\"id\": \"c3\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"Vera Rubin production shipments\", \"question\": \"Will NVIDIA commence Vera Rubin production shipments by December 31, 2026?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"NVIDIA has commenced production shipments by 2026-12-31\"}, {\"label\": \"no\", \"condition\": \"NVIDIA has not commenced production shipments by 2026-12-31\"}], \"due_day\": \"2026-12-31\", \"year\": \"2026\", \"evidence_ids\": [\"e6\", \"e7\"]}, {\"id\": \"c4\", \"object\": \"chip-export-controls\", \"kind\": \"theme\", \"looks_at\": \"U.S. authorization of H200 imports into China\", \"question\": \"Will NVIDIA H200 imports into China be permitted by December 31, 2026?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"H200 imports into China are permitted by 2026-12-31\"}, {\"label\": \"no\", \"condition\": \"H200 imports into China are not permitted by 2026-12-31\"}], \"due_day\": \"2026-12-31\", \"year\": \"2026\", \"evidence_ids\": [\"e8\"]}, {\"id\": \"c5\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"Completion of NVIDIA's announced Anthropic investment\", \"question\": \"Will NVIDIA complete its announced $10 billion investment in Anthropic by December 31, 2026?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"The announced $10 billion investment is completed by 2026-12-31\"}, {\"label\": \"no\", \"condition\": \"The announced $10 billion investment is not completed by 2026-12-31\"}], \"due_day\": \"2026-12-31\", \"year\": \"2026\", \"evidence_ids\": [\"e10\"]}, {\"id\": \"c6\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"NVIDIA–OpenAI partnership agreement\", \"question\": \"Will NVIDIA and OpenAI sign a partnership agreement by December 31, 2026?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"A partnership agreement is signed by 2026-12-31\"}, {\"label\": \"no\", \"condition\": \"No partnership agreement is signed by 2026-12-31\"}], \"due_day\": \"2026-12-31\", \"year\": \"2026\", \"evidence_ids\": [\"e11\"]}, {\"id\": \"c7\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"First Mercedes-Benz CLA featuring Alpamayo on-road milestone\", \"question\": \"Will the first Mercedes-Benz CLA featuring Alpamayo be on the road by December 31, 2026?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"The first Alpamayo-equipped Mercedes-Benz CLA is on the road by 2026-12-31\"}, {\"label\": \"no\", \"condition\": \"It is not on the road by 2026-12-31\"}], \"due_day\": \"2026-12-31\", \"year\": \"2026\", \"evidence_ids\": [\"e12\"]}, {\"id\": \"c8\", \"object\": \"NVDA\", \"kind\": \"company\", \"looks_at\": \"NVIDIA FY2027 gaming revenue growth\", \"question\": \"Will NVIDIA gaming revenue grow year over year in FY2027?\", \"rungs\": [{\"label\": \"yes\", \"condition\": \"FY2027 gaming revenue exceeds FY2026 gaming revenue\"}, {\"label\": \"no\", \"condition\": \"FY2027 gaming revenue is equal to or below FY2026 gaming revenue\"}], \"due_day\": \"2027-02-24\", \"year\": \"FY2027\", \"evidence_ids\": [\"e13\", \"e14\"]}], \"candidate_lists\": {\"c1\": [], \"c2\": [], \"c3\": [], \"c4\": [], \"c5\": [], \"c6\": [], \"c7\": [], \"c8\": []}, \"shown_views\": [], \"evidence\": [{\"id\": \"e1\", \"quote\": \"On a full year basis, data center generated revenue of $194 billion, up 68% year-over-year.\", \"one_line\": \"FY2026 data-center revenue was $194 billion, up 68% year over year.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"fact\", \"event_time\": \"FY2026\", \"links\": [\"c1\"]}, {\"id\": \"e2\", \"quote\": \"We look ahead, we expect sequential revenue growth throughout calendar 2026, exceeding what was included in the $500 billion Blackwell and Rubin revenue opportunity we shared last year.\", \"one_line\": \"Company expects sequential revenue growth throughout calendar 2026 and says it will exceed the previously shared $500 billion Blackwell and Rubin revenue opportunity.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"calendar 2026\", \"links\": [\"c1\", \"c2\"]}, {\"id\": \"e4\", \"quote\": \"Total revenue of $68 billion was up 73% year-over-year, accelerating from Q3.\", \"one_line\": \"Q4 FY2026 total revenue was $68 billion, up 73% year over year.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"fact\", \"event_time\": \"Q4 FY2026\", \"links\": [\"c1\"]}, {\"id\": \"e5\", \"quote\": \"Q4 data center revenue of $62 billion increased 75% year-over-year and 22% sequentially, driven primarily by sustained strength in Blackwell and the Blackwell Ultra ramp.\", \"one_line\": \"Q4 FY2026 data-center revenue was $62 billion, up 75% year over year and 22% sequentially.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"fact\", \"event_time\": \"Q4 FY2026\", \"links\": [\"c2\"]}, {\"id\": \"e6\", \"quote\": \"We shipped our first Vera Rubin samples to customers earlier this week, and we remain on track to commence production shipments in the second half of the year.\", \"one_line\": \"First Vera Rubin samples were shipped; production shipments are planned for the second half of 2026.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"second half of 2026\", \"links\": [\"c3\"]}, {\"id\": \"e7\", \"quote\": \"The question is how soon are we in market and how soon are they able to stand that up in terms of in their data centers.\", \"one_line\": \"CFO says Vera Rubin ramp timing and customer deployment timing remain uncertain.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"FY2027 second half ramp\", \"links\": [\"c3\"]}, {\"id\": \"e8\", \"quote\": \"While small amounts of H200 products for China-based customers were approved by the U.S. government, we have yet to generate any revenue. And we do not know whether any imports will be allowed into China.\", \"one_line\": \"H200 sales to China have not generated revenue and whether imports will be allowed remains unknown.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"as of 2026-02-25\", \"links\": [\"c4\"]}, {\"id\": \"e10\", \"quote\": \"We announced a partnership with Anthropic, and a $10 billion investment in their company.\", \"one_line\": \"NVIDIA announced an Anthropic partnership and a $10 billion investment; completion is not stated here.\", \"speaker\": \"Jen-Hsun Huang\", \"original_who\": \"NVIDIA CEO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"announced this quarter\", \"links\": [\"c5\"]}, {\"id\": \"e11\", \"quote\": \"We continue to work with OpenAI toward a partnership agreement and believe we are close.\", \"one_line\": \"NVIDIA and OpenAI have not yet completed the partnership agreement, according to the CEO.\", \"speaker\": \"Jen-Hsun Huang\", \"original_who\": \"NVIDIA CEO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"unresolved as of 2026-02-25\", \"links\": [\"c6\"]}, {\"id\": \"e12\", \"quote\": \"The first passenger car featuring Alpamyo built on NVIDIA DRIVE, will be on the road soon in the new Mercedes-Benz CLA.\", \"one_line\": \"A first Mercedes-Benz CLA featuring Alpamayo is planned to be on the road soon.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"soon, date unspecified\", \"links\": [\"c7\"]}, {\"id\": \"e13\", \"quote\": \"Looking ahead, while end demand for our products remain strong and channel inventory levels are healthy, we expect supply constraints to be the headwind to Gaming in Q1 and beyond.\", \"one_line\": \"Company expects supply constraints to weigh on gaming from Q1 FY2027 onward.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Q1 FY2027 and beyond\", \"links\": [\"c8\"]}, {\"id\": \"e14\", \"quote\": \"If things improve by the end of the year, there is an opportunity to think about what that is from a year-over-year growth. But it's still too early for us to know at this time, and we'll get back to you as soon as we can.\", \"one_line\": \"CFO says FY2027 gaming year-over-year growth is uncertain and depends on whether supply improves by year-end.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"FY2027\", \"links\": [\"c8\"]}, {\"id\": \"e15\", \"quote\": \"Let me first start with revenue. So revenue is expected to be $78 billion, plus or minus 2%.\", \"one_line\": \"Q1 FY2027 revenue guidance is $78 billion, plus or minus 2%.\", \"speaker\": \"Colette Kress\", \"original_who\": \"NVIDIA CFO\", \"original_day\": \"2026-02-25\", \"tier\": \"party_statement\", \"event_time\": \"Q1 FY2027\", \"links\": [\"c1\"]}], \"evidence_pairs\": []}"
+      }
+    ],
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "hierarchy_result",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "candidates",
+            "evidence"
+          ],
+          "properties": {
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "outcome",
+                  "target_view_id",
+                  "reason",
+                  "dependencies"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "existing",
+                      "successor",
+                      "new",
+                      "discard"
+                    ]
+                  },
+                  "target_view_id": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "dependencies": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "view_id",
+                        "wait_chain_view_id",
+                        "wait_year",
+                        "direction"
+                      ],
+                      "properties": {
+                        "view_id": {
+                          "type": "string"
+                        },
+                        "wait_chain_view_id": {
+                          "type": "string"
+                        },
+                        "wait_year": {
+                          "type": "string"
+                        },
+                        "direction": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "view_id",
+                  "outcome",
+                  "target_evidence_id",
+                  "said_day",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "view_id": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "duplicate",
+                      "replace",
+                      "new"
+                    ]
+                  },
+                  "target_evidence_id": {
+                    "type": "string"
+                  },
+                  "said_day": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "max_completion_tokens": 12000,
+    "reasoning_effort": "medium"
+  },
+  "reserved_usd": 0.137165,
+  "answer": {
+    "candidates": [
+      {
+        "id": "c1",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "FY2027 total revenue is a distinct, specific question, and no existing views are supplied.",
+        "dependencies": []
+      },
+      {
+        "id": "c2",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "FY2027 data-center revenue is a distinct, specific question, and no existing views are supplied.",
+        "dependencies": []
+      },
+      {
+        "id": "c3",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "Vera Rubin production shipments by the stated date are a distinct milestone question, and no existing views are supplied.",
+        "dependencies": []
+      },
+      {
+        "id": "c4",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "Whether H200 imports into China will be permitted by the stated date is a distinct policy question, and no existing views are supplied.",
+        "dependencies": []
+      },
+      {
+        "id": "c5",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "Completion of the announced Anthropic investment by the stated date is a distinct question, and no existing views are supplied.",
+        "dependencies": []
+      },
+      {
+        "id": "c6",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "Whether NVIDIA and OpenAI sign a partnership agreement by the stated date is a distinct question, and no existing views are supplied.",
+        "dependencies": []
+      },
+      {
+        "id": "c7",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "The on-road milestone for the Alpamayo-equipped Mercedes-Benz CLA by the stated date is a distinct question, and no existing views are supplied.",
+        "dependencies": []
+      },
+      {
+        "id": "c8",
+        "outcome": "new",
+        "target_view_id": "",
+        "reason": "FY2027 gaming revenue growth is a distinct, specific question, and no existing views are supplied.",
+        "dependencies": []
+      }
+    ],
+    "evidence": []
+  },
+  "input_tokens": 3406,
+  "output_tokens": 466,
+  "estimated_usd": 0.008918,
+  "seconds": 6.495,
+  "call_id": 2,
+  "request_sha256": "e1ce76f1fc36baab8ab9e483204834321ddc01bb529f862489ba83492d0aeb26",
+  "cached": false
+}

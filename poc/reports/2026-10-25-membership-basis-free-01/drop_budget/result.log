@@ -1,0 +1,96 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_d150_bounds_refuse_before_external_service[budget0] ___________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-294/test_d150_bounds_refuse_before0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1096b3100>
+budget = {'attempts': [{}, {}, {}, {}, {}, {}, ...], 'estimated_spent': 0}
+
+    @pytest.mark.parametrize('budget', [
+        {'attempts': [{}] * 24, 'estimated_spent': 0},
+        {'attempts': [], 'estimated_spent': 1},
+    ])
+    def test_d150_bounds_refuse_before_external_service(tmp_path, monkeypatch, budget):
+        """Budget row: both bounds stop the call before reaching the external model."""
+        out = tmp_path / 'experiment'
+        experiment.prepare(out, SOURCE)
+        study.write_json(out / 'budget.json', budget)
+        calls = experiment.Calls(out, 'dev-1-control', SOURCE / 'sample-2-retained')
+        def external_service(*args, **kwargs):
+            raise AssertionError('External service was reached')
+        monkeypatch.setattr(study.model, 'call', external_service)
+        try:
+            with pytest.raises(experiment.BudgetReached):
+>               calls.stage('item3-extract', 'Test prompt', {}, study.obj({}), calls.cfg.matching)
+
+test_membership_basis.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+membership_basis.py:78: in stage
+    return super().stage(name, prompt, payload, schema, setting)
+../../../hierarchy_study/ingestion_groups.py:244: in stage
+    return self.call(name, prompt, payload, schema)
+membership_basis.py:89: in call
+    return super().call(step, prompt, payload, schema)
+../../../hierarchy_study/study.py:300: in call
+    answer = model.call(self.archive, self.cfg, self.setting, prompt, user, schema, 'hierarchy_result', step, transport=transport)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<hivemind.model.Archive object at 0x1096b1810>, Config(version='retained-membership-v1', checksum='1029121efcf64826',...=12000), 'Test prompt', '{}', {'additionalProperties': False, 'properties': {}, 'required': [], 'type': 'object'}, ...)
+kwargs = {'transport': <function Calls.call.<locals>.transport at 0x1097129e0>}
+
+    def external_service(*args, **kwargs):
+>       raise AssertionError('External service was reached')
+E       AssertionError: External service was reached
+
+test_membership_basis.py:77: AssertionError
+----------------------------- Captured stdout call -----------------------------
+START sample=dev-1-control step=item3-extract reserved=$0.1205
+___________ test_d150_bounds_refuse_before_external_service[budget1] ___________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-294/test_d150_bounds_refuse_before1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10977cdf0>
+budget = {'attempts': [], 'estimated_spent': 1}
+
+    @pytest.mark.parametrize('budget', [
+        {'attempts': [{}] * 24, 'estimated_spent': 0},
+        {'attempts': [], 'estimated_spent': 1},
+    ])
+    def test_d150_bounds_refuse_before_external_service(tmp_path, monkeypatch, budget):
+        """Budget row: both bounds stop the call before reaching the external model."""
+        out = tmp_path / 'experiment'
+        experiment.prepare(out, SOURCE)
+        study.write_json(out / 'budget.json', budget)
+        calls = experiment.Calls(out, 'dev-1-control', SOURCE / 'sample-2-retained')
+        def external_service(*args, **kwargs):
+            raise AssertionError('External service was reached')
+        monkeypatch.setattr(study.model, 'call', external_service)
+        try:
+            with pytest.raises(experiment.BudgetReached):
+>               calls.stage('item3-extract', 'Test prompt', {}, study.obj({}), calls.cfg.matching)
+
+test_membership_basis.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+membership_basis.py:78: in stage
+    return super().stage(name, prompt, payload, schema, setting)
+../../../hierarchy_study/ingestion_groups.py:244: in stage
+    return self.call(name, prompt, payload, schema)
+membership_basis.py:89: in call
+    return super().call(step, prompt, payload, schema)
+../../../hierarchy_study/study.py:300: in call
+    answer = model.call(self.archive, self.cfg, self.setting, prompt, user, schema, 'hierarchy_result', step, transport=transport)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<hivemind.model.Archive object at 0x10977d9c0>, Config(version='retained-membership-v1', checksum='1029121efcf64826',...=12000), 'Test prompt', '{}', {'additionalProperties': False, 'properties': {}, 'required': [], 'type': 'object'}, ...)
+kwargs = {'transport': <function Calls.call.<locals>.transport at 0x109773e20>}
+
+    def external_service(*args, **kwargs):
+>       raise AssertionError('External service was reached')
+E       AssertionError: External service was reached
+
+test_membership_basis.py:77: AssertionError
+----------------------------- Captured stdout call -----------------------------
+START sample=dev-1-control step=item3-extract reserved=$0.1205
+=========================== short test summary info ============================
+FAILED test_membership_basis.py::test_d150_bounds_refuse_before_external_service[budget0]
+FAILED test_membership_basis.py::test_d150_bounds_refuse_before_external_service[budget1]
+2 failed in 0.08s

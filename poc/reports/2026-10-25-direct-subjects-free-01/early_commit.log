@@ -1,0 +1,25 @@
+...........F                                                             [100%]
+=================================== FAILURES ===================================
+___________ test_d146_subject_failure_rolls_back_theses_and_evidence ___________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-271/test_d146_subject_failure_roll0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1097ff100>
+
+    def test_d146_subject_failure_rolls_back_theses_and_evidence(tmp_path, monkeypatch):
+        """Transaction row: a failure after original thesis/evidence writes leaves no partial new article."""
+        conn, calls, uni, items = setup(tmp_path / 'views.sqlite')
+        direct.process(conn, calls, uni, items[0], 1)
+        original = legacy.write_threads
+        def fail(*args, **kwargs):
+            original(*args, **kwargs)
+            raise RuntimeError('Failure after subject write')
+        monkeypatch.setattr(legacy, 'write_threads', fail)
+        with pytest.raises(RuntimeError), conn:
+            direct.process(conn, calls, uni, items[1], 2)
+>       assert conn.execute('select count(*) from views').fetchone()[0] == 1
+E       assert 2 == 1
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py:145: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpixd9hu2q/test_direct_subjects.py::test_d146_subject_failure_rolls_back_theses_and_evidence
+1 failed, 11 passed in 0.18s

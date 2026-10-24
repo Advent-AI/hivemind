@@ -1,0 +1,309 @@
+"""The views database (docs/prd/06-views.md): append-only tables for views, rungs, judgements, evidence, links,
+replacements, dependencies, successions, match records, processing steps and the review pool; a trigram
+full-text index over the views for the matching lists; the queries the other modules read.
+
+Every table refuses UPDATE and DELETE (triggers). Progress and counts are rows, never updates. There is no item
+text here: evidence holds the quoted sentence and the one-line restatement only.
+"""
+import json
+import os
+import sqlite3
+
+TABLES = {
+    'views': 'view_id text primary key, object_id text, object_kind text, kind text, looks_at text, question text, due_day text, year text, created_seq integer, created_from_input text, created_at text',
+    'rungs': 'view_id text, position integer, label text, condition text',
+    'view_switches': 'id integer primary key autoincrement, view_id text, open integer, reason text, by_whom text, after_seq integer',
+    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text',
+    'evidence': 'evidence_id text primary key, quote text, one_line text, speaker text, original_who text, original_day text, tier text, event_time text, created_seq integer, created_from_input text',
+    'evidence_sources': 'id integer primary key autoincrement, evidence_id text, input_id text, category text, publication_day text, location text, seq integer',
+    'evidence_links': 'id integer primary key autoincrement, evidence_id text, view_id text, seq integer',
+    'replacements': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',
+    'dependencies': 'dependency_id integer primary key autoincrement, view_id text, depends_on text, wait_chain_view_id text, wait_year text, direction text, seq integer',
+    'dependency_resolutions': 'id integer primary key autoincrement, dependency_id integer, resolved_to text, reason text, seq integer',
+    'successions': 'id integer primary key autoincrement, view_id text, succeeds text, seq integer',
+    'handovers': 'id integer primary key autoincrement, input_id text, seq integer, handover_json text',
+    'match_records': 'id integer primary key autoincrement, seq integer, input_id text, call_no integer, shown_json text, request_sha256 text, call_id integer, decisions_json text, checks_json text, written_json text',
+    'processing_steps': 'id integer primary key autoincrement, input_id text, sequence_no integer, step text, result text, reason text, publication_day text, at text',
+    'review_pool_entries': 'id integer primary key autoincrement, kind text, key text, example_json text, seq integer',
+    'late_statements': 'id integer primary key autoincrement, input_id text, evidence_quote text, reason text, seq integer',
+    'days_completed': 'id integer primary key autoincrement, day text, seq integer, at text',
+}
+
+INDEXES = [
+    'create index if not exists views_object on views(object_id)',
+    'create index if not exists judgements_view on judgements(view_id, judgement_id)',
+    # 06-views step 7: a view is judged once per round (one item = one sequence number)
+    'create unique index if not exists judgements_once_per_round on judgements(view_id, seq)',
+    'create index if not exists links_view on evidence_links(view_id)',
+    'create index if not exists links_evidence on evidence_links(evidence_id)',
+    'create index if not exists sources_evidence on evidence_sources(evidence_id)',
+    'create index if not exists steps_input on processing_steps(input_id, id)',
+    'create index if not exists switches_view on view_switches(view_id, id)',
+    'create index if not exists deps_view on dependencies(view_id)',
+]
+
+
+def open_db(path):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    for name, columns in TABLES.items():
+        conn.execute(f'create table if not exists {name} ({columns})')
+        conn.execute(f"create trigger if not exists {name}_no_update before update on {name} begin select raise(abort, 'append-only'); end")
+        conn.execute(f"create trigger if not exists {name}_no_delete before delete on {name} begin select raise(abort, 'append-only'); end")
+    for statement in INDEXES:
+        conn.execute(statement)
+    conn.execute("create virtual table if not exists views_fts using fts5(view_id unindexed, text, tokenize='trigram')")
+    conn.commit()
+    return conn
+
+
+def insert(conn, table, **fields):
+    columns = list(fields)
+    cursor = conn.execute(f'insert into {table} ({",".join(columns)}) values ({",".join("?" * len(columns))})', [fields[c] for c in columns])
+    return cursor.lastrowid
+
+
+# ---------- views ----------
+
+def create_view(conn, *, view_id, object_id, object_kind, kind, looks_at, question, due_day, year, rungs, seq, input_id, created_at):
+    insert(conn, 'views', view_id=view_id, object_id=object_id, object_kind=object_kind, kind=kind, looks_at=looks_at,
+           question=question, due_day=due_day, year=year, created_seq=seq, created_from_input=input_id, created_at=created_at)
+    for position, rung in enumerate(rungs, start=1):
+        insert(conn, 'rungs', view_id=view_id, position=position, label=rung['label'], condition=rung['condition'])
+    insert(conn, 'view_switches', view_id=view_id, open=1, reason='created', by_whom='matching', after_seq=seq)
+    conn.execute('insert into views_fts (view_id, text) values (?, ?)', (view_id, f'{object_id} {looks_at} {question}'))
+
+
+def view(conn, view_id):
+    row = conn.execute('select * from views where view_id=?', (view_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def rungs_of(conn, view_id):
+    return [dict(r) for r in conn.execute('select position, label, condition from rungs where view_id=? order by position', (view_id,))]
+
+
+def is_open(conn, view_id):
+    row = conn.execute('select open from view_switches where view_id=? order by id desc limit 1', (view_id,)).fetchone()
+    return bool(row and row['open'])
+
+
+def close_view(conn, view_id, reason, by_whom, seq):
+    insert(conn, 'view_switches', view_id=view_id, open=0, reason=reason, by_whom=by_whom, after_seq=seq)
+
+
+def open_views(conn):
+    rows = conn.execute('select view_id from views').fetchall()
+    return [r['view_id'] for r in rows if is_open(conn, r['view_id'])]
+
+
+def views_of_object(conn, object_id, only_open=True):
+    rows = conn.execute('select view_id from views where object_id=? order by created_seq', (object_id,)).fetchall()
+    ids = [r['view_id'] for r in rows]
+    return [v for v in ids if is_open(conn, v)] if only_open else ids
+
+
+def has_judgement(conn, view_id, seq):
+    return conn.execute('select 1 from judgements where view_id=? and seq=?', (view_id, seq)).fetchone() is not None
+
+
+def open_read_only(path):
+    """The views database for a reader (the agent layer, reports): no schema creation, no writes."""
+    conn = sqlite3.connect(f'file:{os.path.abspath(path)}?mode=ro', uri=True)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def current_state(conn, view_id):
+    row = conn.execute('select judgement_id, rung, reasons, changed, seq, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def dependencies_of(conn, view_id):
+    """Each dependency with its current target: the resolved view, or the waiting chain and year."""
+    out = []
+    for dep in conn.execute('select * from dependencies where view_id=? order by dependency_id', (view_id,)):
+        dep = dict(dep)
+        resolution = conn.execute('select resolved_to, reason from dependency_resolutions where dependency_id=? order by id desc limit 1', (dep['dependency_id'],)).fetchone()
+        if resolution:
+            dep['resolved_to'], dep['resolution'] = resolution['resolved_to'], resolution['reason']
+        else:
+            dep['resolved_to'], dep['resolution'] = dep['depends_on'], ('direct' if dep['depends_on'] else 'waiting')
+        out.append(dep)
+    return out
+
+
+def dependants_of(conn, view_id):
+    direct = [r['view_id'] for r in conn.execute('select view_id from dependencies where depends_on=?', (view_id,))]
+    resolved = [r['view_id'] for r in conn.execute(
+        'select d.view_id from dependency_resolutions r join dependencies d on d.dependency_id=r.dependency_id where r.resolved_to=?', (view_id,))]
+    return sorted(set(direct + resolved))
+
+
+def would_cycle(conn, view_id, depends_on):
+    """True when depends_on already depends, directly or through its dependencies, on view_id."""
+    seen, stack = set(), [depends_on]
+    while stack:
+        current = stack.pop()
+        if current == view_id:
+            return True
+        if current in seen or not current:
+            continue
+        seen.add(current)
+        for dep in dependencies_of(conn, current):
+            if dep['resolved_to']:
+                stack.append(dep['resolved_to'])
+    return False
+
+
+def views_for_prompt(conn, object_ids):
+    """05-extraction block 5: the objects' open views plus every view they depend on, open or closed, with who
+    depends on whom; question, looks_at and due day only."""
+    shown, order = {}, []
+    for object_id in object_ids:
+        for view_id in views_of_object(conn, object_id):
+            if view_id not in shown:
+                shown[view_id] = dict(view(conn, view_id), open=True, depends_on=[])
+                order.append(view_id)
+    for view_id in list(order):
+        for dep in dependencies_of(conn, view_id):
+            target = dep['resolved_to']
+            shown[view_id]['depends_on'].append(target or f'（等 {dep["wait_chain_view_id"]} 这条链上 {dep["wait_year"]} 年的那条）')
+            if target and target not in shown:
+                record = view(conn, target)
+                if record:
+                    shown[target] = dict(record, open=is_open(conn, target), depends_on=[])
+                    order.append(target)
+    return [dict(shown[v], rungs=rungs_of(conn, v)) for v in order]
+
+
+def search_views(conn, text, top_n):
+    """Trigram full-text search over question + looks_at + object; the top N by rank."""
+    words = [w for w in text.replace('？', ' ').replace('，', ' ').split() if len(w) >= 2]
+    if not words:
+        return []
+    query = ' OR '.join('"' + w.replace('"', '') + '"' for w in words[:12])
+    try:
+        rows = conn.execute('select view_id from views_fts where views_fts match ? order by rank limit ?', (query, top_n)).fetchall()
+    except sqlite3.OperationalError:
+        return []
+    return [r['view_id'] for r in rows]
+
+
+# ---------- evidence ----------
+
+def add_evidence(conn, *, evidence_id, quote, one_line, speaker, original_who, original_day, tier, event_time, seq, input_id):
+    insert(conn, 'evidence', evidence_id=evidence_id, quote=quote, one_line=one_line, speaker=speaker, original_who=original_who,
+           original_day=original_day, tier=tier, event_time=event_time, created_seq=seq, created_from_input=input_id)
+
+
+def add_source(conn, evidence_id, input_id, category, publication_day, location, seq):
+    insert(conn, 'evidence_sources', evidence_id=evidence_id, input_id=input_id, category=category, publication_day=publication_day, location=location, seq=seq)
+
+
+def link(conn, evidence_id, view_id, seq):
+    exists = conn.execute('select 1 from evidence_links where evidence_id=? and view_id=?', (evidence_id, view_id)).fetchone()
+    if not exists:
+        insert(conn, 'evidence_links', evidence_id=evidence_id, view_id=view_id, seq=seq)
+        return True
+    return False
+
+
+def replace(conn, old_id, new_id, said_day, seq):
+    insert(conn, 'replacements', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
+
+
+def is_replaced(conn, evidence_id):
+    return bool(conn.execute('select 1 from replacements where old_evidence_id=?', (evidence_id,)).fetchone())
+
+
+def replaced_by(conn, evidence_id):
+    row = conn.execute('select new_evidence_id from replacements where old_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
+    return row['new_evidence_id'] if row else None
+
+
+def predecessor_of(conn, evidence_id):
+    row = conn.execute('select old_evidence_id from replacements where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
+    return row['old_evidence_id'] if row else None
+
+
+def evidence(conn, evidence_id):
+    row = conn.execute('select * from evidence where evidence_id=?', (evidence_id,)).fetchone()
+    if not row:
+        return None
+    record = dict(row)
+    record['sources'] = [dict(s) for s in conn.execute('select input_id, category, publication_day, location from evidence_sources where evidence_id=? order by id', (evidence_id,))]
+    return record
+
+
+def evidence_in_force(conn, view_id):
+    """Evidence linked to the view and not replaced, each with its replaced predecessor when there is one."""
+    out = []
+    for row in conn.execute('select evidence_id from evidence_links where view_id=? order by id', (view_id,)):
+        evidence_id = row['evidence_id']
+        if is_replaced(conn, evidence_id):
+            continue
+        record = evidence(conn, evidence_id)
+        previous = predecessor_of(conn, evidence_id)
+        record['replaced'] = evidence(conn, previous) if previous else None
+        out.append(record)
+    return out
+
+
+def views_linked_to(conn, evidence_id):
+    return [r['view_id'] for r in conn.execute('select view_id from evidence_links where evidence_id=? order by id', (evidence_id,))]
+
+
+def evidence_ids_under(conn, view_id):
+    return [r['evidence_id'] for r in conn.execute('select evidence_id from evidence_links where view_id=?', (view_id,))]
+
+
+# ---------- processing record and pool ----------
+
+def mark_step(conn, input_id, sequence_no, step, result, reason, publication_day, at):
+    insert(conn, 'processing_steps', input_id=input_id, sequence_no=sequence_no, step=step, result=result, reason=reason, publication_day=publication_day, at=at)
+
+
+def last_step(conn, input_id):
+    row = conn.execute('select step, result, sequence_no from processing_steps where input_id=? order by id desc limit 1', (input_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def is_processed(conn, input_id):
+    return bool(conn.execute("select 1 from processing_steps where input_id=? and step='handed_over' and result='ok'", (input_id,)).fetchone())
+
+
+def next_sequence(conn):
+    row = conn.execute('select coalesce(max(sequence_no), 0) from processing_steps').fetchone()
+    return int(row[0]) + 1
+
+
+def pool(conn, kind, key, example, seq):
+    insert(conn, 'review_pool_entries', kind=kind, key=key, example_json=json.dumps(example, ensure_ascii=False)[:4000], seq=seq)
+
+
+def last_check(conn, view_id):
+    """The last round that read this view: its item's publication day and id (the card's 上次核对 line)."""
+    row = conn.execute('select input_id, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+    if row:
+        return row['publication_day'], row['input_id']
+    row = conn.execute('select s.publication_day, s.input_id from evidence_links l join evidence_sources s on s.evidence_id=l.evidence_id where l.view_id=? order by s.id desc limit 1', (view_id,)).fetchone()
+    return (row['publication_day'], row['input_id']) if row else (None, None)
+
+
+def lineage_of_view(conn, view_id):
+    ids = [r['input_id'] for r in conn.execute('select distinct s.input_id from evidence_links l join evidence_sources s on s.evidence_id=l.evidence_id where l.view_id=? order by s.id', (view_id,))]
+    created = conn.execute('select created_from_input from views where view_id=?', (view_id,)).fetchone()
+    if created and created['created_from_input'] not in ids:
+        ids.insert(0, created['created_from_input'])
+    return ids
+
+
+def complete_day(conn, day, seq, at):
+    insert(conn, 'days_completed', day=day, seq=seq, at=at)
+
+
+def last_completed_day(conn):
+    row = conn.execute('select day from days_completed order by id desc limit 1').fetchone()
+    return row['day'] if row else None

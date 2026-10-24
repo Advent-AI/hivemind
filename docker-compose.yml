@@ -1,0 +1,35 @@
+# docker compose up --build
+# api: http://127.0.0.1:8788 (GET routes + POST /ideas); mcp: http://127.0.0.1:8789/mcp (streamable HTTP).
+# Both ports bind to the host's loopback only. The ledger and the items database are mounted read-only; the
+# service folder holds the search index and the idea archive; the credentials file is mounted read-only into the
+# path src/hivemind/model.py reads (never copied into the image, never in this file).
+services:
+  api:
+    build: .
+    command: ["python3", "scripts/hivemind_api.py", "--host", "0.0.0.0", "--port", "8788",
+              "--views", "/data/ledger/views.sqlite", "--items", "/data/items/items-window.sqlite",
+              "--index", "/data/service/search-index.sqlite", "--archive", "/data/service/idea-archive.sqlite",
+              "--config", "poc/config/poc-v3.json"]
+    ports: ["127.0.0.1:8788:8788"]
+    volumes:
+      - ./poc/data/sealed-2026-10-24-run3-through-0815:/data/ledger:ro
+      - ./poc/data/items-window.sqlite:/data/items/items-window.sqlite:ro
+      - ./poc/data/service:/data/service
+      - ${HOME}/.config/tn-hivemind/credentials.json:/root/.config/tn-hivemind/credentials.json:ro
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8788/days', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    command: ["python3", "scripts/hivemind_mcp.py", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8789",
+              "--views", "/data/ledger/views.sqlite", "--items", "/data/items/items-window.sqlite", "--index", "/data/service/search-index.sqlite"]
+    ports: ["127.0.0.1:8789:8789"]
+    volumes:
+      - ./poc/data/sealed-2026-10-24-run3-through-0815:/data/ledger:ro
+      - ./poc/data/items-window.sqlite:/data/items/items-window.sqlite:ro
+      - ./poc/data/service:/data/service
+      - ${HOME}/.config/tn-hivemind/credentials.json:/root/.config/tn-hivemind/credentials.json:ro
