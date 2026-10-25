@@ -423,14 +423,18 @@ def truenorth_story_items(pages):
 
 # ---------- company sites ----------
 
+def newsroom_category(title):
+    """A release that reports a period's results is T1; one that schedules the results call is an ordinary release (T6)."""
+    return 'T1' if re.search(r'(?:reports|announces) .*financial results', title, re.I) and not re.search(r'conference call', title, re.I) else 'T6'
+
+
 def nvidianews_items():
     manifest = read_json(os.path.join(RAW, 'nvidianews', 'manifest.json'), {'releases': []})
     rows = []
     for release in manifest['releases']:
         text = full_text_of(os.path.join(RAW, 'nvidianews', release['file'][:-5]))
         title = release.get('title') or ''
-        # a release that reports a period's results is T1; one that schedules the results call is an ordinary release
-        category = 'T1' if re.search(r'(?:reports|announces) .*financial results', title, re.I) and not re.search(r'conference call', title, re.I) else 'T6'
+        category = newsroom_category(title)
         rows.append(item(
             input_id=f'nvidianews:{release["url"].rsplit("/", 1)[-1][:120]}', klass='公司材料', category=category, channel='company newsroom',
             source_uri=release['url'], publisher='NVIDIA Corporation', publisher_type='company', published_at=release['date'] + 'T12:00:00Z',

@@ -34,6 +34,7 @@ SCHEMAS = {'extract': extraction.SCHEMA, 'match': matching.SCHEMA, 'judge': judg
 ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 |\[Item\] id (\S+?), category ')
 BLOCK5_VIEW = re.compile(r'^\s+- (v\d+)\s?[（(]', re.M)
 MATCH_SHOWN = re.compile(r'^· (v\d+)\s?[（(]', re.M)
+JEV_ASKED = re.compile(r'\b(v\d+): ')          # a Jev candidate reason names every thesis it was asked about: 'jev: v1: different 0.55; …'
 
 
 def normalise_reason(text):
@@ -101,10 +102,25 @@ def part_b(archive_conn, items_conn, uni):
     return judged
 
 
+def shown_for_record(archive_conn, rec, decisions):
+    """The theses a stored matching record was shown, or None when the record cannot be identified: a generative record by its
+    archived request; a Jev record (its request hash combines several calls) by the theses its candidate reasons name."""
+    request_row = archive_conn.execute('select request_json from model_calls where request_sha256=?', (rec['request_sha256'],)).fetchone()
+    if request_row:
+        user = json.loads(request_row['request_json'])['messages'][1]['content']
+        return [{'view_id': v} for v in dict.fromkeys(MATCH_SHOWN.findall(user))]
+    reasons = [x.get('reason', '') for x in decisions.get('candidates', []) + decisions.get('evidence', [])]
+    if reasons and all(r.startswith('jev:') for r in reasons):
+        return [{'view_id': v} for v in dict.fromkeys(JEV_ASKED.findall(' '.join(x.get('reason', '') for x in decisions.get('candidates', []))))]
+    return None
+
+
 def part_c(archive_conn, views_paths, uni):
     reasons, examples = collections.Counter(), collections.defaultdict(list)
     judged = refused_records = 0
+    per_ledger = []
     for path in views_paths:
+        ledger_judged, skipped = 0, collections.Counter()
         # matching.check writes suggested themes to the review pool, so it runs on a scratch copy, never on the real file
         scratch = os.path.join(tempfile.mkdtemp(), 'views.sqlite')
         shutil.copy(path, scratch)
@@ -112,14 +128,16 @@ def part_c(archive_conn, views_paths, uni):
         conn.row_factory = sqlite3.Row
         for rec in conn.execute('select input_id, call_no, shown_json, decisions_json, request_sha256 from match_records order by id'):
             handover_row = conn.execute('select handover_json from handovers where input_id=? order by id desc limit 1', (rec['input_id'],)).fetchone()
-            request_row = archive_conn.execute('select request_json from model_calls where request_sha256=?', (rec['request_sha256'],)).fetchone()
-            if not handover_row or not request_row or not rec['decisions_json']:
+            if not handover_row or not rec['decisions_json']:
+                skipped['no handover or no decision'] += 1
+                continue
+            shown_views = shown_for_record(archive_conn, rec, json.loads(rec['decisions_json']))
+            if shown_views is None:
+                skipped['request not in this archive'] += 1
                 continue
             handover = json.loads(handover_row['handover_json'])
             shown = json.loads(rec['shown_json'])
             lists = matching.Lists(shown.get('candidates', {}), {tuple(k.split('|', 1)): v for k, v in shown.get('evidence', {}).items()})
-            user = json.loads(request_row['request_json'])['messages'][1]['content']
-            shown_views = [{'view_id': v} for v in dict.fromkeys(MATCH_SHOWN.findall(user))]
             if rec['call_no'] <= 2:
                 candidates, evidence = handover['candidates'], handover['evidence']
             else:                                   # the second call: candidate-linked evidence under its destination
@@ -130,16 +148,26 @@ def part_c(archive_conn, views_paths, uni):
             except Exception as error:
                 key = 'check raised ' + type(error).__name__
                 reasons[key] += 1; examples[key].append(f'{os.path.basename(os.path.dirname(path))} {rec["input_id"][:40]}: {error!r}'[:140])
-                judged += 1; refused_records += 1
+                judged += 1; refused_records += 1; ledger_judged += 1
                 continue
             judged += 1
+            ledger_judged += 1
             if checked.refusals:
                 refused_records += 1
             for refusal in checked.refusals:
                 key = normalise_reason(refusal)
                 reasons[key] += 1
                 examples[key].append(f'{os.path.basename(os.path.dirname(path))} {rec["input_id"][:40]}: {refusal[:90]}')
+        per_ledger.append((os.path.basename(os.path.dirname(path)) or path, ledger_judged, skipped))
     tally('C. matching code checks over stored records (database state is the final one, not the state at the time)', judged, refused_records, reasons, examples)
+    unjudged = []
+    for name, ledger_judged, skipped in per_ledger:
+        print(f'       ledger {name}: judged {ledger_judged}, skipped {sum(skipped.values())} {dict(skipped) if skipped else ""}')
+        if skipped and not ledger_judged:
+            unjudged.append(name)
+    if unjudged:
+        print(f'NOT JUDGED: every matching record of {unjudged} was skipped; pass the archive these records were written with')
+        return 0
     return judged
 
 

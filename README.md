@@ -2,7 +2,7 @@
 
 Hivemind reads a stream of information as a hedge-fund analyst would: it identifies theses, links supporting and opposing evidence, and updates its judgement as information arrives. Equities, commodities and cryptocurrencies use the same process.
 
-This repository rebuilds the earlier system in `../tn-hivemind`. The experimental implementation is in `src/hivemind`, `poc` and `scripts`. [Current state](docs/CURRENT_STATE.md) records measured results, open defects and the next task. Extraction and grouping have **not** passed semantic acceptance.
+This repository rebuilds the earlier system in `../tn-hivemind`. The experimental implementation is in `src/hivemind`, `poc` and `scripts`. [Current state](docs/CURRENT_STATE.md) records measured results, open defects and the next task. The English pipeline runs end to end on extraction v10 with Jev matching (D169) and is measured per state against read golds; it has not passed product acceptance.
 
 ## How it works
 
@@ -43,8 +43,8 @@ The foundational design was frozen on October 22, 2026, except for pull mode and
 |---|---|
 | Research universe | First version frozen; specific themes remain a draft |
 | Upstream classification, Config, dispatch | First versions frozen |
-| Extraction | Foundation frozen; category prompts need validation; D149 grouping integration pending |
-| Thesis library and matching records | Foundation frozen; D149 grouping integration and listed open questions pending |
+| Extraction | Foundation frozen; English prompts v10 in the default pipeline; groups declared during extraction (D165, D166) |
+| Thesis library and matching records | Foundation frozen; matching on Jev by default (D169) with the D168 rules; listed open questions pending |
 | Human review pool | Intake frozen; output not yet designed |
 | Final verdict | Earlier draft; freezing the state on the due date is decided |
 | Pull mode | Earlier draft; day-end/scheduled work and due-date freezing are decided |
@@ -72,11 +72,24 @@ Then open <http://localhost:8000/docs/system-design.html>. Serving the repositor
 - Open a module's detailed flow, decision tree and examples, or follow its PRD link.
 - The system PRD contains the overview and glossary.
 
+## Run the pipeline
+
+Replay the item window into a new ledger with the default configuration (`poc/config/poc-v23.json`: extraction v10 on `gpt-6-luna`, matching on Jev); credentials are read from `~/.config/hivemind/credentials.json`, never from the repository:
+
+```sh
+python3 scripts/preflight.py --archive <an archive> --views <ledgers> --items poc/data/items-window-tags2-2026-10-24.sqlite   # $0, before any paid run
+python3 scripts/replay.py --from 2026-07-24 --until 2026-07-31 --views poc/data/<run>/views.sqlite --archive poc/data/<run>/archive.sqlite --cap 3
+```
+
+Measure a ledger per state against the golds in `poc/eval/gold/` with `scripts/benchmark_states.py` (candidates, groups, evidence, threshold robustness, cost per stage at published rates), `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` (evidence retrieval measured apart); `scripts/trace_items.py` renders per-item trace pages. The ledgers, archives and traces of the 2026-10-25 phase are listed in the [data manifest](docs/research/2026-10-25-english/data-manifest.md); `poc/data/` is not in Git.
+
 ## Repository map
 
 | Path | Purpose |
 |---|---|
-| `src/hivemind/`, `scripts/`, `poc/` | Experimental implementation, entry points and experiments |
+| `src/hivemind/`, `scripts/`, `poc/` | Implementation, entry points and the POC corpus, configurations and universe |
+| `poc/eval/gold/`, `poc/reports/` | Golds read from the texts, and the measured reports behind the build log |
+| `docs/research/2026-10-25-english/` | The English library build log (one row per measured step) and the data manifest |
 | `docs/system-design.html`, `docs/system-design/new-*.js` | Maintained design page and its source data |
 | `docs/system-design/old-*.js` | Historical system comparison |
 | `docs/prd/` | One specification per module and an index |

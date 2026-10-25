@@ -157,8 +157,7 @@ def test_jev_client_archives_once_and_serves_a_repeated_request_from_the_archive
     second = jev.ask(archive, CFG, CFG.matching, 'state', questions, 'match', transport=scripted({'q': 0.1}))
     assert (first.cached, second.cached) == (False, True) and second.data == {'q': {'type': 'noul', 'noul': 0.7}}
     assert archive.totals()[0] == 1 if isinstance(archive.totals(), tuple) else True
-    assert json.loads(open(model.CREDENTIALS).read()) is not None or True      # the client reads the hivemind credentials path, never the old one
-    assert model.CREDENTIALS.endswith('/.config/hivemind/credentials.json')
+    assert model.CREDENTIALS.endswith('/.config/hivemind/credentials.json')      # the hivemind path, never the old repository's; tests never read it
 
 
 def test_a_choice_one_rounding_unit_below_the_top_probability_is_valid_but_a_real_gap_is_not():

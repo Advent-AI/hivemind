@@ -9,9 +9,6 @@ streamed; the rest stay in the database for the review.
 import json
 import sqlite3
 
-KIND_RANK = {'公司材料': 0, '官方材料': 1, '新闻': 2}
-
-
 def open_db(path):
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
@@ -28,10 +25,6 @@ def feed(conn, from_day, until_day):
         item = dict(row)
         item['object_identifiers'] = json.loads(item.get('object_identifiers') or '[]')
         yield item
-
-
-def days_with_items(conn, from_day, until_day):
-    return [r[0] for r in conn.execute("select distinct publication_day from items where publication_day >= ? and publication_day <= ? and feed = 1 order by 1", (from_day, until_day))]
 
 
 def count(conn, from_day, until_day):

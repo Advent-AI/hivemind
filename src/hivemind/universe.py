@@ -58,10 +58,6 @@ class Universe:
 
     SCOPELESS = {'total_revenue', 'gross_margin', 'operating_margin', 'operating_expense_growth', 'total_expenses', 'operating_loss', 'tax_rate', 'capex'}
 
-    def canonical_scope(self, object_id, measure, scope='', event_type='n/a'):
-        """The reference spelling on an exact match, otherwise the actual scope given by extraction."""
-        return self.scope_and_source(object_id, measure, scope, event_type)[0]
-
     def scope_and_source(self, object_id, measure, scope='', event_type='n/a'):
         """Use a reference name only on an exact match; preserve actual business qualifiers (D155)."""
         plain = re.sub(r'^(?:non[-_ ]?gaap|gaap)\s*', '', scope.strip(), flags=re.I)

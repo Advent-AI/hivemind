@@ -251,8 +251,6 @@ def test_successor_orientation_reads_bounds_first_then_english_prose():
               {'label': 'c', 'condition': 'the high band', 'lo': 500e9, 'hi': None}]
     falling = list(reversed(rising))
     assert matching.ladder_direction(rising) == 1 and matching.ladder_direction(falling) == -1
-    assert matching.same_orientation(rising, [dict(r, lo=r['lo'] and r['lo'] * 1.1, hi=r['hi'] and r['hi'] * 1.1) for r in rising])
-    assert not matching.same_orientation(rising, falling)
     assert matching.ladder_direction([{'label': r['label'], 'condition': r['condition']} for r in rising]) is None
     prose = [{'label': 'a', 'condition': 'below $300 billion'}, {'label': 'b', 'condition': 'from $300 billion to $500 billion'}, {'label': 'c', 'condition': 'at least $500 billion'}]
     assert matching.ladder_direction(prose) == 1

@@ -8,8 +8,8 @@ import argparse, collections, json, pathlib, sqlite3, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
+from hivemind import model  # noqa: E402
 from hivemind.views import store  # noqa: E402
-PRICES = {'gpt-6-luna': (0.10, 0.50), 'jev-1.14.0': (0.042, 0.0)}
 
 
 def ro(path):
@@ -55,7 +55,7 @@ def decisions(conn):
 def stages(archive):
     out = {}
     for r in archive.execute('select purpose, model, count(*) n, sum(input_tokens) i, sum(output_tokens) o, sum(seconds) s, sum(cost_usd) c from model_calls group by purpose, model'):
-        price = PRICES.get(r['model'], (0.0, 0.0))
+        price = model.PRICES[r['model']]           # the published rates' one owner; an unpriced model stops the report
         out[(r['purpose'], r['model'])] = {'calls': r['n'], 'input_tokens': r['i'] or 0, 'output_tokens': r['o'] or 0, 'seconds': round(r['s'] or 0, 1),
                                            'cost_published': round((r['i'] or 0) / 1e6 * price[0] + (r['o'] or 0) / 1e6 * price[1], 4)}
     return out

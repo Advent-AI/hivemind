@@ -8,12 +8,10 @@ the request text and the retry note follow the version; every answer is read in 
 import dataclasses
 import datetime
 import json
-import os
 import re
 
 from . import config, model, vocabulary
 
-PROMPTS = os.path.join(os.path.dirname(__file__), 'prompts')
 TIERS = vocabulary.TIERS
 LEGACY_TIERS = list(vocabulary.LEGACY['tier'])
 LEGACY_KINDS = list(vocabulary.LEGACY['kind'])
@@ -82,7 +80,6 @@ def key_fields(measures=MEASURES):
             'basis': {'type': 'string', 'enum': BASES}, 'unit': {'type': 'string', 'enum': UNITS}, 'event_type': {'type': 'string', 'enum': EVENT_TYPES}}
 
 
-KEY_FIELDS = key_fields()
 BOUND = {'anyOf': [{'type': 'number'}, {'type': 'null'}]}
 
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Run the POC replay.
 
-  python3 scripts/replay.py --from 2026-02-25 --until 2026-02-25 [--day0 2026-07-24] [--only NVDA] [--cap 50]
-  python3 scripts/replay.py --views poc/data/views.sqlite --archive poc/data/archive.sqlite ...
+  python3 scripts/replay.py --from 2026-02-25 --until 2026-07-23 --views poc/data/<run>/views.sqlite \
+      --archive poc/data/<run>/archive.sqlite [--only NVDA] [--day0 2026-07-24] [--cap 3]
 
-Defaults: test database poc/corpus/items.sqlite, views poc/data/views.sqlite, archive poc/data/archive.sqlite,
-config poc/config/poc-v1.json, universe poc/universe.json. The log goes to stdout and poc/data/replay.log.
+The ledger and the archive are named on every run (a new run gets a new dated folder; an existing ledger resumes after
+its last completed day). Defaults: the item window poc/data/items-window-tags2-2026-10-24.sqlite, config
+poc/config/poc-v23.json (D169: extraction v10, Jev matching), universe poc/universe.json. The log goes to stdout and
+replay.log beside the ledger.
 """
 import argparse
 import os
@@ -22,10 +24,10 @@ def main():
     parser.add_argument('--from', dest='from_day', required=True)
     parser.add_argument('--until', dest='until_day', required=True)
     parser.add_argument('--day0', default=None)
-    parser.add_argument('--testdb', default=os.path.join(ROOT, 'poc', 'corpus', 'items.sqlite'))
-    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'views.sqlite'))
-    parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'archive.sqlite'))
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v1.json'))
+    parser.add_argument('--testdb', default=os.path.join(ROOT, 'poc', 'data', 'items-window-tags2-2026-10-24.sqlite'))
+    parser.add_argument('--views', required=True, help='the ledger this run writes (a new run: a new dated folder)')
+    parser.add_argument('--archive', required=True, help='the model-call archive of this run')
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v23.json'))     # D169
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--only', default=None, help='comma-separated object ids to restrict the stream to')
     parser.add_argument('--cap', type=float, default=None, help='USD spend cap for this run')

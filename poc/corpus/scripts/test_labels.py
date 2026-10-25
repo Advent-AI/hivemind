@@ -7,7 +7,6 @@ and policy exhibits are 不算材料 (docs/poc/pipeline-plan.md, 语料标签收
 Run: python3 -m pytest poc/corpus/scripts/test_labels.py -q
 """
 import os
-import re
 import sqlite3
 import sys
 
@@ -64,14 +63,8 @@ def test_6k_exhibit_with_a_bare_number_is_read_from_its_own_cover():
 
 
 def test_newsroom_release_is_results_only_when_it_reports_them():
-    assert re.search(r'(?:reports|announces) .*financial results', 'NVIDIA Announces Financial Results for Second Quarter Fiscal 2027', re.I)
-    assert assemble_newsroom_category('NVIDIA Announces Financial Results for Second Quarter Fiscal 2027') == 'T1'
-    assert assemble_newsroom_category('NVIDIA Sets Conference Call for Second-Quarter Financial Results') == 'T6'
-
-
-def assemble_newsroom_category(title):
-    """The newsroom rule as written in assemble.nvidianews_items (kept in one place there; mirrored for the test)."""
-    return 'T1' if re.search(r'(?:reports|announces) .*financial results', title, re.I) and not re.search(r'conference call', title, re.I) else 'T6'
+    assert assemble.newsroom_category('NVIDIA Announces Financial Results for Second Quarter Fiscal 2027') == 'T1'
+    assert assemble.newsroom_category('NVIDIA Sets Conference Call for Second-Quarter Financial Results') == 'T6'
 
 
 def test_video_pages_are_not_full_articles():

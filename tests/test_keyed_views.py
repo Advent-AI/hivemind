@@ -128,8 +128,8 @@ def test_a_basis_of_n_a_matches_either_basis_and_gaap_never_matches_non_gaap(tmp
 
 def test_reference_aliases_do_not_authorize_scope_replacement():
     # D155: an alias is a search hint, not authority to replace a narrower or broader scope.
-    assert UNIVERSE.canonical_scope('ai-capex', 'spend_total', 'top 5 cloud providers and hyperscalers CapEx') == 'top 5 cloud providers and hyperscalers CapEx'
-    assert UNIVERSE.canonical_scope('NVDA', 'event', 'H200 China', 'licence') == 'H200 China'
+    assert UNIVERSE.scope_and_source('ai-capex', 'spend_total', 'top 5 cloud providers and hyperscalers CapEx')[0] == 'top 5 cloud providers and hyperscalers CapEx'
+    assert UNIVERSE.scope_and_source('NVDA', 'event', 'H200 China', 'licence')[0] == 'H200 China'
 
 
 def test_a_level_and_a_growth_rate_of_the_same_measure_are_two_quantities(tmp_path):

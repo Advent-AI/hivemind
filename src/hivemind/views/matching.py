@@ -7,13 +7,11 @@ matching-v1 asks and answers in Chinese; matching-v2 and later ask and answer in
 request text and the retry note follow the prompt version; every answer is checked in the canonical vocabulary."""
 import dataclasses
 import json
-import os
 import re
 
 from .. import config, model, vocabulary
 from . import identity, store
 
-PROMPTS = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
 OUTCOMES = vocabulary.CANDIDATE_OUTCOMES
 EVIDENCE_OUTCOMES = vocabulary.EVIDENCE_OUTCOMES
 LEGACY_OUTCOMES = list(vocabulary.LEGACY['candidate_outcome'])
@@ -86,16 +84,6 @@ def ladder_direction(rungs):
     if len(known) < 2 or known[0] == known[-1]:
         return None
     return 1 if known[0] < known[-1] else -1
-
-
-def same_orientation(previous, candidate):
-    """06-views: a successor's ladder keeps the predecessor's direction. Asset views carry the fixed labels, so equal
-    labels settle it; a theme view's labels are results that change with the period, so the direction of the numbers
-    is compared instead, and an undecidable pair is left to the model."""
-    if [vocabulary.canonical('label', r['label']) for r in previous] == [vocabulary.canonical('label', r['label']) for r in candidate]:
-        return True
-    before, after = ladder_direction(previous), ladder_direction(candidate)
-    return before is None or after is None or before == after
 
 
 @dataclasses.dataclass

@@ -7,12 +7,10 @@ judging-v1 and v2 ask and answer in Chinese; judging-v3 and later ask and answer
 request text and the retry note follow the prompt version; every answer is stored in the canonical vocabulary."""
 import dataclasses
 import json
-import os
 
 from .. import config, model, vocabulary
 from . import store
 
-PROMPTS = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
 PUSHES = vocabulary.PUSHES
 LEGACY_PUSHES = list(vocabulary.LEGACY['push'])
 ENGLISH_FROM = 3                  # the first judging prompt version written in English
@@ -176,19 +174,6 @@ def _record(conn, cfg, view_id, seq, item, answer):
                                 request_sha256=answer.request_sha256, publication_day=item['publication_day'])
     conn.commit()
     return {'view_id': view_id, 'judgement_id': judgement_id, 'rung': data['rung'], 'changed': data['changed'], 'cost': answer.cost_usd, 'cached': answer.cached}
-
-
-def judge_one(archive, cfg, conn, view_id, seq, item, *, transport=None):
-    system, user = build_prompt(conn, view_id, cfg.rejudging.prompt_version)
-    schema = schema_for(cfg.rejudging.prompt_version)
-    note = ''
-    for attempt in range(2):
-        answer = model.call(archive, cfg, cfg.rejudging, system, user + note, schema, 'judgement', 'judge', transport=transport)
-        errors = check_answer(conn, view_id, answer.data)
-        if not errors:
-            return _record(conn, cfg, view_id, seq, item, answer)
-        note = retry_note(cfg.rejudging.prompt_version, errors)
-    raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))
 
 
 JUDGE_WORKERS = 6

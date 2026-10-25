@@ -23,8 +23,6 @@ LEGACY = {
     'direction': {'对方第一格是看多': 'first_is_bullish', '对方最后一格是看多': 'last_is_bullish', '同向': 'same', '反向': 'opposite'},
     'label': {'强烈看多': 'Strongly bullish', '看多': 'Bullish', '中性': 'Neutral', '看空': 'Bearish', '强烈看空': 'Strongly bearish', '是': 'Yes', '否': 'No'},
 }
-CANONICAL = {'kind': KINDS, 'tier': TIERS, 'candidate_outcome': CANDIDATE_OUTCOMES, 'evidence_outcome': EVIDENCE_OUTCOMES,
-             'push': PUSHES, 'direction': DIRECTIONS, 'label': ASSET_LABELS + YES_NO}
 
 
 def canonical(field, value):

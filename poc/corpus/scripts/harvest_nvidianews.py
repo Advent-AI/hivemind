@@ -15,9 +15,6 @@ from common import RAW, WINDOW_START, WINDOW_END, fetch, decode, page_text, titl
 
 OUT = os.path.join(RAW, 'nvidianews')
 SITEMAP = 'https://nvidianews.nvidia.com/sitemap.xml'
-MONTHS = {m: i for i, m in enumerate(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-                                      'September', 'October', 'November', 'December'], start=1)}
-DATE = re.compile(r'(January|February|March|April|May|June|July|August|September|October|November|December) (\d{1,2}), (\d{4})')
 
 
 def sitemap_entries():
@@ -47,9 +44,8 @@ def run():
     entries = sitemap_entries()
     # The sitemap's lastmod is not the publish date (a first pass with a 30-day margin found 36 releases where the
     # listing shows several a day), so every /news/ URL is visited once and dated from its own page.
-    margin = ''
     candidates = list(entries)
-    log('sitemap urls', len(entries), 'candidates with lastmod >=', margin, ':', len(candidates))
+    log('sitemap urls', len(entries), 'candidates', len(candidates))
     for lastmod, url in sorted(candidates, reverse=True):
         if url in have:
             continue

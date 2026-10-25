@@ -82,23 +82,23 @@ def piece_question(text):
             'instructions': 'How does the INCOMING PIECE relate to the STORED PIECE below, already under the same thesis? Use only the supplied text. STORED PIECE:\n' + text}
 
 
+def can_succeed(conn, view_id, key, c):
+    """06-views succession: the candidate asks the same object's quantity (no typed field conflicts: measure, event type, a stated
+    basis or unit, a code-owned scope) for a later period that does not overlap, and the thesis has no successor yet."""
+    return bool(key) and (store.view(conn, view_id) or {}).get('object_id') == c['object'] \
+        and not identity.conflicts(key, c, merging=False) \
+        and bool(key.get('period_end') and c.get('period_start') and key['period_end'] < c['period_start']) \
+        and not conn.execute('select 1 from successions where succeeds=?', (view_id,)).fetchone()
+
+
 def succession_target(conn, c, listed):
-    """06-views: the same key for a later period, on a thesis without a successor yet, is a succession; decided by code."""
+    """The succession code decides alone: the same scope as well (a model-worded scope that differs goes to the judge)."""
     if not c.get('measure') or not c.get('period_start'):
         return None
     for view_id in listed:
         key = store.view_key(conn, view_id)
-        if not key or (store.view(conn, view_id) or {}).get('object_id') != c['object']:
-            continue
-        if identity.conflicts(key, c, merging=False):          # measure, event type, a stated basis or unit, a code-owned scope (one rule)
-            continue
-        if _universe.scope_key(key.get('scope', '')) != _universe.scope_key(c.get('scope', '')):
-            continue
-        if not key.get('period_end') or key['period_end'] >= c['period_start']:      # a later period that does not overlap
-            continue
-        if conn.execute('select 1 from successions where succeeds=?', (view_id,)).fetchone():
-            continue
-        return view_id
+        if key and _universe.scope_key(key.get('scope', '')) == _universe.scope_key(c.get('scope', '')) and can_succeed(conn, view_id, key, c):
+            return view_id
     return None
 
 
@@ -150,9 +150,8 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
             key = store.view_key(conn, v) if c.get('measure') else None
             if key and identity.conflicts(key, c, merging=False):
                 continue
-            if key and identity.conflicts(key, c, merging=True):
-                if key.get('period_end') and c.get('period_start') and key['period_end'] < c['period_start'] \
-                        and not conn.execute('select 1 from successions where succeeds=?', (v,)).fetchone():     # a later period that does not overlap
+            if key and identity.conflicts(key, c, merging=True):          # the same quantity for another period
+                if can_succeed(conn, v, key, c):
                     outcome, target = 'succession', v
                     break
                 continue
@@ -166,9 +165,7 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
                            reverse=True)
             for _, v in other:
                 key = store.view_key(conn, v) if c.get('measure') else None
-                if key and (store.view(conn, v) or {}).get('object_id') == c['object'] and not identity.conflicts(key, c, merging=False) \
-                        and key.get('period_end') and c.get('period_start') and key['period_end'] < c['period_start'] \
-                        and not conn.execute('select 1 from successions where succeeds=?', (v,)).fetchone():
+                if can_succeed(conn, v, key, c):
                     outcome, target = 'succession', v
                     break
         if outcome == 'new':

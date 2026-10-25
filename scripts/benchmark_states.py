@@ -11,12 +11,13 @@ Each arm's label names its section in the golds.
 import argparse, collections, json, pathlib, sqlite3, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'src'))
+from hivemind.model import PRICES  # noqa: E402  (the published rates' one owner)
 DEFAULT_ARMS = ['control=poc/data/english-groups4-2026-10-25', 'jev=poc/data/english-jev2-2026-10-25']
 ARMS = {}
 WEEK_GOLD = 'poc/eval/gold/week-benchmark-2026-10-25.json'
 SEED_GOLD = 'poc/eval/gold/evidence-decisions-seed-2026-10-25.json'
 ORACLE = 'poc/reports/2026-10-25-recall-oracle/summary.md'
-PRICES = {'gpt-6-luna': (0.10, 0.50), 'jev-1.14.0': (0.042, 0.0)}
 
 
 def ro(path):
@@ -124,7 +125,7 @@ def stage_costs(archive_path, since=None, version=None):
     clauses = ([f"created_at >= '{since}'"] if since else []) + ([f"config_version = '{version}'"] if version else [])
     where = ('where ' + ' and '.join(clauses)) if clauses else ''
     for r in conn.execute(f'select purpose, model, count(*) n, sum(input_tokens) i, sum(output_tokens) o, sum(seconds) s from model_calls {where} group by purpose, model'):
-        p = PRICES.get(r['model'], (0.0, 0.0))
+        p = PRICES[r['model']]                     # an unpriced model stops the report
         out[f"{r['purpose']} {r['model']}"] = {'calls': r['n'], 'seconds': round(r['s'] or 0), 'cost': round((r['i'] or 0) / 1e6 * p[0] + (r['o'] or 0) / 1e6 * p[1], 4)}
     return out
 
@@ -142,8 +143,6 @@ def threshold_sweep(archive_path, thresholds=(0.4, 0.5, 0.6, 0.7)):
         rel_qs = [a for q, a in answers.items() if q.startswith('rel__')]
         if piece_qs:
             pieces += 1
-            best_same = max(a['probabilities']['same_statement'] for a in piece_qs)
-            best_sup = max(a['probabilities']['supersedes'] for a in piece_qs)
             for t in thresholds:
                 if any(a['choice'] == 'same_statement' and a['probabilities']['same_statement'] >= t for a in piece_qs):
                     repeats[t] += 1
@@ -218,8 +217,11 @@ def main():
     seed = ''
     if not args.no_seed:
         for arm in (A, B):
-            seed += subprocess.run([sys.executable, str(ROOT / 'scripts/score_evidence_gold.py'), '--gold', seed_golds[arm], '--ledger', f"{arm}={ARMS[arm]}"],
-                                   capture_output=True, text=True, cwd=ROOT).stdout + '\n'
+            scored = subprocess.run([sys.executable, str(ROOT / 'scripts/score_evidence_gold.py'), '--gold', seed_golds[arm], '--ledger', f"{arm}={ARMS[arm]}"],
+                                    capture_output=True, text=True, cwd=ROOT)
+            if scored.returncode != 0:                 # never publish a report whose seed section failed
+                sys.exit(f'the evidence scorer failed for {arm}:\n{scored.stderr[-2000:]}')
+            seed += scored.stdout + '\n'
         md += ['### Seed (golds: ' + ', '.join(f'{a} `{pathlib.Path(g).name}`' for a, g in seed_golds.items()) + ')', '', '```', seed.strip(), '```', '']
     ev = gold[args.evidence_key]
     md += ['### Window samples (all replacements + repeats + new per arm, read from the texts)', '', f'| state | {A} right/wrong/debatable | {B} right/wrong/debatable |', '|---|---|---|']

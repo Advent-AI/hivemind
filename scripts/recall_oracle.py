@@ -11,7 +11,6 @@ sys.path.insert(0, str(ROOT / 'src'))
 from hivemind import config, jev, model  # noqa: E402
 from hivemind.views import jev_matching, matching  # noqa: E402
 
-PRICE = 0.042
 
 
 def ro(path):
@@ -65,8 +64,6 @@ def main():
         for x in c['in_force'][:200]:
             a = answer.data[f'piece__{c["view"]}__{x}']
             scored.append((a['probabilities']['same_statement'], a['probabilities']['supersedes'], a['choice'], x))
-        same = sorted(scored, reverse=True)
-        best = same[0]
         inside_best = max((s for s in scored if s[3] in c['listed']), default=(0, 0, '', ''))
         outside_best = max((s for s in scored if s[3] not in c['listed']), default=(0, 0, '', ''))
         results.append({**{k: c[k] for k in ('seq', 'input_id', 'eid', 'view', 'listed')}, 'in_force_n': len(c['in_force']), 'decision': c['decision']['outcome'],

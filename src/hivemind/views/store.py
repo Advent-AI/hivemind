@@ -313,11 +313,6 @@ def is_replaced(conn, evidence_id):
     return bool(conn.execute('select 1 from replacements where old_evidence_id=?', (evidence_id,)).fetchone())
 
 
-def replaced_by(conn, evidence_id):
-    row = conn.execute('select new_evidence_id from replacements where old_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
-    return row['new_evidence_id'] if row else None
-
-
 def predecessor_of(conn, evidence_id):
     row = conn.execute('select old_evidence_id from replacements where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
     return row['old_evidence_id'] if row else None
@@ -385,14 +380,6 @@ def last_check(conn, view_id):
         return row['publication_day'], row['input_id']
     row = conn.execute('select s.publication_day, s.input_id from evidence_links l join evidence_sources s on s.evidence_id=l.evidence_id where l.view_id=? order by s.id desc limit 1', (view_id,)).fetchone()
     return (row['publication_day'], row['input_id']) if row else (None, None)
-
-
-def lineage_of_view(conn, view_id):
-    ids = [r['input_id'] for r in conn.execute('select distinct s.input_id from evidence_links l join evidence_sources s on s.evidence_id=l.evidence_id where l.view_id=? order by s.id', (view_id,))]
-    created = conn.execute('select created_from_input from views where view_id=?', (view_id,)).fetchone()
-    if created and created['created_from_input'] not in ids:
-        ids.insert(0, created['created_from_input'])
-    return ids
 
 
 def complete_day(conn, day, seq, at):
