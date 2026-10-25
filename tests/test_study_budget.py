@@ -11,7 +11,6 @@ from hivemind import model
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'poc'))
 from concurrency_study.budget import BudgetError, GuardedTransport, charge, envelope
-from concurrency_study.smoke import call_job
 
 REQUEST = {'model': 'gpt-6-luna', 'messages': [], 'max_completion_tokens': 16000}
 
@@ -150,46 +149,6 @@ def test_cancellation_during_preparation_never_dispatches(tmp_path):
     assert calls == []
     assert guard.summary()['attempts'][0]['state'] == 'not_sent'
     assert guard.summary()['held_microdollars'] == 0
-
-
-def test_later_schema_failure_closes_admission_before_earlier_dispatch(tmp_path):
-    """Any-worker failure: waiting on input order cannot defer closing admission."""
-    from hivemind import config
-    cfg = config.load(Path(__file__).resolve().parents[1] / 'poc/config/poc-v23.json')
-    setting = cfg.extraction['T1']
-    schema = {'type': 'object', 'required': ['answer'], 'properties': {'answer': {'type': 'boolean'}}}
-    jobs = []
-    for name in ('first', 'second'):
-        request = model.build_request(setting, 'system', name, schema, 'extraction', 'openai')
-        jobs.append({'purpose': 'extract', 'original_call_id': name, 'setting': setting,
-                     'system': 'system', 'user': name, 'schema': schema, 'request_sha256': model.request_identity(request)[1]})
-    prepared, release = threading.Event(), threading.Event()
-    sent = []
-    def prepare(provider, request):
-        name = request['messages'][1]['content']
-        if name == 'first':
-            prepared.set()
-            assert release.wait(5)
-        def send():
-            sent.append(name)
-            result = reply()
-            result['choices'][0]['message']['content'] = '{}' if name == 'second' else '{"answer":true}'
-            return result
-        return send
-    guard = GuardedTransport(tmp_path / 'budget.sqlite', prepare)
-    archive = model.Archive(tmp_path / 'archive.sqlite')
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        first = pool.submit(call_job, jobs[0], archive, cfg, guard)
-        try:
-            assert prepared.wait(5)
-            second = pool.submit(call_job, jobs[1], archive, cfg, guard)
-            with pytest.raises(model.SchemaError):
-                second.result()
-        finally:
-            release.set()
-        with pytest.raises(BudgetError):
-            first.result()
-    assert sent == ['second']
 
 
 def test_request_sized_reservation_bounds_tokens_by_request_bytes():

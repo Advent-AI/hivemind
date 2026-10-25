@@ -46,3 +46,15 @@ def test_a_final_error_is_not_retried_and_retries_are_bounded(tmp_path, monkeypa
     with pytest.raises(RetryableError):
         live('openai', REQUEST)
     assert len(sent) == 3
+
+
+def test_a_trial_passes_only_with_clean_audits_on_both_modes():
+    """D181 review: a failed cross-replay audit stops the study like a table difference does."""
+    from concurrency_study.e2e import passed
+    clean = {'failure': None, 'audit': {'errors': []}, 'cross_replay': {'different_tables': [], 'audit_errors': []}}
+    assert passed(clean)
+    assert not passed(dict(clean, cross_replay={'different_tables': [], 'audit_errors': ['the runner accepted another request: x']}))
+    assert not passed(dict(clean, cross_replay={'different_tables': ['views'], 'audit_errors': []}))
+    assert not passed(dict(clean, audit={'errors': ['not audited']}))
+    assert not passed(dict(clean, failure={'type': 'RuntimeError'}))
+

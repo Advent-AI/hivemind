@@ -30,7 +30,7 @@ The governing design is PRDs 00–06 and 08, with later decisions including D63,
 | Rejudgement | Dependency order, evidence in force plus replaced predecessor, dependency conclusions and prior conclusion for comparison | D63 explicitly changes cadence to once per day before pull, using `round.judge_day` |
 | Pull | Once per calendar day, freeze/close due theses | Only the decided due-date behaviour |
 | Final verdict | Not implemented; settings retained | Separate-step design unresolved |
-| Replay | Items advance by day with future-input guard; cannot replay before a completed day; day-zero snapshot for agents | D159 serial extraction after each preceding write; failures stop the day |
+| Replay | Items advance by day with future-input guard; cannot replay before a completed day; day-zero snapshot for agents | D159: an accepted extraction answers the request built after each preceding write; opt-in `--workers N` (D181) prepares requests early and re-checks each at its turn, 4.46× on the busy July 27 day with the same ledger for the same answers; failures stop the day |
 | Agent layer | Reads day-zero snapshot and later judgements, keeps its own store | Initial consent mode is ask-first |
 | Experience measurements | Changed judgements/exit conditions, last check, event records | Replay cannot measure live latency; settlement-value checks and hit records are later work |
 

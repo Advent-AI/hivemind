@@ -1,0 +1,25 @@
+The most serious finding is a manifest bypass on restart. A failed parallel run can resume serially under a changed configuration and accept its saved handover.
+
+1. **Correctness bugs**
+
+   - **[P1] Serial restart bypasses the manifest.** [replay.py:92](/Users/lchingen/hivemind-parallel-day-2026-10-26/src/hivemind/replay.py:92), [parallel_day.py:94](/Users/lchingen/hivemind-parallel-day-2026-10-26/src/hivemind/parallel_day.py:94). The manifest is checked only when `ParallelDay` runs. I reproduced a writer failure leaving one accepted handover, then changed the configuration. Parallel restart refused it; restart without `day_runner` accepted it and completed the day. **Fix:** persist the parallel-run identity in the ledger and enforce its manifest before routing or recovery, regardless of the selected execution mode.
+
+   - **[P1] Default live retries undercount spending.** [jev.py:43](/Users/lchingen/hivemind-parallel-day-2026-10-26/src/hivemind/jev.py:43), [scripts/replay.py:59](/Users/lchingen/hivemind-parallel-day-2026-10-26/scripts/replay.py:59). The CLI uses default transports, bypassing the study’s per-attempt budget journal. If a response is lost after provider processing, the retry can incur another charge, while the archive records only the successful attempt. An injected truncated-response failure produced two attempts but one archived call. Consequently, archive-based totals and `--cap` omit unknown usage. **Fix:** use persistent per-attempt reservation accounting on this live path and retain failed attempts’ reservations.
+
+   - **[P2] The study can continue after a failed cross-replay audit.** [e2e.py:315](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/e2e.py:315), [e2e.py:387](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/e2e.py:387). The preceding-trial check ignores `cross_replay.audit_errors`. I supplied a result with matching tables but a failed request audit; the next trial reached budget admission. Also, the current trial raises only for execution failures, so validation failures can exit successfully. **Fix:** use one success check covering execution, the main audit, table comparison, and cross-replay audit; enforce it both when finishing and before starting another trial.
+
+2. **Robustness gaps**
+
+   - **[P2] Cancellation can deadlock.** [e2e.py:339](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/e2e.py:339), [budget.py:94](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/budget.py:94). If SIGINT/SIGTERM interrupts the main thread while it holds `guard.lock`—during a serial call or `summary()`—the handler calls `guard.stop()`, which tries to acquire that same non-reentrant lock. I reproduced the blocked handler. **Fix:** keep the signal handler free of journal locking; close admission after safely unwinding the interrupted operation.
+
+3. **Stale code, duplication and bloat**
+
+   - **[P3] Accepted-request verification is duplicated.** [full_day.py:92](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/full_day.py:92) and [e2e.py:151](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/e2e.py:151) separately reconstruct requests, sift answers, and compare handovers. Both share the false-pass behavior described below. **Fix:** merge this into one verification helper used by both harnesses. Delete the unused `re` import at [full_day.py:11](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/full_day.py:11).
+
+4. **Test gaps**
+
+   - **[P2] The proofs verify matching content, not which request supplied the accepted answer.** [e2e.py:161](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/e2e.py:161), [full_day.py:103](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/full_day.py:103). Saving a handover drops its call ID and request hash at [round.py:119](/Users/lchingen/hivemind-parallel-day-2026-10-26/src/hivemind/views/round.py:119). I deliberately supplied a stale handover while the archive also contained an identical empty answer for the current request. Both proof checkers passed. This does **not** establish stale acceptance by the current coordinator; it establishes that these proofs miss that regression. **Fix:** persist the accepted request hash and call ID, check them against the reconstructed request, and add this equal-output stale-answer case.
+
+   - **[P2] The schema test does not verify schema inclusion in extraction identity.** [test_concurrency.py:213](/Users/lchingen/hivemind-parallel-day-2026-10-26/tests/test_concurrency.py:213). Its schema assertion hashes an unrelated dictionary directly. The entire test still passed when I removed `response_format` from extraction-key construction. **Fix:** change only the actual extraction schema while keeping messages fixed, then verify request invalidation and rejection of the old prepared answer.
+
+No files were modified. Eleven existing transport/budget tests passed; the findings above were checked with in-memory reproductions. The full suite was not run because it requires filesystem writes.

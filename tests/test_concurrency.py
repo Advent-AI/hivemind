@@ -1,4 +1,4 @@
-"""D172: the opt-in coordinator preserves ordered knowledge on real temporary storage."""
+"""D172/D181: the parallel day preserves ordered knowledge on real temporary storage."""
 import collections
 import dataclasses
 import json
@@ -12,11 +12,10 @@ import pytest
 
 from test_sequential_replay import CASES, setup_run
 from hivemind import config, extraction, model, replay, vocabulary
+from hivemind.parallel_day import ParallelDay, extraction_key
 from hivemind.views import store
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'poc'))
-from concurrency_study.runner import DayRunner, extraction_key  # noqa: E402
 
 
 def responses(*, reverse=False, fail_first=False, fail_current_second=False, fail_stale_second=False):
@@ -62,7 +61,7 @@ def responses(*, reverse=False, fail_first=False, fail_current_second=False, fai
 
 
 def runner(args, tmp_path):
-    return DayRunner(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=1)
+    return ParallelDay(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=1)
 
 
 def logical_rows(path):
@@ -194,7 +193,7 @@ def test_changed_source_or_configuration_refuses_before_more_calls(tmp_path, cha
         replay.run(**args, transport=forbidden, day_runner=runner(args, tmp_path))
 
 
-def test_group_membership_and_schema_changes_change_the_request_identity(tmp_path):
+def test_group_membership_and_schema_changes_change_the_request_identity(tmp_path, monkeypatch):
     """D172 read set includes group members and the allowed response schema, not just thesis IDs."""
     from test_jev_matching import ledger_with_view, CFG, UNIVERSE
     conn, _ = ledger_with_view(tmp_path)
@@ -211,17 +210,33 @@ def test_group_membership_and_schema_changes_change_the_request_identity(tmp_pat
     assert store.views_for_prompt(conn, ['NVDA']) == shown
     after = extraction_key(CFG, item, item['text'], shown, UNIVERSE, store.groups_for_prompt(conn, ['NVDA'], item['title']))
     assert before != after
-    request = {'messages': [{'content': 'unchanged'}], 'response_format': {'schema': {'enum': ['v1']}}}
-    original = model.request_identity(request)[1]
-    request['response_format']['schema']['enum'].append('v2')
-    assert model.request_identity(request)[1] != original
+    groups = store.groups_for_prompt(conn, ['NVDA'], item['title'])
+    _, system, user, schema = extraction.request_for(CFG, item, item['text'], shown, UNIVERSE, groups)
+    schema_for = extraction.schema_for
+    monkeypatch.setattr(extraction, 'schema_for', lambda version, ids: dict(schema_for(version, ids), description='changed schema only'))
+    _, system2, user2, schema2 = extraction.request_for(CFG, item, item['text'], shown, UNIVERSE, groups)
+    assert (system2, user2) == (system, user) and schema2 != schema
+    assert extraction_key(CFG, item, item['text'], shown, UNIVERSE, groups) != after
 
 
-def test_opt_in_runner_never_implicitly_uses_credentials(tmp_path):
-    """D172 live-launch boundary: the offline POC cannot silently use default network transport."""
+def test_replay_script_runs_the_parallel_day_with_default_transports(tmp_path, monkeypatch):
+    """D181 entry point: `scripts/replay.py --workers` reaches the parallel day and writes the serial ledger."""
+    import runpy
+    serial_dir = tmp_path / 'serial'; serial_dir.mkdir()
+    serial = setup_run(serial_dir)
+    send, _ = responses()
+    replay.run(**serial, transport=send)
     args = setup_run(tmp_path)
-    with pytest.raises(ValueError, match='explicit transport'):
-        replay.run(**args, day_runner=runner(args, tmp_path))
+    send, calls = responses(reverse=True)
+    monkeypatch.setattr(model, 'openai_transport', send)
+    monkeypatch.setattr(model, '_key', lambda provider: pytest.fail('credentials read'))
+    monkeypatch.setattr(sys, 'argv', ['replay.py', '--from', '2026-02-25', '--until', '2026-02-25', '--testdb', args['testdb_path'],
+                                      '--views', args['views_path'], '--archive', str(tmp_path / 'cli-archive.sqlite'),
+                                      '--config', str(ROOT / 'poc/config/poc-v16.json'), '--workers', '2', '--jev-workers', '1'])
+    runpy.run_path(str(ROOT / 'scripts/replay.py'), run_name='__main__')
+    assert (tmp_path / 'manifests' / 'day-2026-02-25.json').is_file()
+    assert sum(name == 'extraction' and second for name, second, _ in calls) == 2
+    assert logical_rows(serial['views_path']) == logical_rows(args['views_path'])
 
 
 def test_current_english_jev_pipeline_preserves_sources_groups_and_call_trace(tmp_path):
@@ -264,7 +279,7 @@ def test_current_english_jev_pipeline_preserves_sources_groups_and_call_trace(tm
                   'cites': list(dict.fromkeys(re.findall(r'^- (e\d+) \[', text, re.M))), 'cites_views': [],
                   'pushes': [], 'changed': True, 'why_changed': 'First judgement.'}
         return {'choices': [{'message': {'content': json.dumps(result)}}]}
-    day = DayRunner(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=2)
+    day = ParallelDay(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=2)
     result = replay.run(**args, transport=send, day_runner=day)
     assert (result['new_views'], result['evidence'], result['judged']) == (1, 2, 1)
     with sqlite3.connect(args['views_path']) as db:
@@ -293,3 +308,26 @@ def test_day_cost_includes_discarded_speculative_calls(tmp_path):
     cost = args['archive'].totals()[1]
     assert args['archive'].totals()[0] == 6  # Two accepted extractions plus one stale extraction, two matches, one judgement.
     assert f'day ${cost:.2f}' in lines[-1]
+
+
+def test_audit_binds_each_handover_to_the_request_the_runner_accepted(tmp_path):
+    """D181 review: the proof checks which request each turn accepted, not only that the handover content matches."""
+    sys.path.insert(0, str(ROOT / 'poc'))
+    from concurrency_study.proof import accepted_requests, handover_errors
+    args = setup_run(tmp_path)
+    send, _ = responses(reverse=True)
+    day = runner(args, tmp_path)
+    replay.run(**args, transport=send, day_runner=day)
+    archive = args['archive'].conn
+    def answer_for(key):
+        row = archive.execute('select answer_json from model_calls where request_sha256=?', (key,)).fetchone()
+        return row[0] if row else None
+    accepted = accepted_requests(day.events)
+    with sqlite3.connect(args['views_path']) as conn:
+        conn.row_factory = sqlite3.Row
+        items = [c['item'] for c in CASES]
+        assert handover_errors(conn, items, args['cfg'], args['universe'], 1, answer_for, accepted)[0] == []
+        stale = [e['before'] for e in day.events if e['event'] == 'stale'][0]
+        accepted[CASES[1]['item']['input_id']] = stale
+        errors = handover_errors(conn, items, args['cfg'], args['universe'], 1, answer_for, accepted)[0]
+    assert errors == ['the runner accepted another request: ' + CASES[1]['item']['input_id']]

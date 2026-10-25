@@ -2,12 +2,15 @@
 """Run the POC replay.
 
   python3 scripts/replay.py --from 2026-02-25 --until 2026-07-23 --views poc/data/<run>/views.sqlite \
-      --archive poc/data/<run>/archive.sqlite [--only NVDA] [--day0 2026-07-24] [--cap 3]
+      --archive poc/data/<run>/archive.sqlite [--only NVDA] [--day0 2026-07-24] [--cap 3] [--workers 16]
 
 The ledger and the archive are named on every run (a new run gets a new dated folder; an existing ledger resumes after
 its last completed day). Defaults: the item window poc/data/items-window-tags2-2026-10-24.sqlite, config
 poc/config/poc-v23.json (D169: extraction v10, Jev matching), universe poc/universe.json. The log goes to stdout and
-replay.log beside the ledger.
+replay.log beside the ledger. `--workers N` (N > 1) processes each day with hivemind.parallel_day: up to N extraction
+requests prepared early and validated against the committed ledger at each item's turn, `--jev-workers` matching
+questions at a time; the ledger equals the serial one for the same answers (D181). Its per-day manifests are written
+beside the ledger. The default is the serial path.
 """
 import argparse
 import os
@@ -16,7 +19,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
 
-from hivemind import config, model, replay, universe  # noqa: E402
+from hivemind import config, model, parallel_day, replay, universe  # noqa: E402
 
 
 def main():
@@ -32,6 +35,8 @@ def main():
     parser.add_argument('--only', default=None, help='comma-separated object ids to restrict the stream to')
     parser.add_argument('--cap', type=float, default=None, help='USD spend cap for this run')
     parser.add_argument('--max-items-per-day', type=int, default=None)
+    parser.add_argument('--workers', type=int, default=1, help='extraction requests prepared at a time; 1 is the serial path')
+    parser.add_argument('--jev-workers', type=int, default=8, help='matching questions sent at a time when --workers > 1')
     args = parser.parse_args()
     os.makedirs(os.path.dirname(args.views), exist_ok=True)
     log_path = os.path.join(os.path.dirname(args.views), 'replay.log')
@@ -45,10 +50,16 @@ def main():
     cfg = config.load(args.config)
     uni = universe.load(args.universe)
     archive = model.Archive(args.archive)
-    log(f'--- replay {args.from_day}..{args.until_day} config {cfg.version}/{cfg.checksum} provider {cfg.provider} universe {uni.version}')
+    day_runner = None
+    if args.workers > 1:
+        day_runner = parallel_day.ParallelDay(os.path.abspath(args.testdb), os.path.join(os.path.dirname(os.path.abspath(args.views)), 'manifests'),
+                                              extraction_workers=args.workers, jev_workers=args.jev_workers)
+    log(f'--- replay {args.from_day}..{args.until_day} config {cfg.version}/{cfg.checksum} provider {cfg.provider} universe {uni.version}'
+        f' workers {args.workers}')
     totals = replay.run(testdb_path=args.testdb, views_path=args.views, archive=archive, cfg=cfg, universe=uni,
                         from_day=args.from_day, until_day=args.until_day, day0=args.day0, spend_cap_usd=args.cap, log=log,
-                        only_objects=set(args.only.split(',')) if args.only else None, max_items_per_day=args.max_items_per_day)
+                        only_objects=set(args.only.split(',')) if args.only else None, max_items_per_day=args.max_items_per_day,
+                        day_runner=day_runner)
     log('totals:', totals)
 
 

@@ -41,3 +41,10 @@ A new journal for this study: $4.00 conservative accounting (request-size input 
 Standard rates), at most 2,000 attempts, up to three attempts per call on network, rate-limit or server errors, each
 failed attempt's reservation held. Published-rate estimate: about $0.08 per trial. The D173–D180 journal and its
 held reservation are not reused.
+
+## Result
+
+[Results](../../../poc/reports/2026-10-26-e2e-parallel/results.md): median 501.8 s → 112.5 s, 4.46× end to end, 5.91×
+for item work; all six trials pass the audit and the cross-replay; drift inside the serial spread. One more live run
+through the product entry point (`scripts/replay.py --workers 16`) took 135.5 s with the same checks clean. The
+read-only code review ([findings](review.txt)) led to five fixes and two recorded non-changes (D181).

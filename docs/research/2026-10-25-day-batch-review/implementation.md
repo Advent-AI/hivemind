@@ -1,6 +1,6 @@
 # D172: isolated concurrency POC, first slice
 
-D180 execution update: the [complete-day and live matching results](../../../poc/reports/2026-10-25-full-day-parallel-r4/results.md) now exercise this implementation on all 53 July 27 inputs. Eight-worker recorded-response execution preserves all 10 logical tables; a six-sample live Jev phase comparison measures a 3.34x median ratio. These are distinct proofs, not a fresh full-pipeline speed measurement.
+D181 update: measured live end to end on the complete July 27 day, 4.46× (median 501.8 s → 112.5 s), with every audit and cross-replay identical ([result](../../../poc/reports/2026-10-26-e2e-parallel/results.md)). The runner now prepares a changed request again right after the commit that changed it, and is the product module `hivemind.parallel_day`, opt-in through `scripts/replay.py --workers N`. The live cost-reservation prerequisite below was met by the study's own journal ([plan](../2026-10-26-e2e-parallel/plan.md)). D180 before it: the [recorded full-day proof](../../../poc/reports/2026-10-25-full-day-parallel-r4/results.md).
 
 Alex accepted the D171 recommendation and asked to flag ordering or production contradictions immediately. This slice implements the offline coordinator and tests. It does not enable concurrent ingestion by default or launch paid calls.
 
@@ -8,7 +8,7 @@ The controlling rule is unchanged: an item's accepted extraction must be a respo
 
 ## Shape and ownership
 
-- `poc/concurrency_study/runner.py`: opt-in callable day runner, bounded extraction lookahead, request validation, immutable worker inputs, manifest and cleanup. Invoked through `replay.run(day_runner=...)`; default remains serial. The POC uses a single coordinator/writer and does not claim support for other processes writing this ledger.
+- `poc/concurrency_study/runner.py` (since D181 `src/hivemind/parallel_day.py`): opt-in callable day runner, bounded extraction lookahead, request validation, immutable worker inputs, manifest and cleanup. Invoked through `replay.run(day_runner=...)`; default remains serial. The POC uses a single coordinator/writer and does not claim support for other processes writing this ledger.
 - `model.request_identity`: one exact serialization/hash function shared by normal calls, Jev calls and validation. Same bytes and keys as before.
 - `extraction.request_for`: one owner for extraction setting, complete prompt and schema; both extraction and validation use it.
 - `round.run(extractor=..., matching_workers=...)`: dependency injection for the POC; the existing checks, two matching phases, writer, completion records, failure handling and daily judging remain the owners.

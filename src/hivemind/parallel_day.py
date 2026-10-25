@@ -1,8 +1,13 @@
-"""D172 offline POC: speculative extraction, validated at ordered commit time.
+"""One day's items with concurrent request preparation and one ordered writer (D172, D181).
 
-The coordinator alone reads/writes the thesis ledger. Workers receive copied
-inputs and only write the thread-safe model archive. Use an explicit offline
-transport; live cost reservation is not implemented by this POC.
+An item's accepted extraction must answer the exact request built from the ledger committed by the items before it,
+as in serial processing (D159). Extraction requests for later items are sent early, from the ledger as it stands;
+after each commit, every waiting request that commit changed is built again and sent again, and at its turn an item
+accepts a prepared answer only if its request is byte-identical to the request built now. Matching questions within
+an item run concurrently and are applied in their planned order. Only this coordinator reads or writes the ledger;
+workers receive copies and write only the thread-safe call archive. Opt-in through `replay.run(day_runner=...)`;
+the default replay stays serial. The run's spend cap is checked after each committed item, so in-flight early
+requests can pass it by at most the worker count's calls.
 """
 import concurrent.futures
 import copy
@@ -12,10 +17,10 @@ import json
 from pathlib import Path
 import time
 
-from hivemind import extraction, model
-from hivemind.views import round as rounds, store
+from . import extraction, model
+from .views import round as rounds, store
 
-ROOT = Path(__file__).resolve().parents[2]
+PACKAGE = Path(__file__).resolve().parent
 
 
 def digest(path):
@@ -31,8 +36,8 @@ def environment_key(cfg, universe):
 
 
 def runtime_key():
-    files = sorted((ROOT / 'src/hivemind').rglob('*.py')) + sorted((ROOT / 'src/hivemind/prompts').glob('*')) + [Path(__file__)]
-    return model.request_identity({str(path.relative_to(ROOT)): digest(path) for path in files if path.is_file()})[1]
+    files = sorted(PACKAGE.rglob('*.py')) + sorted((PACKAGE / 'prompts').glob('*'))
+    return model.request_identity({str(path.relative_to(PACKAGE.parent)): digest(path) for path in files if path.is_file()})[1]
 
 
 def item_key(item):
@@ -44,8 +49,8 @@ def extraction_key(cfg, item, text, shown, universe, groups):
     return model.request_identity(model.build_request(setting, system, user, schema, 'extraction', cfg.provider))[1]
 
 
-class DayRunner:
-    """Opt-in day_runner for replay.run; defaults remain on the serial path."""
+class ParallelDay:
+    """A `day_runner` for replay.run: per-day manifest, bounded early extraction, validated ordered commits."""
 
     def __init__(self, source_path, manifest_dir, *, extraction_workers=2, jev_workers=2):
         for workers in (extraction_workers, jev_workers):
@@ -69,23 +74,21 @@ class DayRunner:
         entries = [{'input_id': item['input_id'], 'seq': route.sequence_no, 'hash': item_key(item)} for item, route in items]
         if not path.exists():
             if conn.execute("select 1 from processing_steps where publication_day=? and step in ('extracted','written','handed_over') limit 1", (day,)).fetchone():
-                raise ValueError('cannot adopt a partially processed day without its concurrency manifest')
+                raise ValueError('cannot adopt a partially processed day without its parallel-day manifest')
             with path.open('x', encoding='utf-8') as handle:
                 json.dump(dict(metadata, inputs=entries), handle, sort_keys=True)
         try:
             saved = json.loads(path.read_text())
         except (OSError, ValueError) as error:
-            raise ValueError('unreadable concurrency manifest; refusing to guess its inputs') from error
+            raise ValueError('unreadable parallel-day manifest; refusing to guess its inputs') from error
         if {k: saved.get(k) for k in metadata} != metadata:
-            raise ValueError('concurrency manifest source, configuration or runtime changed')
+            raise ValueError('parallel-day manifest source, configuration or runtime changed')
         remaining = [entry for entry in saved['inputs'] if not store.is_processed(conn, entry['input_id'])]
         if remaining != entries:
-            raise ValueError('concurrency manifest input order or content changed')
+            raise ValueError('parallel-day manifest input order or content changed')
         return metadata
 
     def __call__(self, conn, archive, cfg, universe, items, *, day, transport=None, log=print):
-        if transport is None:
-            raise ValueError('offline concurrency POC requires an explicit transport; live cost reservation is not implemented')
         if cfg.matching.engine != 'jev' and self.jev_workers != 1:
             raise ValueError('parallel matching is only implemented for Jev')
         metadata = self._manifest(conn, cfg, universe, items, day)

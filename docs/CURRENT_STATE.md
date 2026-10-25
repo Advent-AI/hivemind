@@ -1,12 +1,10 @@
 # Current state
 
-As of October 25, 2026; decisions through D180. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
+As of October 26, 2026; decisions through D181. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
 
 ## Status
 
-Sequential request-construction cleanup was committed and pushed separately as [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) on `cleanup/sequential-requests`. It preserves all 3,595 archived request identities; 123 sequential product/corpus tests pass. It is not merged into `main`; experimental changes remain local.
-
-The tested NAVER prompt candidate and its six-sample evidence are committed and pushed as [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) on `fix/thesis-admission-v11`, based on the sequential cleanup. That branch contains no concurrent runtime. It is not merged or enabled by default.
+Branch `feat/parallel-day` holds the parallel day (D172–D181) on top of the two earlier pushed branches: the sequential request-construction cleanup [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) (all 3,595 archived request identities preserved) and the NAVER prompt candidate [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) (inactive by default). None of the three is merged into `main`.
 
 The English pipeline runs end to end. Extraction v10 (`role-v10`, `categories-v10`, `gpt-6-luna`) reads each item whole and declares groups for ongoing matters (D163–D166); matching runs on TypeSafe's Jev `jev-1.14.0` by default (D169, `poc/config/poc-v23.json`), with the generative matcher kept as the configured alternative (`poc-v23-llm`); the writer owns the replacement and succession rules (D167, D168); judging runs once a day before pull mode (D63).
 
@@ -17,7 +15,8 @@ The phase was closed out with a code review (D170, log row 50). The ledgers, arc
 ## Adopted implementation
 
 - D155: reference lists no longer veto candidates; full-match period handling, exact scopes, event identity, same-answer coalescing, old-key trust and atomic write and resume.
-- D159: each item finishes writing before the next extracts.
+- D159: an item's accepted extraction answers the request built after every earlier item finished writing.
+- D172, D181: the parallel day (`hivemind.parallel_day`), opt-in with `scripts/replay.py --workers N`: later items' extraction requests are prepared early and prepared again right after any commit that changes them; each item accepts only a byte-identical request at its turn; matching questions within an item run concurrently and apply in order; one writer. The serial path stays the default.
 - D163–D166: the English runtime (`vocabulary.py`, canonical values with legacy conversion on read), the fresh English library, research groups declared during extraction with aliases and decided by names in code (`views/groups.py`).
 - D167–D169: no hard-coded identity; the measure vocabulary gains `market_size` and `project_cost`; the Jev engine (`views/jev_matching.py`, client `jev.py`) with the PRD's replacement definition, the shared succession rule and an answer for "the same quantity, another period"; a repeat may name the piece shown for the same evidence under another thesis.
 - Idea service: the adopted two-call contract `poc-v9` / `idea-v7`, reasoning `none` (D135/D145); limits in the [Idea specification](poc/idea-card.md). The service still reads the sealed Chinese ledger with its search index.
@@ -33,21 +32,20 @@ The [pipeline overview](poc/pipeline-plan.md) separates the implementation from 
 - The classification simulation keeps the limits in [the preserved defect list](research/2026-10-25-english/classification-existing-defects.txt); a passing simulation is not classification acceptance.
 - Corpus: 97 official notices with 56 body and filename collisions need the recorded re-fetch before a rebuilt corpus is relied on.
 - The older intermittent search-test failure is untraced; the Docker external-connectivity restriction needs a current check before a container model run.
+- Parallel day: the spend cap is checked per committed item, so in-flight early requests can pass it by at most the worker count's calls; the cap counts archived calls, not a retried attempt whose reply was lost (as for the OpenAI client). Re-prepared requests cost about 24% more per day.
 - Not yet done: the service and UI switch to the English ledger (a new search index), `matching-v4` for dependencies in the generative matcher.
 
 Pull mode and the final verdict remain earlier drafts to redesign together. The decided rule freezes the current state and reasons at the due date and closes the thesis. Upstream supply and human-review handling remain deferred.
 
-## Parallel POC: implementation-plan execution completed
+## Parallel day (D172–D181)
 
-D180 followed the existing [implementation plan](research/2026-10-25-day-batch-review/implementation.md), without changing extraction semantics. The [full result](../poc/reports/2026-10-25-full-day-parallel-r4/results.md) covers all 53 July 27 inputs. Sequential and eight-worker recorded-response execution produce identical views, rungs, evidence, sources, links, dependencies, succession, groups, memberships and judgments. All 106 accepted handovers match their exact current-prefix requests and archived answers; 10 stale preparations were recomputed. A nonempty-handover mutation fails the audit. The full 156-test suite passes.
+Measured live on the complete July 27 day (53 items), three serial against three parallel trials interleaved ([result](../poc/reports/2026-10-26-e2e-parallel/results.md)): median 501.8 s → 112.5 s, **4.46× end to end**, 5.91× for item work; daily judging (~37–40 s) is the same code in both modes. Every trial's audit is clean; each parallel trial's runner accepted exactly the rebuilt exact-prefix request for all 53 items; each trial's answers replayed through the other mode give an identical ledger. Drift from the recorded sequential golden is inside the serial trials' own spread. The product entry point (`--workers 16`) ran the same day live in 135.5 s with the same checks clean. On recorded answers the parallel day equals the golden in all ten tables (D180, and again on the promoted module).
 
-A separate live comparison uses five identical Jev requests and one fixed snapshot, with three serial and three parallel samples. Median time is 3.959 versus 1.185 seconds (3.340x); actual concurrent provider peak is five. One borderline evidence decision varies in two parallel samples; the identical request's raw probabilities cross the existing threshold, and the other five decisions agree. The result records this variation and does not claim semantic stability or whole-pipeline 10x.
-
-The source fixture was completed under current code because historical matching requests predate D168's criterion correction. Exact cached calls were reused; only missing calls were sent. This fixture-completion time is not reported as a latency control. All 138 protected database files are unchanged. Across the earlier run and this continuation there are 140 of the allowed 144 attempts; $0.088577 in conservative known charges and the original $0.517 unknown-use reservation, total held $0.605577 under the unchanged $1.50 cap. No prompt, matching rule, threshold, default runtime or working library was changed.
+What remains of the time is not scheduling: items that depend on the item just before them (~45–60 s), daily judging (D63), and each item's two matching phases in order (~17 s). Ten times end to end on this day would need those to shrink.
 
 ## Next task
 
-Measure fresh end-to-end latency on the complete fixed workload before claiming a whole-pipeline speedup or promoting the mode. Keep the full-day structural proof and the live matching-throughput proof separate. Existing extraction findings remain recorded; they are not a new prerequisite work order for the concurrency task. No further paid call is launched by this status update.
+Alex's choice whether the parallel day becomes the replay default (lean: yes at 16 workers: same ledger for the same answers, 4.46× faster, about 24% more cost). No paid run is open.
 
 ## Previous experiments
 

@@ -30,6 +30,10 @@ Each folder holds `views.sqlite` (the ledger), `archive.sqlite` (every model and
 
 `keyed-2026-10-25/` (the keyed-views rebuild, D155+), `sealed-2026-10-24-run3-*` (sealed ledgers with their own `SHA256SUMS`), `old-2026-10-23-run*`, `service/` (the service's idea archive, search index and timing runs), and the loose `views-2026-10-25-v1*.sqlite`, `archive.sqlite`, `views.sqlite` files at the top of `poc/data/`.
 
+## Parallel-day studies (D172–D181)
+
+The SQLite ledgers, archives and budget journals of the concurrency studies stay on disk, ignored by each report folder's `.gitignore`; the reports, summaries and per-trial results are in Git. Inputs and the recorded golden: `poc/reports/2026-10-25-full-day-canonical/` (current-code sequential fixture of July 27: `views.sqlite`, `archive.sqlite`) and `poc/reports/2026-10-25-full-day-parallel-r4/` (start-of-day `baseline.sqlite`, the day's `items.sqlite`, the golden `serial/views.sqlite`). The live study: `poc/reports/2026-10-26-e2e-parallel/live/` (`inputs/`, one folder per trial with `views.sqlite`, `archive.sqlite` and its `cross-replay/`, and `budget.sqlite`). Earlier studies: `2026-10-25-api-smoke`, `-ingestion-smoke`, `-ingestion-v11`, `-within-item-parallel`, `-full-day-parallel*`.
+
 ## Traces and reports
 
 Per-item trace pages are generated from a ledger and its archive by `scripts/trace_items.py`; the ones built this phase stay on disk under `poc/reports/*/trace*/` and are git-ignored. The benchmark reports, probes and recall oracles of rows 41–49 are in `poc/reports/2026-10-25-*` (in Git, except the three recall-oracle call archives `poc/reports/2026-10-25-recall-oracle*/archive.sqlite`, 6–10 MB each, which stay on disk and in the backup); the golds they score against are in `poc/eval/gold/` with `SHA256SUMS`.

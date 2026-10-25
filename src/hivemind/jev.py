@@ -2,6 +2,7 @@
 questions}`; each question is `noul` (yes/no → a probability), `choice` (labelled options → `choice`, `probabilities`,
 `confidence`) or `score`. Every call is archived in `model_calls` like every other model call, keyed by the request's
 digest, so a byte-identical request is served from the archive; input is priced from `model.PRICES`, output is free."""
+import http.client
 import json
 import os
 import time
@@ -14,6 +15,7 @@ from . import model
 ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
 KEY_NAME = 'TYPESAFE_API_KEY'
 RETRY_STATUSES = {429, 529}
+ATTEMPTS = 3
 
 
 def _key():
@@ -24,23 +26,24 @@ def _key():
 
 
 def transport(request, timeout=60):
-    """POST the request; one retry after a pause on a rate-limit or overload status; any other failure is a TransportError.
-    The body is the same sorted text the archive digests, so a cache hit is byte-identical to what was sent."""
+    """POST the request; up to three attempts, pausing before each retry, on a rate-limit or overload status or a
+    connection that fails without a reply; any other failure is a TransportError. The body is the same sorted text the
+    archive digests, so a cache hit is byte-identical to what was sent."""
     body = json.dumps(request, sort_keys=True, ensure_ascii=False).encode('utf-8')
     key = _key()
-    for attempt in range(2):
+    for attempt in range(ATTEMPTS):
         req = urllib.request.Request(ENDPOINT, body, {'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'})
         try:
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 raw = response.read()
             break
         except urllib.error.HTTPError as error:
-            if error.code in RETRY_STATUSES and attempt == 0:
-                time.sleep(2)
-                continue
-            raise model.TransportError(f'Jev HTTP {error.code}') from None
-        except (urllib.error.URLError, OSError) as error:
-            raise model.TransportError(f'Jev transport failed: {type(error).__name__}') from None
+            if error.code not in RETRY_STATUSES or attempt == ATTEMPTS - 1:
+                raise model.TransportError(f'Jev HTTP {error.code}') from None
+        except (urllib.error.URLError, OSError, http.client.HTTPException) as error:   # a dropped or truncated reply
+            if attempt == ATTEMPTS - 1:
+                raise model.TransportError(f'Jev transport failed: {type(error).__name__}') from None
+        time.sleep(2 * (attempt + 1))
     if key.encode('utf-8') in raw:
         raise model.TransportError('Jev response echoed the credential; not archived')
     return json.loads(raw.decode('utf-8'))

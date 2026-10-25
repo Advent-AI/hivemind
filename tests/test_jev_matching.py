@@ -4,6 +4,8 @@ import json
 import os
 import sys
 
+import pytest
+
 from test_keyed_views import ITEM, UNIVERSE, candidate
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -195,3 +197,39 @@ def test_the_judge_can_name_the_same_quantity_for_another_period(tmp_path):
     earlier = dict(reworded, period_start='2025-02-01', period_end='2026-01-31', year='FY2026', due_day='2026-02-28')
     answer = jev_matching.decide(model.Archive(str(tmp_path / 'a2.sqlite')), CFG, conn, ITEM, [candidate('c6', **earlier)], [], matching.Lists({'c6': ['v1']}, {}), [], transport=scripted(script))
     assert answer.data['candidates'][0]['outcome'] == 'new'                        # an earlier period cannot be chained after
+
+
+@pytest.mark.parametrize('failures, sent, raises', [
+    (['reset'], 2, False), (['reset', 'reset'], 3, False), (['reset'] * 3, 3, True),
+    (['429'], 2, False), (['400'], 1, True)])
+def test_transport_retries_only_replyless_failures_and_rate_limits(monkeypatch, failures, sent, raises):
+    """D181 robustness: a dropped connection (seen 2 of 65 calls at eight parallel matches) is sent again, at most
+    three attempts; a final HTTP status is not retried; credentials are never read."""
+    import io
+    import urllib.error
+    from hivemind import jev
+    monkeypatch.setattr(jev, '_key', lambda: 'test-key')
+    monkeypatch.setattr(jev.time, 'sleep', lambda seconds: None)
+    queue, attempts = list(failures), []
+
+    class Reply(io.BytesIO):
+        def __enter__(self):
+            return self
+        def __exit__(self, *exc):
+            return False
+
+    def urlopen(request, timeout):
+        attempts.append(1)
+        failure = queue.pop(0) if queue else None
+        if failure == 'reset':
+            raise urllib.error.URLError(ConnectionResetError('connection reset by peer'))
+        if failure:
+            raise urllib.error.HTTPError(request.full_url, int(failure), 'failed', {}, io.BytesIO(b''))
+        return Reply(b'{"answers": {}}')
+    monkeypatch.setattr(jev.urllib.request, 'urlopen', urlopen)
+    if raises:
+        with pytest.raises(model.TransportError):
+            jev.transport({'model': 'jev-1.14.0', 'state': '', 'questions': {}})
+    else:
+        assert jev.transport({'model': 'jev-1.14.0', 'state': '', 'questions': {}}) == {'answers': {}}
+    assert len(attempts) == sent

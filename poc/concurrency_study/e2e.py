@@ -22,12 +22,11 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'src'))
 sys.path.insert(0, str(ROOT / 'poc'))
-sys.path.insert(0, str(ROOT / 'docs/research/2026-10-25-day-batch-review'))
-from snapshot_proof import snapshot
-from hivemind import config, extraction, model, replay, testdb, universe
+from hivemind import config, model, replay, testdb, universe
 from hivemind.views import round as rounds, store
 from concurrency_study.budget import GuardedTransport, RetryableError, request_envelope, single_attempt_http
-from concurrency_study.runner import DayRunner, digest, extraction_key, runtime_key
+from hivemind.parallel_day import ParallelDay, digest, runtime_key
+from concurrency_study.proof import accepted_requests, handover_errors
 
 DAY = '2026-07-27'
 FIXTURE = ROOT / 'poc/reports/2026-10-25-full-day-parallel-r4'   # start-of-day ledger, the day's items, recorded golden
@@ -133,7 +132,7 @@ def refuse_network(*args):
     raise AssertionError('cross-replay request missing from the trial archive')
 
 
-def audit(directory, folder, cfg, uni):
+def audit(directory, folder, cfg, uni, events=None):
     """Rebuild every accepted request from its committed prefix and check the ledger's day records; no model call."""
     items = day_items(directory)
     first = first_sequence(directory)
@@ -147,30 +146,13 @@ def audit(directory, folder, cfg, uni):
         hands = list(conn.execute('select * from handovers where seq>=? order by seq', (first,)))
         if [(r['input_id'], r['seq']) for r in hands] != [(i['input_id'], first + n) for n, i in enumerate(items)]:
             errors.append('handover order or count differs from dispatch order')
-        by_id = {i['input_id']: i for i in items}
-        for hand in hands:
-            item = by_id[hand['input_id']]
-            before = snapshot(conn, hand['seq'], exclude_unordered=True)
-            try:
-                objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
-                shown = store.views_for_prompt(before, objects)
-                groups = store.groups_for_prompt(before, objects, item.get('title') or '')
-                key = extraction_key(cfg, item, item['text'], shown, uni, groups)
-            finally:
-                before.close()
-            accepted = archive.execute("select request_json,answer_json from model_calls where request_sha256=? and purpose='extract'", (key,)).fetchone()
-            if not accepted:
-                errors.append('accepted handover has no exact current-prefix request: ' + item['input_id'])
-                continue
-            if model.request_identity(json.loads(accepted['request_json']))[1] != key:
-                errors.append('archived request body differs from its hash: ' + item['input_id'])
-            version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
-            evidence, candidates, dropped, new_groups = extraction.sift_with_groups(
-                json.loads(accepted['answer_json']), item, item['text'], {v['view_id'] for v in shown}, uni,
-                english=extraction.is_english(version), shown_group_ids=[g['group_id'] for g in groups])
-            expected = {'evidence': evidence, 'candidates': candidates, 'dropped': dropped, 'new_groups': new_groups}
-            if json.loads(json.dumps(expected)) != json.loads(hand['handover_json']):
-                errors.append('accepted handover differs from its bound answer: ' + item['input_id'])
+
+        def answer_for(key):
+            row = archive.execute("select request_json,answer_json from model_calls where request_sha256=? and purpose='extract'", (key,)).fetchone()
+            if row and model.request_identity(json.loads(row['request_json']))[1] != key:
+                errors.append('archived request body differs from its hash')
+            return row['answer_json'] if row else None
+        errors += handover_errors(conn, items, cfg, uni, first, answer_for, accepted_requests(events) if events is not None else None)[0]
         for record in conn.execute('select * from match_records where seq>=?', (first,)):
             for call in json.loads(record['shown_json']).get('requests', []):
                 if not archive.execute('select 1 from model_calls where call_id=? and request_sha256=?', (call['call_id'], call['request_sha256'])).fetchone():
@@ -227,7 +209,7 @@ def cross_replay(directory, trial, cfg, uni):
     else:
         provider = ArchiveProvider(folder / 'archive.sqlite')
         transport, unknown = provider, provider
-        runner = DayRunner(directory / 'inputs/items.sqlite', target / 'manifests',
+        runner = ParallelDay(directory / 'inputs/items.sqlite', target / 'manifests',
                            extraction_workers=LIMITS['extraction_workers'], jev_workers=LIMITS['jev_workers'])
     archive = model.Archive(target / 'archive.sqlite')
     try:
@@ -237,7 +219,7 @@ def cross_replay(directory, trial, cfg, uni):
         archive.conn.close()
     expected, actual = logical_rows(folder / 'views.sqlite'), logical_rows(target / 'views.sqlite')
     different = [table for table in expected if expected[table] != actual[table]]
-    checked = audit(directory, target, cfg, uni) if trial.startswith('serial') else None
+    checked = audit(directory, target, cfg, uni, runner.events) if runner else None
     return {'mode': 'serial' if runner is None else 'parallel', 'different_tables': different,
             'tables_compared': len(expected), 'rows_compared': sum(len(v) for v in expected.values()),
             'discarded_unknown_speculations': unknown.unknown if unknown else 0,
@@ -306,13 +288,24 @@ class RecordedPrepare:
         return send
 
 
+def passed(report):
+    """A trial counts only if it ran, its audit is clean, and the other mode rebuilt the same ledger with a clean audit."""
+    crossed = report.get('cross_replay') or {}
+    return (not report.get('failure') and not (report.get('audit') or {}).get('errors', ['not audited'])
+            and crossed.get('different_tables') == [] and not crossed.get('audit_errors'))
+
+
+def interrupt(signum, frame):
+    """Signal handler: unwind only; the trial closes the budget journal after the interrupted call releases its lock."""
+    raise KeyboardInterrupt
+
+
 def run_trial(directory, trial, *, prepare=None):
     directory = directory.resolve()
     if trial not in ORDER or json.loads((directory / 'study.json').read_text()) != contract(directory):
         raise ValueError('unknown trial or changed study contract')
     for name in ORDER[:ORDER.index(trial)]:
-        saved = json.loads((directory / name / 'result.json').read_text())
-        if saved['failure'] or saved['audit']['errors'] or saved['cross_replay']['different_tables']:
+        if not passed(json.loads((directory / name / 'result.json').read_text())):
             raise ValueError(f'prior trial {name} failed; the study stops')
     folder = directory / trial
     if folder.exists():
@@ -324,7 +317,7 @@ def run_trial(directory, trial, *, prepare=None):
     folder.mkdir()
     shutil.copyfile(directory / 'inputs/baseline.sqlite', folder / 'views.sqlite')
     archive = model.Archive(folder / 'archive.sqlite')
-    runner = (DayRunner(directory / 'inputs/items.sqlite', folder / 'manifests', extraction_workers=LIMITS['extraction_workers'],
+    runner = (ParallelDay(directory / 'inputs/items.sqlite', folder / 'manifests', extraction_workers=LIMITS['extraction_workers'],
                         jev_workers=LIMITS['jev_workers']) if trial.startswith('parallel') else None)
     marks = {}
     original_judge_day = rounds.judge_day
@@ -336,10 +329,7 @@ def run_trial(directory, trial, *, prepare=None):
         finally:
             marks['judging_finished'] = time.perf_counter()
 
-    def cancel(signum, frame):
-        guard.stop('cancelled')
-        raise KeyboardInterrupt
-    handlers = {sig: signal.signal(sig, cancel) for sig in (signal.SIGINT, signal.SIGTERM)}
+    handlers = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGINT, signal.SIGTERM)}
     before = guard.summary()
     failure = result = checked = crossed = None
     rounds.judge_day = timed_judge_day
@@ -360,7 +350,7 @@ def run_trial(directory, trial, *, prepare=None):
         archive.conn.close()
     if failure is None:
         try:
-            checked = audit(directory, folder, cfg, uni)
+            checked = audit(directory, folder, cfg, uni, runner.events if runner else None)
             crossed = cross_replay(directory, trial, cfg, uni)
         except Exception as error:      # recorded as a failed check, never as a pass
             crossed = {'different_tables': [f'cross-replay failed: {type(error).__name__}: {str(error)[:300]}']}
@@ -384,8 +374,8 @@ def run_trial(directory, trial, *, prepare=None):
     print(json.dumps({k: report[k] for k in ('trial', 'failure', 'seconds', 'ingestion_seconds', 'judging_seconds', 'provider_peak_inflight',
                                              'retried_attempts', 'published_rate_usd')}
                      | {'audit_errors': report['audit']['errors'], 'cross_replay_different': report['cross_replay']['different_tables']}), flush=True)
-    if failure:
-        raise RuntimeError(f'{trial} failed: {failure}')
+    if not passed(report):
+        raise RuntimeError(f'{trial} failed: {failure or "audit or cross-replay"}')
 
 
 def summarize(directory):

@@ -8,7 +8,6 @@ import argparse
 import copy
 import json
 from pathlib import Path
-import re
 import shutil
 import sqlite3
 import sys
@@ -20,9 +19,10 @@ sys.path.insert(0, str(ROOT / 'src'))
 sys.path.insert(0, str(ROOT / 'poc'))
 sys.path.insert(0, str(ROOT / 'docs/research/2026-10-25-day-batch-review'))
 from snapshot_proof import snapshot
-from hivemind import config, extraction, model, replay, testdb, universe
+from hivemind import config, model, replay, testdb, universe
 from hivemind.views import store
-from concurrency_study.runner import DayRunner, digest, extraction_key
+from hivemind.parallel_day import ParallelDay, digest
+from concurrency_study.proof import accepted_requests, handover_errors
 
 SOURCE = ROOT / 'poc/data/english-v23-jev-2026-10-25'
 ITEMS = ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite'
@@ -89,28 +89,12 @@ class RecordedProvider:
                 self.active -= 1
 
 
-def validate_handovers(conn, items, cfg, uni, calls, first):
+def validate_handovers(conn, items, cfg, uni, calls, first, events=None):
     """Bind every accepted handover to its exact current-prefix request and answer."""
-    by_id = {i['input_id']: i for i in items}
-    accepted = []
-    for hand in conn.execute('select * from handovers where seq>=? order by seq', (first,)):
-        item = by_id[hand['input_id']]
-        before = snapshot(conn, hand['seq'], exclude_unordered=True)
-        objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
-        shown = store.views_for_prompt(before, objects)
-        groups = store.groups_for_prompt(before, objects, item.get('title') or '')
-        key = extraction_key(cfg, item, item['text'], shown, uni, groups)
-        assert key in calls, 'synthetic speculative result became authoritative'
-        version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
-        evidence, candidates, dropped, new_groups = extraction.sift_with_groups(
-            json.loads(calls[key]['answer_json']), item, item['text'], {v['view_id'] for v in shown}, uni,
-            english=extraction.is_english(version), shown_group_ids=[g['group_id'] for g in groups])
-        expected = {'evidence': evidence, 'candidates': candidates, 'dropped': dropped, 'new_groups': new_groups}
-        assert json.loads(json.dumps(expected)) == json.loads(hand['handover_json']), 'handover differs from exact archived answer'
-        accepted.append(key)
-        before.close()
-    assert len(accepted) == len(items)
-    return accepted
+    hit = lambda key: calls[key]['answer_json'] if key in calls else None
+    errors, keys = handover_errors(conn, items, cfg, uni, first, hit, accepted_requests(events) if events is not None else None)
+    assert not errors, errors[:5]
+    return list(keys.values())
 
 
 def run(directory, day, workers, delay_scale, source_directory=SOURCE):
@@ -155,7 +139,7 @@ def run(directory, day, workers, delay_scale, source_directory=SOURCE):
         shutil.copyfile(directory / 'baseline.sqlite', folder / 'views.sqlite')
         provider = RecordedProvider(calls, delay_scale, workers)
         archive = model.Archive(folder / 'archive.sqlite')
-        runner = DayRunner(directory / 'items.sqlite', folder / 'manifests',
+        runner = ParallelDay(directory / 'items.sqlite', folder / 'manifests',
                            extraction_workers=count, jev_workers=count) if count > 1 else None
         started = time.perf_counter()
         result = replay.run(testdb_path=str(directory / 'items.sqlite'), views_path=str(folder / 'views.sqlite'),
@@ -163,7 +147,7 @@ def run(directory, day, workers, delay_scale, source_directory=SOURCE):
             transport=provider, day_runner=runner, log=lambda s: print(name, s, flush=True))
         elapsed = time.perf_counter() - started
         with readonly(folder / 'views.sqlite') as db:
-            accepted = validate_handovers(db, ordered, cfg, uni, calls, first)
+            accepted = validate_handovers(db, ordered, cfg, uni, calls, first, runner.events if runner else None)
             assert len(accepted) == len(rows)
             assert store.last_completed_day(db) == day
         info = {'result': result, 'synthetic_elapsed_seconds': elapsed, 'provider_peak_inflight': provider.peak,
