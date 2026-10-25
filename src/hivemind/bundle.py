@@ -29,7 +29,9 @@ def view_bundle(views_db, item_of, view_id, as_of=None):
     v = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
     if v is None:
         raise KeyError(view_id)
-    rungs = [dict(r) for r in views_db.execute('select position, label, condition from rungs where view_id=? order by position', (view_id,))]
+    columns = {r[1] for r in views_db.execute('pragma table_info(rungs)')}
+    bounds = ', lo, hi' if {'lo', 'hi'} <= columns else ''          # a ledger written before keys has no bounds; the adapter then reads the prose
+    rungs = [dict(r) for r in views_db.execute(f'select position, label, condition{bounds} from rungs where view_id=? order by position', (view_id,))]
     switches = [dict(r) for r in views_db.execute('select open, reason, after_seq from view_switches where view_id=? order by id', (view_id,))
                 if _visible(views_db, r['after_seq'], as_of)]
     for switch in switches:

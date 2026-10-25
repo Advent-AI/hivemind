@@ -1,0 +1,44 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_d160_three_real_inputs_reach_the_same_project ______________
+
+case = (<sqlite3.Connection object at 0x10d5fa740>, <hivemind.model.Archive object at 0x10a87ff70>, Config(version='poc-v16',...供融资。', ...}], 'threads': [{'id': 't1', 'name': 'Ohio project', 'scope': 'OpenAI Ohio financing and deployment'}]}, ...)
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-366/test_d160_three_real_inputs_re0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d6b2cb0>
+
+    def test_d160_three_real_inputs_reach_the_same_project(case, tmp_path, monkeypatch):
+        """D160 input/reader table: all three frozen articles run sequentially in each fresh arm."""
+        _, _, _, _, _, first, followup, new, update = case
+        with sqlite3.connect(f'file:{ohio.ROOT}/poc/data/keyed-2026-10-25/archive-T2.sqlite?mode=ro', uri=True) as source:
+            raw = json.loads(source.execute('select answer_json from model_calls where call_id=460').fetchone()[0])
+        third = {'candidates': [], 'threads': [], 'evidence': [dict(next(e for e in raw['evidence'] if e['id'] == 'e3'), links=['v1'])]}
+        third_match = {'candidates': [], 'evidence': [{'id': 'e3', 'view_id': 'v1', 'outcome': '新证据',
+                        'target_evidence_id': '', 'said_day': '2026-07-28', 'reason': 'controlled third article'}]}
+        ids = (*ohio.ITEM_IDS, 'gnews:eb74b9d16d227f0c2b7a39d8')
+        out = tmp_path / 'three'
+        out.mkdir()
+        (out / 'preflight.txt').write_text('Controlled test; external model only is fake.')
+        role = tmp_path / 'role.txt'
+        role.write_text(ohio.extraction._read('role-v5.txt'))
+        ohio.prepare(out, role_path=role, item_ids=ids, max_requests=54)
+        sent = {}
+    
+        def transport_factory(folder, label, deadline):
+            sent[label] = []
+            return answers(copy.deepcopy([first, new, followup, update, third, third_match]), sent[label])
+    
+        monkeypatch.setattr(ohio, 'BoundedTransport', transport_factory)
+        ohio.run(out)
+        assert set(ohio.read(out / 'status.json').values()) == {'complete'}
+        assert ohio.read(out / 'manifest.json')['max_requests'] == 54
+        for label, requests in sent.items():
+>           assert len(requests) == 6
+E           assert 4 == 6
+E            +  where 4 = len([{'max_completion_tokens': 8000, 'messages': [{'content': '你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点...点的去向和依赖、每条证据的去向。没有的数组交空。target 没有就写空字符串。", 'role': 'user'}], 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', ...}])
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-three-inputs-49aw8hy0/test_parameters.py:202: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"control-1": "complete", "grouped-1": "complete", "control-2": "complete", "grouped-2": "complete", "control-3": "complete", "grouped-3": "complete"}
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-three-inputs-49aw8hy0/test_parameters.py::test_d160_three_real_inputs_reach_the_same_project
+1 failed, 1 passed, 10 deselected in 0.24s

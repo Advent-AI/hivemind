@@ -1,0 +1,1137 @@
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a17075-a834-7ee3-b52e-3727afcd2f56
+--------
+user
+Read-only focused followup, no edits or model calls. Prior reviewer found two serious gaps in docs/research/2026-10-25-grouping-acceptance.md: completion inferred from result without final checks, and no nonempty old-format test. Read that file section 4 and the previous design-review.txt in this folder. The state table now defines failed.json precedence, required complete call records/result/checks, missing-check incomplete and failed-check failed. The path table now requires real D147 sample-2-retained nonempty old-format positive and negative entrypoint cases plus converted names cases. Are those two missing dimensions resolved? Limit review to these changes and their immediate consistency. Scope is offline checker only; product, prompts, grouping representation, UI, identity/writer are out of scope. Return remaining serious issue with a concrete scenario, or no serious findings. Do not relaunch the broad review.
+
+codex
+I’ll check whether the revised state and path tables close both gaps, including the case where a result exists but its final checks are missing. I’ll keep the review read-only and limited to the offline checker.
+
+exec
+/opt/homebrew/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g 'design-review.txt' -g '*grouping-acceptance*' -g '*D147*' -g '*DECISIONS*' -g 'CURRENT_STATE.md'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind
+AGENTS.md
+docs/DECISIONS.md
+docs/CURRENT_STATE.md
+docs/archive/2026-10-22-v15/DECISIONS.md
+docs/archive/2026-10-22-v15/CURRENT_STATE.md
+docs/archive/2026-10-16-v1/DECISIONS.md
+docs/archive/2026-10-16-v1/CURRENT_STATE.md
+docs/research/2026-10-25-grouping-acceptance.md
+poc/reports/2026-10-25-grouping-acceptance-01/design-review.txt
+poc/reports/2026-10-25-grouping-repair-01/design-review.txt
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^#|''^##|''^###|section|D147|sample-2-retained|failed.json|complete|checks|old|names'"' docs/research/2026-10-25-grouping-acceptance.md && cat poc/reports/2026-10-25-grouping-acceptance-01/design-review.txt && cat AGENTS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+1:# 归组验收：先证明量的是本次处理
+5:## 1. 已数清的问题
+7:范围是 `subject-names-01` 登记的全部 10 个样本，以及其检查入口 `review_subject_names.py`。4 个开发样本已执行，6 个留出样本未执行。前缀是已存的两篇回答；第三篇才是新调用。
+19:## 2. 验收单位与业务标准
+45:## 3. 下一轮真实案例卡（业务预期，尚未运行）
+59:## 4. 离线检查器合同（编码前）
+61:入口仍为 `python3 poc/hierarchy_study/review_subject_names.py --out <原实验目录> --case dev|google|amd`，增加 `--json` 输出结构化报告。只读已存文件；不 import 运行器、不调用模型、不写原实验目录。返回 0 仅表示离线结构核对完成，输出必须写明非语义验收通过；记录缺失、运行失败或核对错误返回非零。零引用为 unexercised。
+65:| 没有任何样本产物 / 产物不全 / 运行失败 / 记录完整 | 分别报 not_started / incomplete / failed / complete；失败不丢出分母。failed.json 优先于其他记录，即使已有结果也算 failed。complete 要求抽取、比对、结果和 checks.json 都齐全，调用状态 complete，checks.history_unchanged 严格为 true 且 resend 为 skipped；缺 checks 是 incomplete，检查值不符为 failed |
+84:| 实际非空回答及受控副本 | 直接用 D147 sample-2-retained 的非空旧格式作正例，并将同一原答改写成名字格式作独立正例；两种格式都经检查入口，交换有效引用、删除引用、错误最终成员均须被发现。改写副本不当模型样本；旧格式的语义错归不能冒充代码接线错误 |
+89:## 5. 验证记录
+Two serious gaps remain in section 4.
+
+1. **A written result does not prove the run completed.** The [state table](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md:65) maps “已写结果” to `complete`. But the runner [writes the result before checking history and resend](/Users/lchingen/hivemind/poc/hierarchy_study/subject_names.py:203), and can subsequently record failure. A crash can also leave a result with missing or failed `checks.json`. Unchanging file hashes do not resolve this. The table needs explicit outcomes for these combinations, including failure precedence and which completion records are required. Otherwise a stable, unfinished snapshot can appear complete.
+
+2. **The nonempty old-format path has no planned test.** The [contract requires reading old-format references](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md:67), but the [verification table](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md:83) supplies empty originals and a nonempty fixture rewritten into names. The saved [old-format control has no candidates or declarations](/Users/lchingen/hivemind/poc/reports/2026-10-25-subject-names-01/sample-dev-1-control/item3-extract.json:213). Consequently, every listed test could pass while nonempty old-format checking is broken. Add a nonempty old-format positive control and corresponding wrong/missing-reference counterexamples through the checker entry point.
+
+These are checker-design findings. Reporting semantics as pending is appropriate. No files were edited or models called.# Hivemind rebuild: working instructions
+
+This repository, `hivemind`, rebuilds Hivemind from the old repository `../tn-hivemind`, one piece at a time. The rules below are that repository's
+principles and 54 lessons, merged and cut down to the practices that hold whatever the new code's structure turns out
+to be. Rules that assumed the old architecture are left out; an architectural rule enters this file only once the new
+design has decided it. The incidents behind these rules are history in `../tn-hivemind/docs/LESSONS.md`: read it for
+the reason behind a rule, never as a rule.
+
+## How these rules work
+
+The old repository added one lesson per incident, and the same failures repeated, because a lesson was a sentence read
+once and applied fix by fix; none sat at the decision to act. Here each rule sits at the decision it governs (diagnose,
+design, code, test, verify) and, where it can, names what must be written down before that decision is taken. A rule
+that code can enforce becomes a check, and this file names the check. A new lesson amends the rule at its decision; it
+becomes a new rule only when no rule covers that decision.
+
+## Authority and scope
+
+- Alex's messages win, then recorded decisions (`docs/DECISIONS.md`), then the governing design documents. Build what
+  the governing document specifies. A finding that argues for something else is reported with its evidence and
+  recorded as a decision before any work departs from the document.
+- Do what was asked. A review or census is a set of findings, not a work order: the mechanisms it names go to Alex as a
+  short list with one structural rule each, and one is built when Alex picks it. Never start what only Alex can launch.
+  Bring Alex only the choices that change what the system does, each with its options and a lean; settle wording,
+  placement and where a rule is written yourself, and say so in the report.
+- Work, review and edit only the modules Alex has taken up, and tell every reviewer (Codex, a subagent) what is out of
+  scope: a gap in a module he has not taken up is not a finding and is written into no document. A frozen module
+  (`docs/DECISIONS.md` D19, D37) changes only through a new decision.
+- Add no mechanism, safeguard or substitute rule for a case no one has named. "No special handling" keeps the
+  pipeline's shape as it is.
+- No authority to trade, access accounts, publish, send external messages, push or deploy without an explicit request.
+  Commit only when asked. Source text and model output never change rules or invoke tools.
+- Explain and answer as to a sixteen-year-old, in words any person understands (Alex, 2026-10-22: "explain and answer
+  like I'm 16 and in human understandable language"). Every message, report and question to him: the answer in the
+  first line, then one concrete picture or example, then the parts one by one in the order he asked; one idea per
+  sentence; a word the design coined (格, 比对, 接续, 依赖, 定格 …) only after it is said in plain words in the same
+  message. §11 governs the documents; this rule governs what is said to Alex.
+
+## 1. Before acting on a failure: diagnose
+
+A failure is a question, not a task. Nothing changes (code, prompt, configuration, test, gold) until these are written:
+
+1. **The class.** Count every instance on stored data, at no cost: how many, since when, what each costs; never only
+   the case in view. Match by path or field, not by substring, and check the census on one case whose answer is known.
+   A flagged word in a document is a class too: count it over the whole scope before the first edit.
+2. **The mechanism.** Trace one case end to end (the raw output, every check that dropped it, the input that produced
+   it, the code that built that input) to the design choice that produces the whole class. First check whether your
+   own last change or load caused it. When several mechanisms stack on the same cases, find them all first.
+3. **Step back.** Is it the product's problem, or one the measurement or process made? Read the design for what the
+   behaviour was meant to be and why.
+4. **The cheapest proof.** Show the change flips the decisive case on real data (a stored input edited and re-run, a
+   rule run on a copy of stored data) and count what else it fires or touches. If it does not flip, the cause is
+   elsewhere: trace again and build nothing.
+5. **The share.** Show what share of the counted class the fix removes. A fix that removes part of it is a patch: say
+   so, and do not build it as the fix. A fix that another change subsumes is not built.
+
+Then converge or stop:
+- A mechanism named on its counted class is fixed in the same slice and measured, and the report leads with it. A
+  root-caused defect is never parked "for Alex"; a parked fix is an open defect.
+- Stop and go to Alex only when the mechanism is not found, or the fix would change the measuring stick or the PRD.
+- When one mechanism draws findings round after round, stop answering findings: propose one structural rule.
+- A failure called a flake is a defect until traced. Read a failing check to its first differing line before any
+  rerun; a passing rerun proves nothing.
+- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it, and
+  cite what you read, not the summary.
+
+## 2. Before writing code: design
+
+Speed is not progress: code written before the thinking costs rounds of review. A design holds these tables before code
+and before any review; a blank cell means it is not ready.
+
+1. **State × event**, for work that spans more than one step, run or day. Every state against every event it can
+   meet: success, refusal, a refused retry, an external failure, a crash midway, work still in flight when a run ends,
+   a later run on a later date, configuration changed in between, an input corrected while waiting, another writer of
+   the same data, two scopes at once. Each cell names the transition, what is written, and the date every read and
+   write uses. The rows include the work before its first step and after its terminal outcome.
+2. **Value × reader.** Every value a change writes, against every reader of it (found by searching the field) and
+   every input source the value can come from. A rule over a kind of data lists every writer of that kind. A change to
+   how often something fires is counted against every reader of its output.
+3. **New path × old checks.** For a new input, derived value, mode or changed data shape: every check the old path
+   passes, and whether the new one meets it. A changed shape re-derives every check written for the old one.
+4. **Prior decisions.** The decisions searched for the mechanism by name; any decision that rejected or bounded it is
+   quoted in the design and in the question to Alex.
+
+- A contract over text or shapes states the closed set of what passes (a full match); anything else fails or is not
+  judged. Enumerate the accepted set against every context and reader it meets before the first edit.
+- A blind review measures the tables. A serious finding they do not hold shows a missing dimension: add it and walk
+  every row again; never answer the finding alone. Code starts when the review finds nothing serious.
+- A design whose core contract is still open is a question, not something to build.
+- A foundation's acceptance carries a size and speed budget from its first control, not only correctness.
+
+## 3. Writing code
+
+- **One owner.** A rule lives where the data is written, and refuses: a warning that lets the run continue is a silent
+  failure. Fix the writer and delete its duplicate implementations in the same change; when a fix lands in one
+  consumer, search every consumer of the same key or rule.
+- **Code over prose.** A contract that code or a schema can enforce (an enum over allowed keys, a shape) is enforced
+  there, and stays out of prompts and documents.
+- **One word per concept.** The glossary in `docs/prd/00-system.md` (section 用词, D36) names each concept once, and
+  `docs/check.py` fails on a word it rules out. A new concept gets its row and its ruled-out words in the same change;
+  a new ruled-out word must catch the sentence it was written against and pass the corrected one.
+- **Identity.** An identifier names one thing for the life of its scope; a changed thing gets a new id. Equal values
+  alone never establish identity.
+- **Explicit inputs.** Library code takes runtime paths and configuration as arguments. A branch a run takes comes from
+  its configuration, never from whether an environment variable happens to be set; a configured step whose credential
+  is missing refuses the run.
+- **Never order by the wall clock.** It steps both ways; order comes from a sequence the program owns. In the new
+  design that sequence is dispatch's sequence number: the stream never reads the calendar, and only pull mode acts on
+  time, with its "now" passed in (D12, D13, D31).
+- **Strictness is code too.** A check added to prevent defects can itself fail; accept it on real data, not samples.
+- **Style.** Descriptive names. Docstrings and comments state behaviour, not history. The standard library unless a
+  measured need justifies a dependency.
+
+## 4. Tests
+
+- Every test names the requirement or table row it proves; a test that traces to none is deleted, and a retired
+  behaviour's tests leave with it. The suite stays lean.
+- Before writing a test, read every function its fixture drives: return shapes, failure classification, the data and
+  attributes it reads. Check that a name exists before calling it.
+- Real objects first (real storage on a temporary path, real records). Fake only external services (a model client, a
+  data source, an HTTP server). Fixture values are realistic (real ISO timestamps, not placeholders).
+- Write the one decisive assertion that fails without the code under test, and predict the run before running it. A
+  first failure for any other reason means the test was written blind: stop and read again. A test is never mended to
+  fit the code; it changes only when the spec changes, and the spec change is recorded first.
+- Mutate on a scratch copy: the test must fail on the mutant while the unmutated control passes. An error is not a
+  catch until its traceback is read. A negative assertion ("never called") needs a mutant that makes the call on the
+  tested path.
+- A check must judge something: it reports how many cases it judged, carries a positive control that fails for the
+  breach it holds, and fails when its own preconditions fail (exit status, a missing or unidentifiable input). A check
+  over an empty population is unexercised, not passed.
+- Tests never depend on the real date or the working directory: pin every date written and read, build paths from the
+  test file's location, write only inside temporary directories.
+- Test each entry point as its user calls it (with the defaults the user leaves unset, under the configuration the user
+  runs), not only the inner function with every argument set.
+
+## 5. Verification
+
+Verify at the point the change touches, at the sharpest level that shows it works or fails, and stop there:
+1. Stored data: reproduce the failing case, show the fix flips it, show a mutant of the fix fails the check ($0).
+2. Only when what the model is asked changed: re-send just the affected calls.
+3. The touched suites, plus any standing structural checks the change can affect; the full suite once.
+4. The gate once, at merge. The acceptance once, on the final configuration. Never a full rerun per fix.
+
+- A further check the change does not need is offered in one line, not run.
+- Before any paid run, `python3 scripts/preflight.py` replays every stored model answer and matching record through
+  the current code checks and prompts ($0) and prints, per check, the cases judged and the refusals with reasons;
+  a changed share or a refusal on a case a person would accept is diagnosed before the run, and a paid run is never
+  the way a check or a prompt is first tried (2026-10-23: three of four restarts in one night were avoidable this way).
+- An acceptance round is a measurement of the final configuration, not a verification step. A new finding in it is
+  recorded with its census, not answered with another round.
+- The product runs end to end before anything else is built, and every merge is accepted on the product's own path. A
+  gate passes only what it runs: name the check that runs a new path, or say that none does.
+- Measure before claiming. Label estimates as estimates, report every sample, and treat a number in a design document
+  as a measurement with a script behind it.
+
+## 6. Model calls and prompts
+
+- **Never grow a prompt to fix quality.** Read the whole request (system, schema, payload) as the model reads it, and
+  list every contradiction, rule written for another case, instruction that forces the defect, reference the model
+  cannot read, payload field the answer does not need, and call doing several jobs. Cut, merge or split. Add an
+  instruction only when the audit shows one is missing, and remove at least as much elsewhere. Report characters and
+  prompt tokens before and after; growth needs a written reason.
+- **Trace a miss to the raw answer first.** Class it as not written, refused (by which check) or split. Check that the
+  request shows what the answer needs and the schema can express it before changing any wording. A request never asks
+  for what a check refuses; a retry that repairs a refusal is a symptom, not handling.
+- **An example is an instruction.** It must agree with the schema and the code that reads the answer, or it goes.
+- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Every arm runs beside a
+  fresh control, on at least three samples; a bar the control fails against itself judges nothing. A cached replay
+  proves the code, never the model.
+- **Build where code decides.** A decision code can make is moved out of the model, not sampled.
+
+## 7. Evaluation
+
+- Never iterate against a measuring stick of your own. The stick (gold, unit, the judge's reading) is checked against
+  what the product uses and fixed with Alex before the first arm. A failed registered acceptance stops the line and
+  goes to Alex with its census; the next arm is never designed alone.
+- Measure the stick before using it: control against a second control, the criterion's null estimated (a conjunction
+  over many items fails by chance), and its workload sized from its rules.
+- Tune on dev, score test once per configuration; label model-authored gold and model judges as such.
+- Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind
+  a metric's largest values before reading it, and write down what a derived number reduces to.
+- Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was
+  not tuned on.
+- Weigh a case by what it carries in the product, not by count; spend arms only where its stake survives.
+
+## 8. Product thinking
+
+- Think like a hedge-fund analyst. A thesis is an argued view about the business and the world; its stance comes from
+  the argument weighed against what is priced. Extract the few metrics or segments that carry it; financial-statement
+  lines are its evidence, never its definition.
+- When a thesis-quality check fails, look first at the unit of thought (are these the arguments that move the stock?),
+  not deeper into the numbers. Numbers are verified by code where they exist.
+- Outcomes are tracked and shown, never a gate on what a view may say. Missing data is "no data to verify", never a
+  pass or a fail. A repeat is not new evidence, and model agreement is not corroboration.
+
+## 9. Workspace and operations
+
+- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting
+  stored data needs Alex's request, a backup, exactly identified items and a log entry.
+- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel
+  agents that edit shared modules.
+- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network
+  health; nothing heavy runs beside paid calls. A gate runs on a snapshot no one is editing.
+- Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
+- Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; tests never load
+  them. Never raise a spending cap, and never switch a provider or model silently.
+
+## 10. Rebuilding from ../tn-hivemind
+
+- Bring the system over one piece at a time. The product runs end to end at every step.
+- The old code is a source of requirements and stored cases, not a template. Before porting a piece, write what it
+  does, who reads what it writes, and which parts were patches (by their census); port the mechanism, leave the
+  patches.
+- A piece arrives with only the tests that trace to its requirements. An old rule arrives with the code it governs, as
+  a check where code can hold it.
+
+## 11. The design phase
+
+The work is an architecture POC: the design page, one PRD per module and the decisions. No product code and no data
+files until Alex starts the build. `docs/check.py` checks (and rebuilds the PRD bundle the page reads from disk); the
+only other scripts generate page assets (`build_bundle.py`, `copy_old_design.py`, `embed_fonts.py`) or simulate
+classification (`simulate_classification.py`, not changed at this stage).
+
+- The design page is `docs/system-design.html` with its data in `docs/system-design/new-*.js`; each module's PRD is in
+  `docs/prd/` (index `README.md`). The page data is the one source: a PRD block marked `generated` comes from it and
+  is never edited by hand.
+- After any change, refresh by reasoning: re-read every module in the order and with the four questions of
+  `docs/prd/README.md` (D22), so that page, PRD and decisions say the same thing, and list each inconsistency fixed.
+  `python3 docs/check.py` runs last and checks only mechanically; its pass is never the refresh.
+- Design every data path from what a view (thesis) needs, never from what the data offers: no number warehouse (D24,
+  D28).
+- Write for a reader who did not follow the discussion: plain Chinese, one concrete example, processes as step cards
+  and decisions as trees; every detail page links to its PRD.
+- A rule is written in full in one place, its owner; summaries, other modules and the glossary name it or point to
+  it without restating its conditions, so a change lands once. A finding that one sentence missed a change is a
+  class: count every place that states the same thing before the first edit (§1).
+- Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`.
+  The prompt names the scope, the governing documents and what is out of scope; its report is a lead (§1).
+- Before a freeze, review in rounds. Each round runs read-only reviews by angle: an end-to-end simulation of
+  realistic items, state-by-event tables, wording against the glossary, whether an engineer could build each step
+  from the text, every rule against the decisions, an attack on Claude's own findings, a new reader answering
+  questions, every change read in context, and line-by-line reads by module. Each finding is checked against the
+  text before a change; rounds go on until one finds nothing; then the freeze is recorded and the design sealed.
+
+## Before finishing a slice
+
+1. The touched suites, the structural checks and then the full suite pass (in the design phase: the reasoning refresh,
+   then `python3 docs/check.py`). A red suite is fixed before a handoff, whoever's code it is.
+2. `docs/CURRENT_STATE.md` holds the status, the open defects and the one next task; a status update retires the
+   paragraphs it replaces. A changed choice is recorded in `docs/DECISIONS.md`.
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# 归组验收：先证明量的是本次处理
+     2	
+     3	2026-10-25。Alex 在审查验收缺口后说「好你开始吧，我们一起看」。本轮只修测量与验收定义，用已存输入核对；不修改抽取提示词、观点身份、归组表示或产品写入路径。
+     4	
+     5	## 1. 已数清的问题
+     6	
+     7	范围是 `subject-names-01` 登记的全部 10 个样本，以及其检查入口 `review_subject_names.py`。4 个开发样本已执行，6 个留出样本未执行。前缀是已存的两篇回答；第三篇才是新调用。
+     8	
+     9	| 类别 | 全部范围与决定性案例 | 机制与本轮改法 |
+    10	|---|---|---|
+    11	| 把旧关系当成本次成功 | 4/4 已执行样本没有候选、没有新成员；旧脚本仍报核心联系 4/4 | 脚本遍历整个结果库。改成按本次输入、顺序号和候选编号核对；旧关系另报保留数 |
+    12	| 数量代替引用一致 | 3 份名字投影都为空，实际判断引用 0 个；未出现可测的实际错投影 | 原检查只有 `len(ids)>want`。用真实非空回答改写为名字形状，在副本交换等长引用，独立核对选中的具体对象；不得调用被测投影函数来生成预期 |
+    13	| 没有候选就算漏抽 | 已执行 4 份均为空，但原答分别有 3、2、2、1 条证据；两份各有 1 条出处拒绝 | 应该新增、更新证据、重复或不抽，须先看输入与已有研究。候选为空只说明本次没有测到归组；不能直接判漏抽，也不能直接判证据更新正确 |
+    14	| 名字关键词代替业务判断 | 旧脚本的开发、Google、AMD 三个语义分支都用正则；当前 4 份只匹配到旧观点 | 删除关键词评分；完整问题、范围、引用与原文留给逐项语义审查。未审查写「待审」，不自动报零错 |
+    15	| 未执行或失败消失在分母里 | 6/10 已登记样本未执行；旧脚本从已写结果的子集汇总 | 10 项状态逐项列出。未执行、记录不完整、运行失败和已完成分别报；缺失必要记录令检查失败 |
+    16	
+    17	这是测量缺陷，不是新发现的模型归组成功或失败。旧结果不改写。修复只覆盖此检查入口；不宣称其余研究脚本已迁移。
+    18	
+    19	## 2. 验收单位与业务标准
+    20	
+    21	一个案例是「原文 + 本次读到的已有研究 + 应保留的重要内容」，不是一篇文章必开一个问题，也不是必须得到某个组名。每项先写原句依据和业务含义，再写允许的结果。
+    22	
+    23	| 应做什么 | 合格结果 |
+    24	|---|---|
+    25	| 已有观点管不到的重要问题 | 开新观点；合适时加入已有主线，否则新建；重要内容有真实出处 |
+    26	| 已有观点能回答的新材料 | 更新那条观点的证据；沿已有成员关系可查，不强迫新建观点 |
+    27	| 同源转述或重复材料 | 保留新增出处，不增加独立证据份数 |
+    28	| 背景、广告、没有新增含义 | 可以不抽；不能用这种案例证明归组能力 |
+    29	
+    30	关系分三类：必须保留、允许但不强求、明确禁止。名字、编号和可选的小组不同不扣分。仅同公司、同产品关键词不能证明该归组；同一业务过程的支持和反对材料均保留。同组不等于同一问题，也不自动产生依赖。
+    31	
+    32	六层分别报告，不合成总分：
+    33	
+    34	| 层 | 分子和分母 / 判断方式 |
+    35	|---|---|
+    36	| 内容覆盖 | 实际正确保留的重要内容 / 事先标出的重要内容；候选、证据分别列；漏抽与检查拒绝分别归因。多造的问题逐项列，不拿它增加分母 |
+    37	| 归属含义 | 必须关系保留数 / 必须关系数；禁止关系出现数；未审查的实际关系数。漏抽仍使对应的必须关系未满足；另列「已抽出部分」的结果，不取代端到端结果 |
+    38	| 观点身份 | 相同问题是否复用；不同量、范围、时期、事件是否被误合并；不要求所有数字都成为观点 |
+    39	| 证据忠实 | 原句、计划与事实、支持与反对、同源转述、数字口径逐项核对。原句存在只是代码核对，不等于含义正确 |
+    40	| 连续读写 | 当前选择 → 最终观点 → 成员 → 来源；同日下一条读到先前提交，重送、中断恢复、历史时点不混淆；离线快照核对不冒充已测恢复 |
+    41	| 稳定性与成本 | 同一输入重复运行的重要内容与必须关系逐项比较；记录每次错误、请求数、tokens、时长。先测新鲜对照自身变化；小样本不证明全市场规模或错误率 |
+    42	
+    43	三次是初步筛查，不是「2/3 就可靠」。已覆盖的代码确定性规则须全部满足；核心关系的严重错归、错误合并、证据丢失不能被平均分抵消。即使三次全对，也只说明这些案例通过。更大范围的通过率与速度预算在对应范围登记时定，不能事后挑线。
+    44	
+    45	## 3. 下一轮真实案例卡（业务预期，尚未运行）
+    46	
+    47	下列预期由助手据原文整理，Alex 同意本轮修正验收方向不等于逐条人工标注完毕。运行前必须把每项具体原句、已有观点和必须关系固定；这是下一轮登记的一部分，不把未审完的描述当作金标准。
+    48	
+    49	| 原始输入 | 必须检查 | 不得强求 / 禁止 |
+    50	|---|---|---|
+    51	| Rubin 出货前缀 → `nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory` | SK 的 Rubin 工厂与 Rubin 产品落地的联系；SK 自身项目边界 | 工厂上线不等于 Rubin 出货；同篇的内存合作不凭文章相同就全塞进工厂；意向书不是已建成 |
+    52	| Ohio `gnews:b25b5b3109fbe06f1a394164` → `gnews:bb0d23846735c94b7c1722d2` | 清单外项目能建立研究，后文能接到前文；担保、芯片采购与总投资保留不同口径；分析师质疑也可更新 | 不要求三个数字必开三条观点；不把第二篇转述算独立确认；不能把全项目总额认成担保额 |
+    53	| `nvblog:google-cloud-vera-rubin-infrastructure` | Google 的 Rubin 部署与产品落地联系；具体可用时间按正文 | 不进 SK 专属主线；正文「下个月可用」不能变成已全面可用；若已有对应观点可只更新证据 |
+    54	| `gnews:7ce0b7c3361fc5060098941f` | 按具体问题判断 AMD 自身业绩与竞争材料的区别 | AMD 自身收入不因提到 NVIDIA 就入 Rubin 部署组；直接涉及客户替代的材料不能仅因 AMD 名称排除 |
+    55	| `gnews:9b084fc0f1583da0df01c45c` 长汇总页 | 重要内容覆盖单列；区分旧闻、重复与新材料；跨日期不混同 | 不因已有几个正例难测就丢弃；不规定必有候选；无候选不充当负例通过 |
+    56	
+    57	先在小序列测清：有无初始参考、不同表达、同日连续输入。空库/参考起点的真实运行与固定前缀的一步实验分开报告。开发材料不得再叫留出材料。其他公司、跨行业、大库检索及上层投资论点为后续验收范围，当前均未获证，不在此轮增加产品机制。
+    58	
+    59	## 4. 离线检查器合同（编码前）
+    60	
+    61	入口仍为 `python3 poc/hierarchy_study/review_subject_names.py --out <原实验目录> --case dev|google|amd`，增加 `--json` 输出结构化报告。只读已存文件；不 import 运行器、不调用模型、不写原实验目录。返回 0 仅表示离线结构核对完成，输出必须写明非语义验收通过；记录缺失、运行失败或核对错误返回非零。零引用为 unexercised。
+    62	
+    63	| 状态 × 事件 | 本轮处理 |
+    64	|---|---|
+    65	| 没有任何样本产物 / 产物不全 / 运行失败 / 记录完整 | 分别报 not_started / incomplete / failed / complete；失败不丢出分母。failed.json 优先于其他记录，即使已有结果也算 failed。complete 要求抽取、比对、结果和 checks.json 都齐全，调用状态 complete，checks.history_unchanged 严格为 true 且 resend 为 skipped；缺 checks 是 incomplete，检查值不符为 failed |
+    66	| 已完成、无候选、有或无证据 | 归组 unexercised；列原答证据和拒绝原因；覆盖语义 pending，不推断漏抽 |
+    67	| 已完成、有候选 | 名字选择与投影引用逐条比较；旧形状直接读引用；据拒绝和身份决定核对最终归属 |
+    68	| 投影少一条 / 同数量换目标 / 名字相同而范围不同 | 结构错误；不是「同样多就通过」；模糊或缺失映射报不可核对 |
+    69	| 成员属于旧输入 / 本次输入 / 未来顺序号 | 旧关系单列；本次按输入和序号双重核对；未来记录错误 |
+    70	| 缺文件、坏 JSON、原文或输入身份对不上 | 检查前提失败；输出具体文件与原因，退出非零，不伪装语义失败 |
+    71	| 另一进程在写 / 配置已变 / 后一天审查 | 只用完成的已存快照；同次读取前后摘要不同拒绝；以存下的请求为准，不拿当前配置重新解释，不读当前日期 |
+    72	
+    73	| 值 × 输入 / 写者 | 读者与约束 |
+    74	|---|---|
+    75	| 原答、投影 | 模型归档、名字转换器 → 检查器；预期独立从原答和请求生成，不能复用被测转换器 |
+    76	| 当前输入和已有研究 | 已存请求与 items.json → 检查器；全文、编号一致，不凭文件夹名称认定业务含义 |
+    77	| 最终目标和成员 | 已存身份决定、new_views、bindings、threads、memberships → 检查器；本次映射与快照逐项比较；新组只在本次唯一声明与唯一写入可核对时认定，不凭同名认定历史身份 |
+    78	| 检查报告 | 检查器 → 人、测试；删除旧 core_kept/关键词 scope_errors 的伪语义数字，不再输出旧 wiring_errors 总数 |
+    79	| 旧运行器的 dev-review.json | 是人另写的文件，旧检查器也不生成；本轮不生成这个批准文件，不用结构核对结果启动留出调用 |
+    80	
+    81	| 新路径 × 原检查 | 验证 |
+    82	|---|---|
+    83	| 原四份空候选 | 仍读原请求、结果、拒绝；4 次归组均未测到；6 份未执行保留状态 |
+    84	| 实际非空回答及受控副本 | 直接用 D147 sample-2-retained 的非空旧格式作正例，并将同一原答改写成名字格式作独立正例；两种格式都经检查入口，交换有效引用、删除引用、错误最终成员均须被发现。改写副本不当模型样本；旧格式的语义错归不能冒充代码接线错误 |
+    85	| 入口默认参数 | 从任意 cwd 用绝对路径运行；返回码、JSON、缺文件的负例均测；无网络和凭证 |
+    86	
+    87	先前决定：D149「归属按业务过程判断」「不能混成一个一致性数字」；D150 的失败保留；D155 的当前产品修复不重做。本轮修正 D152 研究计划中以数量与名字当语义结论、以 2/3 当推广通过线的测量；旧报告留作历史。
+    88	
+    89	## 5. 验证记录
+    90	
+    91	第一次只读审查指出：结果文件在最终检查之前写出，不能单凭它认定完成；非空旧格式也必须有正例和反例。已补齐完成状态的组合及两种格式的入口检查。先复审这两个维度，再编码、真实档案核对、受控反例及相关测试。文档按 D22 核对后最后运行 `docs/check.py`。
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D147|sample-2-retained' /Users/lchingen/hivemind/docs/DECISIONS.md /Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01 /Users/lchingen/hivemind/poc/hierarchy_study/subject_names.py /Users/lchingen/hivemind/poc/hierarchy_study/review_subject_names.py && nl -ba /Users/lchingen/hivemind/poc/hierarchy_study/subject_names.py | sed -n '95,275p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind/poc/hierarchy_study/subject_names.py:2:and scope) and writes no IDs; code binds names to stored IDs and projects to the D147 shape, so every downstream
+/Users/lchingen/hivemind/poc/hierarchy_study/subject_names.py:36:    """The D147 candidate contract with `subjects` in place of `thread_ids`, and no separate definitions list."""
+/Users/lchingen/hivemind/poc/hierarchy_study/subject_names.py:52:    that equals a shown one resolves to the stored subject and is counted. Returns the D147-shaped answer and the counts."""
+/Users/lchingen/hivemind/poc/hierarchy_study/subject_names.py:138:    prefix = source / 'sample-2-retained'
+/Users/lchingen/hivemind/docs/DECISIONS.md:2129:## D147 · 2026-10-25 · Continue grouping POCs with direct subject identity results
+/Users/lchingen/hivemind/docs/DECISIONS.md:2138:- The equivalent single-pattern schema produced valid distinct old/new references in all three second-article samples. Two completed the core relation/risk path; one valid old-group assignment was rejected solely for an unused proposed new-group definition. Remove that redundant rejection: unreferenced definitions already never reach the writer. Keep nonempty, unique and valid membership references, unique definition IDs, and all original evidence checks. This changes the experimental input contract, not the semantic acceptance criteria. Replay identical stored requests into new databases, call only missing steps, and keep the same shared ceiling; 38 requests/$0.560701 estimated have been used. Contract and census: `retained-membership-plan.md`, `unused-census.json` in the D147 research directory.
+/Users/lchingen/hivemind/docs/DECISIONS.md:2164:- First replay the three completed D147 streams from stored answers and separate extraction coverage from membership variation. Keep distinct questions and their real evidence links; names, local identifiers and extra small groups alone are not errors. Do not add a group-count target or delete small groups to make the counts agree.
+/Users/lchingen/hivemind/docs/DECISIONS.md:2165:- Run the unchanged D147 process on two previously unused full articles, one about AMD growth and one about Google Cloud's Rubin deployment, starting from copies of the three different D147 states. Report missing connections, unrelated memberships, extraction gaps and rejected calls separately. This is descriptive boundary research with assistant-authored semantic checks, not a new overall quality acceptance threshold or a claim that the method improved.
+/Users/lchingen/hivemind/docs/DECISIONS.md:2166:- New bounded continuation experiment: at most 18 requests/$2 estimated, same model/provider/settings. The completed D147 budget and artifacts stay unchanged. No production, Idea, UI, summary or separate clustering-call change. A failure is retained and reported without replacement samples. Contract and scope handoff: `docs/research/2026-10-25-grouping-consistency/plan.md`.
+/Users/lchingen/hivemind/docs/DECISIONS.md:2167:- Before paid calls, source-level review corrected an earlier classification: sample 2's OpenAI deployment explicitly uses Rubin but belongs only to its new OpenAI group. This is one real missed membership among ten reviewed Rubin-related thesis instances, alongside two samples that did not extract that extra thesis. Pause the new-article continuation and first test the narrower cause: D147 stopped showing existing theses' stored group memberships. Run three fresh unchanged controls and three fresh requests that add only those already-stored membership IDs to the displayed theses, through the original matching/writing path, within the same 18-request/$2 ceiling. Preserve the earlier plan and review; no new prompt, schema, production rule or acceptance target.
+/Users/lchingen/hivemind/docs/DECISIONS.md:2175:- This changes the documented target, not the running pipeline. Keep D147's isolated handover implementation visibly separate from the required behavior and D148's rejected context variant. No production prompt/schema change, stored-data migration, new paid run, group-summary generation, MCP or UI change is authorized by this documentation slice. Adding a short reason for each membership remains an unvalidated proposal.
+/Users/lchingen/hivemind/docs/DECISIONS.md:2185:- Result: 12 fresh calls, estimated $0.199548. The basis arm had one correct OpenAI→Rubin result, one omission, and one PC→Rubin error; controls repeated OpenAI→SK and also produced PC→SK. No adoption or conditional Google run. Across D147/D148/D150, five wrong references and one missed membership remain visible; three wrong-reference answers also declare an appropriate new group but reference a different old one. A zero-call one-ID correction confirms the writer preserves the supplied reference. This does not establish why the model selected it or validate the next representation. All 135 tests and targeted mutants pass; source, history and resend checks pass. Findings: `docs/research/2026-10-25-grouping-basis/findings.md`.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/full-tests-py310.txt:182:        calls = diagnostic.Calls(out, '1-control', conn, SOURCE / 'sample-2-retained')
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:325:   128	D147 固定的出货 / SK / 卫星连接成立，但另有 OpenAI 漏归；D148 补已有成员上下文未解决问题。D150 依 Alex 的继续研究请求，在同一全文抽取里把裸组编号换成“短依据，再选编号”，原检查和写入不变。三个新鲜控制与三个新鲜实验共 12 次请求，估算 $0.199548，独立上限 24 次/$1 未调整。实验一份正确提取 OpenAI 部署并归入 Rubin；一份漏抽；一份把 PC 芯片归到 Rubin。控制又出现 OpenAI→SK 和 PC→SK。变体未采用，预先规定的 Google 继续条件未满足，零次调用，没有替补样本。
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:1748:   195	- 这是目标要求，不是已上线的能力。正式管线还没有归组交接，D147 原型及 D148、D150 一致性结果见 docs/poc/pipeline-plan.md 的“抽取时归组：目标与当前实现”。
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2161:   412	- 实现参考仍是隔离实验：D147 用 existing_subjects 给出已有主线，threads 声明 id、name、scope，candidates[].thread_ids 写引用；新编号用 t 加正整数，库内编号用 g 加正整数。搜索暂用标题和全文词在全局名称、范围索引取前 N 条，N 来自原配置。这些是原型的字段和搜索做法，不是已接入正式管线的能力，也不证明大库召回。
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2185:  2129	## D147 · 2026-10-25 · Continue grouping POCs with direct subject identity results
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2194:  2138	- The equivalent single-pattern schema produced valid distinct old/new references in all three second-article samples. Two completed the core relation/risk path; one valid old-group assignment was rejected solely for an unused proposed new-group definition. Remove that redundant rejection: unreferenced definitions already never reach the writer. Keep nonempty, unique and valid membership references, unique definition IDs, and all original evidence checks. This changes the experimental input contract, not the semantic acceptance criteria. Replay identical stored requests into new databases, call only missing steps, and keep the same shared ceiling; 38 requests/$0.560701 estimated have been used. Contract and census: `retained-membership-plan.md`, `unused-census.json` in the D147 research directory.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2220:  2164	- First replay the three completed D147 streams from stored answers and separate extraction coverage from membership variation. Keep distinct questions and their real evidence links; names, local identifiers and extra small groups alone are not errors. Do not add a group-count target or delete small groups to make the counts agree.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2221:  2165	- Run the unchanged D147 process on two previously unused full articles, one about AMD growth and one about Google Cloud's Rubin deployment, starting from copies of the three different D147 states. Report missing connections, unrelated memberships, extraction gaps and rejected calls separately. This is descriptive boundary research with assistant-authored semantic checks, not a new overall quality acceptance threshold or a claim that the method improved.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2222:  2166	- New bounded continuation experiment: at most 18 requests/$2 estimated, same model/provider/settings. The completed D147 budget and artifacts stay unchanged. No production, Idea, UI, summary or separate clustering-call change. A failure is retained and reported without replacement samples. Contract and scope handoff: `docs/research/2026-10-25-grouping-consistency/plan.md`.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2223:  2167	- Before paid calls, source-level review corrected an earlier classification: sample 2's OpenAI deployment explicitly uses Rubin but belongs only to its new OpenAI group. This is one real missed membership among ten reviewed Rubin-related thesis instances, alongside two samples that did not extract that extra thesis. Pause the new-article continuation and first test the narrower cause: D147 stopped showing existing theses' stored group memberships. Run three fresh unchanged controls and three fresh requests that add only those already-stored membership IDs to the displayed theses, through the original matching/writing path, within the same 18-request/$2 ceiling. Preserve the earlier plan and review; no new prompt, schema, production rule or acceptance target.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2231:  2175	- This changes the documented target, not the running pipeline. Keep D147's isolated handover implementation visibly separate from the required behavior and D148's rejected context variant. No production prompt/schema change, stored-data migration, new paid run, group-summary generation, MCP or UI change is authorized by this documentation slice. Adding a short reason for each membership remains an unvalidated proposal.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2241:  2185	- Result: 12 fresh calls, estimated $0.199548. The basis arm had one correct OpenAI→Rubin result, one omission, and one PC→Rubin error; controls repeated OpenAI→SK and also produced PC→SK. No adoption or conditional Google run. Across D147/D148/D150, five wrong references and one missed membership remain visible; three wrong-reference answers also declare an appropriate new group but reference a different old one. A zero-call one-ID correction confirms the writer preserves the supplied reference. This does not establish why the model selected it or validate the next representation. All 135 tests and targeted mutants pass; source, history and resend checks pass. Findings: `docs/research/2026-10-25-grouping-basis/findings.md`.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:2537:   195	- 这是目标要求，不是已上线的能力。正式管线还没有归组交接，D147 原型及 D148、D150 一致性结果见 docs/poc/pipeline-plan.md 的“抽取时归组：目标与当前实现”。
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/design-review.log:4265:   412	- 实现参考仍是隔离实验：D147 用 existing_subjects 给出已有主线，threads 声明 id、name、scope，candidates[].thread_ids 写引用；新编号用 t 加正整数，库内编号用 g 加正整数。搜索暂用标题和全文词在全局名称、范围索引取前 N 条，N 来自原配置。这些是原型的字段和搜索做法，不是已接入正式管线的能力，也不证明大库召回。
+    95	        super().__init__(out, label)
+    96	        self.source = source
+    97	        self.names_arm = label.endswith('-names')
+    98	
+    99	    def stage(self, name, prompt, payload, schema, setting):
+   100	        if name.startswith(('item1-', 'item2-')):
+   101	            record = json.loads((self.source / f'{name}.json').read_text())
+   102	            expected = study.model.build_request(setting, prompt, json.dumps(payload, ensure_ascii=False), schema, 'hierarchy_result', self.cfg.provider)
+   103	            if record['status'] != 'complete' or record['request'] != expected:
+   104	                raise ValueError('Prefix request differs; no prefix HTTP calls are allowed')
+   105	            return record['answer']
+   106	        if self.names_arm and name.endswith('-extract'):
+   107	            if prompt != base.EXTRACT_PROMPT + retained.EXTRACT_MEMBERSHIP:
+   108	                raise ValueError('Unexpected extraction prompt')
+   109	            offered = payload['existing_subjects']
+   110	            raw = super().stage(name, base.EXTRACT_PROMPT + SUBJECT_PROMPT, payload, extraction_schema(offered), setting)
+   111	            projected, counts = project(raw, offered)
+   112	            study.write_json(self.out / f'sample-{self.sample}' / f'{name}-projection.json', {'counts': counts, 'subjects': [c['subjects'] for c in raw['candidates']], 'thread_ids': [c['thread_ids'] for c in projected['candidates']], 'threads': projected['threads']})
+   113	            return projected
+   114	        return super().stage(name, prompt, payload, schema, setting)
+   115	
+   116	    def call(self, step, prompt, payload, schema):
+   117	        if not (self.out / f'sample-{self.sample}' / f'{step}.json').exists():
+   118	            request = study.model.build_request(self.setting, prompt, json.dumps(payload, ensure_ascii=False), schema, 'hierarchy_result', self.cfg.provider)
+   119	            reserve = (len(json.dumps(request, ensure_ascii=False).encode()) * 1.25 + self.setting.max_output_tokens * 10) / 1e6
+   120	            budget = json.loads((self.out / 'budget.json').read_text())
+   121	            if len(budget['attempts']) >= MAX_REQUESTS or budget['estimated_spent'] + reserve > MAX_USD:
+   122	                raise BudgetReached('subject-names budget reached; no request sent')
+   123	        return super().call(step, prompt, payload, schema)
+   124	
+   125	
+   126	def fingerprints():
+   127	    paths = [Path(__file__), Path(context_study.__file__), study.ROOT / 'poc/config/poc-v7.json', study.ROOT / 'src/hivemind/universe.py']
+   128	    return retained.fingerprints() | {str(p.relative_to(study.ROOT)): study.digest(p) for p in paths}
+   129	
+   130	
+   131	def labels(case, samples):
+   132	    return [f'{case}-{k}-{arm}' for k in range(1, samples + 1) for arm in ARMS]
+   133	
+   134	
+   135	def prepare(out, source, samples=3, controls=1):
+   136	    if out.exists():
+   137	        raise ValueError('Use a new dated experiment directory')
+   138	    prefix = source / 'sample-2-retained'
+   139	    sources = [source / 'items.json', prefix / 'item2-result.json'] + [prefix / f'item{i}-{step}.json' for i in (1, 2) for step in ('extract', 'match')]
+   140	    hashes = {str(p): study.digest(p) for p in sources}
+   141	    items = json.loads((source / 'items.json').read_text())
+   142	    if [item['input_id'] for item in items] != base.ITEM_IDS or any(not item['text'] for item in items):
+   143	        raise ValueError('Expected the three registered full source articles')
+   144	    corpus = study.read_only(base.CORPUS)
+   145	    try:
+   146	        held = {}
+   147	        for case, input_id in (('google', GOOGLE_ID), ('amd', AMD_ID)):
+   148	            row = corpus.execute('select * from items where input_id=?', (input_id,)).fetchone()
+   149	            if row is None or not row['text']:
+   150	                raise ValueError(f'Missing held-out article {input_id}')
+   151	            held[case] = dict(row)
+   152	            held[case]['object_identifiers'] = json.loads(held[case]['object_identifiers'])
+   153	    finally:
+   154	        corpus.close()
+   155	    out.mkdir(parents=True)
+   156	    plan = {'dev': [f'dev-{k}-names' for k in range(1, samples + 1)] + [f'dev-{k}-control' for k in range(1, controls + 1)],
+   157	            'google': [f'google-{k}-names' for k in range(1, samples + 1)], 'amd': [f'amd-{k}-names' for k in range(1, samples + 1)]}
+   158	    for case in plan:
+   159	        for label in plan[case]:
+   160	            (out / f'sample-{label}').mkdir()
+   161	    study.write_json(out / 'items.json', {'prefix': items[:2], 'dev': items[2], **held})
+   162	    study.write_json(out / 'budget.json', {'attempts': [], 'estimated_spent': 0})
+   163	    study.write_json(out / 'manifest.json', {'version': 'subject-names-v1', 'source': str(prefix), 'sources': hashes, 'dependencies': fingerprints(),
+   164	                                              'items_sha256': study.digest(out / 'items.json'), 'plan': plan, 'max_requests': MAX_REQUESTS, 'max_estimated_usd': MAX_USD})
+   165	
+   166	
+   167	def verify(out):
+   168	    manifest = json.loads((out / 'manifest.json').read_text())
+   169	    if manifest['dependencies'] != fingerprints() or manifest['items_sha256'] != study.digest(out / 'items.json') or any(study.digest(path) != sha for path, sha in manifest['sources'].items()):
+   170	        raise ValueError('Frozen experiment inputs or code changed')
+   171	    return manifest
+   172	
+   173	
+   174	def run(out, case='dev'):
+   175	    with (out / 'run.lock').open('a') as lock:
+   176	        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+   177	        manifest = verify(out)
+   178	        if case != 'dev':
+   179	            review = json.loads((out / 'dev-review.json').read_text())
+   180	            if review.get('reviewed_by') != 'assistant' or review.get('wiring_errors') != 0:
+   181	                raise ValueError('A held-out case needs the recorded development review with zero wiring errors')
+   182	        items = json.loads((out / 'items.json').read_text())
+   183	        uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+   184	        expected = json.loads((Path(manifest['source']) / 'item2-result.json').read_text())['details']
+   185	        for label in manifest['plan'][case]:
+   186	            verify(out)
+   187	            folder = out / f'sample-{label}'
+   188	            if (folder / 'failed.json').exists() or (folder / 'item3-result.json').exists():
+   189	                continue
+   190	            conn = threads.open_db(folder / 'views.sqlite')
+   191	            calls = Calls(out, label, Path(manifest['source']))
+   192	            try:
+   193	                for index, item in enumerate(items['prefix'], 1):
+   194	                    retained.process(conn, calls, uni, item, index)
+   195	                if context_study.history(conn, 2) != expected:
+   196	                    raise ValueError('Fixed prefix differs from stored history')
+   197	                result = retained.process(conn, calls, uni, items[case], 3)
+   198	                if result['route'] == 'skipped':
+   199	                    row = conn.execute('select result_json from ingestion_events where input_id=?', (items[case]['input_id'],)).fetchone()
+   200	                    if row is None:
+   201	                        raise ValueError('Completed article is missing its result')
+   202	                    result = json.loads(row[0])
+   203	                study.write_json(folder / 'item3-result.json', result)
+   204	                checks = {'history_unchanged': context_study.history(conn, 2) == expected, 'resend': dispatch.route(conn, items[case], uni).kind}
+   205	                study.write_json(folder / 'checks.json', checks)
+   206	                if not checks['history_unchanged'] or checks['resend'] != 'skipped':
+   207	                    raise ValueError('History or resend contract failed')
+   208	                print(f'COMPLETE {label} new_views={len(result["new_views"])} memberships={[(m["thread_id"], m["view_id"]) for m in result["memberships"]]}', flush=True)
+   209	            except Exception as error:
+   210	                conn.rollback()
+   211	                study.write_json(folder / 'failed.json', {'error': type(error).__name__ + ': ' + str(error)[:500]})
+   212	                print(f'FAILED {label}: {type(error).__name__}: {str(error)[:500]}', flush=True)
+   213	                if isinstance(error, BudgetReached):
+   214	                    break
+   215	            finally:
+   216	                calls.archive.conn.close()
+   217	                conn.close()
+   218	        verify(out)
+   219	        budget = json.loads((out / 'budget.json').read_text())
+   220	        print(f'FINISHED {case} requests={len(budget["attempts"])} estimated_usd={budget["estimated_spent"]:.6f}', flush=True)
+   221	
+   222	
+   223	if __name__ == '__main__':
+   224	    parser = argparse.ArgumentParser(description=__doc__)
+   225	    parser.add_argument('command', choices=['prepare', 'run'])
+   226	    parser.add_argument('--out', type=Path, required=True)
+   227	    parser.add_argument('--source', type=Path)
+   228	    parser.add_argument('--case', choices=['dev', 'google', 'amd'], default='dev')
+   229	    args = parser.parse_args()
+   230	    if args.command == 'prepare':
+   231	        if args.source is None:
+   232	            parser.error('prepare requires --source')
+   233	        prepare(args.out.resolve(), args.source.resolve())
+   234	    else:
+   235	        run(args.out.resolve(), args.case)
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/poc/hierarchy_study/review_subject_names.py | sed -n '1,260p' && sed -n '2129,2148p' /Users/lchingen/hivemind/docs/DECISIONS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Read a subject-names experiment directory without model calls and report, per sample and separately: what the
+     2	third article's extraction proposed, which subject names it chose, how code resolved them, wiring errors (impossible
+     3	by construction, counted anyway), re-declared shown subjects, and the two semantic checks the plan fixed in advance for
+     4	the development article (the OpenAI deployment belongs to the Rubin subject and its own, never to the SK-specific one;
+     5	the PC SoC thesis belongs to no shown subject) and for the held-out articles (Google's Rubin deployment joins the Rubin
+     6	subject; AMD's own revenue never does). The semantic labels are the assistant's reading of the articles, not gold.
+     7	
+     8	Usage: python3 poc/hierarchy_study/review_subject_names.py --out DIR [--case dev|google|amd]
+     9	"""
+    10	import argparse
+    11	import json
+    12	import re
+    13	from pathlib import Path
+    14	
+    15	RUBIN = re.compile(r'rubin', re.I)
+    16	SK = re.compile(r'\bSK\b|SK Telecom', re.I)
+    17	OPENAI = re.compile(r'openai', re.I)
+    18	PC = re.compile(r'\bPC\b|SoC|Windows', re.I)
+    19	AMD_OWN = re.compile(r'\bAMD\b.*(revenue|server|data center|growth)', re.I)
+    20	GOOGLE = re.compile(r'google|A5X', re.I)
+    21	
+    22	
+    23	def read_sample(folder):
+    24	    extract = json.loads((folder / 'item3-extract.json').read_text()) if (folder / 'item3-extract.json').exists() else None
+    25	    projection = json.loads((folder / 'item3-extract-projection.json').read_text()) if (folder / 'item3-extract-projection.json').exists() else None
+    26	    result = json.loads((folder / 'item3-result.json').read_text()) if (folder / 'item3-result.json').exists() else None
+    27	    failed = json.loads((folder / 'failed.json').read_text()) if (folder / 'failed.json').exists() else None
+    28	    return extract, projection, result, failed
+    29	
+    30	
+    31	def subject_names_of(result, view_id):
+    32	    names = {t['thread_id']: t['name'] for t in result['threads']}
+    33	    return [names[m['thread_id']] for m in result['memberships'] if m['view_id'] == view_id]
+    34	
+    35	
+    36	def review(out, case):
+    37	    manifest = json.loads((out / 'manifest.json').read_text())
+    38	    rows = []
+    39	    for label in manifest['plan'][case]:
+    40	        folder = out / f'sample-{label}'
+    41	        extract, projection, result, failed = read_sample(folder)
+    42	        row = {'sample': label, 'failed': failed['error'][:160] if failed else None, 'proposed': [], 'memberships': {}, 'wiring_errors': 0, 'redeclared': 0,
+    43	               'scope_errors': [], 'core_kept': None, 'notes': []}
+    44	        if extract and extract.get('answer'):
+    45	            answer = extract['answer']
+    46	            row['proposed'] = [c['question'][:70] for c in answer['candidates']]
+    47	            if label.endswith('-names') and projection:
+    48	                row['redeclared'] = projection['counts']['redeclared_existing']
+    49	                # a wiring error would be a candidate whose chosen subject names do not match its resolved IDs; by construction zero
+    50	                for chosen, ids in zip(projection['subjects'], projection['thread_ids']):
+    51	                    want = sum(1 for s in chosen if s['existing'] != 'none') + sum(1 for s in chosen if s['existing'] == 'none')
+    52	                    if len(ids) > want:
+    53	                        row['wiring_errors'] += 1
+    54	        if result:
+    55	            names = {t['thread_id']: t['name'] for t in result['threads']}
+    56	            for view in result['views']:
+    57	                vid = view['view_id']; q = view.get('question', '')
+    58	                members = subject_names_of(result, vid)
+    59	                row['memberships'][q[:60]] = members
+    60	                if case == 'dev':
+    61	                    if OPENAI.search(q):
+    62	                        if any(SK.search(n) for n in members): row['scope_errors'].append(f'OpenAI thesis in the SK-specific subject: {members}')
+    63	                        if not any(RUBIN.search(n) for n in members): row['notes'].append(f'OpenAI thesis not in the Rubin subject: {members}')
+    64	                    if PC.search(q) and not OPENAI.search(q):
+    65	                        if any(RUBIN.search(n) or SK.search(n) for n in members): row['scope_errors'].append(f'PC thesis in {members}')
+    66	                if case == 'google' and GOOGLE.search(q) and RUBIN.search(q):
+    67	                    row['core_kept'] = any(RUBIN.search(n) and not GOOGLE.search(n) for n in members)
+    68	                if case == 'amd' and AMD_OWN.search(q):
+    69	                    if any(RUBIN.search(n) for n in members): row['scope_errors'].append(f'AMD own-revenue thesis in a Rubin subject: {members}')
+    70	            core = [vid for vid, q in ((v['view_id'], v.get('question', '')) for v in result['views']) if RUBIN.search(q) and 'shipment' in q.lower()]
+    71	            if core and case == 'dev':
+    72	                row['core_kept'] = all(any(RUBIN.search(n) for n in subject_names_of(result, vid)) for vid in core)
+    73	        rows.append(row)
+    74	    print(f"{case}: {len(rows)} samples")
+    75	    for r in rows:
+    76	        print(f"\n{r['sample']}: " + (f"FAILED {r['failed']}" if r['failed'] else f"proposed {len(r['proposed'])}; wiring errors {r['wiring_errors']}; re-declared shown {r['redeclared']}; scope errors {r['scope_errors'] or 'none'}; core kept {r['core_kept']}"))
+    77	        for q, members in r['memberships'].items():
+    78	            print(f"   {q:60s} → {members}")
+    79	        for n in r['notes']:
+    80	            print('   note:', n)
+    81	    done = [r for r in rows if not r['failed'] and r['memberships']]      # a sample counts as completed only with a written result
+    82	    print(f"\n{case} summary: completed {len(done)}/{len(rows)}; wiring errors {sum(r['wiring_errors'] for r in done)}; re-declared shown subjects {sum(r['redeclared'] for r in done)}; samples with a scope error {sum(bool(r['scope_errors']) for r in done)}; core connection kept {sum(1 for r in done if r['core_kept'])}/{sum(1 for r in done if r['core_kept'] is not None)}")
+    83	    budget = json.loads((out / 'budget.json').read_text())
+    84	    print(f"requests {len(budget['attempts'])}, estimated ${budget['estimated_spent']:.4f}")
+    85	
+    86	
+    87	if __name__ == '__main__':
+    88	    parser = argparse.ArgumentParser(description=__doc__)
+    89	    parser.add_argument('--out', type=Path, required=True)
+    90	    parser.add_argument('--case', choices=['dev', 'google', 'amd'], default='dev')
+    91	    args = parser.parse_args()
+    92	    review(args.out.resolve(), args.case)
+## D147 · 2026-10-25 · Continue grouping POCs with direct subject identity results
+
+- Alex explicitly asked to keep testing from different angles, read the system design and code, and improve barriers within the existing pipeline. This authorizes continued isolated diagnosis and development POCs; no production, sealed ledger, Idea, UI, deploy or model/provider change.
+- Replace D144's model-authored local pointer graph with direct groups of local subject IDs whose destination is either new or a displayed stored subject ID. Keep extraction-owned required thesis membership, original thesis identity/evidence rules, and one transaction. Schema restricts destinations; code resolves final IDs without recursion.
+- Three fresh paired original-article streams against D144, followed by the predetermined extra deployment article only after correct core grouping; same gpt-6-luna/settings, shared maximum 48 calls/$8 estimated. Preserve failed variants and fixed measurements; do not silently replace samples. Plan, state tables and scope: `docs/research/2026-10-25-direct-subjects/plan.md`.
+
+- The first direct-group variant completed 20 requests ($0.334354 estimated). One new stream omitted its required groups; two completed but treated the customer deployment as a different subject from Rubin and split it. All three D144 controls failed subject-count checks. The displayed old group was present in both split cases, so retrieval was not the cause.
+- Continue within the same 48-request/$8 ceiling with extraction-owned membership: retrieve existing group descriptions before reading the full article, require every candidate to cite a shown old group or declared new group, and remove group identity decisions from matching entirely. Matching still resolves the thesis and evidence identities. This asks whether a thesis belongs under a business process, not whether two business processes are identical. The narrower required-output-format draft is not implemented because it would leave this semantic defect intact. Contract and tables: `docs/research/2026-10-25-direct-subjects/extraction-membership-plan.md`.
+- Extraction-owned membership reached the old Rubin group in all three second-article answers, but all returned duplicate g1 references and an unused local t1, so all three were rejected. Nine new calls brought the shared total to 29 ($0.447565 estimated). Continue with a strictly equivalent reference-schema spelling, without changing the prompt, accepted values or local checks; fresh second-article calls use copies of their successful first-article states. This is a representation diagnostic, not proof of a provider defect. Contract: `docs/research/2026-10-25-direct-subjects/flat-reference-plan.md`.
+- The equivalent single-pattern schema produced valid distinct old/new references in all three second-article samples. Two completed the core relation/risk path; one valid old-group assignment was rejected solely for an unused proposed new-group definition. Remove that redundant rejection: unreferenced definitions already never reach the writer. Keep nonempty, unique and valid membership references, unique definition IDs, and all original evidence checks. This changes the experimental input contract, not the semantic acceptance criteria. Replay identical stored requests into new databases, call only missing steps, and keep the same shared ceiling; 38 requests/$0.560701 estimated have been used. Contract and census: `retained-membership-plan.md`, `unused-census.json` in the D147 research directory.
+- Final core result: all three recorded streams preserve separate shipment and SK-deployment theses in the same Rubin group and route later supply risk to it. The three preselected satellite continuations also reuse that group without changing historical snapshots or removing the earlier risk. The code-only final correction replayed original answers; it did not obtain three replacement samples. Total: 47 returned requests, estimated $0.641424. 121 tests and targeted mutants passed. No production adoption; overall group counts (1, 4, 3), large-library recall, cross-company boundaries and an argued main-thesis layer remain unvalidated. Findings: `docs/research/2026-10-25-direct-subjects/findings.md`.
+
+## D146 · 2026-10-25 · The idea gold set: twenty ideas judged as an analyst, authored by Claude, sealed
+
+- Alex, asked for twenty gold ideas with the right views written beside each: "做。然后3.的标准就是hedge fund analyst
+  /investor 会看的观点，你来进入角色做golden 然后封存". The standard is the views a hedge-fund analyst or investor would
+  want to see for the idea; Claude writes the gold in that role, from the view texts of the sealed ledger as judged on
+  2026-08-15, and seals it.
+- The file: `poc/eval/gold/idea-gold-2026-10-25.json`, digest in `poc/eval/gold/SHA256SUMS`, never edited; a revision
+  is a new dated file. Twenty ideas: six on NVIDIA, seven on other companies (TSMC, Meta, CoreWeave ×2, AMD,
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files /Users/lchingen/hivemind/poc/reports | rg '/sample-2-retained/(item3-extract|item3-match|item3-result|checks|failed)\\.json"'$|/2026-10-25-subject-names-01/(manifest'"\\.json|sample-dev-1-control/(checks|item3-match)\\.json)"'$'"'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item3-match.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item3-extract.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item3-result.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-subject-names-01/manifest.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-subject-names-01/sample-dev-1-control/item3-match.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-subject-names-01/sample-dev-1-control/checks.json
+
+codex
+The state table now covers failure after a result is written. I’m checking the named D147 sample to confirm that the planned old-format test can exercise a nonempty case through the checker.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files /Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01 | rg '(sample-2-retained/|checks|manifest\\.json)' && rg -n 'checks|history_unchanged|resend|retained|complete|item3' /Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py /Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/retained-membership-plan.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/manifest.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/membership-manifest.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/flat-manifest.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/resend.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/views.sqlite
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item3-match.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/extra-resend.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/calls.sqlite
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item3-extract.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item4-extract.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item4-match.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item2-extract.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item1-match.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item3-result.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item2-match.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item4-result.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item1-result.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item1-extract.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item2-result.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/retained-manifest.json
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:74:        raise ValueError('Original matching checks: ' + '; '.join(checked.refusals))
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:87:            raise ValueError('Second matching checks: ' + '; '.join(check2.refusals))
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:109:        self.cfg = dataclasses.replace(self.cfg, version='retained-membership-v1')
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:118:    path = out / 'retained-manifest.json'
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:119:    if path.exists() or list(out.glob('sample-*-retained')):
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:120:        raise ValueError('Use a fresh retained-membership experiment')
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:124:        target = out / f'sample-{sample}-retained'
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:130:            if record['status'] != 'complete':
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:136:    study.write_json(path, {'version': 'retained-membership-v1', 'dependencies': fingerprints(),
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:143:    manifest = json.loads((out / 'retained-manifest.json').read_text())
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:145:        raise ValueError('Frozen retained-membership experiment changed')
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:151:        review = json.loads((out / 'retained-core-review.json').read_text())
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:162:            label = f'{sample}-retained'
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:189:                study.write_json(out / f'sample-{label}' / ('extra-resend.json' if extra else 'resend.json'),
+/Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/retained-membership-plan.md:24:| retained threads | 原 process 按保留候选的引用过滤；仅 write_threads 读取。 |
+/Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/retained-membership-plan.md:35:同一份真实原答在移除此校验的 scratch 副本保存 2 观点、1 组，未保存闲置定义。8 项新检查通过，121 项完整套件通过；重新加回旧校验的副本有 3 项失败，均停在明确的未引用定义拒绝。原 preflight 分布未变。只读审查无严重阻碍，见 retained-review.md。本次没有改变提示词；只重放已有原答及补做未发生的步骤。准备时负载约 4.0、磁盘约 298 GB、提供方 DNS 正常。
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py | sed -n '140,210p' && cat /Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/resend.json && cat /Users/lchingen/hivemind/poc/reports/2026-10-25-subject-names-01/sample-dev-1-control/checks.json && cat /Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/retained-manifest.json" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   140	
+   141	def verify(out):
+   142	    previous.verify(out)
+   143	    manifest = json.loads((out / 'retained-manifest.json').read_text())
+   144	    if manifest['dependencies'] != fingerprints() or any(study.digest(path) != sha for path, sha in manifest['reused_sources'].items()):
+   145	        raise ValueError('Frozen retained-membership experiment changed')
+   146	
+   147	
+   148	def run(out, extra=False):
+   149	    verify(out)
+   150	    if extra:
+   151	        review = json.loads((out / 'retained-core-review.json').read_text())
+   152	        if review.get('reviewed_by') != 'assistant' or review.get('core_semantics_passed') is not True:
+   153	            raise ValueError('Extra article requires the predefined successful core review')
+   154	        events = [(4, json.loads((out / 'extra-item.json').read_text()))]
+   155	    else:
+   156	        events = list(enumerate(json.loads((out / 'items.json').read_text()), 1))
+   157	    uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+   158	    with (out / 'run.lock').open('a') as lock:
+   159	        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+   160	        streams = []
+   161	        for sample in [1, 2, 3]:
+   162	            label = f'{sample}-retained'
+   163	            calls = Calls(out, label)
+   164	            conn = legacy.open_db(out / f'sample-{label}' / 'views.sqlite')
+   165	            streams.append((label, calls, conn))
+   166	        stop = False
+   167	        for index, item in events:
+   168	            for label, calls, conn in streams:
+   169	                failed = out / f'sample-{label}' / ('extra-failed.json' if extra else 'failed.json')
+   170	                if failed.exists() or store.is_processed(conn, item['input_id']):
+   171	                    continue
+   172	                try:
+   173	                    result = process(conn, calls, uni, item, index)
+   174	                    study.write_json(out / f'sample-{label}' / f'item{index}-result.json', result)
+   175	                    print(f'WRITTEN {label} item={index} new_views={len(result.get("new_views", {}))}', flush=True)
+   176	                except Exception as error:
+   177	                    conn.rollback()
+   178	                    study.write_json(failed, {'item_index': index, 'error': type(error).__name__ + ': ' + str(error)[:1000]})
+   179	                    print(f'FAILED {label} item={index}: {error}', flush=True)
+   180	                    if 'budget' in str(error).lower():
+   181	                        stop = True
+   182	                        break
+   183	            if stop:
+   184	                break
+   185	        last_item = events[-1][1]
+   186	        for label, calls, conn in streams:
+   187	            if store.is_processed(conn, last_item['input_id']):
+   188	                route = dispatch.route(conn, last_item, uni)
+   189	                study.write_json(out / f'sample-{label}' / ('extra-resend.json' if extra else 'resend.json'),
+   190	                                 {'route': route.kind, 'reason': route.reason})
+   191	            conn.close()
+   192	            calls.archive.conn.close()
+   193	    budget = json.loads((out / 'budget.json').read_text())
+   194	    print(f'FINISHED shared_attempts={len(budget["attempts"])} estimated_usd={budget["estimated_spent"]:.6f}', flush=True)
+   195	
+   196	
+   197	if __name__ == '__main__':
+   198	    parser = argparse.ArgumentParser(description=__doc__)
+   199	    parser.add_argument('command', choices=['prepare', 'core', 'extra'])
+   200	    parser.add_argument('--out', type=Path, required=True)
+   201	    args = parser.parse_args()
+   202	    out = args.out.resolve()
+   203	    if args.command == 'prepare':
+   204	        prepare(out)
+   205	    else:
+   206	        run(out, args.command == 'extra')
+{
+  "route": "skipped",
+  "reason": "already processed"
+}{
+  "history_unchanged": true,
+  "resend": "skipped"
+}{
+  "version": "retained-membership-v1",
+  "dependencies": {
+    "poc/hierarchy_study/direct_subjects.py": "7169bce03f86312a13c30193efdb0679068895ed228f8d3c76349be739695ca4",
+    "poc/hierarchy_study/ingestion_threads.py": "293c9a5f19fb4647d9090f2881e5ab1acbb6039a51cadc8c8864f06528ba1ece",
+    "poc/hierarchy_study/ingestion_groups.py": "b7e2823b3d7d089123acbe590157c0fba292ce54fc8d9a35436a7aeb9e5f2876",
+    "poc/hierarchy_study/study.py": "32497fc35d2ef0c10dac251e1f00122749ebbebeb16fe9e843bf411bafbf8194",
+    "src/hivemind/extraction.py": "b62c17122bd5dcf3c4d8c10d303151c9d793b5246ad9752c5042a7d8fcfb65f8",
+    "src/hivemind/dispatch.py": "4f2dcf18af170839aef3e97c1e16535b8e2fb06e33c326eba2e33568e00ed06a",
+    "src/hivemind/model.py": "a73ab20cb68e380ca07c523e9fa2120ecd87a5738936f914ce5ad16ea7649c63",
+    "src/hivemind/config.py": "4cb7cf4d859157789c888772e846b4470588aa1b71481d17076810a27ee644e4",
+    "src/hivemind/views/store.py": "c1bc085dcd00010e943de6b9f3ca86c603240a1bc963de1ddb4de6a6760c9c56",
+    "src/hivemind/views/matching.py": "3421efedbf8af0064f2a1d9d5c1bb443260e88d07241e7a6a0f640f41e0f313a",
+    "src/hivemind/views/writing.py": "11ae34d96969b42bf959d6dcd794101a89d92d462e9a83d694e0a142f3a3cec7",
+    "poc/universe.json": "b82bcfee5a785cd7d6b6fc0a6924e336f78dd79a6d6b32d465f9d96c22bc7244",
+    "poc/hierarchy_study/extraction_membership.py": "e3e2b8a0b4cdc49f9467a09b7249eb5abe8c7994c7f719b6ab414f9b1d5aa420",
+    "poc/hierarchy_study/flat_membership.py": "aa86fecd94ac61429c97786e40d8d1f9093cbfe9fe8eae2248e3d1090597cf40",
+    "poc/hierarchy_study/retained_membership.py": "27ab8c3df2d4f376f47c67629990dc05adbb67e221bd366953eab19d9fca8773"
+  },
+  "reused_sources": {
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-1-flat/item1-extract.json": "bb22a83dddc43e3db09d2b55cc4a32d665fa35d0adcba4fdc513bc70e7e0ce67",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-1-flat/item1-match.json": "ecc21c2df22ea563b40f55affca7fd7f5b17ac9fe17d99950f73b1c6fed989a7",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-1-flat/item2-extract.json": "14389cdbafb27c56be48ef71abe026fcbdbf32e2fec8f1c266e33c1ad0e7e406",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-flat/item1-extract.json": "a6c69ff7bd9737c8bf88de5c871b053c0ebe73c9e20349f63a8f37c0fdfda44c",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-flat/item1-match.json": "242fea988dbdbf5d009f0e710b89c2b25d0b36605164b22ebba93060dd05f506",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-flat/item2-extract.json": "ad06663bd35e073e72ead64f3fd86276de916093182ecf9a8618b3c5fa9c4e2e",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-flat/item2-match.json": "c181ff4984a4bafe5f0110e1975ed3219318febe4327f2cc9e3c45e2a587d877",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-flat/item3-extract.json": "2e31af25ca56eda1ce7662bd937ec6d27836d16ca23e87f55aa9161652308714",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-flat/item3-match.json": "a6b2d03bdee6c7b7dfd47db2d58f1b889a0a1fb53e540793c43332a4e51090ec",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-3-flat/item1-extract.json": "7fa6b473a970f4d06405d914134d6853d95f9e927705dc20a2fece79b42ed277",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-3-flat/item1-match.json": "8e7f1bd6d8a6315cf9049233c96486409ba5e293131ed20b2cadaddd1a826521",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-3-flat/item2-extract.json": "bfebc8ed5f5653f8aed246f4564171e3480811c93722f0a66b0e4ca9762cdf33",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-3-flat/item2-match.json": "cdc8cd9f4d518134520558c9bfd9686e7da1cafe74dc7e3201757d13b70c9867",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-3-flat/item3-extract.json": "5c0abefd8ec94cf9db4e6de6a80830fe3ad7604651435a748fb9f18eb5821141",
+    "/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-3-flat/item3-match.json": "e7f3cd89f546846870320461777638163432d1109e36afbf80f7a806770bd363"
+  },
+  "shared_attempts_before": 38,
+  "shared_budget_before": 0.5607010000000002
+}
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; from pathlib import Path; root=Path(\"/Users/lchingen/hivemind/poc/reports/2026-10-25-direct-subjects-01/sample-2-retained\"); records={name:json.loads((root/name).read_text()) for name in (\"item3-extract.json\",\"item3-match.json\",\"item3-result.json\")}; print(json.dumps({name: {key:value for key,value in record.items() if key in (\"status\",\"answer\",\"route\",\"input_id\",\"dispatch_seq\",\"new_views\",\"bindings\",\"threads\",\"memberships\")} for name,record in records.items()},ensure_ascii=False,indent=2))'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{
+  "item3-extract.json": {
+    "status": "complete",
+    "answer": {
+      "evidence": [
+        {
+          "id": "e1",
+          "quote": "Nvidia has formally launched the Vera Rubin platform , a combination CPU and GPU platform billed as a major step forward in the convergence of artificial intelligence and high-performance computing (HPC) for scientific research.",
+          "one_line": "The article reports the Vera Rubin platform launch; it does not establish that production shipments have begun.",
+          "speaker": "Network World staff",
+          "original_who": "Network World staff",
+          "original_day": "2026-06-22",
+          "tier": "fact",
+          "event_time": "2026-06-22",
+          "links": [
+            "v1"
+          ]
+        },
+        {
+          "id": "e2",
+          "quote": "Nvidia’s latest generation of AI chips, the Nvidia Rubin GPUs, expected to ship later this year , may face supply delays amid ongoing geopolitical pressures and supply chain constraints.",
+          "one_line": "The article reports expected Rubin GPU shipments later in 2026, while noting possible supply delays.",
+          "speaker": "Network World staff",
+          "original_who": "Network World staff",
+          "original_day": "2026-04-09",
+          "tier": "third_party_view",
+          "event_time": "Later in 2026",
+          "links": [
+            "v1"
+          ]
+        },
+        {
+          "id": "e3",
+          "quote": "Nvidia is developing a system-on-chip for Windows PCs , with Dell and Lenovo among the OEMs planning to build notebooks and desktops around the processor later this year.",
+          "one_line": "The article reports development of a Windows PC SoC and OEM plans to build devices around it later in 2026.",
+          "speaker": "Network World staff",
+          "original_who": "Network World staff",
+          "original_day": "2026-02-24",
+          "tier": "third_party_view",
+          "event_time": "Later in 2026",
+          "links": [
+            "c1"
+          ]
+        },
+        {
+          "id": "e4",
+          "quote": "OpenAI and Nvidia will create a strategic partnership to deploy at least 10 gigawatts of Nvidia systems for OpenAI’s next-generation AI infrastructure.The first phase is expected to come online in the second half of 2026 using Nvidia’s Vera Rubin CPU/GPU combination platform to train and run new models.",
+          "one_line": "The article reports the partners’ plan for at least 10 GW of Nvidia systems and says the first phase is expected online in H2 2026.",
+          "speaker": "Network World staff reporting the companies’ strategic partnership",
+          "original_who": "OpenAI and Nvidia",
+          "original_day": "2025-09-23",
+          "tier": "party_statement",
+          "event_time": "First phase expected in H2 2026",
+          "links": [
+            "c2"
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "id": "v1",
+          "object": "NVDA",
+          "kind": "company",
+          "looks_at": "Vera Rubin platform rollout",
+          "question": "Will NVIDIA commence Vera Rubin production shipments by December 31, 2026?",
+          "rungs": [],
+          "due_day": "2026-12-31",
+          "year": "2026",
+          "evidence_ids": [
+            "e1",
+            "e2"
+          ],
+          "thread_ids": [
+            "g1"
+          ]
+        },
+        {
+          "id": "c1",
+          "object": "NVDA",
+          "kind": "company",
+          "looks_at": "Windows PC SoC product rollout",
+          "question": "Will NVIDIA’s Windows PC SoC begin shipping in a notebook or desktop by December 31, 2026?",
+          "rungs": [
+            {
+              "label": "yes",
+              "condition": "NVIDIA’s Windows PC SoC begins shipping in at least one notebook or desktop by December 31, 2026."
+            },
+            {
+              "label": "no",
+              "condition": "NVIDIA’s Windows PC SoC has not begun shipping in any notebook or desktop by December 31, 2026."
+            }
+          ],
+          "due_day": "2026-12-31",
+          "year": "2026",
+          "evidence_ids": [
+            "e3"
+          ],
+          "thread_ids": [
+            "t1"
+          ]
+        },
+        {
+          "id": "c2",
+          "object": "NVDA",
+          "kind": "company",
+          "looks_at": "OpenAI–NVIDIA AI infrastructure deployment",
+          "question": "Will the first phase of the OpenAI–NVIDIA data-center deployment come online by December 31, 2026?",
+          "rungs": [
+            {
+              "label": "yes",
+              "condition": "The first phase of the OpenAI–NVIDIA data-center deployment comes online by December 31, 2026."
+            },
+            {
+              "label": "no",
+              "condition": "The first phase of the OpenAI–NVIDIA data-center deployment has not come online by December 31, 2026."
+            }
+          ],
+          "due_day": "2026-12-31",
+          "year": "2026",
+          "evidence_ids": [
+            "e4"
+          ],
+          "thread_ids": [
+            "t2"
+          ]
+        }
+      ],
+      "threads": [
+        {
+          "id": "t1",
+          "name": "Windows PC SoC product rollout",
+          "scope": "NVIDIA’s Windows PC SoC development and the planned OEM notebook and desktop products, including whether devices begin shipping."
+        },
+        {
+          "id": "t2",
+          "name": "OpenAI–NVIDIA AI infrastructure deployment",
+          "scope": "The planned deployment of Nvidia systems for OpenAI’s next-generation AI infrastructure, including the first-phase operational milestone."
+        }
+      ]
+    }
+  },
+  "item3-match.json": {
+    "status": "complete",
+    "answer": {
+      "candidates": [
+        {
+          "id": "c1",
+          "outcome": "new",
+          "target_view_id": "",
+          "reason": "The Windows PC SoC notebook-or-desktop shipping question is distinct from Vera Rubin production shipments and the SK Telecom AI factory rollout.",
+          "dependencies": []
+        },
+        {
+          "id": "c2",
+          "outcome": "new",
+          "target_view_id": "",
+          "reason": "The OpenAI–NVIDIA data-center deployment is a distinct question from both shown rollout questions; their outcomes do not determine whether its first phase comes online.",
+          "dependencies": []
+        }
+      ],
+      "evidence": [
+        {
+          "id": "e1",
+          "view_id": "v1",
+          "outcome": "new",
+          "target_evidence_id": "",
+          "said_day": "2026-06-22",
+          "reason": "This reports the platform launch, not the same original speaker, date, and statement as either existing item; it is not a later revision of either."
+        },
+        {
+          "id": "e2",
+          "view_id": "v1",
+          "outcome": "new",
+          "target_evidence_id": "",
+          "said_day": "2026-04-09",
+          "reason": "This is a separate Network World report about anticipated Rubin GPU shipments, not the same original speaker and statement as an existing item or a later revision by its source."
+        }
+      ]
+    }
+  },
+  "item3-result.json": {
+    "input_id": "gnews:9b084fc0f1583da0df01c45c",
+    "route": "written",
+    "new_views": {
+      "c1": "v3",
+      "c2": "v4"
+    },
+    "bindings": [
+      {
+        "candidate_id": "c1",
+        "view_id": "v3",
+        "thread_id": "g3",
+        "new_membership": true
+      },
+      {
+        "candidate_id": "c2",
+        "view_id": "v4",
+        "thread_id": "g4",
+        "new_membership": true
+      }
+    ],
+    "threads": [
+      {
+        "thread_id": "g1",
+        "name": "Vera Rubin platform rollout",
+        "scope": "NVIDIA’s Vera Rubin platform rollout, including customer samples and the planned start of production shipments.",
+        "seq": 1,
+        "input_id": "truenorth:transcript:NVDA:2026-02-25"
+      },
+      {
+        "thread_id": "g2",
+        "name": "SK Telecom AI factory rollout",
+        "scope": "The planned Korea AI Cloud and AI factory build, including the announced scale, deployment and first-factory operational milestone.",
+        "seq": 2,
+        "input_id": "nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory"
+      },
+      {
+        "thread_id": "g3",
+        "name": "Windows PC SoC product rollout",
+        "scope": "NVIDIA’s Windows PC SoC development and the planned OEM notebook and desktop products, including whether devices begin shipping.",
+        "seq": 3,
+        "input_id": "gnews:9b084fc0f1583da0df01c45c"
+      },
+      {
+        "thread_id": "g4",
+        "name": "OpenAI–NVIDIA AI infrastructure deployment",
+        "scope": "The planned deployment of Nvidia systems for OpenAI’s next-generation AI infrastructure, including the first-phase operational milestone.",
+        "seq": 3,
+        "input_id": "gnews:9b084fc0f1583da0df01c45c"
+      }
+    ],
+    "memberships": [
+      {
+        "thread_id": "g1",
+        "view_id": "v1",
+        "seq": 1,
+        "input_id": "truenorth:transcript:NVDA:2026-02-25"
+      },
+      {
+        "thread_id": "g1",
+        "view_id": "v2",
+        "seq": 2,
+        "input_id": "nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory"
+      },
+      {
+        "thread_id": "g2",
+        "view_id": "v2",
+        "seq": 2,
+        "input_id": "nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory"
+      },
+      {
+        "thread_id": "g3",
+        "view_id": "v3",
+        "seq": 3,
+        "input_id": "gnews:9b084fc0f1583da0df01c45c"
+      },
+      {
+        "thread_id": "g4",
+        "view_id": "v4",
+        "seq": 3,
+        "input_id": "gnews:9b084fc0f1583da0df01c45c"
+      }
+    ]
+  }
+}
+
+codex
+No serious findings. Both missing dimensions are resolved in the revised design.
+
+- [Completion rules](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md:65) now cover the original failure: a result without checks is `incomplete`; failed checks or `failed.json` prevent `complete`.
+- [Entrypoint tests](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md:84) now require genuine nonempty D147 old-format data, converted names data, and counterexamples for swapped references, missing references, and incorrect final membership.
+
+No edits or model calls.
+tokens used
+32,808
+No serious findings. Both missing dimensions are resolved in the revised design.
+
+- [Completion rules](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md:65) now cover the original failure: a result without checks is `incomplete`; failed checks or `failed.json` prevent `complete`.
+- [Entrypoint tests](/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-acceptance.md:84) now require genuine nonempty D147 old-format data, converted names data, and counterexamples for swapped references, missing references, and incorrect final membership.
+
+No edits or model calls.

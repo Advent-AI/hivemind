@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_event_type_distinguishes_search_identity_and_merge ____________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-314/test_event_type_distinguishes_0')
+
+    def test_event_type_distinguishes_search_identity_and_merge(tmp_path):
+        """B class: a product's announcement and shipment are distinct events at every reader."""
+        conn = store.open_db(str(tmp_path / 'views.sqlite'))
+        ship = candidate('c1', measure='event', scope='Rubin', scope_source='watch', event_type='shipment')
+        vid = writing.write(conn, UNIVERSE, 1, ITEM, handover([ship]), checked_new([ship]), {}).new_views['c1']
+        launch = dict(ship, id='c2', event_type='launch')
+        assert matching.key_matches(conn, launch) == []
+>       assert not matching._same_key(store.view_key(conn, vid), launch, 'NVDA')
+E       AssertionError: assert not True
+E        +  where True = <function _same_key at 0x10ab2b2e0>({'basis': 'n/a', 'event_type': 'shipment', 'key_version': 2, 'measure': 'event', ...}, {'basis': 'n/a', 'due_day': '2027-02-25', 'event_type': 'launch', 'evidence_ids': ['e1'], ...}, 'NVDA')
+E        +    where <function _same_key at 0x10ab2b2e0> = matching._same_key
+E        +    and   {'basis': 'n/a', 'event_type': 'shipment', 'key_version': 2, 'measure': 'event', ...} = <function view_key at 0x10ac437f0>(<sqlite3.Connection object at 0x10a9b2940>, 'v1')
+E        +      where <function view_key at 0x10ac437f0> = store.view_key
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-j6d0ebml/tests/test_identity_repair.py:64: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-j6d0ebml/tests/test_identity_repair.py::test_event_type_distinguishes_search_identity_and_merge
+1 failed in 0.09s

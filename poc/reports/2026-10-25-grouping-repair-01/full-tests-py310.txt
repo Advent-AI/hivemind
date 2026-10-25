@@ -1,0 +1,264 @@
+........................................................................ [ 42%]
+..............................FFFF.............................F........ [ 85%]
+........................                                                 [100%]
+=================================== FAILURES ===================================
+_ test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write[1] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-319/test_d147_duplicate_raw_output0')
+sample = 1
+
+    @pytest.mark.parametrize('sample', [1, 2, 3])
+    def test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write(tmp_path, sample):
+        """Failure-class proof: new schema spelling never deduplicates or repairs saved model output."""
+        source = study.ROOT / f'poc/reports/2026-10-25-direct-subjects-01/sample-{sample}-membership'
+        record = json.loads((source / 'item2-extract.json').read_text())
+        offered = json.loads(record['request']['messages'][1]['content'])['existing_subjects']
+        with pytest.raises(ValueError):
+            membership.validate_extraction(record['answer'], offered)
+        original = study.read_only(source / 'views.sqlite')
+        conn = legacy.open_db(tmp_path / 'views.sqlite')
+        original.backup(conn)
+        original.close()
+        class Saved:
+            cfg = study.config.load(str(study.ROOT / 'poc/config/poc-v7.json'))
+            def stage(self, name, prompt, payload, schema, setting):
+                if name.endswith('extract'):
+                    answer = copy.deepcopy(record['answer'])
+                    answer['candidates'][0]['thread_ids'] = ['g1', 't1']
+                    return answer
+                return {'candidates': [{'id': 'c1', 'outcome': 'new', 'target_view_id': '',
+                         'reason': 'A distinct customer deployment.', 'dependencies': []}],
+                        'evidence': [{'id': pair['evidence_id'], 'view_id': pair['view_id'], 'outcome': 'new',
+                                      'target_evidence_id': '', 'said_day': '', 'reason': 'New deployment evidence.'}
+                                     for pair in payload['evidence_pairs']]}
+        items = json.loads((source.parent / 'items.json').read_text())
+>       result = membership.process(conn, Saved(), universe.load(str(study.ROOT / 'poc/universe.json')), items[1], 2)
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_flat_membership.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/lchingen/hivemind/poc/hierarchy_study/extraction_membership.py:94: in process
+    written = writing.write(conn, uni, seq, item, handover, checked, second)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:75: in write
+    result = _write(conn, universe, seq, item, handover, checked, second_pass)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:106: in _write
+    view_id = _create_view(conn, c, object_id, universe.kind(object_id), seq, item, universe)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:38: in _create_view
+    store.create_view(conn, view_id=view_id, object_id=object_id, object_kind=object_kind, kind=c['kind'], looks_at=c['looks_at'],
+/Users/lchingen/hivemind/src/hivemind/views/store.py:79: in create_view
+    insert(conn, 'rungs', view_id=view_id, position=position, label=rung['label'], condition=rung['condition'], lo=rung.get('lo'), hi=rung.get('hi'))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <sqlite3.Connection object at 0x10be4af40>, table = 'rungs'
+fields = {'condition': 'The first AI factory comes online between 2027-01-01 and 2027-12-31.', 'hi': None, 'label': 'yes', 'lo': None, ...}
+columns = ['view_id', 'position', 'label', 'condition', 'lo', 'hi']
+
+    def insert(conn, table, **fields):
+        columns = list(fields)
+>       cursor = conn.execute(f'insert into {table} ({",".join(columns)}) values ({",".join("?" * len(columns))})', [fields[c] for c in columns])
+E       sqlite3.OperationalError: table rungs has no column named lo
+
+/Users/lchingen/hivemind/src/hivemind/views/store.py:69: OperationalError
+_ test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write[2] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-319/test_d147_duplicate_raw_output1')
+sample = 2
+
+    @pytest.mark.parametrize('sample', [1, 2, 3])
+    def test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write(tmp_path, sample):
+        """Failure-class proof: new schema spelling never deduplicates or repairs saved model output."""
+        source = study.ROOT / f'poc/reports/2026-10-25-direct-subjects-01/sample-{sample}-membership'
+        record = json.loads((source / 'item2-extract.json').read_text())
+        offered = json.loads(record['request']['messages'][1]['content'])['existing_subjects']
+        with pytest.raises(ValueError):
+            membership.validate_extraction(record['answer'], offered)
+        original = study.read_only(source / 'views.sqlite')
+        conn = legacy.open_db(tmp_path / 'views.sqlite')
+        original.backup(conn)
+        original.close()
+        class Saved:
+            cfg = study.config.load(str(study.ROOT / 'poc/config/poc-v7.json'))
+            def stage(self, name, prompt, payload, schema, setting):
+                if name.endswith('extract'):
+                    answer = copy.deepcopy(record['answer'])
+                    answer['candidates'][0]['thread_ids'] = ['g1', 't1']
+                    return answer
+                return {'candidates': [{'id': 'c1', 'outcome': 'new', 'target_view_id': '',
+                         'reason': 'A distinct customer deployment.', 'dependencies': []}],
+                        'evidence': [{'id': pair['evidence_id'], 'view_id': pair['view_id'], 'outcome': 'new',
+                                      'target_evidence_id': '', 'said_day': '', 'reason': 'New deployment evidence.'}
+                                     for pair in payload['evidence_pairs']]}
+        items = json.loads((source.parent / 'items.json').read_text())
+>       result = membership.process(conn, Saved(), universe.load(str(study.ROOT / 'poc/universe.json')), items[1], 2)
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_flat_membership.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/lchingen/hivemind/poc/hierarchy_study/extraction_membership.py:94: in process
+    written = writing.write(conn, uni, seq, item, handover, checked, second)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:75: in write
+    result = _write(conn, universe, seq, item, handover, checked, second_pass)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:106: in _write
+    view_id = _create_view(conn, c, object_id, universe.kind(object_id), seq, item, universe)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:38: in _create_view
+    store.create_view(conn, view_id=view_id, object_id=object_id, object_kind=object_kind, kind=c['kind'], looks_at=c['looks_at'],
+/Users/lchingen/hivemind/src/hivemind/views/store.py:79: in create_view
+    insert(conn, 'rungs', view_id=view_id, position=position, label=rung['label'], condition=rung['condition'], lo=rung.get('lo'), hi=rung.get('hi'))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <sqlite3.Connection object at 0x10be4b140>, table = 'rungs'
+fields = {'condition': 'The first AI factory comes online by December 31, 2027.', 'hi': None, 'label': 'yes', 'lo': None, ...}
+columns = ['view_id', 'position', 'label', 'condition', 'lo', 'hi']
+
+    def insert(conn, table, **fields):
+        columns = list(fields)
+>       cursor = conn.execute(f'insert into {table} ({",".join(columns)}) values ({",".join("?" * len(columns))})', [fields[c] for c in columns])
+E       sqlite3.OperationalError: table rungs has no column named lo
+
+/Users/lchingen/hivemind/src/hivemind/views/store.py:69: OperationalError
+_ test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write[3] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-319/test_d147_duplicate_raw_output2')
+sample = 3
+
+    @pytest.mark.parametrize('sample', [1, 2, 3])
+    def test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write(tmp_path, sample):
+        """Failure-class proof: new schema spelling never deduplicates or repairs saved model output."""
+        source = study.ROOT / f'poc/reports/2026-10-25-direct-subjects-01/sample-{sample}-membership'
+        record = json.loads((source / 'item2-extract.json').read_text())
+        offered = json.loads(record['request']['messages'][1]['content'])['existing_subjects']
+        with pytest.raises(ValueError):
+            membership.validate_extraction(record['answer'], offered)
+        original = study.read_only(source / 'views.sqlite')
+        conn = legacy.open_db(tmp_path / 'views.sqlite')
+        original.backup(conn)
+        original.close()
+        class Saved:
+            cfg = study.config.load(str(study.ROOT / 'poc/config/poc-v7.json'))
+            def stage(self, name, prompt, payload, schema, setting):
+                if name.endswith('extract'):
+                    answer = copy.deepcopy(record['answer'])
+                    answer['candidates'][0]['thread_ids'] = ['g1', 't1']
+                    return answer
+                return {'candidates': [{'id': 'c1', 'outcome': 'new', 'target_view_id': '',
+                         'reason': 'A distinct customer deployment.', 'dependencies': []}],
+                        'evidence': [{'id': pair['evidence_id'], 'view_id': pair['view_id'], 'outcome': 'new',
+                                      'target_evidence_id': '', 'said_day': '', 'reason': 'New deployment evidence.'}
+                                     for pair in payload['evidence_pairs']]}
+        items = json.loads((source.parent / 'items.json').read_text())
+>       result = membership.process(conn, Saved(), universe.load(str(study.ROOT / 'poc/universe.json')), items[1], 2)
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_flat_membership.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/lchingen/hivemind/poc/hierarchy_study/extraction_membership.py:94: in process
+    written = writing.write(conn, uni, seq, item, handover, checked, second)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:75: in write
+    result = _write(conn, universe, seq, item, handover, checked, second_pass)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:106: in _write
+    view_id = _create_view(conn, c, object_id, universe.kind(object_id), seq, item, universe)
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:38: in _create_view
+    store.create_view(conn, view_id=view_id, object_id=object_id, object_kind=object_kind, kind=c['kind'], looks_at=c['looks_at'],
+/Users/lchingen/hivemind/src/hivemind/views/store.py:79: in create_view
+    insert(conn, 'rungs', view_id=view_id, position=position, label=rung['label'], condition=rung['condition'], lo=rung.get('lo'), hi=rung.get('hi'))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <sqlite3.Connection object at 0x10be4b240>, table = 'rungs'
+fields = {'condition': 'The first such AI factory comes online in calendar 2027.', 'hi': None, 'label': 'yes', 'lo': None, ...}
+columns = ['view_id', 'position', 'label', 'condition', 'lo', 'hi']
+
+    def insert(conn, table, **fields):
+        columns = list(fields)
+>       cursor = conn.execute(f'insert into {table} ({",".join(columns)}) values ({",".join("?" * len(columns))})', [fields[c] for c in columns])
+E       sqlite3.OperationalError: table rungs has no column named lo
+
+/Users/lchingen/hivemind/src/hivemind/views/store.py:69: OperationalError
+____________ test_d148_visible_memberships_follow_the_stored_prefix ____________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-319/test_d148_visible_memberships_0')
+
+    def test_d148_visible_memberships_follow_the_stored_prefix(tmp_path):
+        """Value/reader row: add real displayed memberships without changing the old payload."""
+        out = tmp_path / 'experiment'
+        diagnostic.prepare(out, SOURCE)
+        conn = threads.open_db(out / 'prefix.sqlite')
+        calls = diagnostic.Calls(out, '1-control', conn, SOURCE / 'sample-2-retained')
+        uni = universe.load(str(study.ROOT / 'poc/universe.json'))
+        for i, item in enumerate(json.loads((out / 'items.json').read_text())[:2], 1):
+>           retained.process(conn, calls, uni, item, i)
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_grouping_consistency.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/lchingen/hivemind/poc/hierarchy_study/retained_membership.py:70: in process
+    answer = calls.stage(f'item{index}-match', base.MATCH_PROMPT, payload,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <grouping_consistency.Calls object at 0x10c99ae00>, name = 'item2-match'
+prompt = 'Place the supplied candidate theses and evidence using only the supplied lists.\nFor each candidate choose existing (...ence list.\nUse empty strings for absent targets. Answer every candidate and listed evidence pair. English prose only.'
+payload = {'candidate_lists': {'c1': ['v1']}, 'candidates': [{'due_day': '2027-12-31', 'evidence_ids': ['e1', 'e2'], 'id': 'c1',..._seq': 1, 'event_time': 'Production shipments expected in H2 2026', 'evidence_id': 'e1', ...}], 'view_id': 'v1'}], ...}
+schema = {'additionalProperties': False, 'properties': {'candidates': {'items': {'additionalProperties': False, 'properties': {... 'said_day', 'reason'], 'type': 'object'}, 'type': 'array'}}, 'required': ['candidates', 'evidence'], 'type': 'object'}
+setting = Setting(name='matching', model='gpt-6-luna', prompt_version='matching-v1', temperature=0.1, reasoning_effort='medium', max_output_tokens=12000)
+
+    def stage(self, name, prompt, payload, schema, setting):
+        if name.startswith(('item1-', 'item2-')):
+            record = json.loads((self.source / f'{name}.json').read_text())
+            expected = study.model.build_request(setting, prompt, json.dumps(payload, ensure_ascii=False),
+                                                  schema, 'hierarchy_result', self.cfg.provider)
+            if record['status'] != 'complete' or record['request'] != expected:
+>               raise ValueError('Prefix request differs; no prefix model calls are allowed')
+E               ValueError: Prefix request differs; no prefix model calls are allowed
+
+/Users/lchingen/hivemind/poc/hierarchy_study/grouping_consistency.py:51: ValueError
+_____ test_d150_default_cli_replays_real_requests_and_writes_same_members ______
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-319/test_d150_default_cli_replays_0')
+
+    def test_d150_default_cli_replays_real_requests_and_writes_same_members(tmp_path):
+        """State/entry-point rows: six isolated streams, original checks, history and resend at zero calls."""
+        out = tmp_path / 'experiment'
+        experiment.prepare(out, SOURCE)
+        original = CONTEXT / 'sample-3-control'
+        for label in experiment.LABELS:
+            folder = out / f'sample-dev-{label}'
+            for stage in ('extract', 'match'):
+                record = json.loads((original / f'item3-{stage}.json').read_text())
+                if label.endswith('-basis') and stage == 'extract':
+                    payload = json.loads(record['request']['messages'][1]['content'])
+                    record['request']['messages'][0]['content'] = base.EXTRACT_PROMPT + experiment.MEMBERSHIP_PROMPT
+                    record['request']['response_format']['json_schema']['schema'] = experiment.extraction_schema(payload['existing_subjects'])
+                    record['answer'] = wire_fixture(record['answer'])
+                study.write_json(folder / f'item3-{stage}.json', record)
+        result = subprocess.run([sys.executable, str(Path(experiment.__file__)), 'run', '--out', str(out)],
+                                cwd=tmp_path, capture_output=True, text=True, check=True)
+        assert 'FINISHED dev requests=0' in result.stdout
+        expected = json.loads((original / 'item3-result.json').read_text())
+        for label in experiment.LABELS:
+            folder = out / f'sample-dev-{label}'
+>           actual = json.loads((folder / 'item3-result.json').read_text())
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_membership_basis.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/pathlib.py:1134: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-319/test_d150_default_cli_replays_0/experiment/sample-dev-1-control/item3-result.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return self._accessor.open(self, mode, buffering, encoding, errors,
+                                   newline)
+E       FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-319/test_d150_default_cli_replays_0/experiment/sample-dev-1-control/item3-result.json'
+
+/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/pathlib.py:1119: FileNotFoundError
+=========================== short test summary info ============================
+FAILED ../../Users/lchingen/hivemind/poc/hierarchy_study/test_flat_membership.py::test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write[1]
+FAILED ../../Users/lchingen/hivemind/poc/hierarchy_study/test_flat_membership.py::test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write[2]
+FAILED ../../Users/lchingen/hivemind/poc/hierarchy_study/test_flat_membership.py::test_d147_duplicate_raw_outputs_still_refused_and_complete_references_write[3]
+FAILED ../../Users/lchingen/hivemind/poc/hierarchy_study/test_grouping_consistency.py::test_d148_visible_memberships_follow_the_stored_prefix
+FAILED ../../Users/lchingen/hivemind/poc/hierarchy_study/test_membership_basis.py::test_d150_default_cli_replays_real_requests_and_writes_same_members
+5 failed, 163 passed in 13.88s

@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_d162_every_stored_answer_roundtrips_without_changing_evidence ______
+
+    def test_d162_every_stored_answer_roundtrips_without_changing_evidence():
+        """Value table: source fields and both evidence-relation readers stay identical across all 18 answers."""
+        files = sorted(OLD.glob('*/item*/extraction.json'))
+        assert len(files) == 18
+        for path in files:
+            raw = ohio.read(path)
+            source, organised = parts(raw)
+>           assert split.assemble(source, organised, ohio.read(path.parent / 'context.json')['offered']) == raw
+E           AssertionError: assert {'candidates'...提供融资的相关安排。'}]} == {'candidates'...提供融资的相关安排。'}]}
+E             Omitting 2 identical items, use -vv to show
+E             Differing items:
+E             {'evidence': [{'event_time': '报道发表于2026-07-27；所述洽谈日期未说明', 'id': 'e1', 'links': ['c1'], 'one_line': 'Reuters于2026年7月27日...'c1', 'c2'], 'one_line': 'Reuters转述WSJ称，约2500亿美元担保涵盖数据中心租赁和债务融资、不涵盖中心内的英伟达芯片；英伟达还在讨论为OpenAI最高3500亿美元的芯片采购提供融资。', ...}]} != {'evidence': [{'event_time': '报道发表于2026-07-27；所述洽谈日期未说明', 'id': 'e1', 'links': ['c1'], 'one_line': 'Reuters于2026年7月27日...'c1', 'c2'], 'one_line': 'Reuters转述WSJ称，约2500亿美元担保涵盖数据中心租赁和债务融资、不涵盖中心内的英伟达芯片；英伟达还在讨论为OpenAI最高3500亿美元的芯片采购提供融资。', ...}]}
+E             Use -v to get more diff
+
+poc/hierarchy_study/test_source_first.py:39: AssertionError
+=========================== short test summary info ============================
+FAILED poc/hierarchy_study/test_source_first.py::test_d162_every_stored_answer_roundtrips_without_changing_evidence
+1 failed, 9 deselected in 0.04s

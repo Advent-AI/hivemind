@@ -1,0 +1,64 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_next_extraction_reads_committed_prior_view ________________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-358/test_next_extraction_reads_com0')
+
+    def test_next_extraction_reads_committed_prior_view(tmp_path):
+        """D159 normal same-day row: two real statements pass the public replay entry point."""
+        args, calls = setup_run(tmp_path), []
+>       result = replay.run(**args, transport=transport_for(args, calls))
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-sequence-mutants-zwsa1cij/tests/test_sequential_replay.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-sequence-mutants-zwsa1cij/src/hivemind/replay.py:135: in run
+    extracted = pre_extract(conn, archive, cfg, universe, fresh, transport, log)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <sqlite3.Connection object at 0x10d7d2340>
+archive = <hivemind.model.Archive object at 0x10d9ce080>
+cfg = Config(version='poc-v16', checksum='b3457a76324b38af', provider='openai', search_top_n=10, extraction={'T1': Setting(n...t-6-luna', prompt_version='verdict-v0', temperature=0.0, reasoning_effort='medium', max_output_tokens=8000), idea=None)
+universe = <hivemind.universe.Universe object at 0x10d9cda20>
+items_and_routes = [({'category': 'T4', 'copy_of': None, 'feed': 1, 'input_id': 'truenorth:transcript:NVDA:2026-02-25', ...}, Route(kind=...NVDA:0001045810-26-000021:nvda-20260125.htm', ...}, Route(kind='extract', sequence_no=2, resume_from=None, reason=''))]
+transport = <function transport_for.<locals>.send at 0x10d9e8940>
+log = <function setup_run.<locals>.<lambda> at 0x10d8c7eb0>
+
+    def pre_extract(conn, archive, cfg, universe, items_and_routes, transport, log):
+        """Run the day's extractions concurrently (model calls that read only the item and the views open at the start
+        of the day) and store each handover; the rounds then run in sequence order and resume from 'matched'. A candidate
+        that an earlier item of the same day just opened is caught by matching (归入), so the end state is the one
+        sequential processing gives (D31: a parallel read that changed is judged again by the matcher)."""
+        # the views database connection stays in this thread: the shown views are read here, once per object set
+        snapshot = {}
+        shown_for = {}
+        for item, route in items_and_routes:
+            objects = [o['value'] for o in item.get('object_identifiers') or [] if universe.has(o['value'])]
+            key = tuple(sorted(objects))
+            if key not in snapshot:
+                snapshot[key] = store.views_for_prompt(conn, objects)
+            shown_for[item['input_id']] = snapshot[key]
+    
+        def work(item, route):
+            return item, route, extraction.extract(archive, cfg, item, item['text'], shown_for[item['input_id']], universe, transport=transport)
+    
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=EXTRACTION_WORKERS) as pool_:
+            futures = [pool_.submit(work, item, route) for item, route in items_and_routes]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    item, route, handover = future.result()
+                    results[item['input_id']] = handover
+                except Exception as error:
+                    log('  ! pre-extraction failed:', repr(error)[:200])
+        for item, route in items_and_routes:
+            handover = results.get(item['input_id'])
+            if handover is None:
+                continue
+            store.insert(conn, 'handovers', input_id=item['input_id'], seq=route.sequence_no,
+>                        handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped}, ensure_ascii=False))
+E           NameError: name 'json' is not defined
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-sequence-mutants-zwsa1cij/src/hivemind/replay.py:46: NameError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-sequence-mutants-zwsa1cij/tests/test_sequential_replay.py::test_next_extraction_reads_committed_prior_view
+1 failed in 0.07s

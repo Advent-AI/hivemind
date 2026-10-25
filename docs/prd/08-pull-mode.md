@@ -1,41 +1,40 @@
-# Pull 模式
+# Pull mode
 
-> 状态：只定了什么时候跑和到期定格（D54），其余以后设计 · 更新：2026-10-22 · 依据：docs/DECISIONS.md D12、D13、D14、D29、D31、D41、D54、D57、D58
-> 最后一节“旧稿”是按旧观点库写的（D41 以前），检验条件、前提、兜底复核、合并拆分驱动和“要等”都不再用。
-> 设计页：docs/system-design.html › New › Pull 模式。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+> Status: scheduling and due-date freezing are decided (D54); remaining design is deferred. English edition: October 25, 2026 (D163).
+> The earlier draft predates D41. Its verification conditions, premises, fallback reviews, driver merging/splitting and waiting requirements no longer apply.
+> Design page: `docs/system-design.html` → New → Pull mode. Recorded decisions take precedence.
 
-## 一句话
+## Purpose
 
-系统里唯一按时间做事的地方：每天结束时、或按定时任务的间隔主动跑，把观点整体过一遍、更新；到期的观点，状态定格、关掉。
+The only time-driven module: run at day-end or scheduled intervals to review and update theses, and freeze and close those that are due.
 
-## 已经定的
+## Decided behaviour
 
-- 和信息流的方向相反：信息流来一条处理一条，从不看日历，也不管时间；按时间做的事都在这里。
-- 每天结束时、或按定时任务的间隔跑一次，主动把观点整体过一遍、更新（Alex：“the other mode will proactively run through theses and update holistically by end of day, or like a certain cron job with a certain time interval”）。
-- 到期的观点：状态停在哪一格，就定格，这条观点关掉，不另外定别的（Alex：“最后到期日的状态就定格就好”）。让争论见分晓的那条信息（年报、官方行动）照常作为证据进来、推状态；定格不另外等这些信息（Alex：“为什么要等？不合理啊”）。
-- 依赖它的观点读它关掉时的状态和理由；要接着看，就开一条新观点接续它（见 06-views.md）。
-- Pull 模式用的“现在”从外面传进来：上线用真实时间，测试用回放的时间。系统里没有自己的钟。
-- 和上游推送不是一回事：上游推送只负责把信息送进来，不叫 Pull。
+- The incoming stream handles items without reading the calendar; pull mode owns time-driven work.
+- Run at day-end or at scheduled intervals for an overall review and update.
+- Freeze due theses at their current rung, without a separate result. Decisive information enters normally as evidence; freezing does not wait for it.
+- Dependencies read the closing state and reasons. Further tracking uses a new successor thesis under the library's rules.
+- Supply “now” externally: real time in production, replay time in tests. The system has no internal clock.
+- Upstream delivery is distinct and must not be called pull mode.
 
-## 例子
+## Example
 
-NVDA FY27 全年中国区收入那条，到期日是 FY27 年报的财报日（示意 2027-02-25）。那天业绩发布进来，是“发生的事”，写着中国区收入比 FY26 降了 85%（示意）；观点库重判，把状态推到“降 80% 及以上”。当天结束时 Pull 模式跑，这条今天到期，状态就定格在“降 80% 及以上”，观点关掉。依赖它的观点读它关掉时的状态和理由；要接着看，就开 FY28 那条接续它。
+Suppose NVDA FY2027 China revenue is due on the annual earnings date, illustrated as February 25, 2027. Published results show an 85% decline versus FY2026. The library rejudges it to “down at least 80%”. Day-end pull freezes that state and closes the thesis. Dependencies read the closing conclusion. An FY2028 successor continues tracking.
 
-## 还没定的（以后设计）
+## Open questions
 
-- 每天结束时、或按定时任务，具体怎么跑；“整体过一遍、更新”做什么、怎么做。
-- 最终判定还要不要单独一步（Claude 提议由这里来做，不再单独成一步，因为每次重判本来就读全部没被替代的证据；没确认）。Config 里最终判定那一套设置，在这之前先留着。
-- Claude 提的 2 条（见 06-views.md 最后）：答不出和等公布；每天查重。
-- 到期时要不要另外去查准确的数（股价、XBRL 等），从哪里查（团队自己的库，还是直接去源头）；查到的要不要也走分发进来。
+- Detailed day-end/scheduled execution and what the overall review does.
+- Whether final verdict is separate. Claude proposed integrating it here because rejudgement already reads all evidence still in force; this is unapproved. Keep its Config settings meanwhile.
+- The library's two proposals: unavailable answers/pending publication, and daily duplicate checks.
+- Whether to fetch exact settlement numbers such as prices/XBRL, from the team's library or original source, and whether those enter through dispatch.
 
-## 旧稿（D41 以前写的，不再用）
+## Earlier draft: no longer used
 
-按旧观点库写的三件事：到期的观点送最终判定，要等发布日不晚于期限的文件都处理完再判；前提被削弱、超过 7 天没人看过的观点，兜底复核；定期合并和拆分驱动。检验条件、前提、驱动已经不用（D38、D41），“要等”也不再用（D54）。
+The former design sent due theses to a final verdict after all pre-deadline publications were processed; reviewed weakened premises after seven days; and periodically merged/split drivers. D38/D41 removed those concepts; D54 removed the extra wait.
 
-## 相关决定
+## Related decisions
 
-- D12、D13：信息流不看日历。
-- D14：两种模式分开设计。
-- D29：到期的观点送最终判定（旧稿；D54 改成到期状态定格）。
-- D31：Pull 模式的“现在”从外面传进来（前提落后的兜底复核是旧稿，不再用）。
-- D54：Pull 模式每天结束时、或按定时任务主动跑，把观点整体过一遍；到期的观点状态定格，不另外等。
+- D12/D13: the stream does not read the calendar. D14: design the two modes separately.
+- D29: earlier expiry final verdict, superseded by D54.
+- D31: externally supplied “now”; the premise-lag fallback is obsolete.
+- D54: scheduled overall review and due-date freezing without waiting.

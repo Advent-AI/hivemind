@@ -1,77 +1,73 @@
-# Thesis UI：数据与组件边界
+# Thesis UI: data and component boundaries
 
-本轮只整理 Thesis 和页面骨架。Idea 的判断、数字输入和匹配仍是演示代码，隔离在 `legacy` 模块，留到下一轮。
-2026-10-24 晚：Idea 卡接到了服务（`poc/ui/src/idea/idea.js`，`docs/poc/idea-card.md`）：一句话 POST `/ideas`，回复经 `fromIdeaResponse` 进合同，`reading.chosen[0]` 做主卡、其余做支撑；本地匹配的演示代码 `legacy/idea.js` 已按 Alex 的要求删除。
-例如：agent 取回 v3 的完整记录，交给一个转换函数，得到同一份已验证的 Thesis；卡片、历史图、证据列表和详情都读它，不各猜一套字段。
+This refactor covers thesis components and the page structure. Its initial scope left Idea judgement and matching in demo code. The subsequent October 24 update connected the Idea card to the service (`poc/ui/src/idea/idea.js`, `docs/poc/idea-card.md`): POST a sentence to `/ideas`, adapt the response with `fromIdeaResponse`, use `reading.chosen[0]` as the main card and the rest as supporting cards. The local `legacy/idea.js` matcher was removed at Alex's request.
 
-## 范围与依据
+For example, an agent retrieves the complete v3 record and passes it through one adapter. The card, history chart, evidence list and detail panel all read the same validated thesis instead of inferring separate field shapes.
 
-- D76、D112：服务负责取数和 agent 判断，UI 不调用模型、不保管密钥、不重写判断。
-- D78、D81、D87、D97–D129：保留已确定的命名、颜色、图、交互、居中方式和字号。
-- 新的入口接收 `thesis-ui/1` 数据；现有 `view_bundle` 经过唯一的适配器再进入 UI。schema 是允许字段的唯一清单。
-- 不改抽取、比对、评分或 Idea 产品设计。不在本轮接通付费调用。新增一个只读取数入口 `thesis_bundles` / `GET /thesis-bundles`，复用已有 bundle writer，不重新组装源数据。
+## Scope and authority
 
-## 当前范围的清点
+- D76/D112: the service owns data retrieval and agent judgement. The UI does not call models, hold credentials or rewrite judgements.
+- D78/D81/D87/D97–D129: preserve agreed terminology, colours, charts, interactions, centring and typography.
+- The new entry accepts `thesis-ui/1`; existing `view_bundle` data passes through one adapter. The schema is the sole allowed-field list.
+- This refactor does not alter extraction, matching, scoring or Idea product design, or enable paid calls. Add the read-only `thesis_bundles` / `GET /thesis-bundles` entry using the existing bundle writer.
 
-`data.en.json`：42 个 Thesis、375 次判断、1,089 个证据链接、44 条开关记录、32 条依赖。
-中英文文件同构。现有一页同时负责展示、领域推导、交互和演示匹配；bundle 中评分为 position，UI 又根据标签猜 score。
-开关和依赖只有 seq，证据的 publication day 被当成到达日期，因此历史重放没有足够字段稳定地还原状态。
+## Original inventory
 
-## 所有权
+`data.en.json` contained 42 theses, 375 judgements, 1,089 evidence links, 44 lifecycle switches and 32 dependencies. Chinese and English files shared a structure. The former single page combined rendering, domain derivation, interaction and demo matching. Bundles supplied positions while the UI inferred scores from labels. Switches/dependencies had sequence numbers only; publication day was treated as arrival day, leaving insufficient dates for faithful historical replay.
 
-| 模块 | 输入 | 输出/职责 | 不负责 |
+## Ownership
+
+| Module | Input | Responsibility | Excludes |
 |---|---|---|---|
-| `model/thesis.schema.json` | agent 提供的规范数据 | 固定版本和封闭形状 | 渲染 |
-| `adapters/bundle.js` | mock 或 API 的 bundle | 显式 score、日期、规范 Thesis | 网络与模型调用 |
-| `model/contract.js` | 规范数据 | schema 与引用/时间关系校验；错误含字段路径 | 修补错误数据 |
-| `model/thesis.js` | 已验证数据、指定日期 | 当前判断、状态、证据、关系、历史选择 | DOM |
-| `components/thesis-card.js` | Thesis、日期范围 | 卡片 | Idea 匹配 |
-| `components/thesis-chart.js` | Thesis、日期范围、回调 | 图与选择坐标 | 取数 |
-| `components/thesis-detail.js` | 数据集、Thesis id、日期 | Overview/Evidence/History；拥有自己的交互状态和销毁函数 | 全局变量 |
-| `components/canvas.js` | 已选择的卡片、回调 | 摆放、连线、平移、缩放 | 决定哪个 Thesis 匹配 Idea |
-| `legacy/idea.js` + demo entry | 用户输入、旧演示数据 | 原来的 Idea 演示行为 | 正式 agent 接口 |
+| `model/thesis.schema.json` | Canonical agent data | Versioned closed shape | Rendering |
+| `adapters/bundle.js` | Mock/API bundle | Explicit scores, dates and canonical theses | Network/model calls |
+| `model/contract.js` | Canonical data | Schema, reference and time validation; field-path errors | Repairing invalid data |
+| `model/thesis.js` | Validated data and date | Current judgement, state, evidence, relations and history selection | DOM |
+| `components/thesis-card.js` | Thesis and date range | Card | Idea matching |
+| `components/thesis-chart.js` | Thesis, date range, callbacks | Chart and selection coordinates | Fetching |
+| `components/thesis-detail.js` | Dataset, thesis ID, date | Overview/Evidence/History, local state and destruction | Global variables |
+| `components/canvas.js` | Selected cards and callbacks | Layout, edges, pan and zoom | Selecting Idea matches |
+| `idea/idea.js` | User input and service response | Service-backed Idea flow | The removed local demo matcher |
 
-## 值 × 读者
+## Value × reader
 
-| 值 | 写入方 | 读者/规则 |
+| Value | Writer | Reader/contract |
 |---|---|---|
-| id | ledger/agent | 卡片、选择、依赖；数据集内唯一 |
-| rung.position / score | bundle adapter 或 agent | 图、badge、表格；position 连续，score 显式，2 个 Yes/No 或 5 个数值状态 |
-| judgement.id / day / seq / rung / cited | ledger/adapter | as-of 与历史；按 day、seq、稳定 id 排序，引用必须存在，不能引用未来证据 |
-| evidence.day / arrival_day | 来源/ledger | date 显示读 day，历史过滤与柱子读 arrival_day |
-| switches.day / dependencies.day | ledger seq 的日期 | 状态与关系只使用截至所选日期已存在的记录 |
-| dataset.as_of / days | host | 默认日期和重放边界；不读机器时钟 |
-| URI | 来源 | 只把 http/https 做成链接，文本与属性转义 |
+| id | Ledger/agent | Cards, selection and dependencies; unique within dataset |
+| rung.position / score | Adapter/agent | Chart, badge and table; consecutive positions and explicit scores; two yes/no or five numeric states |
+| judgement.id / day / seq / rung / cited | Ledger/adapter | Historical reads ordered by day, sequence and stable ID; references exist and cannot cite future evidence |
+| evidence.day / arrival_day | Source/ledger | Display uses publication day; historical filtering and bars use arrival day |
+| switches.day / dependencies.day | Ledger sequence date | Only records existing by the selected date affect state/relations |
+| dataset.as_of / days | Host | Default date and replay bounds, never machine time |
+| URI | Source | Only http/https become links; escape text and attributes |
 
-## 状态 × 事件
+## State × event
 
-| 状态/事件 | 结果 |
+| State/event | Result |
 |---|---|
-| 有效数据 + mount/update | 验证后一次性替换数据；所有组件共用同一快照 |
-| 无效数据 + update | 抛带路径的 ContractError；现有画面不被半份数据替换 |
-| 有/无判断、未创建、已关闭 | 显式空状态；不捏造 score；状态取对应日期的开关 |
-| 悬空关系目标 | 保留引用；只画已载入的目标，不猜目标内容 |
-| 切换 Thesis 或数据 | 清理旧事件/动画，重置详情局部状态 |
-| 展开/折叠中重复点击 | 从当前高度反向；销毁取消动画 |
-| History hover/click/quiet day | 保留 D122 的选点规则；不读未来判断 |
-| destroy 后的事件 | 无监听器、无动画继续写 DOM |
-| 两个实例同时存在 | 各自根节点、id 前缀、数据和生命周期；互不查全局 DOM |
+| Valid data + mount/update | Validate then replace atomically; all components share one snapshot |
+| Invalid data + update | Throw a field-path ContractError; preserve the existing view |
+| Judged/unjudged, not created, closed | Explicit empty states; no invented score; read the selected date's switch |
+| Unloaded relation target | Preserve reference; draw only loaded targets without inventing content |
+| Thesis/data switch | Remove old events/animations and reset local detail state |
+| Repeated expand/collapse | Reverse from current height; destruction cancels animation |
+| History hover/click/quiet day | Preserve D122 selection rules; never read future judgements |
+| Event after destruction | No listener or animation continues writing DOM |
+| Two instances | Separate roots, ID prefixes, data and lifecycles; no global DOM queries |
 
-## 旧检查与新入口
+## Existing checks and new entry
 
-现有 mock 与 API 均经过相同 adapter。对 42 个中英文 mock、完整 ledger bundle 和已存 `/ideas` 样本做离线回放；不调用模型。
-测试覆盖：缺字段/未知字段、重复 id、错误日期、非法状态、错误引用、乱序输入、源数据不被修改、关闭/关系时间、早于首次判断、日期间隙、替换证据和危险链接。
-组件使用真实浏览器验证，覆盖两种梯子、空判断、筛选、历史选择、展开反向和销毁。Python 原套件跑一次；`docs/check.py` 最后跑。
+Mock and API bundles use the same adapter. Replay both languages' 42 mock theses, complete ledger bundles and stored `/ideas` samples without model calls. Cover missing/unknown fields, duplicate IDs, invalid dates/states/references, unordered input, source immutability, lifecycle/relation dates, time before first judgement, date gaps, replacement evidence and unsafe links.
 
-构建保留单文件 mock，源代码改用 ES modules。只引入开发构建所需的 esbuild 和 schema 校验器 Ajv；schema 在构建时编译成独立校验函数，浏览器不运行编译器。JS 产物预算 200 KB（不含数据与字体）；验证全部示例数据预算 200ms。记录实际值，不把预算写成结果。
+Browser verification covers both ladder kinds, empty judgements, filtering, historical selection, reversing expansion and destruction. Run the Python suite once and `docs/check.py` last.
 
-ESLint 检查模块边界中的未声明变量和无用代码；Prettier 固定格式。它们只用于开发，不进入页面。
+Keep the single-file mock build while organising source into ES modules. Use esbuild and Ajv for development; compile the schema to a standalone validator so the browser does not run a compiler. Budget: 200 KB JavaScript excluding data/fonts and 200 ms to validate the full sample. Report measurements separately from budgets. ESLint and Prettier are development-only.
 
-## 本轮验证结果
+## Recorded refactor results (historical, not a new D163 run)
 
-- `npm --prefix poc/ui test`：10 项通过；两种语言的 42 条 mock 记录，以及全部 94 条 live bundle 都经过同一合同。
-- `npm --prefix poc/ui run test:mutations`：把未来判断当成当前判断、把发布日期当到达日期、提前应用关闭状态，三个改坏版本都被真实数据检查拒绝。
-- `python3 -m pytest tests -q`：31 项通过，包含通过实际 HTTP 和 MCP 传输读取 bundle。
-- 浏览器：两个实例无重复 DOM id，拒绝非法更新后仍显示原数据；销毁一个实例不影响另一个；空历史、两个梯子类型、重放、筛选、展开与历史选点均可用。
-- 本机最终构建：JS 约 174 KB，42 个 Thesis 的数据验证约 23ms，均在预算内。`npm run lint` 和 `npm run format:check` 通过。
-- 冻结的上游 PRD 不变。此次读数层只补齐 id 和时间，不改变分类、抽取、比对、重判或到期规则。
+- UI tests: 10 passed; both 42-thesis mock languages and 94 live bundles used the same contract.
+- Three mutants were rejected: future judgement as current, publication day as arrival day, and early closure.
+- Python: 31 tests passed, including real HTTP/MCP bundle reads.
+- Browser: two instances had unique DOM IDs; invalid updates retained old data; destroying one did not affect the other. Empty history, both ladders, replay, filters, expansion and selection worked.
+- Build: about 174 KB JavaScript; 42-thesis validation about 23 ms. Lint and format checks passed.
+- The read layer added IDs and dates without changing classification, extraction, matching, rejudgement or expiry rules.

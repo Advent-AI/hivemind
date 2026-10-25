@@ -7,22 +7,22 @@
   // ------------------------------------------------------------------ the tags: rule = what puts an input here
 
   const TAGS = {
-    T1: { name: 'results_release', label: '业绩发布', forms: '两者', decide: '文字：8-K 里 Item 2.02 点名的附件、6-K 里的财期业绩附件、交易所的业绩公告、来源标为“业绩”的文件。表格：数据集表里登记为业绩数字的。', rule: '一个财期的业绩稿、股东信、当天的数字', definition: '一个财期（季度、半年、全年）的业绩发布。文字：8-K 里 Item 2.02 那一段点名的附件（业绩稿、股东信、CFO 解读、Update deck），6-K 里写明是财期业绩的附件，交易所的业绩公告，来源标为“业绩”的文件。表格：业绩当天公布的数字和指引（业绩表、指引历史）。月度经营数据不在这里，归 T6。同一份业绩稿的转载，并到原来那条。', examples: 'Apple 季度业绩稿、Tesla Update deck、指引历史' },
-    T2: { name: 'periodic_report', label: '定期报告', forms: '两者', decide: '文字：10-K、10-Q、20-F、40-F、ARS（含修正版 /A），交易所的年报、中报、季报，来源标为“定期报告”的文件。表格：标准化报表（申报里的 XBRL 数字不另外推，文件本身已经有这些数）。', rule: '10-K、10-Q、20-F、40-F、ARS，和数据商整理的标准化报表', definition: '文字：10-K、10-Q、20-F、40-F、ARS 及修正版（/A，注明它替换了哪一版），交易所的年报、中报、季报，来源标为“定期报告”的文件。表格：数据商整理的标准化报表和分部数据（注明出自哪份报告）；这些报告里的 XBRL 数字不另外推，文件本身已经有这些数。是年报还是季报，只是一个属性。', examples: 'Meta 10-K、10-K/A、标准化利润表' },
-    T3: { name: 'legal_and_capital_markets', label: '法律与资本市场文件', forms: '文本', decide: '文字：委托书、融资、并购、要约收购类申报（不管谁提交的），申报里编号 2、3、4、10 的附件，交易所通函，来源标为“法律”的文件。', rule: '委托书、融资、并购、要约；附件 2、3、4、10', definition: '不管谁提交的：委托书（包括代理权争夺双方的材料）、融资、并购、要约收购（包括收购方、私募发起的）申报及修正版；SEC 规定编号 2、3、4、10 的附件（并购协议、公司章程、证券和债务工具、重大合同）；交易所通函；来源标为“法律”的文件。读法：读出条款和各方的说法，说法算提交方说的。', examples: 'DEF 14A、激进投资者的 DEFC14A、424B5、合并协议、信贷协议' },
-    T4: { name: 'call_transcript', label: '电话会文字稿', forms: '文本', decide: '文字：文字稿，而且是公司在讲（公司自己办的会，或在投资者会议上发言）；425 申报里的并购电话会。', rule: '公司自己在讲的会议文字稿', definition: '公司在讲的会议文字稿：公司自己办的（业绩会、投资者日、公司播客），在投资者会议上的发言（券商会议），以及 425 申报里的并购电话会。媒体办的活动归 T7。在哪开的、谁整理的文字稿，都只是属性。', examples: 'MSFT 业绩会、NVDA 在券商会议上的炉边对谈' },
-    T5: { name: 'presentation', label: '演示材料', forms: '文本', decide: '文字：公司的幻灯片：8-K 里 7.01 项和 425 申报里的演示稿、IR 网站上不算业绩发布的 PPT。', rule: '幻灯片、PDF 演示稿', definition: '公司发布的幻灯片或 PDF 演示稿：8-K 里 7.01 项和 425 申报里的演示稿、IR 网站上不算业绩发布的 PPT（来源标为“业绩”的归 T1）。', examples: '投资者日 PPT、IR 网站上没标成“业绩”的 PPT' },
-    T6: { name: 'company_communication', label: '公司其他发布', forms: '两者', decide: '文字：公司的其余文件（8-K 正文和其他附件、其余 6-K、给 SEC 的回函、延期申报通知、新闻稿、官方账号的帖子）。表格：IR 网站的补充表格、月度经营数据。', rule: '公司的其余文件和数据（公司发的其余内容都归这里）', definition: '文字：申报里不属于前几类的（8-K 正文、业绩那一段没点名的附件和其他项、其余 6-K、给 SEC 的回函、延期申报通知），以及新闻稿、经营更新、ESG 报告、新闻室、博客、IR 和产品页面、公司官方社交账号的帖子。表格：公司自己发布的补充资料和月度经营数据（IR 网站上的 Excel、CSV）。', examples: '高管任免 8-K、季度交付量公告、IR 网站上的 KPI 表' },
-    T7: { name: 'news', label: '新闻', forms: '文本', decide: '文字：作者是媒体，没有登记过发布系列，栏目不是评论或分析（没写栏目也算新闻）。', rule: '媒体的报道（媒体发的其余内容都归这里）', definition: '媒体发的内容，除了评论和分析：新闻报道、访谈、播客文字稿、媒体自己办的活动（比如 WSJ Tech Live）、媒体账号的帖子；综合、财经、行业媒体都算。没写栏目的按新闻算。评论和分析栏目归 T8；媒体登记过的发布系列按系列归类（比如 Reuters 的经济学家调查归 T8）。', examples: 'Reuters 报道、CNBC 对 CEO 的访谈、DigiTimes 的供应链报道' },
-    T8: { name: 'opinion_analysis', label: '观点与分析', forms: '两者', decide: '文字：登记为预测、展望或研究的发布系列（不管谁发的）；媒体的评论和分析栏目；分析方写的、不是对话记录的文字；个人写的所有文字；申报里投资者写给董事会的信。表格：预测、评级、目标价、一致预期、投资者情绪调查。', rule: '有作者的看法、分析、预测和评级', definition: '有作者的看法和分析，不管作者是谁、多长、发在哪。文字：卖方和独立研究、评级机构、行业研究、智库和学术、官方和国际组织的预测、展望和研究（IMF 世界经济展望、CBO 预算展望、央行工作论文）、投资者（基金信、做空报告、申报里写给董事会的信）、媒体的评论栏目、个人的帖子和长文，以及你自己的投资备忘录。表格：分析师预测和修正历史、投资评级、目标价、一致预期、信用和 ESG 评级、经济学家和官方机构的预测（包括 GDPNow 这种实时预测）、投资者情绪调查（一群人看法的汇总，和一致预期一样）、行业估计、“预测表”上传模板。看法和估计都算作者说的，不当成已经发生的事；作者是你自己的，只当作要跟踪的看法，不当作证据。', examples: '卖方首次覆盖、做空报告、IMF 世界经济展望、Reddit 帖子、FY27 EPS 一致预期、你的盈利模型' },
-    T9: { name: 'interview_notes', label: '访谈记录', forms: '文本', decide: '文字：作者是分析方，体裁是逐字稿或纪要。', rule: '对话的逐字稿或纪要', definition: '分析方记录的对话：专家网络的访谈、你约的管理层会面和渠道调研。体裁是逐字稿或纪要。话算原来说话的人说的，记录的人只是属性。公司自己办的活动，和公司在投资者会议上的发言，归 T4。', examples: '专家网络访谈、与 CFO 会面的纪要' },
-    T10: { name: 'official_record', label: '官方行动与记录', forms: '两者', decide: '文字：登记为行动或记录的官方发布系列；作者是官方、但没登记发布系列的（官方的其余内容都归这里）；SEC 意见函、法院案卷。表格：政府公布的记录。', rule: '官方的文件、程序和记录', definition: '官方发的、不属于别处的都归这里。文字：监管、法院、立法、行政、交易所的正式文件和程序记录（裁决、审批、召回、法规、制裁、出口管制、关税、合同授予、听证会和庭审文字稿、SEC 意见函、法院案卷）。表格：政府公布的记录（合同、游说、政治献金、专利、诉讼案卷信息、召回、海关提单）。官方的预测、展望和研究归 T8，统计数据归 T11。官员在任期内的个人账号也算官方（比如总统在社交平台上宣布关税）。里面的说法算原来说话的人或提交方说的。', examples: '欧盟委员会决定、FTC 诉状、SEC 意见函、国防合同授予、专利授权' },
-    T11: { name: 'macro_policy_statistics', label: '宏观政策与统计', forms: '两者', decide: '文字：登记为货币政策或统计的发布系列，不管作者是官方还是民间。表格：宏观统计和政策利率。', rule: '货币政策、宏观统计（官方民间都算）', definition: '文字：登记为货币政策或统计的发布内容，不管谁发的：央行关于货币政策和经济形势的材料（声明、纪要、讲话、点阵图、褐皮书），统计发布稿（官方的 CPI、非农；民间的 ISM PMI、ADP 就业、密歇根消费者信心）。表格：衡量整体经济或整个行业的统计和政策利率，官方民间都算，每条都带它是哪天发布的（数据会修正，旧版留着）；权重不公开、我们自己算不出来的合成指标（领先指标 LEI、金融条件指数）也在这里。市场上的利率和汇率归 T12；针对具体公司、产品、地点、链和协议的测量归 T15。', examples: 'FOMC 声明、褐皮书、CPI 与非农、ISM PMI、联邦基金利率' },
-    T12: { name: 'market_data', label: '市场价格与成交', forms: '结构化', decide: '表格：数据集表里登记为价格和成交的。', rule: '股票、期权、利率、汇率、商品、加密货币、CDS', definition: '能交易的东西的价格和成交：股票、ETF、期权链、期货、利率、汇率、商品、加密货币、信用利差和 CDS、预测市场；分红、拆股这类公司行动，股本。', examples: '日线、期权隐含波动率、10 年期国债收益率' },
-    T13: { name: 'positioning', label: '持仓与资金流', forms: '结构化', decide: '表格：数据集表里登记为持仓和资金流的；持股类申报的表格版本。', rule: '13F、Form 4、13D/G、空头、资金流', definition: '市场参与者的持仓和资金流：Form 4、13D/G、13F、144 的表格版本，空头持仓、融券费率和使用率、ETF 和基金的资金流、CFTC 持仓报告、加密货币的大户和“聪明钱”持仓。', examples: '机构持仓变化、内部人卖出' },
-    T14: { name: 'calendar', label: '日历', forms: '结构化', decide: '表格：数据集表里登记为排好的日期的。', rule: '财报日、会议、截止日', definition: '已经排好的日期：财报、投资者日、发布会、宏观数据发布、央行会议、法院和监管的截止日、指数调整、解禁和代币解锁、期权到期。', examples: '下次财报日、FOMC 会议日' },
-    T15: { name: 'third_party_measurement', label: '第三方测量', forms: '结构化', decide: '表格：数据集表里登记为实际活动测量的。', rule: '刷卡、App、流量、卫星、链上', definition: '数据商测到的、针对具体公司、产品、地点、链和协议的实际活动：刷卡、App 使用、网站流量、搜索、客流、卫星和航运、招聘、价格抓取、评论、链上活动（链和协议的使用量、收入）。是测出来的，不是估的：机构的行业估计和预测归 T8；衡量整体经济或整个行业的统计归 T11。', examples: 'App 下载量、刷卡消费数据' },
-    T16: { name: 'reference', label: '参照数据', forms: '结构化', decide: '表格：数据集表里登记为身份和分类的。', rule: '身份、分类、指数成分', definition: '公司和资产的身份、行业分类、公司结构、供应链关系、指数成分和权重。研究对象默认都不看这一类；身份对照由上游用来认出信息讲的是谁。', examples: '股票代码对应 CIK、GICS 行业分类、标普 500 权重' },
+    T1: { name: 'results_release', label: "Earnings releases", forms: "Both", decide: "Text: exhibits named by 8-K Item 2.02, fiscal-results exhibits in 6-K, exchange earnings announcements and sources labelled as earnings. Tables: datasets registered as earnings figures.", rule: "A fiscal period's earnings release, shareholder letter and release-day figures", definition: "Earnings releases for a quarter, half-year or full year. Text includes exhibits named by 8-K Item 2.02 (earnings releases, shareholder letters, CFO commentary, update decks), explicitly identified fiscal-results exhibits in 6-K, exchange earnings announcements and sources labelled as earnings. Tables include release-day results and guidance, including guidance history. Monthly operating data belongs to T6. Merge republications of the same release with the original.", examples: "Apple quarterly earnings release, Tesla update deck, guidance history" },
+    T2: { name: 'periodic_report', label: "Periodic reports", forms: "Both", decide: "Text: 10-K, 10-Q, 20-F, 40-F and ARS, including /A amendments; exchange annual, interim and quarterly reports; sources labelled as periodic reports. Tables: standardised financial statements. Do not separately ingest XBRL facts already in the filing.", rule: "10-K, 10-Q, 20-F, 40-F, ARS and vendor-standardised financial statements", definition: "Text: 10-K, 10-Q, 20-F, 40-F and ARS, including amendments that name the replaced version; exchange annual, interim and quarterly reports; sources labelled as periodic reports. Tables: vendor-standardised statements and segment data, identifying the source report. Do not separately supply XBRL facts already in those reports. Annual versus quarterly is an attribute.", examples: "Meta 10-K, 10-K/A, standardised income statement" },
+    T3: { name: 'legal_and_capital_markets', label: "Legal and capital-markets documents", forms: "Text", decide: "Proxy, financing, M&A and tender-offer filings regardless of filer; exhibits numbered 2, 3, 4 or 10; exchange circulars; sources labelled as legal documents.", rule: "Proxy, financing, M&A and tender offers; exhibits 2, 3, 4 and 10", definition: "Proxy materials, including both sides of a proxy contest; financing, M&A and tender-offer filings and amendments, including acquirer and private-equity filings, regardless of filer. Include SEC exhibit categories 2, 3, 4 and 10 (acquisition agreements, charters, security/debt instruments and material contracts), exchange circulars and sources labelled as legal documents. Read terms and each party's statements; attribute statements to the submitting party.", examples: "DEF 14A, activist DEFC14A, 424B5, merger agreement, credit agreement" },
+    T4: { name: 'call_transcript', label: "Company-call transcripts", forms: "Text", decide: "Transcripts of company-hosted calls or company presentations at investor conferences; merger calls in 425 filings.", rule: "Transcripts of meetings where the company is speaking", definition: "Company-hosted earnings calls, investor days and company podcasts; company presentations at investor conferences; merger calls in 425 filings. Media-hosted events belong to T7. Venue and transcript provider are attributes.", examples: "MSFT earnings call, NVDA fireside chat at a broker conference" },
+    T5: { name: 'presentation', label: "Presentations", forms: "Text", decide: "Company slides: presentations under 8-K Item 7.01 or in 425 filings, and IR-site slides that are not earnings releases.", rule: "Slide decks and PDF presentations", definition: "Company slide decks and PDF presentations under 8-K Item 7.01 or in 425 filings, and IR-site decks that are not earnings releases. Sources labelled as earnings belong to T1.", examples: "Investor-day deck, IR-site presentation not labelled as earnings" },
+    T6: { name: 'company_communication', label: "Other company publications", forms: "Both", decide: "Text: remaining company files, including 8-K bodies and other exhibits, remaining 6-K content, SEC response letters, late-filing notices, press releases and official posts. Tables: IR supplements and monthly operating data.", rule: "Remaining company publications and data", definition: "Text not covered above: 8-K bodies, exhibits not named in the earnings item, other items, remaining 6-K content, SEC response letters and late-filing notices; press releases, operating updates, ESG reports, newsrooms, blogs, IR/product pages and official company social posts. Tables: company-published supplementary information and monthly operating data, such as IR Excel or CSV files.", examples: "Executive-change 8-K, quarterly delivery announcement, IR KPI table" },
+    T7: { name: 'news', label: "News", forms: "Text", decide: "Material authored by media, with no registered publication series and no opinion or analysis section. A missing section defaults to news.", rule: "Media reporting and other media material not classified elsewhere", definition: "Media publications other than opinion and analysis: news, interviews, podcast transcripts, media-hosted events such as WSJ Tech Live, and media-account posts. General, financial and trade media all qualify. A missing section defaults to news. Opinion and analysis sections belong to T8. Registered media series follow their registered category, such as Reuters economist surveys in T8.", examples: "Reuters report, CNBC CEO interview, DigiTimes supply-chain report" },
+    T8: { name: 'opinion_analysis', label: "Opinion and analysis", forms: "Both", decide: "Text: registered forecast, outlook or research series regardless of author; media opinion/analysis sections; analyst-authored text other than dialogue records; all individual-authored text; investor letters to boards in filings. Tables: forecasts, ratings, price targets, consensus and investor-sentiment surveys.", rule: "Attributed opinions, analysis, forecasts and ratings", definition: "Attributed opinions and analysis regardless of author, length or platform. Text includes sell-side and independent research, rating agencies, industry research, think tanks and academia; official and international-organisation forecasts, outlooks and research such as the IMF World Economic Outlook, CBO Budget Outlook and central-bank working papers; fund letters, short reports and investor letters to boards in filings; media opinion; personal posts and essays; and the user's investment memos. Tables include analyst forecasts and revisions, ratings, targets, consensus, credit/ESG ratings, economist and official forecasts including GDPNow nowcasts, investor-sentiment surveys, industry estimates and forecast upload templates. Opinions and estimates remain attributed statements, not completed facts. The user's own opinions become candidate theses, not evidence.", examples: "Sell-side initiation, short report, IMF World Economic Outlook, Reddit post, FY2027 EPS consensus, personal earnings model" },
+    T9: { name: 'interview_notes', label: "Interview records", forms: "Text", decide: "Analyst-authored transcripts or meeting notes.", rule: "Dialogue transcripts or notes", definition: "Dialogue recorded by analysts: expert-network interviews, management meetings arranged by the user and channel checks. The form is a transcript or notes. Attribute statements to the original speaker; the recorder is an attribute. Company-hosted events and company presentations at investor conferences belong to T4.", examples: "Expert-network interview, CFO meeting notes" },
+    T10: { name: 'official_record', label: "Official actions and records", forms: "Both", decide: "Text: official series registered as actions or records; official authors without a registered series; SEC comment letters and court dockets. Tables: government-published records.", rule: "Official documents, proceedings and records", definition: "Official material not classified elsewhere. Text includes regulatory, judicial, legislative, administrative and exchange documents and proceedings: rulings, approvals, recalls, regulations, sanctions, export controls, tariffs, contract awards, hearing/trial transcripts, SEC comment letters and court dockets. Tables include government records of contracts, lobbying, political donations, patents, litigation, recalls and customs bills of lading. Official forecasts, outlooks and research belong to T8; statistics belong to T11. Officials' personal accounts count as official during their tenure, such as a president announcing tariffs. Attribute quoted statements to their original speaker or submitting party.", examples: "European Commission decision, FTC complaint, SEC comment letter, defence contract award, patent grant" },
+    T11: { name: 'macro_policy_statistics', label: "Macro policy and statistics", forms: "Both", decide: "Text: registered monetary-policy or statistical series, whether public or private. Tables: macro statistics and policy rates.", rule: "Monetary policy and macro statistics, public or private", definition: "Text registered as monetary policy or statistics, regardless of publisher: central-bank statements, minutes, speeches, dot plots and Beige Books; official CPI/jobs releases and private ISM PMI, ADP employment and Michigan sentiment releases. Tables: economy-wide or industry-wide statistics and policy rates, public or private, each with a publication date; retain earlier revisions. Include composite measures we cannot calculate because weights are unavailable, such as LEI and financial-conditions indices. Market interest and exchange rates belong to T12; measurements of specific companies, products, locations, chains and protocols belong to T15.", examples: "FOMC statement, Beige Book, CPI and payrolls, ISM PMI, federal funds rate" },
+    T12: { name: 'market_data', label: "Market prices and trading", forms: "Table", decide: "Datasets registered as prices and trading.", rule: "Stocks, options, rates, FX, commodities, cryptocurrencies and CDS", definition: "Prices and trading in stocks, ETFs, option chains, futures, interest rates, FX, commodities, cryptocurrencies, credit spreads, CDS and prediction markets; corporate actions such as dividends and splits; share capital.", examples: "Daily prices, option implied volatility, 10-year Treasury yield" },
+    T13: { name: 'positioning', label: "Holdings and flows", forms: "Table", decide: "Datasets registered as holdings and flows; table versions of ownership filings.", rule: "13F, Form 4, 13D/G, short positions and flows", definition: "Market-participant holdings and flows: table versions of Form 4, 13D/G, 13F and 144; short interest, borrow fees and utilisation; ETF/fund flows; CFTC positioning; cryptocurrency whale and smart-money holdings.", examples: "Institutional holding changes, insider sales" },
+    T14: { name: 'calendar', label: "Calendar", forms: "Table", decide: "Datasets registered as scheduled dates.", rule: "Earnings dates, meetings and deadlines", definition: "Scheduled dates for earnings, investor days, launches, macro releases, central-bank meetings, court/regulatory deadlines, index rebalancing, lock-up and token unlocks, and option expiries.", examples: "Next earnings date, FOMC meeting date" },
+    T15: { name: 'third_party_measurement', label: "Third-party measurements", forms: "Table", decide: "Datasets registered as measured activity.", rule: "Card spending, apps, traffic, satellites and on-chain activity", definition: "Vendor-measured activity for specific companies, products, locations, chains and protocols: card spending, app usage, web/search/foot traffic, satellite and shipping data, hiring, scraped prices, reviews and on-chain usage/revenue. These are measurements, not estimates. Industry estimates and forecasts belong to T8; economy-wide or industry-wide statistics belong to T11.", examples: "App downloads, card-spending data" },
+    T16: { name: 'reference', label: "Reference data", forms: "Table", decide: "Datasets registered as identities and classifications.", rule: "Identities, classifications and index constituents", definition: "Company and asset identities, industry classifications, corporate structure, supply-chain relationships, index constituents and weights. No subject tracks this category by default. Upstream uses identity references to resolve subjects.", examples: "Ticker-to-CIK mapping, GICS classification, S&P 500 weights" },
   };
 
   // ------------------------------------------------------------------ the issue tree: the taxonomy, each tag once
@@ -30,23 +30,23 @@
   // ROUTING says how one input finds its leaf.
 
   const TREE = {
-    label: '所有信息', question: '这是哪一类信息？', field: '先查合不合格、是不是重复（见下方“判断顺序”第 1 步）；每条信息只有一个分类结果，要归类的只落到一个类别',
+    label: "All incoming items", question: "Which category is this item?", field: "First check validity and duplication (step 1 below). Each item has exactly one classification result and, if categorised, exactly one category.",
     children: [
-      { label: '公司与申报披露', question: '哪种披露？', field: '看申报代码、来源栏目、体裁', tags: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'] },
-      { label: '媒体报道', question: '媒体的报道', field: '作者是媒体', tags: ['T7'] },
-      { label: '观点与对话', question: '是看法，还是对话记录？', field: '作者是分析方或个人，或登记为预测、研究', tags: ['T8', 'T9'] },
-      { label: '官方行动与宏观统计', question: '是行动记录，还是政策和统计？', field: '看发布系列；T10 只限官方，T11 官方民间都算', tags: ['T10', 'T11'] },
-      { label: '市场与测量数据', question: '测的是什么？', field: '看数据集表', tags: ['T12', 'T13', 'T14', 'T15', 'T16'] },
+      { label: "Company publications and filings", question: "Which disclosure?", field: "Use filing code, source section and genre", tags: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'] },
+      { label: "Media reporting", question: "Media reports", field: "Media author", tags: ['T7'] },
+      { label: "Opinion and dialogue", question: "Opinion or dialogue record?", field: "Analyst/individual author, or registered forecast/research series", tags: ['T8', 'T9'] },
+      { label: "Official actions and macro statistics", question: "Action/record or policy/statistics?", field: "Use the publication series. T10 is official only; T11 includes public and private sources.", tags: ['T10', 'T11'] },
+      { label: "Market and measurement data", question: "What is measured?", field: "Use the dataset table", tags: ['T12', 'T13', 'T14', 'T15', 'T16'] },
     ],
   };
 
   // How one input finds its leaf, in order. Text or structured only decides which table answers.
   const ROUTING = [
-    '先检查：缺必填信息、对象标识写得不对、文字信息没有能读的文字、系统自己的产出 → 不合格；以前收过的同一内容、又没写明替换哪一版的 → 并到原来那条。',
-    '表格数据：不逐条判断。每个数据集接入时，在数据集表里登记一次属于哪一类（一个数据接口返回好几类内容的，按字段分开登记），之后每条都直接用这个类别；没登记的数据集 → 不合格，放进人工复核池。',
-    '文字，而且是申报（SEC、交易所、法院）：查这个系统的申报代码表，不管谁提交的；表里没有的申报代码 → 不合格，放进人工复核池。',
-    '其余文字，作者登记过这个发布系列：查发布系列表定类别（只可能是 T8、T10、T11），不管作者类型是什么。带了系列名、但发布系列表里没登记的 → 放进人工复核池，这条照常往下判。',
-    '其余文字：先看作者类型（查作者表，看发布日是否在有效期内；查不到就用渠道默认的作者类型），再看栏目或体裁定类别；官方作者没登记发布系列 → T10；判断不了作者类型 → 不合格，放进人工复核池。',
+    "First validate: missing required metadata, malformed subject identifiers, unreadable text or the system's own output → invalid. Previously received identical content without an explicit replaced version → merge with the original.",
+    "Table data: register each dataset's category once at onboarding rather than judging every record. Split registration by field when an interface returns multiple kinds of content. All later records use that category. Unregistered datasets are invalid and go to human review.",
+    "Text filings (SEC, exchange, court): use the filing-system code table regardless of filer. Unknown codes are invalid and go to human review.",
+    "Other text with a registered publication series: use the series table (T8, T10 or T11), regardless of author type. An unregistered series name goes to human review while classification continues normally.",
+    "Remaining text: resolve author type from the author table valid on the publication day, falling back to the channel default; then use section or genre. Official authors without a registered series → T10. Unresolved author type → invalid and human review.",
   ];
 
   // ------------------------------------------------------------------ the input schema
@@ -54,109 +54,109 @@
   // Every input carries this envelope. `classify` marks the fields the tree reads; the rest place the input in time and
   // provenance. A required field that is missing refuses the input before the tree runs.
   const INPUT_SCHEMA = [
-    { group: '身份', field: 'input_id', meaning: '这条信息的固定编号', required: '必填' },
-    { group: '身份', field: 'content_sha256', meaning: '由内容算出的指纹，用来认出同样的内容；没写明替换哪一版的，同样的内容只收一次', required: '必填', classify: true },
-    { group: '身份', field: 'copy_of', meaning: '以前收过同样的内容、又没写明替换哪一版时，写原来那条的编号；有就并过去', required: '同样的内容、没写明替换哪一版时', classify: true },
-    { group: '身份', field: 'supersedes', meaning: '更新版写明它替换的是哪一版（新闻更新、10-K/A、改过的帖子、数据修正、类别改了）；新版不覆盖旧版，也不当重复并掉', required: '有前版时', classify: true },
-    { group: '来源', field: 'channel', meaning: '从哪个渠道来：数据接口、通稿平台、转载站、EDGAR、社交或投稿平台、你的上传', required: '必填', classify: true },
-    { group: '来源', field: 'source_uri', meaning: '原始地址；SEC 申报写申报编号（accession number），帖子写帖子编号', required: '必填' },
-    { group: '来源', field: 'publisher', meaning: '作者，也就是对内容负责的一方，不是转发它的渠道；社交帖子写账号', required: '必填', classify: true },
-    { group: '来源', field: 'publisher_type', meaning: '作者类型：公司、媒体、分析方、官方、个人；先查作者表（看发布日是否在有效期内），查不到用渠道默认的作者类型', required: '查表或渠道给', classify: true },
-    { group: '来源', field: 'event_organizer', meaning: '会议、访谈这类口头活动是谁办的：公司、投资者会议、媒体、官方、专家网络、你；决定文字稿算谁的', required: '文字稿', classify: true },
-    { group: '来源', field: 'authors', meaning: '署名的人，或账号背后的真实身份；用来把看法算到人头上', required: '可选' },
-    { group: '来源', field: 'derived_from', meaning: '出自哪条信息（比如标准化报表出自哪份 10-K）', required: '有出处时' },
-    { group: '来源', field: 'context', meaning: '帖子的上下文：回复的谁、引用了谁、在哪个帖子串或版块', required: '可选' },
-    { group: '时间', field: 'period', meaning: '内容讲的是哪段时间：哪个财期、观察期、事件发生日', required: '定期报告和数据' },
-    { group: '时间', field: 'published_at', meaning: '作者公开它的时间；只看是纽约时间的哪一天（发布日）；重复的取最早那天', required: '必填', classify: true },
-    { group: '时间', field: 'filing_date', meaning: 'SEC 的法定申报日（下午 5:30 以后受理的算下一个工作日，和 SEC 公开的那天一致）；SEC 申报的发布日就用它', required: 'SEC 申报', classify: true },
-    { group: '时间', field: 'retrieved_at', meaning: '我们拿到它的时间；只用来留底，不参与任何判断', required: '必填' },
-    { group: '分类', field: 'is_structured', meaning: '是表格还是文字（这是形式，不是类别）：表格是有固定字段的记录（JSON、XBRL、XML、CSV、上传模板），按数据集表定类别；文字按分类规则判', required: '必填', classify: true },
-    { group: '分类', field: 'has_readable_text', meaning: '有没有能读的文字：音频、视频、图片、没有文字层的扫描件都算没有', required: '文字必填', classify: true },
-    { group: '分类', field: 'dataset', meaning: '来自哪个数据集、数据接口或上传模板；接入时登记一次属于哪一类，每条记录都直接用它', required: '表格', classify: true },
-    { group: '分类', field: 'filing_system', meaning: '来自哪个申报系统：EDGAR、港交所、法院案卷……；每个系统一张申报代码表', required: '申报', classify: true },
-    { group: '分类', field: 'filing_form', meaning: '申报代码：10-K、10-K/A、8-K、DEF 14A、425……', required: '申报', classify: true },
-    { group: '分类', field: 'filing_items', meaning: '8-K 里有哪几项，以及业绩那一项（2.02）点名了哪些附件', required: '8-K', classify: true },
-    { group: '分类', field: 'exhibit', meaning: '附件编号和说明：99.1 业绩稿、4.1 债券契约、10.1 重大合同……', required: '附件', classify: true },
-    { group: '分类', field: 'document_format', meaning: '体裁：逐字稿、纪要、备忘录、报告、幻灯片、文章、信、帖子；渠道写明，上传必须写明；长短和平台只是属性', required: '文字', classify: true },
-    { group: '分类', field: 'channel_category', meaning: '来源标的栏目：媒体的新闻、评论、分析、转载的新闻稿；IR 网站、通稿、数据室的业绩、定期报告、法律文件', required: '可选（没有就按默认）', classify: true },
-    { group: '分类', field: 'series', meaning: '发布系列，任何作者都可能有（官方或民间）：FOMC 声明、褐皮书、ISM PMI、世界经济展望……；在发布系列表里登记过才起作用，没登记的放进人工复核池', required: '可选（没有就看作者）', classify: true },
-    { group: '内容', field: 'media_type', meaning: '文件格式：网页、PDF、JSON、XML、CSV、Excel、音频、视频、图片', required: '必填' },
-    { group: '内容', field: 'language', meaning: '语言', required: '必填' },
-    { group: '对象', field: 'object_identifiers', classify: true, meaning: '渠道给的对象标识，每个写三样：哪种标识（CIK、股票代码、公司名、加密货币代码、商品代码、主题编号）、标识本身、为什么标在这条上（申报对象、申报人、数据字段、渠道标签、上游为这个对象推来的、上传时写明的）；可以没有', required: '可选' },
+    { group: "Identity", field: 'input_id', meaning: "The item's stable identifier", required: "Required" },
+    { group: "Identity", field: 'content_sha256', meaning: "A content fingerprint identifies identical content. Without an explicit replaced version, accept identical content only once.", required: "Required", classify: true },
+    { group: "Identity", field: 'copy_of', meaning: "When the same content was received before and no replaced version is named, identify the original item and merge with it.", required: "Identical content without an explicit replaced version", classify: true },
+    { group: "Identity", field: 'supersedes', meaning: "An update names its previous version: updated news, 10-K/A, edited posts, data revisions or category corrections. Do not overwrite the previous version or merge the update as a duplicate.", required: "When a previous version exists", classify: true },
+    { group: "Source", field: 'channel', meaning: "Delivery channel: data interface, press-release wire, republication site, EDGAR, social/contributor platform or user upload", required: "Required", classify: true },
+    { group: "Source", field: 'source_uri', meaning: "Original location; use an accession number for SEC filings and a post ID for posts", required: "Required" },
+    { group: "Source", field: 'publisher', meaning: "The author responsible for the content, not the channel forwarding it; use the account for social posts", required: "Required", classify: true },
+    { group: "Source", field: 'publisher_type', meaning: "Author type: company, media, analyst, official or individual. Resolve using the author table valid on the publication day, then the channel default.", required: "Lookup table or channel", classify: true },
+    { group: "Source", field: 'event_organizer', meaning: "Host of an oral event: company, investor conference, media, official body, expert network or user. This determines transcript authorship.", required: "Transcripts", classify: true },
+    { group: "Source", field: 'authors', meaning: "Named individual or real identity behind an account, used to attribute opinions", required: "Optional" },
+    { group: "Source", field: 'derived_from', meaning: "The source item, such as the 10-K underlying standardised financial statements", required: "When a source exists" },
+    { group: "Source", field: 'context', meaning: "Post context: reply target, quoted post, thread or forum", required: "Optional" },
+    { group: "Time", field: 'period', meaning: "Period described by the content: fiscal period, observation window or event date", required: "Periodic reports and data" },
+    { group: "Time", field: 'published_at', meaning: "When the author made it public; use the New York publication day. For duplicates, use the earliest day.", required: "Required", classify: true },
+    { group: "Time", field: 'filing_date', meaning: "SEC legal filing day: acceptance after 5:30 p.m. counts as the next business day, matching SEC publication. Use it as the SEC filing's publication day.", required: "SEC filings", classify: true },
+    { group: "Time", field: 'retrieved_at', meaning: "When we received it, kept for audit only and never used for decisions", required: "Required" },
+    { group: "Classification", field: 'is_structured', meaning: "Table or text is a form, not a category. Tables contain fixed-field records (JSON, XBRL, XML, CSV, upload templates) and use the dataset table. Text follows classification rules.", required: "Required", classify: true },
+    { group: "Classification", field: 'has_readable_text', meaning: "Whether readable text exists; audio, video, images and scans without a text layer do not qualify", required: "Required for text", classify: true },
+    { group: "Classification", field: 'dataset', meaning: "Dataset, data interface or upload template; register its category once at onboarding and use it for every record", required: "Tables", classify: true },
+    { group: "Classification", field: 'filing_system', meaning: "Filing system: EDGAR, HKEX, court docket, etc.; each has its own code table", required: "Filings", classify: true },
+    { group: "Classification", field: 'filing_form', meaning: "Filing code: 10-K, 10-K/A, 8-K, DEF 14A, 425, etc.", required: "Filings", classify: true },
+    { group: "Classification", field: 'filing_items', meaning: "8-K items and the exhibits named by earnings Item 2.02", required: '8-K', classify: true },
+    { group: "Classification", field: 'exhibit', meaning: "Exhibit number and description: 99.1 earnings release, 4.1 indenture, 10.1 material contract, etc.", required: "Exhibits", classify: true },
+    { group: "Classification", field: 'document_format', meaning: "Genre: transcript, notes, memo, report, slides, article, letter or post. The channel identifies it; uploads must specify it. Length and platform are attributes.", required: "Text", classify: true },
+    { group: "Classification", field: 'channel_category', meaning: "Source section: media news, opinion, analysis or republished press release; IR/wire/data-room earnings, periodic report or legal document", required: "Optional; use the default if absent", classify: true },
+    { group: "Classification", field: 'series', meaning: "Publication series from any public or private author, such as FOMC statements, Beige Book, ISM PMI or World Economic Outlook. Applies only if registered; unregistered names go to human review.", required: "Optional; use author rules if absent", classify: true },
+    { group: "Content", field: 'media_type', meaning: "File format: web page, PDF, JSON, XML, CSV, Excel, audio, video or image", required: "Required" },
+    { group: "Content", field: 'language', meaning: "Language", required: "Required" },
+    { group: "Subject", field: 'object_identifiers', classify: true, meaning: "Channel-supplied subject identifiers, each with kind (CIK, ticker, company name, cryptocurrency symbol, commodity symbol or theme ID), value and reason (filing subject, filer, data field, channel tag, upstream delivery for that subject or explicit upload). May be empty.", required: "Optional" },
   ];
 
-  const OUTPUT_FIELDS = '分类结果（一个类别；或者并到原来那条；或者“不算材料”；或者不合格并写明原因）；归了类的，再加上相关对象（对象编号、种类、为什么标在这条上）和查不到的标识（原样留着）';
+  const OUTPUT_FIELDS = "One category, merge with the original, not source material, or invalid with a reason. Categorised items also include resolved subjects (ID, kind, reason) and unresolved identifiers preserved as received.";
 
   // Which objects an input concerns (D1, D11). Read off the identifiers the channel gives, never off the text; no model.
   const OBJECT_RULES = [
-    '对象有四种：公司、加密货币、商品、主题（和研究对象名单一样）。一条信息可以讲好几个对象，也可以一个都没有。',
-    '讲的是谁，只看渠道给的对象标识（申报对象、申报人、数据字段、渠道标签、上游为这个对象推来的、上传时写明的），再加上作者本人——只限作者是公司的时候（通稿算发稿的公司，公司自己讲的会议算这家公司）。每个对象都写明为什么标在这条上。标识的种类或理由不在规定范围内、或者是空的，整条不合格。',
-    '标识按种类分开写，因为同一个标识在不同种类里可能指不同的东西：公司用 CIK、股票代码、公司名；加密货币用加密货币代码；商品用商品代码；主题用主题编号。',
-    '主题只有两个来处：上游为这个主题推来的，或者上传时写明的；不从正文里猜。',
-    '只看对象标识，不读正文，也不看网址：代理申报机构的编号会出现在网址里（旧数据里 Amazon 有一份 8-K，网址里是代理机构的编号 1104659）。',
-    '公司、加密货币、商品的标识去参照数据里查：CIK 补足 10 位；股票代码按发布日的对应关系查（FB 在 2022-06-09 以前是 Meta，之后不是）；公司名只认登记过的别名。主题编号去主题库里查。查不到的原样留着，记为“查不到”，这条信息照常处理，等登记后再补。',
-    '作者不是公司的时候（媒体、分析方、官方、个人），作者不算这条讲的对象；申报人和申报对象都留着，写明谁是谁（比如 13D 里，激进投资者是申报人，被持股的公司是申报对象）。',
-    '正文里顺带提到的公司或主题，不在这里标；抽取的时候在具体的观点和证据上标。',
-    '重复的并到原来那条时，两边讲的对象合在一起，相同的只留一个。讲的是谁不影响类别。不合格的和“不算材料”的，不标对象。',
+    "Four subject kinds, matching the research universe: company, cryptocurrency, commodity and theme. An item may concern several subjects or none.",
+    "Use only channel-supplied identifiers and their stated reasons, plus the author when it is a company: the issuing company for a release or the company speaking at its meeting. Record why each subject is attached. An empty or unsupported identifier kind or reason invalidates the whole item.",
+    "Keep identifier kinds separate because equal strings can mean different subjects: companies use CIK, ticker or company name; cryptocurrencies and commodities use their own symbols; themes use theme IDs.",
+    "Themes have only two origins: upstream delivery for that theme or explicit identification at upload. Do not infer them from the body text.",
+    "Read identifiers, not body text or URLs. A filing agent's identifier can appear in a URL; an old Amazon 8-K URL contains agent ID 1104659.",
+    "Resolve company, cryptocurrency and commodity identifiers through reference data. Pad CIK to 10 digits; resolve tickers as of publication day (FB identified Meta before June 9, 2022); accept only registered company aliases. Resolve theme IDs through the theme library. Preserve unresolved identifiers as received, mark them unresolved and continue processing; fill them after registration.",
+    "A non-company author (media, analyst, official or individual) is not itself a subject. Preserve both filer and filing subject with their roles: in a 13D, the activist is the filer and the held company is the subject.",
+    "Do not label incidentally mentioned companies or themes here. Extraction associates them with specific theses and evidence.",
+    "When merging a duplicate, union both items' subjects and deduplicate them. Subjects do not affect category. Invalid items and non-source material receive no subjects.",
   ];
 
   const TIME_RULES = [
-    '时间只看“哪一天”：每条信息按纽约时间算是哪天发布的；除了用来定 SEC 申报的发布日（见第 4 条），几点几分不参与任何判断；处理先后不看发布时间，按分发编的顺序号。',
-    '每条信息只用一个日期：它的发布日。内容讲的是哪段时间（比如哪个财季）只是属性。信息流里没有“今天是哪天”这个概念；按时间做事的只有 Pull 模式。',
-    '渠道晚了几天才拿到，不另外记。任何规则都不看电脑时间；我们拿到它的时间只用来留底。',
-    'SEC 申报按 SEC 公开的那天算发布日，也就是法定申报日：下午 5:30 以前受理的，算受理当天；5:30 以后受理的，SEC 下一个工作日早上才公开，算下一个工作日。',
-    '重复的并到原来那条后，发布日取最早的那天：市场最早在哪里看到，就从那天算知道。',
-    '修正、更新、重述、编辑、类别改了，都是新版本，旧版本留着，不覆盖。',
-    '没有发布时间的信息放不到时间线上，不合格。',
+    "Use the New York publication day. Time of day matters only for SEC filing-day calculation (rule 4). Processing order follows dispatch sequence, not publication time.",
+    "Each item uses one date: publication day. Its described fiscal or observation period is an attribute. The stream has no concept of today's date; only pull mode acts on time.",
+    "Do not separately record a channel delay of several days. No rule uses the computer clock; receipt time is for audit only.",
+    "SEC publication day is the legal filing day. Acceptance before 5:30 p.m. uses that day; after 5:30 p.m., SEC publication is next business morning, so use the next business day.",
+    "Merged duplicates use the earliest publication day: knowledge begins when the market could first see it.",
+    "Corrections, updates, restatements, edits and category changes create new versions without overwriting old ones.",
+    "An item without publication time cannot be placed on the timeline and is invalid.",
   ];
 
   const RULES = [
-    '类别按“信息是什么”分；是文字还是表格、多长、发在哪、从哪个渠道来，都只是属性。同一类信息可以是文字也可以是表格，形式只决定怎样定类别（表格查数据集表，文字按规则判）。',
-    '每条信息只有一个结果：一个类别、并到原来那条、“不算材料”，或者不合格并写明原因。判断只用固定规则和对照表，不用模型。',
-    '作者是对内容负责的一方，不是转发它的渠道：通稿平台、转载站、文字稿供应商、数据商、社交和投稿平台、EDGAR 上的代理申报机构、你的上传，都只是渠道。',
-    '作者类型先查作者表；查不到就用渠道默认的作者类型（新闻索引默认是媒体，通稿默认是公司，社交、投稿和邮件订阅平台上的账号默认是个人）；两样都定不了才算不合格。有没有登记过，记为属性。国际组织（IMF、世界银行、OECD、OPEC、WTO）算官方。',
-    '作者表里每一条都有有效期，按发布日查，按任期算、不按影响力算：同一个账号在任期内算官方，任期外（竞选期间、当选还没就职、卸任以后）算个人。',
-    '发布系列先于作者：登记过的发布系列按表归类，不管作者是官方、民间、媒体还是公司（ISM 的 PMI 报告 → T11，Reuters 的经济学家调查 → T8，CBO 预算展望 → T8，CBO 月度赤字数据 → T11）。',
-    '会议、访谈这类口头活动的文字稿，按谁办的定作者：公司办的、在投资者会议上发言的算公司；媒体办的算媒体；听证会、庭审算官方；专家网络办的算专家网络；你约的会面算你。',
-    '申报先查申报代码表，不管谁提交的：每个申报系统（EDGAR、交易所、法院案卷）一张列全的表；修正版（/A）和原申报同一类；表里没有的申报代码不合格，放进人工复核池，登记后再收。',
-    '8-K 里只有 Item 2.02 那一段点名的附件才算业绩发布；同一份 8-K 的其他附件各自定类别。',
-    '一份申报的正文和每个附件各算一条信息；申报里的 XBRL 数字不另外推进来，文件本身已经有这些数；持股类申报（Form 4、13D/G、13F、144）用表格版本，归 T13。',
-    '以前收过的同一内容（指纹相同，或和原来那条对得上），又没写明替换哪一版的，并到原来那条，算原来那条的另一个出处，类别跟原来那条一样；写明了替换哪一版的（比如只改了类别），是新版本，不并。',
-    '同一种看法和分析，不因作者、长短而换类别：作者是谁（券商、评级机构、媒体评论员、投资者、个人、你自己……）、多长、发在哪，都只是属性。看法和估计都算作者说的。',
-    '手动上传必须写明文字的体裁或用的哪个上传模板，没写的不合格；系统自己的产出也不合格（见判断顺序第 1 步）。',
-    '表格数据一次发布算一条（比如一份 13F、一次统计发布），整批推进来；一个数据接口返回好几种东西的，按东西拆成多条；别人算好、我们用已有信息就能自己算出来的指标，以及文件目录，不算材料。',
-    '文件里引用别人的话，在具体证据上算原来说话的人说的；文件本身的类别不变。',
-    '只是附带情况不同的，记为属性：渠道、平台、长短、摘要还是全文、在哪开的、年报还是季报、是不是持仓、是不是高管、有没有登记。（口头活动是谁办的，会决定文字稿算谁的，见上面第 7 条。）',
+    "Category describes what the information is. Text/table form, length, platform and channel are attributes. A category can have both forms; form only determines whether classification uses the dataset table or text rules.",
+    "Each item has exactly one result: a category, merge with the original, not source material, or invalid with a reason. Use fixed rules and lookup tables, not a model.",
+    "The author is responsible for the content. Wires, republication sites, transcript providers, data vendors, social/contributor platforms, EDGAR filing agents and user uploads are delivery channels.",
+    "Resolve author type from the author table, then channel defaults: news indices default to media, wires to company, and social/contributor/newsletter accounts to individual. Only an unresolved result after both is invalid. Registration is an attribute. International organisations such as IMF, World Bank, OECD, OPEC and WTO are official.",
+    "Author-table entries have validity periods evaluated on publication day. Status follows tenure, not influence: an account is official during office and individual during campaigning, before inauguration or after leaving office.",
+    "Registered publication series take precedence over author type: ISM PMI → T11; Reuters economist survey → T8; CBO Budget Outlook → T8; CBO monthly deficit data → T11.",
+    "Transcript authorship follows the event host: company-hosted and investor-conference company presentations count as company; media-hosted as media; hearings/trials as official; expert-network events as expert network; user-arranged meetings as user.",
+    "Resolve filings from a complete code table for each system (EDGAR, exchange, court), regardless of filer. /A amendments share their original category. Unknown filing codes are invalid and go to human review before registration and acceptance.",
+    "Only exhibits explicitly named by 8-K Item 2.02 count as earnings releases. Classify each other exhibit separately.",
+    "A filing body and each exhibit are separate items. Do not separately ingest XBRL facts already in the filing. Ownership filings (Form 4, 13D/G, 13F, 144) use their table form and belong to T13.",
+    "Previously received identical content, matched by fingerprint or to the original, without an explicit replaced version, becomes another source of the original and retains its category. An explicit replacement, including a category-only correction, is a new version, not a duplicate.",
+    "The same kind of opinion or analysis keeps its category regardless of author, length or platform. Broker, rating agency, columnist, investor, individual or user identity is an attribute. Attribute opinions and estimates to their author.",
+    "Manual uploads must specify text genre or upload template; otherwise they are invalid. The system's own output is also invalid (classification step 1).",
+    "A table release is one item, such as an entire 13F or statistical release, and enters as a batch. Split an interface's different kinds of content into separate items. Derived indicators we can calculate from existing information and file listings are not source material.",
+    "Attribute quoted statements to their original speaker at the evidence level. The containing item's category does not change.",
+    "Keep incidental differences as attributes: channel, platform, length, summary/full text, venue, annual/quarterly, holding status, executive status and registration. The host of an oral event does determine transcript authorship (rule 7).",
   ];
 
   // The lookup tables the tree reads (D8). Each is looked up by its key; what comes out is a tag, or an author type.
   const LOOKUP_TABLES = [
-    { table: '数据集表', lookup: '数据集 → 类别，或“不算材料”', example: '日线行情 → T12；财务报表 → T2；ISM PMI、领先指标 LEI → T11；GDPNow → T8；技术指标、恐惧贪婪指数 → 不算材料' },
-    { table: '申报代码表（每个申报系统一张）', lookup: '申报代码 → 类别；8-K 和 6-K、425、持股类申报光看申报代码定不了，按规则再分', example: '10-K → T2；DEF 14A → T3；8-K → 看里面有哪几项、哪些附件' },
-    { table: '发布系列表', lookup: '（作者，系列）→ T8、T10 或 T11；任何作者都能登记，T10 只给官方', example: 'FOMC 声明、褐皮书、ISM PMI → T11；IMF 世界经济展望、CBO 预算展望 → T8；OFAC 制裁公告 → T10' },
-    { table: '作者表', lookup: '作者 → 作者类型（公司、媒体、分析方、官方、个人），每条有有效期；查不到用渠道默认的作者类型', example: 'Reuters → 媒体；Morgan Stanley → 分析方；IMF → 官方；总统个人账号在任期内 → 官方' },
+    { table: "Dataset table", lookup: "Dataset → category or not source material", example: "Daily prices → T12; financial statements → T2; ISM PMI and LEI → T11; GDPNow → T8; technical indicators and fear/greed index → not source material" },
+    { table: "Filing-code table, one per filing system", lookup: "Filing code → category; 8-K, 6-K, 425 and ownership filings require additional rules", example: "10-K → T2; DEF 14A → T3; 8-K → inspect items and exhibits" },
+    { table: "Publication-series table", lookup: "(author, series) → T8, T10 or T11. Any author can register a series; T10 is official only.", example: "FOMC statements, Beige Book, ISM PMI → T11; IMF World Economic Outlook, CBO Budget Outlook → T8; OFAC sanctions announcements → T10" },
+    { table: "Author table", lookup: "Author → company, media, analyst, official or individual, with a validity period. Fall back to the channel default when unresolved.", example: "Reuters → media; Morgan Stanley → analyst; IMF → official; president's personal account during tenure → official" },
   ];
 
   const LOOKUP_RULES = [
-    '四张表放在同一份 JSON 数据文件里，正式运行和测试读同一份。改了表，就是分类的新版本。',
-    '前三张查出来直接是结果（类别、不算材料，或者要再按规则分，比如 8-K），不经过中间名称。作者表查出来是作者类型，不是类别：同一个作者会落到不同类别（Reuters 的新闻归 T7，评论栏目归 T8），还要看栏目、体裁或发布系列。',
-    '登记的原则（数据集表和发布系列表一样）：统计数据，官方民间都算 → T11；央行关于货币政策和经济形势的材料（声明、纪要、讲话、点阵图、褐皮书）→ T11，央行的研究和工作论文 → T8；预测、展望、研究 → T8；行动和记录 → T10，只限官方。数据集表还有一条，只管实际活动的测量数据：衡量整体经济或整个行业的 → T11；针对具体公司、产品、地点、链和协议的 → T15。',
-    '读这四张表时只检查一件事：查出来的值必须有效（数据集表：16 个类别之一或“不算材料”；申报代码表：类别或规则；发布系列表：T8、T10、T11 之一，T10 只给官方；作者表：5 种作者类型之一），不对就不启动。',
-    '表里没有的（新数据集、新申报代码、新发布系列）不猜，放进人工复核池，由人登记；作者表里没有的，先用渠道默认的作者类型，两样都定不了才放进人工复核池。',
-    '标识和对象的对照（比如 AAPL 对应 Apple）不是分类的表：它不决定类别，只用来认出信息讲的是谁、检查研究对象名单。分类在上游做，这张表也归上游管，以后再谈。',
+    "Keep all four tables in one JSON file read by production and tests. Changing a table creates a new classification version.",
+    "The first three tables return a result directly: category, not source material, or further rules such as 8-K. No intermediate name. The author table returns author type, not category: Reuters news is T7 and opinion is T8; section, genre or series still matters.",
+    "Dataset and series registration follow the same principles: public/private statistics → T11; central-bank monetary-policy/economic statements, minutes, speeches, dot plots and Beige Books → T11; central-bank research and working papers → T8; forecasts, outlooks and research → T8; actions and records → T10, official only. For measured activity datasets, economy/industry-wide → T11; specific company, product, location, chain or protocol → T15.",
+    "Validate table values at load: dataset → one of 16 categories or not source material; filing code → category or rule; series → T8, T10 or T11, with T10 official only; author → one of five author types. Invalid values prevent startup.",
+    "Do not guess missing datasets, filing codes or series; send them to human review for registration. Missing authors use channel defaults first and reach human review only if still unresolved.",
+    "Identifier-to-subject mappings, such as AAPL → Apple, are not classification tables. They resolve subjects and validate the universe, not categories. Upstream owns this mapping; details are deferred.",
   ];
 
   const NOT_SOURCES = [
-    '别人算好的指标：用我们已有的信息就能自己算出来的（估值倍数、因子暴露、技术指标、用价格或成交算出来的情绪指标，比如恐惧贪婪指数），数据商给的一律“不算材料”。我们自己算不出来的（权重不公开，或底层数据拿不到）按它是什么归类：领先指标 LEI、金融条件指数 → T11；GDPNow 这种实时预测 → T8。',
-    '文件目录（EDGAR 文件列表、新闻搜索结果）：只用来找到信息，本身不算材料。',
-    '没有能读的文字的音频、视频、图片、扫描件：不合格；有了文字稿或文字层，再按分类规则定类别。',
-    '系统自己的产出（报告、导出、被转载的内容）：不合格，免得自己引用自己。',
-    '股票池、观察列表属于研究对象名单；你自己的持仓、交易、盈亏和投资授权不算材料，放在哪以后再定。',
+    "Vendor-derived indicators we can calculate from available information are not source material: valuation multiples, factor exposures, technical indicators and sentiment derived from price/volume such as fear/greed indices. If weights or underlying data are unavailable, classify by content: LEI and financial-conditions indices → T11; nowcasts such as GDPNow → T8.",
+    "File listings, such as EDGAR lists and news search results, locate information but are not source material themselves.",
+    "Audio, video, images and scans without readable text are invalid. Once a transcript or text layer exists, apply normal classification.",
+    "The system's own reports, exports and republished output are invalid, preventing self-citation.",
+    "Stock universes and watchlists belong to the research universe. The user's holdings, trades, P&L and investment permissions are not source material; their destination is deferred.",
   ];
 
   // ------------------------------------------------------------------ the drill-down
 
-  const FORM_LABELS = { '两者': '文字和表格', '文本': '文字', '结构化': '表格' };
+  const FORM_LABELS = { "Both": "Text and tables", "Text": "Text", "Table": "Tables" };
 
   const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
 
@@ -219,8 +219,8 @@
   design.drilldowns = design.drilldowns || {};
   design.classification = { TAGS, TREE, INPUT_SCHEMA };
   design.drilldowns.classify = {
-    button: '展开分类规则：16 个类别怎么判',
-    kicker: '分类 · 详细说明',
+    button: "Explore classification: the 16 categories",
+    kicker: "Classification · Details",
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
@@ -244,18 +244,18 @@
 
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">分类规则：每条信息归到哪一类</h2>
-          <p class="drill__intro">分类由上游完成：推给我们的每条信息，都已经按这里的规则带上分类结果、标明讲的是谁；我们照着这里检查。上游只推研究对象名单范围内的信息。一共 ${total} 个类别，按“信息是什么”分成 5 个大类，每个类别只出现一次。是文字还是表格只是形式，只影响怎样定类别。点任意一个类别，跳到它的定义。</p>
-          <p class="drill__status"><span class="pill pill--strong">第一版已冻结 · 2026-10-18</span>用旧系统 412 条真实材料和 161 个手写例子跑过仿真，全部通过；“讲的是谁”测了 24 个例子，也都通过，但只测了公司。新补的宏观规则，和加密货币、商品、主题的对象识别，还没跑测试；仿真本身还有几处没跟上现在的规则，见 CURRENT_STATE。改了规则要记一条新决定，并重跑 <code>python3 docs/system-design/simulate_classification.py</code>（必须全部通过）或者重新推演边界材料。</p>
+          <h2 class="drill__title">Classification: assign each item a category</h2>
+          <p class="drill__intro">Upstream classifies every item and identifies its subjects under these rules; we validate it. Upstream supplies only the research universe. The ${total} categories are organised into five families by content, each appearing once. Text or table is a form that determines how classification works. Select a category to read its definition.</p>
+          <p class="drill__status"><span class="pill pill--strong">First version frozen · 2026-10-18</span>Simulation passed 412 real items and 161 hand-written cases. Subject resolution passed 24 company cases. Added macro rules and cryptocurrency, commodity and theme resolution remain untested. The simulator still differs from current rules; see CURRENT_STATE. Rule changes need a new decision and a rerun of <code>python3 docs/system-design/simulate_classification.py</code> (all cases must pass), or a fresh reasoning review of boundary cases.</p>
           <div class="org"><div class="org-tree"><ul><li>${renderBranch(TREE, escapeHtml, true)}</li></ul></div></div>
           <section>
-            <h3 class="drill__heading">判断顺序：一条信息怎样找到它的类别</h3>
+            <h3 class="drill__heading">Decision order: find the category</h3>
             <ol class="drill__rules">${ROUTING.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
           </section>
           <section>
-            <h3 class="drill__heading">对照表：分类时要查的四张表</h3>
+            <h3 class="drill__heading">The four classification lookup tables</h3>
             <table class="schema-table schema-table--compact">
-              <thead><tr><th>表</th><th>拿什么查，查出什么</th><th>例子</th></tr></thead>
+              <thead><tr><th>Table</th><th>Lookup input and result</th><th>Example</th></tr></thead>
               <tbody>${LOOKUP_TABLES.map((row) => `<tr><td>${escapeHtml(row.table)}</td><td>${escapeHtml(row.lookup)}</td><td class="schema-table__quiet">${escapeHtml(row.example)}</td></tr>`).join('')}</tbody>
             </table>
             <ul class="drill__rules">${LOOKUP_RULES.map((rule) => `<li>${escapeHtml(rule)}</li>`).join('')}</ul>
@@ -263,29 +263,29 @@
 
           <div class="drill__columns drill__columns--schema">
             <section>
-              <h3 class="drill__heading">每条信息要带的字段</h3>
+              <h3 class="drill__heading">Fields supplied with each item</h3>
               <table class="schema-table schema-table--compact">
-                <thead><tr><th>分组</th><th>字段</th><th>意思</th><th>必填</th><th>分类时用</th></tr></thead>
+                <thead><tr><th>Group</th><th>Field</th><th>Meaning</th><th>Required</th><th>Used for classification</th></tr></thead>
                 <tbody>${schemaFieldRows}</tbody>
               </table>
-              <p class="drill__output"><strong>分类给出：</strong>${escapeHtml(OUTPUT_FIELDS)}</p>
+              <p class="drill__output"><strong>Classification returns: </strong>${escapeHtml(OUTPUT_FIELDS)}</p>
             </section>
             <section>
-              <h3 class="drill__heading">时间规则</h3>
+              <h3 class="drill__heading">Time rules</h3>
               <ol class="drill__rules">${TIME_RULES.map((rule) => `<li>${escapeHtml(rule)}</li>`).join('')}</ol>
-              <h3 class="drill__heading drill__heading--spaced">分类规则</h3>
+              <h3 class="drill__heading drill__heading--spaced">Classification rules</h3>
               <ol class="drill__rules">${RULES.map((rule) => `<li>${escapeHtml(rule)}</li>`).join('')}</ol>
-              <h3 class="drill__heading drill__heading--spaced">讲的是谁（相关对象）</h3>
+              <h3 class="drill__heading drill__heading--spaced">Related subjects</h3>
               <ol class="drill__rules">${OBJECT_RULES.map((rule) => `<li>${escapeHtml(rule)}</li>`).join('')}</ol>
-              <h3 class="drill__heading drill__heading--spaced">哪些不算材料、哪些不合格</h3>
+              <h3 class="drill__heading drill__heading--spaced">Excluded source material and invalid items</h3>
               <ul class="drill__rules">${NOT_SOURCES.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
             </section>
           </div>
 
           <section>
-            <h3 class="drill__heading">${total} 个类别</h3>
+            <h3 class="drill__heading">${total} categories</h3>
             <table class="schema-table">
-              <thead><tr><th>编号</th><th>类别</th><th>形式</th><th>所在大类</th><th>怎么判</th><th>定义</th><th>例子</th></tr></thead>
+              <thead><tr><th>ID</th><th>Category</th><th>Form</th><th>Family</th><th>Decision rule</th><th>Definition</th><th>Example</th></tr></thead>
               <tbody>${schemaRows}</tbody>
             </table>
           </section>

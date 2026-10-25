@@ -1,0 +1,20 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_empty_population_is_unexercised_not_a_grouping_success __________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-327/test_empty_population_is_unexe0')
+
+    def test_empty_population_is_unexercised_not_a_grouping_success(tmp_path):
+        """Empty-candidate row: original four runs contain only prior memberships."""
+        code, report = run(ARCHIVE)
+        assert code == 0 and report['states'] == {'complete': 4}
+>       assert [(r['grouping'], r['references_checked'], r['new_memberships']) for r in report['samples']] == [
+            ('unexercised', 0, 0)] * 4
+E       AssertionError: assert [('pending_se...eview', 0, 0)] == [('unexercise...cised', 0, 0)]
+E         At index 0 diff: ('pending_semantic_review', 0, 0) != ('unexercised', 0, 0)
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py:79: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py::test_empty_population_is_unexercised_not_a_grouping_success
+1 failed, 20 deselected in 0.07s

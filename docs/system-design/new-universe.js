@@ -5,57 +5,57 @@
   'use strict';
 
   const OBJECT_KINDS = [
-    { label: '公司', identifiers: '股票代码、CIK 或公司名', example: '500 多只美股：Apple、Amazon、Meta……' },
-    { label: '加密货币', identifiers: '加密货币代码', example: '比特币、以太坊……' },
-    { label: '商品', identifiers: '商品代码', example: '黄金、原油、铜……' },
-    { label: '主题', identifiers: '主题编号', example: '美国通胀、中美关税、俄乌战争……' },
+    { label: 'Company', identifiers: 'Ticker, CIK or company name', example: 'Over 500 US-listed companies: Apple, Amazon, Meta…' },
+    { label: 'Cryptocurrency', identifiers: 'Cryptocurrency symbol', example: 'Bitcoin, Ethereum…' },
+    { label: 'Commodity', identifiers: 'Commodity symbol', example: 'Gold, crude oil, copper…' },
+    { label: 'Theme', identifiers: 'Theme ID', example: 'US inflation, US–China tariffs, Russia–Ukraine war…' },
   ];
 
   // What each kind of object looks at by default: the one place that decides which kinds of information are processed.
   const TRACKING_DEFAULTS = [
-    { kind: '公司', plain: '公司自己发的（业绩稿、定期报告、电话会、演示材料、其他发布）、和它有关的法律与资本市场文件（不管谁提交的）、新闻、观点与分析、访谈、官方对它的行动、股价、持仓、日历、第三方测量', codes: 'T1–T10、T12–T15' },
-    { kind: '加密货币', plain: '新闻、观点与分析、官方行动（执法、ETF 审批）、价格、资金与持仓、解锁日历、链上数据', codes: 'T7、T8、T10、T12–T15' },
-    { kind: '商品', plain: '新闻、观点与分析、官方行动（OPEC 决定、制裁）、统计数据（EIA 库存）、价格、持仓（CFTC）、日历、航运和卫星数据', codes: 'T7、T8、T10–T15' },
-    { kind: '主题', plain: '没有默认，每个主题自己写', codes: '—' },
+    { kind: 'Company', plain: 'Company publications (earnings, periodic reports, calls, presentations and other releases), related legal and capital-markets documents regardless of filer, news, opinion and analysis, interviews, official actions, prices, holdings, calendars and third-party measurements', codes: 'T1–T10, T12–T15' },
+    { kind: 'Cryptocurrency', plain: 'News, opinion and analysis, official actions (enforcement, ETF approvals), prices, flows and holdings, unlock calendars and on-chain data', codes: 'T7, T8, T10, T12–T15' },
+    { kind: 'Commodity', plain: 'News, opinion and analysis, official actions (OPEC decisions, sanctions), statistics (EIA inventories), prices, holdings (CFTC), calendars, shipping and satellite data', codes: 'T7, T8, T10–T15' },
+    { kind: 'Theme', plain: 'No default; define categories for each theme', codes: '—' },
   ];
 
   // The theme library, first draft: the macro, political, economic and geopolitical drivers that move the objects above.
   const THEME_LIBRARY = [
-    { category: '货币与利率', themes: '美联储政策利率 · 美债收益率曲线 · 欧央行、日本央行、人民银行政策' },
-    { category: '通胀', themes: '美国通胀 · 工资增长 · 能源价格传导' },
-    { category: '增长与就业', themes: '美国衰退风险 · 就业市场 · 消费支出 · 中国经济 · 欧洲经济' },
-    { category: '财政', themes: '美国赤字与发债 · 债务上限与政府停摆 · 税收政策' },
-    { category: '贸易与产业政策', themes: '中美关税 · 芯片出口管制 · 产业补贴（CHIPS 法案、IRA）· 供应链转移' },
-    { category: '地缘政治与战争', themes: '俄乌战争 · 中东冲突 · 台海局势 · 制裁' },
-    { category: '政治与选举', themes: '美国大选 · 政策走向' },
-    { category: '监管与法律', themes: '美欧反垄断 · 数据与隐私 · AI 监管 · 金融监管' },
-    { category: '能源与大宗', themes: '原油供给（OPEC）· 天然气 · 工业金属' },
-    { category: '汇率与资本流动', themes: '美元强弱 · 人民币 · 日元' },
-    { category: '产业周期', themes: 'AI 资本开支 · 半导体周期 · 云计算需求' },
-    { category: '市场风险偏好', themes: '信用利差 · 波动率 · 流动性' },
+    { category: 'Money and rates', themes: 'Fed policy rate · US Treasury yield curve · ECB, BOJ and PBOC policy' },
+    { category: 'Inflation', themes: 'US inflation · Wage growth · Energy price transmission' },
+    { category: 'Growth and employment', themes: 'US recession risk · Labour market · Consumer spending · Chinese economy · European economy' },
+    { category: 'Fiscal policy', themes: 'US deficits and debt issuance · Debt ceiling and government shutdowns · Tax policy' },
+    { category: 'Trade and industrial policy', themes: 'US–China tariffs · Chip export controls · Industrial subsidies (CHIPS Act, IRA) · Supply-chain shifts' },
+    { category: 'Geopolitics and war', themes: 'Russia–Ukraine war · Middle East conflict · Taiwan Strait · Sanctions' },
+    { category: 'Politics and elections', themes: 'US elections · Policy direction' },
+    { category: 'Regulation and law', themes: 'US/EU antitrust · Data and privacy · AI regulation · Financial regulation' },
+    { category: 'Energy and commodities', themes: 'Crude oil supply (OPEC) · Natural gas · Industrial metals' },
+    { category: 'Exchange rates and capital flows', themes: 'US dollar strength · Renminbi · Yen' },
+    { category: 'Industry cycles', themes: 'AI capital expenditure · Semiconductor cycle · Cloud demand' },
+    { category: 'Market risk appetite', themes: 'Credit spreads · Volatility · Liquidity' },
   ];
 
   const TRACKING_EXAMPLES = [
-    { theme: '美国通胀', tracked: 'CPI、PCE 数据和 BLS 的发布稿，ISM 的物价分项，密歇根大学的通胀预期（宏观统计）；相关新闻；经济学家的预测', codes: 'T11、T7、T8' },
-    { theme: '中美关税', tracked: 'USTR、商务部的公告（官方行动）；相关新闻和评论；提到关税的公司财报、电话会和公告', codes: 'T10、T7、T8、T1–T6' },
+    { theme: 'US inflation', tracked: 'CPI, PCE and BLS releases, ISM price components and University of Michigan inflation expectations (macro statistics); related news; economist forecasts', codes: 'T11, T7, T8' },
+    { theme: 'US–China tariffs', tracked: 'USTR and Commerce Department announcements (official actions); related news and commentary; company reports, calls and announcements discussing tariffs', codes: 'T10, T7, T8, T1–T6' },
   ];
 
   const RULES = [
-    '名单单独管理、单独出版本，不放在 Config 里。主题库是名单的一部分，不另外建一份。',
-    '名单决定两件事：研究哪些对象，以及每个对象要看哪几类信息。系统里只有这里决定“处理什么”。',
-    '公司、加密货币、商品各有一套默认要看的类别；主题没有默认，每个主题自己写，至少写一类。要看的类别必须是 16 类之一；名单里的对象在参照数据或主题库里查不到，这一版不能用。',
-    '上游只推名单范围内的信息，也就是名单里的对象，各自要看的那几类；测试代码也按这个范围推。推进来的都处理。',
-    '名单加了对象或改了要看的类别，就是一个新版本；上游按新名单把以前的相关信息补推一遍。',
-    '利率、汇率、指数不单独列，算在主题里（比如“美债收益率曲线”“美元强弱”）。',
-    '名单外的东西不会自动加进名单：查不到的标识，和名单里没有的主题，放进人工复核池，由人决定；查得到、只是不在名单里的公司、加密货币或商品（比如三星）不进，只在处理记录里留一笔。',
-    '宏观、地缘政治怎么连到公司：靠观点库里的“依赖”。主题观点讲世界会变成什么样，不说好坏；公司的对象观点依赖哪几条主题观点，写明对方的哪一头对它是看多；主题观点的结论变了，依赖它的观点照观点库重判的规矩重判。',
+    'Manage and version the research universe separately from Config. The theme library is part of it, not a separate copy.',
+    'The universe defines which subjects to research and which categories to track for each. It is the sole owner of what the system processes.',
+    'Companies, cryptocurrencies and commodities each have default categories. Every theme explicitly specifies at least one category. Categories must come from the set of 16. A universe version is invalid if a subject cannot be resolved in reference data or the theme library.',
+    'Upstream supplies only subjects and categories covered by the universe. Test code follows the same scope. Every supplied item is processed.',
+    'Adding a subject or changing tracked categories creates a new version. Upstream backfills relevant historical items under the new universe.',
+    'Rates, exchange rates and indices belong to themes, such as the US Treasury yield curve or US dollar strength, rather than separate subject kinds.',
+    'Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry.',
+    'Macro and geopolitical themes connect to companies through thesis dependencies. A theme thesis describes an outcome without calling it good or bad. An asset thesis records which theme theses it reads and which end of each is bullish for it. A changed conclusion triggers the library’s rejudgement rules for dependent theses.',
   ];
 
   const design = window.HIVEMIND_DESIGNS.new;
   design.drilldowns = design.drilldowns || {};
   design.drilldowns.universe = {
-    button: '展开名单：有哪些对象、各看哪几类信息、主题库',
-    kicker: '研究对象名单 · 详细说明',
+    button: 'Explore the universe: subjects, tracked categories and themes',
+    kicker: 'Research universe · Details',
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
@@ -69,33 +69,33 @@
 
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">研究对象名单：研究什么，每样要看哪几类信息</h2>
-          <p class="drill__intro">研究的对象有四种：公司（500 多只美股）、加密货币、商品，以及宏观、政治、经济、地缘政治的主题。每个对象还写明要看哪几类信息，上游只推这个范围内的信息。</p>
+          <h2 class="drill__title">Research universe: subjects and tracked information</h2>
+          <p class="drill__intro">The four subject kinds are companies (over 500 US-listed companies), cryptocurrencies, commodities, and macroeconomic, political, economic or geopolitical themes. Each specifies tracked information categories; upstream supplies only that scope.</p>
           <div class="drill__columns drill__columns--schema">
             <section>
-              <h3 class="drill__heading">对象有四种</h3>
+              <h3 class="drill__heading">Four subject kinds</h3>
               <table class="schema-table schema-table--compact">
-                <thead><tr><th>种类</th><th>用什么认出它</th><th>例子</th></tr></thead>
+                <thead><tr><th>Kind</th><th>Identifiers</th><th>Example</th></tr></thead>
                 <tbody>${kindRows}</tbody>
               </table>
-              <h3 class="drill__heading drill__heading--spaced">每种对象默认要看哪几类信息</h3>
+              <h3 class="drill__heading drill__heading--spaced">Default categories by subject kind</h3>
               <table class="schema-table schema-table--compact">
-                <thead><tr><th>种类</th><th>要看的信息</th><th>类别编号</th></tr></thead>
+                <thead><tr><th>Kind</th><th>Tracked information</th><th>Category IDs</th></tr></thead>
                 <tbody>${defaultRows}</tbody>
               </table>
-              <h3 class="drill__heading drill__heading--spaced">主题库草稿：12 组</h3>
+              <h3 class="drill__heading drill__heading--spaced">Draft theme library: 12 groups</h3>
               <table class="schema-table schema-table--compact">
-                <thead><tr><th>分组</th><th>主题</th></tr></thead>
+                <thead><tr><th>Group</th><th>Theme</th></tr></thead>
                 <tbody>${themeRows}</tbody>
               </table>
-              <h3 class="drill__heading drill__heading--spaced">一个主题要看什么（例子）</h3>
+              <h3 class="drill__heading drill__heading--spaced">Tracked information for a theme: examples</h3>
               <table class="schema-table schema-table--compact">
-                <thead><tr><th>主题</th><th>要看的信息</th><th>类别编号</th></tr></thead>
+                <thead><tr><th>Theme</th><th>Tracked information</th><th>Category IDs</th></tr></thead>
                 <tbody>${trackingRows}</tbody>
               </table>
             </section>
             <section>
-              <h3 class="drill__heading">规则</h3>
+              <h3 class="drill__heading">Rules</h3>
               <ol class="drill__rules">${RULES.map((rule) => `<li>${escapeHtml(rule)}</li>`).join('')}</ol>
             </section>
           </div>

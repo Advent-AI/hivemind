@@ -1,83 +1,83 @@
-# Agentic 体验：把一个信念交给 agent
+# Agentic experience: entrusting an investment belief to an agent
 
-2026-10-22，第二版。第一版我自己挑战了一轮，又让 Codex 当三个人（做过消费金融的产品负责人、拿五只股票天天看价的散户、对冲基金的 PM）审了一轮。两轮都说：有用，但 wow 是后置的，而且第一版把差别说过头了，还有一处违反了冻结的设计。这一版按两轮的结论改。Alex 还没定。
+October 22, 2026, second draft. English edition: October 25 (D163). This is an **unapproved experience proposal**, not the governing system design or a claim about current product capabilities. The [original draft](research/2026-10-25-english/agentic-experience.original.zh.md) retains its historical wording. The [full experience proposal](experience-prd.md) develops the same direction. Current implementation status is in [CURRENT_STATE](CURRENT_STATE.md).
 
-## wow 是什么，一句话
+## The central experience
 
-**它在新闻出来之前就记着你画的线；一份文件碰到线的时候，它把那句原文和你当初定的动作一起拿到你面前。**
+The agent remembers the exit condition you chose before the news arrived. When new evidence moves the judgement across that condition, it brings you both the exact source and the action you previously chose.
 
-不是「替你赚钱」，不是「比市场快」。是：你在冷静的时候定了一条线，它替你记着；证据碰线的那天，它不让你临时改主意，也不替你改主意，它把你自己说过的话拿回来。
+The promise is disciplined follow-through, not profit or faster execution than the market. You choose the condition while calm. Later, the agent returns your own words rather than changing the plan for you.
 
-十秒钟的演示：前三秒，你存过的信念、它对应的那个问题、你批准过的出场条件和日期；中间三秒，新来的那句原文，判断从哪格到了哪格，哪一步是推断就标推断；最后三秒，「这碰到了你的条件，你当初定的是减一半，要不要按它做」，原文和你当初的话一点就到。用真实记录下来的案例演示，用历史重放的要标明是重放。
+A ten-second demonstration first shows the saved belief, corresponding thesis, approved condition and date; then the new quotation and changed judgement, identifying any inference; finally it asks whether to take the previously chosen action. Use recorded cases and label historical replay as replay.
 
-## 一遍旅程，Alex 和 NVDA，日期是真的，问题按冻结的设计写
+## Alex and NVDA: an illustrative journey
 
-冻结的设计说：数字的问题按年开，到期是那个数公布的那天，一般六到十二个月；中间的季报是证据，不另开问题。所以问题是年度的，8 月 26 日的财报是一次大考，不是结算。第一版写成季度问题、8 月结算，错了。
+Numeric theses are annual in the governing design. Interim earnings provide evidence; they do not settle the annual question. The draft uses August 26 as a checkpoint, not a due date. Its dated examples illustrate a proposed experience and are not newly verified financial facts.
 
-**7 月 24 日，交出去。** Alex：「我拿着 NVDA，我信的是数据中心的需求能撑到年底。昨天那一跌我有点慌。」
+**July 24: set the plan.** Alex says: “I hold NVDA because I think data-center demand will last through year-end. Yesterday's drop worried me.” The agent responds:
 
-agent 回：
+```text
+The closest question we have tracked since February 25 is:
+How will NVDA FY2027 annual data-center revenue compare with FY2026?
+Current judgement: growth above 50%. Due: the annual results next February.
 
+Your belief concerns demand lasting through year-end. This question concerns
+annual revenue growth. Demand can hold up while falling prices reduce revenue.
+Does this question represent your belief, or do you need another question?
+
+We found no change in the evidence we track that changed this judgement yesterday.
+That does not establish that the price drop was unrelated.
+China revenue, gross margin and customers' own chips are other relevant questions.
+
+Plan for your review:
+Expected outcome: growth above 50%.
+Position: keep the current holding; do not add.
+Exit condition: sell half if the judgement falls to growth below 10%.
+Checkpoints: August 26 Q2 results and November 17 Q3 results.
+Due: the annual results next February.
+Permission: ask me first.
+A loss-based stop belongs with your broker; set that separately.
 ```
-你说的这件事，最接近的是我们从 2 月 25 日起就开着的这个问题：
-  NVDA FY27 全年数据中心收入，比 FY26 会怎样？   现在看：涨 50% 以上    明年 2 月年报见分晓
-  它的历史：5-20 公司给 Q2 指引 910 亿时往上走了一格；7-8 富士康 AI 服务器收入 +39.8%，没再推动。
-  注意：你说的是「需求撑到年底」，这个问题问的是「全年收入涨多少」。不完全一样，差在这：
-  需求撑住但价格跌了，收入也可能不达标。你认这个问题，还是要我另开一个？
-昨天的跌：在我们盯的证据里没有找到动到这个问题的变化。这不是「跟它没关系」，是「我们没看到」。
-你拿 NVDA 其实还牵着另外三个问题：中国区、毛利率、自研芯片。要不要也看？
 
-计划草稿，你改：
-  押：这个问题到期落在「涨 50% 以上」
-  进：现在就拿着，不加
-  走：这个问题的判断掉到「涨不到 10%」那一格，减一半；最大亏损线在券商那边，你自己设
-  大考：8-26 Q2 财报、11-17 Q3 财报，考完告诉你判断动没动
-  到：明年 2 月年报结算
-  权限：问我
-```
+The draft's illustrative history shows a one-rung increase after May 20 guidance of $91 billion and no further movement after July 8 Foxconn AI-server revenue growth of 39.8%. Alex accepts the question, changes “sell half” to “sell all” and confirms. The product must make the difference between his words and the tracked question visible.
 
-Alex 认了这个问题，把「减一半」改成「清掉」，点了确认。十秒钟，一个模糊的信念变成了一个有问题、有线、有日期的计划，而且他知道了这个问题和他原话差在哪。
+**July 25–August 25: quiet monitoring.** A persistent card beside the position shows the belief, tracked question, current judgement, last check and exit condition. It is available when Alex looks; it does not push routine reminders.
 
-**7 月 25 日到 8 月 25 日。** agent 不说话。持仓页旁边有一张常驻的卡，他看价格的时候顺便看到：「你为什么还拿着它：数据中心需求撑到年底。盯着的问题：FY27 全年数据中心收入比 FY26。现在看：涨 50% 以上。上次核对：今天，没有够得上的变化。要你出手的条件：判断掉到『涨不到 10%』。」这张卡不推送，它就在那。他看它，是因为它回答了他本来就在问的那个问题。
+**August 26: checkpoint.** The agent reports the quarterly figure as evidence, whether the annual judgement changed, whether the exit condition was crossed and the next checkpoint.
 
-**8 月 26 日，大考。** 财报出来，agent 当晚：「Q2 数据中心收入 X 亿，这是证据，不是结算。判断还在『涨 50% 以上』，没动。你的条件没碰到。下一次大考 11-17。」
+**A day in September: condition crossed.** A company filing moves the China-revenue judgement to the lowest rung. Alex has separately chosen an exit condition for that thesis. The agent shows the quotation, its evidence tier and his approved “sell all” instruction, then requests confirmation. The action is grounded in the source and his prior plan.
 
-**9 月的某天，碰线。** 一份公司文件把「中国区」那个问题推到最底格。Alex 后来也押了这条，线画在最底格。agent 下午四点十二分：「中国区碰到你的线了。推它的是这份文件里的这一句（原文）。这是公司说的，不是推断。你当初定的是清掉。要不要按它做？」他看了原文，点了确认。这是整个产品里最硬的一下：动手的时候，手里拿着文件和他自己的话，不是一个价格。
+**Next February: outcome.** The proposed experience reports the published annual number, year-on-year change and corresponding rung. It describes that question's outcome, not the success of the entire position. Record the share-price result separately. This proposed verification at the due date extends beyond the frozen design's implemented freeze/close rule and needs its own decision.
 
-**明年 2 月，结算。** 「FY27 全年数据中心收入 Y 亿，比 FY26 涨 Z%，落在『涨 50% 以上』。你押的这一格成立了。」只说这一句。不说「你判断对了」，因为一个问题说明不了整笔持仓；更不说「你是运气」。股价涨跌另记一行。
+**The following year: inspect the record.** Show requests, approvals, refusals, whether triggered actions were justified and missed triggers. More approvals do not prove better judgement; the user decides any change to permissions or budget.
 
-**第二年。** 记录摆出来：agent 问过几次、你批了几次、拒了几次、碰线的那几次事后看对不对、有没有漏掉该叫你的。要不要放大权限和预算，你看着记录定。不是「批了七次就该放大」，批了只说明你同意，不说明它判得好。
+## Responsibilities and limits
 
-## 它靠什么做到
+The proposal expects Hivemind to supply maintained theses, ladders, due dates, evidence tiers, quotations and judgement history. It proposes two additions: publish changed judgements with their supporting evidence, and verify outcomes against actual numbers in code. Neither is authorised merely by this proposal. The early “two to four questions per company” example is not a current hard quota.
 
-Hivemind 给，都是冻结的设计里有的：每家公司两到四个问题，按年开，有梯子、有到期日、有按证据判的状态和历史；证据分档、带日期、带原句；到期定格。要补两样：状态变了带着推它的证据当事件推出去；定格对着真实的数用代码核。
+The surrounding stack maps a belief to a thesis and explains the mismatch, drafts the plan, manages permissions, executes authorised actions and retains the persistent card and activity record. Hivemind itself holds no user funds and executes no trades.
 
-Stack 做：把一句话落到一个问题上，并把差异说给用户听；问题和状态变成计划；三级权限，默认「问我」；执行；每次动手记文件和原句；常驻的那张卡；记录。
+Two limits must remain visible. A trigger follows a **judgement**, which can be moved by company statements, third-party views or rumours; it is not necessarily an established fact. Also, evidence-based action can follow a price move. It addresses a broken investment reason, not loss protection.
 
-**两件事必须说老实。** 第一，「判断」是模型按带出处的证据判的，公司说的、第三方的看法、传闻都能推它。所以碰线的是「判断」，不一定是「事实」；动手时把推它的那条证据和它的档亮出来，是事实就说事实，是看法就说看法，是推断就标推断。第二，按判断出场比价格慢，文件出来股价已经动了；这条线管的是「别拿着破了的理由」，不管「少亏」，少亏是券商亏损线的事。
+## What the reviews changed
 
-## 两轮挑战留下的东西
+The self-review and three-role Codex review found a useful experience with delayed value. They corrected the quarterly settlement example, replaced “the price drop is unrelated” with “we found no relevant change,” removed automatic budget expansion after several approvals, and replaced Sunday notifications with the persistent card.
 
-**Codex 说对的，照改了。** 第一版的例子是季度问题、8 月结算，违反了冻结设计的第六条。「昨天的跌和这件事没关系」是说过头的，能说的只有「我们盯的证据里没找到够得上的变化」。「GPT 做不到」「规则只能写价格」是绝对话：Robinhood 的 agent 已经能读文件和新闻、默认每笔批准，Loops 在路上；ChatGPT 有记忆和定时任务。一个肯折腾的人用这些加一条写好的指令能做到大半，我们多的「所有人读同一份、有记录、会结算」他在第一个月感觉不到，只在难的时候感觉到：来源被更正、agent 和他想听的故事唱反调、过去判错的那次还摆在那。「批了七次就放大预算」不成立，同意不等于判得好。周日那条推送删了，换成常驻的卡。
+Absolute competitor claims were withdrawn. Other agents and configurable assistants may provide much of this workflow. The proposed distinction needs to be demonstrated when sources are corrected, the maintained judgement contradicts the user's preferred story or a past error remains visible. A company without maintained history must be presented that way.
 
-**我自己说的，也留着。** 按事实出场在动手那天的体感是混的，股价已经跌过了。第一眼靠历史，上线第一天没有历史，没覆盖的名字没有历史，那一刻和 GPT 一样，要老实说「这家我们没有维护过的历史」。「把信念交出去」对多数散户太抽象，他们有的是代码和感觉，所以 agent 要把「你的原话」和「盯的问题」的差说出来，不能悄悄换题。「问我」不是自主，第一版叫它有理由的看管更准。
+A replay showing when today's rule would have triggered is an explanation, not a claim that the product would have saved the user then. The rule's author already knows the historical outcome.
 
-**规则回放，降级为说明。** 「你这条线在过去六个月会在哪天动」可以给人看，但只能当作讲解，不能当作「我们当时会救你」：规则是今天定的，今天的人知道后来怎样。
+## Proposed first version
 
-## 第一版做什么，不做什么
+Include belief-to-thesis mapping with an explicit mismatch, a draft plan, ask-first permission, quotations and tiers at a trigger, the persistent card, checkpoint/outcome messages and an inspectable activity record.
 
-做：一句话落到问题并说出差异；计划草稿；「问我」；碰线时带原文和档；常驻的卡；大考后的一句话；到期的那一句话；记录（问过、批过、拒过、对不对、漏没漏）。
+Defer market expectations, per-rung probabilities, recommendations, rankings, automatic execution, a proprietary stop-loss, automatic budget increases and routine weekly notifications. Do not say “unrelated to you,” “your whole judgement was right” or “you were lucky” from one thesis outcome.
 
-不做：市场预期、每格概率、推荐、榜、排名、「替我做」、自己的亏损线、自动放大预算、周日推送、「跟你无关」「你判断对了」「你是运气」这几种话。
+## Proposed verification and decisions
 
-## 怎么验
+1. Map 20 real beliefs and test both correctness and whether users can explain the mismatch.
+2. Replay NVDA from July 24 through October 22, looking for missed or incorrect triggers and false “unchanged” messages.
+3. Compare with an existing configurable agent on the same period, measuring omissions, delay and differing answers.
+4. Show refusals, late arrivals and wrong outcomes alongside successes.
 
-1. 落得准不准、差异说得清不清：20 句真实的信念，各落一次，落对的占几成；用户能不能复述「我的原话和盯的问题差在哪」。
-2. 漏没漏：NVDA 7-24 到 10-22 回放，碰线的那几天 agent 问没问、问得对不对；「判断说没动、事后看该动」的天数。
-3. 对照组：同一段时间，一个配置好的 Robinhood agent 加一条写好的指令，做同一件事，看两边漏了什么、晚了几天、哪次答得不一样。
-4. 把拒绝、晚到、结算错的案例一起摆出来，不只摆好看的。
-
-## 要 Alex 定的
-
-1. wow 就定成那一句：它在新闻之前记着你画的线，碰线时把原文和你当初的动作拿到你面前。不许诺赚钱，不许诺比市场快。
-2. 第一版按上面「做」的清单做，先做「问我」和常驻的卡。
+Alex still needs to approve the central experience and first-version scope. This translation grants no trading authority and starts none of these proposed experiments.

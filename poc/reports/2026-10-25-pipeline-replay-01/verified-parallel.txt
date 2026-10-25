@@ -1,0 +1,21 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_next_extraction_reads_committed_prior_view ________________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-362/test_next_extraction_reads_com0')
+
+    def test_next_extraction_reads_committed_prior_view(tmp_path):
+        """D159 normal same-day row: two real statements pass the public replay entry point."""
+        args, calls = setup_run(tmp_path), []
+        result = replay.run(**args, transport=transport_for(args, calls))
+>       assert calls == [('extraction', False), ('matching', False), ('extraction', True),
+                         ('matching', True), ('judgement', False)]
+E       AssertionError: assert [('extraction...ment', False)] == [('extraction...ment', False)]
+E         At index 1 diff: ('extraction', True) != ('matching', False)
+E         Left contains one more item: ('judgement', False)
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-order-proof-d5cb_n31/tests/test_sequential_replay.py:67: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-order-proof-d5cb_n31/tests/test_sequential_replay.py::test_next_extraction_reads_committed_prior_view
+1 failed in 0.09s

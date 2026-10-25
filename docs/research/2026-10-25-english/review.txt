@@ -1,0 +1,19 @@
+I found four serious contract gaps. For example, removing the Chinese fallback text can make the same theme display `+2` instead of `−2`.
+
+1. **English queries can lose existing Chinese records.**  
+   [The plan:29](/Users/lchingen/hivemind/docs/research/2026-10-25-english/plan.md:29) promises readable/searchable legacy data, but [search uses literal text](/Users/lchingen/hivemind/src/hivemind/views/store.py:251) and [matching truncates its list](/Users/lchingen/hivemind/src/hivemind/views/matching.py:113). Against the sealed ledger, translating 42 stored queries loses six original targets from the top ten. Existing context rescues two; `v17`, `v19`, `v47`, and `v70` remain unavailable to matching.  
+   **Missing contract:** English query × unchanged Chinese index, including preservation of required targets within the bounded matching input.
+
+2. **English-only theme bundles can reverse displayed scores.**  
+   [The adapter:22](/Users/lchingen/hivemind/poc/ui/src/adapters/bundle.js:22) determines orientation from Chinese monetary expressions, preferring `condition_zh`. New English output has no such fallback, and [the bundle:32](/Users/lchingen/hivemind/src/hivemind/bundle.py:32) omits numeric bounds. Removing only `condition_zh` from the stored English examples reverses scores in **12 of 18** five-step themes.  
+   **Missing contract:** how English-only bundles preserve score orientation, and how the plan’s authoritative numeric bounds reach this reader. Existing translated fixtures conceal this missing input case.
+
+3. **Year text is missing from the compatibility contract.**  
+   The [value table:49](/Users/lchingen/hivemind/docs/research/2026-10-25-english/plan.md:49) omits `year` and `wait_year`. [Fiscal parsing:72](/Users/lchingen/hivemind/src/hivemind/universe.py:72) accepts `2026自然年` but returns `None` for `calendar year 2026`. That disables [extraction’s period correction:221](/Users/lchingen/hivemind/src/hivemind/extraction.py:221). Separately, [waiting dependencies:57](/Users/lchingen/hivemind/src/hivemind/views/writing.py:57) join on exact year text.  
+   **Missing contract:** accepted year representations across new answers, legacy records and waiting dependencies, preserving fiscal/calendar distinctions and multi-year spans.
+
+4. **Translating half-year wording bypasses an admission check.**  
+   [The plan:9](/Users/lchingen/hivemind/docs/research/2026-10-25-english/plan.md:9) preserves admission behavior. However, [the subannual filter:156](/Users/lchingen/hivemind/src/hivemind/extraction.py:156) matches `H1 收入` and `上半年收入`, but neither `H1 revenue` nor `first-half revenue`. Translating those fields therefore bypasses [the rejection:198](/Users/lchingen/hivemind/src/hivemind/extraction.py:198).  
+   **Missing contract:** equivalent keep/drop decisions for translated `looks_at` and `question` text, alongside the monetary-parser checks already planned.
+
+No files changed and no model calls were made.

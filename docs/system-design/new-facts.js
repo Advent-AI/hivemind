@@ -16,357 +16,358 @@
 
   // The template prompt of the read step: the same parts for every category, in this order.
   const TEMPLATE = [
-    { part: '角色', content: '你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点上；已有观点管不到、又要紧的事，写成候选观点，当场写全：问题、梯子、到期日和研究归属，带上提出它的证据。你自己的备忘录里的判断，都交成候选观点，可以不带证据，不当作证据。写观点的规矩：一个观点只看一件东西；梯子五格（只有是或否的问题两格），每格是一个能核对的结果，格和格不重叠、不留空，没有含糊的“部分”；到期日定在争论见分晓的那天，数字的观点就是这个数公布的那天；数字写明哪一年：今年、明年按这条信息的发布日算，公司的数按它的财年。', source: '所有类别一样；写观点的规矩原样取自观点库' },
-    { part: '这一类是什么、怎么读', content: '这一类的定义和读法，比如“看法和估计都算作者说的，不当成已经发生的事”。', source: '取自分类规则，这里不另写' },
-    { part: '讲的是谁', content: '这条信息的相关对象；另附研究对象名单里的全部主题，候选观点讲的是主题时，名单里有的从里面挑，没有的写清是什么事。', source: '这条信息的标签；主题取自研究对象名单' },
-    { part: '这一类要读出什么', content: '见下面的表，每类一行。', source: '抽取模块' },
-    { part: '已有观点与研究主线', content: '这条信息相关对象开着的观点，加上它们依赖的观点，写明谁依赖谁；只给问题、看的是什么和到期日，不给状态和证据；同一块另附可用的研究主线，内容按观点库的归组规矩提供。', source: '观点库' },
+    { part: "Role", content: "You are a senior hedge-fund analyst. Read this item to test and form theses: link supporting or opposing statements and numbers as evidence to existing theses. For important questions not covered, return complete candidates with a question, ladder, due date, research-group association and initiating evidence. Judgements in the user's own memo become candidates, may lack evidence and are not themselves evidence. Each thesis concerns one thing. Its ladder has five rungs, or two for yes/no, with concrete, verifiable, non-overlapping and exhaustive outcomes, never vague “partial” outcomes. Set the due date when the issue can be resolved; for a number, use its publication date. Name the year. This year and next year are relative to the item's publication day; company numbers use its fiscal year.", source: "Shared by all categories; thesis rules come directly from the library" },
+    { part: "What this category is and how to read it", content: "The category definition and reading method; for example, attribute opinions and estimates to their author rather than treating them as completed facts.", source: "Owned by classification; not redefined here" },
+    { part: "Subjects", content: "The item's related subjects plus every theme in the research universe. Select an existing theme for a theme candidate when applicable; otherwise describe the new issue clearly.", source: "Item metadata; themes from the research universe" },
+    { part: "What to extract from this category", content: "One row per category in the table below.", source: "Extraction module" },
+    { part: "Existing theses and research groups", content: "Open theses for the item's subjects and their dependencies, with dependency links. Supply only question, focus and due date, not states or evidence. Also supply available research groups under the library's grouping contract.", source: "Thesis library" },
   ];
 
   // D149 requires extraction-owned membership; D147/D148 remain isolated implementations and measurements.
   const EXTRACT_RELATIONS = [
-    "D149 已定要求：读全文时就决定候选观点属于哪个持续业务过程，称为研究主线。例如 Rubin 出货和 SK 工厂上线各有自己的问题，同时属于 Rubin 推出这条主线。归组随抽取完成，不留给前端或事后全库聚类。",
-    "证据和候选观点仍分开交；每个候选观点同时带结构化归属，需要新主线时附上名称和范围。只在解释里提到相关、没有可保存的引用，不算交完。抽取只读不落库，完整交接和保存规矩由观点库的“研究主线：抽取时归组”一节规定。",
-    "这是目标要求，不是已上线的能力。正式管线还没有归组交接，D147 原型及 D148、D150 一致性结果见 docs/poc/pipeline-plan.md 的“抽取时归组：目标与当前实现”。"
+    "D149 requirement: while reading the full text, decide which continuing business process each candidate belongs to, called a research group. Rubin shipments and SK factory deployment retain separate questions while sharing the Rubin rollout group. Group during extraction, not in the frontend or a later whole-library clustering pass.",
+    "Return evidence and candidates separately. Each candidate also carries structured associations; new groups have a name and scope. Mentioning a relationship only in prose is not a complete handoff. Extraction is read-only; the library's “Research groups: associate during extraction” section owns the full handoff and storage contract.",
+    "Grouping remains a target requirement, not a default-pipeline handoff. D155 fixed reference-list vetoes, period/scope rewriting and same-batch duplicates; that does not prove grouping works. See docs/poc/grouping-improvement-plan.md for steps and measurements."
 ];
 
   const GROUP_RELATIONS = [
-    "D149 已定要求：把观点按所谈的持续业务过程组织成研究主线。例如 Vera Rubin 从产品准备到客户落地；出货时间、SK 工厂上线、OpenAI 部署仍各有问题、梯子和到期日。主线可从一条观点开始，一个观点可属于多条主线。它没有状态或梯子，不自动产生依赖，也不等于给 agent 的上层投资论点。",
-    "归属按业务过程判断，可以跨公司、跨行业，不按同一家公司判断。明确使用 Rubin 的客户部署可以跨公司归在 Rubin 下；NVIDIA 的 PC 芯片不能仅因同公司归入 Rubin，OpenAI 部署不能因同属 Rubin 就归入 SK 专属主线。研究主线也不代替研究对象名单里的主题。",
-    "读全文前，代码给抽取提供可用的已有主线名称、范围和编号；搜索范围不按公司隔开。抽取在这次读全文的调用里决定归属：引用展示过的主线，或声明有名称和范围的新主线。每个候选观点必须有非空、不重复的归属引用，不能指向未展示、未声明的主线；代码检查完整引用，不合格的交接不进入写入。没有合适的旧主线就声明新的，不硬塞进近似的。",
-    "比对仍只判断观点和证据身份、依赖，不读归属字段来重判分组。候选观点新建、接续或归入已有观点后，写入器把候选观点编号解析为最终观点编号，把新主线编号解析为库内编号，再保存成员关系；未通过原出处检查或最终不开的候选观点不成为成员。未使用的新主线声明不建空主线，也不因此拒绝其他有效归属。",
-    "同一主线的同一成员只存一次；归属带输入编号和顺序号，遵守本库的先后与历史读取规则。主线和成员在观点、证据写入那一步一起提交，失败一起回滚，处理记录不能把半次写入记成完成。重送不重复增加成员，继续用原分发和恢复流程。",
-    "主线不复制证据。详情沿成员观点的真实证据连线读来源，按所看顺序号过滤，并排除当时已被替代的证据；没有连线就返回空证据。新成员或原观点写入的变化标记使主线更新；重复原话只多出处不触发。只有证据、没有新候选观点的文章沿既有成员关系更新，不重新造观点或主线。",
-    "验收看原文支持的成员关系和证据能否保留，不要求名称、编号、组数每次完全一样。分别报告没抽出、检查拒绝、漏归和错归，不能混成一个一致性数字。Rubin 出货与客户部署的核心联系要保留，无关产品和其他客户专属主线的错归也要检查；多公司、大库尚未验证。",
-    "实现参考仍是隔离实验：D147 用 existing_subjects 给出已有主线，threads 声明 id、name、scope，candidates[].thread_ids 写引用；新编号用 t 加正整数，库内编号用 g 加正整数。搜索暂用标题和全文词在全局名称、范围索引取前 N 条，N 来自原配置。这些是原型的字段和搜索做法，不是已接入正式管线的能力，也不证明大库召回。",
-    "当前差距见 docs/poc/pipeline-plan.md 的“抽取时归组：目标与当前实现”。D148 补已有成员上下文的变体未采用；D150 每条归属先写短依据也未解决错归和漏抽，未采用。历次原答与结果保留，上层投资论点生成、MCP 展示及旧数据回填不在本次实现范围。"
+    "D149 requirement: organise theses by the continuing business process they discuss, called a research group. Vera Rubin readiness and customer deployment can share a group while shipment dates, SK factory launch and OpenAI deployment retain separate questions, ladders and due dates. A group may start with one thesis; a thesis may belong to several groups. A group has no state or ladder, creates no automatic dependency and is not an overarching investment thesis for an agent.",
+    "Associate by business process, across companies and industries, not merely by company. A customer deployment explicitly using Rubin can join Rubin; NVIDIA PC chips cannot join just because they share a company. OpenAI deployment cannot join an SK-specific group merely because both involve Rubin. A group does not replace a research-universe theme.",
+    "Before the full-text call, code supplies available group IDs, names and scopes. Search is not restricted by company. During that call, extraction references shown groups or declares new named and scoped groups. A candidate that tracks an ongoing matter (a product rollout and its deployments, a deal, a policy process, an investment or demand cycle) cites one or more groups, each shown or declared, without repeats; a company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and cite none unless the line itself tracks such a matter (D165). Code validates the references before writing, and creates a declared group only when a written thesis that tracks a matter cites it, so a company's lines alone never found a group. Declare a new group if none fits; do not force an approximate fit.",
+    "Matching still decides thesis/evidence identity and dependencies; it does not reread association fields to regroup. After creation, succession or merging, the writer resolves candidate IDs to final thesis IDs and local group IDs to stored group IDs, then stores membership. Candidates failing source checks or ultimately skipped do not become members. Do not create empty groups for unused declarations or reject other valid memberships because of them.",
+    "Store each group/member pair once, with input ID and sequence number under the library's ordering and historical-read rules. Commit groups and memberships atomically with theses and evidence; roll all back on failure. Never mark a partial write complete. Redelivery must not duplicate membership; use existing dispatch and recovery.",
+    "Groups do not copy evidence. Read sources through members' real evidence links, filtered by the requested sequence and excluding evidence already replaced at that point. No link means no evidence. A new member or an existing thesis change flag updates its groups. A repeated quote only adds a source and does not trigger an update. Evidence-only articles update existing memberships without inventing theses or groups.",
+    "Acceptance measures source-supported membership and evidence retention, not identical names, IDs or group counts on every run. Report omissions, check refusals, missed associations and wrong associations separately. Preserve Rubin shipment/customer-deployment relationships and check wrong links to unrelated products or customer-specific groups. Multi-company and large-library behaviour is not yet validated.",
+    "Implementation reference remains an isolated experiment: D147 supplies existing_subjects; threads declares id, name and scope; candidates[].thread_ids holds references. Local IDs are t plus a positive integer; stored IDs are g plus a positive integer. Prototype search uses title/full-text words against a global name/scope index, taking N from existing Config. These are prototype fields and search choices, not default-pipeline capabilities or evidence of large-library recall.",
+    "See docs/poc/grouping-improvement-plan.md for gaps and steps. D148 member context and D150 reason-first output did not solve wrong grouping. D152's four name-selection responses to the third article created no candidates, so new membership was unexercised. Preserve all prior responses and results. Overarching thesis generation, MCP presentation and historical backfill are outside that implementation scope."
 ];
 
   // What each category should yield, and in which tier its evidence usually sits. The category's own definition and
   // reading rule come from the classification page and are not repeated here.
   const CATEGORY_READS = {
-    T1: { read: '实际数、指引、管理层的解释', tier: '实际数是发生的事；指引和解释是当事人说的' },
-    T2: { read: '实际数、分部数；风险因素和业务描述里讲到的风险和变化', tier: '数是发生的事；风险和变化是当事人说的' },
-    T3: { read: '交易条款（价格、对价、交割条件、时间表）；各方的说法和诉求', tier: '条款是发生的事；说法是当事人说的' },
-    T4: { read: '管理层对关键问题的回答、口径的变化；分析师追问的焦点', tier: '回答是当事人说的；追问是第三方看法' },
-    T5: { read: '管理层给的中长期目标、资本配置的框架、新业务的规模', tier: '当事人说的' },
-    T6: { read: '发生了什么事（高管变动、并购、新产品、回购）；公布的经营数字（比如交付量）', tier: '发生的事' },
-    T7: { read: '发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁', tier: '官方确认的算发生的事；“知情人士称”算传闻' },
-    T8: { read: '作者的看法、论据、预测、评级和目标价，以及它们的变化', tier: '第三方看法' },
-    T9: { read: '说话人讲的经营情况（订单、价格、份额、库存）；他凭什么知道', tier: '第三方看法' },
-    T10: { read: '决定或行动本身、什么时候生效、影响谁；后面的程序（上诉、截止日），可以用作到期日', tier: '发生的事' },
-    T11: { read: '公布的数字和政策决定，和上一次比差多少；官方措辞的变化', tier: '数和决定是发生的事；措辞是当事人说的' },
-    T12: { read: '价格和成交的变化', tier: '发生的事' },
-    T13: { read: '谁在买、谁在卖、规模多大', tier: '发生的事' },
-    T14: { read: '排定的日期，用作到期日', tier: '发生的事' },
-    T15: { read: '测到的经营数据，作为量化证据', tier: '发生的事（注明是第三方测的）' },
-    T16: { read: '研究对象默认不看', tier: '—' },
+    T1: { read: "Actual figures, guidance and management explanations", tier: "Actual figures are facts; guidance and explanations are party statements" },
+    T2: { read: "Actual and segment figures; risks and changes in risk factors and business descriptions", tier: "Figures are facts; described risks and changes are party statements" },
+    T3: { read: "Transaction terms: price, consideration, closing conditions and timetable; parties' statements and demands", tier: "Terms are facts; statements are party statements" },
+    T4: { read: "Management answers to key questions, changes in wording and analysts' follow-up concerns", tier: "Answers are party statements; analysts' questions are third-party views" },
+    T5: { read: "Management's medium/long-term targets, capital-allocation framework and new-business scale", tier: "Party statement" },
+    T6: { read: "Events such as executive changes, acquisitions, products and buybacks; published operating figures such as deliveries", tier: "Fact" },
+    T7: { read: "What happened, when and who was involved; attribution and original sources", tier: "Official confirmation is fact; unnamed-source claims are rumours" },
+    T8: { read: "The author's opinions, arguments, forecasts, ratings and targets, and changes to them", tier: "Third-party view" },
+    T9: { read: "The speaker's account of orders, prices, share and inventory, and how they know", tier: "Third-party view" },
+    T10: { read: "The decision/action, effective date and affected parties; subsequent appeals and deadlines that may set the due date", tier: "Fact" },
+    T11: { read: "Published figures and policy decisions versus the previous release; changes in official wording", tier: "Figures and decisions are facts; wording is a party statement" },
+    T12: { read: "Changes in prices and trading", tier: "Fact" },
+    T13: { read: "Who buys, who sells and at what scale", tier: "Fact" },
+    T14: { read: "Scheduled dates that can set due dates", tier: "Fact" },
+    T15: { read: "Measured operating data as quantitative evidence", tier: "Fact; identify the third-party measurement" },
+    T16: { read: "Not tracked by default", tier: '—' },
   };
 
-  const CATEGORY_NOTE = '每份文件都整份交给模型，里面的表格一起读；表格数据一次发布算一条，也整批交给模型。申报里的 XBRL 数字不另外推，文件本身已经有这些数。到期时要不要另外去查准确的数，等以后设计 Pull 模式时定。';
+  const CATEGORY_NOTE = "Read every whole file, including tables. A table release is one item and is read as a whole batch. Do not separately ingest XBRL facts already in the filing. Whether to fetch exact settlement numbers is deferred to pull-mode design.";
 
   // Every category has its own prompt: the same template with that category's parts. One assembled example.
   const PROMPT_EXAMPLE = {
-    label: 'T7 新闻的提示词', note: '同一个提示词模板，第 2、4 块换成新闻这一类的',
+    label: "T7 news prompt", note: "The same template, with news-specific blocks 2 and 4",
     children: [
-      { answer: '1 角色', label: '资深对冲基金分析师', note: '读这条信息，是为了检验和形成观点：证据连到已有观点上；已有观点管不到的要紧事，写成候选观点，当场写全问题、梯子、到期日和研究归属' },
-      { answer: '2 这一类怎么读', label: '媒体的报道', note: '取自分类规则：媒体发的内容里，评论和分析归 T8，登记过的发布系列按系列归类，其余归这一类' },
-      { answer: '3 讲的是谁', label: '这篇报道的相关对象', note: '由代码填，比如 NVDA、AMD；另附名单里的全部主题' },
-      { answer: '4 要读出什么', label: '发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁', note: '官方确认的算发生的事；“知情人士称”算传闻' },
-      { answer: '5 已有观点与研究主线', label: '这篇报道相关对象开着的观点，加上它们依赖的观点', note: '由代码填，写明谁依赖谁，只给问题、看的是什么和到期日；比如“NVDA FY27 全年中国区收入，比 FY26 会怎样？”，和它依赖的“这一档芯片对华出口许可”；另附可用的研究主线' },
+      { answer: "1 Role", label: "Senior hedge-fund analyst", note: "Read to test and form theses. Link evidence to existing theses; for important uncovered questions, return complete candidates with question, ladder, due date and research-group association." },
+      { answer: "2 How to read this category", label: "Media reporting", note: "From classification: opinion and analysis belong to T8; registered publication series use their category; remaining media material belongs here." },
+      { answer: "3 Subjects", label: "Subjects of this report", note: "Filled by code, such as NVDA and AMD, plus all universe themes" },
+      { answer: "4 What to extract", label: "What happened, when and who was involved; attribution and original sources", note: "Official confirmation is fact; unnamed-source claims are rumours" },
+      { answer: "5 Existing theses and research groups", label: "Open theses for the report's subjects and their dependencies", note: "Filled by code with dependency links, questions, focus and due dates. For example, NVDA FY2027 China revenue versus FY2026 and its chip-export-licence dependency. Also include available research groups." },
     ],
   };
 
   const PROMPT_NOTES = [
-    '每一类都有自己的提示词：同一个提示词模板，第 2 块（这一类怎么读）和第 4 块（要读出什么）换成这一类的；第 1 块所有类别一样；第 3、5 块由代码按这条信息填进去。',
-    '研究对象会看的 15 类（T1–T15）各一份；T16 研究对象默认不看，用到时再写。',
-    '候选观点讲的是谁：主题从第 3 块附的主题里挑，名单里没有的写清是什么事；公司、加密货币、商品写代码（股票代码、加密货币代码、商品代码）或名字，由代码去参照数据里查，名字只认登记过的，和分类查公司名一样。',
-    '你自己的备忘录（作者是你的 T8）：里面的判断读成候选观点，不当作证据；这样的候选观点可以不带证据，开成观点以后，第一次连上证据以前，状态写“还没判”。',
-    '输出的格式（证据、候选观点及其归属、必要的新主线定义、出处各有哪几栏）由代码规定和检查，不写进提示词。',
-    '每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里，改一次就是一个新版本。',
+    "Each category has its own prompt using the same template. Blocks 2 and 4 vary by category; block 1 is shared; code fills blocks 3 and 5 for the item.",
+    "One prompt per tracked category T1–T15. T16 is not tracked by default; write its prompt when needed.",
+    "For theme candidates, select from block 3 or describe a new issue if absent. For companies, cryptocurrencies and commodities, provide the relevant symbol or name. Code resolves reference data and accepts registered names only, as classification does.",
+    "The user's own memo (T8 authored by the user) yields candidate judgements, not evidence. These candidates may have no evidence. Once opened, their state is “not yet judged” until evidence first links to them.",
+    "Code defines and validates output fields for evidence, candidates and associations, necessary new groups and sources. Do not restate the shape in prompts.",
+    "Test each category's prompt on stored items before settling its wording. Config records each version; a change creates a new version.",
   ];
 
   // Extraction, step by step: it only reads; matching and writing happen in the views database.
   const EXTRACT_STEPS = [
-    { code: '1', name: '拼提示词', who: '代码', does: '按这条信息的类别，用同一个提示词模板拼出这一类的提示词；第 5 块由观点库给：相关对象开着的观点、它们依赖的观点，以及归组所需的已有主线' },
-    { code: '2', name: '读', who: '模型', does: '整份读完，交出两样：证据，连到第 5 块里的观点上，或连到这次的候选观点上；候选观点，第 5 块里没有一条观点管、又要紧的事，带上提出它的证据；你自己的备忘录照提示词说明处理。每个候选观点同时确定研究归属，按观点库的归组规矩交出引用；每条带出处' },
-    { code: '3', name: '核对出处与归属引用', who: '代码', does: '引用的原文（那一句，或表里那个单元格）在不在这条信息里、数字在不在引用的地方；证据连的必须是第 5 块里的观点或这次的候选观点；出处对不上的不要，记下原因；归属引用按观点库的完整交接规矩检查' },
-    { code: '4', name: '交给观点库', who: '代码', does: '证据、候选观点连同归属和必要的新主线定义，带着顺序号一起交给观点库；比对定观点身份，写入保留归属' },
+    { code: '1', name: "Build the prompt", who: "Code", does: "Use the category's content in the shared template. The library supplies block 5: open subject theses, their dependencies and existing groups needed for association." },
+    { code: '2', name: "Read", who: "Model", does: "Read the whole item. Return evidence linked to block-5 theses or current candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources." },
+    { code: '3', name: "Check sources and group references", who: "Code", does: "Check that the quote or cell exists in the item and that cited numbers appear there. Evidence must link to block-5 theses or current candidates. Reject source mismatches with reasons. Validate association references under the library's complete handoff contract." },
+    { code: '4', name: "Hand off to the library", who: "Code", does: "Hand off evidence, candidates, associations and necessary group definitions with the sequence number. Matching decides identity; writing preserves membership." },
   ];
 
   // The two things one read hands over, side by side.
   const EXTRACT_TWO = [
-    { aspect: '是什么', evidence: '信息里的一句话或一个数：谁说了什么、发生了什么', candidate: '一个要盯的问题，当场写全：讲的是谁、问题、梯子、到期日和研究归属' },
-    { aspect: '多不多', evidence: '几乎每条信息都有', candidate: '少：第 5 块里没有一条观点管、又要紧的事；你自己的备忘录里的判断都算' },
-    { aspect: '连到哪', evidence: '第 5 块里的观点（可以连几条），或者这次的候选观点', candidate: '带着提出它的证据（你自己的备忘录读出的可以没有）' },
-    { aspect: '到了观点库', evidence: '和它那条观点下已有的证据比：重复、替代还是新证据', candidate: '先定是哪一条（或它的一部分）、接续、新观点，还是不开；归属随最终观点保存，不再由比对重判' },
-    { aspect: '例子', evidence: '8-K 里的“H20 出口中国要许可证”', candidate: '2025-04 那条规定管的这一档芯片对华出口许可，到 2026-04-15 处在哪一格？' },
+    { aspect: "What it is", evidence: "A statement or number from the item: who said what or what happened", candidate: "A complete question to track: subject, question, ladder, due date and research-group association" },
+    { aspect: "How common", evidence: "Present in almost every item", candidate: "Few: important questions uncovered by block 5; also all judgements from the user's memo" },
+    { aspect: "Links", evidence: "One or more block-5 theses, or current candidates", candidate: "Carries initiating evidence; candidates from the user's memo may omit it" },
+    { aspect: "In the library", evidence: "Compare against its thesis's existing evidence: repeat, replacement or new", candidate: "Decide existing identity or a part of it, succession, new thesis or skip. Preserve associations with the final thesis; matching does not regroup." },
+    { aspect: "Example", evidence: "The 8-K statement that H20 exports to China require a licence", candidate: "What will the China export-licence regime for chips covered by the April 2025 rule be on April 15, 2026?" },
   ];
 
   // How the model sorts what it reads: against the open views in prompt part 5.
   const EXTRACT_SORT_TREE = {
-    label: '读到一句话或一个数', question: '它和哪条观点有关？', note: '你自己的备忘录里的判断不走这棵树：都写成候选观点，可以不带证据',
+    label: "Read a statement or number", question: "Which thesis does it concern?", note: "Judgements in the user's memo bypass this tree: all become candidates and may lack evidence",
     children: [
-      { answer: '第 5 块里的观点', label: '证据：连到那条观点上', note: '连在它直接讲的那条上；另一条依赖那条的，不再连给它', act: true },
-      { answer: '第 5 块里没有，但要紧', label: '候选观点：这句话是它的证据', note: '先在抽取时交研究归属；是已有的哪一条，还是新观点，由观点库比对时定；一条观点只管到它的到期日，到期以后才发生的事也算这里', act: true },
-      { answer: '都没关系', label: '不抽', note: '背景、套话' },
+      { answer: "A thesis in block 5", label: "Evidence: link to that thesis", note: "Link only to the thesis directly discussed, not also to theses that depend on it", act: true },
+      { answer: "Not in block 5, but important", label: "Candidate thesis with this statement as evidence", note: "Return its group association during extraction. The library later decides existing identity or new thesis. A thesis covers only up to its due date; events after that date belong here too.", act: true },
+      { answer: "Neither", label: "Do not extract", note: "Background or boilerplate" },
     ],
   };
 
   // What one source records; every view, piece of evidence and change carries one.
   const SOURCE_TREE = {
-    label: '一条出处',
+    label: "A source reference",
     children: [
-      { answer: '哪条信息', label: '上游编号', note: '每个版本有自己的编号；凭它去团队的库里取原文' },
-      { answer: '哪一类、哪天', label: '类别、发布日' },
-      { answer: '哪一处', label: '第几节第几段、表里哪个单元格', note: '表格数据写数据集和记录编号' },
-      { answer: '哪一句', label: '原文那一句，或表里那个单元格', note: '代码核对它真的在这条信息里，数字真的印在引用的地方', act: true },
+      { answer: "Which item", label: "Upstream ID", note: "Each version has its own ID; use it to retrieve the original from the team's library" },
+      { answer: "Category and day", label: "Category and publication day" },
+      { answer: "Where in the item", label: "Section, paragraph or table cell", note: "For table data, record dataset and record IDs" },
+      { answer: "Which statement", label: "The original sentence or table cell", note: "Code verifies the quote exists in the item and the cited number appears there", act: true },
     ],
   };
 
   const SOURCE_NOTES = [
-    '每条观点、每条证据、每一次由信息引起的变化都带出处；状态的每次变化写明依据哪几条证据（因为依赖的观点变了而重判的，也写那几条观点）。',
-    '抽取核对三件事：引用的原文（那一句，或表里那个单元格）在这条信息里；数字在引用的地方；证据连的是第 5 块里的观点，或者这次的候选观点。有一件不对，就不交出去。观点库核对：出处在处理记录里查不到的，不写进库。都记下原因。',
-    '两头都能查：从一条观点查到它的全部来源信息，从一条信息查到它产生和改动过的全部观点和证据。',
-    '整份信息不存，要看原文就凭上游编号去团队的库里取；原文里只存观点或证据的出处引用的那一句，或表里那个单元格。',
-    '同一条信息里说同一件事的几处（正文和表格里的同一个数），交成一条证据，带几个出处。',
+    "Every thesis, evidence item and information-triggered change retains sources. Each state change identifies its supporting evidence, plus dependency theses when their changes triggered rejudgement.",
+    "Extraction checks quote/cell presence, number presence and links to block-5 theses or current candidates. Reject output failing any check. The library refuses sources absent from processing records. Both record reasons.",
+    "Trace in both directions: thesis to all source items, and item to every thesis and evidence item it created or changed.",
+    "Do not store the whole source item; retrieve it from the team's library by upstream ID. Store only the quoted sentence or cell supporting the thesis or evidence.",
+    "Repeated statements of the same fact within one item, such as a number in text and a table, become one evidence item with multiple references.",
   ];
 
   const EXTRACT_EXAMPLE_TREE = {
-    label: '两条信息读出什么', note: '示意',
+    label: "What two items yield", note: "Illustration",
     children: [
       {
-        answer: '2025-04-15 NVDA 的 8-K', label: '库是空的，第 5 块里没有观点', question: '读出两条候选观点',
-        note: 'T6 公司其他发布：H20 出口中国要许可证，预计最多约 55 亿美元的费用',
+        answer: "NVIDIA 8-K, April 15, 2025", label: "Empty library; no theses in block 5", question: "Two candidate theses",
+        note: "T6 other company publication: H20 exports to China require a licence; expected charges up to approximately $5.5 billion",
         children: [
-          { answer: '候选观点（主题观点）', label: '2025-04 那条规定管的这一档芯片（H20、MI308 等）对华出口许可，到 2026-04-15 处在哪一格？', note: '事件观点。五格：全面禁止；要许可，一个都不发；要许可，发了，但有附条件的；要许可，发了，都不附条件；不再要许可。到期日：2026-04-15。证据原文：“…requires a license for export to China … of the Company’s H20 integrated circuits…”，意思是 NVDA 披露 H20 出口中国要许可证，算发生的事。到了观点库，开成 #1', act: true },
-          { answer: '候选观点（对象观点 NVDA）', label: 'NVDA FY26 全年中国区收入，比 FY25 会怎样？', note: '数字观点。五格：涨 50% 及以上；涨 10% 及以上不到 50%；涨跌都不到 10%；降 10% 及以上不到 80%；降 80% 及以上。到期日：FY26 年报的财报日。证据原文：“…up to approximately $5.5 billion of charges…”，意思是公司预计最多约 55 亿美元的费用，算当事人说的。到了观点库，开成 #2，依赖 #1', act: true },
+          { answer: "Candidate: theme thesis", label: "What will China export licensing for chips covered by the April 2025 rule, including H20 and MI308, look like on April 15, 2026?", note: "Event thesis. Five rungs: full ban; licences required and none issued; licences issued with some conditions; all issued licences unconditional; no licence required. Due April 15, 2026. Quote: “…requires a license for export to China … of the Company’s H20 integrated circuits…”. NVIDIA discloses the licence requirement, classified as fact. The library opens thesis #1.", act: true },
+          { answer: "Candidate: NVDA asset thesis", label: "How will NVDA FY2026 China revenue compare with FY2025?", note: "Numeric thesis. Five rungs: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Due on the FY2026 annual earnings date. Quote: “…up to approximately $5.5 billion of charges…”. This is a company expectation, classified as a party statement. The library opens #2, dependent on #1.", act: true },
         ],
       },
       {
-        answer: '2025-07-14 NVDA 的声明', label: '第 5 块：#2 和它依赖的 #1', question: '读出一条证据，没有候选观点',
+        answer: "NVIDIA statement, July 14, 2025", label: "Block 5 contains #2 and its dependency #1", question: "One evidence item, no candidate",
         children: [
-          { answer: '证据', label: '连到 #1', note: '当事人说的；一句话说清：NVDA 称美国政府已保证会批准 H20 对华出口的许可（2025-07-14）', act: true },
+          { answer: "Evidence", label: "Link to #1", note: "Party statement: NVIDIA says the US government assured it that H20 export licences to China will be granted (July 14, 2025)", act: true },
         ],
       },
     ],
   };
 
-  const EXAMPLE_NOTE = '出处：每条证据都记上游编号、所在段落和原文那一句（英文原句，中文只是说明）；代码核对“$5.5 billion”确实在那一句里。第一条信息进来时库是空的，第 5 块里没有观点，读到的要紧事只能写成候选观点；第二条信息进来时，第 5 块里已经有出口许可那条，NVDA 的声明就直接连上去。到了观点库，候选观点去和搜出来的已有观点比，证据去和它那条观点下已有的证据比，见观点库。两条候选观点同时归在“这一档芯片的对华许可与中国业务”主线下；第二篇只有证据，沿已有成员关系更新。归属不代替 #2 依赖 #1 的判断。例子用 NVDA，美股、期货、加密货币都走同一套。';
+  const EXAMPLE_NOTE = "Each evidence item records upstream ID, paragraph and exact quotation. Code checks that “$5.5 billion” appears in the quoted sentence. The first item sees an empty library, so important questions become candidates. The second sees the licence thesis and links NVIDIA's statement directly. The library compares candidates with searched theses and evidence within its thesis. Both candidates join the chip-licensing-and-China-business group; the evidence-only second item updates existing membership. Grouping does not replace #2's dependency on #1. The NVDA example uses the same process as equities, futures and cryptocurrencies.";
 
   const EXTRACT_OPEN = [
-    '每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里。',
-    '候选观点的颗粒度，也就是一条观点管多大的范围（见观点库还没定的）：要让模型知道，观点不能全是财务指标，也不能把几件事捆成一条，或者把一件事拆得太碎；等调研完再写进提示词。',
+    "Validate each category prompt on stored items before settling it; record its version in Config.",
+    "Research thesis granularity: avoid only financial metrics, bundling separate questions or splitting one question too finely. See the library's open questions; reflect the decision in prompts after research.",
   ];
 
   // ------------------------------------------------------------------ views database (D38–D45)
 
   // What the views database holds.
   const VIEW_TREE = {
-    label: '观点库',
+    label: "Thesis library",
     children: [
       {
-        answer: '对象', label: '名单里的公司、加密货币、商品、主题',
+        answer: "Subject", label: "Companies, cryptocurrencies, commodities and themes in the universe",
         children: [
           {
-            answer: '观点', label: '一个问题 + 一把梯子 + 一个到期日', note: '写下不改；梯子五格，只有是或否的问题两格；比对开观点时，同一个对象、看同一样东西，同一时间只开一条',
+            answer: "Thesis", label: "A question + a ladder + a due date", note: "Immutable once written. Five rungs, or two for yes/no. When matching opens a thesis, only one may be open for the same subject and focus at a time.",
             children: [
-              { answer: '状态', label: '这条观点处在梯子的哪一格', note: '证据把它往梯子的一头或另一头推，模型按事实判；你自己的备忘录开的观点，第一次连上证据以前是“还没判”', act: true },
-              { answer: '连线', label: '证据', note: '证据只存一次，带出处和层；往哪边推记在连线上；被替代的证据留在历史里，不再算数', act: true },
-              { answer: '依赖', label: '别的观点', note: '箭头带一个方向：对象观点写明对方的哪一头对它是看多，主题观点写明两把梯子同向还是反向', act: true },
-              { answer: '接续', label: '上一期的观点', note: '同一样东西一期接一期，连成一条链', act: true },
+              { answer: "State", label: "The thesis's current ladder rung", note: "Evidence pushes towards either end; the model judges from facts. A thesis from the user's memo is not yet judged until evidence first links to it.", act: true },
+              { answer: "Link", label: "Evidence", note: "Store evidence once with sources and tier. Its push belongs to the link. Replaced evidence remains in history and no longer counts.", act: true },
+              { answer: "Dependency", label: "Another thesis", note: "Direction specifies which end of the other thesis is bullish for an asset thesis, or whether the two ladders have the same or opposite orientation for a theme thesis.", act: true },
+              { answer: "Succession", label: "The previous period's thesis", note: "Successive periods of the same focus form a chain", act: true },
             ],
           },
         ],
       },
-      { answer: '研究主线', label: '按持续业务过程组织观点', note: '抽取时归组；完整规矩见“研究主线：抽取时归组”' },
-      { answer: '只加不改的记录', label: '比对记录、重判记录、接续、关掉和重新打开的记录、标注', note: '每一步都新加一条，不改不删；想知道某天当时怎么判，就翻那天以前的记录' },
+      { answer: "Research group", label: "Organise theses by a continuing business process", note: "Associate during extraction; full rules are in “Research groups: associate during extraction”" },
+      { answer: "Append-only records", label: "Matching, rejudgement, succession, closure, reopening and labelling records", note: "Append at every step, without editing or deleting. Read records up to a historical date to recover its judgement." },
     ],
   };
 
   // The two kinds of view: the same structure, rungs that mean different things.
   const VIEW_KINDS = [
-    { kind: '对象观点', on: '能交易的对象：公司、加密货币、商品', rungs: '五格：强烈看多、看多、中性、看空、强烈看空；只有是或否的问题两格：看多、看空。说的是对业务好还是坏，建的时候定，以后不变', example: 'NVDA FY27 全年中国区收入，比 FY26 会怎样？' },
-    { kind: '主题观点', on: '主题：宏观、政策、行业', rungs: '从一头排到另一头的几种结果（五格；只有是或否的问题两格），用结果命名，不说好坏；对谁是好是坏，由依赖它的对象观点各自写明', example: '美联储 2026 年最后一次议息后的目标利率上限，比现在会怎样？（大幅降息……大幅加息）' },
+    { kind: "Asset thesis", on: "Tradable subjects: companies, cryptocurrencies and commodities", rungs: "Five rungs: strongly bullish, bullish, neutral, bearish, strongly bearish. Two for yes/no: bullish and bearish. These describe the business impact; set them at creation and keep them fixed.", example: "How will NVDA FY2027 China revenue compare with FY2026?" },
+    { kind: "Theme thesis", on: "Macro, policy and industry themes", rungs: "Ordered outcomes from one end to the other: five rungs, or two for yes/no. Name outcomes without judging them good or bad. Dependent asset theses specify which outcome benefits them.", example: "How will the Fed's target-rate upper bound after its last 2026 meeting compare with now? (Large cut … large hike)" },
   ];
 
-  const KIND_NOTE = '同一件世界上的事，对不同的对象可能好坏相反：降息对以太坊是看多，对 JPM 的净利息收入是看空。所以主题观点不说好坏。';
+  const KIND_NOTE = "The same event can affect assets differently: rate cuts can be bullish for Ethereum and bearish for JPM net interest income. Theme theses therefore do not label outcomes good or bad.";
 
   // Two ladders, one of each kind (ranges are illustrative).
   const LADDER_EXAMPLES = {
-    label: '两种梯子', note: '区间示意',
+    label: "Two kinds of ladder", note: "Illustrative ranges",
     children: [
       {
-        answer: '对象观点（数字）', label: 'NVDA FY27 全年中国区收入，比 FY26', question: '五格：对 NVDA 的业务是好是坏',
-        note: '到期 = FY27 年报的财报日',
+        answer: "Asset thesis: numeric", label: "NVDA FY2027 China revenue versus FY2026", question: "Five rungs describing NVDA's business impact",
+        note: "Due on the FY2027 annual earnings date",
         children: [
-          { answer: '强烈看多', label: '涨 50% 及以上' },
-          { answer: '看多', label: '涨 10% 及以上，不到 50%' },
-          { answer: '中性', label: '涨不到 10%，或降不到 10%' },
-          { answer: '看空', label: '降 10% 及以上，不到 80%' },
-          { answer: '强烈看空', label: '降 80% 及以上', note: '最多剩两成' },
+          { answer: "Strongly bullish", label: "Up at least 50%" },
+          { answer: "Bullish", label: "Up at least 10% but under 50%" },
+          { answer: "Neutral", label: "Up or down by less than 10%" },
+          { answer: "Bearish", label: "Down at least 10% but under 80%" },
+          { answer: "Strongly bearish", label: "Down at least 80%", note: "At most one fifth remains" },
         ],
       },
       {
-        answer: '主题观点（事件）', label: '2025-04 那条规定管的这一档芯片（H20、MI308 等）对华出口许可，到 2026-04-15 处在哪一格',
-        question: '五格：从一头排到另一头的结果，不说好坏', note: '以那天已经生效的规定为准',
+        answer: "Theme thesis: event", label: "China export licensing for chips covered by the April 2025 rule, including H20 and MI308, as of April 15, 2026",
+        question: "Five ordered outcomes, without good/bad labels", note: "Use the rules in force on that date",
         children: [
-          { answer: '第 1 格', label: '全面禁止，不再受理许可' },
-          { answer: '第 2 格', label: '要许可，一个都不发' },
-          { answer: '第 3 格', label: '要许可，发了，但有附条件的' },
-          { answer: '第 4 格', label: '要许可，发了，都不附条件' },
-          { answer: '第 5 格', label: '不再要许可' },
+          { answer: "Rung 1", label: "Full ban; licence applications no longer accepted" },
+          { answer: "Rung 2", label: "Licences required; none issued" },
+          { answer: "Rung 3", label: "Licences required and issued; some conditional" },
+          { answer: "Rung 4", label: "Licences required and issued; all unconditional" },
+          { answer: "Rung 5", label: "Licences no longer required" },
         ],
       },
     ],
   };
 
   const LADDER_RULES = [
-    '每把梯子五格：对象观点是强烈看多到强烈看空，说的是对业务好还是坏；主题观点是从一头排到另一头的五种结果，用结果命名，不说好坏。只有是或否的问题用两格，不硬分五格：对象观点的两格是看多、看空；主题观点的两格用结果命名，比如“到期前签署了”“没签署”。',
-    '每一格写成一个能核对的结果：可以是一个数落在哪段区间，也可以是一件事到了哪一步。格和格不重叠、不留空，到期时正好一格成立：涨 50% 及以上、涨 10% 及以上不到 50%、涨跌都不到 10%、降 10% 及以上不到 80%、降 80% 及以上，每个边界只属于一格，到期拿到实际数，一定落进其中一格；写成“涨很多、涨一点”就对不出来。没有含糊的“部分”：部分做到的，写清楚是什么，单独成一格（“发许可，但附条件”）。中性跟什么比，写在那一格的条件里。',
-    '一把梯子只放一种东西，一个观点只看一件东西：既要数字又要事件的，拆成两条，用依赖连起来；两部分可能往相反方向走的（H20 这一档和 Blackwell 这一档），也是两条观点。',
-    '梯子由模型在抽取时写进候选观点，开成新观点就用这把，到期以前不改；后来归入的候选观点，梯子和到期日都用已有的。',
-    '数字的观点写明哪一年。不是公司的数，按自然年：这条信息发布那年是今年，下一年是明年，各到 12 月 31 日。公司的数按它的财年：发布日所在的财年是今年，下一个财年是明年。都按信息的发布日算，不看电脑时钟。同一个数，今年、明年最多各开一条，超出的不开；到期日就是这个数公布的那天。',
-    '到期日定在这个争论见分晓的那天，一般 6–12 个月；中间的季报是证据，不另开观点。',
+    "A ladder has five rungs. Asset theses run from strongly bullish to strongly bearish, describing business impact; theme theses name five ordered outcomes without good/bad labels. Use two rungs for yes/no rather than forcing five: bullish/bearish for assets; named outcomes for themes, such as signed by the deadline/not signed.",
+    "Each rung is verifiable: a numeric interval or event stage. Rungs must be exhaustive and non-overlapping, so exactly one applies at expiry. For example: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Every boundary belongs to one rung. “Up a lot/a little” cannot be checked. Avoid vague partial outcomes; specify the partial state, such as conditional licences, as a distinct rung. State the comparison underlying neutral.",
+    "One ladder concerns one thing. Separate numeric and event questions and connect them with dependencies. Likewise, separate components that can move in opposite directions, such as H20 and Blackwell chip classes.",
+    "The extraction model writes the candidate's ladder. A new thesis adopts it unchanged until expiry. A merged candidate uses the existing thesis's ladder and due date.",
+    "Numeric theses name a year. Non-company quantities use calendar years: the publication year is this year and the following year is next year, each ending December 31. Company quantities use the fiscal year containing publication day and its successor. Never use the computer clock. For a given quantity, open at most one thesis for each of this year and next year; do not open later years. The due date is the quantity's publication date.",
+    "Set the due date when the debate can be resolved, usually 6–12 months away. Intermediate quarterly reports are evidence, not separate theses.",
   ];
 
   // The state on a ladder (D45: where it is now is a proposal, in VIEWS_PROPOSED).
   const POSITIONS = [
-    { position: '状态', means: '这条观点处在梯子的哪一格：我们的判断，证据把它往梯子的一头或另一头推', moves: '模型判，温度调低，只按事实。每次从这条观点下没被替代的全部证据（每条带上它替掉的那条，看得到变化）、加上它依赖的观点现在的状态和理由重新判，不在上一次的基础上加减；写明依据哪几条证据；再和这条观点在这一轮之前的结论比，写明结论变不变。读的东西没变（连着的证据只多了出处，依赖的观点结论也没变），就不重判', example: '看到 8-K 以后：强烈看空' },
+    { position: "State", means: "Our judgement of the thesis's current rung; evidence pushes toward either end", moves: "The model judges at low temperature from facts. Reconsider all evidence still in force, including each item's replaced predecessor to show the change, plus current dependency states and reasons. Do not increment or decrement the previous score. Cite evidence and compare with the conclusion before this round to state whether it changed. Do not rejudge if only source references were added and dependency conclusions did not change.", example: "After the 8-K: strongly bearish" },
   ];
 
   // How a judgement shows its sources and how code checks them (D46).
   const STATE_RULES = [
-    '每次判断都写明依据：模型按固定格式交回判断，其中一栏写它根据的是哪几条证据，写证据的编号，比如“依据：e12、e15”；因为它依赖的观点变了而重判的，也写那几条观点的编号，比如“依赖：#1”。',
-    '代码查表核对：每条证据存进库时有一个编号；库里记着每个观点下有哪些证据、每条有没有标“被替代”。代码拿依据里的编号去查：证据是不是这个观点下的、有没有标“被替代”；观点是不是它依赖的那几条。都对，这次判断写进去；有一个不对，这次判断不收，记下原因，让模型重判一次；再不对，这一步算失败，照失败的规矩处理（从这一步重试，多次失败的放进人工复核池）。只核对引用合不合上面这几条，不管判得对不对，就像核对脚注里写的页码，书里到底有没有那一页。',
-    '每次判断还交一栏“结论变不变”：模型拿这次的判断和这条观点在这一轮之前的结论（状态和理由）比（这一轮里重试也一样），写“变了”或“没变”，加一句为什么；这一轮之前的结论只拿来比，不在它的基础上加减。换了一格，或者撑着这个状态的关键事实、关键数字变了，算变了：AMZN 资本开支指引从涨 12% 改成 25%，还在同一格，也是变了；同样的话再说一遍，是没变。写了“变了”，依赖它的观点读的东西就变了，这一轮接着重判。代码只核对一件事：换了一格的、第一次判的，必须写“变了”；写成“没变”的不收，照上一条查表不对的规矩处理。',
-    '想知道某天当时怎么判，就翻那天存下的判断记录，不重新问模型；再问一次，模型可能答得不一样。',
+    "Every judgement states its basis in a fixed response shape: evidence IDs such as e12 and e15, plus dependency thesis IDs such as #1 when their changes triggered rejudgement.",
+    "Code checks cited IDs against records: evidence must belong to this thesis and not be replaced; cited theses must be its dependencies. Accept only if all checks pass. Otherwise record the reason and ask for one corrected judgement. If that also fails, use normal failure handling: retry from this step, then human review after repeated failure. This checks references, not whether the judgement is correct, like verifying a cited page exists.",
+    "Each judgement also declares whether the conclusion changed and explains why, comparing with the state and reasons before this round, including during retries. That earlier conclusion is for comparison, not incremental scoring. A rung change or a material change in the supporting facts/numbers counts: AMZN capex guidance moving from 12% to 25% growth changes the conclusion even within one rung. Repetition does not. A changed conclusion triggers dependent theses in the same round. Code requires changed=true for a first judgement or rung change; otherwise refuse under the same correction rules.",
+    "For historical judgement, read the records saved on that date. Do not ask the model again; a new sample can differ.",
   ];
 
   const TIERS = [
-    { tier: '发生的事', examples: '官方行动、公布的数、已经完成的交易', counts: '能定哪一格成立，也能推状态' },
-    { tier: '当事人说的', examples: '公司指引、管理层表态、官员讲话', counts: '只能推状态' },
-    { tier: '第三方看法', examples: '卖方、媒体分析、专家', counts: '只能推状态' },
-    { tier: '传闻', examples: '“知情人士称”、没有出处的说法', counts: '只能推状态' },
+    { tier: "Fact", examples: "Official actions, published figures and completed transactions", counts: "Can establish which rung holds and move the state" },
+    { tier: "Party statement", examples: "Company guidance, management statements and official speeches", counts: "Can move the state only" },
+    { tier: "Third-party view", examples: "Sell-side analysts, media analysis and experts", counts: "Can move the state only" },
+    { tier: "Rumour", examples: "Unnamed-source claims and unattributed statements", counts: "Can move the state only" },
   ];
 
   const TIER_RULES = [
-    '推多远由模型判，写明依据；哪一层都不给固定分数。',
-    '独立来源按原始来源数：二十家媒体转述同一条独家，是同一条证据的二十个出处，算一份。',
-    '层看是谁确认的：“知情人士称商务部开始发许可证”是传闻；商务部或公司确认以后，确认的那条是发生的事，替代那条传闻；传闻还是传闻，留在历史里。',
-    '证据只存一次，本身不带方向；往哪边推记在证据和每条观点之间的连线上，由每次重判写。同一句话可以连几条观点，各推各的。',
+    "The model determines the size of the push and gives reasons. No tier has a fixed score.",
+    "Count independent original sources. Twenty outlets retelling one exclusive are twenty references to one evidence item, not twenty independent confirmations.",
+    "Tier follows who confirmed it. An unnamed-source report that Commerce is issuing licences is a rumour. An official or company confirmation is factual evidence replacing it. The rumour remains a rumour in history.",
+    "Store evidence once without an intrinsic direction. Each rejudgement writes its push on the evidence–thesis link. One statement can affect multiple theses differently.",
   ];
 
   // How B reads A when B depends on A.
   const DEPENDENCY_TREE = {
-    label: 'B 依赖 A', question: 'A 是哪一种观点？', note: '箭头带一个方向：B 是对象观点，写明 A 的哪一头对 B 是看多；B 是主题观点，写明两把梯子同向还是反向',
+    label: "B depends on A", question: "What kind of thesis is A?", note: "For an asset thesis B, state which end of A is bullish for B. For a theme thesis B, state whether their ladders have the same or opposite orientation.",
     children: [
       {
-        answer: '数字的观点', label: '读那一年的那条', note: '例：JPM 2027 全年净利息收入 → 美联储 2027 年末利率',
+        answer: "Numeric thesis", label: "Read the specified year's thesis", note: "Example: JPM 2027 net interest income → Fed year-end 2027 rate",
         children: [
-          { answer: 'A 开着', label: '读 A 的状态和理由', act: true },
-          { answer: 'A 关了', label: '读 A 关掉时的状态和理由', note: '到期定格的，这就是 B 要用的，B 接着读它', act: true },
-          { answer: 'A 还没建', label: '箭头先等着', note: '记下等的是哪条链上的哪一年（链是模型面前那条观点所在的链）；那一年的观点在链上接续出来时连上，B 重判一次' },
+          { answer: "A is open", label: "Read A's state and reasons", act: true },
+          { answer: "A is closed", label: "Read A's closing state and reasons", note: "The frozen outcome is what B needs; keep reading it", act: true },
+          { answer: "A does not exist yet", label: "Wait for it", note: "Record the awaited year on the chain containing the shown thesis. When that year's successor is created, bind the dependency and rejudge B once." },
         ],
       },
       {
-        answer: '事件的观点', label: '顺着接续往下走', note: '例：NVDA FY27 全年中国区收入 → 这一档芯片对华出口许可',
+        answer: "Event thesis", label: "Follow succession", note: "Example: NVDA FY2027 China revenue → chip export licensing to China",
         children: [
-          { answer: 'A 开着', label: '读 A 的状态和理由', act: true },
-          { answer: 'A 关了，有接续的', label: '读接续的那条', note: '记一笔；接续的那条建出来，B 读的东西变了，重判一次', act: true },
-          { answer: 'A 关了，没有接续', label: '读 A 关掉时的状态和理由，标“只是历史”' },
+          { answer: "A is open", label: "Read A's state and reasons", act: true },
+          { answer: "A is closed with a successor", label: "Read the successor", note: "Record the change. The successor changes B's input, so rejudge B once.", act: true },
+          { answer: "A is closed without a successor", label: "Read A's closing state and reasons, marked “historical only”" },
         ],
       },
     ],
   };
 
   const DEPENDENCY_RULES = [
-    '主题观点不说好坏；对谁是好是坏，由依赖它的对象观点在箭头上写明：降息那头对以太坊是看多，对 JPM 是看空。',
-    '箭头只有一个方向。看起来要“先好后坏”，说明中间还有一条观点没写出来，要拆出来：钢铁关税抬高国内钢价是一条路，拖垮下游用钢需求是另一条路。',
-    '观点之间互相影响只有一种方式：依赖（接续只记哪一期接着哪一期）。B 依赖 A，就是 B 判断时要看 A 的结论。B 判断时看两样，分开放：直接讲 B 的证据；它依赖的观点现在的状态和理由。A 的结论对 B 起的作用像证据，但不当证据存：证据是外面发生的事、别人说的话，A 的结论是我们自己的判断，当成证据，系统会自己说服自己。',
-    '一句话只算一次：讲 A 的话只算 A 的证据（同一条信息里新提的两条候选观点也一样，一句话只连到它直接讲的那条），B 通过 A 的结论知道这件事；直接讲 B 的，才算 B 的证据；B 不依赖 A 的，讲 A 的话也直接算 B 的证据。依赖谁只在建 B 的时候定。',
-    '什么时候重判：一条观点读的东西变了，就重判。读的东西有两样：它自己的证据，和它依赖的观点的结论（状态和理由）。自己的证据变了，是来了新证据、有证据被替代，或者新连上了一条库里已有的证据；连着的证据只多了出处，不算。依赖的观点结论变了，是那条观点这次判完写了“变了”。B 等着的 A 刚建出来、B 读的那条换成了接续的下一期，也都是 B 读的东西变了。只重判开着的观点，关了的不再更新。你自己的备忘录开的观点，第一次连上证据时才第一次判；在那以前状态是“还没判”，依赖它的观点读到的也是“还没判”。',
-    '新观点连不连依赖、连哪几条，由模型在比对的那一次一起判，像分析师一样：写出这条观点的结果要靠哪几条观点的结果，各往哪个方向推。从模型面前已有的观点里挑：搜出来的前 N 条、抽取时第 5 块列的、同一条信息里新建的；不另外搜。已经发生的事是证据，不连：OPEC 看着今天的油价定产量，今天的油价是“OPEC 产量”这条观点的证据，不是依赖。',
-    '防绕圈：每加一条箭头，或者一条箭头顺着接续换到下一期，代码先查会不会绕成圈（A 靠 B，B 又靠 A）；会的话这条不收，退回给模型改；改了还绕圈，照失败的规矩处理。看起来互相依赖的两个问题，是观点没起好。',
+    "Theme theses do not judge outcomes as good or bad. Each dependent asset thesis records its direction: rate cuts are bullish for Ethereum and bearish for JPM.",
+    "A dependency has one direction. An apparent “good first, bad later” relationship needs an intermediate thesis: steel tariffs raising domestic steel prices and weakening downstream steel demand are separate paths.",
+    "Dependencies are the sole way theses influence each other; succession only orders periods. B depending on A means B reads A's conclusion. Keep B's direct evidence separate from dependency states and reasons. A's conclusion can affect B like evidence but is not stored as evidence: external events and statements are evidence, whereas A is our own judgement. Treating it as evidence would let the system convince itself.",
+    "Count a statement once. A statement about A is A's evidence, including when two candidates arise from one item. B learns it through A's conclusion. Only statements directly about B are B's evidence. If B does not depend on A, the statement may also directly evidence B. Choose dependencies only when B is created.",
+    "Rejudge an open thesis when its inputs change: new evidence, replacement, a new link to existing evidence, or a dependency declaring a changed conclusion. Additional source references alone do not count. Binding an awaited A or moving to its successor also changes B's inputs. Closed theses do not update. A memo-derived thesis is first judged when evidence first links to it; before that, it and its dependants see “not yet judged”.",
+    "The matching model chooses dependencies when opening a thesis, stating which conclusions it relies on and each direction. Choose only among searched theses, extraction block-5 theses and candidates opened from the same item; no extra search. Completed events are evidence, not dependencies: today's oil price influencing OPEC output is evidence for the OPEC-output thesis.",
+    "Before adding an edge or following it to a successor, code checks for cycles. Refuse a cycle and ask the model to correct it; persistent cycles follow normal failure handling. Apparently mutually dependent questions indicate poorly defined theses.",
   ];
 
   // Succession: the same thing, period after period.
   const CHAIN_RULES = [
-    '同一样东西的下一条观点接着上一条，连成一条链：美联储 2026 年末利率 → 2027 年末利率 → 2028 年末利率。这条链记下各期观点的前后关系；依赖的箭头怎么顺着链走，见上面。',
-    '一条只能有一个下一期：FY26 后面只接一条 FY27，不能冒出两条。',
-    '下一期的梯子方向不变：上一期第一格是“强烈看多”，下一期也是；每一格的门槛可以重新定。依赖它的观点沿用原来的方向，梯子两头一反就乱了。',
+    "Successive periods of the same focus form a chain, such as Fed year-end 2026 rate → 2027 rate → 2028 rate. The chain records period order. Dependency traversal follows the rules above.",
+    "One thesis has at most one successor: FY2026 cannot produce two FY2027 successors.",
+    "Keep ladder orientation across succession: a strongly bullish first rung remains strongly bullish, although thresholds can change. Dependencies retain their direction; reversing the ends would break it.",
   ];
 
   // Writing what extraction hands over, one item per round: candidate views first, then evidence.
   const INTAKE_STEPS = [
-    { code: '1', name: '核对出处', who: '代码', does: '出处在处理记录里查不到的不要，记下原因' },
-    { code: '2', name: '收证据', who: '代码', does: '重试不重复存；一条信息出了修正版，只换它自己那一处出处：修正版只是转述别人的，不动原来那条证据；修正版本身就是原始来源的，新版里的句子照常比对，改了的替代原句' },
-    { code: '3', name: '搜索', who: '代码', does: '用搜索引擎在观点库里搜（像 Elasticsearch，语义搜索或关键词，怎么搜还没定）。候选观点搜整个观点库，开着的、关掉的都搜，取前 N 条（N 写在 Config，先定 10）；证据只在它连到的那条观点下的证据里搜，取前 N 条；连在候选观点上的（哪怕也连着已有观点），等候选观点有了去向再一起搜。搜出来是空的，也照样交给第 4 步' },
-    { code: '4', name: '比对', who: '模型', does: '模型不读原文，在同一次调用里判三件事；给它看的每条已有观点，都有属于哪个对象、问题、看的是什么、梯子、到期日和开着还是关了。一是每个候选观点：是清单里的哪一条（或者它的一部分）、接续哪一条（接续的，梯子按上一期的方向排，门槛照候选观点写的），还是新观点（对不上，或者只是有点像，就开新的）；太大太杂的、超出今年和明年的数字观点、和一条关了的观点是同一样东西的同一期的，都不开；都写理由。二是要开的新观点依赖哪几条观点、各往哪个方向推，从模型面前已有的观点里挑：搜出来的、抽取时第 5 块列的、同一条信息里新建的。三是只连在已有观点上的每条证据，和那条观点下搜出来的证据比，是重复、替代还是新证据。连在候选观点上的证据，等候选观点有了去向再比：到它连着的每条已有观点下（包括候选观点归入的那条）一起搜，另叫一次模型一起比；只连在新观点上的，就是新证据' },
-    { code: '5', name: '核对', who: '代码', does: '候选观点和证据的去向，编号必须在清单里，或者是那条观点下的证据；候选观点要归入的那条已有观点，必须还开着；新观点讲的对象必须在研究对象名单里（照分类查对象标识的办法查），不在的照“不开”处理；新观点依赖的，必须是这一次给模型看过的观点（或者写明了要等它那条链上的哪一年），连上以后不绕成圈，不对的退回给模型改' },
-    { code: '6', name: '写进库', who: '代码', does: '按归组规矩把抽取交来的归属连到最终观点，和本步一起保存；各对象自己的队列写，先写主题观点，再写对象观点；新观点和它的依赖箭头一起写；重复只给那一条多一个出处，这次新连上它的观点也连过去；替代按说的时间排（这句话是哪天说的），后说的算数，先说的标“被替代”，晚到的旧说法不加进来，只在处理记录里写一笔；被替代的证据还连着别的观点，新的那条也连过去；原始来源自己的修正版里找不到、也没被新句替代的原句，算删了，标“被替代”；比对时读到的东西在写进库之前变了，就把受影响的部分重新比对' },
-    { code: '7', name: '重判一轮', who: '模型', does: '读的东西变了的观点重判，只判开着的（关了的不判）：这一轮来了新证据、有证据被替代、新连上了一条已有的证据，或者它依赖的观点这一轮判完写了“变了”（刚建出来的、换成接续的下一期的，都算变了）。先判被依赖的观点，再判依赖它的，每条这一轮只判一次；连着的证据只多了出处，本身不触发重判；你自己的备忘录开的、还没连上证据的观点不判，状态写“还没判”；每条判完写明结论变不变，变了的，依赖它的接着判' },
+    { code: '1', name: "Check sources", who: "Code", does: "Reject sources absent from processing records and record the reason" },
+    { code: '2', name: "Receive evidence", who: "Code", does: "Retries do not duplicate evidence. A revised input updates only its own source reference. A revised retelling does not alter the original evidence. If the revision is from the original source, compare its statements normally and replace changed statements." },
+    { code: '3', name: "Search", who: "Code", does: "Use a search engine such as Elasticsearch; semantic versus keyword search remains open. Search all open and closed theses for each candidate and take top N, initially 10 in Config. Search evidence only within its linked thesis, also top N. Evidence linked to candidates waits for their destinations, even if also linked to existing theses. Empty lists still proceed to matching." },
+    { code: '4', name: "Match", who: "Model", does: "The model does not read the original item. Show each existing thesis's subject, question, focus, ladder, due date and open/closed state. In one call: (1) decide candidate identity or a narrower part, succession with unchanged ladder orientation but new thresholds, new thesis for distinct or merely similar questions, or skip overly broad questions, numbers beyond this/next year and the same period of a closed thesis; give reasons; (2) choose dependencies and directions among searched, block-5 and same-item new theses; (3) compare evidence linked only to existing theses. Evidence linked to candidates waits for their destinations, then searches all linked existing theses together and uses one further comparison call. Evidence linked only to new theses is new evidence." },
+    { code: '5', name: "Validate", who: "Code", does: "Destination IDs must be in the shown lists or the relevant thesis's evidence. Merge only into open theses. New subjects must resolve within the universe using classification's identifier rules; otherwise skip. Dependencies must reference shown theses or an explicit awaited chain/year and remain acyclic. Return invalid answers for correction." },
+    { code: '6', name: "Write to the library", who: "Code", does: "Resolve extraction's group associations to final theses and save them in this step. Each subject has its own writing queue; write theme theses before asset theses. Save new theses with their dependency edges. A repeat adds a source reference and any new thesis link. For replacement, order by when the statement was made: later statements supersede earlier ones. A late-arriving older statement is logged, not inserted. Carry the old evidence's other thesis links to its replacement. An original-source revision that omits a statement without replacing it marks it replaced. If compared data changes before writing, repeat matching only for the affected part." },
+    { code: '7', name: "Run a rejudgement round", who: "Model", does: "Rejudge only open theses whose inputs changed: new/replaced/newly linked evidence, or a changed dependency conclusion, newly created awaited thesis or successor. Judge dependencies first and each thesis once per round. Extra source references alone do not trigger it. Memo-derived theses without evidence stay not yet judged. Each judgement declares whether its conclusion changed; changed conclusions propagate to dependants." },
   ];
 
   // Two lanes, one shape: a candidate view and a piece of evidence are each compared with what is already there.
   const INTAKE_SHAPE = [
-    { aspect: '去哪比', views: '搜索引擎从整个观点库搜出的前 N 条', evidence: '在它那条观点下的证据里搜出的前 N 条' },
-    { aspect: '判什么', views: '是哪一条（或它的一部分）、接续、新观点，还是不开', evidence: '重复、替代、新证据' },
-    { aspect: '链', views: '接续：美联储 2026 年末利率 → 2027 → 2028', evidence: '替代：AMZN 资本开支指引涨 12% → 25%' },
-    { aspect: '什么算现在', views: '链上开着的（数字可以今年、明年各开一条）', evidence: '没被替代的那些（证据的替代也连成一条链）' },
-    { aspect: '搜什么', views: '整个观点库，开着的、关掉的都搜', evidence: '只搜它那条观点下的，不搜全库' },
+    { aspect: "Comparison set", views: "Top N search results from the entire thesis library", evidence: "Top N evidence results within its thesis" },
+    { aspect: "Decision", views: "Existing identity or part, succession, new thesis or skip", evidence: "Repeat, replace or new evidence" },
+    { aspect: "Chain", views: "Succession: Fed year-end 2026 rate → 2027 → 2028", evidence: "Replacement: AMZN capex guidance 12% growth → 25%" },
+    { aspect: "What counts as current", views: "Open theses on the chain; numeric theses may have one for this year and one for next year", evidence: "Evidence not replaced; replacements also form a chain" },
+    { aspect: "Search scope", views: "Entire thesis library, open and closed", evidence: "Only evidence within its thesis, not the entire library" },
   ];
 
   // Step 4: where a candidate goes.
   const MATCH_OUTCOMES = [
-    { outcome: '归入已有的', when: '候选观点看的就是那条观点看的东西，或者是它的一部分（“H20 在中国的收入”是“中国区收入”的一部分）；只能归入开着的，关掉的只能接续', writes: '证据再和那条观点下的证据比，研究归属按本节归组规矩保留；梯子和到期日用已有的' },
-    { outcome: '接续', when: '同一样东西的下一期：数字的下一年；事件的那条已经关了，要接着看', writes: '建新观点，记接续' },
-    { outcome: '新观点', when: '对不上，或者只是有点像：Blackwell 这一档对华许可，不是 H20 这一档', writes: '建新观点，梯子和到期日从此定死' },
-    { outcome: '不开', when: '太大太杂，一条里捆了几件可能往相反方向走的事：“美国对华芯片管制会怎样”；或者数字的观点超出了今年、明年；或者和一条关了的观点是同一样东西的同一期（关掉的只能接续）；或者讲的对象不在研究对象名单里（名单里没有的主题，交人工复核池当建议新增的主题；名单外的公司只在处理记录里留一笔）', writes: '不建；它的证据如果也连在具体的那条上，照常算数；只连在它身上的不存' },
+    { outcome: "Merge into existing", when: "The candidate concerns the same focus or a part of it, such as H20 China revenue within China revenue. Merge only into open theses; closed theses can only be succeeded.", writes: "Compare its evidence within the target thesis and preserve grouping under this section's rules. Use the existing ladder and due date." },
+    { outcome: "Succession", when: "The next period of the same focus: the next year for numbers, or continued tracking after an event thesis closed", writes: "Create a thesis and record succession" },
+    { outcome: "New thesis", when: "Distinct or merely similar: Blackwell export licences and H20 export licences are different questions", writes: "Create a thesis with its ladder and due date fixed from now on" },
+    { outcome: "Skip", when: "Too broad or mixed, bundling questions that can move oppositely, such as all US chip controls on China; numbers beyond this/next year; the same focus and period as a closed thesis; or an out-of-universe subject. Proposed themes go to human review; out-of-universe companies receive only a processing-log entry.", writes: "Do not create it. Evidence also linked to a specific valid thesis still counts; evidence linked only to the skipped candidate is not stored." },
   ];
 
   const MATCH_NOTES = [
-    '搜只用来找出前几条可能的，是不是同一条由模型判：“H20 对华许可”和“Blackwell 对华许可”很像，却是两条；看多和看空的两种说法，是同一条。',
-    '关掉的观点也搜得到：FY26 那条关了，FY27 的候选观点进来照样搜到它，模型判成接续。',
+    "The D155 POC uses code for fully determined duplicate identity and model comparison when scope or legacy identity needs judgement. Reference lists guide research without vetoing candidates. Same group does not mean same thesis. See docs/poc/grouping-improvement-plan.md for the contract and measured scope.",
+    "Search finds plausible candidates; the model handles semantic comparison. H20 and Blackwell export licences can look similar but are separate questions. Bullish and bearish accounts of one question share its identity.",
+    "Search includes closed theses, allowing an FY2027 candidate to find closed FY2026 and be classified as succession.",
   ];
 
   // Step 4: where a piece of evidence goes, against the evidence its view already holds.
   const EVIDENCE_OUTCOMES = [
-    { outcome: '重复', when: '说的就是那条观点下已有的一条：别人转述；正文和表格里的同一个数；同一个人把同样的话再说一遍', writes: '那一条多记一个出处；证据不多一条。对已经连着它的观点，这本身不触发重判；这次新连上它的观点，读的东西变了，照常重判' },
-    { outcome: '替代', when: '和已有的一条是同一件事的前后两个说法：同一个人后来改了说法或数（指引、预测、某件事办到了哪一步）；官方证实或否认了一条传闻；原始来源自己出了修正版，改了原句', writes: '按说的时间排（这句话是哪天说的），后说的算数，先说的标“被替代”，留在历史里，重判；晚到的旧说法（同一件事已经有更新的）不加进来，只在处理记录里写一笔，不重判' },
-    { outcome: '新证据', when: '别的都是：新的事、另一期的数、另一个人的说法（说法相反的也是）；拿不准也算新证据', writes: '加进来，和别的一起算数；重判' },
+    { outcome: "Repeat", when: "The same evidence already exists under the thesis: a retelling, the same number in text and table, or the same speaker repeating the same statement", writes: "Add a source reference, not another evidence item. Existing links do not trigger rejudgement; a new thesis link changes that thesis's inputs and does." },
+    { outcome: "Replace", when: "A later account of the same matter: a speaker revises guidance, forecast or event progress; an official confirms/denies a rumour; or the original source revises its statement", writes: "Order by statement date. Later statements replace earlier ones, which remain in history; rejudge. A late-arriving older statement is only logged and does not trigger rejudgement." },
+    { outcome: "New evidence", when: "Anything else: a new event, another period's figure or another speaker's statement, including disagreement. Uncertainty also means new evidence.", writes: "Add it alongside existing evidence and rejudge" },
   ];
 
   const EVIDENCE_NOTES = [
-    '证据只和它那条观点下的证据比，不拿证据去搜全库：先定好它连在哪条观点上（抽取时连上的，或者候选观点比对后去的那条），再在这条观点下没被替代的证据里搜前 N 条，交给模型比。候选观点搜的是整个观点库，证据只搜它那条观点下的。',
-    '一条证据连几条观点，也只存一条：和这几条观点下的证据一起比一次；其中有连在候选观点上的，等候选观点有了去向再一起比。',
-    '被替代的证据还连着别的观点，新的那条也连过去，其中开着的也重判；不然那条观点手里只剩一个过时的说法。',
-    '证据是一句话或一个数，替掉的只是那一句：卖方新报告改了收入预测，替掉的是它上一份里的那个预测，别的论据照样算数。',
-    '比对不读整份原文，读的是证据里“一句话说清”的那句，加上谁说的、原始来源和哪天说的；拿不准算新证据，最坏也就是两条都算数，由重判自己看。',
+    "First resolve the evidence's thesis destination from extraction or candidate matching. Search the top N evidence items still in force within that thesis and ask the model to compare. Unlike candidate-thesis search, evidence search never spans the whole library.",
+    "Store evidence once even when linked to several theses. Compare all those theses' evidence together. If any link is to a candidate, wait for that candidate's destination.",
+    "Carry other thesis links from replaced evidence to the replacement and rejudge open linked theses; otherwise they would retain only an obsolete statement.",
+    "Replacement applies to a statement or number, not the whole report. A revised sell-side revenue forecast replaces that forecast while other arguments remain in force.",
+    "Matching reads the evidence summary, speaker, original source and statement date, not the full original item. When uncertain, treat it as new evidence; both then remain available for judgement.",
   ];
 
 
   const INTAKE_EXAMPLE_TREE = {
-    label: '三条信息，库从空的开始', note: '示意',
+    label: "Three items, starting with an empty library", note: "Illustration",
     children: [
       {
-        answer: '2025-04-15 NVDA 的 8-K', label: '库是空的，交来两个候选观点', question: '比对：清单是空的，都开新观点',
+        answer: "NVIDIA 8-K, April 15, 2025", label: "Empty library; two candidates arrive", question: "Empty comparison lists; open both as new theses",
         children: [
-          { answer: '#1 主题观点', label: '这一档芯片对华出口许可（事件）', note: '证据：H20 出口中国要许可证（发生的事）', act: true },
-          { answer: '#2 对象观点（NVDA）', label: 'FY26 全年中国区收入（数字）', note: '证据：预计最多约 55 亿美元的费用（当事人说的）；依赖 #1，放松那头看多', act: true },
+          { answer: "#1 Theme thesis", label: "China export licensing for this chip class: event", note: "Evidence: H20 exports to China require a licence (fact)", act: true },
+          { answer: "#2 NVDA asset thesis", label: "FY2026 China revenue: numeric", note: "Evidence: expected charges up to approximately $5.5 billion (party statement); depends on #1, with easing bullish", act: true },
         ],
       },
       {
-        answer: '2025-04-16 AMD 的 8-K', label: '讲的是 AMD，AMD 还没有观点，交来两个候选观点', question: '比对',
+        answer: "AMD 8-K, April 16, 2025", label: "AMD has no existing theses; two candidates arrive", question: "Match",
         children: [
-          { answer: '候选观点“MI308 对华许可”', label: '归入 #1', note: '搜到 #1，模型判是同一件事（同一条规定管的同一档芯片）；它的证据再和 #1 下的证据比：AMD 说的是 MI308，是新证据；#1 重判，写“没变”：多了一个受管的型号，撑着结论的关键事实没变，状态也还在同一格，所以 #2 不判', act: true },
-          { answer: '候选观点“AMD 2025 全年中国区收入”', label: '新观点 #3', note: 'AMD 还没有开着的观点；证据：预计最多约 8 亿美元的费用（当事人说的）', act: true },
+          { answer: "Candidate: MI308 export licensing to China", label: "Merge into #1", note: "Search finds #1. The model identifies the same question: the same chip class under the same rule. AMD's MI308 statement is new evidence. #1 is rejudged but declares its conclusion unchanged: an additional affected model does not change the key facts or rung. #2 is therefore not rejudged.", act: true },
+          { answer: "Candidate: AMD 2025 China revenue", label: "New thesis #3", note: "AMD has no open thesis; evidence is expected charges up to approximately $800 million (party statement)", act: true },
         ],
       },
       {
-        answer: '2025-04-16 路透的报道，转述 NVDA 的 8-K', label: '已有的观点：#2 和它依赖的 #1', question: '比对',
+        answer: "Reuters, April 16, 2025, retelling NVIDIA's 8-K", label: "Existing context: #2 and its dependency #1", question: "Match",
         children: [
-          { answer: '证据连到 #1 和 #2', label: '都是重复', note: '原始来源同是 NVDA 的 8-K，说的就是 #1、#2 下已有的那两条：各多记一个出处；#1、#2 都不重判', act: true },
+          { answer: "Evidence links to #1 and #2", label: "Both are repeats", note: "The original source is the same NVIDIA 8-K and both statements already exist under #1 and #2. Add a source reference to each; neither thesis is rejudged.", act: true },
         ],
       },
     ],
@@ -374,135 +375,135 @@
 
   // One view's evidence over half a year: how repeats and replacements keep it current (numbers illustrative).
   const EVIDENCE_EXAMPLE = [
-    { item: '2-05 电话会：资本开支指引涨 12%', matched: '新证据（这条观点下还没有证据）', store: '加 g1', rejudge: '判' },
-    { item: '2-06 路透的报道，转述指引', matched: '重复 g1', store: 'g1 多一个出处', rejudge: '不判' },
-    { item: '3-10 摩根士丹利：预计涨 18%', matched: '新证据（另一个人说的）', store: '加 m1', rejudge: '判' },
-    { item: '4-30 电话会：指引改成涨 25%', matched: '替代 g1', store: 'g2 算数，g1 被替代', rejudge: '判，读到“12% → 25%”' },
-    { item: '5-02 摩根士丹利：改成涨 27%', matched: '替代 m1', store: 'm2 算数，m1 被替代', rejudge: '判' },
-    { item: '5-20 才到：摩根士丹利 2 月报告里的预测', matched: '晚到的旧说法：摩根士丹利后来已经改过两次（3 月 m1、5 月 m2）', store: '这条预测不加进来，处理记录里写一笔“过时，没用”；m2 照旧算数', rejudge: '不判' },
-    { item: '6-10 会上重申“还是 25% 左右”', matched: '重复 g2', store: 'g2 多一个出处（最近一次 6-10）', rejudge: '不判' },
+    { item: "February 5 call: capex guidance up 12%", matched: "New evidence; none previously under this thesis", store: "Add g1", rejudge: "Rejudge" },
+    { item: "February 6 Reuters report retells the guidance", matched: "Repeat of g1", store: "Add a source reference to g1", rejudge: "No rejudgement" },
+    { item: "March 10 Morgan Stanley forecast: up 18%", matched: "New evidence from another speaker", store: "Add m1", rejudge: "Rejudge" },
+    { item: "April 30 call: guidance revised to 25% growth", matched: "Replace g1", store: "g2 is in force; g1 is replaced", rejudge: "Rejudge, reading “12% → 25%”" },
+    { item: "May 2 Morgan Stanley forecast revised to 27%", matched: "Replace m1", store: "m2 is in force; m1 is replaced", rejudge: "Rejudge" },
+    { item: "Arrives May 20: Morgan Stanley's February forecast", matched: "Late older statement; Morgan Stanley already revised it in March (m1) and May (m2)", store: "Do not insert this forecast. Log it as superseded and unused; m2 remains in force.", rejudge: "No rejudgement" },
+    { item: "June 10 meeting reiterates “still around 25%”", matched: "Repeat of g2", store: "Add a source reference to g2, latest June 10", rejudge: "No rejudgement" },
   ];
 
-  const EVIDENCE_EXAMPLE_NOTE = '半年后这条观点下可能有几十条证据，重判读的只是没被替代的那几条：公司指引涨 25%（2 月是 12%），摩根士丹利预计涨 27%（3 月是 18%），加上别的人、别的事。';
+  const EVIDENCE_EXAMPLE_NOTE = "After six months the thesis may have dozens of evidence items. Rejudgement reads those still in force: company guidance of 25% growth (12% in February), Morgan Stanley's 27% forecast (18% in March), plus other speakers and events.";
 
   // The judge of step 4, its records, and the labels that will train a faster model.
   const JUDGE_STEPS = [
-    { code: '1', name: '大模型比对', who: '模型', does: '第一版用通用大模型做比对（Config 里的“比对”设置），先让系统跑起来' },
-    { code: '2', name: '每次都记', who: '代码', does: '每次比对留一条比对记录：给模型看了什么、它答了什么、最后写进库的是什么' },
-    { code: '3', name: '人来标', who: '人', does: '挑两种给人标：被代码退回的（第 5 步核对没过的），和隔一段时间随机抽的几条；人标出正确的结果' },
-    { code: '4', name: '训练小模型', who: '代码', does: '用人标的结果，训练一个更快的小模型' },
-    { code: '5', name: '小模型接手', who: '代码', does: '以后由小模型做比对；什么时候接手还没定' },
+    { code: '1', name: "Large-model matching", who: "Model", does: "Start with a general-purpose model using Config's matching settings" },
+    { code: '2', name: "Record every comparison", who: "Code", does: "Record what the model saw, what it returned and what was ultimately stored" },
+    { code: '3', name: "Human labelling", who: "Person", does: "Label two sets: code-refused decisions from validation step 5 and periodic random samples. People supply the correct outcome." },
+    { code: '4', name: "Train a smaller model", who: "Code", does: "Use human labels to train a faster, smaller model" },
+    { code: '5', name: "Smaller model takes over", who: "Code", does: "A smaller model eventually handles matching; the handover criterion is not yet decided" },
   ];
 
   const TRACE_FIELDS = [
-    { part: '哪条信息', meaning: '上游编号、顺序号' },
-    { part: '交来的', meaning: '抽取交来的候选观点、研究归属、新主线定义和证据，原样留存；给比对模型看的内容另记' },
-    { part: '给模型看的', meaning: '候选观点比的是搜出来的前 N 条（带名次）；证据比的是它那条观点下搜出来的前 N 条；新观点挑依赖时，还有抽取第 5 块列的观点和同一条信息里新建的' },
-    { part: '谁定的', meaning: '大模型、以后的小模型，或人' },
-    { part: '请求和返回', meaning: '实际发出的请求、原始返回、Config 版本（模型、提示词版本、温度）' },
-    { part: '决定', meaning: '每个候选观点的去向和理由；新观点依赖哪几条、各往哪个方向；每条证据是重复、替代还是新证据；代码核对的结果和拒绝的原因' },
-    { part: '写进库的', meaning: '最后写进库的结果' },
+    { part: "Which item", meaning: "Upstream ID and sequence number" },
+    { part: "Received input", meaning: "Preserve extraction's candidates, associations, new group definitions and evidence exactly. Separately record the matching-model input." },
+    { part: "Shown to the model", meaning: "Ranked top N thesis matches per candidate; top N evidence matches within each thesis; extraction block-5 theses and same-item new theses available for dependency selection" },
+    { part: "Decision maker", meaning: "Large model, future smaller model or person" },
+    { part: "Request and response", meaning: "Actual request, raw response and Config version identifying model, prompt and temperature" },
+    { part: "Decision", meaning: "Each candidate's destination and reason; new-thesis dependencies and directions; evidence repeat/replacement/new decisions; validation results and refusal reasons" },
+    { part: "Stored result", meaning: "What was finally written to the library" },
   ];
 
 
   // How a view ends.
   const LIFECYCLE_TREE = {
-    label: '一条观点', question: '开着还是关了？', note: '只有这一个开关',
+    label: "A thesis", question: "Open or closed?", note: "This is the only lifecycle switch",
     children: [
-      { answer: '开着', label: '读的东西变了就重判，条件见“什么时候重判”那一条', note: '比对开观点时，同一样东西同时只开一条；数字的同一个数，今年、明年各一条' },
-      { answer: '关了', label: '不再更新，不重判', note: '状态停在关掉时的样子（判过的停在那一格，还没判的就是还没判）；留在库里，搜得到', act: true },
+      { answer: "Open", label: "Rejudge when its inputs change, under the rejudgement rule", note: "When matching opens theses, only one for the same focus at a time; numeric quantities may have one each for this year and next year" },
+      { answer: "Closed", label: "No updates or rejudgement", note: "Retain its closing state: the last rung if judged, otherwise not yet judged. Keep it searchable in the library.", act: true },
     ],
   };
 
   const LIFECYCLE_NOTES = [
-    '到期那天由 Pull 模式关掉：状态停在哪一格，就定格在那一格，连同理由，就是这条观点最后的结论；要接着看，就开一条新观点接续它。Pull 模式在每天结束时、或按定时任务的间隔主动跑；信息流这一边不管时间。Pull 模式以后设计。',
-    '人也可以手动关掉或重新打开一条观点，比如资产退市；每次都新加一条记录，写明是谁、从哪个顺序号的信息之后算数。同一样东西同时只开一条，是比对时的规矩，人手动打开的不受它管。研究对象名单也由人手动改。',
+    "Pull mode closes it when due. The current rung and reasons become its frozen final conclusion. To keep tracking, create a successor. Pull mode runs at day-end or scheduled intervals; the incoming stream does not manage time. Remaining pull-mode design is deferred.",
+    "People may manually close or reopen a thesis, for example after a delisting. Append a record naming the person and the sequence after which it applies. The matching rule of one open thesis per focus does not restrict manual reopening. People also maintain the research universe.",
   ];
 
   const VIEW_FIELDS = [
-    { part: '对象', meaning: '名单里的哪个对象', example: 'NVDA' },
-    { part: '种类', meaning: '对象观点或主题观点', example: '对象观点' },
-    { part: '看的是什么', meaning: '数字：哪个数、哪一年；事件：哪件事', example: 'FY27 全年中国区收入' },
-    { part: '问题', meaning: '一句话，写下不改', example: 'NVDA FY27 全年中国区收入，比 FY26 会怎样？' },
-    { part: '梯子', meaning: '五格（只有是或否的问题两格），每格一个能核对的结果，写下不改', example: '涨 50% 及以上……降 80% 及以上' },
-    { part: '到期日', meaning: '争论见分晓的那天；数字就是它公布的那天', example: 'FY27 年报的财报日' },
-    { part: '状态', meaning: '这条观点处在梯子的哪一格；每次重判记一版，写明依据和结论变不变；你自己的备忘录开的观点，第一次连上证据以前，状态写“还没判”', example: '强烈看空' },
-    { part: '依赖', meaning: '指向哪几条观点，各带一个方向；等着还没建的，写明等哪条链上的哪一年', example: '→ 这一档芯片对华出口许可：放松那头看多' },
-    { part: '研究归属', meaning: '属于哪些研究主线；按本节归组规矩保存成员关系', example: '这一档芯片的对华许可与中国业务' },
-    { part: '接续', meaning: '接着哪一条；可以没有', example: '接着 FY26 那条' },
-    { part: '从哪来', meaning: '从哪条信息建的', example: '2026-02-25 NVDA FY26 年报的业绩发布（示意）' },
-    { part: '开着还是关了', meaning: '开着或关了，只有这一个开关：到期那天由 Pull 模式定格、关掉；人也可以手动关掉或重新打开（比如资产退市）；关了的不再更新', example: '开着' },
+    { part: "Subject", meaning: "The subject in the research universe", example: 'NVDA' },
+    { part: "Kind", meaning: "Asset thesis or theme thesis", example: "Asset thesis" },
+    { part: "Focus", meaning: "Numeric: which quantity and year; event: which event", example: "FY2027 China revenue" },
+    { part: "Question", meaning: "One sentence, immutable once written", example: "How will NVDA FY2027 China revenue compare with FY2026?" },
+    { part: "Ladder", meaning: "Five rungs, or two for yes/no; each is a verifiable outcome, immutable once written", example: "Up at least 50% … down at least 80%" },
+    { part: "Due date", meaning: "When the debate can be resolved; for numbers, their publication day", example: "FY2027 annual earnings date" },
+    { part: "State", meaning: "Current rung; append each judgement with reasons and whether the conclusion changed. A memo-derived thesis is not yet judged until evidence first links to it.", example: "Strongly bearish" },
+    { part: "Dependency", meaning: "Dependency targets and directions; for uncreated targets, the awaited chain and year", example: "→ China chip export licensing: easing is bullish" },
+    { part: "Research-group association", meaning: "Group memberships, stored under this section's grouping rules", example: "China licensing and business for this chip class" },
+    { part: "Succession", meaning: "Predecessor, if any", example: "Succeeds FY2026" },
+    { part: "Origin", meaning: "The item that created it", example: "NVIDIA FY2026 annual earnings release, February 25, 2026 (illustration)" },
+    { part: "Open or closed", meaning: "One switch: open or closed. Pull mode freezes and closes at expiry; people may close or reopen manually, such as after a delisting. Closed theses do not update.", example: "Open" },
   ];
 
   const EVIDENCE_FIELDS = [
-    { part: '原文', meaning: '信息里的那一句，或表里的那个单元格' },
-    { part: '一句话说清', meaning: '离开原文也看得懂的一句：谁、做了什么、多少、哪一期；比对和重判读这一句' },
-    { part: '出处', meaning: '上游编号、类别、发布日、在信息里的位置；重复的（别人转述、同一条信息的正文和表格、同一个人再说一遍）记成这条证据的又一个出处' },
-    { part: '谁说的', meaning: '说这句话的人或机构' },
-    { part: '原始来源', meaning: '转述的，记下最初是谁、哪天说的；独立来源按它数，替代也按这一天排先后' },
-    { part: '哪一层', meaning: '发生的事、当事人说的、第三方看法、传闻' },
-    { part: '事情发生的时间', meaning: '事情什么时候发生或生效；数字写它属于哪一期' },
-    { part: '被替代', meaning: '指向替代它的那一条：同一个人后来改了说法或数、官方证实或否认了这条传闻；或者原始来源自己出了修正版，把这句改了、删了（删了的，没有替它的新证据）；被替代的不再算数，留在历史里' },
+    { part: "Quotation", meaning: "The original sentence or table cell" },
+    { part: "Standalone summary", meaning: "A sentence understandable without the original: who, what, how much and which period. Matching and rejudgement read it." },
+    { part: "Source", meaning: "Upstream ID, category, publication day and location. Retellings, repeated numbers in text/tables and repeated statements add source references to the same evidence item." },
+    { part: "Speaker", meaning: "The person or organisation making the statement" },
+    { part: "Original source", meaning: "For a retelling, identify who originally said it and on which day. Count independent sources and order replacements by that origin." },
+    { part: "Tier", meaning: "Fact, party statement, third-party view or rumour" },
+    { part: "Event time", meaning: "When the event happened or takes effect; for a number, the period it describes" },
+    { part: "Replaced", meaning: "The replacing evidence, where a speaker revises a statement/number, an official confirms/denies a rumour, or the original source revises/deletes it. Deletion has no replacement evidence. Replaced evidence no longer counts but remains in history." },
   ];
 
   const ORDER_RULES = [
-    '只有信息能产生证据；观点之间只传通知，不传证据，所以观点不会自己证明自己。',
-    '每条观点只由一个队列来写：主题观点由主题的队列写，对象观点由它所属的公司、加密货币或商品的队列写；写进库时，同一条信息先写主题，再写对象；重判的先后另按依赖排（见“一条信息引起的变化算一轮”那条）。别的队列要它改的（它依赖的观点结论变了、要它重判，或者被替代的证据要连过来），作为通知交给它自己的队列，带着那条信息的顺序号。',
-    '先后按顺序号排，不用电脑时钟。一条信息只读顺序号比它小的信息写下的内容，加上这一轮里它自己已经写下的；结果要和一条一条按顺序处理完全一样；几条信息同时处理时，一条信息读到的东西（搜出来的清单也算）在它写进库之前被别的信息改了，就重新做一次。',
-    '一条信息引起的变化算一轮：先做完连证据、建观点、接续和连依赖，再按依赖先后重判：先判被依赖的观点，再判依赖它的，后者读的是前者这一轮刚判完的结论（状态和理由）；每条观点这一轮只判一次。美联储这样的观点被很多观点依赖：它判完写“变了”，依赖它的才各判一次；写“没变”，到此为止。',
-    '记录只加不改：观点的问题、梯子和到期日写下就不动；比对、重判、接续、关掉、重新打开、标注，都是新加一条记录，带顺序号。',
-    '时间线只往后加，不回头改：观点的每一次变化，按我们什么时候知道的往后记。晚到的信息，同一件事已经有更新的说法，它就不算数，不加进观点，只在处理记录里写一笔“过时，没用”；讲的是我们不知道的事，照常算，记上它真实的日期。分这两种由模型比证据时一起判，不另加规矩。',
-    '一条信息出了修正版，只换它自己那一处出处：修正版只是转述别人的，不动原来那条证据；修正版本身就是原始来源的，改了的原句由新句替代，删了的标“被替代”。连着被改了、被删了的原句的开着的观点各重判一次；只换了转述出处的，不重判；过去的重判记录不改。',
-    '失败：每条信息记下做到哪一步，从失败的那一步重试，重试只替换自己上次的结果；多次失败的放进人工复核池。',
-    '两头都能查：从一条观点查到推过它的全部信息；从一条信息查到它建过的观点，和它作为出处的全部证据（重复的也查得到）。',
+    "Only incoming information creates evidence. Theses send notifications, not evidence, so they cannot prove themselves.",
+    "One queue writes each thesis: the theme's queue for theme theses; the company, cryptocurrency or commodity queue for asset theses. Within an item, write themes before assets. Rejudgement order follows dependencies under the round rule. Other queues send requests, such as dependency changes or replacement links, to the owning queue with the item's sequence number.",
+    "Order by sequence, never the computer clock. An item reads only records from earlier sequences plus its own round's writes. The result must match serial processing. If concurrent work changes anything it read, including search lists, before commit, redo the affected work.",
+    "One item's changes form a round. Finish evidence links, thesis creation, succession and dependencies, then rejudge in dependency order. Dependants read conclusions freshly judged in that round. Judge each thesis once. A widely depended-on thesis such as the Fed rate triggers each dependant once only if it declares its conclusion changed; otherwise propagation stops.",
+    "Append-only records: questions, ladders and due dates are immutable. Matching, rejudgement, succession, closure, reopening and labels append records with sequence numbers.",
+    "The timeline only appends, never rewrites past knowledge. A late statement already superseded by a newer one is logged as superseded and unused, not added to the thesis. Previously unknown information counts normally with its true date. The evidence-matching model distinguishes these cases; add no separate rule.",
+    "A revised input changes only its own source reference. Revising a retelling does not change original evidence. For an original-source revision, changed statements are replaced and deleted statements marked replaced. Rejudge each open thesis linked to affected statements once. A retelling-reference change alone does not trigger rejudgement. Keep old judgement records unchanged.",
+    "On failure, record the item's completed step and retry from the failed step, replacing only that attempt's own result. Repeated failures go to human review.",
+    "Trace both directions: a thesis to all information that affected it; an item to theses it created and all evidence it sourced, including repeats.",
   ];
 
-  const STORE_NOTE = '存在哪、用什么数据库，建的时候定。';
+  const STORE_NOTE = "Choose storage location and database during implementation.";
 
   const VIEWS_OPEN = [
-    '搜索怎么搜：用语义搜索、关键词还是两样一起，怎么排先后；建的时候在存下的信息上试过再定。前几条先定 10，试的时候再调。',
-    '观点的颗粒度，也就是一条观点管多大的范围，还没定，要专门定。现在只定了：是已有观点的一部分，就归入那条；太大太杂的不开。要紧的那一块要单独成一条（NVDA 中国区收入很关键，不能归入总收入）；太粗的话，观点会全变成财务指标，这不行；要让模型清楚知道这样抽是错的。先做一次完整的调研：从对冲基金的角度看，一条观点到底长什么样，什么该合、什么该拆，每个对象盯几个问题（现实里每家公司只盯 2–3 个）。',
-    '标注的细节以后再补：谁来标、标多少、用什么界面；怎么考小模型准不准、训练怎么用标好的数据；小模型什么时候接手；抽取连错、漏掉的证据怎么查，也在这里一起补。',
-    'Pull 模式以后设计：每天结束时、或按定时任务怎么跑，怎样把观点整体过一遍；最终判定还要不要单独一步，一起定。',
+    "Search method and ranking remain open: semantic, keyword or both. Test on stored information during implementation. Start with top 10 and adjust during experiments.",
+    "Thesis granularity needs a separate decision. Current rules merge a part into its existing thesis and reject overly broad questions. A material segment deserves its own question: NVDA China revenue must not disappear into total revenue. Overly broad units reduce all theses to financial metrics, which is wrong. Research what hedge-fund theses look like, what to merge/split and how many questions to track per subject; the discussion assumes analysts focus on 2–3 per company.",
+    "Labelling details remain open: who, how many, which interface, model evaluation and training, handover to a smaller model, and checks for omitted or mislinked extraction evidence.",
+    "Design pull mode later: day-end/scheduled execution, overall review, and whether final verdict remains a separate step.",
   ];
 
   // Claude's proposals that Alex has not decided (D45). None of them is built until he decides it.
   const VIEWS_PROPOSED = [
-    'Pull 模式的事，设计 Pull 模式时再谈：除了到期定格，另外两种情况，答不出（不再披露这个数、事情本身没了；依赖它的观点标“缺这个输入”）和等公布（数字的观点期末已过、这个数还没公布）。',
-    'Pull 模式的事，设计 Pull 模式时再谈：每天查重，Pull 模式每天发起，同一对象开着的观点两两比；后建的合并到先建的，连线和箭头搬过去，查环，重判；Config 里多一套“查重”的设置。',
+    "Proposal for later pull-mode design: besides due-date freezing, distinguish an unavailable answer (quantity no longer disclosed or event ceases to exist; dependants lack that input) and pending publication (period ended but the number is not yet released).",
+    "Proposal for later pull-mode design: daily pairwise duplicate checks among open theses of a subject; merge the later thesis into the earlier, move links and dependencies, check cycles and rejudge. Add separate duplicate-check settings to Config.",
   ];
 
   // ------------------------------------------------------------------ final verdict (old draft, to be redone: D41)
 
-  const VERDICT_EXAMPLE_NOTE = '到 7 月证据两边都有：NVDA 的声明（当事人说的）削弱，卖方 A（第三方看法）支持。两条不在同一层，也没有“发生的事”来削弱，不触发最终判定；观点留着，两边的证据都展示出来。能一锤定音的，就是证伪条件里写的那件事：美国会不会真的批准 H20 对华出口。8 月据报道商务部开始发许可证，证伪条件满足，送最终判定，主题观点“管制会收紧”判为已证伪。以它为前提的 NVDA 观点再判一次：据报道中国要求企业不要采购 H20，中国收入仍没回来，所以留下，前提换成一条新的主题观点。';
+  const VERDICT_EXAMPLE_NOTE = "Earlier-draft example: July evidence points both ways, with NVIDIA's statement weakening the thesis and analyst A supporting it. They are different tiers and no factual weakening evidence has arrived, so no final verdict is triggered. In August, reported Commerce licence issuance meets the old falsification condition; the tightening-controls theme is judged falsified. Its dependent NVDA thesis is reviewed again and remains open because reported Chinese procurement restrictions prevent revenue recovery, with a new premise.";
 
 
   const VERDICT_TRIGGERS = [
-    { trigger: '证实条件或证伪条件满足', who: '代码' },
-    { trigger: '到了期限', who: 'Pull 模式；要等发布日不晚于期限的文件都处理完再判' },
-    { trigger: '前提的状态变了（证伪、过期、证实、被接替、不再跟踪）', who: '代码，马上' },
-    { trigger: '前提被削弱', who: '这个对象下一份文件进来时；最迟 7 天，由 Pull 模式兜底' },
-    { trigger: '“发生的事”这一层来了削弱证据', who: '代码' },
-    { trigger: '出现分歧：同一层里，独立来源有的支持、有的削弱', who: '代码' },
-    { trigger: '同一份文件出了修正版，观点没了依据', who: '代码' },
+    { trigger: "Confirmation or falsification condition met", who: "Code" },
+    { trigger: "Deadline reached", who: "Pull mode, after all items published no later than the deadline have been processed" },
+    { trigger: "Premise status changes: falsified, expired, confirmed, superseded or no longer tracked", who: "Code, immediately" },
+    { trigger: "Premise weakened", who: "At the subject's next item, or within seven days via pull mode" },
+    { trigger: "Weakening evidence arrives in the fact tier", who: "Code" },
+    { trigger: "Disagreement: independent sources within one tier support and weaken the thesis", who: "Code" },
+    { trigger: "A revised source item removes the thesis's basis", who: "Code" },
   ];
 
   const VERDICT_TREE = {
-    label: '最终判定', question: '这条观点还成立吗？', note: '模型看：这条观点、全部证据、前提的现状、这次为什么被送来',
+    label: "Final verdict", question: "Does this thesis still hold?", note: "The model reads the thesis, all evidence, premise states and trigger",
     children: [
-      { answer: '证实条件满足，有“发生的事”', label: '关掉：已证实', note: '写明依据哪几条证据', act: true },
-      { answer: '证伪条件满足，有“发生的事”', label: '关掉：已证伪', note: '写明依据哪几条证据', act: true },
-      { answer: '到期，没有能判的证据', label: '关掉：已过期', note: '记“没有数据可验证”，不算对也不算错', act: true },
-      { answer: '其余情况', label: '留下', note: '可以去掉或换掉前提；可以加检验条件，写下“什么事实能定、什么时候能知道”', act: true },
+      { answer: "Confirmation condition met with factual evidence", label: "Close: confirmed", note: "Identify the evidence used", act: true },
+      { answer: "Falsification condition met with factual evidence", label: "Close: falsified", note: "Identify the evidence used", act: true },
+      { answer: "Deadline reached without decisive evidence", label: "Close: expired", note: "Record “no data to verify”, neither success nor failure", act: true },
+      { answer: "Other cases", label: "Keep open", note: "May remove or replace premises and add verification conditions specifying decisive facts and when they can be known", act: true },
     ],
   };
 
   const VERDICT_RULES = [
-    '模型把这条观点、它的全部证据、前提的现状和这次为什么被触发一起看完，一次判完。',
-    '能判成已证实或已证伪的，只有检验条件加上“发生的事”这一层的证据；只凭第三方看法和传闻不能判。已过期不算判对错。',
-    '判完写成这条观点的新版本，写明依据哪几条证据和出处；关掉的观点留在库里，可以查历史。',
-    '一条观点关掉以后，以它为前提的观点各自再送一次最终判定。',
-    'Pull 模式用的“现在”从外面传进来：上线用真实时间，测试用回放的时间。系统里没有自己的钟。',
+    "The model reviews the thesis, all evidence, current premises and trigger in one judgement.",
+    "Only verification conditions plus factual evidence can establish confirmation or falsification. Third-party views and rumours alone cannot. Expiry is not a correctness judgement.",
+    "Write a new thesis version citing evidence and sources. Retain closed theses for historical lookup.",
+    "Closing a thesis sends each thesis that uses it as a premise to another final verdict.",
+    "Pass “now” into pull mode: real time in production, replay time in tests. The system owns no clock.",
   ];
 
   // ------------------------------------------------------------------ rendering
@@ -582,8 +583,8 @@
   design.drilldowns = design.drilldowns || {};
 
   design.drilldowns.extract = {
-    button: '展开抽取：每一类信息怎么读成证据和候选观点',
-    kicker: '抽取 · 详细说明',
+    button: "Explore extraction: from each category to evidence and candidates",
+    kicker: "Extraction · Details",
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
@@ -591,41 +592,41 @@
       const categoryRows = Object.keys(CATEGORY_READS)
         .sort((first, second) => Number(first.slice(1)) - Number(second.slice(1)))
         .map((code) => [`${code} ${(tags[code] || {}).label || ''}`, CATEGORY_READS[code].read, CATEGORY_READS[code].tier]);
-      const stepCards = EXTRACT_STEPS.map((step) => ({ code: step.code, title: step.name, who: step.who, note: step.does, strong: step.who === '模型' }));
+      const stepCards = EXTRACT_STEPS.map((step) => ({ code: step.code, title: step.name, who: step.who, note: step.does, strong: step.who === "Model" }));
       const templateCards = TEMPLATE.map((part, index) => ({ code: String(index + 1), title: part.part, who: part.source, note: part.content }));
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">抽取：每一类信息怎么读成证据和候选观点</h2>
-          <p class="drill__intro">抽取只做一件事：每条信息整份交给模型，用资深对冲基金分析师的视角、按这一类的提示词，对着这些对象已有的观点读完，交出两样东西。一是证据：支持或削弱观点的话和数，连到已有观点上，或者这次的候选观点上。二是候选观点：已有观点管不到、又要紧的事，带着提出它的证据（你自己的备忘录照提示词说明处理）。每个候选观点同时带研究归属，按下节规矩交接；每条带出处，交给观点库；怎么和库里已有的比、写进去，是观点库的事。</p>
-          <p class="drill__status"><span class="pill pill--strong">第一版已冻结 · 2026-10-18</span>定下：整份交给模型；每一类一份提示词，拼法相同；观点是模型的判断，证据是客观的；每条都带出处；抽取只读；证据连到已有观点上，和候选观点分开交；候选观点当场写全。没定：每一类提示词的具体写法，建的时候试过再定。</p>
-          <h3 class="drill__heading drill__heading--spaced">抽取时同时确定研究归属</h3>
+          <h2 class="drill__title">Extraction: read each category into evidence and candidates</h2>
+          <p class="drill__intro">Give the model the entire item and its category prompt, alongside existing theses, to read as a senior hedge-fund analyst. Return evidence supporting or weakening existing theses or current candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their prompt rule. Each candidate carries a group association under the contract below. Retain sources. The library owns matching and writing.</p>
+          <p class="drill__status"><span class="pill pill--strong">First version frozen · 2026-10-18</span>Decided: whole-item reading, one prompt per category with a shared structure, model-judged theses and objective evidence, source references, read-only extraction, evidence separate from complete candidates. Category prompt wording still needs validation.</p>
+          <h3 class="drill__heading drill__heading--spaced">Determine group associations during extraction</h3>
           <ul class="drill__rules">${listItems(EXTRACT_RELATIONS, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">一条信息，一步一步</h3>
-          <p class="flow-legend">黑框是模型做的，灰框是代码做的。</p>
+          <h3 class="drill__heading drill__heading--spaced">One item, step by step</h3>
+          <p class="flow-legend">Black boxes are model steps; grey boxes are code.</p>
           ${flow(stepCards, '→', escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">读出两样东西：证据和候选观点</h3>
-          ${table(['', '证据', '候选观点'], EXTRACT_TWO.map((row) => [row.aspect, row.evidence, row.candidate]), escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">读到一句话或一个数，它算什么</h3>
+          <h3 class="drill__heading drill__heading--spaced">Two outputs: evidence and candidate theses</h3>
+          ${table(['', "Evidence", "Candidate thesis"], EXTRACT_TWO.map((row) => [row.aspect, row.evidence, row.candidate]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Classify a statement or number</h3>
           ${tree(EXTRACT_SORT_TREE, escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">第 1 步：每一类的提示词，都由同一个提示词模板的这五块拼起来</h3>
+          <h3 class="drill__heading drill__heading--spaced">Step 1: five shared prompt blocks</h3>
           ${flow(templateCards, '+', escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">每一类有自己的提示词：以 T7 新闻为例，五块各写什么（只列要点）</h3>
+          <h3 class="drill__heading drill__heading--spaced">Category prompt example: the five blocks for T7 news</h3>
           ${tree(PROMPT_EXAMPLE, escapeHtml)}
           <ul class="drill__rules">${listItems(PROMPT_NOTES, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">16 个类别：每一类读出什么（第 4 块）</h3>
-          ${table(['类别', '这一类要读出什么', '证据一般在哪一层'], categoryRows, escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">What to extract from each of 16 categories (block 4)</h3>
+          ${table(["Category", "What to extract from this category", "Typical evidence tier"], categoryRows, escapeHtml)}
           <p class="drill__footnote">${escapeHtml(CATEGORY_NOTE)}</p>
-          <h3 class="drill__heading drill__heading--spaced">例子：两条信息读出什么</h3>
+          <h3 class="drill__heading drill__heading--spaced">Example: outputs from two items</h3>
           ${tree(EXTRACT_EXAMPLE_TREE, escapeHtml)}
           <p class="drill__footnote">${escapeHtml(EXAMPLE_NOTE)}</p>
           <div class="drill__columns">
             <section>
-              <h3 class="drill__heading drill__heading--spaced">出处记什么</h3>
+              <h3 class="drill__heading drill__heading--spaced">Source-reference fields</h3>
               ${tree(SOURCE_TREE, escapeHtml)}
               <ul class="drill__rules">${listItems(SOURCE_NOTES, escapeHtml)}</ul>
             </section>
             <section>
-              <h3 class="drill__heading drill__heading--spaced">还没定的</h3>
+              <h3 class="drill__heading drill__heading--spaced">Open questions</h3>
               <ul class="drill__rules">${listItems(EXTRACT_OPEN, escapeHtml)}</ul>
             </section>
           </div>
@@ -635,79 +636,79 @@
   };
 
   design.drilldowns.views = {
-    button: '展开观点库：观点长什么样、证据和候选观点怎么写进库、怎么连、怎么标注',
-    kicker: '观点库 · 详细说明',
+    button: "Explore the thesis library: structure, storage, links and labelling",
+    kicker: "Thesis library · Details",
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
-      const stepCards = (steps) => steps.map((step) => ({ code: step.code, title: step.name, who: step.who, note: step.does, strong: step.who === '模型' }));
+      const stepCards = (steps) => steps.map((step) => ({ code: step.code, title: step.name, who: step.who, note: step.does, strong: step.who === "Model" }));
       const tierCards = TIERS.map((tier, index) => ({ code: String(index + 1), title: tier.tier, note: `${tier.examples}。${tier.counts}`, strong: index === 0 }));
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">观点库</h2>
-          <p class="drill__intro">系统做的事，就是在这里建观点、更新观点、关掉观点。一条观点是一个问题、一把梯子和一个到期日：证据把它的状态往两头推，到期那天状态定格。抽取交来两样东西，都是先搜、再由模型比：候选观点和搜出来的几条已有观点比，判是归入已有的、接续、开新的，还是不开；证据和它那条观点下搜出来的证据比，判是重复、替代还是新证据。连着的证据只多了出处，本身不触发重判。每条证据都带出处；研究归属由抽取交来，按下节规矩保存；记录只加不改。</p>
-          <p class="drill__status"><span class="pill pill--strong">第一版已冻结 · 2026-10-20</span>只写 Alex 说过或定过的；要改，先记一条新决定。还没定的、和 2 条 Pull 模式的事，单列在最后。</p>
-          <h3 class="drill__heading drill__heading--spaced">研究主线：抽取时归组</h3>
+          <h2 class="drill__title">Thesis library</h2>
+          <p class="drill__intro">Create, update and close theses here. A thesis has a question, ladder and due date; evidence moves its state, which freezes when due. Search and compare both extraction outputs: candidates against existing theses for merge, succession, creation or skip; evidence within its thesis for repeat, replacement or addition. An extra source reference alone does not trigger rejudgement. Preserve sources and extraction-owned group associations under the rules below. Records are append-only.</p>
+          <p class="drill__status"><span class="pill pill--strong">First version frozen · 2026-10-20</span>Only recorded decisions are included. Changes need a new decision. Open questions and two pull-mode proposals are listed at the end.</p>
+          <h3 class="drill__heading drill__heading--spaced">Research groups: associate during extraction</h3>
           <ul class="drill__rules">${listItems(GROUP_RELATIONS, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">结构</h3>
+          <h3 class="drill__heading drill__heading--spaced">Structure</h3>
           ${tree(VIEW_TREE, escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">两种观点：结构一样，梯子的格意思不一样</h3>
-          ${table(['种类', '属于什么', '梯子的格', '例子'], VIEW_KINDS.map((row) => [row.kind, row.on, row.rungs, row.example]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Two thesis kinds: shared structure, different rung meanings</h3>
+          ${table(["Kind", "Subject kind", "Ladder rungs", "Example"], VIEW_KINDS.map((row) => [row.kind, row.on, row.rungs, row.example]), escapeHtml)}
           <p class="drill__footnote">${escapeHtml(KIND_NOTE)}</p>
-          <h3 class="drill__heading drill__heading--spaced">梯子：五格（只有是或否的问题两格），每格是一个能核对的结果</h3>
+          <h3 class="drill__heading drill__heading--spaced">Ladders: five verifiable outcomes, or two for yes/no</h3>
           ${tree(LADDER_EXAMPLES, escapeHtml)}
           <ol class="drill__rules">${listItems(LADDER_RULES, escapeHtml)}</ol>
-          <h3 class="drill__heading drill__heading--spaced">状态：这条观点处在梯子的哪一格</h3>
-          ${table(['', '是什么', '谁来判', '例子'], POSITIONS.map((row) => [row.position, row.means, row.moves, row.example]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">State: the current rung</h3>
+          ${table(['', "What it is", "Decision maker", "Example"], POSITIONS.map((row) => [row.position, row.means, row.moves, row.example]), escapeHtml)}
           <ul class="drill__rules">${listItems(STATE_RULES, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">证据分四层</h3>
+          <h3 class="drill__heading drill__heading--spaced">Four evidence tiers</h3>
           ${flow(tierCards, '·', escapeHtml)}
           <ul class="drill__rules">${listItems(TIER_RULES, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">依赖：箭头怎么读</h3>
+          <h3 class="drill__heading drill__heading--spaced">Dependencies: reading the arrows</h3>
           ${tree(DEPENDENCY_TREE, escapeHtml)}
           <ul class="drill__rules">${listItems(DEPENDENCY_RULES, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">接续：同一样东西一期接一期</h3>
+          <h3 class="drill__heading drill__heading--spaced">Succession: the same focus over successive periods</h3>
           <ul class="drill__rules">${listItems(CHAIN_RULES, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">进库：候选观点和证据都是先搜、再由模型比</h3>
-          ${table(['', '候选观点', '证据'], INTAKE_SHAPE.map((row) => [row.aspect, row.views, row.evidence]), escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">一条信息进来，怎么写进库（一轮）</h3>
-          <p class="flow-legend">黑框是模型做的，灰框是代码做的。</p>
+          <h3 class="drill__heading drill__heading--spaced">Intake: search then compare candidates and evidence</h3>
+          ${table(['', "Candidate thesis", "Evidence"], INTAKE_SHAPE.map((row) => [row.aspect, row.views, row.evidence]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">One item entering the library: a round</h3>
+          <p class="flow-legend">Black boxes are model steps; grey boxes are code.</p>
           ${flow(stepCards(INTAKE_STEPS), '→', escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">第 4 步比对：候选观点的去向</h3>
-          ${table(['去向', '什么时候', '写什么'], MATCH_OUTCOMES.map((row) => [row.outcome, row.when, row.writes]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Step 4: candidate destinations</h3>
+          ${table(["Destination", "When", "Writes"], MATCH_OUTCOMES.map((row) => [row.outcome, row.when, row.writes]), escapeHtml)}
           <ul class="drill__rules">${listItems(MATCH_NOTES, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">第 4 步比对：证据的去向</h3>
-          ${table(['去向', '什么时候', '写什么'], EVIDENCE_OUTCOMES.map((row) => [row.outcome, row.when, row.writes]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Step 4: evidence destinations</h3>
+          ${table(["Destination", "When", "Writes"], EVIDENCE_OUTCOMES.map((row) => [row.outcome, row.when, row.writes]), escapeHtml)}
           <ul class="drill__rules">${listItems(EVIDENCE_NOTES, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">例子：三条信息怎么写进库</h3>
+          <h3 class="drill__heading drill__heading--spaced">Example: three items entering the library</h3>
           ${tree(INTAKE_EXAMPLE_TREE, escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">例子：一条观点下的证据怎么跟着更新（AMZN 2026 全年资本开支，示意）</h3>
-          ${table(['信息', '比对证据', '库里', '重判'], EVIDENCE_EXAMPLE.map((row) => [row.item, row.matched, row.store, row.rejudge]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Example: evidence updates for AMZN 2026 capex (illustration)</h3>
+          ${table(["Item", "Evidence comparison", "Library result", "Rejudgement"], EVIDENCE_EXAMPLE.map((row) => [row.item, row.matched, row.store, row.rejudge]), escapeHtml)}
           <p class="drill__footnote">${escapeHtml(EVIDENCE_EXAMPLE_NOTE)}</p>
-          <h3 class="drill__heading drill__heading--spaced">比对的裁判和标注：先用大模型跑起来，攒下标注，以后交给小模型</h3>
-          <p class="flow-legend">黑框是模型做的，灰框是代码或人做的。</p>
+          <h3 class="drill__heading drill__heading--spaced">Matching and labelling: start with a large model, train a smaller one later</h3>
+          <p class="flow-legend">Black boxes are model steps; grey boxes are code or people.</p>
           ${flow(stepCards(JUDGE_STEPS), '→', escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">一条比对记录记什么</h3>
-          ${table(['部分', '记什么'], TRACE_FIELDS.map((row) => [row.part, row.meaning]), escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">一条观点开着还是关了</h3>
+          <h3 class="drill__heading drill__heading--spaced">Matching-record fields</h3>
+          ${table(["Part", "Recorded content"], TRACE_FIELDS.map((row) => [row.part, row.meaning]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Open or closed</h3>
           ${tree(LIFECYCLE_TREE, escapeHtml)}
           <ul class="drill__rules">${listItems(LIFECYCLE_NOTES, escapeHtml)}</ul>
           <div class="drill__columns">
             <section>
-              <h3 class="drill__heading drill__heading--spaced">一条观点有哪些部分</h3>
-              ${table(['部分', '写什么', '例子'], VIEW_FIELDS.map((row) => [row.part, row.meaning, row.example]), escapeHtml)}
+              <h3 class="drill__heading drill__heading--spaced">Thesis fields</h3>
+              ${table(["Part", "Writes", "Example"], VIEW_FIELDS.map((row) => [row.part, row.meaning, row.example]), escapeHtml)}
             </section>
             <section>
-              <h3 class="drill__heading drill__heading--spaced">一条证据记什么</h3>
-              ${table(['部分', '写什么'], EVIDENCE_FIELDS.map((row) => [row.part, row.meaning]), escapeHtml)}
-              <h3 class="drill__heading drill__heading--spaced">先后顺序、同时处理和查来历</h3>
+              <h3 class="drill__heading drill__heading--spaced">Evidence fields</h3>
+              ${table(["Part", "Writes"], EVIDENCE_FIELDS.map((row) => [row.part, row.meaning]), escapeHtml)}
+              <h3 class="drill__heading drill__heading--spaced">Ordering, concurrency and traceability</h3>
               <ul class="drill__rules">${listItems(ORDER_RULES, escapeHtml)}</ul>
               <p class="drill__footnote">${escapeHtml(STORE_NOTE)}</p>
             </section>
           </div>
-          <h3 class="drill__heading drill__heading--spaced">还没定的</h3>
+          <h3 class="drill__heading drill__heading--spaced">Open questions</h3>
           <ul class="drill__rules">${listItems(VIEWS_OPEN, escapeHtml)}</ul>
-          <h3 class="drill__heading drill__heading--spaced">Claude 提的、Alex 还没定的（定了才算数）</h3>
+          <h3 class="drill__heading drill__heading--spaced">Proposals awaiting Alex’s decision</h3>
           <ol class="drill__rules">${listItems(VIEWS_PROPOSED, escapeHtml)}</ol>
         </div>`;
       keepFitted(container);
@@ -715,27 +716,27 @@
   };
 
   design.drilldowns.verdict = {
-    button: '展开最终判定：什么时候判、判出什么',
-    kicker: '最终判定 · 详细说明',
+    button: "Explore final verdicts: triggers and outcomes",
+    kicker: "Final verdict · Details",
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">最终判定（旧稿）：一条观点还成立吗</h2>
-          <p class="drill__intro">现在：到期那天，观点的状态停在哪一格就定格、关掉，由 Pull 模式做；最终判定还要不要单独一步，以后和 Pull 模式一起定。下面是旧稿：一条观点要不要关，不由一条证据或一个条件直接决定，而是先送到这里，由模型把整条观点和它的全部证据完整看一遍再判。</p>
-          ${status('旧稿 · 要重做', '观点库已按 D38–D40 重建，这里写的检验条件、证实和证伪、前提、前提被削弱时的 7 天兜底复核、同一层来源有分歧就送来都不再用（D38、D41）。已经定了：一条观点只有一个状态，到期那天状态定格就关掉，不另外定别的；Pull 模式每天结束时或按定时任务跑，不另外等（D54）。其余以后和 Pull 模式一起重做。', escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">这些情况会把观点送来</h3>
-          ${table(['触发', '谁发现'], VERDICT_TRIGGERS.map((trigger) => [trigger.trigger, trigger.who]), escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">判出什么</h3>
+          <h2 class="drill__title">Final verdict (earlier draft): does the thesis still hold?</h2>
+          <p class="drill__intro">Current decision: pull mode freezes and closes the thesis at its current rung when due. Whether a separate final verdict remains is deferred. The earlier draft below instead asks a model to review the whole thesis and its evidence before deciding closure.</p>
+          ${status("Earlier draft · Requires redesign", "The library was rebuilt under D38–D40. Verification conditions, confirmation/falsification, premises, seven-day fallback review and same-tier-disagreement escalation no longer apply (D38, D41). Each thesis has one state, frozen and closed when due, with no separate outcome. Pull mode runs at day-end or on a schedule without an extra wait (D54). Other details will be redesigned with pull mode.", escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Triggers</h3>
+          ${table(["Trigger", "Detected by"], VERDICT_TRIGGERS.map((trigger) => [trigger.trigger, trigger.who]), escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Outcomes</h3>
           ${tree(VERDICT_TREE, escapeHtml)}
           <div class="drill__columns">
             <section>
-              <h3 class="drill__heading drill__heading--spaced">规则</h3>
+              <h3 class="drill__heading drill__heading--spaced">Rules</h3>
               <ol class="drill__rules">${listItems(VERDICT_RULES, escapeHtml)}</ol>
             </section>
             <section>
-              <h3 class="drill__heading drill__heading--spaced">例子</h3>
+              <h3 class="drill__heading drill__heading--spaced">Example</h3>
               <p class="drill__footnote">${escapeHtml(VERDICT_EXAMPLE_NOTE)}</p>
             </section>
           </div>

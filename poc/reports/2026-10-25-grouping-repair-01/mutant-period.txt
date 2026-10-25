@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_stored_multiyear_and_ambiguous_scope_survive_unchanged __________
+
+    def test_stored_multiyear_and_ambiguous_scope_survive_unchanged():
+        """B periods/scopes: the recorded failures, not invented descriptions, retain their meaning."""
+        for case in CASES[:2]:
+            _, kept, _ = extraction.sift(case['answer'], case['item'], case['text'], set(case['shown_ids']), UNIVERSE)
+            raw = case['answer']['candidates'][0]
+>           assert [(c['scope'], c['period_start'], c['period_end']) for c in kept] == [
+                (raw['scope'], raw['period_start'], raw['period_end'])]
+E           AssertionError: assert [('Blackwell+...'2025-01-31')] == [('Blackwell+...'2027-12-31')]
+E             At index 0 diff: ('Blackwell+Rubin', '2024-02-01', '2025-01-31') != ('Blackwell+Rubin', '2025-01-01', '2027-12-31')
+E             Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-_v63pnlm/tests/test_identity_repair.py:29: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-_v63pnlm/tests/test_identity_repair.py::test_stored_multiyear_and_ambiguous_scope_survive_unchanged
+1 failed in 0.08s

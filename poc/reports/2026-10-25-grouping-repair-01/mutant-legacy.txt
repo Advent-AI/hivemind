@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_unknown_basis_and_legacy_key_never_authorize_automatic_merge _______
+
+    def test_unknown_basis_and_legacy_key_never_authorize_automatic_merge():
+        c = candidate('c1', scope_source='watch')
+        key = dict(c, scope_key='data center')
+        assert matching._same_key(key, c, 'NVDA')
+        assert not matching._same_key(key, dict(c, basis='GAAP'), 'NVDA')
+>       assert not matching._same_key(dict(key, key_version=None), c, 'NVDA')
+E       AssertionError: assert not True
+E        +  where True = <function _same_key at 0x10d00f2e0>({'basis': 'n/a', 'due_day': '2027-02-25', 'event_type': 'n/a', 'evidence_ids': ['e1'], ...}, {'basis': 'n/a', 'due_day': '2027-02-25', 'event_type': 'n/a', 'evidence_ids': ['e1'], ...}, 'NVDA')
+E        +    where <function _same_key at 0x10d00f2e0> = matching._same_key
+E        +    and   {'basis': 'n/a', 'due_day': '2027-02-25', 'event_type': 'n/a', 'evidence_ids': ['e1'], ...} = dict({'basis': 'n/a', 'due_day': '2027-02-25', 'event_type': 'n/a', 'evidence_ids': ['e1'], ...}, key_version=None)
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-hvyhdj_2/tests/test_identity_repair.py:98: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-hvyhdj_2/tests/test_identity_repair.py::test_unknown_basis_and_legacy_key_never_authorize_automatic_merge
+1 failed in 0.08s

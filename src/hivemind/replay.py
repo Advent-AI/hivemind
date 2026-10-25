@@ -6,55 +6,30 @@ then pull mode for that day. A guard refuses an item whose
 publication day is after the replay day. The views database refuses to run a day at or before the last day it
 completed (no backdating). After day0's pull the views database is copied to <views>.day0.sqlite for the agent
 layer. Every day prints one line and the archive's cumulative cost."""
-import concurrent.futures
 import datetime
-import json
-import os
 import shutil
 import time
 
-from . import dispatch, extraction, pull, testdb
+from . import dispatch, pull, testdb
 from .views import round as round_module, store
 
-EXTRACTION_WORKERS = 8
+
+class StaleHandoverError(RuntimeError):
+    """A saved parallel extraction cannot establish that it read its predecessors."""
 
 
-def pre_extract(conn, archive, cfg, universe, items_and_routes, transport, log):
-    """Run the day's extractions concurrently (model calls that read only the item and the views open at the start
-    of the day) and store each handover; the rounds then run in sequence order and resume from 'matched'. A candidate
-    that an earlier item of the same day just opened is caught by matching (归入), so the end state is the one
-    sequential processing gives (D31: a parallel read that changed is judged again by the matcher)."""
-    # the views database connection stays in this thread: the shown views are read here, once per object set
-    snapshot = {}
-    shown_for = {}
-    for item, route in items_and_routes:
-        objects = [o['value'] for o in item.get('object_identifiers') or [] if universe.has(o['value'])]
-        key = tuple(sorted(objects))
-        if key not in snapshot:
-            snapshot[key] = store.views_for_prompt(conn, objects)
-        shown_for[item['input_id']] = snapshot[key]
-
-    def work(item, route):
-        return item, route, extraction.extract(archive, cfg, item, item['text'], shown_for[item['input_id']], universe, transport=transport)
-
-    results = {}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=EXTRACTION_WORKERS) as pool_:
-        futures = [pool_.submit(work, item, route) for item, route in items_and_routes]
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                item, route, handover = future.result()
-                results[item['input_id']] = handover
-            except Exception as error:
-                log('  ! pre-extraction failed:', repr(error)[:200])
-    for item, route in items_and_routes:
-        handover = results.get(item['input_id'])
-        if handover is None:
-            continue
-        store.insert(conn, 'handovers', input_id=item['input_id'], seq=route.sequence_no,
-                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped}, ensure_ascii=False))
-        dispatch.mark(conn, item, route.sequence_no, 'extracted', 'ok', f'{len(handover.evidence)} evidence, {len(handover.candidates)} candidates, {len(handover.dropped)} dropped (parallel)')
-    conn.commit()
-    return results
+def refuse_unfinished_parallel(conn):
+    """D159: preserve old handovers, but never resume a day-start read as a sequential read."""
+    pending = conn.execute("""select p.input_id, p.reason from processing_steps p
+        where p.step='extracted' and p.result='ok'
+        and p.id=(select max(q.id) from processing_steps q
+                  where q.input_id=p.input_id and q.step='extracted' and q.result='ok')
+        and not exists (select 1 from processing_steps q
+                        where q.input_id=p.input_id and q.step='handed_over' and q.result='ok')
+        order by p.sequence_no""")
+    ids = [row['input_id'] for row in pending if row['reason'].endswith(' (parallel)')]
+    if ids:
+        raise StaleHandoverError('unfinished day-start extractions; keep this ledger and replay into a new one: ' + ', '.join(ids))
 
 
 class LookAheadError(RuntimeError):
@@ -77,6 +52,7 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
         transport=None, log=print, only_objects=None, max_items_per_day=None):
     items_db = testdb.open_db(testdb_path)
     conn = store.open_db(views_path)
+    refuse_unfinished_parallel(conn)
     last_done = store.last_completed_day(conn)
     start = from_day
     if last_done and from_day <= last_done:
@@ -113,11 +89,6 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
                 continue
             processed += 1
             to_run.append((item, route))
-        fresh = [(item, route) for item, route in to_run if not route.resume_from]
-        if len(fresh) > 1:
-            extracted = pre_extract(conn, archive, cfg, universe, fresh, transport, log)
-            to_run = [(item, dispatch.Route('extract', route.sequence_no, 'matched' if item['input_id'] in extracted else None, route.reason))
-                      for item, route in to_run]
         for item, route in to_run:
             result = round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
             day_stats['extracted'] += 1
@@ -129,6 +100,7 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
             if result.failed:
                 day_stats['failed'] += 1
                 log(f'  ! {item["input_id"][:60]}: {result.failed}')
+                raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
             if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
                 raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
         seq = store.next_sequence(conn) - 1
@@ -139,6 +111,7 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
         if judged.failed:
             day_stats['failed'] += 1
             log(f'  ! day judging: {judged.failed}')
+            raise RuntimeError(f'judging failed; day {day} remains resumable: {judged.failed}')
         closed = pull.end_of_day(conn, day, seq)
         day_stats['closed'] = len(closed)
         store.complete_day(conn, day, seq, time.strftime('%Y-%m-%dT%H:%M:%S'))

@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_snapshot_rejects_changes_including_late_failure _____________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-330/test_snapshot_rejects_changes_0')
+
+    def test_snapshot_rejects_changes_including_late_failure(tmp_path):
+        """Concurrent-writer row: absent failure files are part of the snapshot."""
+        path = tmp_path / 'failed.json'
+        snapshot = audit.Snapshot()
+        assert snapshot.read(path, optional=True) is None
+        write(path, {'error': 'late failure'})
+>       with pytest.raises(audit.RecordError, match='changed during audit'):
+E       Failed: DID NOT RAISE <class 'review_subject_names.RecordError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py:186: Failed
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py::test_snapshot_rejects_changes_including_late_failure
+1 failed, 20 deselected in 0.04s

@@ -1,0 +1,1092 @@
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a170b3-396b-74a1-aeaf-810e8e3e8be2
+--------
+user
+Read-only follow-up of exactly two prior findings, not a new broad review. User approved testing the two-step hypothesis. Read poc/reports/2026-10-25-source-first-01/review.txt and updated docs/research/2026-10-25-source-first.md plus organise-source.txt. Fixes: dispositions.links is the sole relationship source; code derives candidate evidence_ids, model no longer emits it. Empty observations binds first actual call id/hash/cost, organiser provenance null. Wrong entry point refuses before calls. Check all relevant table rows and these fixes for any remaining serious contract contradiction. Return concise unresolved findings or no serious findings. Do not read entire decisions/history or other modules; do not edit.
+codex
+I’ll check only the two prior findings and the fixes you named, against the relevant table rows. I won’t edit files or review other modules.
+
+exec
+/opt/homebrew/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g '*organise-source.txt' -g 'review.txt' -g '2026-10-25-source-first.md' -g 'CURRENT_STATE.md' -g 'DECISIONS.md'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind
+AGENTS.md
+docs/DECISIONS.md
+docs/CURRENT_STATE.md
+docs/archive/2026-10-22-v15/DECISIONS.md
+docs/archive/2026-10-22-v15/CURRENT_STATE.md
+docs/archive/2026-10-16-v1/DECISIONS.md
+docs/archive/2026-10-16-v1/CURRENT_STATE.md
+docs/research/2026-10-25-source-first.md
+poc/reports/2026-10-25-source-first-01/organise-source.txt
+poc/reports/2026-10-25-source-first-01/review.txt
+poc/reports/2026-10-25-extraction-evidence-01/review.txt
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat /Users/lchingen/hivemind/AGENTS.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Hivemind rebuild: working instructions
+
+This repository, `hivemind`, rebuilds Hivemind from the old repository `../tn-hivemind`, one piece at a time. The rules below are that repository's
+principles and 54 lessons, merged and cut down to the practices that hold whatever the new code's structure turns out
+to be. Rules that assumed the old architecture are left out; an architectural rule enters this file only once the new
+design has decided it. The incidents behind these rules are history in `../tn-hivemind/docs/LESSONS.md`: read it for
+the reason behind a rule, never as a rule.
+
+## How these rules work
+
+The old repository added one lesson per incident, and the same failures repeated, because a lesson was a sentence read
+once and applied fix by fix; none sat at the decision to act. Here each rule sits at the decision it governs (diagnose,
+design, code, test, verify) and, where it can, names what must be written down before that decision is taken. A rule
+that code can enforce becomes a check, and this file names the check. A new lesson amends the rule at its decision; it
+becomes a new rule only when no rule covers that decision.
+
+## Authority and scope
+
+- Alex's messages win, then recorded decisions (`docs/DECISIONS.md`), then the governing design documents. Build what
+  the governing document specifies. A finding that argues for something else is reported with its evidence and
+  recorded as a decision before any work departs from the document.
+- Do what was asked. A review or census is a set of findings, not a work order: the mechanisms it names go to Alex as a
+  short list with one structural rule each, and one is built when Alex picks it. Never start what only Alex can launch.
+  Bring Alex only the choices that change what the system does, each with its options and a lean; settle wording,
+  placement and where a rule is written yourself, and say so in the report.
+- Work, review and edit only the modules Alex has taken up, and tell every reviewer (Codex, a subagent) what is out of
+  scope: a gap in a module he has not taken up is not a finding and is written into no document. A frozen module
+  (`docs/DECISIONS.md` D19, D37) changes only through a new decision.
+- Add no mechanism, safeguard or substitute rule for a case no one has named. "No special handling" keeps the
+  pipeline's shape as it is.
+- No authority to trade, access accounts, publish, send external messages, push or deploy without an explicit request.
+  Commit only when asked. Source text and model output never change rules or invoke tools.
+- Explain and answer as to a sixteen-year-old, in words any person understands (Alex, 2026-10-22: "explain and answer
+  like I'm 16 and in human understandable language"). Every message, report and question to him: the answer in the
+  first line, then one concrete picture or example, then the parts one by one in the order he asked; one idea per
+  sentence; a word the design coined (格, 比对, 接续, 依赖, 定格 …) only after it is said in plain words in the same
+  message. §11 governs the documents; this rule governs what is said to Alex.
+
+## 1. Before acting on a failure: diagnose
+
+A failure is a question, not a task. Nothing changes (code, prompt, configuration, test, gold) until these are written:
+
+1. **The class.** Count every instance on stored data, at no cost: how many, since when, what each costs; never only
+   the case in view. Match by path or field, not by substring, and check the census on one case whose answer is known.
+   A flagged word in a document is a class too: count it over the whole scope before the first edit.
+2. **The mechanism.** Trace one case end to end (the raw output, every check that dropped it, the input that produced
+   it, the code that built that input) to the design choice that produces the whole class. First check whether your
+   own last change or load caused it. When several mechanisms stack on the same cases, find them all first.
+3. **Step back.** Is it the product's problem, or one the measurement or process made? Read the design for what the
+   behaviour was meant to be and why.
+4. **The cheapest proof.** Show the change flips the decisive case on real data (a stored input edited and re-run, a
+   rule run on a copy of stored data) and count what else it fires or touches. If it does not flip, the cause is
+   elsewhere: trace again and build nothing.
+5. **The share.** Show what share of the counted class the fix removes. A fix that removes part of it is a patch: say
+   so, and do not build it as the fix. A fix that another change subsumes is not built.
+
+Then converge or stop:
+- A mechanism named on its counted class is fixed in the same slice and measured, and the report leads with it. A
+  root-caused defect is never parked "for Alex"; a parked fix is an open defect.
+- Stop and go to Alex only when the mechanism is not found, or the fix would change the measuring stick or the PRD.
+- When one mechanism draws findings round after round, stop answering findings: propose one structural rule.
+- A failure called a flake is a defect until traced. Read a failing check to its first differing line before any
+  rerun; a passing rerun proves nothing.
+- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it, and
+  cite what you read, not the summary.
+
+## 2. Before writing code: design
+
+Speed is not progress: code written before the thinking costs rounds of review. A design holds these tables before code
+and before any review; a blank cell means it is not ready.
+
+1. **State × event**, for work that spans more than one step, run or day. Every state against every event it can
+   meet: success, refusal, a refused retry, an external failure, a crash midway, work still in flight when a run ends,
+   a later run on a later date, configuration changed in between, an input corrected while waiting, another writer of
+   the same data, two scopes at once. Each cell names the transition, what is written, and the date every read and
+   write uses. The rows include the work before its first step and after its terminal outcome.
+2. **Value × reader.** Every value a change writes, against every reader of it (found by searching the field) and
+   every input source the value can come from. A rule over a kind of data lists every writer of that kind. A change to
+   how often something fires is counted against every reader of its output.
+3. **New path × old checks.** For a new input, derived value, mode or changed data shape: every check the old path
+   passes, and whether the new one meets it. A changed shape re-derives every check written for the old one.
+4. **Prior decisions.** The decisions searched for the mechanism by name; any decision that rejected or bounded it is
+   quoted in the design and in the question to Alex.
+
+- A contract over text or shapes states the closed set of what passes (a full match); anything else fails or is not
+  judged. Enumerate the accepted set against every context and reader it meets before the first edit.
+- A blind review measures the tables. A serious finding they do not hold shows a missing dimension: add it and walk
+  every row again; never answer the finding alone. Code starts when the review finds nothing serious.
+- A design whose core contract is still open is a question, not something to build.
+- A foundation's acceptance carries a size and speed budget from its first control, not only correctness.
+
+## 3. Writing code
+
+- **One owner.** A rule lives where the data is written, and refuses: a warning that lets the run continue is a silent
+  failure. Fix the writer and delete its duplicate implementations in the same change; when a fix lands in one
+  consumer, search every consumer of the same key or rule.
+- **Code over prose.** A contract that code or a schema can enforce (an enum over allowed keys, a shape) is enforced
+  there, and stays out of prompts and documents.
+- **One word per concept.** The glossary in `docs/prd/00-system.md` (section 用词, D36) names each concept once, and
+  `docs/check.py` fails on a word it rules out. A new concept gets its row and its ruled-out words in the same change;
+  a new ruled-out word must catch the sentence it was written against and pass the corrected one.
+- **Identity.** An identifier names one thing for the life of its scope; a changed thing gets a new id. Equal values
+  alone never establish identity.
+- **Explicit inputs.** Library code takes runtime paths and configuration as arguments. A branch a run takes comes from
+  its configuration, never from whether an environment variable happens to be set; a configured step whose credential
+  is missing refuses the run.
+- **Never order by the wall clock.** It steps both ways; order comes from a sequence the program owns. In the new
+  design that sequence is dispatch's sequence number: the stream never reads the calendar, and only pull mode acts on
+  time, with its "now" passed in (D12, D13, D31).
+- **Strictness is code too.** A check added to prevent defects can itself fail; accept it on real data, not samples.
+- **Style.** Descriptive names. Docstrings and comments state behaviour, not history. The standard library unless a
+  measured need justifies a dependency.
+
+## 4. Tests
+
+- Every test names the requirement or table row it proves; a test that traces to none is deleted, and a retired
+  behaviour's tests leave with it. The suite stays lean.
+- Before writing a test, read every function its fixture drives: return shapes, failure classification, the data and
+  attributes it reads. Check that a name exists before calling it.
+- Real objects first (real storage on a temporary path, real records). Fake only external services (a model client, a
+  data source, an HTTP server). Fixture values are realistic (real ISO timestamps, not placeholders).
+- Write the one decisive assertion that fails without the code under test, and predict the run before running it. A
+  first failure for any other reason means the test was written blind: stop and read again. A test is never mended to
+  fit the code; it changes only when the spec changes, and the spec change is recorded first.
+- Mutate on a scratch copy: the test must fail on the mutant while the unmutated control passes. An error is not a
+  catch until its traceback is read. A negative assertion ("never called") needs a mutant that makes the call on the
+  tested path.
+- A check must judge something: it reports how many cases it judged, carries a positive control that fails for the
+  breach it holds, and fails when its own preconditions fail (exit status, a missing or unidentifiable input). A check
+  over an empty population is unexercised, not passed.
+- Tests never depend on the real date or the working directory: pin every date written and read, build paths from the
+  test file's location, write only inside temporary directories.
+- Test each entry point as its user calls it (with the defaults the user leaves unset, under the configuration the user
+  runs), not only the inner function with every argument set.
+
+## 5. Verification
+
+Verify at the point the change touches, at the sharpest level that shows it works or fails, and stop there:
+1. Stored data: reproduce the failing case, show the fix flips it, show a mutant of the fix fails the check ($0).
+2. Only when what the model is asked changed: re-send just the affected calls.
+3. The touched suites, plus any standing structural checks the change can affect; the full suite once.
+4. The gate once, at merge. The acceptance once, on the final configuration. Never a full rerun per fix.
+
+- A further check the change does not need is offered in one line, not run.
+- Before any paid run, `python3 scripts/preflight.py` replays every stored model answer and matching record through
+  the current code checks and prompts ($0) and prints, per check, the cases judged and the refusals with reasons;
+  a changed share or a refusal on a case a person would accept is diagnosed before the run, and a paid run is never
+  the way a check or a prompt is first tried (2026-10-23: three of four restarts in one night were avoidable this way).
+- An acceptance round is a measurement of the final configuration, not a verification step. A new finding in it is
+  recorded with its census, not answered with another round.
+- The product runs end to end before anything else is built, and every merge is accepted on the product's own path. A
+  gate passes only what it runs: name the check that runs a new path, or say that none does.
+- Measure before claiming. Label estimates as estimates, report every sample, and treat a number in a design document
+  as a measurement with a script behind it.
+
+## 6. Model calls and prompts
+
+- **Never grow a prompt to fix quality.** Read the whole request (system, schema, payload) as the model reads it, and
+  list every contradiction, rule written for another case, instruction that forces the defect, reference the model
+  cannot read, payload field the answer does not need, and call doing several jobs. Cut, merge or split. Add an
+  instruction only when the audit shows one is missing, and remove at least as much elsewhere. Report characters and
+  prompt tokens before and after; growth needs a written reason.
+- **Trace a miss to the raw answer first.** Class it as not written, refused (by which check) or split. Check that the
+  request shows what the answer needs and the schema can express it before changing any wording. A request never asks
+  for what a check refuses; a retry that repairs a refusal is a symptom, not handling.
+- **An example is an instruction.** It must agree with the schema and the code that reads the answer, or it goes.
+- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Every arm runs beside a
+  fresh control, on at least three samples; a bar the control fails against itself judges nothing. A cached replay
+  proves the code, never the model.
+- **Build where code decides.** A decision code can make is moved out of the model, not sampled.
+
+## 7. Evaluation
+
+- Never iterate against a measuring stick of your own. The stick (gold, unit, the judge's reading) is checked against
+  what the product uses and fixed with Alex before the first arm. A failed registered acceptance stops the line and
+  goes to Alex with its census; the next arm is never designed alone.
+- Measure the stick before using it: control against a second control, the criterion's null estimated (a conjunction
+  over many items fails by chance), and its workload sized from its rules.
+- Tune on dev, score test once per configuration; label model-authored gold and model judges as such.
+- Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind
+  a metric's largest values before reading it, and write down what a derived number reduces to.
+- Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was
+  not tuned on.
+- Weigh a case by what it carries in the product, not by count; spend arms only where its stake survives.
+
+## 8. Product thinking
+
+- Think like a hedge-fund analyst. A thesis is an argued view about the business and the world; its stance comes from
+  the argument weighed against what is priced. Extract the few metrics or segments that carry it; financial-statement
+  lines are its evidence, never its definition.
+- When a thesis-quality check fails, look first at the unit of thought (are these the arguments that move the stock?),
+  not deeper into the numbers. Numbers are verified by code where they exist.
+- Outcomes are tracked and shown, never a gate on what a view may say. Missing data is "no data to verify", never a
+  pass or a fail. A repeat is not new evidence, and model agreement is not corroboration.
+
+## 9. Workspace and operations
+
+- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting
+  stored data needs Alex's request, a backup, exactly identified items and a log entry.
+- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel
+  agents that edit shared modules.
+- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network
+  health; nothing heavy runs beside paid calls. A gate runs on a snapshot no one is editing.
+- Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
+- Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; tests never load
+  them. Never raise a spending cap, and never switch a provider or model silently.
+
+## 10. Rebuilding from ../tn-hivemind
+
+- Bring the system over one piece at a time. The product runs end to end at every step.
+- The old code is a source of requirements and stored cases, not a template. Before porting a piece, write what it
+  does, who reads what it writes, and which parts were patches (by their census); port the mechanism, leave the
+  patches.
+- A piece arrives with only the tests that trace to its requirements. An old rule arrives with the code it governs, as
+  a check where code can hold it.
+
+## 11. The design phase
+
+The work is an architecture POC: the design page, one PRD per module and the decisions. No product code and no data
+files until Alex starts the build. `docs/check.py` checks (and rebuilds the PRD bundle the page reads from disk); the
+only other scripts generate page assets (`build_bundle.py`, `copy_old_design.py`, `embed_fonts.py`) or simulate
+classification (`simulate_classification.py`, not changed at this stage).
+
+- The design page is `docs/system-design.html` with its data in `docs/system-design/new-*.js`; each module's PRD is in
+  `docs/prd/` (index `README.md`). The page data is the one source: a PRD block marked `generated` comes from it and
+  is never edited by hand.
+- After any change, refresh by reasoning: re-read every module in the order and with the four questions of
+  `docs/prd/README.md` (D22), so that page, PRD and decisions say the same thing, and list each inconsistency fixed.
+  `python3 docs/check.py` runs last and checks only mechanically; its pass is never the refresh.
+- Design every data path from what a view (thesis) needs, never from what the data offers: no number warehouse (D24,
+  D28).
+- Write for a reader who did not follow the discussion: plain Chinese, one concrete example, processes as step cards
+  and decisions as trees; every detail page links to its PRD.
+- A rule is written in full in one place, its owner; summaries, other modules and the glossary name it or point to
+  it without restating its conditions, so a change lands once. A finding that one sentence missed a change is a
+  class: count every place that states the same thing before the first edit (§1).
+- Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`.
+  The prompt names the scope, the governing documents and what is out of scope; its report is a lead (§1).
+- Before a freeze, review in rounds. Each round runs read-only reviews by angle: an end-to-end simulation of
+  realistic items, state-by-event tables, wording against the glossary, whether an engineer could build each step
+  from the text, every rule against the decisions, an attack on Claude's own findings, a new reader answering
+  questions, every change read in context, and line-by-line reads by module. Each finding is checked against the
+  text before a change; rounds go on until one finds nothing; then the freeze is recorded and the design sealed.
+
+## Before finishing a slice
+
+1. The touched suites, the structural checks and then the full suite pass (in the design phase: the reasoning refresh,
+   then `python3 docs/check.py`). A red suite is fixed before a handoff, whoever's code it is.
+2. `docs/CURRENT_STATE.md` holds the status, the open defects and the one next task; a status update retires the
+   paragraphs it replaces. A changed choice is recorded in `docs/DECISIONS.md`.
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/review.txt && nl -ba /Users/lchingen/hivemind/docs/research/2026-10-25-source-first.md && nl -ba /Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/organise-source.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	发现 **2 个需要在实现前补齐的合同缺口**。例如，第二步可以把 `e1` 连给 `c1`，同时把它列成 `c2` 的依据；目前写下的条件不会拒绝。
+     2	
+     3	1. **两份证据关系可以互相矛盾。**  
+     4	   [交接合同第 19 行](/Users/lchingen/hivemind/docs/research/2026-10-25-source-first.md:19)只要求候选的 `evidence_ids` 引用未省略的 observation，没有要求它与 `dispositions.links` 对应。[比对读取前者](/Users/lchingen/hivemind/src/hivemind/views/matching.py:158)，[写入读取后者](/Users/lchingen/hivemind/src/hivemind/views/writing.py:143)，可能导致比对使用了某条依据，最终观点却没有那条证据连接。应以一份关系为准生成另一份，或明确拒绝不一致的交接。
+     5	
+     6	2. **空结果分支没有闭合调用来源合同。**  
+     7	   [第 21 行](/Users/lchingen/hivemind/docs/research/2026-10-25-source-first.md:21)规定零 observation 跳过第二步；[第 23 行](/Users/lchingen/hivemind/docs/research/2026-10-25-source-first.md:23)却规定最终交接指向第二步。现有 runner 会把调用编号、请求摘要和费用放进交接。应明确这个合法分支绑定第一步的真实调用，并记录第二步未执行，否则 reader 回调没有完整的返回合同。
+     8	
+     9	未编辑文件，未运行测试或模型实验。     1	# 先选内容，再组织问题：最小对照实验
+     2	
+     3	2026-10-25，D162。Alex 同意先检验 D161 提出的假设。本轮只做隔离实验，不更改产品默认配置、最终数据库合同或历史数据。不改 UI、Idea、分类、Pull、最终判定，也不扩大到上层投资论点。
+     4	
+     5	例子：第一步读出“项目总成本超过 5000 亿”和“分析师认为这类融资风险很大”；第二步决定它们连到哪个问题。第二步没有采用某条时，必须留下原因。第一步本身也可能漏掉，实验分别观察这两个位置。
+     6	
+     7	## 为什么试，以及不声称什么
+     8	
+     9	D161 的全部 18 次抽取里，六次首篇有五次未写总成本；两次序列把 Ohio 归到 Rubin，形成三条错误成员；一条引文被改写后正确拒绝。两个问题都已在原答中出现，11 条成员和 66 次出处写入都对应交接。计数与原例见 `poc/reports/2026-10-25-extraction-evidence-01/results.md`、`audit.json`。已知正例是 grouped-1 首篇 e4；负例是 grouped-3 全部三篇；错组例是 grouped-2 首篇 c1→g1。
+    10	
+    11	改提示词顺序没有解决这些问题。本轮假设：把挑内容和写完整问题分成两次调用，避免模型在挑内容时同时安排梯子、键和归属，再明确保存每条所选内容的去向，可能提高保留率和归组质量。这是对“分步加显式交接”整体的检验，不能单独把效果归因于多一次调用。没有声称已找到模型内部遗漏的原因。
+    12	
+    13	不同时试原文片段编号：两臂都继续使用现有 quote 和出处字段、同一原文核对。也不改召回、模型、reasoning、组定义或误差标准。
+    14	
+    15	## 闭合的交接合同
+    16	
+    17	第一步输入：同一篇完整原文、原发布日和作者、类别读法、相同对象及研究参考、相同的已有问题简介。不给问题梯子输出要求或组选择任务。输出 `observations`，每条使用现有 evidence 字段，只有 `links` 留给第二步：`id/quote/one_line/speaker/original_who/original_day/tier/event_time`。id 必须完整匹配 e 加正整数且唯一。允许空数组，表示没有选到内容；这不是语义通过。
+    18	
+    19	第二步输入：同一发布日、作者、对象、类别读法、研究参考、已有问题和组，以及第一步完整原答；原文正文不重复提供，不能绕过第一步自己添加事实。输出 candidates（不含 evidence_ids）、原有 threads，以及 dispositions。dispositions 是以第一步所有 observation id 为唯一必填键的对象；每个值只有 links 和 omit_reason。闭合条件只有两种：非空 links 且 omit_reason 为空；或空 links 且 omit_reason 为非空说明。缺项、多项或两种都不符合，拒绝交接。links 是唯一关系来源：代码从其中指向各候选的连接生成该候选的 evidence_ids，不让模型另填一份；已省略的 observation 因而不会成为候选依据。恢复后的 evidence_ids 和 links 必须满足双向一致，覆盖比对与写入两个读者。
+    20	
+    21	代码按 dispositions 回填第一步原封不动的证据，形成现有 evidence/candidates/threads 形状，再过原有 schema、归属引用、sift、matching、writing 和组保存。引文真假和链接对象仍由现有检查判断，不复制一份宽松检查。被省略的内容只在实验调用记录中保存，不进入产品证据表。零 observation 直接形成空交接，不调用无事可做的第二步。
+    22	
+    23	两步的请求、原答、call id 和费用分别存档；非空时最终交接指向第二步，并另记两步来源及费用合计。零 observation 时最终空交接绑定第一步的真实 call id 和请求摘要，只计第一步费用，来源记录的第二步为 null。恢复、重送和异常沿用隔离 runner 的规定：本轮不自动重发。整个输入成功写完才轮到下一篇。新模式必须由专用入口显式提供 reader；用旧单步入口误跑已登记的两步模式，在第一笔调用前拒绝。
+    24	
+    25	## 完整请求审查
+    26	
+    27	对照是 D161 的 role-evidence，全套原请求保持。实验第一步保留其证据选择及出处规则，去掉尚未发生的 links 要求；第二步保留其开题、梯子、年份、键及直接关系规则，去掉需要改写证据的要求，增加一项交代所选内容去向的合同。组文字完全相同。未加入 Ohio 人名、金额或正确答案。合计文字可能因两个调用都需说明职责而略增；运行前报告每步字符和完整请求字符，运行后报告实际 token，额外调用及重复上下文的费用纳入比较。
+    28	
+    29	## 状态 × 事件
+    30	
+    31	| 状态 | 事件 | 转移、记录和日期 |
+    32	|---|---|---|
+    33	| 未开始 | 预检、审查通过 | 新目录冻结两个步骤、对照、代码和三个真实输入；保留 publication_day |
+    34	| 输入到达 | 首篇或后篇 | dispatch 分配 seq，读取本样本已提交的问题和组 |
+    35	| 读原文中 | 成功、有内容 | 存第一步原答；第二步读同一 seq 快照、原输入日，不写产品数据 |
+    36	| 读原文中 | 成功、空内容 | 空交接引用第一步 call id/摘要/费用，第二步来源 null；按原流程完成，语义检查不能因此豁免 |
+    37	| 任一步 | schema 拒绝或交接不全 | 留原答，停止该序列；其他独立序列继续，不重抽 |
+    38	| 任一步 | 网络失败、崩溃、到时仍在途 | 费用预留不释放，停止整轮；不自动续跑 |
+    39	| 已组织 | 合法 / 有证据被原检查删除 | 过原检查并记录每条原因，再匹配和原子写入；语义失败仍计数 |
+    40	| 写入中 | 成功 / 异常 | 观点、证据、组同事务提交 / 回滚 |
+    41	| 已完成 | 下一日或重送 | 下一篇读已提交内容；重送跳过；旧 seq 历史保持 |
+    42	| 任意 | 配置变动、修正输入、另一写者 | 冻结摘要或独占锁拒绝；两臂和各样本不共享数据库或缓存 |
+    43	
+    44	## 值 × 来源/写者 × 读者
+    45	
+    46	| 值 | 来源与写者 | 读者 |
+    47	|---|---|---|
+    48	| observations | 第一步模型 | 第二步、转换器、逐项内容审计 |
+    49	| dispositions | 第二步模型，schema 按真实 id 构造 | 转换器拒绝不全或矛盾去向；审计区分显式省略与第一步遗漏 |
+    50	| 原证据正文及出处 | 只由第一步提供，代码复制 | 原 sift、匹配、写入、后篇；第二步没有改写入口 |
+    51	| 候选 evidence_ids | 只由代码从 dispositions.links 生成 | 比对与写入读到同一关系；无第二份模型决定 |
+    52	| candidates/threads | 第二步 | 原归属验证及写入；不新增归组裁判 |
+    53	| reader 回调 | 新实验入口显式传给 runner | 仅实验臂 process；省略参数的全部旧入口不变 |
+    54	| 调用费用/摘要 | 原 Archive 与 BoundedTransport | 预算、复现与报告；包含第一步，不能只算第二步 |
+    55	
+    56	## 新路径 × 原检查
+    57	
+    58	| 路径 | 原检查如何保持 / 新交接如何验证 |
+    59	|---|---|
+    60	| 两步输出 | 转换后必须满足原 evidence/candidates/threads schema；unknown id、缺项拒绝；候选 evidence_ids 从 links 生成并验证双向一致 |
+    61	| 空内容或错误入口 | 空交接引用第一步真实来源；零第二步调用；登记两步模式但没有 reader 的入口在调用前拒绝 |
+    62	| 原文及来源 | 原 quote 核对不变；第一步有错照样拒绝，不能靠第二步修好后隐去 |
+    63	| 日期、梯子、身份 | 同一 sift、matching、writing，不改变字段或语义 |
+    64	| 两步调用 | 都经同一预算 transport 和 Archive；任何缓存命中拒绝；只有已返回的调用才能释放预留 |
+    65	| 第一步或第二步失败 | 真实 SQLite 验证零产品写入；默认单步入口及三篇连续入口照旧测试 |
+    66	| 审计 | 逐 observation 对照原答、去向、最终交接和来源；缺内容不能从分母消失 |
+    67	
+    68	## 固定测量
+    69	
+    70	沿用 D161 三篇完整输入：`gnews:b25b5b3109fbe06f1a394164`、`gnews:bb0d23846735c94b7c1722d2`、`gnews:eb74b9d16d227f0c2b7a39d8`。每臂三个独立序列，按对照 1、实验 1……交错运行；都给原 Rubin 与 SK 两个参考组。控制已有数据、引用 schema、温度和 low reasoning 不变，模型仍 gpt-6-luna。
+    71	
+    72	O1–O6、金额原意及首篇总成本标准不变。逐次报告：项目问题、三种金额、Goldberg 批评、同源转述、错归组、旧成员保留。分别数第一步没选、第二步省略、检查删除、写入差异。检查所有答案条件和实际链接；合法编号不能代替语义判断。助手阅读标注仍不冒充独立人工金标。
+    73	
+    74	三个实验序列全部满足旧核心标准且首篇保留总成本，才叫本开发案例通过；否则停止，不私改标准或开启下一臂。即使通过，也只支持下一步跨类别验证，不封存全部抽取、不启用默认分组。控制组的自身变化逐次报告，三个样本不推断总体准确率。
+    75	
+    76	理论上限：18 次原抽取 + 9 次额外源文读取 + 最多 36 次比对 = 63 次。预计正常 45 次约 $0.7–$1.1（估计），独立上限仍为 $1.50、30 分钟，不增加旧预算。全部按最大输出先预留。先跑免费 preflight、全部 D161 原答转换及正反例测试，再发真实调用；没有重新跑半年库。
+    77	
+    78	## 既有决定
+    79	
+    80	D42 的最终证据必须连到问题、D47 的直接关系、D149 的抽取中归组、D155 的清单只作参考、D158 的事件日期、D159 的顺序与原意都保持。D25 的一个抽取模块不变，但 D162 授权在本实验中分两次模型调用；中间稿不作为新产品数据种类。失败后更新 CURRENT_STATE，完成相关及完整测试、逐模块推理刷新，最后跑 docs/check.py。
+     1	你是一位资深对冲基金分析师。你收到上一读取步骤从本条信息中选出的 observations；它们是本步唯一事实来源，未核实的仍未核实。把它们用于已有问题或必要的新问题，并在本步确定研究归属。
+     2	每条 observation 都在 dispositions 中交代：保留时 links 只连它直接讲的已有或本次候选问题，omit_reason 留空；没有直接相关问题且不构成要紧的新问题时，links 留空并写明不采用的理由。不能因无需单独开题就省略有用论据。
+     3	
+     4	开哪些观点：
+     5	- 只有已有观点管不到的重要问题才开候选：什么尚未发生的结果会改变公司的全年业务或重要分部？写成到期可核对的问题，不因每个数字存在就各开一条。
+     6	- 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。问题和每格条件保留原文的量与时间：拟议额度、担保、项目总价不改写成当年实际付款，规划容量不改写成当年产量。
+     7	- 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。
+     8	- 游戏、软件功能、工具和驱动的更新、促销、单款外设、高管任免、股东投票和章程细则、例行诉讼程序、回购授权不开观点。季度数和季度指引是全年问题的证据；护城河、竞争格局等没有可核对结果的宽泛话题不单独开。
+     9	- 已有观点里的同一个问题不再写候选，证据直接连到它；重要但不同的问题照常提出。同一件事只写一条。
+    10	
+    11	写观点的规矩：
+    12	- 一个观点只问一个数（写明哪一年）或一件事，不捆绑。写成问句，到期用一个数或一件事判对错。
+    13	- 问的是一家公司的收入、利润、份额、产品进度，就是对象观点，object 写这家公司的股票代码，哪怕背后的原因是政策或宏观；主题观点只问世界会变成什么样（许可发不发、利率到哪、资本开支多少），不问某家公司因此怎样。
+    14	- 问题、看的是什么、梯子每一格的条件都用中文写。
+    15	- 梯子每一格的条件现在就要写得出具体的数或状态；条件要靠将来才公布的目标值、门槛值的，核对不了，不开。
+    16	- 梯子五格（只有是或否的问题两格）。对象观点（公司）的五格从「强烈看多」到「强烈看空」，说的是对这家公司业务好还是坏；主题观点（宏观、政策、行业）的五格是从一头排到另一头的五种结果，用结果命名，不说好坏。每一格是一个能核对的结果：一个数落在哪段区间，或一件事到了哪一步；格和格不重叠、不留空，到期时正好一格成立；中性那一格跟什么比写在条件里；没有含糊的「部分」。
+    17	- 到期日定在这个争论见分晓的那天。数字的观点，到期日就是这个数公布的那天；公司的数按它的财年，发布日所在的财年是今年、下一个财年是明年；不是公司的数按自然年。事件的观点写清到哪一天看它处在哪一格。
+    18	
+    19	每个候选观点另填一把键，让代码判断两条观点是不是同一个量：
+    20	- measure：从清单里选最贴的量。公司的数：total_revenue、segment_revenue、product_revenue、gross_margin、operating_margin、operating_expense_growth、total_expenses、operating_loss、tax_rate、capex、shipments_or_capacity、run_rate、design_wins；事件：event；世界的数：spend_total、financing_amount、price、capacity、growth_rate、policy_event；都不是：other。
+    21	- scope：量的实际限定范围；分部、产品、群体或事件对象。参考名称含义相同时沿用，没有限定写空字符串。
+    22	- period_start / period_end：这个量覆盖的起止日（ISO）。财年按财年说明换算；自然年 2026 = 2026-01-01 到 2026-12-31；事件写提出当年年初到到期日。
+    23	- basis：GAAP、non_GAAP 或 n/a。unit：USD、percent、count、GW、MW、TWD、multiple 或 n/a。event_type：measure 是 event 或 policy_event 时选 launch、shipment、licence、approval、deal_close、deployment、other，否则 n/a。
+    24	- 梯子每格另写 lo、hi：这一格数值区间的下界（含）和上界（不含），用 unit 的单位（美元写完整数字，百分比写 73 不写 0.73）；最低格 lo 写 null，最高格 hi 写 null；是/否两格都写 null。
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'evidence_ids|dispositions|observations|source.first|source_first|organise.source|organise_source|reader|call_id|request_hash|request_digest|cost' /Users/lchingen/hivemind/src/hivemind/views/matching.py /Users/lchingen/hivemind/src/hivemind/views/writing.py /Users/lchingen/hivemind/poc --glob '*.py' --glob '"'!reports/**'"'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind/poc/hierarchy_study/membership_basis.py:39:    """Validate the complete new answer before discarding explanation text for old readers."""
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:17:    evidence_ids: dict         # handover evidence id -> evidence_id
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:88:    changed, notes, new_views, evidence_ids = set(), [], {}, {}
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:171:            evidence_ids[e['id']] = repeat_of
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:191:            evidence_ids[e['id']] = stored_id
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:197:        evidence_ids[e['id']] = stored_id
+/Users/lchingen/hivemind/src/hivemind/views/writing.py:198:    return Written(changed, new_views, evidence_ids, notes)
+/Users/lchingen/hivemind/src/hivemind/views/matching.py:158:                         '；'.join(e['one_line'] for e in evidence if e['id'] in c['evidence_ids'])[:1500])
+/Users/lchingen/hivemind/poc/hierarchy_study/study.py:301:            record.update(status='complete', answer=answer.data, input_tokens=answer.input_tokens, output_tokens=answer.output_tokens, estimated_usd=answer.cost_usd, seconds=round(time.perf_counter()-started, 3), call_id=answer.call_id, request_sha256=answer.request_sha256, cached=answer.cached)
+/Users/lchingen/hivemind/poc/hierarchy_study/study.py:302:            entry.update(status='complete', estimated_usd=answer.cost_usd)
+/Users/lchingen/hivemind/poc/hierarchy_study/study.py:303:            budget['estimated_spent'] += answer.cost_usd - reserve
+/Users/lchingen/hivemind/poc/hierarchy_study/study.py:306:            print(f'DONE sample={self.sample} step={step} in={answer.input_tokens} out={answer.output_tokens} usd={answer.cost_usd:.4f}', flush=True)
+/Users/lchingen/hivemind/poc/hierarchy_study/study.py:375:        records.append(dict(thesis, evidence_ids=[piece['evidence_id'] for piece in thesis['evidence']], evidence=[]))
+/Users/lchingen/hivemind/poc/hierarchy_study/review_consistency.py:40:        candidates = [c for c in raw['candidates'] if eids & set(c['evidence_ids'])]
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ingestion_groups.py:25:        'due_day': '2026-12-31', 'year': '2026', 'evidence_ids': ['e1']}],
+/Users/lchingen/hivemind/poc/hierarchy_study/test_review_subject_names.py:129:    """Value-reader row: preserve both name and scope when creating a group."""
+/Users/lchingen/hivemind/poc/hierarchy_study/review_threads.py:43:                                "unknown_cost_reservation":0, "estimated_usd":0, "input_tokens":0, "output_tokens":0})
+/Users/lchingen/hivemind/poc/hierarchy_study/review_threads.py:52:                totals[arm]["unknown_cost_reservation"] += call.get("reserved_usd", 0)
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:23:    raw = json.loads(archive.execute('select answer_json from model_calls where call_id=304').fetchone()[0])
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:24:    second = json.loads(archive.execute('select answer_json from model_calls where call_id=349').fetchone()[0])
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:27:    c = dict(raw['candidates'][0], object='ai-capex', evidence_ids=['e2'], thread_ids=['t1'])
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:183:    """D160 input/reader table: all three frozen articles run sequentially in each fresh arm."""
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:186:        raw = json.loads(source.execute('select answer_json from model_calls where call_id=460').fetchone()[0])
+/Users/lchingen/hivemind/poc/hierarchy_study/replay.py:53:        'evidence_ids': study.STRINGS,
+/Users/lchingen/hivemind/poc/hierarchy_study/replay.py:77:        if thesis is None or thesis['assessment'] is None or not ref['evidence_ids']:
+/Users/lchingen/hivemind/poc/hierarchy_study/replay.py:80:        for eid in ref['evidence_ids']:
+/Users/lchingen/hivemind/poc/hierarchy_study/replay.py:139:    visible = {(r['view_id'], eid) for a in card['arguments'] for r in a['references'] for eid in r['evidence_ids']}
+/Users/lchingen/hivemind/poc/hierarchy_study/replay.py:144:        selected = {(r['view_id'], eid) for r in facet['references'] for eid in r['evidence_ids']}
+/Users/lchingen/hivemind/poc/hierarchy_study/replay.py:255:                           pairs=sorted({(r['view_id'], eid) for a in value['arguments'] for r in a['references'] for eid in r['evidence_ids']}))
+/Users/lchingen/hivemind/poc/hierarchy_study/replay.py:264:    text = ['# Fresh versus update: all stored outputs', '', 'Diagnostic observations only; not an accuracy score.', '']
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ingestion_threads.py:155:def test_d144_reader_uses_actual_links_and_excludes_replaced_evidence(tmp_path):
+/Users/lchingen/hivemind/poc/hierarchy_study/relation_handoff.py:24:    'evidence_ids': study.STRINGS, 'reason': study.STRING,
+/Users/lchingen/hivemind/poc/hierarchy_study/relation_handoff.py:68:        members, sources = set(a['member_ids']), set(a['evidence_ids'])
+/Users/lchingen/hivemind/poc/hierarchy_study/relation_handoff.py:70:                or len(members) != len(a['member_ids']) or len(sources) != len(a['evidence_ids'])
+/Users/lchingen/hivemind/poc/hierarchy_study/relation_handoff.py:83:            a['evidence_ids'] = list(dict.fromkeys(aliases[e] for e in a['evidence_ids']))
+/Users/lchingen/hivemind/poc/hierarchy_study/relation_handoff.py:107:        sources = [written.evidence_ids.get(e) for e in proposal['evidence_ids']]
+/Users/lchingen/hivemind/poc/hierarchy_study/relation_handoff.py:132:                         'members': members, 'evidence_ids': list(dict.fromkeys(sources))})
+/Users/lchingen/hivemind/poc/hierarchy_study/relation_handoff.py:182:              'association_decisions': decisions, 'evidence_ids': written.evidence_ids, 'dropped': handover.dropped,
+/Users/lchingen/hivemind/poc/hierarchy_study/test_membership_basis.py:30:    """Value/reader row: all 18 saved answers retain every original field, value and order."""
+/Users/lchingen/hivemind/poc/hierarchy_study/test_grouping_consistency.py:17:    """Value/reader row: add real displayed memberships without changing the old payload."""
+/Users/lchingen/hivemind/poc/hierarchy_study/test_relation_handoff.py:36:                        'evidence_ids': candidate['evidence_ids'], 'reason': hint['reason']})
+/Users/lchingen/hivemind/poc/hierarchy_study/test_relation_handoff.py:81:        source = next(e for e in answer['evidence'] if e['id'] == association['evidence_ids'][0])
+/Users/lchingen/hivemind/poc/hierarchy_study/test_relation_handoff.py:83:        association['evidence_ids'] = ['alias_evidence']
+/Users/lchingen/hivemind/poc/hierarchy_study/test_relation_handoff.py:87:    assert all(conn.execute('select 1 from evidence where evidence_id=?', (e,)).fetchone() for e in decision['evidence_ids'])
+/Users/lchingen/hivemind/poc/hierarchy_study/test_relation_handoff.py:94:        wanted = set(answer['associations'][0]['evidence_ids'])
+/Users/lchingen/hivemind/poc/hierarchy_study/test_relation_handoff.py:134:    members, sources = decision['members'], decision['evidence_ids']
+/Users/lchingen/hivemind/poc/hierarchy_study/test_relation_handoff.py:136:                'member_ids': ['c1', 'c2'], 'evidence_ids': ['e_alias'], 'reason': 'Supported relation.'}
+/Users/lchingen/hivemind/poc/hierarchy_study/review_replay.py:31:                    for eid in reference['evidence_ids']:
+/Users/lchingen/hivemind/poc/hierarchy_study/review_replay.py:42:            record.update(reference_occurrences=len(refs), evidence_ids=sorted({e for _, e in refs}),
+/Users/lchingen/hivemind/poc/hierarchy_study/review_replay.py:64:    text.extend(['', f'Total calls: {len(records)}. Estimated cost: ${result["estimated_usd"]:.6f}.',
+/Users/lchingen/hivemind/poc/hierarchy_study/test_replay.py:26:                           'references': [{'view_id': vid, 'evidence_ids': [eid]}]}],
+/Users/lchingen/hivemind/poc/hierarchy_study/test_replay.py:35:    assert ref == {'view_id': 'v7', 'evidence_ids': ['e55'], 'judgement_id': 350}
+/Users/lchingen/hivemind/poc/hierarchy_study/test_replay.py:45:        answer['arguments'][0]['references'] = [{'view_id': vid, 'evidence_ids': [eid]}]
+/Users/lchingen/hivemind/poc/hierarchy_study/test_replay.py:55:                         'references': [{'view_id': 'v7', 'evidence_ids': ['e55']}]}
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:1:"""Reproduce structural counts, costs and source traces from the frozen basis experiment."""
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:63:    round_costs = []
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:73:                    round_costs.append({'sample': sample, 'scope': scope, 'arm': arm,
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:78:              'groups': grouped, 'final_round_costs': round_costs, 'results': results, 'traces': traces}
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:79:    means = {arm: statistics.mean(r['estimated_usd'] for r in round_costs if r['arm'] == arm)
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:80:             for arm in ['basis', 'direct'] if any(r['arm'] == arm for r in round_costs)}
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:82:        report['comparison'] = {'mean_final_round_usd': means, 'basis_to_direct_cost_ratio': means['basis'] / means['direct'],
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:83:                                'basis_to_direct_reader_input_ratio': next(r['mean_input_tokens'] for r in grouped if r['phase'] == 'basis_probe') / next(r['mean_input_tokens'] for r in grouped if r['phase'] == 'direct_probe')}
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:90:             'The final-round comparison includes latest-source review + summary + reader for basis, and summary + reader for direct. Earlier historical source reviews are excluded from that comparison.', '',
+/Users/lchingen/hivemind/poc/hierarchy_study/review_basis.py:91:             '```json', json.dumps(round_costs, indent=2), '```']
+/Users/lchingen/hivemind/poc/hierarchy_study/test_basis_replay.py:94:    """Plan visibility: a real but hidden source is not valid for this reader."""
+/Users/lchingen/hivemind/poc/agent/beliefs.py:49:            'why': data['why'], 'settlement_day': settlement_day, 'shown': shown, 'call_id': answer.call_id, 'cost': answer.cost_usd}
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:131:    handover = extraction.Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, False, answer.cost_usd)
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:175:              'evidence_ids': written.evidence_ids, 'bindings': bindings, 'affected_threads': affected,
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:195:            raise RuntimeError('Registered time/call/cost limit reached; no request sent')
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:215:            cost = (usage.get('prompt_tokens', 0) * price_in + usage.get('completion_tokens', 0) * price_out) / 1e6
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:217:                cost = reserve
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:218:            budget['reserved_or_spent'] += cost - reserve
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:219:            budget['attempts'][-1].update(status='complete', estimated_usd=cost)
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:220:            record['estimated_usd'] = cost
+/Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py:223:            print(f'DONE {self.label} usd=${cost:.4f} seconds={record["seconds"]:.1f}', flush=True)
+/Users/lchingen/hivemind/poc/agent/conditions.py:19:create table if not exists mappings (id integer primary key autoincrement, user text, sentence text, view_id text, difference text, nearest_json text, settlement_day text, call_id integer, created_at text);
+/Users/lchingen/hivemind/poc/agent/conditions.py:39:    conn_agent.execute('insert into mappings (user, sentence, view_id, difference, nearest_json, settlement_day, call_id, created_at) values (?,?,?,?,?,?,?,?)',
+/Users/lchingen/hivemind/poc/agent/conditions.py:40:                       (user, mapping['sentence'], mapping['view_id'], mapping['difference'], json.dumps(mapping['nearest']), mapping['settlement_day'], mapping['call_id'], time.strftime('%Y-%m-%dT%H:%M:%S')))
+/Users/lchingen/hivemind/poc/corpus/scripts/harvest_gdelt.py:5:days cost one call. GDELT throttles bursts; we wait 8 seconds between calls and back off on its throttle message.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-membership-basis-free-01/drop_shape/membership_basis.py:39:    """Validate the complete new answer before discarding explanation text for old readers."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-membership-basis-free-01/drop_shape/test_membership_basis.py:30:    """Value/reader row: all 18 saved answers retain every original field, value and order."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-consistency-free-01/drop_budget/test_grouping_consistency.py:17:    """Value/reader row: add real displayed memberships without changing the old payload."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-membership-basis-free-01/drop_budget/membership_basis.py:39:    """Validate the complete new answer before discarding explanation text for old readers."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-consistency-free-01/drop_context/test_grouping_consistency.py:17:    """Value/reader row: add real displayed memberships without changing the old payload."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-membership-basis-free-01/drop_budget/test_membership_basis.py:30:    """Value/reader row: all 18 saved answers retain every original field, value and order."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-02/trace_census.py:34:    cases.append((f'archive-T2/call-{row["call_id"]}', item, json.loads(row['answer_json']), set(re.findall(r'^\s+- (v\d+)（', user, re.M))))
+/Users/lchingen/hivemind/poc/reports/2026-10-25-pipeline-replay-01/census.py:78:                      'request': json.loads(call['request_json']), 'call_id': call['call_id'],
+/Users/lchingen/hivemind/poc/reports/2026-10-25-pipeline-replay-01/census.py:79:                      'historical_cost_usd': call['cost_usd']})
+/Users/lchingen/hivemind/poc/reports/2026-10-25-membership-basis-free-01/drop_membership/membership_basis.py:39:    """Validate the complete new answer before discarding explanation text for old readers."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-membership-basis-free-01/drop_membership/test_membership_basis.py:30:    """Value/reader row: all 18 saved answers retain every original field, value and order."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-pipeline-replay-01/trace_meaning.py:32:    assert len(records) == 29 and len(traces) == 1 and traces[0]['call_id'] == 460
+/Users/lchingen/hivemind/poc/reports/2026-10-25-pipeline-replay-01/trace_meaning.py:47:            if r['created_from_input'] == AFFECTED_INPUT], 'source_call': trace['call_id'],
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:21:    cost: float = 0.0
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:45:        result.cost += answer.cost_usd
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:50:                     request_sha256=answer.request_sha256, call_id=answer.call_id, decisions_json=json.dumps(answer.data, ensure_ascii=False),
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:80:        result.cost += sum(j['cost'] for j in judged)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:124:        result.cost += handover.cost_usd
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/audit_results.py:28:               'cost': round(sum(c['estimated_usd'] for c in calls), 6), 'seconds': round(sum(c['seconds'] for c in calls), 2), 'articles': []}
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/audit_results.py:91:            'calls': sum(r['calls'] for r in samples), 'cost': round(sum(r['cost'] for r in samples), 6),
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:127:    handover = extraction.Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, False, answer.cost_usd)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:171:              'evidence_ids': written.evidence_ids, 'bindings': bindings, 'affected_threads': affected,
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:189:            raise RuntimeError('Registered time/call/cost limit reached; no request sent')
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:209:            cost = (usage.get('prompt_tokens', 0) * price_in + usage.get('completion_tokens', 0) * price_out) / 1e6
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:211:                cost = reserve
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:212:            budget['reserved_or_spent'] += cost - reserve
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:213:            budget['attempts'][-1].update(status='complete', estimated_usd=cost)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:214:            record['estimated_usd'] = cost
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-01/run-original.py:217:            print(f'DONE {self.label} usd=${cost:.4f} seconds={record["seconds"]:.1f}', flush=True)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/matching.py:169:                         '；'.join(e['one_line'] for e in evidence if e['id'] in c['evidence_ids'])[:1500])
+/Users/lchingen/hivemind/poc/reports/2026-10-25-extraction-evidence-01/audit.py:53:            for eid in result['evidence_ids'].values():
+/Users/lchingen/hivemind/poc/reports/2026-10-25-extraction-evidence-01/audit.py:62:        calls,usd,seconds,it,ot=archive.execute('select count(*),sum(cost_usd),sum(seconds),sum(input_tokens),sum(output_tokens) from model_calls').fetchone()
+/Users/lchingen/hivemind/poc/reports/2026-10-25-extraction-evidence-01/audit.py:64:                      first_input_tokens=archive.execute('select input_tokens from model_calls order by call_id limit 1').fetchone()[0])
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/judging.py:115:                                why_changed=data['why_changed'], config_checksum=cfg.checksum, call_id=answer.call_id,
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/judging.py:118:    return {'view_id': view_id, 'judgement_id': judgement_id, 'rung': data['rung'], 'changed': data['changed'], 'cost': answer.cost_usd, 'cached': answer.cached}
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-03/audit.py:14:  'risk_evidence':[], 'issues':['item1 e1 changes the source quote; c1 then loses its only evidence.', 'item2 e2 project cost and item3 e3 project financing link to v1 industry spending.']},
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-03/audit.py:20:  'risk_evidence':[], 'issues':['Project total cost above $500B absent in all three answers.', 'Goldberg criticism absent from item2 raw answer despite the displayed project question.']},
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-03/audit.py:66:            for eid in result['evidence_ids'].values():
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-03/audit.py:75:        calls,usd,seconds,it,ot=archive.execute('select count(*),sum(cost_usd),sum(seconds),sum(input_tokens),sum(output_tokens) from model_calls').fetchone()
+/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-03/audit.py:77:                      first_input_tokens=archive.execute('select input_tokens from model_calls order by call_id limit 1').fetchone()[0])
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/writing.py:17:    evidence_ids: dict         # handover evidence id -> evidence_id
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/writing.py:68:    changed, notes, new_views, evidence_ids = set(), [], {}, {}
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/writing.py:135:            evidence_ids[e['id']] = repeat_of
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/writing.py:155:            evidence_ids[e['id']] = stored_id
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/writing.py:161:        evidence_ids[e['id']] = stored_id
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/writing.py:162:    return Written(changed, new_views, evidence_ids, notes)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:7:replay costs nothing and gives the same answers. The provider key is read from the owner-only credentials file and
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:24:# USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:29:  call_id integer primary key autoincrement, purpose text, config_version text, config_checksum text, model text,
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:31:  input_tokens integer, output_tokens integer, cost_usd real, seconds real, created_at text
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:48:    call_id: int
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:54:    cost_usd: float
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:69:            return self.conn.execute('select call_id, answer_json, prompt_chars, input_tokens, output_tokens from model_calls where request_sha256=?', (sha,)).fetchone()
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:80:                return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:85:            return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:191:        call_id, answer_json, _, input_tokens, output_tokens = hit
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:192:        return Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:203:                       input_tokens=0, output_tokens=0, cost_usd=0.0, seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:210:    cost = round(input_tokens / 1e6 * price_in + output_tokens / 1e6 * price_out, 6)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:211:    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:214:                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:218:    return Answer(data, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:28:            'required': ['id', 'object', 'kind', 'looks_at', 'question', 'rungs', 'due_day', 'year', 'evidence_ids'],
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:35:                'year': {'type': 'string'}, 'evidence_ids': {'type': 'array', 'items': {'type': 'string'}}}}},
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:72:    call_id: int
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:75:    cost_usd: float
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:127:    parts.append('按 JSON schema 交出 evidence 和 candidates。候选观点的 evidence_ids 填它自己的证据编号；证据的 links 填已有观点编号或这次候选观点的编号（如 c1）。没有可抽的就都交空数组。')
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:164:    return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:253:        ids = list(dict.fromkeys(alias.get(i, i) for i in c['evidence_ids'] if alias.get(i, i) in kept_ids))
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:257:        final_candidates.append(dict(c, evidence_ids=ids))
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/store.py:17:    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text',
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/store.py:26:    'match_records': 'id integer primary key autoincrement, seq integer, input_id text, call_no integer, shown_json text, request_sha256 text, call_id integer, decisions_json text, checks_json text, written_json text',
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/store.py:155:    """The views database for a reader (the agent layer, reports): no schema creation, no writes."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/store.py:301:def evidence_ids_under(conn, view_id):
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:8:layer. Every day prints one line and the archive's cumulative cost."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:93:    calls_before, cost_before, *_ = archive.totals()
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:96:        day_cost = 0.0
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:128:            day_cost += result.cost
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:132:            if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:138:        day_cost += judged.cost
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:148:        calls, cost, _, _ = archive.totals()
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:152:            f'changed {day_stats["changed"]:3d} closed {len(closed)} | open views {open_count} | day ${day_cost:.2f} total ${cost - cost_before:.2f} calls {calls - calls_before}')
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/service.py:32:    one view with 367 pieces of evidence cost 1,224 full scans (0.46 s, measured 2026-10-24)."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/service.py:87:    92 of those cost 0.29 s per search (1,205 evidence reads), measured 2026-10-24."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/search.py:7:evaluation rerun costs nothing. The embedding key is read the way model.py reads the chat key and never stored.
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/search.py:150:    locally. Measured 2026-10-24: a never-seen query costs a 0.6–1.9 s round trip and an idea made seven of them in
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:206:    view's bundle, the days, the trace of searches, and the cost of the two calls. No recorded view → no model call."""
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:214:            'no_recorded_view': found['results'] is None, 'cost': dict(NO_COST)}
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:222:    cost = dict(NO_COST)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:223:    cost['cached'] = True
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:226:        cost['usd'] += answer.cost_usd
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:227:        cost['input_tokens'] += answer.input_tokens
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:228:        cost['output_tokens'] += answer.output_tokens
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:229:        cost['turns'] += 1
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:230:        cost['cached'] = cost['cached'] and answer.cached
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:264:    cost['seconds'] = round(time.time() - started, 1)
+/Users/lchingen/hivemind/poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/idea.py:324:    card['cost'] = cost
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/src/hivemind/views/matching.py | sed -n '145,170p'
+nl -ba /Users/lchingen/hivemind/src/hivemind/views/writing.py | sed -n '125,166p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   145	def describe_evidence(conn, evidence_id):
+   146	    e = store.evidence(conn, evidence_id)
+   147	    return f'{evidence_id}［{e["tier"]}；{e["speaker"]}；原始来源 {e["original_who"]} {e["original_day"]}］{e["one_line"]}｜原句：{e["quote"][:300]}'
+   148	
+   149	
+   150	def _user_text(conn, item, candidates, evidence, lists, shown_views, extra_views=()):
+   151	    parts = [f'信息：{item["input_id"]}，发布日 {item["publication_day"]}，类别 {item["category"]}。']
+   152	    if candidates:
+   153	        parts.append('【候选观点】')
+   154	        for c in candidates:
+   155	            rungs = ' / '.join(f'{r["label"]}：{r["condition"]}' for r in c['rungs'])
+   156	            listed = lists.candidate_lists.get(c['id'], [])
+   157	            parts.append(f'- {c["id"]}（{c["kind"]}，对象 {c["object"]}，看的是「{c["looks_at"]}」，{c["year"]}，到期 {c["due_day"]}）：{c["question"]}\n    梯子：{rungs}\n    它的证据：' +
+   158	                         '；'.join(e['one_line'] for e in evidence if e['id'] in c['evidence_ids'])[:1500])
+   159	            if listed:
+   160	                parts.append('    搜出来的已有观点：\n' + '\n'.join('    · ' + describe_view(conn, v) for v in listed))
+   161	            else:
+   162	                parts.append('    搜出来的已有观点：没有。')
+   163	    if shown_views:
+   164	        parts.append('【抽取时给模型看过的已有观点】\n' + '\n'.join('· ' + describe_view(conn, v['view_id']) for v in shown_views))
+   165	    for v in extra_views:
+   166	        parts.append('· ' + describe_view(conn, v))
+   167	    direct = [(e, vid) for e in evidence for vid in e['links'] if (e['id'], vid) in lists.evidence_lists]
+   168	    if direct:
+   169	        parts.append('【连在已有观点上的证据，和那条观点下已有的证据比】')
+   170	        for e, vid in direct:
+   125	                notes.append(f'dependency {view_id} -> candidate {depends_on} dropped: that candidate was not opened')
+   126	                continue
+   127	            if depends_on and store.would_cycle(conn, view_id, depends_on):
+   128	                notes.append(f'dependency {view_id} -> {depends_on} dropped: cycle')
+   129	                continue
+   130	            chain = dep['wait_chain_view_id']
+   131	            if chain in new_views:
+   132	                chain = new_views[chain]
+   133	            edge = (view_id, depends_on, chain, dep['wait_year'], dep['direction'])
+   134	            if edge in dependencies_written:
+   135	                continue
+   136	            dependencies_written.add(edge)
+   137	            store.insert(conn, 'dependencies', view_id=view_id, depends_on=depends_on, wait_chain_view_id=chain, wait_year=dep['wait_year'],
+   138	                         direction=dep['direction'], seq=seq)
+   139	        resolve_waiting(conn, view_id, seq, changed)
+   140	    # 3. where each piece of evidence goes
+   141	    def destinations(e):
+   142	        targets = []
+   143	        for link in e['links']:
+   144	            if link in new_views:
+   145	                targets.append((new_views[link], ('新证据', None, '')))
+   146	            elif link in checked.outcomes and checked.outcomes[link][0] == '归入已有的':
+   147	                targets.append((checked.outcomes[link][1], second_pass.get((e['id'], checked.outcomes[link][1]), ('新证据', None, ''))))
+   148	            elif link in checked.outcomes:
+   149	                continue   # a candidate that was not opened: evidence only on it is not stored
+   150	            elif (e['id'], link) in checked.evidence:
+   151	                targets.append((link, checked.evidence[(e['id'], link)]))
+   152	            elif (e['id'], link) in second_pass:
+   153	                targets.append((link, second_pass[(e['id'], link)]))
+   154	        return targets
+   155	
+   156	    for e in handover.evidence:
+   157	        targets = destinations(e)
+   158	        if not targets:
+   159	            notes.append(f'evidence {e["id"]} linked to nothing kept; not stored')
+   160	            continue
+   161	        # one piece is stored once however many views it goes to (06-views: 一条证据连几条观点，也只存一条); a repeat
+   162	        # under any destination means the piece already exists and is linked on, a replacement under any
+   163	        # destination replaces there and links everywhere, a late older statement is logged and linked nowhere
+   164	        repeat_of = next((target for _, (outcome, target, _) in targets if outcome == '重复' and target), None)
+   165	        replacing = [(target, said_day) for _, (outcome, target, said_day) in targets if outcome == '替代' and target]
+   166	        if repeat_of:
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'reader|Handover|call_id|request_sha256|cost_usd|mode|def process|def main' /Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py
+rg -n 'class Handover|evidence_ids|def sift|links|def validate' /Users/lchingen/hivemind/src/hivemind/extraction.py
+rg --files /Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+20:from hivemind import config, dispatch, extraction, model, universe
+39:    """A completed model answer did not meet the registered contract; do not resample."""
+67:    errors = model.check_schema(raw, schema(offered))
+113:def process(conn, archive, cfg, uni, item, grouped, directory, transport, *, role_text=None):
+123:    answer = model.call(archive, cfg, cfg.extraction_setting(item['category']), system, user,
+131:    handover = extraction.Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, False, answer.cost_usd)
+192:        price_in, price_out = model.PRICES[request['model']]
+208:                url, _ = model.ENDPOINTS[provider]
+209:                headers = {'Authorization': f'Bearer {model._key(provider)}', 'Content-Type': 'application/json'}
+244:    with sqlite3.connect(f'file:{ITEMS_DB}?mode=ro', uri=True) as conn:
+314:            archive = model.Archive(str(folder / 'calls.sqlite'))
+340:            except (Refused, model.SchemaError) as error:
+357:def main():
+22:            'required': ['id', 'quote', 'one_line', 'speaker', 'original_who', 'original_day', 'tier', 'event_time', 'links'],
+26:                'event_time': {'type': 'string'}, 'links': {'type': 'array', 'items': {'type': 'string'}}}}},
+29:            'required': ['id', 'object', 'kind', 'looks_at', 'question', 'rungs', 'due_day', 'year', 'evidence_ids'],
+36:                'year': {'type': 'string'}, 'evidence_ids': {'type': 'array', 'items': {'type': 'string'}}}}},
+69:class Handover:
+128:    parts.append('按 JSON schema 交出 evidence 和 candidates。候选观点的 evidence_ids 填它自己的证据编号；证据的 links 填已有观点编号或这次候选观点的编号（如 c1）。没有可抽的就都交空数组。')
+184:def sift(data, item, text, shown_ids, universe=None):
+186:    the text, links to shown views or kept candidates, one piece per sentence. Returns (evidence, candidates,
+243:        links = [l for l in e['links'] if l in shown_ids or l in candidate_ids]
+244:        if not links:
+245:            dropped.append((e['id'], f'links to nothing shown: {e["links"]}'))
+247:        if quote in by_quote:            # the same sentence read out twice is one piece with both links
+249:            first['links'].extend(l for l in links if l not in first['links'])
+253:        e = dict(e, links=links)
+259:        ids = list(dict.fromkeys(alias.get(i, i) for i in c['evidence_ids'] if alias.get(i, i) in kept_ids))
+263:        final_candidates.append(dict(c, evidence_ids=ids))
+265:        e['links'] = [l for l in e['links'] if l in shown_ids or any(c['id'] == l for c in final_candidates)]
+266:    evidence = [e for e in evidence if e['links']]
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/review-followup-prompt.txt
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/preflight.txt
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/review.log
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/relation-census.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/review-followup.log
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/review-prompt.txt
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/health.json
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/read-source.txt
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/organise-source.txt
+/Users/lchingen/hivemind/poc/reports/2026-10-25-source-first-01/review.txt
+
+codex
+The updated contract addresses both reported cases: it derives candidate evidence from the links, and ties an empty result to the first call. I’m checking that the existing readers and failure paths agree with those rules.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py | sed -n '35,181p'
+nl -ba /Users/lchingen/hivemind/poc/hierarchy_study/ohio_sequence.py | sed -n '265,373p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/src/hivemind/extraction.py | sed -n '65,83p'
+nl -ba /Users/lchingen/hivemind/src/hivemind/extraction.py | sed -n '184,273p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    35	          'threads', 'thread_members')
+    36	
+    37	
+    38	class Refused(ValueError):
+    39	    """A completed model answer did not meet the registered contract; do not resample."""
+    40	
+    41	
+    42	def write(path, value):
+    43	    study.write_json(Path(path), value)
+    44	
+    45	
+    46	def read(path):
+    47	    return json.loads(Path(path).read_text())
+    48	
+    49	
+    50	def digest(path):
+    51	    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    52	
+    53	
+    54	def schema(offered):
+    55	    result = extraction.keyed_schema()
+    56	    result['required'].append('threads')
+    57	    result['properties']['threads'] = {'type': 'array', 'items': copy.deepcopy(groups.THREAD_SCHEMA)}
+    58	    candidate = result['properties']['candidates']['items']
+    59	    candidate['required'].append('thread_ids')
+    60	    reference_pattern = r'^(?:t[1-9][0-9]*' + ''.join('|' + re.escape(g['thread_id']) for g in offered) + ')$'
+    61	    candidate['properties']['thread_ids'] = {'type': 'array', 'minItems': 1,
+    62	                                             'items': {'type': 'string', 'pattern': reference_pattern}}
+    63	    return result
+    64	
+    65	
+    66	def validate_references(raw, offered):
+    67	    errors = model.check_schema(raw, schema(offered))
+    68	    if errors:
+    69	        raise Refused('; '.join(errors))
+    70	    ids = [g['id'] for g in raw['threads']]
+    71	    candidate_ids = [c['id'] for c in raw['candidates']]
+    72	    if len(candidate_ids) != len(set(candidate_ids)):
+    73	        raise Refused('ambiguous candidate IDs')
+    74	    if len(ids) != len(set(ids)) or any(re.fullmatch(r't[1-9][0-9]*', ident) is None for ident in ids):
+    75	        raise Refused('new groups need unique local t IDs')
+    76	    if any(not g['name'].strip() or not g['scope'].strip() for g in raw['threads']):
+    77	        raise Refused('group name and scope must be nonempty')
+    78	    allowed = set(ids) | {g['thread_id'] for g in offered}
+    79	    for c in raw['candidates']:
+    80	        refs = c['thread_ids']
+    81	        if not refs or len(refs) != len(set(refs)) or set(refs) - allowed:
+    82	            raise Refused(f'{c["id"]}: invalid group references')
+    83	
+    84	
+    85	def context(conn, item, uni, grouped, *, role_text=None):
+    86	    shown = store.views_for_prompt(conn, [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])])
+    87	    offered = []
+    88	    if grouped:
+    89	        for row in conn.execute('select * from threads order by rowid'):
+    90	            group = dict(row)
+    91	            group['members'] = [r[0] for r in conn.execute(
+    92	                'select view_id from thread_members where thread_id=? order by rowid', (row['thread_id'],))]
+    93	            offered.append(group)
+    94	        member_ids = {v for g in offered for v in g['members']}
+    95	        shown_ids = {v['view_id'] for v in shown}
+    96	        for vid in sorted(member_ids - shown_ids):
+    97	            shown.append(dict(store.view(conn, vid), depends_on=[]))
+    98	    system, user = extraction.build_prompt(item, item['text'], shown, uni, 'v5')
+    99	    if role_text is not None:
+   100	        system = role_text
+   101	    if grouped:
+   102	        system += '\n\n' + GROUP_PROMPT
+   103	        user += '\n\n【可用研究主线】\n' + json.dumps(offered, ensure_ascii=False)
+   104	    return system, user, shown, offered
+   105	
+   106	
+   107	def snapshot(conn, seq):
+   108	    result = {table: [dict(r) for r in conn.execute(f'select * from {table} order by rowid')] for table in TABLES}
+   109	    result['details'] = [groups.thread_detail(conn, r['thread_id'], seq) for r in result['threads']]
+   110	    return result
+   111	
+   112	
+   113	def process(conn, archive, cfg, uni, item, grouped, directory, transport, *, role_text=None):
+   114	    """One dispatch, extract, match and atomic write; no hidden repair call."""
+   115	    route = dispatch.route(conn, item, uni)
+   116	    if route.kind != 'extract':
+   117	        return {'route': route.kind, 'input_id': item['input_id']}
+   118	    if route.resume_from:
+   119	        raise Refused('This measurement does not resume unfinished sequences')
+   120	    seq = route.sequence_no
+   121	    system, user, shown, offered = context(conn, item, uni, grouped, role_text=role_text)
+   122	    write(directory / 'context.json', {'shown': shown, 'offered': offered, 'before': snapshot(conn, seq - 1)})
+   123	    answer = model.call(archive, cfg, cfg.extraction_setting(item['category']), system, user,
+   124	                        schema(offered) if grouped else extraction.keyed_schema(), 'extraction', 'extract', transport=transport)
+   125	    if answer.cached:
+   126	        raise Refused('Fresh sample unexpectedly used a cached answer')
+   127	    write(directory / 'extraction.json', answer.data)
+   128	    if grouped:
+   129	        validate_references(answer.data, offered)
+   130	    evidence, candidates, dropped = extraction.sift(answer.data, item, item['text'], {v['view_id'] for v in shown}, uni)
+   131	    handover = extraction.Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, False, answer.cost_usd)
+   132	    write(directory / 'handover.json', dataclasses.asdict(handover))
+   133	
+   134	    def match(name, handover, lists, shown, extra_views=()):
+   135	        result = matching.decide(archive, cfg, conn, item, handover.candidates, handover.evidence, lists, shown,
+   136	                                 extra_views=extra_views, transport=transport)
+   137	        if result.cached:
+   138	            raise Refused('Fresh matching sample unexpectedly used cache')
+   139	        checked = matching.check(conn, uni, result.data, handover.candidates, handover.evidence, lists, shown)
+   140	        write(directory / f'{name}.json', {'answer': result.data, 'outcomes': checked.outcomes,
+   141	              'evidence': [[*key, *value] for key, value in checked.evidence.items()],
+   142	              'refusals': checked.refusals, 'not_opened': checked.not_opened, 'notes': checked.notes})
+   143	        if checked.refusals:
+   144	            conn.rollback()
+   145	            raise Refused('; '.join(checked.refusals))
+   146	        return checked
+   147	
+   148	    checked = matching.Checked({}, {}, [], {})
+   149	    second = {}
+   150	    if evidence or candidates:
+   151	        checked = match('matching', handover, matching.build_lists(conn, handover, shown, cfg.search_top_n), shown)
+   152	        pending = [(e, checked.outcomes[link][1]) for e in evidence for link in e['links']
+   153	                   if link in checked.outcomes and checked.outcomes[link][0] == matching.OUTCOMES[0]]
+   154	        if pending:
+   155	            mapped = {e['id']: dict(e, links=list(dict.fromkeys(v for x, v in pending if x['id'] == e['id']))) for e, _ in pending}
+   156	            second_handover = dataclasses.replace(handover, candidates=[], evidence=list(mapped.values()))
+   157	            lists = matching.Lists({}, {(e['id'], vid): matching.rank_evidence(conn, vid, e['one_line'], cfg.search_top_n) for e, vid in pending})
+   158	            second = match('matching-evidence', second_handover, lists, [], sorted({vid for _, vid in pending})).evidence
+   159	    # The group write is in the SAME outer transaction as the current product writer.
+   160	    try:
+   161	        with conn:
+   162	            written = writing.write(conn, uni, seq, item, handover, checked, second)
+   163	            bindings, affected = [], []
+   164	            if grouped:
+   165	                used = {ref for c in candidates for ref in c['thread_ids']}
+   166	                definitions = [g for g in answer.data['threads'] if g['id'] in used]
+   167	                bindings, affected = groups.write_threads(conn, definitions, {ref: ref for ref in used}, handover, checked, written, seq, item)
+   168	            store.insert(conn, 'handovers', input_id=item['input_id'], seq=seq, handover_json=json.dumps(dataclasses.asdict(handover), ensure_ascii=False))
+   169	            dispatch.mark(conn, item, seq, 'written', 'ok', json.dumps({'new': written.new_views, 'changed': sorted(written.changed_views)}))
+   170	            dispatch.mark(conn, item, seq, 'handed_over', 'ok', '')
+   171	    except Exception:
+   172	        conn.rollback()
+   173	        raise
+   174	    result = {'route': 'written', 'input_id': item['input_id'], 'seq': seq, 'new_views': written.new_views,
+   175	              'evidence_ids': written.evidence_ids, 'bindings': bindings, 'affected_threads': affected,
+   176	              'notes': written.notes, 'snapshot': snapshot(conn, seq)}
+   177	    write(directory / 'result.json', result)
+   178	    return result
+   179	
+   180	
+   181	class BoundedTransport:
+   265	    if role_path is not None:
+   266	        role_path = Path(role_path).resolve()
+   267	        if not role_path.read_text().strip():
+   268	            raise ValueError('Experiment role must not be empty')
+   269	        paths += [role_path, ROOT / 'docs/research/2026-10-25-ohio-root-cause.md']
+   270	    if control_role_path is not None:
+   271	        control_role_path = Path(control_role_path).resolve()
+   272	        if not control_role_path.read_text().strip():
+   273	            raise ValueError('Control role must not be empty')
+   274	        paths.append(control_role_path)
+   275	    if design_path is not None:
+   276	        design_path = Path(design_path).resolve()
+   277	        if not design_path.is_file():
+   278	            raise ValueError('Registered design must exist')
+   279	        paths.append(design_path)
+   280	    write(out / 'manifest.json', {'version': 'ohio-sequence-v1', 'labels': LABELS, 'max_requests': max_requests,
+   281	          'item_ids': item_ids, 'design_path': str(design_path) if design_path else None,
+   282	          'role_path': str(role_path) if role_path else None,
+   283	          'control_role_path': str(control_role_path) if control_role_path else None,
+   284	          'max_usd': MAX_USD, 'max_seconds': MAX_SECONDS, 'dependencies': {str(p.resolve()): digest(p) for p in paths if p.is_file()}})
+   285	    write(out / 'budget.json', {'attempts': [], 'reserved_or_spent': 0})
+   286	
+   287	
+   288	def verify(out):
+   289	    for path, sha in read(out / 'manifest.json')['dependencies'].items():
+   290	        if digest(path) != sha:
+   291	            raise ValueError(f'Frozen input/code changed: {path}')
+   292	
+   293	
+   294	def run(out):
+   295	    with (out / 'run.lock').open('a') as lock:
+   296	        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+   297	        verify(out)
+   298	        if read(out / 'budget.json')['attempts'] or any((out / label).exists() for label in LABELS):
+   299	            raise ValueError('Measurement already started; no automatic resume')
+   300	        items = read(out / 'items.json')
+   301	        role_path = read(out / 'manifest.json').get('role_path')
+   302	        role_text = Path(role_path).read_text() if role_path else None
+   303	        control_role_path = read(out / 'manifest.json').get('control_role_path')
+   304	        control_role_text = Path(control_role_path).read_text() if control_role_path else None
+   305	        uni, cfg = universe.load(out / 'universe.json'), config.load(out / 'config.json')
+   306	        deadline = time.monotonic() + MAX_SECONDS
+   307	        statuses = {label: 'not_started' for label in LABELS}
+   308	        write(out / 'status.json', statuses)
+   309	        for label in LABELS:
+   310	            verify(out)
+   311	            folder = out / label
+   312	            folder.mkdir()
+   313	            conn = groups.open_db(folder / 'views.sqlite')
+   314	            archive = model.Archive(str(folder / 'calls.sqlite'))
+   315	            # A role experiment compares two grouped streams; D157's default keeps its original arms.
+   316	            grouped = role_text is not None or label.startswith('grouped')
+   317	            sample_role = role_text if label.startswith('grouped') else control_role_text
+   318	            if grouped:
+   319	                for g in read(out / 'reference-groups.json'):
+   320	                    conn.execute('insert into threads values (?,?,?,?,?)', tuple(g[k] for k in ('thread_id', 'name', 'scope', 'seq', 'input_id')))
+   321	                conn.commit()
+   322	            transport = BoundedTransport(out, label, deadline)
+   323	            try:
+   324	                first = None
+   325	                for index, item in enumerate(items, 1):
+   326	                    directory = folder / f'item{index}'
+   327	                    directory.mkdir()
+   328	                    result = process(conn, archive, cfg, uni, item, grouped, directory, transport, role_text=sample_role)
+   329	                    if result['route'] != 'written':
+   330	                        raise Refused(f'Expected extract route, got {result["route"]}')
+   331	                    if index == 1:
+   332	                        first = result
+   333	                historical = [groups.thread_detail(conn, g['thread_id'], first['seq']) for g in first['snapshot']['threads']]
+   334	                if historical != first['snapshot']['details']:
+   335	                    raise AssertionError('First article history changed')
+   336	                if any(dispatch.route(conn, item, uni).kind != 'skipped' for item in items):
+   337	                    raise AssertionError('Completed input not skipped on resend')
+   338	                write(folder / 'checks.json', {'history_unchanged': True, 'resend_skipped': True, 'semantic_status': 'pending'})
+   339	                statuses[label] = 'complete'
+   340	            except (Refused, model.SchemaError) as error:
+   341	                statuses[label] = 'refused'
+   342	                write(folder / 'failed.json', {'kind': type(error).__name__, 'reason': str(error)[:1000]})
+   343	            except Exception as error:
+   344	                statuses[label] = 'failed'
+   345	                write(folder / 'failed.json', {'kind': type(error).__name__, 'reason': str(error)[:1000]})
+   346	                write(out / 'status.json', statuses)
+   347	                raise
+   348	            finally:
+   349	                conn.rollback()
+   350	                conn.close()
+   351	                archive.conn.close()
+   352	            verify(out)
+   353	            write(out / 'status.json', statuses)
+   354	        print(json.dumps(statuses), flush=True)
+   355	
+   356	
+   357	def main():
+   358	    parser = argparse.ArgumentParser(description=__doc__)
+   359	    parser.add_argument('command', choices=('prepare', 'run'))
+   360	    parser.add_argument('--out', type=Path, default=DEFAULT_OUT)
+   361	    parser.add_argument('--role-path', type=Path, help='Prepare two grouped arms; only the grouped arm uses this role')
+   362	    parser.add_argument('--control-role-path', type=Path, help='Explicit control role for a two-role comparison')
+   363	    parser.add_argument('--item-id', action='append', help='Prepare with these stored inputs, in stream order')
+   364	    parser.add_argument('--max-requests', type=int, default=MAX_REQUESTS, help='Registered attempt limit; dollar cap is unchanged')
+   365	    parser.add_argument('--design-path', type=Path, help='Freeze the registered design with the experiment')
+   366	    args = parser.parse_args()
+   367	    out = args.out.resolve()
+   368	    if args.command == 'prepare':
+   369	        prepare(out, role_path=args.role_path, control_role_path=args.control_role_path,
+   370	                item_ids=args.item_id, max_requests=args.max_requests, design_path=args.design_path)
+   371	    else:
+   372	        if (args.role_path is not None or args.control_role_path is not None or args.item_id is not None
+   373	                or args.design_path is not None or args.max_requests != MAX_REQUESTS):
+
+ succeeded in 0ms:
+    65	    return keyed_schema() if version and int(version.lstrip('v') or 0) >= 4 else SCHEMA
+    66	
+    67	
+    68	@dataclasses.dataclass
+    69	class Handover:
+    70	    evidence: list
+    71	    candidates: list
+    72	    dropped: list
+    73	    call_id: int
+    74	    request_sha256: str
+    75	    cached: bool
+    76	    cost_usd: float
+    77	
+    78	
+    79	SELF_PUBLISHER_TYPE = 'self'      # the owner's own memo (02-classification T8, D59): its judgements are candidates without evidence
+    80	
+    81	
+    82	def _read(name):
+    83	    with open(config.prompt_path(name), encoding='utf-8') as handle:
+   184	def sift(data, item, text, shown_ids, universe=None):
+   185	    """05-extraction step 3, the code checks on one answer: ladders, the quarter and year rules, due days, quotes in
+   186	    the text, links to shown views or kept candidates, one piece per sentence. Returns (evidence, candidates,
+   187	    dropped); the preflight runs it over every stored answer."""
+   188	    body = normalise(text)
+   189	    dropped = []
+   190	    candidates = []
+   191	    candidate_ids = set()
+   192	    for c in data.get('candidates', []):
+   193	        problem = check_ladder(c['rungs'], c['kind'])
+   194	        if problem:
+   195	            dropped.append((c['id'], f'candidate ladder: {problem}'))
+   196	            continue
+   197	        c = dict(c, rungs=normalise_ladder(c['rungs'], c['kind']))
+   198	        if QUARTERLY.search(c['looks_at'] + ' ' + c['question']) and c['kind'] == '对象观点':
+   199	            dropped.append((c['id'], 'quarterly number: evidence, not a view (06-views ladder rule 6)'))
+   200	            continue
+   201	        year_match = re.search(r'(\d{4})', c['year'] or '')
+   202	        if c.get('measure') not in ('event', 'policy_event') and year_match and int(year_match.group(1)) > int(item['publication_day'][:4]) + 1:
+   203	            dropped.append((c['id'], f'year {c["year"]} is beyond next year: not opened (06-views 不开)'))
+   204	            continue
+   205	        if not re.match(r'\d{4}-\d{2}-\d{2}$', c['due_day']):
+   206	            dropped.append((c['id'], f'due_day not a date: {c["due_day"]!r}'))
+   207	            continue
+   208	        if c['due_day'] <= item['publication_day']:
+   209	            dropped.append((c['id'], f'due_day {c["due_day"]} not after the item'))
+   210	            continue
+   211	        if c.get('measure'):          # keyed candidates keep their actual scope; reference lists do not gate admission (D155)
+   212	            problem = check_bounds(c['rungs'])
+   213	            if problem:
+   214	                dropped.append((c['id'], f'candidate ladder bounds: {problem}'))
+   215	                continue
+   216	            if universe is not None:
+   217	                object_id = universe.resolve(c['object']) or c['object']
+   218	                scope, source = universe.scope_and_source(object_id, c['measure'], c.get('scope', ''), c.get('event_type', 'n/a'))
+   219	                c = dict(c, object=object_id, scope=scope, scope_source=source, key_version=2)
+   220	                if c['measure'] not in ('event', 'policy_event'):
+   221	                    period = universe.fiscal_period(object_id, c.get('year', ''))                                                        # and the period of a yearly number
+   222	                    if period:
+   223	                        c = dict(c, period_start=period[0], period_end=period[1])
+   224	            try:
+   225	                start = datetime.date.fromisoformat(c['period_start'])
+   226	                end = datetime.date.fromisoformat(c['period_end'])
+   227	                if start > end:
+   228	                    raise ValueError('start after end')
+   229	            except (KeyError, ValueError):
+   230	                dropped.append((c['id'], 'invalid period: expected real dates with start <= end'))
+   231	                continue
+   232	        candidates.append(c)
+   233	        candidate_ids.add(c['id'])
+   234	    evidence = []
+   235	    kept_ids = set()
+   236	    by_quote = {}
+   237	    alias = {}
+   238	    for e in data.get('evidence', []):
+   239	        quote = normalise(e['quote'])
+   240	        if len(quote) < 8 or quote not in body:
+   241	            dropped.append((e['id'], 'quote not in item'))
+   242	            continue
+   243	        links = [l for l in e['links'] if l in shown_ids or l in candidate_ids]
+   244	        if not links:
+   245	            dropped.append((e['id'], f'links to nothing shown: {e["links"]}'))
+   246	            continue
+   247	        if quote in by_quote:            # the same sentence read out twice is one piece with both links
+   248	            first = by_quote[quote]
+   249	            first['links'].extend(l for l in links if l not in first['links'])
+   250	            alias[e['id']] = first['id']
+   251	            dropped.append((e['id'], f'same quote as {first["id"]}; merged'))
+   252	            continue
+   253	        e = dict(e, links=links)
+   254	        by_quote[quote] = e
+   255	        evidence.append(e)
+   256	        kept_ids.add(e['id'])
+   257	    final_candidates = []
+   258	    for c in candidates:
+   259	        ids = list(dict.fromkeys(alias.get(i, i) for i in c['evidence_ids'] if alias.get(i, i) in kept_ids))
+   260	        if not ids and item.get('publisher_type') != SELF_PUBLISHER_TYPE:
+   261	            dropped.append((c['id'], 'candidate without surviving evidence'))
+   262	            continue
+   263	        final_candidates.append(dict(c, evidence_ids=ids))
+   264	    for e in evidence:
+   265	        e['links'] = [l for l in e['links'] if l in shown_ids or any(c['id'] == l for c in final_candidates)]
+   266	    evidence = [e for e in evidence if e['links']]
+   267	    return evidence, final_candidates, dropped
+
+codex
+No serious findings remain within the two-item scope.
+
+- `dispositions.links` alone determines candidate evidence; the organiser prompt and relevant table rows agree.
+- Empty results bind the first call’s actual ID, hash and cost, with organiser provenance `null`.
+- Registered two-step runs through the wrong entry point refuse before any call.
+
+Read-only contract review; no edits, tests or model calls.
+tokens used
+50,883
+No serious findings remain within the two-item scope.
+
+- `dispositions.links` alone determines candidate evidence; the organiser prompt and relevant table rows agree.
+- Empty results bind the first call’s actual ID, hash and cost, with organiser provenance `null`.
+- Registered two-step runs through the wrong entry point refuse before any call.
+
+Read-only contract review; no edits, tests or model calls.

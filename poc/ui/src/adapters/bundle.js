@@ -1,20 +1,27 @@
 import { ContractError, parseDataset } from '../model/contract.js';
 
+// The canonical English ledger values (D163) and the legacy spellings of earlier ledgers and exports.
 const KINDS = {
+  asset: 'Company thesis',
   'Company view': 'Company thesis',
   'Company thesis': 'Company thesis',
   对象观点: 'Company thesis',
+  theme: 'Theme thesis',
   'Theme view': 'Theme thesis',
   'Theme thesis': 'Theme thesis',
   主题观点: 'Theme thesis',
 };
 const TIERS = {
+  fact: 'Fact',
   Fact: 'Fact',
   发生的事: 'Fact',
+  party_statement: 'Party statement',
   'Party statement': 'Party statement',
   当事人说的: 'Party statement',
+  third_party_view: 'Third-party view',
   'Third-party view': 'Third-party view',
   第三方看法: 'Third-party view',
+  rumour: 'Rumour',
   Rumour: 'Rumour',
   传闻: 'Rumour',
 };
@@ -25,13 +32,22 @@ function magnitude(condition) {
       Number(m[1].replaceAll(',', '')) * (m[2] === '万亿' ? 10000 : m[2] === '千亿' ? 1000 : 1),
   );
 }
+// A rung's representative amount: its numeric bounds when the ledger carries them (every English-library rung does),
+// else the magnitudes written in its condition (legacy ledgers; condition_zh is the untranslated text).
+function representative(rung) {
+  const lo = typeof rung.lo === 'number' ? rung.lo : null;
+  const hi = typeof rung.hi === 'number' ? rung.hi : null;
+  if (lo !== null || hi !== null)
+    return lo !== null && hi !== null ? (lo + hi) / 2 : lo !== null ? lo : hi;
+  const values = magnitude(rung.condition_zh || rung.condition);
+  return values.length ? values.reduce((sum, n) => sum + n, 0) / values.length : NaN;
+}
 function legacyScores(view) {
   if (view.rungs.every((r) => r.score)) return view.rungs.map((r) => r.score);
   if (view.rungs.length === 2) return ['Yes', 'No'];
   if (KINDS[view.kind] === 'Theme thesis') {
-    const mean = (values) => values.reduce((sum, n) => sum + n, 0) / values.length;
-    const first = mean(magnitude(view.rungs[0].condition_zh || view.rungs[0].condition));
-    const last = mean(magnitude(view.rungs.at(-1).condition_zh || view.rungs.at(-1).condition));
+    const first = representative(view.rungs[0]);
+    const last = representative(view.rungs.at(-1));
     if (last > first) return [...ORDINAL].reverse();
   }
   return ORDINAL;
@@ -82,6 +98,8 @@ export function fromBundles(input, options = {}) {
         label: r.label,
         condition: r.condition,
         ...(r.condition_zh ? { condition_zh: r.condition_zh } : {}),
+        ...(typeof r.lo === 'number' ? { lo: r.lo } : {}),
+        ...(typeof r.hi === 'number' ? { hi: r.hi } : {}),
       })),
       judgements: v.judgements
         .map((j, i) => ({

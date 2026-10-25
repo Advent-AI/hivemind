@@ -1,196 +1,190 @@
-# 抽取
+# Extraction
 
-> 状态：第一版已冻结 · 2026-10-18（没定的：每一类提示词的具体写法） · D149 补入抽取时归组要求，尚未接入默认管线 · 更新：2026-10-25 · 依据：docs/DECISIONS.md D11、D13、D25–D28、D32、D33、D35–D37、D41、D42、D45–D47、D51–D54、D58–D60、D149
-> 设计页：docs/system-design.html › New › 抽取 › 展开。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+> Status: foundation frozen, October 18, 2026; category prompt wording needs validation. D149 requires extraction-time grouping; D165 integrates it into the default pipeline (poc-v20), with a company's own financial lines carrying no group. English edition: October 25, 2026 (D163).
+> Design page: `docs/system-design.html` → New → Extraction → Details. Recorded decisions take precedence over this PRD.
 
-## 一句话
+## Purpose
 
-抽取只做一件事：每条信息整份交给模型，用资深对冲基金分析师的视角、按这一类的提示词读完，交出两样东西：证据，连到这些对象已有的观点上（或这次的候选观点上）；候选观点，已有观点管不到、又要紧的事（你自己的备忘录另有说明，见提示词那一节）。每个候选观点同时带结构化研究归属，必要时声明新的研究主线。每条带出处，一起交给观点库。完整归组规矩见 [观点库](06-views.md#研究主线抽取时归组)。
+Read each whole item with its category prompt as a senior hedge-fund analyst. Return evidence linked to shown or candidate theses, and candidates for important uncovered questions. Each candidate also carries structured group associations and any necessary new group definitions. Every output retains its source. Hand everything to the library, which owns the [grouping contract](06-views.md#research-groups-associate-during-extraction). Personal memos follow the prompt rule below.
 
-## 为什么这样设计
+## Rationale
 
-- 系统做的事是在观点库里建观点、更新观点、关掉观点，抽取就是把每条信息读成证据和带研究归属的候选观点。怎么和库里已有的比、写进库，是观点库的事，不在这里。
-- 推进来的每条信息都整份交给模型读：文件连同里面的表格一起读，表格数据一次发布整批读，不按文字、表格分开处理。
-- 不同类别该读的东西不同：新闻读发生了什么、说法从哪来；研报读作者的看法和评级；政府决定读决定本身和生效时间。所以每个类别一份提示词，都用同一个提示词模板拼出来。
-- 观点库里的观点是模型（分析师）的判断：一个问题、一把梯子和一个到期日；谁在哪条信息里说了什么，是客观的证据。多数信息只带来已有观点的证据，少数才提出一条新的候选观点。
-- 证据要连在观点上才算证据：一句话算不算证据，只能对着一个问题来判断。所以提示词第 5 块给模型这些对象已有的观点，读的时候就把证据连上去（Alex：“evidence 怎么在抽取的时候不挂钩 thesis？这怎么可能。”）。已有的观点里也放上它们依赖的观点，因为一条公司的信息常常带着主题上的事：NVDA 的声明说美国保证会批许可证，这句话该连到“出口许可”那条主题观点上。
-- 已有观点管不到的要紧事（正文点名的另一家公司、这个对象一个新的关键问题、宏观或政策上一件要紧的事），写成候选观点，带上提出它的证据；你自己的备忘录照提示词说明处理；是已有的哪一条还是新观点，由观点库比对时定。
-- 每条观点和证据都带出处，以后能快速回到原文去查、去推理。
+- Extraction reads; the library compares and stores. Those responsibilities remain separate.
+- Read the complete file with embedded tables, or an entire table release, without separate text/table pipelines.
+- Categories require different reading: news for events and attribution, research for views and ratings, official decisions for actions and effective dates. They share one prompt structure.
+- A thesis is the analyst's judgement expressed as a question, ladder and due date. Evidence is an objective record of who said what in which item. Most items add evidence; fewer create new questions.
+- Evidence matters in relation to a question. Block 5 supplies existing subject theses and their dependencies, allowing a company statement about assured export licences to link directly to the licence theme.
+- Important uncovered matters, including another named company, a new material issue or a macro/policy event, become candidates with initiating evidence. The library later determines whether they are existing or new questions.
+- Sources make both theses and evidence traceable to the original text.
 
-## 一条信息，一步一步
+## One item, step by step
 
-模型只做第 2 步，其余是代码。
+The model performs step 2; code performs the others.
 
 <!-- generated: steps -->
 ```
-一条信息进来（带类别和顺序号）
-  ↓ 1 拼提示词（代码）：按这条信息的类别，用同一个提示词模板拼出这一类的提示词；第 5 块由观点库给：相关对象开着的观点、它们依赖的观点，以及归组所需的已有主线
-  ↓ 2 读（模型）：整份读完，交出两样：证据，连到第 5 块里的观点上，或连到这次的候选观点上；候选观点，第 5 块里没有一条观点管、又要紧的事，带上提出它的证据；你自己的备忘录照提示词说明处理。每个候选观点同时确定研究归属，按观点库的归组规矩交出引用；每条带出处
-  ↓ 3 核对出处与归属引用（代码）：引用的原文（那一句，或表里那个单元格）在不在这条信息里、数字在不在引用的地方；证据连的必须是第 5 块里的观点或这次的候选观点；出处对不上的不要，记下原因；归属引用按观点库的完整交接规矩检查
-  ↓ 4 交给观点库（代码）：证据、候选观点连同归属和必要的新主线定义，带着顺序号一起交给观点库；比对定观点身份，写入保留归属
+An item arrives with category and sequence number
+  ↓ 1 Build the prompt (Code): Use the category's content in the shared template. The library supplies block 5: open subject theses, their dependencies and existing groups needed for association.
+  ↓ 2 Read (Model): Read the whole item. Return evidence linked to block-5 theses or current candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources.
+  ↓ 3 Check sources and group references (Code): Check that the quote or cell exists in the item and that cited numbers appear there. Evidence must link to block-5 theses or current candidates. Reject source mismatches with reasons. Validate association references under the library's complete handoff contract.
+  ↓ 4 Hand off to the library (Code): Hand off evidence, candidates, associations and necessary group definitions with the sequence number. Matching decides identity; writing preserves membership.
 ```
 <!-- /generated: steps -->
 
-## 读出两样东西：证据和候选观点
+## Two outputs: evidence and candidates
 
-一遍读完，交出证据和候选观点；候选观点的研究归属与必要的新主线定义随同交出。证据几乎每条信息都有，连到已有观点上，也可以连到这次的候选观点上；候选观点很少，只给已有观点管不到的要紧事（你自己的备忘录照提示词说明处理）。到了观点库，候选观点先和搜出来的几条已有观点比；它带的证据等它的去向定了，再和那条观点下已有的证据比，见 06-views.md。
+One reading returns evidence, candidates, group associations and necessary new group definitions. Evidence may link to shown theses or current candidates. Candidates are reserved for important uncovered questions, subject to the personal-memo rule. The library first resolves a candidate's destination, then compares its evidence within that thesis.
 
 <!-- generated: two -->
-|  | 证据 | 候选观点 |
+|  | Evidence | Candidate thesis |
 |---|---|---|
-| 是什么 | 信息里的一句话或一个数：谁说了什么、发生了什么 | 一个要盯的问题，当场写全：讲的是谁、问题、梯子、到期日和研究归属 |
-| 多不多 | 几乎每条信息都有 | 少：第 5 块里没有一条观点管、又要紧的事；你自己的备忘录里的判断都算 |
-| 连到哪 | 第 5 块里的观点（可以连几条），或者这次的候选观点 | 带着提出它的证据（你自己的备忘录读出的可以没有） |
-| 到了观点库 | 和它那条观点下已有的证据比：重复、替代还是新证据 | 先定是哪一条（或它的一部分）、接续、新观点，还是不开；归属随最终观点保存，不再由比对重判 |
-| 例子 | 8-K 里的“H20 出口中国要许可证” | 2025-04 那条规定管的这一档芯片对华出口许可，到 2026-04-15 处在哪一格？ |
+| What it is | A statement or number from the item: who said what or what happened | A complete question to track: subject, question, ladder, due date and research-group association |
+| How common | Present in almost every item | Few: important questions uncovered by block 5; also all judgements from the user's memo |
+| Links | One or more block-5 theses, or current candidates | Carries initiating evidence; candidates from the user's memo may omit it |
+| In the library | Compare against its thesis's existing evidence: repeat, replacement or new | Decide existing identity or a part of it, succession, new thesis or skip. Preserve associations with the final thesis; matching does not regroup. |
+| Example | The 8-K statement that H20 exports to China require a licence | What will the China export-licence regime for chips covered by the April 2025 rule be on April 15, 2026? |
 
 ```
-读到一句话或一个数｜它和哪条观点有关？（你自己的备忘录里的判断不走这棵树：都写成候选观点，可以不带证据）
-├─ 第 5 块里的观点 → 证据：连到那条观点上（连在它直接讲的那条上；另一条依赖那条的，不再连给它）
-├─ 第 5 块里没有，但要紧 → 候选观点：这句话是它的证据（先在抽取时交研究归属；是已有的哪一条，还是新观点，由观点库比对时定；一条观点只管到它的到期日，到期以后才发生的事也算这里）
-└─ 都没关系 → 不抽（背景、套话）
+Read a statement or number | Which thesis does it concern? (Judgements in the user's memo bypass this tree: all become candidates and may lack evidence)
+├─ A thesis in block 5 → Evidence: link to that thesis (Link only to the thesis directly discussed, not also to theses that depend on it)
+├─ Not in block 5, but important → Candidate thesis with this statement as evidence (Return its group association during extraction. The library later decides existing identity or new thesis. A thesis covers only up to its due date; events after that date belong here too.)
+└─ Neither → Do not extract (Background or boilerplate)
 ```
 <!-- /generated: two -->
 
-## 提示词模板
+## Prompt template
 
-所有类别用同一个提示词模板，由这五块拼成这一类的提示词；这一类的读法取自分类规则，不另写。
+All categories use these five blocks. Classification owns the category's definition and reading method.
 
 <!-- generated: template -->
-| 部分 | 写什么 | 从哪来 |
+| Part | Writes | Source |
 |---|---|---|
-| 角色 | 你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点上；已有观点管不到、又要紧的事，写成候选观点，当场写全：问题、梯子、到期日和研究归属，带上提出它的证据。你自己的备忘录里的判断，都交成候选观点，可以不带证据，不当作证据。写观点的规矩：一个观点只看一件东西；梯子五格（只有是或否的问题两格），每格是一个能核对的结果，格和格不重叠、不留空，没有含糊的“部分”；到期日定在争论见分晓的那天，数字的观点就是这个数公布的那天；数字写明哪一年：今年、明年按这条信息的发布日算，公司的数按它的财年。 | 所有类别一样；写观点的规矩原样取自观点库 |
-| 这一类是什么、怎么读 | 这一类的定义和读法，比如“看法和估计都算作者说的，不当成已经发生的事”。 | 取自分类规则，这里不另写 |
-| 讲的是谁 | 这条信息的相关对象；另附研究对象名单里的全部主题，候选观点讲的是主题时，名单里有的从里面挑，没有的写清是什么事。 | 这条信息的标签；主题取自研究对象名单 |
-| 这一类要读出什么 | 见下面的表，每类一行。 | 抽取模块 |
-| 已有观点与研究主线 | 这条信息相关对象开着的观点，加上它们依赖的观点，写明谁依赖谁；只给问题、看的是什么和到期日，不给状态和证据；同一块另附可用的研究主线，内容按观点库的归组规矩提供。 | 观点库 |
+| Role | You are a senior hedge-fund analyst. Read this item to test and form theses: link supporting or opposing statements and numbers as evidence to existing theses. For important questions not covered, return complete candidates with a question, ladder, due date, research-group association and initiating evidence. Judgements in the user's own memo become candidates, may lack evidence and are not themselves evidence. Each thesis concerns one thing. Its ladder has five rungs, or two for yes/no, with concrete, verifiable, non-overlapping and exhaustive outcomes, never vague “partial” outcomes. Set the due date when the issue can be resolved; for a number, use its publication date. Name the year. This year and next year are relative to the item's publication day; company numbers use its fiscal year. | Shared by all categories; thesis rules come directly from the library |
+| What this category is and how to read it | The category definition and reading method; for example, attribute opinions and estimates to their author rather than treating them as completed facts. | Owned by classification; not redefined here |
+| Subjects | The item's related subjects plus every theme in the research universe. Select an existing theme for a theme candidate when applicable; otherwise describe the new issue clearly. | Item metadata; themes from the research universe |
+| What to extract from this category | One row per category in the table below. | Extraction module |
+| Existing theses and research groups | Open theses for the item's subjects and their dependencies, with dependency links. Supply only question, focus and due date, not states or evidence. Also supply available research groups under the library's grouping contract. | Thesis library |
 <!-- /generated: template -->
 
-## 每一类有自己的提示词
+## Category-specific prompts
 
-下面以 T7 新闻为例，看五块怎么拼在一起，每块只列要点。
+T7 news illustrates how the five blocks fit together.
 
 <!-- generated: prompt -->
 ```
-T7 新闻的提示词（同一个提示词模板，第 2、4 块换成新闻这一类的）
-├─ 1 角色 → 资深对冲基金分析师（读这条信息，是为了检验和形成观点：证据连到已有观点上；已有观点管不到的要紧事，写成候选观点，当场写全问题、梯子、到期日和研究归属）
-├─ 2 这一类怎么读 → 媒体的报道（取自分类规则：媒体发的内容里，评论和分析归 T8，登记过的发布系列按系列归类，其余归这一类）
-├─ 3 讲的是谁 → 这篇报道的相关对象（由代码填，比如 NVDA、AMD；另附名单里的全部主题）
-├─ 4 要读出什么 → 发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁（官方确认的算发生的事；“知情人士称”算传闻）
-└─ 5 已有观点与研究主线 → 这篇报道相关对象开着的观点，加上它们依赖的观点（由代码填，写明谁依赖谁，只给问题、看的是什么和到期日；比如“NVDA FY27 全年中国区收入，比 FY26 会怎样？”，和它依赖的“这一档芯片对华出口许可”；另附可用的研究主线）
+T7 news prompt (The same template, with news-specific blocks 2 and 4)
+├─ 1 Role → Senior hedge-fund analyst (Read to test and form theses. Link evidence to existing theses; for important uncovered questions, return complete candidates with question, ladder, due date and research-group association.)
+├─ 2 How to read this category → Media reporting (From classification: opinion and analysis belong to T8; registered publication series use their category; remaining media material belongs here.)
+├─ 3 Subjects → Subjects of this report (Filled by code, such as NVDA and AMD, plus all universe themes)
+├─ 4 What to extract → What happened, when and who was involved; attribution and original sources (Official confirmation is fact; unnamed-source claims are rumours)
+└─ 5 Existing theses and research groups → Open theses for the report's subjects and their dependencies (Filled by code with dependency links, questions, focus and due dates. For example, NVDA FY2027 China revenue versus FY2026 and its chip-export-licence dependency. Also include available research groups.)
 ```
 
-- 每一类都有自己的提示词：同一个提示词模板，第 2 块（这一类怎么读）和第 4 块（要读出什么）换成这一类的；第 1 块所有类别一样；第 3、5 块由代码按这条信息填进去。
-- 研究对象会看的 15 类（T1–T15）各一份；T16 研究对象默认不看，用到时再写。
-- 候选观点讲的是谁：主题从第 3 块附的主题里挑，名单里没有的写清是什么事；公司、加密货币、商品写代码（股票代码、加密货币代码、商品代码）或名字，由代码去参照数据里查，名字只认登记过的，和分类查公司名一样。
-- 你自己的备忘录（作者是你的 T8）：里面的判断读成候选观点，不当作证据；这样的候选观点可以不带证据，开成观点以后，第一次连上证据以前，状态写“还没判”。
-- 输出的格式（证据、候选观点及其归属、必要的新主线定义、出处各有哪几栏）由代码规定和检查，不写进提示词。
-- 每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里，改一次就是一个新版本。
+- Each category has its own prompt using the same template. Blocks 2 and 4 vary by category; block 1 is shared; code fills blocks 3 and 5 for the item.
+- One prompt per tracked category T1–T15. T16 is not tracked by default; write its prompt when needed.
+- For theme candidates, select from block 3 or describe a new issue if absent. For companies, cryptocurrencies and commodities, provide the relevant symbol or name. Code resolves reference data and accepts registered names only, as classification does.
+- The user's own memo (T8 authored by the user) yields candidate judgements, not evidence. These candidates may have no evidence. Once opened, their state is “not yet judged” until evidence first links to them.
+- Code defines and validates output fields for evidence, candidates and associations, necessary new groups and sources. Do not restate the shape in prompts.
+- Test each category's prompt on stored items before settling its wording. Config records each version; a change creates a new version.
 <!-- /generated: prompt -->
 
-## 16 个类别：每一类读出什么（提示词第 4 块）
+## What each of the 16 categories yields: block 4
 
 <!-- generated: categories -->
-| 类别 | 这一类要读出什么 | 证据一般在哪一层 |
+| Category | What to extract | Typical evidence tier |
 |---|---|---|
-| T1 业绩发布 | 实际数、指引、管理层的解释 | 实际数是发生的事；指引和解释是当事人说的 |
-| T2 定期报告 | 实际数、分部数；风险因素和业务描述里讲到的风险和变化 | 数是发生的事；风险和变化是当事人说的 |
-| T3 法律与资本市场文件 | 交易条款（价格、对价、交割条件、时间表）；各方的说法和诉求 | 条款是发生的事；说法是当事人说的 |
-| T4 电话会文字稿 | 管理层对关键问题的回答、口径的变化；分析师追问的焦点 | 回答是当事人说的；追问是第三方看法 |
-| T5 演示材料 | 管理层给的中长期目标、资本配置的框架、新业务的规模 | 当事人说的 |
-| T6 公司其他发布 | 发生了什么事（高管变动、并购、新产品、回购）；公布的经营数字（比如交付量） | 发生的事 |
-| T7 新闻 | 发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁 | 官方确认的算发生的事；“知情人士称”算传闻 |
-| T8 观点与分析 | 作者的看法、论据、预测、评级和目标价，以及它们的变化 | 第三方看法 |
-| T9 访谈记录 | 说话人讲的经营情况（订单、价格、份额、库存）；他凭什么知道 | 第三方看法 |
-| T10 官方行动与记录 | 决定或行动本身、什么时候生效、影响谁；后面的程序（上诉、截止日），可以用作到期日 | 发生的事 |
-| T11 宏观政策与统计 | 公布的数字和政策决定，和上一次比差多少；官方措辞的变化 | 数和决定是发生的事；措辞是当事人说的 |
-| T12 市场价格与成交 | 价格和成交的变化 | 发生的事 |
-| T13 持仓与资金流 | 谁在买、谁在卖、规模多大 | 发生的事 |
-| T14 日历 | 排定的日期，用作到期日 | 发生的事 |
-| T15 第三方测量 | 测到的经营数据，作为量化证据 | 发生的事（注明是第三方测的） |
-| T16 参照数据 | 研究对象默认不看 | — |
+| T1 Earnings releases | Actual figures, guidance and management explanations | Actual figures are facts; guidance and explanations are party statements |
+| T2 Periodic reports | Actual and segment figures; risks and changes in risk factors and business descriptions | Figures are facts; described risks and changes are party statements |
+| T3 Legal and capital-markets documents | Transaction terms: price, consideration, closing conditions and timetable; parties' statements and demands | Terms are facts; statements are party statements |
+| T4 Company-call transcripts | Management answers to key questions, changes in wording and analysts' follow-up concerns | Answers are party statements; analysts' questions are third-party views |
+| T5 Presentations | Management's medium/long-term targets, capital-allocation framework and new-business scale | Party statement |
+| T6 Other company publications | Events such as executive changes, acquisitions, products and buybacks; published operating figures such as deliveries | Fact |
+| T7 News | What happened, when and who was involved; attribution and original sources | Official confirmation is fact; unnamed-source claims are rumours |
+| T8 Opinion and analysis | The author's opinions, arguments, forecasts, ratings and targets, and changes to them | Third-party view |
+| T9 Interview records | The speaker's account of orders, prices, share and inventory, and how they know | Third-party view |
+| T10 Official actions and records | The decision/action, effective date and affected parties; subsequent appeals and deadlines that may set the due date | Fact |
+| T11 Macro policy and statistics | Published figures and policy decisions versus the previous release; changes in official wording | Figures and decisions are facts; wording is a party statement |
+| T12 Market prices and trading | Changes in prices and trading | Fact |
+| T13 Holdings and flows | Who buys, who sells and at what scale | Fact |
+| T14 Calendar | Scheduled dates that can set due dates | Fact |
+| T15 Third-party measurements | Measured operating data as quantitative evidence | Fact; identify the third-party measurement |
+| T16 Reference data | Not tracked by default | — |
 
-每份文件都整份交给模型，里面的表格一起读；表格数据一次发布算一条，也整批交给模型。申报里的 XBRL 数字不另外推，文件本身已经有这些数。到期时要不要另外去查准确的数，等以后设计 Pull 模式时定。
+Read every whole file, including tables. A table release is one item and is read as a whole batch. Do not separately ingest XBRL facts already in the filing. Whether to fetch exact settlement numbers is deferred to pull-mode design.
 <!-- /generated: categories -->
 
-## 例子：两条信息读出什么
+## Example: two items
 
 <!-- generated: example -->
 ```
-两条信息读出什么（示意）
-├─ 2025-04-15 NVDA 的 8-K → 库是空的，第 5 块里没有观点｜读出两条候选观点（T6 公司其他发布：H20 出口中国要许可证，预计最多约 55 亿美元的费用）
-│   ├─ 候选观点（主题观点） → 2025-04 那条规定管的这一档芯片（H20、MI308 等）对华出口许可，到 2026-04-15 处在哪一格？（事件观点。五格：全面禁止；要许可，一个都不发；要许可，发了，但有附条件的；要许可，发了，都不附条件；不再要许可。到期日：2026-04-15。证据原文：“…requires a license for export to China … of the Company’s H20 integrated circuits…”，意思是 NVDA 披露 H20 出口中国要许可证，算发生的事。到了观点库，开成 #1）
-│   └─ 候选观点（对象观点 NVDA） → NVDA FY26 全年中国区收入，比 FY25 会怎样？（数字观点。五格：涨 50% 及以上；涨 10% 及以上不到 50%；涨跌都不到 10%；降 10% 及以上不到 80%；降 80% 及以上。到期日：FY26 年报的财报日。证据原文：“…up to approximately $5.5 billion of charges…”，意思是公司预计最多约 55 亿美元的费用，算当事人说的。到了观点库，开成 #2，依赖 #1）
-└─ 2025-07-14 NVDA 的声明 → 第 5 块：#2 和它依赖的 #1｜读出一条证据，没有候选观点
-    └─ 证据 → 连到 #1（当事人说的；一句话说清：NVDA 称美国政府已保证会批准 H20 对华出口的许可（2025-07-14））
+What two items yield (Illustration)
+├─ NVIDIA 8-K, April 15, 2025 → Empty library; no theses in block 5 | Two candidate theses (T6 other company publication: H20 exports to China require a licence; expected charges up to approximately $5.5 billion)
+│   ├─ Candidate: theme thesis → What will China export licensing for chips covered by the April 2025 rule, including H20 and MI308, look like on April 15, 2026? (Event thesis. Five rungs: full ban; licences required and none issued; licences issued with some conditions; all issued licences unconditional; no licence required. Due April 15, 2026. Quote: “…requires a license for export to China … of the Company’s H20 integrated circuits…”. NVIDIA discloses the licence requirement, classified as fact. The library opens thesis #1.)
+│   └─ Candidate: NVDA asset thesis → How will NVDA FY2026 China revenue compare with FY2025? (Numeric thesis. Five rungs: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Due on the FY2026 annual earnings date. Quote: “…up to approximately $5.5 billion of charges…”. This is a company expectation, classified as a party statement. The library opens #2, dependent on #1.)
+└─ NVIDIA statement, July 14, 2025 → Block 5 contains #2 and its dependency #1 | One evidence item, no candidate
+    └─ Evidence → Link to #1 (Party statement: NVIDIA says the US government assured it that H20 export licences to China will be granted (July 14, 2025))
 ```
 
-出处：每条证据都记上游编号、所在段落和原文那一句（英文原句，中文只是说明）；代码核对“$5.5 billion”确实在那一句里。第一条信息进来时库是空的，第 5 块里没有观点，读到的要紧事只能写成候选观点；第二条信息进来时，第 5 块里已经有出口许可那条，NVDA 的声明就直接连上去。到了观点库，候选观点去和搜出来的已有观点比，证据去和它那条观点下已有的证据比，见观点库。两条候选观点同时归在“这一档芯片的对华许可与中国业务”主线下；第二篇只有证据，沿已有成员关系更新。归属不代替 #2 依赖 #1 的判断。例子用 NVDA，美股、期货、加密货币都走同一套。
+Each evidence item records upstream ID, paragraph and exact quotation. Code checks that “$5.5 billion” appears in the quoted sentence. The first item sees an empty library, so important questions become candidates. The second sees the licence thesis and links NVIDIA's statement directly. The library compares candidates with searched theses and evidence within its thesis. Both candidates join the chip-licensing-and-China-business group; the evidence-only second item updates existing membership. Grouping does not replace #2's dependency on #1. The NVDA example uses the same process as equities, futures and cryptocurrencies.
 <!-- /generated: example -->
 
-## 出处记什么
+## Source-reference fields
 
 <!-- generated: sources -->
 ```
-一条出处
-├─ 哪条信息 → 上游编号（每个版本有自己的编号；凭它去团队的库里取原文）
-├─ 哪一类、哪天 → 类别、发布日
-├─ 哪一处 → 第几节第几段、表里哪个单元格（表格数据写数据集和记录编号）
-└─ 哪一句 → 原文那一句，或表里那个单元格（代码核对它真的在这条信息里，数字真的印在引用的地方）
+A source reference
+├─ Which item → Upstream ID (Each version has its own ID; use it to retrieve the original from the team's library)
+├─ Category and day → Category and publication day
+├─ Where in the item → Section, paragraph or table cell (For table data, record dataset and record IDs)
+└─ Which statement → The original sentence or table cell (Code verifies the quote exists in the item and the cited number appears there)
 ```
 
-- 每条观点、每条证据、每一次由信息引起的变化都带出处；状态的每次变化写明依据哪几条证据（因为依赖的观点变了而重判的，也写那几条观点）。
-- 抽取核对三件事：引用的原文（那一句，或表里那个单元格）在这条信息里；数字在引用的地方；证据连的是第 5 块里的观点，或者这次的候选观点。有一件不对，就不交出去。观点库核对：出处在处理记录里查不到的，不写进库。都记下原因。
-- 两头都能查：从一条观点查到它的全部来源信息，从一条信息查到它产生和改动过的全部观点和证据。
-- 整份信息不存，要看原文就凭上游编号去团队的库里取；原文里只存观点或证据的出处引用的那一句，或表里那个单元格。
-- 同一条信息里说同一件事的几处（正文和表格里的同一个数），交成一条证据，带几个出处。
+- Every thesis, evidence item and information-triggered change retains sources. Each state change identifies its supporting evidence, plus dependency theses when their changes triggered rejudgement.
+- Extraction checks quote/cell presence, number presence and links to block-5 theses or current candidates. Reject output failing any check. The library refuses sources absent from processing records. Both record reasons.
+- Trace in both directions: thesis to all source items, and item to every thesis and evidence item it created or changed.
+- Do not store the whole source item; retrieve it from the team's library by upstream ID. Store only the quoted sentence or cell supporting the thesis or evidence.
+- Repeated statements of the same fact within one item, such as a number in text and a table, become one evidence item with multiple references.
 <!-- /generated: sources -->
 
-## 验收标准
+## Acceptance
 
-- 每条交进来的信息都整份交给模型，用这一类的提示词；用的是哪版设置，记在处理记录里。
-- 每条证据都连在给它看的已有观点或这次的候选观点上；连在别处的、哪都没连的，不交给观点库，记下原因。
-- 同一条信息里说同一件事的几处（正文和表格里的同一个数），交成一条证据，带几个出处。
-- 每条证据带原文、一句话说清、谁说的、原始来源、哪一层、事情发生的时间；每个候选观点当场写全：讲的是谁（主题从第 3 块附的主题里挑，名单里没有的写清是什么事；公司、加密货币、商品写代码或名字）、对象观点还是主题观点、看的是什么、问题、梯子、到期日、研究归属，和至少一条证据（你自己的备忘录读出的，可以没有）。
-- 每条观点和证据都有出处。引用的原文（那一句，或表里那个单元格）不在这条信息里、数字不在引用的地方的，不交给观点库，记下原因。
-- 抽取不改观点库：证据、候选观点及其研究归属一起交出，不另加聚类调用。归组的引用与语义验收见 [观点库](06-views.md#研究主线抽取时归组)；名字相似或次数相同不等于归对。
-- 失败从失败的那一步重试；重试只替换自己上次的结果。
+- Give the model every whole item with its category prompt; record the settings version.
+- Every evidence link targets a shown thesis or current candidate. Reject missing or invalid targets with reasons.
+- Repeated statements of the same fact within one item, including text/table repetitions, produce one evidence item with multiple references.
+- Evidence contains a quotation, standalone summary, speaker, original source, tier and event time. A candidate contains subject, asset/theme kind, focus, question, ladder, due date, association and at least one evidence item; personal-memo candidates may lack evidence. Themes select from block 3 or clearly identify a new issue; assets use a symbol or registered name.
+- Every thesis and evidence item has a source. Reject absent quotes/cells or numbers not printed in the cited location, recording the reason.
+- Extraction does not mutate the library. Return evidence, candidates and associations together without a separate clustering call. Reference and semantic criteria are owned by the [grouping contract](06-views.md#research-groups-associate-during-extraction); similar names or equal counts do not prove correct grouping.
+- Retry from the failed step and replace only that attempt's own result.
 
-## 还没定的
+## Open questions
 
 <!-- generated: open -->
-- 每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里。
-- 候选观点的颗粒度，也就是一条观点管多大的范围（见观点库还没定的）：要让模型知道，观点不能全是财务指标，也不能把几件事捆成一条，或者把一件事拆得太碎；等调研完再写进提示词。
+- Validate each category prompt on stored items before settling it; record its version in Config.
+- Research thesis granularity: avoid only financial metrics, bundling separate questions or splitting one question too finely. See the library's open questions; reflect the decision in prompts after research.
 <!-- /generated: open -->
 
-## 相关决定
+## Related decisions
 
-- D149：研究归属是抽取的必交内容；目标要求与当前未接入的实现状态分开写。
+- D11: theses belong to subjects; extraction handles body mentions. D13: information-driven processing.
+- D25–D28: one extraction module, shared analyst role, category prompts, whole-item reading, sources and restored report ingestion.
+- D32/D33: whole table releases, no separate filing XBRL ingestion, read-only extraction with matching/writing in the library.
+- D35/D37: first-version review and freeze; changes require a decision.
+- D41/D42: candidates and block-5 context updated for the rebuilt library; separate evidence/candidate outputs with existing dependencies shown.
+- D45: only recorded decisions apply; no unapproved preset settlement source or theme-scope restriction.
+- D46: write the complete candidate while the full source is available.
+- D47: explicit dependency links; link a statement only to the question it directly concerns.
+- D51: omit unapproved restrictions on theme observations; evidence-link quality checks belong with matching labels; no consensus calculation.
+- D58: include due dates in block 5; events after an existing due date can form candidates.
+- D59/D60: subject identification and personal-memo candidates; no judgement before evidence first links; wording and diagram alignment without new rules.
+- D149: associations are required extraction output; the default implementation has not yet integrated them.
+- D155: current POC identity/reference changes are described in the improvement plan, not evidence of grouping acceptance.
 
-- D11：观点属于对象；正文提到的对象在抽取时标。
-- D13：由信息推动。
-- D25：只有一个抽取模块，按类别读，同一个分析师角色。
-- D26：观点库是系统的核心；每条都带出处。
-- D27：每条信息整份交给模型，按类别用提示词。
-- D28：财报重新推进来。
-- D32：表格数据一次发布算一条；XBRL 不另外推。
-- D33：抽取只读；比对和写进库在观点库。
-- D35：抽取第一版的最后复核。
-- D37：第一版冻结（2026-10-18）；要改先记一条新决定。
-- D41：为观点库的新设计，改了候选观点带什么、提示词第 5 块给什么。
-- D42：证据连到已有观点或候选观点上，候选观点只给已有观点管不到的要紧事；两样分开交给观点库；已有观点里也放上它们依赖的观点。
-- D45：只有 Alex 说过或定过的才算定了；提示词里不再要求事先写到期看哪个来源、主题观点管多大（那是 Claude 提的）。
-- D46：候选观点在抽取时写全：问题、梯子、到期日，因为这时模型手里有整份原文。
-- D47：用词对齐（证据“连到”观点）；第 5 块写明谁依赖谁；同一条信息新提的两条候选观点，一句话只连到它直接讲的那条。
-- D51：还没定的只留 Alex 说过以后再定的：删了“主题观点要不要只收新的观察”（证据分层已经管了）；“抽取连错、漏掉的证据怎么查”归入比对标注的细节；第三方看法这一类不再写“用来算共识”。
-- D58：第 5 块也给已有观点的到期日；一条观点只管到它的到期日，之后才发生的事写成候选观点；两件事等 Alex 定（候选观点讲的对象怎么写成名单里的；你自己的备忘录读出的观点没有别的证据时怎么办）。
-- D59：候选观点讲的是主题时，从提示词第 3 块附的名单主题里挑，其余写代码或名字，照分类查；你自己的备忘录读出的观点可以不带证据，第一次连上证据以前状态写“还没判”。
-- D60：按 Alex 的要求再深审一遍：把 D59 写全（备忘录里的判断都交成候选观点、“还没判”写进状态和各处重判的说法、对象写代码或名字），理顺几处说法和总图上两根线；没有加新规矩。
+<a id="抽取时同时确定研究归属"></a>
 
-## 抽取时同时确定研究归属
+## Determine associations during extraction
 
 <!-- generated: relations -->
-- D149 已定要求：读全文时就决定候选观点属于哪个持续业务过程，称为研究主线。例如 Rubin 出货和 SK 工厂上线各有自己的问题，同时属于 Rubin 推出这条主线。归组随抽取完成，不留给前端或事后全库聚类。
-- 证据和候选观点仍分开交；每个候选观点同时带结构化归属，需要新主线时附上名称和范围。只在解释里提到相关、没有可保存的引用，不算交完。抽取只读不落库，完整交接和保存规矩由观点库的“研究主线：抽取时归组”一节规定。
-- 这是目标要求，不是已上线的能力。正式管线还没有归组交接，D147 原型及 D148、D150 一致性结果见 docs/poc/pipeline-plan.md 的“抽取时归组：目标与当前实现”。
+- D149 requirement: while reading the full text, decide which continuing business process each candidate belongs to, called a research group. Rubin shipments and SK factory deployment retain separate questions while sharing the Rubin rollout group. Group during extraction, not in the frontend or a later whole-library clustering pass.
+- Return evidence and candidates separately. Each candidate also carries structured associations; new groups have a name and scope. Mentioning a relationship only in prose is not a complete handoff. Extraction is read-only; the library's “Research groups: associate during extraction” section owns the full handoff and storage contract.
+- Grouping remains a target requirement, not a default-pipeline handoff. D155 fixed reference-list vetoes, period/scope rewriting and same-batch duplicates; that does not prove grouping works. See docs/poc/grouping-improvement-plan.md for steps and measurements.
 <!-- /generated: relations -->

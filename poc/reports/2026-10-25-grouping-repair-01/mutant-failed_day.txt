@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_failed_replay_day_is_not_completed_and_can_resume ____________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-318/test_failed_replay_day_is_not_0')
+
+    def test_failed_replay_day_is_not_completed_and_can_resume(tmp_path):
+        """B state table: entry-point failure cannot advance past the failed date."""
+        root = Path(__file__).resolve().parents[1]
+        path = tmp_path / 'items.sqlite'
+        conn = sqlite3.connect(path)
+        conn.execute('create table items (input_id, publisher, published_at, publication_day, category, source_uri, text, object_identifiers, feed, copy_of, klass)')
+        conn.execute('insert into items values (?,?,?,?,?,?,?,?,?,?,?)',
+                     ('news:one', 'NVIDIA', '2026-05-20T12:00:00Z', '2026-05-20', 'T7', 'https://example.test/one', TEXT,
+                      json.dumps([{'value': 'NVDA'}]), 1, None, '新闻'))
+        conn.commit()
+        args = dict(testdb_path=str(path), views_path=str(tmp_path / 'views.sqlite'), archive=model.Archive(str(tmp_path / 'archive.sqlite')),
+                    cfg=config.load(root / 'poc/config/poc-v16.json'), universe=UNIVERSE,
+                    from_day='2026-05-20', until_day='2026-05-20', log=lambda *args: None)
+    
+        def unavailable(*args):
+            raise model.TransportError('offline')
+    
+>       with pytest.raises(RuntimeError, match='remains resumable'):
+E       Failed: DID NOT RAISE <class 'RuntimeError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-9t5i_o1u/tests/test_identity_repair.py:167: Failed
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-9t5i_o1u/tests/test_identity_repair.py::test_failed_replay_day_is_not_completed_and_can_resume
+1 failed in 0.10s

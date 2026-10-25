@@ -25,10 +25,12 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import dispatch, extraction, testdb, universe as universe_module  # noqa: E402
+from hivemind import dispatch, extraction, testdb, universe as universe_module, vocabulary  # noqa: E402
 
-ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 ')
-BLOCK5_LINE = re.compile(r'^\s+- (v\d+)（(.*)$', re.M)
+# stored requests of both prompt languages (D163): Chinese headers up to extraction v5, English from v6
+ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 |\[Item\] id (\S+?), category ')
+ITEM_HEADER = re.compile(r'【信息】|\[Item\]')
+BLOCK5_LINE = re.compile(r'^\s+- (v\d+)\s?[（(](.*)$', re.M)
 # a key is "sk-" (not the tail of "musk-" or "sk-hynix-…") followed by an unbroken run of 20+ letters and digits
 # that holds a digit; URL slugs are hyphen-separated words and never match
 SECRET = re.compile(r'(?<![A-Za-z0-9])sk-(?:[A-Za-z0-9_\-]*?)(?=[A-Za-z0-9_]{20,})(?=[A-Za-z_]*\d)[A-Za-z0-9_]{20,}|Bearer\s+(?=[A-Za-z0-9_\-\.]*\d)[A-Za-z0-9_\-\.]{20,}')
@@ -36,21 +38,22 @@ QUOTE_CHARS = 400
 REASON_CHARS = 400
 
 DROP_CLASSES = [
-    ('quote not in item', '原句不在原文里（模型改了字或编了句子）'),
-    ('links to nothing shown', '连到不存在的观点编号'),
-    ('same quote as', '同一句写了两次（合并成一条，不算杂音）'),
-    ('candidate ladder', '梯子格式不对（格数或标签）'),
-    ('quarterly number', '季度数当成观点（规则：季度数是证据）'),
-    ('is beyond next year', '年份超出明年（规则：不开）'),
-    ('due_day not a date', '到期日不是日期'),
-    ('not after the item', '到期日不在发布日之后'),
-    ('candidate without surviving evidence', '候选观点的证据都被丢了，观点跟着丢'),
+    ('quote not in item', 'quote not in the source text (the model changed or invented words)'),
+    ('links to nothing shown', 'linked to a thesis id that does not exist'),
+    ('same quote as', 'the same sentence written twice (merged into one; not noise)'),
+    ('candidate ladder', 'ladder malformed (rung count, labels or bounds)'),
+    ('quarterly number', 'a quarterly figure proposed as a thesis (rule: quarterly figures are evidence)'),
+    ('is beyond next year', 'year beyond next year (rule: not opened)'),
+    ('due_day not a date', 'due day is not a date'),
+    ('not after the item', 'due day not after the publication day'),
+    ('candidate without surviving evidence', 'all of the candidate\'s evidence was dropped, so the candidate went too'),
+    ('invalid period', 'period is not a valid date span'),
 ]
 NOTE_CLASSES = [
-    ('linked to nothing kept; not stored', '证据连的候选观点没开，证据没存'),
-    ('late older statement', '更早的旧话晚到，不连'),
-    ('that candidate was not opened', '依赖的候选观点没开，依赖丢掉'),
-    ('cycle', '依赖成环，丢掉'),
+    ('linked to nothing kept; not stored', 'evidence linked only to a candidate that did not open; not stored'),
+    ('late older statement', 'an older statement arriving late; not linked'),
+    ('that candidate was not opened', 'dependency on a candidate that did not open; dropped'),
+    ('cycle', 'dependency would form a cycle; dropped'),
 ]
 
 
@@ -70,16 +73,16 @@ def classify(text, classes, fallback):
 def evidence_drop_class(why, links, shown_ids, answer_candidate_ids, dropped_candidate_ids):
     """'links to nothing shown' split by what the link actually pointed at, so the mechanism is visible."""
     if 'links to nothing shown' not in why:
-        return classify(why, DROP_CLASSES, '其他')
+        return classify(why, DROP_CLASSES, 'other')
     if not links:
-        return '没写 links（一条观点都没连）'
+        return 'no links written (linked to no thesis)'
     if set(links) & dropped_candidate_ids:
-        return '连的候选观点被代码丢了，证据跟着丢'
+        return 'linked to a candidate the code dropped, so the evidence went too'
     if any(re.fullmatch(r'c\d+', link) and link not in answer_candidate_ids for link in links):
-        return '连到模型没写出来的候选观点编号'
+        return 'linked to a candidate id the model never wrote'
     if any(re.fullmatch(r'v\d+', link) and link not in shown_ids for link in links):
-        return '连到没给它看的观点编号（别的对象的，或编出来的）'
-    return '连到不存在的观点编号'
+        return 'linked to a thesis id it was not shown (another object\'s, or invented)'
+    return 'linked to a thesis id that does not exist'
 
 
 def slug_of(input_id):
@@ -95,22 +98,22 @@ def route_offline(item, uni):
     """dispatch.route without its writes: the same three questions, in plain words."""
     missing = [field for field in dispatch.REQUIRED if not item.get(field)]
     if missing:
-        return '退回', f'缺字段 {missing}'
+        return 'returned', f'missing fields {missing}'
     if item.get('copy_of'):
-        return '合并', f'是 {item["copy_of"]} 的转载'
+        return 'merged', f'a copy of {item["copy_of"]}'
     if item.get('supersedes'):
-        return '不处理', '更正稿（POC 不支持）'
+        return 'not_processed', 'a correction (not supported in the POC)'
     objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
     if not objects:
         labelled = [o['value'] for o in item['object_identifiers']]
-        return '不处理', f'对象不在研究名单上（上游标的是 {labelled or "空"}）'
+        return 'not_processed', f'object not on the research list (upstream labelled {labelled or "nothing"})'
     if not any(uni.watches(o, item['category']) for o in objects):
-        return '不处理', f'{item["category"]} 这一类对 {objects} 不看'
-    return '进流程', ''
+        return 'not_processed', f'category {item["category"]} is not watched for {objects}'
+    return 'in_pipeline', ''
 
 
 def load_extract_calls(archive):
-    """Every stored extraction call keyed by the item it was about, parsed from the request's 【信息】 line."""
+    """Every stored extraction call keyed by the item it was about, parsed from the request's item header (either language)."""
     calls = collections.defaultdict(list)
     rows = archive.execute("select call_id, config_version, model, request_json, answer_json, prompt_chars, input_tokens, output_tokens, "
                            "cost_usd, seconds, created_at from model_calls where purpose='extract' and request_sha256 not like '%:%'")
@@ -120,7 +123,7 @@ def load_extract_calls(archive):
         found = ITEM_ID.search(user)
         if not found:
             continue
-        calls[found.group(1)].append(dict(row, system=request['messages'][0]['content'], user=user))
+        calls[found.group(1) or found.group(2)].append(dict(row, system=request['messages'][0]['content'], user=user))
     for item_calls in calls.values():
         item_calls.sort(key=lambda c: (c['created_at'], c['call_id']))
     return calls
@@ -160,16 +163,16 @@ def build_item_trace(item, uni, views, archive_calls, archive, text_dir, request
         handle.write(f'{input_id}\n{item.get("title") or ""}\n{item.get("publisher")} ({item.get("publisher_type")}) {item["publication_day"]} {item["category"]}\n{item.get("source_uri") or ""}\n\n{item.get("text") or ""}')
     steps = [dict(r) for r in views.execute('select sequence_no, step, result, reason, at from processing_steps where input_id=? order by id', (input_id,))]
     trace['steps'] = [{'seq': s['sequence_no'], 'step': s['step'], 'result': s['result'], 'reason': trim(s['reason'], 600), 'at': s['at']} for s in steps]
-    if route_kind != '进流程':
+    if route_kind != 'in_pipeline':
         trace['diagnosis'] = route_kind
         trace['diagnosis_why'] = route_reason
         return trace
     if not steps:
-        trace['diagnosis'] = '未跑'
-        trace['diagnosis_why'] = '启动期（%s 之前）只跑了 NVDA 的材料' % window_start if item['publication_day'] < window_start else '没有处理记录'
+        trace['diagnosis'] = 'not_run'
+        trace['diagnosis_why'] = 'the seed period (before %s) ran NVDA material only' % window_start if item['publication_day'] < window_start else 'no processing record'
         return trace
     trace['seq'] = max(s['sequence_no'] for s in steps)
-    failed = [s for s in steps if s['result'] == 'failed']
+    failed = [s for s in steps if s['result'] == 'failed'] if steps[-1]['result'] == 'failed' else []      # an item resumed after a failure is judged by its last step
     extracted = [s for s in steps if s['step'] == 'extracted']
     # --- extraction: the raw answer and what the code kept
     handover_row = views.execute('select handover_json from handovers where input_id=? order by id desc limit 1', (input_id,)).fetchone()
@@ -184,8 +187,8 @@ def build_item_trace(item, uni, views, archive_calls, archive, text_dir, request
     kept_candidate_ids = {c['id'] for c in handover['candidates']}
     shown = []
     if call:
-        for view_id, rest in BLOCK5_LINE.findall(call['user'].split('【信息】')[0]):
-            shown.append(f'{view_id}（{rest}')
+        for view_id, rest in BLOCK5_LINE.findall(ITEM_HEADER.split(call['user'])[0]):
+            shown.append(f'{view_id} ({rest}')
         trace['extract_call'] = {'model': call['model'], 'prompt_chars': call['prompt_chars'], 'input_tokens': call['input_tokens'],
                                  'output_tokens': call['output_tokens'], 'seconds': round(call['seconds'] or 0, 1), 'cost': round(call['cost_usd'] or 0, 4),
                                  'config': call['config_version'], 'candidates_of_item': len(archive_calls.get(input_id, []))}
@@ -195,37 +198,37 @@ def build_item_trace(item, uni, views, archive_calls, archive, text_dir, request
         with open(os.path.join(answer_dir, slug + '.json'), 'w', encoding='utf-8') as handle:
             json.dump(answer, handle, ensure_ascii=False, indent=1)
     trace['shown_views'] = shown
-    shown_ids = {line.split('（')[0] for line in shown}
+    shown_ids = {line.split(' (')[0] for line in shown}
     answer_candidate_ids = {c['id'] for c in answer.get('candidates', [])}
     dropped_candidate_ids = answer_candidate_ids - kept_candidate_ids
     raw_evidence = []
     for e in answer.get('evidence', []):
         if e['id'] in kept_evidence_ids:
-            status, why, why_class = '留下', '', ''
+            status, why, why_class = 'kept', '', ''
         elif e['id'] in dropped:
-            status, why = '丢掉', dropped[e['id']]
+            status, why = 'dropped', dropped[e['id']]
             why_class = evidence_drop_class(why, e['links'], shown_ids, answer_candidate_ids, dropped_candidate_ids)
         else:
-            status, why, why_class = '丢掉', '留下的证据后来没有可连的观点（候选观点没留下）', '连的候选观点被代码丢了，证据跟着丢'
-        raw_evidence.append({'id': e['id'], 'tier': e['tier'], 'speaker': e['speaker'], 'original_who': e.get('original_who', ''),
+            status, why, why_class = 'dropped', 'kept at first, then left with no thesis to link to (its candidate was dropped)', 'linked to a candidate the code dropped, so the evidence went too'
+        raw_evidence.append({'id': e['id'], 'tier': vocabulary.canonical('tier', e['tier']), 'speaker': e['speaker'], 'original_who': e.get('original_who', ''),
                              'original_day': e.get('original_day', ''), 'quote': trim(e['quote'], QUOTE_CHARS), 'one_line': e['one_line'],
                              'links': e['links'], 'status': status, 'why': why, 'why_class': why_class})
     raw_candidates = []
     for c in answer.get('candidates', []):
         if c['id'] in kept_candidate_ids:
-            status, why = '留下', ''
+            status, why = 'kept', ''
         else:
-            status, why = '丢掉', dropped.get(c['id'], '')
-        raw_candidates.append({'id': c['id'], 'kind': c['kind'], 'object': c['object'], 'looks_at': c['looks_at'], 'question': c['question'],
-                               'rungs': [f'{r["label"]}：{r["condition"]}' for r in c['rungs']], 'due_day': c['due_day'], 'year': c['year'],
+            status, why = 'dropped', dropped.get(c['id'], '')
+        raw_candidates.append({'id': c['id'], 'kind': vocabulary.canonical('kind', c['kind']), 'object': c['object'], 'looks_at': c['looks_at'], 'question': c['question'],
+                               'rungs': [f'{vocabulary.canonical("label", r["label"])}: {r["condition"]}' for r in c['rungs']], 'due_day': c['due_day'], 'year': c['year'],
                                'evidence_ids': c['evidence_ids'], 'status': status, 'why': why,
-                               'why_class': classify(why, DROP_CLASSES, '其他') if status == '丢掉' else ''})
+                               'why_class': classify(why, DROP_CLASSES, 'other') if status == 'dropped' else ''})
     trace['raw_evidence'], trace['raw_candidates'] = raw_evidence, raw_candidates
     produced = len(raw_evidence) + len(raw_candidates)
     merged = sum(1 for e in raw_evidence if 'same quote as' in e['why'])
-    dropped_evidence = sum(1 for e in raw_evidence if e['status'] == '丢掉') - merged
-    dropped_candidates = sum(1 for c in raw_candidates if c['status'] == '丢掉')
-    kept_tiers = collections.Counter(e['tier'] for e in handover['evidence'])
+    dropped_evidence = sum(1 for e in raw_evidence if e['status'] == 'dropped') - merged
+    dropped_candidates = sum(1 for c in raw_candidates if c['status'] == 'dropped')
+    kept_tiers = collections.Counter(vocabulary.canonical('tier', e['tier']) for e in handover['evidence'])
     trace['kept'] = {'evidence': len(handover['evidence']), 'candidates': len(handover['candidates']), 'tiers': dict(kept_tiers)}
     # --- matching
     records = [dict(r) for r in views.execute('select call_no, shown_json, request_sha256, decisions_json, checks_json from match_records where input_id=? order by id', (input_id,))]
@@ -240,11 +243,11 @@ def build_item_trace(item, uni, views, archive_calls, archive, text_dir, request
         match_calls.append({
             'call_no': rec['call_no'], 'cost': round(cost, 4), 'seconds': round(archive_row['seconds'] or 0, 1) if archive_row else None,
             'refusals': checks.get('refusals', []),
-            'candidates': [{'id': d['id'], 'outcome': d['outcome'], 'target': d.get('target_view_id', ''), 'reason': trim(d.get('reason', ''), REASON_CHARS),
-                            'dependencies': d.get('dependencies', []), 'offered': shown_lists.get('candidates', {}).get(d['id'], []),
-                            'not_opened': checks.get('not_opened', {}).get(d['id'], '') if d['outcome'] != '不开' else ''}
+            'candidates': [{'id': d['id'], 'outcome': vocabulary.canonical('candidate_outcome', d['outcome']), 'target': d.get('target_view_id', ''), 'reason': trim(d.get('reason', ''), REASON_CHARS),
+                            'dependencies': [dict(x, direction=vocabulary.canonical('direction', x.get('direction'))) for x in d.get('dependencies', [])], 'offered': shown_lists.get('candidates', {}).get(d['id'], []),
+                            'not_opened': checks.get('not_opened', {}).get(d['id'], '') if vocabulary.canonical('candidate_outcome', d['outcome']) != 'skip' else ''}
                            for d in decisions.get('candidates', [])],
-            'evidence': [{'id': d['id'], 'view': d.get('view_id', ''), 'outcome': d['outcome'], 'target': d.get('target_evidence_id', ''),
+            'evidence': [{'id': d['id'], 'view': d.get('view_id', ''), 'outcome': vocabulary.canonical('evidence_outcome', d['outcome']), 'target': d.get('target_evidence_id', ''),
                           'said_day': d.get('said_day', ''), 'reason': trim(d.get('reason', ''), REASON_CHARS),
                           'offered': shown_lists.get('evidence', {}).get(f'{d["id"]}|{d.get("view_id", "")}', [])}
                          for d in decisions.get('evidence', [])],
@@ -261,16 +264,18 @@ def build_item_trace(item, uni, views, archive_calls, archive, text_dir, request
         code_not_opened = json.loads(rec['checks_json'] or '{}').get('not_opened', {})
         if group == 1:
             for d in decisions.get('candidates', []):
-                if d['outcome'] == '新观点' and d['id'] in code_not_opened:      # the object is not on the research list: pooled as a suggested theme, not opened
-                    outcome_counts['新观点→复核池（对象不在名单）'] += 1
+                outcome = vocabulary.canonical('candidate_outcome', d['outcome'])
+                if outcome == 'new' and d['id'] in code_not_opened:      # the object is not on the research list: pooled as a suggested theme, not opened
+                    outcome_counts['new → review pool (object not on the list)'] += 1
                     pooled += 1
                     continue
-                outcome_counts[d['outcome']] += 1
-                if d['outcome'] == '不开':
+                outcome_counts[outcome] += 1
+                if outcome == 'skip':
                     not_opened_reasons.append(trim(d.get('reason', ''), REASON_CHARS))
         for d in decisions.get('evidence', []):
-            evidence_outcome_counts[d['outcome']] += 1
-            if d['outcome'] == '重复':
+            outcome = vocabulary.canonical('evidence_outcome', d['outcome'])
+            evidence_outcome_counts[outcome] += 1
+            if outcome == 'repeat':
                 repeat_reasons.append(trim(d.get('reason', ''), REASON_CHARS))
     trace['outcomes'] = dict(outcome_counts)
     trace['evidence_outcomes'] = dict(evidence_outcome_counts)
@@ -283,14 +288,14 @@ def build_item_trace(item, uni, views, archive_calls, archive, text_dir, request
     new_views = []
     for candidate_id, view_id in (written.get('new') or {}).items():
         view = views.execute('select * from views where view_id=?', (view_id,)).fetchone()
-        rungs = [f'{r["label"]}：{r["condition"]}' for r in views.execute('select label, condition from rungs where view_id=? order by position', (view_id,))]
+        rungs = [f'{vocabulary.canonical("label", r["label"])}: {r["condition"]}' for r in views.execute('select label, condition from rungs where view_id=? order by position', (view_id,))]
         if view:
-            new_views.append({'candidate': candidate_id, 'view_id': view_id, 'object': view['object_id'], 'kind': view['kind'], 'looks_at': view['looks_at'],
+            new_views.append({'candidate': candidate_id, 'view_id': view_id, 'object': view['object_id'], 'kind': vocabulary.canonical('kind', view['kind']), 'looks_at': view['looks_at'],
                               'question': view['question'], 'due_day': view['due_day'], 'year': view['year'], 'rungs': rungs})
     stored_evidence = views.execute('select count(*) from evidence where created_from_input=?', (input_id,)).fetchone()[0]
     linked_existing = views.execute('select count(distinct evidence_id) from evidence_sources where input_id=? and evidence_id not in (select evidence_id from evidence where created_from_input=?)', (input_id, input_id)).fetchone()[0]
     not_stored = sum(1 for n in written.get('notes', []) if 'not stored' in n)
-    trace['written'] = {'changed': written.get('changed', []), 'new_views': new_views, 'notes': [{'text': n, 'class': classify(n, NOTE_CLASSES, '其他')} for n in written.get('notes', [])],
+    trace['written'] = {'changed': written.get('changed', []), 'new_views': new_views, 'notes': [{'text': n, 'class': classify(n, NOTE_CLASSES, 'other')} for n in written.get('notes', [])],
                         'stored_evidence': stored_evidence, 'linked_existing': linked_existing}
     # --- the day's judging of the views this item changed
     judged = []
@@ -300,61 +305,61 @@ def build_item_trace(item, uni, views, archive_calls, archive, text_dir, request
         rows = views.execute(f'select view_id, seq, input_id, rung, changed, why_changed, reasons from judgements where (input_id=? or input_id=?) and view_id in ({marks}) order by judgement_id',
                              (input_id, f'day:{item["publication_day"]}', *sorted(watched)))
         for r in rows:
-            judged.append({'view_id': r['view_id'], 'rung': r['rung'], 'changed': bool(r['changed']), 'why_changed': trim(r['why_changed'], REASON_CHARS), 'reasons': trim(r['reasons'], REASON_CHARS), 'by': '当天一轮' if r['input_id'].startswith('day:') else '这条之后'})
+            judged.append({'view_id': r['view_id'], 'rung': r['rung'], 'changed': bool(r['changed']), 'why_changed': trim(r['why_changed'], REASON_CHARS), 'reasons': trim(r['reasons'], REASON_CHARS), 'by': 'the day\'s round' if r['input_id'].startswith('day:') else 'after this item'})
     trace['judged'] = judged
     # --- the diagnosis, by rule (stated on the page)
-    repeats = evidence_outcome_counts['重复']
-    noise = dropped_evidence + dropped_candidates + outcome_counts['不开'] + pooled + not_stored
+    repeats = evidence_outcome_counts['repeat']
+    noise = dropped_evidence + dropped_candidates + outcome_counts['skip'] + pooled + not_stored
     trace['noise'], trace['produced'], trace['repeats'] = noise, produced, repeats
-    trace['noise_parts'] = {'代码丢的证据': dropped_evidence, '代码丢的候选观点': dropped_candidates, '比对判不开': outcome_counts['不开'],
-                            '对象不在名单，进复核池': pooled, '证据没存（观点没开）': not_stored, '比对判重复（不计）': repeats, '同句合并（不计）': merged}
+    trace['noise_parts'] = {'evidence dropped by code': dropped_evidence, 'candidates dropped by code': dropped_candidates, 'candidates matching skipped': outcome_counts['skip'],
+                            'object not on the list, pooled': pooled, 'evidence not stored (thesis not opened)': not_stored, 'matching repeats (not counted)': repeats, 'same-sentence merges (not counted)': merged}
     if failed:
-        trace['diagnosis'] = '失败'
-        trace['diagnosis_why'] = f'{failed[-1]["step"]}：{trim(failed[-1]["reason"], 200)}'
+        trace['diagnosis'] = 'failed'
+        trace['diagnosis_why'] = f'{failed[-1]["step"]}: {trim(failed[-1]["reason"], 200)}'
     elif produced == 0:
-        trace['diagnosis'] = '空手'
-        trace['diagnosis_why'] = '模型一条证据、一条候选观点都没写'
+        trace['diagnosis'] = 'empty_handed'
+        trace['diagnosis_why'] = 'the model wrote no evidence and no candidate thesis'
     elif trace['kept']['evidence'] + trace['kept']['candidates'] == 0:
-        main = collections.Counter([e['why_class'] for e in raw_evidence if e['status'] == '丢掉'] + [c['why_class'] for c in raw_candidates if c['status'] == '丢掉']).most_common(1)
-        trace['diagnosis'] = '全被丢'
-        trace['diagnosis_why'] = f'模型写了 {produced} 条，代码全丢；主要原因：{main[0][0] if main else "？"}'
+        main = collections.Counter([e['why_class'] for e in raw_evidence if e['status'] == 'dropped'] + [c['why_class'] for c in raw_candidates if c['status'] == 'dropped']).most_common(1)
+        trace['diagnosis'] = 'all_dropped'
+        trace['diagnosis_why'] = f'the model wrote {produced} items and the code dropped every one; main reason: {main[0][0] if main else "?"}'
     elif noise * 3 >= produced:
-        parts = '，'.join(f'{k} {v}' for k, v in trace['noise_parts'].items() if v and '不计' not in k)
-        trace['diagnosis'] = '杂音多'
-        trace['diagnosis_why'] = f'写了 {produced} 条，杂音 {noise} 条（{parts}）'
+        parts = ', '.join(f'{k} {v}' for k, v in trace['noise_parts'].items() if v and 'not counted' not in k)
+        trace['diagnosis'] = 'noisy'
+        trace['diagnosis_why'] = f'{produced} written, {noise} noise ({parts})'
     elif repeats and repeats * 2 >= trace['kept']['evidence']:
-        trace['diagnosis'] = '多为重复'
-        trace['diagnosis_why'] = f'留下 {trace["kept"]["evidence"]} 条证据，{repeats} 条比对判「重复」：库里已有同一句或同一个数，只加出处；抽取没错，是这篇在复述'
+        trace['diagnosis'] = 'mostly_repeats'
+        trace['diagnosis_why'] = f'{trace["kept"]["evidence"]} evidence items kept, {repeats} judged repeats by matching: the library already holds the same sentence or number and only gains a source; extraction is right, the article retells'
     else:
-        trace['diagnosis'] = '正常'
-        trace['diagnosis_why'] = f'写了 {produced} 条，杂音 {noise} 条；存了 {stored_evidence} 条证据，开了 {len(new_views)} 条观点，改了 {len(written.get("changed", []))} 条观点的读法'
+        trace['diagnosis'] = 'normal'
+        trace['diagnosis_why'] = f'{produced} written, {noise} noise; {stored_evidence} evidence items stored, {len(new_views)} theses opened, the reading of {len(written.get("changed", []))} theses changed'
     trace['cost'] = round(trace['cost'], 4)
     return trace
 
 
 def route_reason_class(reason):
     """One row per kind of reason in the summary: the object list and the copied item's id vary per item."""
-    reason = re.sub(r'（上游标的是.*', '', reason)
-    reason = re.sub(r'^是 \S+ 的转载', '同一篇的转载', reason)
-    return re.sub(r"这一类对 \[.*?\] 不看", '这一类对它讲的对象不看', reason)
+    reason = re.sub(r' \(upstream labelled.*', '', reason)
+    reason = re.sub(r'^a copy of \S+', 'a copy of another item', reason)
+    return re.sub(r"category (\S+) is not watched for \[.*?\]", r'category \1 is not watched for its objects', reason)
 
 
 def summarise(traces, from_day, until_day):
-    processed = [t for t in traces if t['route'] == '进流程' and t.get('seq')]
+    processed = [t for t in traces if t['route'] == 'in_pipeline' and t.get('seq')]
     counter = collections.Counter
     summary = {
         'from': from_day, 'to': until_day, 'items': len(traces),
         'routes': dict(counter(t['route'] for t in traces)),
-        'route_reasons': dict(counter(f'{t["route"]}：{route_reason_class(t["route_reason"])}' for t in traces if t['route'] != '进流程').most_common()),
-        'unrun': sum(1 for t in traces if t['diagnosis'] == '未跑'),
+        'route_reasons': dict(counter(f'{t["route"]}: {route_reason_class(t["route_reason"])}' for t in traces if t['route'] != 'in_pipeline').most_common()),
+        'unrun': sum(1 for t in traces if t['diagnosis'] == 'not_run'),
         'processed': len(processed),
         'wrote_something': sum(1 for t in processed if t['produced']),
         'kept_something': sum(1 for t in processed if t['kept']['evidence'] + t['kept']['candidates']),
         'stored_something': sum(1 for t in processed if t['written']['stored_evidence'] or t['written']['new_views'] or t['written']['changed']),
         'diagnoses': dict(counter(t['diagnosis'] for t in processed)),
         'by_category': {}, 'by_publisher_type': {}, 'by_day': {},
-        'drop_reasons': dict(counter(e['why_class'] for t in processed for e in t['raw_evidence'] if e['status'] == '丢掉').most_common()),
-        'candidate_drop_reasons': dict(counter(c['why_class'] for t in processed for c in t['raw_candidates'] if c['status'] == '丢掉').most_common()),
+        'drop_reasons': dict(counter(e['why_class'] for t in processed for e in t['raw_evidence'] if e['status'] == 'dropped').most_common()),
+        'candidate_drop_reasons': dict(counter(c['why_class'] for t in processed for c in t['raw_candidates'] if c['status'] == 'dropped').most_common()),
         'outcomes': dict(sum((counter(t['outcomes']) for t in processed), counter())),
         'evidence_outcomes': dict(sum((counter(t['evidence_outcomes']) for t in processed), counter())),
         'tiers_kept': dict(sum((counter(t['kept']['tiers']) for t in processed), counter())),
@@ -373,18 +378,18 @@ def summarise(traces, from_day, until_day):
         groups = collections.defaultdict(lambda: counter())
         for t in processed:
             groups[t[field]][t['diagnosis']] += 1
-            groups[t[field]]['条数'] += 1
-            groups[t[field]]['费用'] += t['cost']
-        summary[key] = {k: {kk: (round(vv, 2) if kk == '费用' else vv) for kk, vv in v.items()} for k, v in sorted(groups.items())}
+            groups[t[field]]['items'] += 1
+            groups[t[field]]['cost'] += t['cost']
+        summary[key] = {k: {kk: (round(vv, 2) if kk == 'cost' else vv) for kk, vv in v.items()} for k, v in sorted(groups.items())}
     return summary
 
 
 PAGE = r'''<!doctype html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>逐条抽取追踪</title>
+<title>Item-by-item extraction trace</title>
 <style>
 :root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e2e2dd;--ok:#2d7a3a;--warn:#b26a00;--bad:#b3261e;--info:#2b5fa8;--tag:#eef0f3}
 *{box-sizing:border-box}
@@ -403,11 +408,11 @@ th{background:#f0f0ec;white-space:nowrap}
 #items > thead th{position:sticky;top:0;cursor:pointer;z-index:1}
 td.n,th.n{text-align:right;white-space:nowrap}
 .badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:12px;background:var(--tag);white-space:nowrap}
-.b-正常{background:#dff3e3;color:var(--ok)} .b-杂音多{background:#fff1d6;color:var(--warn)} .b-全被丢,.b-失败{background:#fde0de;color:var(--bad)}
-.b-空手{background:#e8e8e4;color:var(--muted)} .b-不处理,.b-合并,.b-未跑,.b-退回{background:#f1f1ee;color:var(--muted)} .b-多为重复{background:#e3ebf7;color:var(--info)}
-.b-留下{background:#dff3e3;color:var(--ok)} .b-丢掉{background:#fde0de;color:var(--bad)}
-.b-归入已有的{background:#e3ebf7;color:var(--info)} .b-接续{background:#e3ebf7;color:var(--info)} .b-新观点{background:#dff3e3;color:var(--ok)} .b-不开{background:#fff1d6;color:var(--warn)}
-.b-新证据{background:#dff3e3;color:var(--ok)} .b-重复{background:#fff1d6;color:var(--warn)} .b-替代{background:#e3ebf7;color:var(--info)}
+.b-normal{background:#dff3e3;color:var(--ok)} .b-noisy{background:#fff1d6;color:var(--warn)} .b-all_dropped,.b-failed{background:#fde0de;color:var(--bad)}
+.b-empty_handed{background:#e8e8e4;color:var(--muted)} .b-not_processed,.b-merged,.b-not_run,.b-returned{background:#f1f1ee;color:var(--muted)} .b-mostly_repeats{background:#e3ebf7;color:var(--info)}
+.b-kept{background:#dff3e3;color:var(--ok)} .b-dropped{background:#fde0de;color:var(--bad)}
+.b-merge{background:#e3ebf7;color:var(--info)} .b-succession{background:#e3ebf7;color:var(--info)} .b-new{background:#dff3e3;color:var(--ok)} .b-skip{background:#fff1d6;color:var(--warn)}
+.b-repeat{background:#fff1d6;color:var(--warn)} .b-replace{background:#e3ebf7;color:var(--info)}
 .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 .filters select,.filters input{padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;font:inherit}
 tr.item{cursor:pointer} tr.item:hover{background:#fbfbf8}
@@ -423,25 +428,25 @@ a{color:var(--info)}
 </style>
 </head>
 <body><main>
-<h1>逐条抽取追踪 <span class="muted small" id="range"></span></h1>
-<p class="muted">每一条信息走过的路：路由（进不进流程）→ 抽取（模型写了什么、代码丢了什么）→ 比对（候选观点去哪、证据算新还是重复）→ 入库（开了什么、改了什么）→ 当天重判。所有数字都从存下来的数据里数出来，没有再问模型。</p>
+<h1>Item-by-item extraction trace <span class="muted small" id="range"></span></h1>
+<p class="muted">The road every item took: routing (into the pipeline or not) → extraction (what the model wrote, what the code dropped) → matching (where each candidate thesis went, whether evidence is new or a repeat) → writing (what opened, what changed) → the day's re-judging. Every number is counted from stored data; the model was not asked again.</p>
 <div class="card small">
-<b>诊断怎么打的（规则，不是人判）</b>
-<div class="rule">「空手」：模型一条证据、一条候选观点都没写。</div>
-<div class="rule">「全被丢」：模型写了，代码检查把每一条都丢了（原句不在原文、连到不存在的观点、梯子不对、季度数、年份超、到期日错、证据没了）。</div>
-<div class="rule">「杂音多」：杂音 ≥ 写出来的三分之一。杂音 = 模型写了、但后面被扔掉的东西：代码丢的证据 + 代码丢的候选观点 + 比对判「不开」的候选观点 + 对象不在研究名单上、只能进复核池的候选观点 + 因为观点没开而没存的证据。同一句写两次只合并，不算杂音。</div>
-<div class="rule">「多为重复」：留下的证据里一半以上被比对判「重复」（库里已有同一句或同一个数，只加一个出处）。这不是抽取写了废话，是这篇在复述别处已经说过的话；单独标出来，免得和杂音混在一起。</div>
-<div class="rule">「正常」：其余。<b>这个规则只看流程里能数的东西</b>；存进去的证据本身讲的是不是正事（trivia 还是关键数），要你点开看。</div>
+<b>How the diagnosis is assigned (a rule, not a person's judgement)</b>
+<div class="rule">empty_handed: the model wrote no evidence and no candidate thesis.</div>
+<div class="rule">all_dropped: the model wrote something and the code checks dropped every item (quote not in the text, link to a thesis that does not exist, malformed ladder, quarterly figure, year beyond next year, wrong due day, no surviving evidence).</div>
+<div class="rule">noisy: noise ≥ one third of what was written. Noise = what the model wrote and was later thrown away: evidence dropped by code + candidates dropped by code + candidates matching judged skip + candidates whose object is not on the research list (review pool only) + evidence not stored because its thesis did not open. A sentence written twice is merged and is not noise.</div>
+<div class="rule">mostly_repeats: at least half of the kept evidence was judged repeat by matching (the library already holds the same sentence or number and only gains a source). The extraction wrote nothing useless; the article retells what was said elsewhere, and this is shown apart from noise.</div>
+<div class="rule">normal: everything else. <b>The rule counts only what the pipeline can count</b>; whether the stored evidence is about what matters (trivia or a key number) is for you to read.</div>
 </div>
 <section id="summary"></section>
-<h2>每一条</h2>
+<h2>Every item</h2>
 <div class="filters" id="filters"></div>
 <div class="muted small" id="count"></div>
 <table id="items"><thead><tr>
-<th data-k="day">日期</th><th data-k="category">类别</th><th data-k="publisher">来源</th><th data-k="objects">对象</th><th data-k="title">标题</th>
-<th class="n" data-k="produced" title="模型写了几条证据 / 几条候选观点">写了 证/观</th><th class="n" data-k="kept" title="代码检查后留下几条">留下 证/观</th>
-<th data-k="outcomes" title="候选观点：归入 / 接续 / 新 / 不开；证据：新 / 重复 / 替代">比对</th><th class="n" data-k="stored" title="存了几条证据 / 开了几条观点 / 改了几条观点">入库 证/开/改</th>
-<th data-k="diagnosis">诊断</th><th class="n" data-k="cost">费用$</th>
+<th data-k="day">Day</th><th data-k="category">Category</th><th data-k="publisher">Source</th><th data-k="objects">Objects</th><th data-k="title">Title</th>
+<th class="n" data-k="produced" title="evidence / candidate theses the model wrote">Written ev/th</th><th class="n" data-k="kept" title="kept after the code checks">Kept ev/th</th>
+<th data-k="outcomes" title="candidates: merge / succession / new / skip; evidence: new / repeat / replace">Matching</th><th class="n" data-k="stored" title="evidence stored / theses opened / theses changed">Written ev/open/chg</th>
+<th data-k="diagnosis">Diagnosis</th><th class="n" data-k="cost">Cost $</th>
 </tr></thead><tbody id="rows"></tbody></table>
 </main>
 <script id="data" type="application/json">__DATA__</script>
@@ -450,58 +455,58 @@ const DATA = JSON.parse(document.getElementById('data').textContent);
 const S = DATA.summary, ITEMS = DATA.items;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const badge = s => `<span class="badge b-${esc(s)}">${esc(s)}</span>`;
-document.getElementById('range').textContent = `${S.from} 到 ${S.to}`;
+document.getElementById('range').textContent = `${S.from} to ${S.to}`;
 function table(rows, head){ return `<table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${typeof c==='number'?'n':''}">${typeof c==='number'?c:c}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
 function kv(obj, label1, label2){ return table(Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[esc(k), v]), [label1, label2]); }
 function groupTable(groups, label){
-  const diag = ['正常','多为重复','杂音多','全被丢','空手','失败'];
-  return table(Object.entries(groups).map(([k,v])=>[esc(k), v['条数']||0, ...diag.map(d=>v[d]||0), v['费用']||0]), [label,'条数',...diag,'费用$']);
+  const diag = ['normal','mostly_repeats','noisy','all_dropped','empty_handed','failed'];
+  return table(Object.entries(groups).map(([k,v])=>[esc(k), v['items']||0, ...diag.map(d=>v[d]||0), v['cost']||0]), [label,'items',...diag,'cost $']);
 }
 (function renderSummary(){
   const el = document.getElementById('summary');
   const funnel = [
-    ['语料里这段日子的条目', S.items],
-    ['路由进流程的', (S.routes['进流程']||0)],
-    ['其中真的跑了的（启动期只跑 NVDA）', S.processed],
-    ['模型写了东西的', S.wrote_something],
-    ['代码检查后还留下东西的', S.kept_something],
-    ['比对后写进库的（存了证据、开了或改了观点）', S.stored_something],
+    ['items in the corpus for these days', S.items],
+    ['routed into the pipeline', (S.routes['in_pipeline']||0)],
+    ['of which actually run (the seed period ran NVDA only)', S.processed],
+    ['the model wrote something', S.wrote_something],
+    ['something survived the code checks', S.kept_something],
+    ['written into the library after matching (evidence stored, a thesis opened or changed)', S.stored_something],
   ];
   el.innerHTML = `
-  <h2>总览</h2>
+  <h2>Overview</h2>
   <div class="cards">${funnel.map(([k,v])=>`<div class="card"><div class="num">${v}</div><div class="muted small">${esc(k)}</div></div>`).join('')}</div>
   <div class="two">
-    <div class="card"><h3>没进流程的，为什么</h3>${kv(S.route_reasons,'原因','条数')}<p class="small muted">「未跑」${S.unrun} 条：启动期（窗口开始前）只跑了 NVDA。</p></div>
-    <div class="card"><h3>跑了的 ${S.processed} 条，诊断</h3>${kv(S.diagnoses,'诊断','条数')}<p class="small muted">费用合计 $${S.cost}（抽取 + 比对，按买答案时的价）。比对被代码退回过的条目 ${S.match_refused_items}；答案和交接记录对不上的 ${S.answer_mismatch}。</p></div>
+    <div class="card"><h3>Not in the pipeline, and why</h3>${kv(S.route_reasons,'reason','items')}<p class="small muted">not_run ${S.unrun} items: the seed period (before the window) ran NVDA only.</p></div>
+    <div class="card"><h3>Diagnoses of the ${S.processed} items run</h3>${kv(S.diagnoses,'diagnosis','items')}<p class="small muted">Cost $${S.cost} (extraction + matching, at the price when the answers were bought). Items whose matching the code returned: ${S.match_refused_items}; answers not matching the handover record: ${S.answer_mismatch}.</p></div>
   </div>
   <div class="two">
-    <div class="card"><h3>模型写了多少，留下多少</h3>${table([
-      ['证据', S.produced.evidence, S.kept.evidence, S.stored_evidence],
-      ['候选观点', S.produced.candidates, S.kept.candidates, S.new_views]], ['', '模型写了', '代码留下', '最后入库'])}
-      <p class="small muted">入库的证据少于留下的：比对判「重复」的 ${S.repeats} 条只加出处，不新存；候选观点归入已有观点的也不开新的。</p></div>
-    <div class="card"><h3>比对的结果</h3><div class="two">${kv(S.outcomes,'候选观点去哪','条数')}${kv(S.evidence_outcomes,'证据算什么（一条证据连几条观点就判几次）','次数')}</div></div>
+    <div class="card"><h3>How much the model wrote, how much was kept</h3>${table([
+      ['evidence', S.produced.evidence, S.kept.evidence, S.stored_evidence],
+      ['candidate theses', S.produced.candidates, S.kept.candidates, S.new_views]], ['', 'model wrote', 'code kept', 'written to the library'])}
+      <p class="small muted">Fewer evidence items are written than kept: the ${S.repeats} judged repeat only gain a source; a candidate merged into an existing thesis opens no new one.</p></div>
+    <div class="card"><h3>Matching results</h3><div class="two">${kv(S.outcomes,'where candidates went','items')}${kv(S.evidence_outcomes,'what evidence counts as (one decision per thesis it links to)','decisions')}</div></div>
   </div>
   <div class="two">
-    <div class="card"><h3>代码为什么丢证据</h3>${kv(S.drop_reasons,'原因','条数')}</div>
-    <div class="card"><h3>代码为什么丢候选观点</h3>${kv(S.candidate_drop_reasons,'原因','条数')}<h3>入库时的备注</h3>${kv(S.notes,'备注','条数')}</div>
+    <div class="card"><h3>Why the code dropped evidence</h3>${kv(S.drop_reasons,'reason','items')}</div>
+    <div class="card"><h3>Why the code dropped candidates</h3>${kv(S.candidate_drop_reasons,'reason','items')}<h3>Notes at writing</h3>${kv(S.notes,'note','items')}</div>
   </div>
-  <div class="card"><h3>留下的证据，来源分四层</h3>${kv(S.tiers_kept,'层','条数')}</div>
-  <div class="card"><h3>按类别</h3>${groupTable(S.by_category,'类别')}</div>
-  <div class="card"><h3>按来源类型</h3>${groupTable(S.by_publisher_type,'来源类型')}</div>
-  <div class="card"><h3>按日</h3>${groupTable(S.by_day,'日期')}</div>`;
+  <div class="card"><h3>Kept evidence by tier</h3>${kv(S.tiers_kept,'tier','items')}</div>
+  <div class="card"><h3>By category</h3>${groupTable(S.by_category,'category')}</div>
+  <div class="card"><h3>By source type</h3>${groupTable(S.by_publisher_type,'source type')}</div>
+  <div class="card"><h3>By day</h3>${groupTable(S.by_day,'day')}</div>`;
 })();
 const state = {day:'', category:'', ptype:'', diag:'', object:'', q:'', sort:'day', dir:1};
 (function renderFilters(){
   const el = document.getElementById('filters');
-  const opts = (vals, label) => `<option value="">${label}：全部</option>` + [...new Set(vals)].sort().map(v=>`<option>${esc(v)}</option>`).join('');
+  const opts = (vals, label) => `<option value="">${label}: all</option>` + [...new Set(vals)].sort().map(v=>`<option>${esc(v)}</option>`).join('');
   el.innerHTML = `
-  <select id="f-day">${opts(ITEMS.map(i=>i.day),'日期')}</select>
-  <select id="f-category">${opts(ITEMS.map(i=>i.category),'类别')}</select>
-  <select id="f-ptype">${opts(ITEMS.map(i=>i.publisher_type),'来源类型')}</select>
-  <select id="f-diag">${opts(ITEMS.map(i=>i.diagnosis),'诊断')}</select>
-  <select id="f-object">${opts(ITEMS.flatMap(i=>i.objects),'对象')}</select>
-  <input id="f-q" placeholder="搜标题 / 来源 / 编号" size="28">
-  <label class="small"><input type="checkbox" id="f-noise"> 只看杂音≥1 的</label>`;
+  <select id="f-day">${opts(ITEMS.map(i=>i.day),'day')}</select>
+  <select id="f-category">${opts(ITEMS.map(i=>i.category),'category')}</select>
+  <select id="f-ptype">${opts(ITEMS.map(i=>i.publisher_type),'source type')}</select>
+  <select id="f-diag">${opts(ITEMS.map(i=>i.diagnosis),'diagnosis')}</select>
+  <select id="f-object">${opts(ITEMS.flatMap(i=>i.objects),'object')}</select>
+  <input id="f-q" placeholder="search title / source / id" size="28">
+  <label class="small"><input type="checkbox" id="f-noise"> only items with noise ≥ 1</label>`;
   for (const [id,key] of [['f-day','day'],['f-category','category'],['f-ptype','ptype'],['f-diag','diag'],['f-object','object']])
     document.getElementById(id).onchange = e => { state[key]=e.target.value; renderRows(); };
   document.getElementById('f-q').oninput = e => { state.q=e.target.value.toLowerCase(); renderRows(); };
@@ -516,12 +521,12 @@ function renderRows(){
     &&(!state.diag||i.diagnosis===state.diag)&&(!state.object||i.objects.includes(state.object))&&(!state.noise||(i.noise||0)>=1)
     &&(!state.q||(i.title+' '+i.publisher+' '+i.id).toLowerCase().includes(state.q)));
   rows.sort((a,b)=>{const x=sortKey(a,state.sort), y=sortKey(b,state.sort); return (x>y?1:x<y?-1:0)*state.dir;});
-  document.getElementById('count').textContent = `${rows.length} 条（点一行展开）`;
+  document.getElementById('count').textContent = `${rows.length} items (click a row to expand)`;
   document.getElementById('rows').innerHTML = rows.map((i,n)=>{
     const o=i.outcomes||{}, eo=i.evidence_outcomes||{};
-    const outcomes = i.route!=='进流程'||!i.seq ? '' : `${o['归入已有的']||0}/${o['接续']||0}/${o['新观点']||0}/${o['不开']||0} · ${eo['新证据']||0}/${eo['重复']||0}/${eo['替代']||0}`;
+    const outcomes = i.route!=='in_pipeline'||!i.seq ? '' : `${o['merge']||0}/${o['succession']||0}/${o['new']||0}/${o['skip']||0} · ${eo['new']||0}/${eo['repeat']||0}/${eo['replace']||0}`;
     return `<tr class="item" data-id="${esc(i.id)}"><td>${esc(i.day)}</td><td>${esc(i.category)}</td><td>${esc(i.publisher)}<div class="muted small">${esc(i.publisher_type)}</div></td>
-    <td>${i.objects.map(esc).join(' ')}</td><td>${esc(i.title)||'<span class="muted">（无标题）</span>'}<div class="muted small">${esc(i.id)}</div></td>
+    <td>${i.objects.map(esc).join(' ')}</td><td>${esc(i.title)||'<span class="muted">(no title)</span>'}<div class="muted small">${esc(i.id)}</div></td>
     <td class="n">${i.seq?`${i.raw_evidence.length}/${i.raw_candidates.length}`:''}</td><td class="n">${i.seq?`${i.kept.evidence}/${i.kept.candidates}`:''}</td>
     <td class="small">${outcomes}</td><td class="n">${i.seq?`${i.written.stored_evidence}/${i.written.new_views.length}/${i.written.changed.length}`:''}</td>
     <td>${badge(i.diagnosis)}</td><td class="n">${i.cost?i.cost.toFixed(3):''}</td></tr>`;
@@ -537,27 +542,27 @@ function toggle(tr){
   tr.after(d);
 }
 function detail(i){
-  const files = `<a href="text/${i.slug}.txt" target="_blank">原文全文</a>` + (i.seq?` · <a href="request/${i.slug}.txt" target="_blank">给模型的完整请求</a> · <a href="answer/${i.slug}.json" target="_blank">模型原始答案</a>`:'') + (i.uri?` · <a href="${esc(i.uri)}" target="_blank">来源链接</a>`:'');
-  let out = `<div><b>诊断：</b>${badge(i.diagnosis)} ${esc(i.diagnosis_why)}</div><div class="small muted">${files} · 原文 ${i.chars} 字</div><div class="quote small" style="margin:6px 0">${esc(i.excerpt)}</div>`;
-  out += `<h4>① 路由</h4><div>${esc(i.route)}${i.route_reason?'：'+esc(i.route_reason):'：对象在名单上，这一类在看，进流程'}</div>`;
+  const files = `<a href="text/${i.slug}.txt" target="_blank">full source text</a>` + (i.seq?` · <a href="request/${i.slug}.txt" target="_blank">the complete request to the model</a> · <a href="answer/${i.slug}.json" target="_blank">the model's raw answer</a>`:'') + (i.uri?` · <a href="${esc(i.uri)}" target="_blank">source link</a>`:'');
+  let out = `<div><b>Diagnosis:</b> ${badge(i.diagnosis)} ${esc(i.diagnosis_why)}</div><div class="small muted">${files} · source ${i.chars} characters</div><div class="quote small" style="margin:6px 0">${esc(i.excerpt)}</div>`;
+  out += `<h4>① Routing</h4><div>${esc(i.route)}${i.route_reason?': '+esc(i.route_reason):': the object is on the list and the category is watched; into the pipeline'}</div>`;
   if (!i.seq) return out;
   const c = i.extract_call||{};
-  out += `<h4>② 抽取</h4><div class="small muted">模型 ${esc(c.model)}，请求 ${c.prompt_chars} 字，输入 ${c.input_tokens} / 输出 ${c.output_tokens} tokens，${c.seconds} 秒，$${c.cost}${c.candidates_of_item>1?`（档案里这条有 ${c.candidates_of_item} 次抽取调用，取「抽取完成」那一刻之前最后一次）`:''}${i.answer_matches_handover===false?' <b style="color:var(--bad)">答案和交接记录对不上</b>':''}</div>`;
-  out += `<div class="small"><b>给模型看的已有观点（${i.shown_views.length}）</b>${i.shown_views.length?`<ul>${i.shown_views.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:'：还没有，该开的都写成候选观点'}</div>`;
-  out += `<div><b>模型写的证据（${i.raw_evidence.length}）</b></div>` + (i.raw_evidence.length ? table(i.raw_evidence.map(e=>[esc(e.id), badge(e.status)+(e.why?`<div class="small muted">${esc(e.why_class)}<br>${esc(e.why)}</div>`:''), esc(e.tier), esc(e.speaker)+(e.original_who?`<div class="small muted">转述 ${esc(e.original_who)} ${esc(e.original_day)}</div>`:''), `<div class="quote">${esc(e.quote)}</div><div>${esc(e.one_line)}</div>`, e.links.map(esc).join(' ')]), ['编号','结果','层','谁说的','原句 / 一句话','连到']) : '<div class="muted small">没有</div>');
-  out += `<div style="margin-top:8px"><b>模型写的候选观点（${i.raw_candidates.length}）</b></div>` + (i.raw_candidates.length ? table(i.raw_candidates.map(k=>[esc(k.id), badge(k.status)+(k.why?`<div class="small muted">${esc(k.why_class)}<br>${esc(k.why)}</div>`:''), `${esc(k.kind)}<div class="small muted">${esc(k.object)} · ${esc(k.year)} · 到期 ${esc(k.due_day)}</div>`, `<b>${esc(k.question)}</b><div class="small muted">看的是「${esc(k.looks_at)}」</div><ol class="small" style="margin:2px 0;padding-left:18px">${k.rungs.map(r=>`<li>${esc(r)}</li>`).join('')}</ol>`, k.evidence_ids.map(esc).join(' ')]), ['编号','结果','种类','问题 / 梯子','证据']) : '<div class="muted small">没有</div>');
-  out += `<h4>③ 比对</h4>`;
-  if (!i.match_calls.length) out += `<div class="muted small">没到比对：抽取后没有留下的东西</div>`;
+  out += `<h4>② Extraction</h4><div class="small muted">model ${esc(c.model)}, request ${c.prompt_chars} characters, ${c.input_tokens} input / ${c.output_tokens} output tokens, ${c.seconds} s, $${c.cost}${c.candidates_of_item>1?` (the archive holds ${c.candidates_of_item} extraction calls for this item; the last one before the "extracted" step is shown)`:''}${i.answer_matches_handover===false?' <b style="color:var(--bad)">answer does not match the handover record</b>':''}</div>`;
+  out += `<div class="small"><b>Existing theses shown to the model (${i.shown_views.length})</b>${i.shown_views.length?`<ul>${i.shown_views.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:': none yet; everything that should open is a candidate'}</div>`;
+  out += `<div><b>Evidence the model wrote (${i.raw_evidence.length})</b></div>` + (i.raw_evidence.length ? table(i.raw_evidence.map(e=>[esc(e.id), badge(e.status)+(e.why?`<div class="small muted">${esc(e.why_class)}<br>${esc(e.why)}</div>`:''), esc(e.tier), esc(e.speaker)+(e.original_who?`<div class="small muted">retelling ${esc(e.original_who)} ${esc(e.original_day)}</div>`:''), `<div class="quote">${esc(e.quote)}</div><div>${esc(e.one_line)}</div>`, e.links.map(esc).join(' ')]), ['id','result','tier','speaker','quote / one line','links']) : '<div class="muted small">none</div>');
+  out += `<div style="margin-top:8px"><b>Candidate theses the model wrote (${i.raw_candidates.length})</b></div>` + (i.raw_candidates.length ? table(i.raw_candidates.map(k=>[esc(k.id), badge(k.status)+(k.why?`<div class="small muted">${esc(k.why_class)}<br>${esc(k.why)}</div>`:''), `${esc(k.kind)}<div class="small muted">${esc(k.object)} · ${esc(k.year)} · due ${esc(k.due_day)}</div>`, `<b>${esc(k.question)}</b><div class="small muted">focus: ${esc(k.looks_at)}</div><ol class="small" style="margin:2px 0;padding-left:18px">${k.rungs.map(r=>`<li>${esc(r)}</li>`).join('')}</ol>`, k.evidence_ids.map(esc).join(' ')]), ['id','result','kind','question / ladder','evidence']) : '<div class="muted small">none</div>');
+  out += `<h4>③ Matching</h4>`;
+  if (!i.match_calls.length) out += `<div class="muted small">no matching: nothing survived extraction</div>`;
   for (const m of i.match_calls){
-    out += `<div class="small muted">第 ${m.call_no} 次调用（${m.call_no<=2?'候选观点 + 直连已有观点的证据':'归入已有观点后的证据再比一次'}），$${m.cost}，${m.seconds} 秒${m.refusals.length?` · <b style="color:var(--bad)">代码退回</b>：${m.refusals.map(esc).join('；')}`:''}</div>`;
-    if (m.candidates.length) out += table(m.candidates.map(k=>[esc(k.id), badge(k.outcome)+(k.target?` → ${esc(k.target)}`:'')+(k.not_opened?`<div class="small" style="color:var(--warn)">代码没开：对象不在研究名单上，进复核池当建议主题</div>`:''),`<span class="small muted">给它比的已有观点：${k.offered.length?k.offered.map(esc).join(' '):'没有'}</span>`+(k.dependencies.length?`<div class="small muted">依赖：${k.dependencies.map(d=>esc(d.view_id)+(d.direction?`（${esc(d.direction)}）`:'')+(d.wait_chain_view_id?`，等 ${esc(d.wait_chain_view_id)} ${esc(d.wait_year)}`:'')).join('；')}</div>`:''), esc(k.reason)]), ['候选','去哪','比对清单','模型的理由']);
-    if (m.evidence.length) out += table(m.evidence.map(e=>[esc(e.id)+' → '+esc(e.view), badge(e.outcome)+(e.target?` 对 ${esc(e.target)}`:'')+(e.said_day?` 说于 ${esc(e.said_day)}`:''), `<span class="small muted">给它比的已有证据：${e.offered.length?e.offered.map(esc).join(' '):'没有'}</span>`, esc(e.reason)]), ['证据 → 观点','算什么','比对清单','模型的理由']);
+    out += `<div class="small muted">call ${m.call_no} (${m.call_no<=2?'candidates + evidence linked straight to existing theses':'evidence compared again under the thesis its candidate merged into'}), $${m.cost}, ${m.seconds} s${m.refusals.length?` · <b style="color:var(--bad)">returned by the code</b>: ${m.refusals.map(esc).join('; ')}`:''}</div>`;
+    if (m.candidates.length) out += table(m.candidates.map(k=>[esc(k.id), badge(k.outcome)+(k.target?` → ${esc(k.target)}`:'')+(k.not_opened?`<div class="small" style="color:var(--warn)">not opened by the code: the object is not on the research list; pooled as a suggested theme</div>`:''),`<span class="small muted">compared with: ${k.offered.length?k.offered.map(esc).join(' '):'nothing'}</span>`+(k.dependencies.length?`<div class="small muted">dependencies: ${k.dependencies.map(d=>esc(d.view_id)+(d.direction?` (${esc(d.direction)})`:'')+(d.wait_chain_view_id?`, waiting for ${esc(d.wait_chain_view_id)} ${esc(d.wait_year)}`:'')).join('; ')}</div>`:''), esc(k.reason)]), ['candidate','destination','compared with','the model\'s reason']);
+    if (m.evidence.length) out += table(m.evidence.map(e=>[esc(e.id)+' → '+esc(e.view), badge(e.outcome)+(e.target?` of ${esc(e.target)}`:'')+(e.said_day?` said on ${esc(e.said_day)}`:''), `<span class="small muted">compared with: ${e.offered.length?e.offered.map(esc).join(' '):'nothing'}</span>`, esc(e.reason)]), ['evidence → thesis','counts as','compared with','the model\'s reason']);
   }
   const w = i.written;
-  out += `<h4>④ 入库</h4><div class="small">存了 ${w.stored_evidence} 条新证据，另有 ${w.linked_existing} 条已有证据加了这条出处；开了 ${w.new_views.length} 条观点；改了读法的观点：${w.changed.length?w.changed.map(esc).join(' '):'无'}</div>`;
-  if (w.new_views.length) out += table(w.new_views.map(v=>[`${esc(v.candidate)} → <b>${esc(v.view_id)}</b>`, `${esc(v.kind)}<div class="small muted">${esc(v.object)} · ${esc(v.year)} · 到期 ${esc(v.due_day)}</div>`, `<b>${esc(v.question)}</b><div class="small muted">看的是「${esc(v.looks_at)}」</div><ol class="small" style="margin:2px 0;padding-left:18px">${v.rungs.map(r=>`<li>${esc(r)}</li>`).join('')}</ol>`]), ['候选 → 观点','种类','问题 / 梯子']);
-  if (w.notes.length) out += `<ul class="small">${w.notes.map(n=>`<li>${esc(n.class)}：<span class="muted">${esc(n.text)}</span></li>`).join('')}</ul>`;
-  out += `<h4>⑤ 重判</h4>` + (i.judged.length ? table(i.judged.map(j=>[esc(j.view_id), `第 ${j.rung} 格`, j.changed?'<b>变了</b>':'没变', esc(j.by), `<div>${esc(j.why_changed)}</div><div class="small muted">${esc(j.reasons)}</div>`]), ['观点','判在','变没变','哪一轮','为什么']) : `<div class="muted small">${w.changed.length||w.new_views.length?'这条改的观点在当天那一轮没有被判（当天没有重判记录）':'这条没改任何观点的读法，不用重判'}</div>`);
+  out += `<h4>④ Writing</h4><div class="small">${w.stored_evidence} new evidence items stored, ${w.linked_existing} existing items gained this source; ${w.new_views.length} theses opened; theses whose reading changed: ${w.changed.length?w.changed.map(esc).join(' '):'none'}</div>`;
+  if (w.new_views.length) out += table(w.new_views.map(v=>[`${esc(v.candidate)} → <b>${esc(v.view_id)}</b>`, `${esc(v.kind)}<div class="small muted">${esc(v.object)} · ${esc(v.year)} · due ${esc(v.due_day)}</div>`, `<b>${esc(v.question)}</b><div class="small muted">focus: ${esc(v.looks_at)}</div><ol class="small" style="margin:2px 0;padding-left:18px">${v.rungs.map(r=>`<li>${esc(r)}</li>`).join('')}</ol>`]), ['candidate → thesis','kind','question / ladder']);
+  if (w.notes.length) out += `<ul class="small">${w.notes.map(n=>`<li>${esc(n.class)}: <span class="muted">${esc(n.text)}</span></li>`).join('')}</ul>`;
+  out += `<h4>⑤ Re-judging</h4>` + (i.judged.length ? table(i.judged.map(j=>[esc(j.view_id), `rung ${j.rung}`, j.changed?'<b>changed</b>':'unchanged', esc(j.by), `<div>${esc(j.why_changed)}</div><div class="small muted">${esc(j.reasons)}</div>`]), ['thesis','judged at','changed','round','why']) : `<div class="muted small">${w.changed.length||w.new_views.length?'the theses this item changed were not judged in the day\'s round (no judgement recorded that day)':'this item changed no thesis, so nothing to re-judge'}</div>`);
   return out;
 }
 renderRows();

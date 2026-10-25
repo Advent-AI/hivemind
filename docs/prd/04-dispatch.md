@@ -1,78 +1,74 @@
-# 分发
+# Dispatch
 
-> 状态：第一版已冻结 · 2026-10-18 · 更新：2026-10-21 · 依据：docs/DECISIONS.md D4、D7、D10、D16、D17、D18、D19、D25、D31、D36、D37、D47、D52、D53
-> 设计页：docs/system-design.html › New › 分发。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+> Status: first version frozen, October 18, 2026. English edition: October 25, 2026 (D163).
+> Design page: `docs/system-design.html` → New → Dispatch. Recorded decisions take precedence over this PRD.
 
-## 一句话
+## Purpose
 
-系统的唯一入口：每来一条信息，依次问三个问题，决定它的去处。
+The system's only entry point asks three questions in sequence to determine each item's destination.
 
-## 为什么要有它
+The old system spread routing across daily steps, channel-specific text/table rules, filename-based model routing and category lists in nine modules. This design gives that decision one tree.
 
-旧系统里，“一条信息该怎么处理”由四个地方分别决定：日常步骤表、按取数渠道写死的“文字还是表格”分流、按文件名规则换模型设置的路由文件、9 个模块里各自的类别清单。新系统把这件事收成一棵决策树。
+## Scope
 
-## 做什么 / 不做什么
+Check completeness, previous processing and classification. Give categorised items a sequence number and send them to extraction. Send issues to human review.
 
-- 做：检查信息完整不完整；查以前处理过没有；看分类结果；属于某一类的编上顺序号，交给抽取；把有问题的放进人工复核池。
-- 不做：不看信息讲的是谁；不按类别过滤（推进来的都在研究对象名单的范围内）；不决定研究什么；不按日期做任何事。
+Do not inspect subjects, filter categories already selected by the universe, choose research scope or perform date-based work.
 
-## 决策树
+## Decision tree
 
 <!-- generated: tree -->
-- 一条信息进来 → **问：信息完整吗？**（看有没有写明：谁发的、哪天发的、分类结果、上游编号）
-  - 不完整 → **退回**：这是上游的问题，同时放进人工复核池
-  - 完整 → 查处理记录，**问：以前处理过吗？**（同一个上游编号；更新版是新的一条，有自己的编号）
-    - 处理过 → **跳过**：上游重发或测试重跑时，不重复花钱
-    - 没处理过 → 看分类结果，**问：分类结果是什么？**
-      - 不合格 → **不处理**：写明原因；对照表里查不到的，放进人工复核池
-      - 不算材料 → **不处理**：比如别人算好、我们自己就能算出来的指标，文件目录
-      - 重复的信息 → **并到原来那条**：算原来那条的另一个出处，不再处理一遍
-      - 属于某一类 → **交给抽取**：带上它的类别和顺序号；抽取按类别用不同的读法
+- An item arrives → **Question: Is the item complete?** (Check author, publication day, classification result and upstream ID.)
+  - Incomplete → **Return**: This is an upstream problem; also place it in the human review pool.
+  - Complete → Check processing records, **Question: Has it been processed?** (Use the upstream ID. An updated version is a new item with its own ID.)
+    - Already processed → **Skip**: Do not pay again when upstream resends an item or a test reruns.
+    - Not processed → Read classification, **Question: What is the classification result?**
+      - Invalid → **Do not process**: Record the reason; unresolved lookup entries go to the human review pool.
+      - Not source material → **Do not process**: For example, derived indicators we can calculate ourselves, or a file listing.
+      - Duplicate item → **Merge with the original item**: Record another source for the original item; do not process it again.
+      - Assigned to a category → **Send to extraction**: Include its category and sequence number; extraction reads each category differently.
 <!-- /generated: tree -->
 
-## 说明
+## Notes
 
 <!-- generated: notes -->
-- 灰色框：到这里就停了，不处理。黑框：交给抽取。
-- 不看信息讲的是谁。推进来的信息都在研究对象名单的范围内，所以不再问“这一类要不要处理”。
-- 每一类都交给抽取，按类别用不同的读法，不需要人来选。每一类读出什么，见抽取。
-- 带了发布系列名、但发布系列表里没登记的，照常往下走，同时放进人工复核池。
-- 顺序号按到达的先后编，不用电脑时钟；后面每一步都按它排先后。
-- “处理过”指已经处理完；上次没做完的，从记下的那一步接着做，不算处理过。
+- Grey boxes stop processing. The black box sends the item to extraction.
+- Do not filter by subject here. Incoming items are already within the research universe, so dispatch does not decide which categories to process.
+- Every category goes to extraction with its category-specific reading method; no manual selection. Extraction defines what each category yields.
+- An unregistered publication series does not stop processing; also record it in the human review pool.
+- Assign sequence numbers in arrival order, without using the computer clock. All later steps use that order.
+- Processed means completed. Resume unfinished work from its recorded step rather than treating it as completed.
 <!-- /generated: notes -->
 
-## 例子
+## Examples
 
-| 情况 | 去处 |
+| Input | Destination |
 |---|---|
-| 上游重发了一条已经处理完的 Reuters 报道（同一个上游编号） | 跳过 |
-| 同一条报道的更新版（新版本） | 照常处理 |
-| 一条新闻没有发布时间 | 退回，同时进人工复核池 |
-| 数据商算好的市盈率 | 不处理（不算材料） |
-| FOMC 声明 | 交给抽取（按 T11 的读法） |
-| Reuters 报道 | 交给抽取（按 T7 的读法） |
-| 带了没登记的发布系列 | 按作者类型归类后照常处理，同时进人工复核池 |
+| Resent Reuters item with a completed upstream ID | Skip |
+| Updated version of that report, with a new ID | Process normally |
+| News without publication time | Return and record in human review |
+| Vendor-calculated P/E ratio | Do not process: not source material |
+| FOMC statement | Extract under T11 |
+| Reuters report | Extract under T7 |
+| Unregistered publication series | Classify using author rules, process normally and record in human review |
 
-## 验收标准
+## Acceptance
 
-- 每条信息恰好落到一个去处。
-- 同一个上游编号、已经处理完的信息第二次进来，一定跳过（改过的新版本是新的一条，有自己的编号），不重复调用模型；上次没做完的，从记下的那一步接着做。
-- 属于某一类的信息一定交给抽取，并带上它的类别和顺序号；顺序号只按到达的先后编，不看电脑时钟。
-- 判断过程中不读信息的相关对象。
-- 不完整的信息退回，并出现在人工复核池里。
-- 没有信息进来时，分发不做任何事。
+- Every item has exactly one destination.
+- A completed upstream ID is skipped on redelivery without another model call. An updated version has its own ID. Unfinished work resumes from its recorded step.
+- Every categorised item reaches extraction with its category and sequence number. Sequence follows arrival order, not the computer clock.
+- Routing does not read related subjects.
+- Incomplete items are returned and appear in human review.
+- Without an incoming item, dispatch does nothing.
 
-## 还没定的
+## Open question
 
-- 退回的信息怎样通知上游（和上游一起谈）。
+How returned items notify upstream; decide with upstream.
 
-## 相关决定
+## Related decisions
 
-- D4、D18：不看对象；不按类别过滤。
-- D7：处理记录用来判断以前处理过没有。
-- D10、D17：系统从分发开始，分发是唯一入口。
-- D16：有问题的进人工复核池。
-- D19：第一版冻结。
-- D25：只有一个抽取模块，分发不再问“文字还是表格”。
-- D31：交给抽取时编顺序号，后面每一步都按它排先后。
-- D37：第一版冻结（2026-10-18）；要改先记一条新决定。
+- D4/D18: no subject or category filtering here. D7: processing records determine prior completion.
+- D10/D17: dispatch is the system's sole entry. D16: issues go to human review.
+- D19/D37: first-version freeze; changes need a decision.
+- D25: one extraction module; dispatch no longer branches on text/table form.
+- D31: assign the sequence passed through every later step.

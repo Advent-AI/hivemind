@@ -41,6 +41,14 @@
       if (!line.trim()) { index += 1; continue; }
       if (/^<!--.*-->$/.test(line.trim())) { index += 1; continue; }   // hidden markers, e.g. generated blocks
 
+      // Preserve explicit historical heading aliases without showing raw HTML.
+      const anchor = line.trim().match(/^<a id="([^"<>\s]+)"><\/a>$/);
+      if (anchor) {
+        html.push(`<a id="${escapeHtml(anchor[1])}"></a>`);
+        index += 1;
+        continue;
+      }
+
       if (/^```/.test(line)) {
         const body = [];
         index += 1;

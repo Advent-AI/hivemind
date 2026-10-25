@@ -1,0 +1,23 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+_____ test_projection_itself_checks_exact_targets[1-t2-changed new target] _____
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-325/test_projection_itself_checks_1')
+index = 1, ref = 't2', reason = 'changed new target'
+
+    @pytest.mark.parametrize('index,ref,reason', [(0, 'g2', 'changed existing target'),
+                                                 (1, 't2', 'changed new target')])
+    def test_projection_itself_checks_exact_targets(tmp_path, index, ref, reason):
+        """Projection row: another valid target of the same type must be caught here."""
+        _, sample = fixture(tmp_path, True)
+        extract = read(sample / 'item3-extract.json')
+        payload = json.loads(extract['request']['messages'][1]['content'])
+        projection = read(sample / 'item3-extract-projection.json')
+        projection['thread_ids'][index] = [ref]
+>       with pytest.raises(audit.RecordError, match=reason):
+E       Failed: DID NOT RAISE <class 'review_subject_names.RecordError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py:148: Failed
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py::test_projection_itself_checks_exact_targets[1-t2-changed new target]
+1 failed, 1 passed, 19 deselected in 0.05s

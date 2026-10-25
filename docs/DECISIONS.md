@@ -2183,3 +2183,168 @@ A later decision that changes one names the one it replaces.
 - The new output is validated before projection to the old membership IDs; explanations are archived, never treated as evidence or sent to identity matching. No separate clustering call, group-count target, production schema migration, or claim that rationale helps because Claude used it. Claude's latest per-driver rationale arm did not improve consistency.
 - Contract, state/event and value/reader tables, unchanged measurement definitions and read-only review: `docs/research/2026-10-25-grouping-basis/plan.md`.
 - Result: 12 fresh calls, estimated $0.199548. The basis arm had one correct OpenAI→Rubin result, one omission, and one PC→Rubin error; controls repeated OpenAI→SK and also produced PC→SK. No adoption or conditional Google run. Across D147/D148/D150, five wrong references and one missed membership remain visible; three wrong-reference answers also declare an appropriate new group but reference a different old one. A zero-call one-ID correction confirms the writer preserves the supplied reference. This does not establish why the model selected it or validate the next representation. All 135 tests and targeted mutants pass; source, history and resend checks pass. Findings: `docs/research/2026-10-25-grouping-basis/findings.md`.
+
+## D151 · 2026-10-25 · Before the NVDA rerun: the two sessions merged, two prompt rules corrected and proven on stored requests
+
+- Alex: "codex 做完了，你合并，然后解决你上面的顺序问题，开始跑小的验证快速的收敛这些问题。确认是真实的问题，不是你自己看错或是理解错误；务必不要scope creep乱搞". The merge is commit 7033c87 (one tree, both sessions' work, every suite passing).
+- Verified on the sealed run (`docs/poc/pipeline-plan.md`, 重跑前的基本面): nine product-trivia views and no H200 licence view (60 items mention it); two of 465 judgements read "no fact confirms" as the lowest rung; eight theme views that are anti-dumping or scrap-metal notices; the English requirement is a contract migration (137 Chinese literals in the pipeline's code, 13 KB of prompts, a Chinese-only ladder parser), not a prompt change.
+- Adopted for the rerun as `poc/config/poc-v14.json`: `role-v3` (a dated event opens a view only when it moves a full-year number or a segment; pending regulatory decisions open without a date, due at the fiscal year end) and `judging-v2` (missing confirmation is not the lowest rung). Proof on the stored requests with only the prompt changed: the three trivia items open nothing in 6 of 6 samples, the May 10-Q opens the H200 import-licence view in 2 of 2; the two misjudged cases move to rungs 4 and 3, the rung-5 control holds.
+- Not changed: grouping (D149, Codex's slice, still not in the default pipeline); the language (Alex's call: run in Chinese now or migrate first). The rerun reads the relabelled corpus `items-window-tags2-2026-10-24.sqlite`. A one-week run comes first.
+
+## D152 · 2026-10-25 · The rerun runs in Chinese first; grouping passes to Claude
+
+- Alex, on the language: "1. 可以吧。" The NVDA rerun runs on the Chinese pipeline with the corrected rules (poc-v14);
+  the English migration (137 Chinese literals in the pipeline's code, the four prompts, the ladder parser; D133) is a
+  separate slice, scheduled after it, measured on its own.
+- Alex, on grouping: "2. codex 已经停止了，要靠你来接着把这部分整好，你单独的把这块搞对". Grouping at extraction
+  (D142–D150) is Claude's slice from here, worked on its own: Codex's experiments, reports and handoff
+  (`docs/research/2026-10-25-grouping-basis/`, `poc/hierarchy_study/`) are the starting record; the default pipeline
+  stays without grouping until a measured design is accepted.
+
+## D153 · 2026-10-25 · Keyed views: the structural correction is the direction; the week run is read first
+
+- Alex, after the structural review (`docs/research/2026-10-25-structural-review.md`): "好就这么做。你需要看完trace 给出非常干净
+  的系统修正方案来解决我们上叙述的问题，从完整的写log 和计划按照这个来小范围的测试和改进，并量化的测量其效果".
+- Direction: A, the one-week run with poc-v14 finishes and its trace is read in full; B, the correction is designed as
+  one plan before any pipeline code changes: a view carries a key written by extraction and owned by code (measure
+  from a closed list, period as a date span, basis, unit, rung bounds as numbers), research subjects become objects of
+  the universe with aliases, each object carries the analyst's list of the quantities to watch, identity is a key
+  match in code and the model only fills keys or chooses among shown names. The full-night rerun waits for the keyed
+  design; the sealed ledger and the week run's data stay as they are.
+- Record: `docs/poc/keyed-views-plan.md` (the plan and its tables), `docs/poc/pipeline-tuning-log.md` (one row per
+  small test with its numbers). This decision departs from the frozen extraction and views design (D37, D58–D60) in
+  the direction stated; the detailed contract is recorded as its own decision when Alex accepts the plan.
+
+## D154 · 2026-10-25 · The keyed view contract as built and measured on the bootstrap documents (T1–T2d)
+
+- Under D153 (Alex: "T2可以按照你看完T1的结果自己思索之后开始动工…我要看的就是量化的结果收敛"), the contract of
+  `docs/poc/keyed-views-plan.md` was built into the default pipeline behind prompt version v4 (`poc/config/poc-v15.json`):
+  every candidate view carries `measure` (closed list), `scope`, `period_start/end`, `basis`, `unit`, `event_type`; every rung
+  carries numeric `lo/hi`; the ledger stores them (`view_keys`, rung bounds); the service judges claims on the numbers.
+- What the four small runs on the same twenty bootstrap documents taught, each turned into a code rule and a test
+  (`docs/poc/pipeline-tuning-log.md` T1–T2d): the key is a necessary, not a sufficient, condition of identity (T1: exact
+  keys over-merged a run-rate into revenue); the model must not spell the scope or convert the fiscal year (T2: four tax-rate
+  views, a wrong Compute & Networking period); a watched scope is recognised by the list's aliases (T2b: hyperscaler capex and
+  the H200 licence refused on spelling); the unit belongs to the key (a level and a growth rate collided); the model's answer
+  to "same quantity?" on a same-key pair is not stable between samples (T2c), so where code owns the key (scope from the
+  list or none) code decides identity, and a merge across periods or quantities is refused whatever the model says.
+- Result on the twenty documents: 11 views, 0 duplicate keys, 0 product-trivia views, the H200 licence, the Rubin shipment,
+  hyperscaler capex and the export rule all open (the sealed run opened 10 views with duplicates; poc-v14 opened 15 with four
+  duplicates). The watch-list gate was not exercised by filings (review pool empty); the week run (T4) exercises it.
+- Known limits recorded, not patched: a basis of n/a on an existing view accepts both GAAP and non-GAAP candidates (right for
+  NVIDIA's joint guidance, to be re-read on a company with distinct guidance); a statement about another year can still be
+  linked as evidence to this year's view by the extraction when no view of that year exists (an evidence-link class, not a
+  candidate class); grouping (research subjects as universe objects, 2.3) is not yet in the default pipeline.
+
+## D155 · 2026-10-25 · 清单是参考，先修身份，再按顺序验证归组
+
+- Alex 明确：公司清单可以作为初始参考，但清单外不能忽略；随后要求“总体的重新看一次系统设计”“完整的写一个 improvement plan”“一步一步的来解决并量化验证”。Codex 接手这一修复范围，保留 Claude 的并行修改。
+- 改进计划与每步的证据在 `docs/poc/grouping-improvement-plan.md`。D154 的清单门槛取消；范围别名可以帮助找候选，不能单凭部分文字命中改写范围并自动合并观点。完整单年与明确自然年分开处理，多年不再抓首个年份转财年。
+- 自动认定同一观点须完整键相同，包含事件类型；含糊的口径不能作为自动合并通配符。同一次交接中代码确定的同一问题只写一次，保留所有证据。搜索的宽松召回与身份判断分开。
+- D149 归组要求不变。先验证同次抽取的归属交接，再接入按分发顺序读写的新路径；当天开始的快照不能证明后续抽取看到了当天新主线。小实验不证明全市场搜索能力。
+- 当前只实施并验证计划中合同已完整的步骤；归组表示、原子写入与恢复的具体合同经原答验证和设计审查后再建。旧数据不回填，Idea、前端、交易、分类、Pull 和最终判定不在本次修改范围。
+
+## D156 · 2026-10-25 · 先校正归组验收，再评价模型方案
+
+- Alex 看过验收审查后要求「好你开始吧，我们一起看」。先修验收定义和离线检查入口，用已存结果及受控反例验证，不把旧关系保留或零次判断报成新归组成功。
+- 当前验收定义、已数清的测量缺陷、状态表和案例卡由 `docs/research/2026-10-25-grouping-acceptance.md` 统一维护。它替代名字实验旧计划的推广通过线；旧计划与原答保留为历史。
+- 本轮不修改产品的抽取、归组表示、身份、写入或提示词，不启动新的付费实验。业务样本按原文和已有研究分别判断应新增、更新证据、重复或不抽；语义未审不报正确，三次样本不推断总体可靠率。
+- D149、D155 的产品边界不变。修好测量之后再固定下一轮真实案例的逐项预期和对照；上层投资论点、跨市场规模能力不由本轮获证。
+
+## D157 · 2026-10-25 · 用当前中文管线验证 Ohio 两篇连续报道
+
+- Alex 要求「开始继续做」，继续 D156 留下的 Ohio 案例。登记、接口和验收见 `docs/research/2026-10-25-ohio-grouping-poc.md`；各三次新鲜对照和归组序列，固定两篇全文，不延用旧缓存前缀或英文抽取。
+- 只在隔离 POC 复用当前抽取、身份和证据写入，再由抽取携带业务组引用。下一篇能读组内真实成员；不凭相同名称合并组，不让比对替抽取补分组。归组不增加模型调用。
+- 本次限 30 次请求、$1.50 估算保留额；不自动重试不明请求、不提高预算。逐项核对风险判断、同源转述和金额口径，失败停止推广，不私改验收或续开新臂。默认管线与其它模块不变。
+- 实测已结束且业务验收失败：20 次调用、估算 $0.373923；三次归组只有一次接回风险判断，仍有错归与错连。实验自身漏传的编号 schema 约束已在原答上修正，未付费复测。原答和结果在 `poc/reports/2026-10-25-ohio-grouping-01/`；关于改变观点入口的建议尚未决定，不启动下一臂。
+
+## D158 · 2026-10-25 · 追查 Ohio 入口并在同一归组流程内对照
+
+- Alex 在 D157 失败后要求「根因是什么」「务必深度的看代码，trace 思考」「再重新尝试是否能解决」。据此重新诊断并做隔离实验，不沿用 D157 的失败配置直接推广。
+- 全链路诊断、事前设计与同一验收在 `docs/research/2026-10-25-ohio-root-cause.md`。两臂都使用已修编号 schema、相同连续归组读取和写入；唯一模型差异是把枚举数字的入口段改为先提出重要且可核对的业务问题。没有官方承诺日期时使用明确的研究检查日。仅供实验，默认 role-v5 不变；不增建存储类型或上层 thesis。
+- 另修已由原答证明的代码偏差：06 的次年限制针对数字，明确的 event / policy_event 不应被同一年度检查拒绝。其它检查照旧，重放全部范围列出差异。此修复不能解释或解决 Ohio 原答没提出事件的问题，独立报告。
+- 各三次新鲜完整两篇序列，原 O1–O6 不变；本轮独立 30 次请求、$1.50 估算保留额、30 分钟，不加预算、不自动重试，不从失败中私自续开第三臂。默认归组、前端、Idea、分类、Pull、最终判定和上层论点均不在本次工作范围。
+
+- D158 运行结果：免费重放 326 个答案，事件年度修复仅恢复 NAVER 一条部署事件及三条证据；两个反向修改和完整 211 项测试通过。在线第一条对照请求 180.342 秒超时，无模型回答；其余五个序列未开始，$0.105535 未知用量保留额不释放。新入口尚无在线效果结论，不推广、不自动重发。结果：`poc/reports/2026-10-25-ohio-grouping-02/results.md`。
+
+## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
+
+- Alex 要求重新看完整抽取、找已有观点、去重和归组流程，找结构性原因后修复，不做个案调参。诊断、表、固定案例与验证方案见 `docs/research/2026-10-25-pipeline-replay.md`。
+- 八个 v15 库有 834 次日初预抽取，其中 576 次之前已有同日新观点；此数是上下文暴露，不是错误数。删除预抽取，让一条写完下一条再抽，恢复 D31/D63 的顺序要求。D155 中这一顺序修复不再等待分组语义试验；分组仍不因此启用。未完成的旧并行交接明确拒绝恢复，保留原数据，不静默重抽。
+- Ohio 所查的既有问题均已搜到，不能统称数据库没召回。原拟用四个比对请求检验补充双方原句和来源，审查在调用前发现：165 的候选已变成年度实际出资，与旧担保金额不同；不能把合并算成功。该实验不运行，先把抽取改变含义与身份拆分分开评价。不换搜索、不增加专用合并规则、不改默认提示词。
+- 每个案例每臂三次，最多 24 次请求、$1.50 估算保留额、30 分钟；与 D158 超时请求及其未知费用分开，不自动重发。原文审阅形成的开发预期不是人工金标，结果不充当完整分组验收。前端、Idea、分类、Pull、最终判定和上层论点均不在本次范围。
+- 结果：顺序修复的 3 项入口测试、31 项相关测试、完整 214 项套件通过；恢复旧并行的反向修改被调用顺序断言抓住。身份试验的 24 次是草案上限，实际没有开始，生成费用为零。下一步先确认“同问题去重、同项目不同问题归组、原意改变归抽取”的验收界限，再固定最小实验；不得按被审查否决的预期启动。
+
+## D160 · 2026-10-25 · 按原意检验三篇连续抽取，不用错误合并掩盖提问失真
+
+- Alex 同意 D159 的界限并要求继续完整修复。以同一可核对问题判去重，以同一业务过程判归组；拟议担保改成当年实际付款属于抽取失真，不能强行合并算修复。
+- 最小下一步见 `docs/research/2026-10-25-extraction-continuity.md`：三个真实 Ohio 输入、两臂各三次连续样本，两臂都沿用已有组成员上下文、身份与原子保存，仅改变实验角色的阅读入口。默认角色和归组仍不改变；本轮不声称验证大库检索。
+- 独立登记最多 54 次请求（18 次抽取、最多 36 次比对），费用上限仍 $1.50，30 分钟。旧预算、超时记录和未知费用不动；不自动重试，不用失败样本改尺或续开臂。无关产品模块和上层投资论点仍不在范围内。
+
+- D160 实测结果：六个序列全部完成，36 次调用，估算 $0.51142625。新入口三次均把两项融资问题分别保留且归在同组，但风险论据和三种金额口径完整保留均只有 2/3，与对照覆盖相同；完整验收失败，不推广、不自动续开臂。18 条成员、54 次出处交接全部对应；完整 216 项 Python 测试通过。后两篇没有新候选，不能声称检验了旧身份拆分问题。结果和剩余合同问题见 `poc/reports/2026-10-25-ohio-grouping-03/results.md`。
+
+## D161 · 2026-10-25 · 继续修抽取，把保留论据与新开问题分开
+
+- Alex 在 D160 失败后要求继续改进抽取和后续运行，为封存做准备。当前合同能够保存遗漏的风险论据；不采用前一轮提出但未获证的新证据存储层。
+- 设计、计数、阅读机制和固定验证见 `docs/research/2026-10-25-extraction-evidence.md`。以 D160 角色为新鲜对照，仅重排并明确证据选择：关键条款及支持/反对理由可归入同一个问题，不因无需新开问题而丢掉。原问题边界、引用检查及存储保持。
+- 六个独立三篇序列，每臂三次；原 O1–O6 不变，另报首篇总成本是否保留。最多 54 次请求、$1.50、30 分钟；不自动重试或超额。通过这个开发案例不等于全部抽取封存，也不启用默认归组。失败按原标准报告，不补采改尺。
+- 实测失败：36 次调用、估算 $0.497585。新角色批评论据 3/3（对照 2/3），但首篇总成本只保留 1/3（对照 0/3），两臂各有一次把 Ohio 问题放进 Rubin 组。11 条成员及 66 次出处交接全部对应，说明错误已在原答，不是保存丢失。217 项测试通过。默认不变，抽取未封存；分两步读内容再建问题的建议尚未决定或实施。结果：`poc/reports/2026-10-25-extraction-evidence-01/results.md`。
+
+## D162 · 2026-10-25 · 先验证分两步抽取的假设
+
+- Alex 明确同意先测试 D161 的下一步假设。仅在隔离 POC 把抽取分为读取原文内容、组织问题及归属两个内部步骤；第二步须交代第一步每条内容的去向。最终仍交现有证据、候选观点及归属，不增加产品数据层。
+- 注册设计见 `docs/research/2026-10-25-source-first.md`。对照为 D161 的证据优先角色，三篇原文、每臂三个独立新鲜序列，原语义标准保持；不同时改原文引用表示、模型或搜索。
+- 最多 63 次请求，独立上限仍 $1.50、30 分钟；不自动重试、不调整旧预算。通过开发案例才谈后续验证，不直接启用默认管线或封存；失败报告，不自行改尺续开臂。
+
+- D162 result: the registered comparison failed end to end. All six sequences completed, 45 calls, estimated $0.6928525. First-step cost selection improved, but invalid ownership, wrong grouping, a period-check merge override and an inaccurate numerical summary remain. No default promotion. 227 Python tests passed. Evidence: `poc/reports/2026-10-25-source-first-01/results.md`.
+
+## D163 · 2026-10-25 · English for the maintained project
+
+- Alex: “let’s also use this chance to convert everything into english from chinese.” English becomes the language for maintained prompts, generated explanations, UI text and current documentation. Original source quotations and historical records retain their original language and identity.
+- The D162 experiment finishes under its original frozen requests. Language conversion is a separate change, not an unregistered experimental arm and not evidence that the extraction defects are fixed.
+- Inventory exact schema values and their readers before conversion. Preserve the ability to read existing records; no in-place rewriting of historical databases, frozen prompts, raw answers or prior decisions. New decisions and reports are written in English.
+- Alex additionally requires prompt translations to be well written and structured, with terminology matching the PRD and no drift. Audit complete requests against the glossary, schema and readers; use the actually adopted prompt versions, not later experimental filenames. Candidate English prompts remain inactive until compatibility checks are complete. Existing PRD/implementation gaps must be reported separately from translation corrections.
+- Alex selected a fresh English library: “yes start an english library work. how was this lib constructed previously, and how should we do it noe”. Start from original sources and an empty, separately named ledger; preserve the old Chinese ledgers and their raw answers. Do not copy translated thesis rows or append English ingestion to the old library. The [build plan](research/2026-10-25-english/english-library.md) records the old construction, selected source population and staged verification. This selection does not promote D162, enable default grouping, or authorize a larger spending cap.
+
+## D164 · 2026-10-25 · Claude builds the English library on Codex's plan; the watch list is a reference, not a gate
+
+- Alex stopped the keyed-views line as Claude had built it overnight, on seeing that the per-object watch list decided what may open: "你这个做法难道不是非常的限死吗？永远都是一堆财务指标，真正的观点呢？", "你现在是写死一些一定需要关注的证据吧？", then "停了吧，codex 再重整呢". The code-owned key (identity: is this the same quantity?) stays; what is worth a thesis is the analyst-model's judgement (00-system: 候选观点是抽取交出去的、已有观点管不到的要紧事). Codex had already recorded the same correction as D155.
+- Alex then handed the English library build (D163, [english-library.md](research/2026-10-25-english/english-library.md)) to Claude: "好那你按照codex 需求来重建，然后开始充分的测试，一定要仔细的看结果以及评量". The build log with one row per measured step, costs and mistakes is [build-log.md](research/2026-10-25-english/build-log.md).
+- Implementation choices recorded there and settled by Claude: canonical English values live in `src/hivemind/vocabulary.py` and are applied where an answer or a stored record is read for comparison (`extraction.sift`, `matching.check`, `judging._record`, the service's tier counts, the UI adapter), never by rewriting rows; the prompt version is the one switch between the Chinese and English contracts (extraction v6, `matching-v2`, `judging-v3`, `idea-v11`; `poc/config/poc-v17.json`); the Chinese versions keep their request text byte for byte, including the universe's `legacy_name` theme names, so stored requests replay at no cost; `direction` is an enum in the English matching schema; a view's year is stored in one canonical spelling (a fiscal form becomes FY2027 or 2027 for a December year-end, a calendar form 2026, a bare year keeps its digits and is never reinterpreted) so that a waiting dependency joins its year; the half-year filter admits the same questions in both languages; successor orientation and the UI's score orientation read the rungs' numeric bounds first.
+- The seed build runs on the 20 NVIDIA documents of 2026-02-25..07-23 with a $5 cap, then the week 2026-07-24..31 and August 1–15 on the same ledger, each stage read before the next; the API and UI are pointed at the English ledger only after that. Grouping stays out of the default pipeline (D149, D162 unchanged).
+
+## D165 · 2026-10-25 · Research groups enter the default pipeline; a group is an ongoing matter, a company's own financial lines carry none
+
+- Alex, on learning that the grouping research (D142–D150, D156–D162) had not reached the pipeline: "把我要做的grouping逻辑充分地scope in 做第一周管线的验证". Claude put the D149 contract in D147's final form into the default pipeline (`thesis_groups`, `thesis_group_members`, extraction v7 with `group_refs` and `new_groups`, the writer resolving local ids and storing memberships with the theses, matching deciding none), config `poc-v19`.
+- The first grouped seed day showed the company-folder failure (eight NVDA financial theses in one "AI infrastructure demand" group) because every candidate had to cite a group. Alex chose the correction from the two offered ("看起来可以你深度思考计划之后改再跑"): a research group is one ongoing matter in the world that several questions track together (a product rollout and its deployments, a financing or acquisition deal, a policy process, an investment or demand cycle), usually across companies and themes; a company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and carry no group unless the line itself tracks such a matter. Code guards it: a declared group is created only when a written thesis that tracks a matter cites it; the lines may join a group another thesis founded. This amends D149's "every proposed thesis carries structured membership" and 06-views' "every candidate needs nonempty references". Config `poc-v20` (`role-v8`).
+- Validation is on real data, not the three-article experiments: the seed, then the week 2026-07-24..27 on `poc/data/english-groups2-2026-10-25/`, read group by group (Rubin shipment with its customer deployments; the OpenAI–NVIDIA financing and Ohio campus; the hyperscaler capex cycle; China chip export controls; PC and other companies' own lines outside those). Alex: stop and report as soon as the groups look wrong ("如果你跑了前几天就发现grouping 有问题或是实现出来的质量有问题就停止来和我说").
+- Alex's standing note (same day): the pipeline is brute-force LLM prototyping on purpose; it must work and replicate stably before any cost, speed or throughput optimisation.
+
+## D166 · 2026-10-25 · Group identity and membership by names, in code
+
+- After the grouped seed and two week days (poc-v20) the model still declared a group of its own for each customer deployment (SK Telecom, NAVER) although the Rubin rollout group was shown, the research's recurring failure; the trace confirmed the request, schema and stored answers were right. Alex approved the code-owned alternative with a warning: "可以但是你要小心不要步上crazy bloat prompt 和overfitting prompt 的后尘，想清楚架构问题再下手快速小范围的验证".
+- A research group carries aliases, the names the matter goes by (products, projects, programmes, parties; never a company's id, name or alias). The model's only new output is that alias list on a declared group (one schema field, `role-v9`). Code decides: a declaration whose names hit a stored group is that group and creates nothing; a thesis whose own focus, question or scope carries a group's name joins it (membership basis `alias:<name>`), next to the groups the model cited (basis `model`); a company's financial lines still cannot found a group. Matching is unchanged.
+- Validation stays small: the seed and the first two week days on a fresh ledger (`poc/data/english-groups3-2026-10-25/`, poc-v21), read group by group before anything larger.
+
+## D167 · 2026-10-25 · No hard-coded identity for aggregates; the judge gets the evidence, the vocabulary gets the missing measures, the writer owns replacement
+
+- Alex, after the Jev benchmark showed three theses opened for one ~$700bn spending figure under three scope wordings: "我不要 hardcode 解法 it's premature optimization, not general root fix, you need to make sure then poc then measure result". Claude had proposed a named list of aggregate scopes and then a key rule "under a theme, same measure and period = one thesis"; the first is a list of what matters (the kind D154 rejected), the second fails the old checks (`test_a_model_written_scope_is_wording_not_identity`, D155) and the gold's own counter-example under one theme, measure and period: the $250bn guarantee and the $350bn chip financing are two quantities. Neither is built.
+- Decided: identity over a model-written scope stays a judgement (D155). The judge is given the material the judgement needs, the candidate's own quotes and the target thesis's defining quotes, and its `same quantity or event` criterion says what the word means here: two estimates or figures of one quantity are one question. Code gates stay on typed fields only.
+- The measure vocabulary gains `market_size` and `project_cost` from extraction version 10 (the week filed an accelerator TAM and a data-center project's cost as `spend_total`); version-gated so earlier requests stay byte-identical.
+- The writer owns the replacement rule (06-views, the Replace row): a piece may replace one in force only with a stated day not earlier than the stored one's, a tier at least the stored one's (fact and party statement above third-party view above rumour), and, between two third-party views, the same party; otherwise it is stored as new. Found when Jev's `supersedes` let analysts' reactions retire reported facts (log rows 39–41); the rule applies to both matching engines.
+- Measured as two arms on identical extraction (`poc-v23-llm`, `poc-v23`) over the seed, the week and August 1–15, per state (`scripts/benchmark_states.py`), with the retrieval stage quantified apart.
+
+## D168 · 2026-10-25 · Four corrections found by the D167 measurement: one repeat rule, one replace definition, one succession rule, one missing answer
+
+Found while measuring the two D167 arms (log rows 44–48); each is general, follows the PRD, and was measured on stored data or by re-sending stored requests before it entered the code.
+- **A repeat may name the piece shown for the same evidence under another of its theses** (`matching.check`). 06-views step 6: a repeat adds a source and any new thesis link; the writer already resolves a piece to one stored identity for all its theses. The check required the target under the destination thesis and failed an item twice (9 of 17 such refusals over four ledgers were this case). A replacement still stays within its thesis.
+- **The Jev replace criterion carries the PRD's full definition**: a later version of the same statement or number, changed (the same speaker revises it, an official confirms or denies that claim, the original source revises it); another statement on the same topic is not this (06-views lines 191, 197, 306). Probed against a fresh control, three samples: wrong replacements 10 of 10 removed on the seed and week, 6 of 7 out of sample on August; the right ones that stay are the guidance revisions and a source revising its own figure. A second wording ('the same party') was rejected by its pre-registered rule.
+- **The writer's replacement rule, generalised from the PRD**: an incoming third-party view or rumour replaces only the same party's earlier piece (subsumes the view-over-view rule of D167). On every stored ledger it refuses 6 written replacements, all a commentator's view over another party's rumour, none right.
+- **Succession**: the code's rule uses the shared typed-field rule (`identity.conflicts`: 'n/a' matches any basis or unit), so an unstated basis no longer blocks a succession (adds exactly 2 over all ledgers, both right); and the Jev relation question gains the answer 'the same defined quantity or event series for another period', with the direction, the typed fields and the successor check in code, so a succession between differently worded model scopes can be judged (probe: recovers the one such case, changes nothing gold-labelled for the worse).
+
+## D169 · 2026-10-25 · Jev is the default matching engine
+
+- Asked "要不要把 Jev 定为默认的匹配引擎" after the D167/D168 measurement (log rows 44–49), Alex answered: "要的。你的抽取，trace和当前抽好的db都很宝贵，这些都留下来然后开始做这个阶段的收尾".
+- Decided: `poc-v23` (extraction v10, `matching.engine: "jev"`, model `jev-1.14.0`, with D168) is the default configuration of the replay, the service and the compose file. The generative matcher stays a configured alternative (`engine: "llm"`); old configurations and stored archives replay unchanged.
+- The phase's extractions, traces and ledgers are kept (data manifest `docs/research/2026-10-25-english/data-manifest.md`, two backups outside the repository); the close-out is a code review for stale code and bloat, then the documents, then a push.
+- Not decided here: moving group membership from extraction to matching (D149/D166), which the queued day-batch shape needs; it comes with that task.

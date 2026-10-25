@@ -1,0 +1,23 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+_________________ test_d160_manifest_attempt_limit_is_enforced _________________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-367/test_d160_manifest_attempt_lim0')
+
+    def test_d160_manifest_attempt_limit_is_enforced(tmp_path):
+        """D160 budget table: transport reads the frozen limit, without changing the dollar cap."""
+        ohio.write(tmp_path / 'manifest.json', {'max_requests': 1})
+        ohio.write(tmp_path / 'budget.json', {'attempts': [{}], 'reserved_or_spent': 0})
+        (tmp_path / 'control-1').mkdir()
+        sent = []
+        call = ohio.BoundedTransport(tmp_path, 'control-1', time.monotonic() + 60, send=answers([{}], sent))
+>       with pytest.raises(RuntimeError, match='limit reached'):
+E       Failed: DID NOT RAISE <class 'RuntimeError'>
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-three-inputs-49aw8hy0/test_parameters.py:217: Failed
+----------------------------- Captured stdout call -----------------------------
+START control-1 call=2 reserve=$0.0801
+DONE control-1 usd=$0.0013 seconds=0.0
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-three-inputs-49aw8hy0/test_parameters.py::test_d160_manifest_attempt_limit_is_enforced
+1 failed, 1 passed, 10 deselected in 0.27s

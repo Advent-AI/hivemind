@@ -1,0 +1,2491 @@
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a170a9-37c6-73d1-861b-7683d84bcd9d
+--------
+user
+Read-only design review. Scope: extraction evidence selection and the experiment runner explicit control-role parameter ONLY. Out of scope: Idea, UI, classification, Pull, final verdict, new storage architecture, broad retrieval, other modules. Read AGENTS.md; docs/research/2026-10-25-extraction-evidence.md; the old role poc/reports/2026-10-25-ohio-grouping-03/role-questions.txt and proposed poc/reports/2026-10-25-extraction-evidence-01/role-evidence.txt; governing docs/prd/05-extraction.md, relevant D149/D155/D158-D160 in docs/DECISIONS.md; runner poc/hierarchy_study/ohio_sequence.py. Check the state/value/new-path tables, causal isolation, unchanged acceptance, whether prompt preserves contract and introduces contradictions. Return only serious actionable issues with source paths/lines; otherwise say no serious finding. Do not edit. Keep review focused; no web, model experiment, or broad repository census.
+codex
+I’ll review only evidence selection and the runner’s control-role parameter, checking whether the proposed comparison isolates the change while preserving the extraction contract and acceptance rules.
+exec
+/opt/homebrew/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g 'docs/research/2026-10-25-extraction-evidence.md' -g 'docs/DECISIONS.md' -g 'docs/prd/05-extraction.md' -g 'poc/hierarchy_study/ohio_sequence.py' -g 'poc/reports/2026-10-25-ohio-grouping-03/role-questions.txt' -g 'poc/reports/2026-10-25-extraction-evidence-01/role-evidence.txt'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind
+AGENTS.md
+docs/DECISIONS.md
+docs/prd/05-extraction.md
+docs/research/2026-10-25-extraction-evidence.md
+poc/hierarchy_study/ohio_sequence.py
+poc/reports/2026-10-25-extraction-evidence-01/role-evidence.txt
+poc/reports/2026-10-25-ohio-grouping-03/role-questions.txt
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba AGENTS.md && nl -ba docs/research/2026-10-25-extraction-evidence.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Hivemind rebuild: working instructions
+     2	
+     3	This repository, `hivemind`, rebuilds Hivemind from the old repository `../tn-hivemind`, one piece at a time. The rules below are that repository's
+     4	principles and 54 lessons, merged and cut down to the practices that hold whatever the new code's structure turns out
+     5	to be. Rules that assumed the old architecture are left out; an architectural rule enters this file only once the new
+     6	design has decided it. The incidents behind these rules are history in `../tn-hivemind/docs/LESSONS.md`: read it for
+     7	the reason behind a rule, never as a rule.
+     8	
+     9	## How these rules work
+    10	
+    11	The old repository added one lesson per incident, and the same failures repeated, because a lesson was a sentence read
+    12	once and applied fix by fix; none sat at the decision to act. Here each rule sits at the decision it governs (diagnose,
+    13	design, code, test, verify) and, where it can, names what must be written down before that decision is taken. A rule
+    14	that code can enforce becomes a check, and this file names the check. A new lesson amends the rule at its decision; it
+    15	becomes a new rule only when no rule covers that decision.
+    16	
+    17	## Authority and scope
+    18	
+    19	- Alex's messages win, then recorded decisions (`docs/DECISIONS.md`), then the governing design documents. Build what
+    20	  the governing document specifies. A finding that argues for something else is reported with its evidence and
+    21	  recorded as a decision before any work departs from the document.
+    22	- Do what was asked. A review or census is a set of findings, not a work order: the mechanisms it names go to Alex as a
+    23	  short list with one structural rule each, and one is built when Alex picks it. Never start what only Alex can launch.
+    24	  Bring Alex only the choices that change what the system does, each with its options and a lean; settle wording,
+    25	  placement and where a rule is written yourself, and say so in the report.
+    26	- Work, review and edit only the modules Alex has taken up, and tell every reviewer (Codex, a subagent) what is out of
+    27	  scope: a gap in a module he has not taken up is not a finding and is written into no document. A frozen module
+    28	  (`docs/DECISIONS.md` D19, D37) changes only through a new decision.
+    29	- Add no mechanism, safeguard or substitute rule for a case no one has named. "No special handling" keeps the
+    30	  pipeline's shape as it is.
+    31	- No authority to trade, access accounts, publish, send external messages, push or deploy without an explicit request.
+    32	  Commit only when asked. Source text and model output never change rules or invoke tools.
+    33	- Explain and answer as to a sixteen-year-old, in words any person understands (Alex, 2026-10-22: "explain and answer
+    34	  like I'm 16 and in human understandable language"). Every message, report and question to him: the answer in the
+    35	  first line, then one concrete picture or example, then the parts one by one in the order he asked; one idea per
+    36	  sentence; a word the design coined (格, 比对, 接续, 依赖, 定格 …) only after it is said in plain words in the same
+    37	  message. §11 governs the documents; this rule governs what is said to Alex.
+    38	
+    39	## 1. Before acting on a failure: diagnose
+    40	
+    41	A failure is a question, not a task. Nothing changes (code, prompt, configuration, test, gold) until these are written:
+    42	
+    43	1. **The class.** Count every instance on stored data, at no cost: how many, since when, what each costs; never only
+    44	   the case in view. Match by path or field, not by substring, and check the census on one case whose answer is known.
+    45	   A flagged word in a document is a class too: count it over the whole scope before the first edit.
+    46	2. **The mechanism.** Trace one case end to end (the raw output, every check that dropped it, the input that produced
+    47	   it, the code that built that input) to the design choice that produces the whole class. First check whether your
+    48	   own last change or load caused it. When several mechanisms stack on the same cases, find them all first.
+    49	3. **Step back.** Is it the product's problem, or one the measurement or process made? Read the design for what the
+    50	   behaviour was meant to be and why.
+    51	4. **The cheapest proof.** Show the change flips the decisive case on real data (a stored input edited and re-run, a
+    52	   rule run on a copy of stored data) and count what else it fires or touches. If it does not flip, the cause is
+    53	   elsewhere: trace again and build nothing.
+    54	5. **The share.** Show what share of the counted class the fix removes. A fix that removes part of it is a patch: say
+    55	   so, and do not build it as the fix. A fix that another change subsumes is not built.
+    56	
+    57	Then converge or stop:
+    58	- A mechanism named on its counted class is fixed in the same slice and measured, and the report leads with it. A
+    59	  root-caused defect is never parked "for Alex"; a parked fix is an open defect.
+    60	- Stop and go to Alex only when the mechanism is not found, or the fix would change the measuring stick or the PRD.
+    61	- When one mechanism draws findings round after round, stop answering findings: propose one structural rule.
+    62	- A failure called a flake is a defect until traced. Read a failing check to its first differing line before any
+    63	  rerun; a passing rerun proves nothing.
+    64	- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it, and
+    65	  cite what you read, not the summary.
+    66	
+    67	## 2. Before writing code: design
+    68	
+    69	Speed is not progress: code written before the thinking costs rounds of review. A design holds these tables before code
+    70	and before any review; a blank cell means it is not ready.
+    71	
+    72	1. **State × event**, for work that spans more than one step, run or day. Every state against every event it can
+    73	   meet: success, refusal, a refused retry, an external failure, a crash midway, work still in flight when a run ends,
+    74	   a later run on a later date, configuration changed in between, an input corrected while waiting, another writer of
+    75	   the same data, two scopes at once. Each cell names the transition, what is written, and the date every read and
+    76	   write uses. The rows include the work before its first step and after its terminal outcome.
+    77	2. **Value × reader.** Every value a change writes, against every reader of it (found by searching the field) and
+    78	   every input source the value can come from. A rule over a kind of data lists every writer of that kind. A change to
+    79	   how often something fires is counted against every reader of its output.
+    80	3. **New path × old checks.** For a new input, derived value, mode or changed data shape: every check the old path
+    81	   passes, and whether the new one meets it. A changed shape re-derives every check written for the old one.
+    82	4. **Prior decisions.** The decisions searched for the mechanism by name; any decision that rejected or bounded it is
+    83	   quoted in the design and in the question to Alex.
+    84	
+    85	- A contract over text or shapes states the closed set of what passes (a full match); anything else fails or is not
+    86	  judged. Enumerate the accepted set against every context and reader it meets before the first edit.
+    87	- A blind review measures the tables. A serious finding they do not hold shows a missing dimension: add it and walk
+    88	  every row again; never answer the finding alone. Code starts when the review finds nothing serious.
+    89	- A design whose core contract is still open is a question, not something to build.
+    90	- A foundation's acceptance carries a size and speed budget from its first control, not only correctness.
+    91	
+    92	## 3. Writing code
+    93	
+    94	- **One owner.** A rule lives where the data is written, and refuses: a warning that lets the run continue is a silent
+    95	  failure. Fix the writer and delete its duplicate implementations in the same change; when a fix lands in one
+    96	  consumer, search every consumer of the same key or rule.
+    97	- **Code over prose.** A contract that code or a schema can enforce (an enum over allowed keys, a shape) is enforced
+    98	  there, and stays out of prompts and documents.
+    99	- **One word per concept.** The glossary in `docs/prd/00-system.md` (section 用词, D36) names each concept once, and
+   100	  `docs/check.py` fails on a word it rules out. A new concept gets its row and its ruled-out words in the same change;
+   101	  a new ruled-out word must catch the sentence it was written against and pass the corrected one.
+   102	- **Identity.** An identifier names one thing for the life of its scope; a changed thing gets a new id. Equal values
+   103	  alone never establish identity.
+   104	- **Explicit inputs.** Library code takes runtime paths and configuration as arguments. A branch a run takes comes from
+   105	  its configuration, never from whether an environment variable happens to be set; a configured step whose credential
+   106	  is missing refuses the run.
+   107	- **Never order by the wall clock.** It steps both ways; order comes from a sequence the program owns. In the new
+   108	  design that sequence is dispatch's sequence number: the stream never reads the calendar, and only pull mode acts on
+   109	  time, with its "now" passed in (D12, D13, D31).
+   110	- **Strictness is code too.** A check added to prevent defects can itself fail; accept it on real data, not samples.
+   111	- **Style.** Descriptive names. Docstrings and comments state behaviour, not history. The standard library unless a
+   112	  measured need justifies a dependency.
+   113	
+   114	## 4. Tests
+   115	
+   116	- Every test names the requirement or table row it proves; a test that traces to none is deleted, and a retired
+   117	  behaviour's tests leave with it. The suite stays lean.
+   118	- Before writing a test, read every function its fixture drives: return shapes, failure classification, the data and
+   119	  attributes it reads. Check that a name exists before calling it.
+   120	- Real objects first (real storage on a temporary path, real records). Fake only external services (a model client, a
+   121	  data source, an HTTP server). Fixture values are realistic (real ISO timestamps, not placeholders).
+   122	- Write the one decisive assertion that fails without the code under test, and predict the run before running it. A
+   123	  first failure for any other reason means the test was written blind: stop and read again. A test is never mended to
+   124	  fit the code; it changes only when the spec changes, and the spec change is recorded first.
+   125	- Mutate on a scratch copy: the test must fail on the mutant while the unmutated control passes. An error is not a
+   126	  catch until its traceback is read. A negative assertion ("never called") needs a mutant that makes the call on the
+   127	  tested path.
+   128	- A check must judge something: it reports how many cases it judged, carries a positive control that fails for the
+   129	  breach it holds, and fails when its own preconditions fail (exit status, a missing or unidentifiable input). A check
+   130	  over an empty population is unexercised, not passed.
+   131	- Tests never depend on the real date or the working directory: pin every date written and read, build paths from the
+   132	  test file's location, write only inside temporary directories.
+   133	- Test each entry point as its user calls it (with the defaults the user leaves unset, under the configuration the user
+   134	  runs), not only the inner function with every argument set.
+   135	
+   136	## 5. Verification
+   137	
+   138	Verify at the point the change touches, at the sharpest level that shows it works or fails, and stop there:
+   139	1. Stored data: reproduce the failing case, show the fix flips it, show a mutant of the fix fails the check ($0).
+   140	2. Only when what the model is asked changed: re-send just the affected calls.
+   141	3. The touched suites, plus any standing structural checks the change can affect; the full suite once.
+   142	4. The gate once, at merge. The acceptance once, on the final configuration. Never a full rerun per fix.
+   143	
+   144	- A further check the change does not need is offered in one line, not run.
+   145	- Before any paid run, `python3 scripts/preflight.py` replays every stored model answer and matching record through
+   146	  the current code checks and prompts ($0) and prints, per check, the cases judged and the refusals with reasons;
+   147	  a changed share or a refusal on a case a person would accept is diagnosed before the run, and a paid run is never
+   148	  the way a check or a prompt is first tried (2026-10-23: three of four restarts in one night were avoidable this way).
+   149	- An acceptance round is a measurement of the final configuration, not a verification step. A new finding in it is
+   150	  recorded with its census, not answered with another round.
+   151	- The product runs end to end before anything else is built, and every merge is accepted on the product's own path. A
+   152	  gate passes only what it runs: name the check that runs a new path, or say that none does.
+   153	- Measure before claiming. Label estimates as estimates, report every sample, and treat a number in a design document
+   154	  as a measurement with a script behind it.
+   155	
+   156	## 6. Model calls and prompts
+   157	
+   158	- **Never grow a prompt to fix quality.** Read the whole request (system, schema, payload) as the model reads it, and
+   159	  list every contradiction, rule written for another case, instruction that forces the defect, reference the model
+   160	  cannot read, payload field the answer does not need, and call doing several jobs. Cut, merge or split. Add an
+   161	  instruction only when the audit shows one is missing, and remove at least as much elsewhere. Report characters and
+   162	  prompt tokens before and after; growth needs a written reason.
+   163	- **Trace a miss to the raw answer first.** Class it as not written, refused (by which check) or split. Check that the
+   164	  request shows what the answer needs and the schema can express it before changing any wording. A request never asks
+   165	  for what a check refuses; a retry that repairs a refusal is a symptom, not handling.
+   166	- **An example is an instruction.** It must agree with the schema and the code that reads the answer, or it goes.
+   167	- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Every arm runs beside a
+   168	  fresh control, on at least three samples; a bar the control fails against itself judges nothing. A cached replay
+   169	  proves the code, never the model.
+   170	- **Build where code decides.** A decision code can make is moved out of the model, not sampled.
+   171	
+   172	## 7. Evaluation
+   173	
+   174	- Never iterate against a measuring stick of your own. The stick (gold, unit, the judge's reading) is checked against
+   175	  what the product uses and fixed with Alex before the first arm. A failed registered acceptance stops the line and
+   176	  goes to Alex with its census; the next arm is never designed alone.
+   177	- Measure the stick before using it: control against a second control, the criterion's null estimated (a conjunction
+   178	  over many items fails by chance), and its workload sized from its rules.
+   179	- Tune on dev, score test once per configuration; label model-authored gold and model judges as such.
+   180	- Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind
+   181	  a metric's largest values before reading it, and write down what a derived number reduces to.
+   182	- Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was
+   183	  not tuned on.
+   184	- Weigh a case by what it carries in the product, not by count; spend arms only where its stake survives.
+   185	
+   186	## 8. Product thinking
+   187	
+   188	- Think like a hedge-fund analyst. A thesis is an argued view about the business and the world; its stance comes from
+   189	  the argument weighed against what is priced. Extract the few metrics or segments that carry it; financial-statement
+   190	  lines are its evidence, never its definition.
+   191	- When a thesis-quality check fails, look first at the unit of thought (are these the arguments that move the stock?),
+   192	  not deeper into the numbers. Numbers are verified by code where they exist.
+   193	- Outcomes are tracked and shown, never a gate on what a view may say. Missing data is "no data to verify", never a
+   194	  pass or a fail. A repeat is not new evidence, and model agreement is not corroboration.
+   195	
+   196	## 9. Workspace and operations
+   197	
+   198	- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting
+   199	  stored data needs Alex's request, a backup, exactly identified items and a log entry.
+   200	- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+   201	- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel
+   202	  agents that edit shared modules.
+   203	- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network
+   204	  health; nothing heavy runs beside paid calls. A gate runs on a snapshot no one is editing.
+   205	- Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
+   206	- Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; tests never load
+   207	  them. Never raise a spending cap, and never switch a provider or model silently.
+   208	
+   209	## 10. Rebuilding from ../tn-hivemind
+   210	
+   211	- Bring the system over one piece at a time. The product runs end to end at every step.
+   212	- The old code is a source of requirements and stored cases, not a template. Before porting a piece, write what it
+   213	  does, who reads what it writes, and which parts were patches (by their census); port the mechanism, leave the
+   214	  patches.
+   215	- A piece arrives with only the tests that trace to its requirements. An old rule arrives with the code it governs, as
+   216	  a check where code can hold it.
+   217	
+   218	## 11. The design phase
+   219	
+   220	The work is an architecture POC: the design page, one PRD per module and the decisions. No product code and no data
+   221	files until Alex starts the build. `docs/check.py` checks (and rebuilds the PRD bundle the page reads from disk); the
+   222	only other scripts generate page assets (`build_bundle.py`, `copy_old_design.py`, `embed_fonts.py`) or simulate
+   223	classification (`simulate_classification.py`, not changed at this stage).
+   224	
+   225	- The design page is `docs/system-design.html` with its data in `docs/system-design/new-*.js`; each module's PRD is in
+   226	  `docs/prd/` (index `README.md`). The page data is the one source: a PRD block marked `generated` comes from it and
+   227	  is never edited by hand.
+   228	- After any change, refresh by reasoning: re-read every module in the order and with the four questions of
+   229	  `docs/prd/README.md` (D22), so that page, PRD and decisions say the same thing, and list each inconsistency fixed.
+   230	  `python3 docs/check.py` runs last and checks only mechanically; its pass is never the refresh.
+   231	- Design every data path from what a view (thesis) needs, never from what the data offers: no number warehouse (D24,
+   232	  D28).
+   233	- Write for a reader who did not follow the discussion: plain Chinese, one concrete example, processes as step cards
+   234	  and decisions as trees; every detail page links to its PRD.
+   235	- A rule is written in full in one place, its owner; summaries, other modules and the glossary name it or point to
+   236	  it without restating its conditions, so a change lands once. A finding that one sentence missed a change is a
+   237	  class: count every place that states the same thing before the first edit (§1).
+   238	- Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`.
+   239	  The prompt names the scope, the governing documents and what is out of scope; its report is a lead (§1).
+   240	- Before a freeze, review in rounds. Each round runs read-only reviews by angle: an end-to-end simulation of
+   241	  realistic items, state-by-event tables, wording against the glossary, whether an engineer could build each step
+   242	  from the text, every rule against the decisions, an attack on Claude's own findings, a new reader answering
+   243	  questions, every change read in context, and line-by-line reads by module. Each finding is checked against the
+   244	  text before a change; rounds go on until one finds nothing; then the freeze is recorded and the design sealed.
+   245	
+   246	## Before finishing a slice
+   247	
+   248	1. The touched suites, the structural checks and then the full suite pass (in the design phase: the reasoning refresh,
+   249	   then `python3 docs/check.py`). A red suite is fixed before a handoff, whoever's code it is.
+   250	2. `docs/CURRENT_STATE.md` holds the status, the open defects and the one next task; a status update retires the
+   251	   paragraphs it replaces. A changed choice is recorded in `docs/DECISIONS.md`.
+     1	# 把重要论据保留下来，再决定要不要新开问题
+     2	
+     3	2026-10-25，D161。Alex 在 D160 失败后要求继续改进抽取，为后续运行和封存做准备。本轮只修抽取的阅读任务；不加新的证据存储层，不改观点身份、归组含义、UI、Idea、分类、Pull 或最终判定。
+     4	
+     5	例子：一项融资安排有拟议担保额度、项目总成本和分析师对风险的批评。这些内容可以共同检验一个项目问题，不需要每读到一个数字就新开问题；也不能因为不用新开问题，就把总成本和批评丢掉。
+     6	
+     7	## 先诊断
+     8	
+     9	范围是 D160 六个完整序列、18 次抽取，逐条读过全文、原答、交接和最终记录。完整计数见 `poc/reports/2026-10-25-ohio-grouping-03/audit.json` 和该目录的 `results.md`。
+    10	
+    11	| 原答中的缺失 | 旧默认角色，3 次 | D160 问题优先角色，3 次 |
+    12	|---|---:|---:|
+    13	| 第二篇没有 Goldberg 的风险判断 | 1 | 1 |
+    14	| 第一篇没有项目总成本证据 | 1 | 3 |
+    15	| 最终仍缺三种金额中的一种 | 1 | 1 |
+    16	
+    17	这是人工按证据字段及其原句所指事实逐项标注，不以关键词出现代替正确保留。已知正例是 grouped-2 的第二篇 e4–e6；反例是 grouped-1 第二篇全部原答只有两条证据。该请求已经显示两个项目问题、所属组以及全文；sift 零删除，后续原样保存。因此这里不是数据库没有召回，也不是存储丢失。三个新角色首篇都漏总成本，两个在第二篇补回；补回不代表首篇抽取正确。
+    18	
+    19	先查自己的改动：D160 取消逐个数字开问题，却主要解释如何开问题，证据段仍主要规定引用格式。模型可以把“不新开问题”执行成“不保留论据”。这是待验证的阅读机制；不是已经证明一句提示词能完全修好。两次成功保留批评也证明现有 schema 和证据必须连到问题的合同能表达它，无需据此另建存储层。
+    20	
+    21	## 一处修改、完整请求审查
+    22	
+    23	用 D160 角色作新鲜对照，不再拿更差的 role-v5 作主要对照。实验角色先要求保留直接影响判断的事实、条款及支持和反对的理由，再决定复用问题或新开问题。合并重复的“一个问题”和“同一个问题”要求；保留年度、研究检查日、来源原意、逐字引用、对象、梯子及键的合同。没有 Ohio、Goldberg 或某个金额的专用提示。
+    24	
+    25	逐层审查：system 是阅读任务；类别段仍按 T7 读来源和事件、按 T8 读论据；对象及参考清单仍只供参考；既有问题和组已可见；全文不截取；schema 已可表达同一问题的多条支持/反对证据；匹配只判断身份及证据新旧。schema、模型、reasoning、输出上限、全文、归组段、匹配和写入均不变。角色字符数和完整首请求字符数在运行前记录，实际输入 token 在运行后记录。不新增模型调用。
+    26	
+    27	## 本轮验证及停止条件
+    28	
+    29	使用 D160 同三篇输入、同六个独立序列，每臂三个新鲜样本，交错运行。每篇抽完并写完再读下一篇。沿用 D160 的 O1–O6 及金额原意判断，不因这次输出改答案；另列“第一篇是否已保留总成本”定位这次修改。原标准是否通过与新诊断项分别报告，不把补回算首篇通过。
+    30	
+    31	每条检查问题、答案条件、证据原句、链接、出处、最终成员及重复归并；读所有错误的原答。三次实验必须全部满足旧核心标准，且首篇总成本三次均保留，才说明这个开发案例修好。对照自身的差异也逐次报出。任何拒绝、未完成、错误链接均不是通过；不能靠多开问题掩盖证据缺失，也不要求逐字输出相同。
+    32	
+    33	这是开发案例验证，不是全抽取模块验收；即使通过，也不能直接封存全部类别或启用默认归组。通过后才固定其他类别的回归案例与默认接入方案；本轮不预授权一个未定输入和答案的付费测试。失败停止这轮，报告最大剩余原因，不暗改标准、补采或换模型。默认产品仍用 v16，只有通过完整后续验收才提升版本。
+    34	
+    35	## 状态 × 事件
+    36	
+    37	| 状态 | 事件 | 转移、写入、所用日期 |
+    38	|---|---|---|
+    39	| 未开始 | 审查、免费预检通过 | 新目录冻结两个角色、三个输入、配置、源码；保留 publication_day |
+    40	| 正在读一篇 | 成功、零候选、只有证据 | 同一 process 按 seq 检查并原子保存；使用该输入日 |
+    41	| 已保存 | 下一篇、下一日 | 读取本样本已提交的问题及组；不用日初快照 |
+    42	| 原答不合合同 | 首次拒绝或要求重试 | 留原答，结束该序列，不重抽；独立序列照原计划执行 |
+    43	| 调用在途 | 失败、崩溃、运行到期 | 留费用预留，结束整轮，不自动重发 |
+    44	| 正在写入 | 成功或异常 | 观点、证据及组同事务；异常回滚 |
+    45	| 任意 | 源文/配置改动、另一写者 | 冻结摘要或独占锁拒绝；不混合运行 |
+    46	| 六序列完成 | 通过、失败 | 按固定标准报告；不自动发布、重跑或改尺 |
+    47	
+    48	## 值 × 来源/写者 × 读者
+    49	
+    50	| 值 | 来源和唯一写者 | 读者 |
+    51	|---|---|---|
+    52	| control_role_path | prepare 显式参数；可省略保持旧默认 | manifest 摘要、run → context → model.call |
+    53	| role_path | 已有实验角色参数 | 同上；不能从环境或文件偶然存在推导 |
+    54	| 候选及证据 | 模型原答 | 原 schema、sift、matching、writing；不变 |
+    55	| 归属 | 原答及 write_threads | 下篇 context 和 thread_detail；不变 |
+    56	| 状态、费用、尝试数 | 原 runner / transport | 审计；不变 |
+    57	
+    58	## 新路径 × 原检查
+    59	
+    60	| 路径 | 检查 |
+    61	|---|---|
+    62	| 显式对照角色 | 非空，必须同时给实验角色，两者都冻结；入口测试断言两臂收到各自精确内容 |
+    63	| 省略对照角色 | 旧默认请求保持；已有入口测试继续验证 |
+    64	| 修改证据读法 | 仍需逐字原句、合法链接、来源及候选完整性；用全部旧原答和正反例先检查 |
+    65	| 三篇连续 | 沿用真实 SQLite 历史、重送、成员及出处核对；不新建保存路径 |
+    66	
+    67	## 既有决定与预算
+    68	
+    69	D42 要求证据连到问题；D47 只连直接讲的问题；D149 在抽取时归组；D155 清单是参考；D158 事件不套数字次年上限；D159 保持来源原意并顺序读写。本轮全部保持。D160 失败后曾提出新的证据存储合同，但原答不支持必须如此改，本轮不采用。
+    70	
+    71	最多 54 次请求、$1.50 估算保留额、30 分钟，不提高旧预算。D160 实测 36 次、$0.51142625；本轮估计约 $0.5–$0.9，估计不是测量。先跑 preflight，审查全部拒绝；先跑显式对照角色的入口测试及反向修改；只读设计审查通过后修改 runner。独立 session、日志和 pid；每次发送前预留费用；不自动重试。
+    72	
+    73	通过与否都完成相关套件、全套一次、逐模块推理刷新和最后 docs/check.py。结果另写，注册文本冻结后不修改。
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^#{1,4} .*D(149|155|158|159|160)|D149|D155|D158|D159|D160'"' docs/DECISIONS.md && nl -ba poc/hierarchy_study/ohio_sequence.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2170:## D149 · 2026-10-25 · Group association is required during extraction
+2192:- Not changed: grouping (D149, Codex's slice, still not in the default pipeline); the language (Alex's call: run in Chinese now or migrate first). The rerun reads the relabelled corpus `items-window-tags2-2026-10-24.sqlite`. A one-week run comes first.
+2239:## D155 · 2026-10-25 · 清单是参考，先修身份，再按顺序验证归组
+2244:- D149 归组要求不变。先验证同次抽取的归属交接，再接入按分发顺序读写的新路径；当天开始的快照不能证明后续抽取看到了当天新主线。小实验不证明全市场搜索能力。
+2252:- D149、D155 的产品边界不变。修好测量之后再固定下一轮真实案例的逐项预期和对照；上层投资论点、跨市场规模能力不由本轮获证。
+2261:## D158 · 2026-10-25 · 追查 Ohio 入口并在同一归组流程内对照
+2268:- D158 运行结果：免费重放 326 个答案，事件年度修复仅恢复 NAVER 一条部署事件及三条证据；两个反向修改和完整 211 项测试通过。在线第一条对照请求 180.342 秒超时，无模型回答；其余五个序列未开始，$0.105535 未知用量保留额不释放。新入口尚无在线效果结论，不推广、不自动重发。结果：`poc/reports/2026-10-25-ohio-grouping-02/results.md`。
+2270:## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
+2273:- 八个 v15 库有 834 次日初预抽取，其中 576 次之前已有同日新观点；此数是上下文暴露，不是错误数。删除预抽取，让一条写完下一条再抽，恢复 D31/D63 的顺序要求。D155 中这一顺序修复不再等待分组语义试验；分组仍不因此启用。未完成的旧并行交接明确拒绝恢复，保留原数据，不静默重抽。
+2275:- 每个案例每臂三次，最多 24 次请求、$1.50 估算保留额、30 分钟；与 D158 超时请求及其未知费用分开，不自动重发。原文审阅形成的开发预期不是人工金标，结果不充当完整分组验收。前端、Idea、分类、Pull、最终判定和上层论点均不在本次范围。
+2278:## D160 · 2026-10-25 · 按原意检验三篇连续抽取，不用错误合并掩盖提问失真
+2280:- Alex 同意 D159 的界限并要求继续完整修复。以同一可核对问题判去重，以同一业务过程判归组；拟议担保改成当年实际付款属于抽取失真，不能强行合并算修复。
+2284:- D160 实测结果：六个序列全部完成，36 次调用，估算 $0.51142625。新入口三次均把两项融资问题分别保留且归在同组，但风险论据和三种金额口径完整保留均只有 2/3，与对照覆盖相同；完整验收失败，不推广、不自动续开臂。18 条成员、54 次出处交接全部对应；完整 216 项 Python 测试通过。后两篇没有新候选，不能声称检验了旧身份拆分问题。结果和剩余合同问题见 `poc/reports/2026-10-25-ohio-grouping-03/results.md`。
+     1	"""D157: a bounded, isolated two-article stream using the current Chinese pipeline.
+     2	
+     3	The registered scope and checks live in docs/research/2026-10-25-ohio-grouping-poc.md.
+     4	No default pipeline configuration or historical ledger is modified.
+     5	"""
+     6	import argparse
+     7	import copy
+     8	import dataclasses
+     9	import fcntl
+    10	import hashlib
+    11	import json
+    12	import re
+    13	import sqlite3
+    14	import time
+    15	import urllib.request
+    16	from pathlib import Path
+    17	
+    18	import ingestion_threads as groups
+    19	import study
+    20	from hivemind import config, dispatch, extraction, model, universe
+    21	from hivemind.views import matching, store, writing
+    22	
+    23	ROOT = Path(__file__).resolve().parents[2]
+    24	DEFAULT_OUT = ROOT / 'poc/reports/2026-10-25-ohio-grouping-01'
+    25	ITEMS_DB = ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite'
+    26	PREFIX = ROOT / 'poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item2-result.json'
+    27	ITEM_IDS = ('gnews:b25b5b3109fbe06f1a394164', 'gnews:bb0d23846735c94b7c1722d2')
+    28	LABELS = tuple(f'{arm}-{sample}' for sample in range(1, 4) for arm in ('control', 'grouped'))
+    29	MAX_REQUESTS, MAX_USD, MAX_SECONDS = 30, 1.5, 1800
+    30	GROUP_PROMPT = '''同时把候选观点归入所谈的持续业务过程，例如产品推出、投资项目或政策过程；公司相同不够。
+    31	可以复用下面展示的研究主线编号，也可以在 threads 声明有名称和范围的新主线；在候选的 thread_ids 引用。
+    32	同一过程的不同问题可以共用主线，一个问题也可以属于多条。归组不合并问题，也不表示因果或依赖。
+    33	只更新已有观点的证据时不用再造候选或主线。'''
+    34	TABLES = ('views', 'view_keys', 'rungs', 'evidence', 'evidence_sources', 'evidence_links', 'replacements',
+    35	          'threads', 'thread_members')
+    36	
+    37	
+    38	class Refused(ValueError):
+    39	    """A completed model answer did not meet the registered contract; do not resample."""
+    40	
+    41	
+    42	def write(path, value):
+    43	    study.write_json(Path(path), value)
+    44	
+    45	
+    46	def read(path):
+    47	    return json.loads(Path(path).read_text())
+    48	
+    49	
+    50	def digest(path):
+    51	    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    52	
+    53	
+    54	def schema(offered):
+    55	    result = extraction.keyed_schema()
+    56	    result['required'].append('threads')
+    57	    result['properties']['threads'] = {'type': 'array', 'items': copy.deepcopy(groups.THREAD_SCHEMA)}
+    58	    candidate = result['properties']['candidates']['items']
+    59	    candidate['required'].append('thread_ids')
+    60	    reference_pattern = r'^(?:t[1-9][0-9]*' + ''.join('|' + re.escape(g['thread_id']) for g in offered) + ')$'
+    61	    candidate['properties']['thread_ids'] = {'type': 'array', 'minItems': 1,
+    62	                                             'items': {'type': 'string', 'pattern': reference_pattern}}
+    63	    return result
+    64	
+    65	
+    66	def validate_references(raw, offered):
+    67	    errors = model.check_schema(raw, schema(offered))
+    68	    if errors:
+    69	        raise Refused('; '.join(errors))
+    70	    ids = [g['id'] for g in raw['threads']]
+    71	    candidate_ids = [c['id'] for c in raw['candidates']]
+    72	    if len(candidate_ids) != len(set(candidate_ids)):
+    73	        raise Refused('ambiguous candidate IDs')
+    74	    if len(ids) != len(set(ids)) or any(re.fullmatch(r't[1-9][0-9]*', ident) is None for ident in ids):
+    75	        raise Refused('new groups need unique local t IDs')
+    76	    if any(not g['name'].strip() or not g['scope'].strip() for g in raw['threads']):
+    77	        raise Refused('group name and scope must be nonempty')
+    78	    allowed = set(ids) | {g['thread_id'] for g in offered}
+    79	    for c in raw['candidates']:
+    80	        refs = c['thread_ids']
+    81	        if not refs or len(refs) != len(set(refs)) or set(refs) - allowed:
+    82	            raise Refused(f'{c["id"]}: invalid group references')
+    83	
+    84	
+    85	def context(conn, item, uni, grouped, *, role_text=None):
+    86	    shown = store.views_for_prompt(conn, [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])])
+    87	    offered = []
+    88	    if grouped:
+    89	        for row in conn.execute('select * from threads order by rowid'):
+    90	            group = dict(row)
+    91	            group['members'] = [r[0] for r in conn.execute(
+    92	                'select view_id from thread_members where thread_id=? order by rowid', (row['thread_id'],))]
+    93	            offered.append(group)
+    94	        member_ids = {v for g in offered for v in g['members']}
+    95	        shown_ids = {v['view_id'] for v in shown}
+    96	        for vid in sorted(member_ids - shown_ids):
+    97	            shown.append(dict(store.view(conn, vid), depends_on=[]))
+    98	    system, user = extraction.build_prompt(item, item['text'], shown, uni, 'v5')
+    99	    if role_text is not None:
+   100	        system = role_text
+   101	    if grouped:
+   102	        system += '\n\n' + GROUP_PROMPT
+   103	        user += '\n\n【可用研究主线】\n' + json.dumps(offered, ensure_ascii=False)
+   104	    return system, user, shown, offered
+   105	
+   106	
+   107	def snapshot(conn, seq):
+   108	    result = {table: [dict(r) for r in conn.execute(f'select * from {table} order by rowid')] for table in TABLES}
+   109	    result['details'] = [groups.thread_detail(conn, r['thread_id'], seq) for r in result['threads']]
+   110	    return result
+   111	
+   112	
+   113	def process(conn, archive, cfg, uni, item, grouped, directory, transport, *, role_text=None):
+   114	    """One dispatch, extract, match and atomic write; no hidden repair call."""
+   115	    route = dispatch.route(conn, item, uni)
+   116	    if route.kind != 'extract':
+   117	        return {'route': route.kind, 'input_id': item['input_id']}
+   118	    if route.resume_from:
+   119	        raise Refused('This measurement does not resume unfinished sequences')
+   120	    seq = route.sequence_no
+   121	    system, user, shown, offered = context(conn, item, uni, grouped, role_text=role_text)
+   122	    write(directory / 'context.json', {'shown': shown, 'offered': offered, 'before': snapshot(conn, seq - 1)})
+   123	    answer = model.call(archive, cfg, cfg.extraction_setting(item['category']), system, user,
+   124	                        schema(offered) if grouped else extraction.keyed_schema(), 'extraction', 'extract', transport=transport)
+   125	    if answer.cached:
+   126	        raise Refused('Fresh sample unexpectedly used a cached answer')
+   127	    write(directory / 'extraction.json', answer.data)
+   128	    if grouped:
+   129	        validate_references(answer.data, offered)
+   130	    evidence, candidates, dropped = extraction.sift(answer.data, item, item['text'], {v['view_id'] for v in shown}, uni)
+   131	    handover = extraction.Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, False, answer.cost_usd)
+   132	    write(directory / 'handover.json', dataclasses.asdict(handover))
+   133	
+   134	    def match(name, handover, lists, shown, extra_views=()):
+   135	        result = matching.decide(archive, cfg, conn, item, handover.candidates, handover.evidence, lists, shown,
+   136	                                 extra_views=extra_views, transport=transport)
+   137	        if result.cached:
+   138	            raise Refused('Fresh matching sample unexpectedly used cache')
+   139	        checked = matching.check(conn, uni, result.data, handover.candidates, handover.evidence, lists, shown)
+   140	        write(directory / f'{name}.json', {'answer': result.data, 'outcomes': checked.outcomes,
+   141	              'evidence': [[*key, *value] for key, value in checked.evidence.items()],
+   142	              'refusals': checked.refusals, 'not_opened': checked.not_opened, 'notes': checked.notes})
+   143	        if checked.refusals:
+   144	            conn.rollback()
+   145	            raise Refused('; '.join(checked.refusals))
+   146	        return checked
+   147	
+   148	    checked = matching.Checked({}, {}, [], {})
+   149	    second = {}
+   150	    if evidence or candidates:
+   151	        checked = match('matching', handover, matching.build_lists(conn, handover, shown, cfg.search_top_n), shown)
+   152	        pending = [(e, checked.outcomes[link][1]) for e in evidence for link in e['links']
+   153	                   if link in checked.outcomes and checked.outcomes[link][0] == matching.OUTCOMES[0]]
+   154	        if pending:
+   155	            mapped = {e['id']: dict(e, links=list(dict.fromkeys(v for x, v in pending if x['id'] == e['id']))) for e, _ in pending}
+   156	            second_handover = dataclasses.replace(handover, candidates=[], evidence=list(mapped.values()))
+   157	            lists = matching.Lists({}, {(e['id'], vid): matching.rank_evidence(conn, vid, e['one_line'], cfg.search_top_n) for e, vid in pending})
+   158	            second = match('matching-evidence', second_handover, lists, [], sorted({vid for _, vid in pending})).evidence
+   159	    # The group write is in the SAME outer transaction as the current product writer.
+   160	    try:
+   161	        with conn:
+   162	            written = writing.write(conn, uni, seq, item, handover, checked, second)
+   163	            bindings, affected = [], []
+   164	            if grouped:
+   165	                used = {ref for c in candidates for ref in c['thread_ids']}
+   166	                definitions = [g for g in answer.data['threads'] if g['id'] in used]
+   167	                bindings, affected = groups.write_threads(conn, definitions, {ref: ref for ref in used}, handover, checked, written, seq, item)
+   168	            store.insert(conn, 'handovers', input_id=item['input_id'], seq=seq, handover_json=json.dumps(dataclasses.asdict(handover), ensure_ascii=False))
+   169	            dispatch.mark(conn, item, seq, 'written', 'ok', json.dumps({'new': written.new_views, 'changed': sorted(written.changed_views)}))
+   170	            dispatch.mark(conn, item, seq, 'handed_over', 'ok', '')
+   171	    except Exception:
+   172	        conn.rollback()
+   173	        raise
+   174	    result = {'route': 'written', 'input_id': item['input_id'], 'seq': seq, 'new_views': written.new_views,
+   175	              'evidence_ids': written.evidence_ids, 'bindings': bindings, 'affected_threads': affected,
+   176	              'notes': written.notes, 'snapshot': snapshot(conn, seq)}
+   177	    write(directory / 'result.json', result)
+   178	    return result
+   179	
+   180	
+   181	class BoundedTransport:
+   182	    """One request, durable budget reservation, exact request and raw response, no retries."""
+   183	    def __init__(self, out, label, deadline, send=None):
+   184	        self.out, self.label, self.deadline, self.send = out, label, deadline, send
+   185	        manifest = out / 'manifest.json'
+   186	        self.max_requests = read(manifest)['max_requests'] if manifest.exists() else MAX_REQUESTS
+   187	
+   188	    def __call__(self, provider, request):
+   189	        budget_path = self.out / 'budget.json'
+   190	        budget = read(budget_path)
+   191	        encoded = json.dumps(request, ensure_ascii=False).encode()
+   192	        price_in, price_out = model.PRICES[request['model']]
+   193	        reserve = (len(encoded) * price_in + request['max_completion_tokens'] * price_out) / 1e6
+   194	        if time.monotonic() >= self.deadline or len(budget['attempts']) >= self.max_requests or budget['reserved_or_spent'] + reserve > MAX_USD:
+   195	            raise RuntimeError('Registered time/call/cost limit reached; no request sent')
+   196	        record = {'status': 'started', 'label': self.label, 'request': request, 'reserved_usd': reserve}
+   197	        budget['attempts'].append({'label': self.label, 'status': 'started', 'reserved_usd': reserve})
+   198	        budget['reserved_or_spent'] += reserve
+   199	        write(budget_path, budget)
+   200	        path = self.out / self.label / f'call-{len(budget["attempts"]):02d}.json'
+   201	        write(path, record)
+   202	        started = time.monotonic()
+   203	        print(f'START {self.label} call={len(budget["attempts"])} reserve=${reserve:.4f}', flush=True)
+   204	        try:
+   205	            if self.send is not None:
+   206	                response = self.send(provider, request)
+   207	            else:
+   208	                url, _ = model.ENDPOINTS[provider]
+   209	                headers = {'Authorization': f'Bearer {model._key(provider)}', 'Content-Type': 'application/json'}
+   210	                req = urllib.request.Request(url, data=encoded, headers=headers, method='POST')
+   211	                with urllib.request.urlopen(req, timeout=min(180, max(1, self.deadline - time.monotonic()))) as handle:
+   212	                    response = json.loads(handle.read().decode())
+   213	            record.update(status='complete', response=response, seconds=time.monotonic() - started)
+   214	            usage = response.get('usage', {})
+   215	            cost = (usage.get('prompt_tokens', 0) * price_in + usage.get('completion_tokens', 0) * price_out) / 1e6
+   216	            if 'prompt_tokens' not in usage or 'completion_tokens' not in usage:
+   217	                cost = reserve
+   218	            budget['reserved_or_spent'] += cost - reserve
+   219	            budget['attempts'][-1].update(status='complete', estimated_usd=cost)
+   220	            record['estimated_usd'] = cost
+   221	            write(path, record)
+   222	            write(budget_path, budget)
+   223	            print(f'DONE {self.label} usd=${cost:.4f} seconds={record["seconds"]:.1f}', flush=True)
+   224	            return response
+   225	        except Exception as error:
+   226	            # Error type only: avoid logging headers or credential-bearing exception objects.
+   227	            record.update(status='failed', error_type=type(error).__name__, seconds=time.monotonic() - started)
+   228	            budget['attempts'][-1]['status'] = 'failed'
+   229	            write(path, record)
+   230	            write(budget_path, budget)
+   231	            raise RuntimeError(f'Network attempt failed ({type(error).__name__}); no resend') from None
+   232	
+   233	
+   234	def prepare(out, *, role_path=None, item_ids=None, max_requests=MAX_REQUESTS, design_path=None):
+   235	    if (out / 'manifest.json').exists() or any((out / label).exists() for label in LABELS):
+   236	        raise ValueError('Use a new experiment directory')
+   237	    if not (out / 'preflight.txt').is_file():
+   238	        raise ValueError('Run and inspect preflight first')
+   239	    item_ids = ITEM_IDS if item_ids is None else tuple(item_ids)
+   240	    if not item_ids or len(item_ids) != len(set(item_ids)) or max_requests < 1:
+   241	        raise ValueError('Provide unique input IDs and a positive registered request limit')
+   242	    with sqlite3.connect(f'file:{ITEMS_DB}?mode=ro', uri=True) as conn:
+   243	        conn.row_factory = sqlite3.Row
+   244	        items = []
+   245	        for ident in item_ids:
+   246	            row = conn.execute('select * from items where input_id=?', (ident,)).fetchone()
+   247	            if row is None or not row['text']:
+   248	                raise ValueError(f'Missing source item/text: {ident}')
+   249	            items.append(dict(row))
+   250	    if [i['publication_day'] for i in items] != sorted(i['publication_day'] for i in items):
+   251	        raise ValueError('Inputs must be in publication order')
+   252	    for item in items:
+   253	        item['object_identifiers'] = json.loads(item['object_identifiers'])
+   254	    seeds = [dict(g, seq=0, input_id='reference:' + g['input_id']) for g in read(PREFIX)['threads']]
+   255	    write(out / 'items.json', items)
+   256	    write(out / 'reference-groups.json', seeds)
+   257	    write(out / 'config.json', read(ROOT / 'poc/config/poc-v16.json'))
+   258	    write(out / 'universe.json', read(ROOT / 'poc/universe.json'))
+   259	    paths = list((ROOT / 'src/hivemind').rglob('*.py')) + list((ROOT / 'src/hivemind/prompts').glob('*'))
+   260	    paths += [Path(__file__), ROOT / 'poc/hierarchy_study/ingestion_threads.py', ROOT / 'poc/hierarchy_study/study.py',
+   261	              ROOT / 'docs/research/2026-10-25-ohio-grouping-poc.md', PREFIX]
+   262	    paths += [out / name for name in ('items.json', 'reference-groups.json', 'config.json', 'universe.json', 'preflight.txt')]
+   263	    if role_path is not None:
+   264	        role_path = Path(role_path).resolve()
+   265	        if not role_path.read_text().strip():
+   266	            raise ValueError('Experiment role must not be empty')
+   267	        paths += [role_path, ROOT / 'docs/research/2026-10-25-ohio-root-cause.md']
+   268	    if design_path is not None:
+   269	        design_path = Path(design_path).resolve()
+   270	        if not design_path.is_file():
+   271	            raise ValueError('Registered design must exist')
+   272	        paths.append(design_path)
+   273	    write(out / 'manifest.json', {'version': 'ohio-sequence-v1', 'labels': LABELS, 'max_requests': max_requests,
+   274	          'item_ids': item_ids, 'design_path': str(design_path) if design_path else None,
+   275	          'role_path': str(role_path) if role_path else None,
+   276	          'max_usd': MAX_USD, 'max_seconds': MAX_SECONDS, 'dependencies': {str(p.resolve()): digest(p) for p in paths if p.is_file()}})
+   277	    write(out / 'budget.json', {'attempts': [], 'reserved_or_spent': 0})
+   278	
+   279	
+   280	def verify(out):
+   281	    for path, sha in read(out / 'manifest.json')['dependencies'].items():
+   282	        if digest(path) != sha:
+   283	            raise ValueError(f'Frozen input/code changed: {path}')
+   284	
+   285	
+   286	def run(out):
+   287	    with (out / 'run.lock').open('a') as lock:
+   288	        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+   289	        verify(out)
+   290	        if read(out / 'budget.json')['attempts'] or any((out / label).exists() for label in LABELS):
+   291	            raise ValueError('Measurement already started; no automatic resume')
+   292	        items = read(out / 'items.json')
+   293	        role_path = read(out / 'manifest.json').get('role_path')
+   294	        role_text = Path(role_path).read_text() if role_path else None
+   295	        uni, cfg = universe.load(out / 'universe.json'), config.load(out / 'config.json')
+   296	        deadline = time.monotonic() + MAX_SECONDS
+   297	        statuses = {label: 'not_started' for label in LABELS}
+   298	        write(out / 'status.json', statuses)
+   299	        for label in LABELS:
+   300	            verify(out)
+   301	            folder = out / label
+   302	            folder.mkdir()
+   303	            conn = groups.open_db(folder / 'views.sqlite')
+   304	            archive = model.Archive(str(folder / 'calls.sqlite'))
+   305	            # A role experiment compares two grouped streams; D157's default keeps its original arms.
+   306	            grouped = role_text is not None or label.startswith('grouped')
+   307	            sample_role = role_text if label.startswith('grouped') else None
+   308	            if grouped:
+   309	                for g in read(out / 'reference-groups.json'):
+   310	                    conn.execute('insert into threads values (?,?,?,?,?)', tuple(g[k] for k in ('thread_id', 'name', 'scope', 'seq', 'input_id')))
+   311	                conn.commit()
+   312	            transport = BoundedTransport(out, label, deadline)
+   313	            try:
+   314	                first = None
+   315	                for index, item in enumerate(items, 1):
+   316	                    directory = folder / f'item{index}'
+   317	                    directory.mkdir()
+   318	                    result = process(conn, archive, cfg, uni, item, grouped, directory, transport, role_text=sample_role)
+   319	                    if result['route'] != 'written':
+   320	                        raise Refused(f'Expected extract route, got {result["route"]}')
+   321	                    if index == 1:
+   322	                        first = result
+   323	                historical = [groups.thread_detail(conn, g['thread_id'], first['seq']) for g in first['snapshot']['threads']]
+   324	                if historical != first['snapshot']['details']:
+   325	                    raise AssertionError('First article history changed')
+   326	                if any(dispatch.route(conn, item, uni).kind != 'skipped' for item in items):
+   327	                    raise AssertionError('Completed input not skipped on resend')
+   328	                write(folder / 'checks.json', {'history_unchanged': True, 'resend_skipped': True, 'semantic_status': 'pending'})
+   329	                statuses[label] = 'complete'
+   330	            except (Refused, model.SchemaError) as error:
+   331	                statuses[label] = 'refused'
+   332	                write(folder / 'failed.json', {'kind': type(error).__name__, 'reason': str(error)[:1000]})
+   333	            except Exception as error:
+   334	                statuses[label] = 'failed'
+   335	                write(folder / 'failed.json', {'kind': type(error).__name__, 'reason': str(error)[:1000]})
+   336	                write(out / 'status.json', statuses)
+   337	                raise
+   338	            finally:
+   339	                conn.rollback()
+   340	                conn.close()
+   341	                archive.conn.close()
+   342	            verify(out)
+   343	            write(out / 'status.json', statuses)
+   344	        print(json.dumps(statuses), flush=True)
+   345	
+   346	
+   347	def main():
+   348	    parser = argparse.ArgumentParser(description=__doc__)
+   349	    parser.add_argument('command', choices=('prepare', 'run'))
+   350	    parser.add_argument('--out', type=Path, default=DEFAULT_OUT)
+   351	    parser.add_argument('--role-path', type=Path, help='Prepare two grouped arms; only the grouped arm uses this role')
+   352	    parser.add_argument('--item-id', action='append', help='Prepare with these stored inputs, in stream order')
+   353	    parser.add_argument('--max-requests', type=int, default=MAX_REQUESTS, help='Registered attempt limit; dollar cap is unchanged')
+   354	    parser.add_argument('--design-path', type=Path, help='Freeze the registered design with the experiment')
+   355	    args = parser.parse_args()
+   356	    out = args.out.resolve()
+   357	    if args.command == 'prepare':
+   358	        prepare(out, role_path=args.role_path, item_ids=args.item_id, max_requests=args.max_requests, design_path=args.design_path)
+   359	    else:
+   360	        if args.role_path is not None or args.item_id is not None or args.design_path is not None or args.max_requests != MAX_REQUESTS:
+   361	            parser.error('run reads the frozen settings from the prepared manifest')
+   362	        run(out)
+   363	
+   364	
+   365	if __name__ == '__main__':
+   366	    main()
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba poc/reports/2026-10-25-ohio-grouping-03/role-questions.txt && nl -ba poc/reports/2026-10-25-extraction-evidence-01/role-evidence.txt && nl -ba docs/prd/05-extraction.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点上；已有观点管不到的，写成候选观点，当场写全：问题、梯子、到期日，带上提出它的证据。
+     2	
+     3	开哪些观点：
+     4	- 先找这条材料正在争论、而已有观点管不到的重要问题：什么尚未发生的结果会改变公司的全年业务或重要分部？把它写成一个可以到期核对的问题。材料里的金额、条款、规模和风险是提出或检验问题的证据，不因每个数字存在就各开一条。
+     5	- 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。问题和每格条件保留原文的量与时间：拟议额度、担保、项目总价不改写成当年实际付款，规划容量不改写成当年产量。
+     6	- 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。
+     7	- 游戏、软件功能、工具和驱动的更新、促销、单款外设、高管任免、股东投票和章程细则、例行诉讼程序、回购授权不开观点。季度数和季度指引是全年问题的证据；护城河、竞争格局等没有可核对结果的宽泛话题不单独开。
+     8	- 已有观点里的同一个问题不再写候选，证据直接连到它；重要但不同的问题照常提出。同一件事只写一条。
+     9	
+    10	写观点的规矩：
+    11	- 一个观点只看一件东西：一个数（写明哪一年）或一件事。既要数字又要事件的，拆成两条。
+    12	- 问题写成一句问句，不写成断言；到期那天有一个数或一件事能判对错。
+    13	- 问的是一家公司的收入、利润、份额、产品进度，就是对象观点，object 写这家公司的股票代码，哪怕背后的原因是政策或宏观；主题观点只问世界会变成什么样（许可发不发、利率到哪、资本开支多少），不问某家公司因此怎样。
+    14	- 问题、看的是什么、梯子每一格的条件、一句话说清（one_line）都用中文写；原句（quote）照抄原文，不翻译。
+    15	- 梯子每一格的条件现在就要写得出具体的数或状态；条件要靠将来才公布的目标值、门槛值的，核对不了，不开。
+    16	- 梯子五格（只有是或否的问题两格）。对象观点（公司）的五格从「强烈看多」到「强烈看空」，说的是对这家公司业务好还是坏；主题观点（宏观、政策、行业）的五格是从一头排到另一头的五种结果，用结果命名，不说好坏。每一格是一个能核对的结果：一个数落在哪段区间，或一件事到了哪一步；格和格不重叠、不留空，到期时正好一格成立；中性那一格跟什么比写在条件里；没有含糊的「部分」。
+    17	- 到期日定在这个争论见分晓的那天。数字的观点，到期日就是这个数公布的那天；公司的数按它的财年，发布日所在的财年是今年、下一个财年是明年；不是公司的数按自然年。事件的观点写清到哪一天看它处在哪一格。
+    18	
+    19	写证据的规矩：
+    20	- 一条证据是信息里的一句原话或一个数，原文照抄（quote），不改一个字；另写一句离开原文也看得懂的话（one_line）：谁、做了什么、多少、哪一期。
+    21	- 每条证据写明谁说的（speaker），转述的写明最初是谁、哪天说的（original_who、original_day）；tier 只写这四个词之一：发生的事、当事人说的、第三方看法、传闻。发生的事指官方行动、公布的数、完成的交易；当事人说的指公司指引、管理层表态、官员讲话；第三方看法指卖方、媒体分析、专家；传闻指「知情人士称」和没有出处的说法。
+    22	- 每条证据连到它直接讲的那条观点上（links 写观点编号），可以连几条；已有观点管不到的，连到这次的候选观点上（写候选观点的编号）。一句话只连它直接讲的那条，不连间接相关的。没有观点可连的话不抽。
+    23	- 背景、套话、广告、导航文字不抽。
+    24	- 只凭这条信息写，不用你自己知道的别的事。
+    25	
+    26	每个候选观点另填一把键，让代码判断两条观点是不是同一个量：
+    27	- measure：从清单里选最贴的量。公司的数：total_revenue、segment_revenue、product_revenue、gross_margin、operating_margin、operating_expense_growth、total_expenses、operating_loss、tax_rate、capex、shipments_or_capacity、run_rate、design_wins；事件：event；世界的数：spend_total、financing_amount、price、capacity、growth_rate、policy_event；都不是：other。
+    28	- scope：量的实际限定范围；分部、产品、群体或事件对象。参考名称含义相同时沿用，没有限定写空字符串。
+    29	- period_start / period_end：这个量覆盖的起止日（ISO）。财年按财年说明换算；自然年 2026 = 2026-01-01 到 2026-12-31；事件写提出当年年初到到期日。
+    30	- basis：GAAP、non_GAAP 或 n/a。unit：USD、percent、count、GW、MW、TWD、multiple 或 n/a。event_type：measure 是 event 或 policy_event 时选 launch、shipment、licence、approval、deal_close、deployment、other，否则 n/a。
+    31	- 梯子每格另写 lo、hi：这一格数值区间的下界（含）和上界（不含），用 unit 的单位（美元写完整数字，百分比写 73 不写 0.73）；最低格 lo 写 null，最高格 hi 写 null；是/否两格都写 null。
+     1	你是一位资深对冲基金分析师。读完整条信息，保留能支持或削弱业务判断的证据，再决定复用已有问题还是提出候选观点。证据连到问题；候选观点写全问题、梯子、到期日，并带上提出它的证据。
+     2	
+     3	写证据的规矩：
+     4	- 先读出影响判断的事实、条款、规模、限制，以及作者和受访者支持或反对的理由；这些都可以检验同一个问题。金额不能单独开观点，不等于不能作证据。对一个安排能否落地的判断，要保留它的关键条件和风险论据，不能只摘安排本身的报道。
+     5	- 一条证据是信息里的一句原话或一个数，原文照抄（quote），不改一个字；另写一句离开原文也看得懂的话（one_line）：谁、做了什么、多少、哪一期。
+     6	- 每条证据写明谁说的（speaker），转述的写明最初是谁、哪天说的（original_who、original_day）；tier 只写这四个词之一：发生的事、当事人说的、第三方看法、传闻。发生的事指官方行动、公布的数、完成的交易；当事人说的指公司指引、管理层表态、官员讲话；第三方看法指卖方、媒体分析、专家；传闻指「知情人士称」和没有出处的说法。
+     7	- 每条证据连到它直接讲的那条观点上（links 写观点编号），可以连几条；已有观点管不到的，连到这次的候选观点上（写候选观点的编号）。一句话只连它直接讲的那条，不连间接相关的。没有观点可连的话不抽。
+     8	- 背景、套话、广告、导航文字不抽。
+     9	- 只凭这条信息写，不用你自己知道的别的事。
+    10	
+    11	开哪些观点：
+    12	- 只有已有观点管不到的重要问题才开候选：什么尚未发生的结果会改变公司的全年业务或重要分部？写成到期可核对的问题，不因每个数字存在就各开一条。
+    13	- 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。问题和每格条件保留原文的量与时间：拟议额度、担保、项目总价不改写成当年实际付款，规划容量不改写成当年产量。
+    14	- 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。
+    15	- 游戏、软件功能、工具和驱动的更新、促销、单款外设、高管任免、股东投票和章程细则、例行诉讼程序、回购授权不开观点。季度数和季度指引是全年问题的证据；护城河、竞争格局等没有可核对结果的宽泛话题不单独开。
+    16	- 已有观点里的同一个问题不再写候选，证据直接连到它；重要但不同的问题照常提出。同一件事只写一条。
+    17	
+    18	写观点的规矩：
+    19	- 一个观点只问一个数（写明哪一年）或一件事，不捆绑。写成问句，到期用一个数或一件事判对错。
+    20	- 问的是一家公司的收入、利润、份额、产品进度，就是对象观点，object 写这家公司的股票代码，哪怕背后的原因是政策或宏观；主题观点只问世界会变成什么样（许可发不发、利率到哪、资本开支多少），不问某家公司因此怎样。
+    21	- 问题、看的是什么、梯子每一格的条件、一句话说清（one_line）都用中文写；原句（quote）照抄原文，不翻译。
+    22	- 梯子每一格的条件现在就要写得出具体的数或状态；条件要靠将来才公布的目标值、门槛值的，核对不了，不开。
+    23	- 梯子五格（只有是或否的问题两格）。对象观点（公司）的五格从「强烈看多」到「强烈看空」，说的是对这家公司业务好还是坏；主题观点（宏观、政策、行业）的五格是从一头排到另一头的五种结果，用结果命名，不说好坏。每一格是一个能核对的结果：一个数落在哪段区间，或一件事到了哪一步；格和格不重叠、不留空，到期时正好一格成立；中性那一格跟什么比写在条件里；没有含糊的「部分」。
+    24	- 到期日定在这个争论见分晓的那天。数字的观点，到期日就是这个数公布的那天；公司的数按它的财年，发布日所在的财年是今年、下一个财年是明年；不是公司的数按自然年。事件的观点写清到哪一天看它处在哪一格。
+    25	
+    26	每个候选观点另填一把键，让代码判断两条观点是不是同一个量：
+    27	- measure：从清单里选最贴的量。公司的数：total_revenue、segment_revenue、product_revenue、gross_margin、operating_margin、operating_expense_growth、total_expenses、operating_loss、tax_rate、capex、shipments_or_capacity、run_rate、design_wins；事件：event；世界的数：spend_total、financing_amount、price、capacity、growth_rate、policy_event；都不是：other。
+    28	- scope：量的实际限定范围；分部、产品、群体或事件对象。参考名称含义相同时沿用，没有限定写空字符串。
+    29	- period_start / period_end：这个量覆盖的起止日（ISO）。财年按财年说明换算；自然年 2026 = 2026-01-01 到 2026-12-31；事件写提出当年年初到到期日。
+    30	- basis：GAAP、non_GAAP 或 n/a。unit：USD、percent、count、GW、MW、TWD、multiple 或 n/a。event_type：measure 是 event 或 policy_event 时选 launch、shipment、licence、approval、deal_close、deployment、other，否则 n/a。
+    31	- 梯子每格另写 lo、hi：这一格数值区间的下界（含）和上界（不含），用 unit 的单位（美元写完整数字，百分比写 73 不写 0.73）；最低格 lo 写 null，最高格 hi 写 null；是/否两格都写 null。
+     1	# 抽取
+     2	
+     3	> 状态：第一版已冻结 · 2026-10-18（没定的：每一类提示词的具体写法） · D149 补入抽取时归组要求，尚未接入默认管线 · 更新：2026-10-25 · 依据：docs/DECISIONS.md D11、D13、D25–D28、D32、D33、D35–D37、D41、D42、D45–D47、D51–D54、D58–D60、D149、D155
+     4	> 设计页：docs/system-design.html › New › 抽取 › 展开。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+     5	
+     6	## 一句话
+     7	
+     8	抽取只做一件事：每条信息整份交给模型，用资深对冲基金分析师的视角、按这一类的提示词读完，交出两样东西：证据，连到这些对象已有的观点上（或这次的候选观点上）；候选观点，已有观点管不到、又要紧的事（你自己的备忘录另有说明，见提示词那一节）。每个候选观点同时带结构化研究归属，必要时声明新的研究主线。每条带出处，一起交给观点库。完整归组规矩见 [观点库](06-views.md#研究主线抽取时归组)。
+     9	
+    10	## 为什么这样设计
+    11	
+    12	- 系统做的事是在观点库里建观点、更新观点、关掉观点，抽取就是把每条信息读成证据和带研究归属的候选观点。怎么和库里已有的比、写进库，是观点库的事，不在这里。
+    13	- 推进来的每条信息都整份交给模型读：文件连同里面的表格一起读，表格数据一次发布整批读，不按文字、表格分开处理。
+    14	- 不同类别该读的东西不同：新闻读发生了什么、说法从哪来；研报读作者的看法和评级；政府决定读决定本身和生效时间。所以每个类别一份提示词，都用同一个提示词模板拼出来。
+    15	- 观点库里的观点是模型（分析师）的判断：一个问题、一把梯子和一个到期日；谁在哪条信息里说了什么，是客观的证据。多数信息只带来已有观点的证据，少数才提出一条新的候选观点。
+    16	- 证据要连在观点上才算证据：一句话算不算证据，只能对着一个问题来判断。所以提示词第 5 块给模型这些对象已有的观点，读的时候就把证据连上去（Alex：“evidence 怎么在抽取的时候不挂钩 thesis？这怎么可能。”）。已有的观点里也放上它们依赖的观点，因为一条公司的信息常常带着主题上的事：NVDA 的声明说美国保证会批许可证，这句话该连到“出口许可”那条主题观点上。
+    17	- 已有观点管不到的要紧事（正文点名的另一家公司、这个对象一个新的关键问题、宏观或政策上一件要紧的事），写成候选观点，带上提出它的证据；你自己的备忘录照提示词说明处理；是已有的哪一条还是新观点，由观点库比对时定。
+    18	- 每条观点和证据都带出处，以后能快速回到原文去查、去推理。
+    19	
+    20	## 一条信息，一步一步
+    21	
+    22	模型只做第 2 步，其余是代码。
+    23	
+    24	<!-- generated: steps -->
+    25	```
+    26	一条信息进来（带类别和顺序号）
+    27	  ↓ 1 拼提示词（代码）：按这条信息的类别，用同一个提示词模板拼出这一类的提示词；第 5 块由观点库给：相关对象开着的观点、它们依赖的观点，以及归组所需的已有主线
+    28	  ↓ 2 读（模型）：整份读完，交出两样：证据，连到第 5 块里的观点上，或连到这次的候选观点上；候选观点，第 5 块里没有一条观点管、又要紧的事，带上提出它的证据；你自己的备忘录照提示词说明处理。每个候选观点同时确定研究归属，按观点库的归组规矩交出引用；每条带出处
+    29	  ↓ 3 核对出处与归属引用（代码）：引用的原文（那一句，或表里那个单元格）在不在这条信息里、数字在不在引用的地方；证据连的必须是第 5 块里的观点或这次的候选观点；出处对不上的不要，记下原因；归属引用按观点库的完整交接规矩检查
+    30	  ↓ 4 交给观点库（代码）：证据、候选观点连同归属和必要的新主线定义，带着顺序号一起交给观点库；比对定观点身份，写入保留归属
+    31	```
+    32	<!-- /generated: steps -->
+    33	
+    34	## 读出两样东西：证据和候选观点
+    35	
+    36	一遍读完，交出证据和候选观点；候选观点的研究归属与必要的新主线定义随同交出。证据几乎每条信息都有，连到已有观点上，也可以连到这次的候选观点上；候选观点很少，只给已有观点管不到的要紧事（你自己的备忘录照提示词说明处理）。到了观点库，候选观点先和搜出来的几条已有观点比；它带的证据等它的去向定了，再和那条观点下已有的证据比，见 06-views.md。
+    37	
+    38	<!-- generated: two -->
+    39	|  | 证据 | 候选观点 |
+    40	|---|---|---|
+    41	| 是什么 | 信息里的一句话或一个数：谁说了什么、发生了什么 | 一个要盯的问题，当场写全：讲的是谁、问题、梯子、到期日和研究归属 |
+    42	| 多不多 | 几乎每条信息都有 | 少：第 5 块里没有一条观点管、又要紧的事；你自己的备忘录里的判断都算 |
+    43	| 连到哪 | 第 5 块里的观点（可以连几条），或者这次的候选观点 | 带着提出它的证据（你自己的备忘录读出的可以没有） |
+    44	| 到了观点库 | 和它那条观点下已有的证据比：重复、替代还是新证据 | 先定是哪一条（或它的一部分）、接续、新观点，还是不开；归属随最终观点保存，不再由比对重判 |
+    45	| 例子 | 8-K 里的“H20 出口中国要许可证” | 2025-04 那条规定管的这一档芯片对华出口许可，到 2026-04-15 处在哪一格？ |
+    46	
+    47	```
+    48	读到一句话或一个数｜它和哪条观点有关？（你自己的备忘录里的判断不走这棵树：都写成候选观点，可以不带证据）
+    49	├─ 第 5 块里的观点 → 证据：连到那条观点上（连在它直接讲的那条上；另一条依赖那条的，不再连给它）
+    50	├─ 第 5 块里没有，但要紧 → 候选观点：这句话是它的证据（先在抽取时交研究归属；是已有的哪一条，还是新观点，由观点库比对时定；一条观点只管到它的到期日，到期以后才发生的事也算这里）
+    51	└─ 都没关系 → 不抽（背景、套话）
+    52	```
+    53	<!-- /generated: two -->
+    54	
+    55	## 提示词模板
+    56	
+    57	所有类别用同一个提示词模板，由这五块拼成这一类的提示词；这一类的读法取自分类规则，不另写。
+    58	
+    59	<!-- generated: template -->
+    60	| 部分 | 写什么 | 从哪来 |
+    61	|---|---|---|
+    62	| 角色 | 你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点上；已有观点管不到、又要紧的事，写成候选观点，当场写全：问题、梯子、到期日和研究归属，带上提出它的证据。你自己的备忘录里的判断，都交成候选观点，可以不带证据，不当作证据。写观点的规矩：一个观点只看一件东西；梯子五格（只有是或否的问题两格），每格是一个能核对的结果，格和格不重叠、不留空，没有含糊的“部分”；到期日定在争论见分晓的那天，数字的观点就是这个数公布的那天；数字写明哪一年：今年、明年按这条信息的发布日算，公司的数按它的财年。 | 所有类别一样；写观点的规矩原样取自观点库 |
+    63	| 这一类是什么、怎么读 | 这一类的定义和读法，比如“看法和估计都算作者说的，不当成已经发生的事”。 | 取自分类规则，这里不另写 |
+    64	| 讲的是谁 | 这条信息的相关对象；另附研究对象名单里的全部主题，候选观点讲的是主题时，名单里有的从里面挑，没有的写清是什么事。 | 这条信息的标签；主题取自研究对象名单 |
+    65	| 这一类要读出什么 | 见下面的表，每类一行。 | 抽取模块 |
+    66	| 已有观点与研究主线 | 这条信息相关对象开着的观点，加上它们依赖的观点，写明谁依赖谁；只给问题、看的是什么和到期日，不给状态和证据；同一块另附可用的研究主线，内容按观点库的归组规矩提供。 | 观点库 |
+    67	<!-- /generated: template -->
+    68	
+    69	## 每一类有自己的提示词
+    70	
+    71	下面以 T7 新闻为例，看五块怎么拼在一起，每块只列要点。
+    72	
+    73	<!-- generated: prompt -->
+    74	```
+    75	T7 新闻的提示词（同一个提示词模板，第 2、4 块换成新闻这一类的）
+    76	├─ 1 角色 → 资深对冲基金分析师（读这条信息，是为了检验和形成观点：证据连到已有观点上；已有观点管不到的要紧事，写成候选观点，当场写全问题、梯子、到期日和研究归属）
+    77	├─ 2 这一类怎么读 → 媒体的报道（取自分类规则：媒体发的内容里，评论和分析归 T8，登记过的发布系列按系列归类，其余归这一类）
+    78	├─ 3 讲的是谁 → 这篇报道的相关对象（由代码填，比如 NVDA、AMD；另附名单里的全部主题）
+    79	├─ 4 要读出什么 → 发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁（官方确认的算发生的事；“知情人士称”算传闻）
+    80	└─ 5 已有观点与研究主线 → 这篇报道相关对象开着的观点，加上它们依赖的观点（由代码填，写明谁依赖谁，只给问题、看的是什么和到期日；比如“NVDA FY27 全年中国区收入，比 FY26 会怎样？”，和它依赖的“这一档芯片对华出口许可”；另附可用的研究主线）
+    81	```
+    82	
+    83	- 每一类都有自己的提示词：同一个提示词模板，第 2 块（这一类怎么读）和第 4 块（要读出什么）换成这一类的；第 1 块所有类别一样；第 3、5 块由代码按这条信息填进去。
+    84	- 研究对象会看的 15 类（T1–T15）各一份；T16 研究对象默认不看，用到时再写。
+    85	- 候选观点讲的是谁：主题从第 3 块附的主题里挑，名单里没有的写清是什么事；公司、加密货币、商品写代码（股票代码、加密货币代码、商品代码）或名字，由代码去参照数据里查，名字只认登记过的，和分类查公司名一样。
+    86	- 你自己的备忘录（作者是你的 T8）：里面的判断读成候选观点，不当作证据；这样的候选观点可以不带证据，开成观点以后，第一次连上证据以前，状态写“还没判”。
+    87	- 输出的格式（证据、候选观点及其归属、必要的新主线定义、出处各有哪几栏）由代码规定和检查，不写进提示词。
+    88	- 每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里，改一次就是一个新版本。
+    89	<!-- /generated: prompt -->
+    90	
+    91	## 16 个类别：每一类读出什么（提示词第 4 块）
+    92	
+    93	<!-- generated: categories -->
+    94	| 类别 | 这一类要读出什么 | 证据一般在哪一层 |
+    95	|---|---|---|
+    96	| T1 业绩发布 | 实际数、指引、管理层的解释 | 实际数是发生的事；指引和解释是当事人说的 |
+    97	| T2 定期报告 | 实际数、分部数；风险因素和业务描述里讲到的风险和变化 | 数是发生的事；风险和变化是当事人说的 |
+    98	| T3 法律与资本市场文件 | 交易条款（价格、对价、交割条件、时间表）；各方的说法和诉求 | 条款是发生的事；说法是当事人说的 |
+    99	| T4 电话会文字稿 | 管理层对关键问题的回答、口径的变化；分析师追问的焦点 | 回答是当事人说的；追问是第三方看法 |
+   100	| T5 演示材料 | 管理层给的中长期目标、资本配置的框架、新业务的规模 | 当事人说的 |
+   101	| T6 公司其他发布 | 发生了什么事（高管变动、并购、新产品、回购）；公布的经营数字（比如交付量） | 发生的事 |
+   102	| T7 新闻 | 发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁 | 官方确认的算发生的事；“知情人士称”算传闻 |
+   103	| T8 观点与分析 | 作者的看法、论据、预测、评级和目标价，以及它们的变化 | 第三方看法 |
+   104	| T9 访谈记录 | 说话人讲的经营情况（订单、价格、份额、库存）；他凭什么知道 | 第三方看法 |
+   105	| T10 官方行动与记录 | 决定或行动本身、什么时候生效、影响谁；后面的程序（上诉、截止日），可以用作到期日 | 发生的事 |
+   106	| T11 宏观政策与统计 | 公布的数字和政策决定，和上一次比差多少；官方措辞的变化 | 数和决定是发生的事；措辞是当事人说的 |
+   107	| T12 市场价格与成交 | 价格和成交的变化 | 发生的事 |
+   108	| T13 持仓与资金流 | 谁在买、谁在卖、规模多大 | 发生的事 |
+   109	| T14 日历 | 排定的日期，用作到期日 | 发生的事 |
+   110	| T15 第三方测量 | 测到的经营数据，作为量化证据 | 发生的事（注明是第三方测的） |
+   111	| T16 参照数据 | 研究对象默认不看 | — |
+   112	
+   113	每份文件都整份交给模型，里面的表格一起读；表格数据一次发布算一条，也整批交给模型。申报里的 XBRL 数字不另外推，文件本身已经有这些数。到期时要不要另外去查准确的数，等以后设计 Pull 模式时定。
+   114	<!-- /generated: categories -->
+   115	
+   116	## 例子：两条信息读出什么
+   117	
+   118	<!-- generated: example -->
+   119	```
+   120	两条信息读出什么（示意）
+   121	├─ 2025-04-15 NVDA 的 8-K → 库是空的，第 5 块里没有观点｜读出两条候选观点（T6 公司其他发布：H20 出口中国要许可证，预计最多约 55 亿美元的费用）
+   122	│   ├─ 候选观点（主题观点） → 2025-04 那条规定管的这一档芯片（H20、MI308 等）对华出口许可，到 2026-04-15 处在哪一格？（事件观点。五格：全面禁止；要许可，一个都不发；要许可，发了，但有附条件的；要许可，发了，都不附条件；不再要许可。到期日：2026-04-15。证据原文：“…requires a license for export to China … of the Company’s H20 integrated circuits…”，意思是 NVDA 披露 H20 出口中国要许可证，算发生的事。到了观点库，开成 #1）
+   123	│   └─ 候选观点（对象观点 NVDA） → NVDA FY26 全年中国区收入，比 FY25 会怎样？（数字观点。五格：涨 50% 及以上；涨 10% 及以上不到 50%；涨跌都不到 10%；降 10% 及以上不到 80%；降 80% 及以上。到期日：FY26 年报的财报日。证据原文：“…up to approximately $5.5 billion of charges…”，意思是公司预计最多约 55 亿美元的费用，算当事人说的。到了观点库，开成 #2，依赖 #1）
+   124	└─ 2025-07-14 NVDA 的声明 → 第 5 块：#2 和它依赖的 #1｜读出一条证据，没有候选观点
+   125	    └─ 证据 → 连到 #1（当事人说的；一句话说清：NVDA 称美国政府已保证会批准 H20 对华出口的许可（2025-07-14））
+   126	```
+   127	
+   128	出处：每条证据都记上游编号、所在段落和原文那一句（英文原句，中文只是说明）；代码核对“$5.5 billion”确实在那一句里。第一条信息进来时库是空的，第 5 块里没有观点，读到的要紧事只能写成候选观点；第二条信息进来时，第 5 块里已经有出口许可那条，NVDA 的声明就直接连上去。到了观点库，候选观点去和搜出来的已有观点比，证据去和它那条观点下已有的证据比，见观点库。两条候选观点同时归在“这一档芯片的对华许可与中国业务”主线下；第二篇只有证据，沿已有成员关系更新。归属不代替 #2 依赖 #1 的判断。例子用 NVDA，美股、期货、加密货币都走同一套。
+   129	<!-- /generated: example -->
+   130	
+   131	## 出处记什么
+   132	
+   133	<!-- generated: sources -->
+   134	```
+   135	一条出处
+   136	├─ 哪条信息 → 上游编号（每个版本有自己的编号；凭它去团队的库里取原文）
+   137	├─ 哪一类、哪天 → 类别、发布日
+   138	├─ 哪一处 → 第几节第几段、表里哪个单元格（表格数据写数据集和记录编号）
+   139	└─ 哪一句 → 原文那一句，或表里那个单元格（代码核对它真的在这条信息里，数字真的印在引用的地方）
+   140	```
+   141	
+   142	- 每条观点、每条证据、每一次由信息引起的变化都带出处；状态的每次变化写明依据哪几条证据（因为依赖的观点变了而重判的，也写那几条观点）。
+   143	- 抽取核对三件事：引用的原文（那一句，或表里那个单元格）在这条信息里；数字在引用的地方；证据连的是第 5 块里的观点，或者这次的候选观点。有一件不对，就不交出去。观点库核对：出处在处理记录里查不到的，不写进库。都记下原因。
+   144	- 两头都能查：从一条观点查到它的全部来源信息，从一条信息查到它产生和改动过的全部观点和证据。
+   145	- 整份信息不存，要看原文就凭上游编号去团队的库里取；原文里只存观点或证据的出处引用的那一句，或表里那个单元格。
+   146	- 同一条信息里说同一件事的几处（正文和表格里的同一个数），交成一条证据，带几个出处。
+   147	<!-- /generated: sources -->
+   148	
+   149	## 验收标准
+   150	
+   151	- 每条交进来的信息都整份交给模型，用这一类的提示词；用的是哪版设置，记在处理记录里。
+   152	- 每条证据都连在给它看的已有观点或这次的候选观点上；连在别处的、哪都没连的，不交给观点库，记下原因。
+   153	- 同一条信息里说同一件事的几处（正文和表格里的同一个数），交成一条证据，带几个出处。
+   154	- 每条证据带原文、一句话说清、谁说的、原始来源、哪一层、事情发生的时间；每个候选观点当场写全：讲的是谁（主题从第 3 块附的主题里挑，名单里没有的写清是什么事；公司、加密货币、商品写代码或名字）、对象观点还是主题观点、看的是什么、问题、梯子、到期日、研究归属，和至少一条证据（你自己的备忘录读出的，可以没有）。
+   155	- 每条观点和证据都有出处。引用的原文（那一句，或表里那个单元格）不在这条信息里、数字不在引用的地方的，不交给观点库，记下原因。
+   156	- 抽取不改观点库：证据、候选观点及其研究归属一起交出，不另加聚类调用。归组的引用与语义验收见 [观点库](06-views.md#研究主线抽取时归组)；名字相似或次数相同不等于归对。
+   157	- 失败从失败的那一步重试；重试只替换自己上次的结果。
+   158	
+   159	## 还没定的
+   160	
+   161	<!-- generated: open -->
+   162	- 每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里。
+   163	- 候选观点的颗粒度，也就是一条观点管多大的范围（见观点库还没定的）：要让模型知道，观点不能全是财务指标，也不能把几件事捆成一条，或者把一件事拆得太碎；等调研完再写进提示词。
+   164	<!-- /generated: open -->
+   165	
+   166	## 相关决定
+   167	
+   168	- D149：研究归属是抽取的必交内容；目标要求与当前未接入的实现状态分开写。
+   169	
+   170	- D11：观点属于对象；正文提到的对象在抽取时标。
+   171	- D13：由信息推动。
+   172	- D25：只有一个抽取模块，按类别读，同一个分析师角色。
+   173	- D26：观点库是系统的核心；每条都带出处。
+   174	- D27：每条信息整份交给模型，按类别用提示词。
+   175	- D28：财报重新推进来。
+   176	- D32：表格数据一次发布算一条；XBRL 不另外推。
+   177	- D33：抽取只读；比对和写进库在观点库。
+   178	- D35：抽取第一版的最后复核。
+   179	- D37：第一版冻结（2026-10-18）；要改先记一条新决定。
+   180	- D41：为观点库的新设计，改了候选观点带什么、提示词第 5 块给什么。
+   181	- D42：证据连到已有观点或候选观点上，候选观点只给已有观点管不到的要紧事；两样分开交给观点库；已有观点里也放上它们依赖的观点。
+   182	- D45：只有 Alex 说过或定过的才算定了；提示词里不再要求事先写到期看哪个来源、主题观点管多大（那是 Claude 提的）。
+   183	- D46：候选观点在抽取时写全：问题、梯子、到期日，因为这时模型手里有整份原文。
+   184	- D47：用词对齐（证据“连到”观点）；第 5 块写明谁依赖谁；同一条信息新提的两条候选观点，一句话只连到它直接讲的那条。
+   185	- D51：还没定的只留 Alex 说过以后再定的：删了“主题观点要不要只收新的观察”（证据分层已经管了）；“抽取连错、漏掉的证据怎么查”归入比对标注的细节；第三方看法这一类不再写“用来算共识”。
+   186	- D58：第 5 块也给已有观点的到期日；一条观点只管到它的到期日，之后才发生的事写成候选观点；两件事等 Alex 定（候选观点讲的对象怎么写成名单里的；你自己的备忘录读出的观点没有别的证据时怎么办）。
+   187	- D59：候选观点讲的是主题时，从提示词第 3 块附的名单主题里挑，其余写代码或名字，照分类查；你自己的备忘录读出的观点可以不带证据，第一次连上证据以前状态写“还没判”。
+   188	- D60：按 Alex 的要求再深审一遍：把 D59 写全（备忘录里的判断都交成候选观点、“还没判”写进状态和各处重判的说法、对象写代码或名字），理顺几处说法和总图上两根线；没有加新规矩。
+   189	
+   190	## 抽取时同时确定研究归属
+   191	
+   192	<!-- generated: relations -->
+   193	- D149 已定要求：读全文时就决定候选观点属于哪个持续业务过程，称为研究主线。例如 Rubin 出货和 SK 工厂上线各有自己的问题，同时属于 Rubin 推出这条主线。归组随抽取完成，不留给前端或事后全库聚类。
+   194	- 证据和候选观点仍分开交；每个候选观点同时带结构化归属，需要新主线时附上名称和范围。只在解释里提到相关、没有可保存的引用，不算交完。抽取只读不落库，完整交接和保存规矩由观点库的“研究主线：抽取时归组”一节规定。
+   195	- 归组仍是目标要求，正式管线还没有归组交接。D155 已修复清单误挡、时期与范围改写及同批重复；这不证明归组有效。当前步骤和量化记录见 docs/poc/grouping-improvement-plan.md。
+   196	<!-- /generated: relations -->
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba docs/research/2026-10-25-extraction-evidence.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# 把重要论据保留下来，再决定要不要新开问题
+     2	
+     3	2026-10-25，D161。Alex 在 D160 失败后要求继续改进抽取，为后续运行和封存做准备。本轮只修抽取的阅读任务；不加新的证据存储层，不改观点身份、归组含义、UI、Idea、分类、Pull 或最终判定。
+     4	
+     5	例子：一项融资安排有拟议担保额度、项目总成本和分析师对风险的批评。这些内容可以共同检验一个项目问题，不需要每读到一个数字就新开问题；也不能因为不用新开问题，就把总成本和批评丢掉。
+     6	
+     7	## 先诊断
+     8	
+     9	范围是 D160 六个完整序列、18 次抽取，逐条读过全文、原答、交接和最终记录。完整计数见 `poc/reports/2026-10-25-ohio-grouping-03/audit.json` 和该目录的 `results.md`。
+    10	
+    11	| 原答中的缺失 | 旧默认角色，3 次 | D160 问题优先角色，3 次 |
+    12	|---|---:|---:|
+    13	| 第二篇没有 Goldberg 的风险判断 | 1 | 1 |
+    14	| 第一篇没有项目总成本证据 | 1 | 3 |
+    15	| 最终仍缺三种金额中的一种 | 1 | 1 |
+    16	
+    17	这是人工按证据字段及其原句所指事实逐项标注，不以关键词出现代替正确保留。已知正例是 grouped-2 的第二篇 e4–e6；反例是 grouped-1 第二篇全部原答只有两条证据。该请求已经显示两个项目问题、所属组以及全文；sift 零删除，后续原样保存。因此这里不是数据库没有召回，也不是存储丢失。三个新角色首篇都漏总成本，两个在第二篇补回；补回不代表首篇抽取正确。
+    18	
+    19	先查自己的改动：D160 取消逐个数字开问题，却主要解释如何开问题，证据段仍主要规定引用格式。模型可以把“不新开问题”执行成“不保留论据”。这是待验证的阅读机制；不是已经证明一句提示词能完全修好。两次成功保留批评也证明现有 schema 和证据必须连到问题的合同能表达它，无需据此另建存储层。
+    20	
+    21	## 一处修改、完整请求审查
+    22	
+    23	用 D160 角色作新鲜对照，不再拿更差的 role-v5 作主要对照。实验角色先要求保留直接影响判断的事实、条款及支持和反对的理由，再决定复用问题或新开问题。合并重复的“一个问题”和“同一个问题”要求；保留年度、研究检查日、来源原意、逐字引用、对象、梯子及键的合同。没有 Ohio、Goldberg 或某个金额的专用提示。
+    24	
+    25	逐层审查：system 是阅读任务；类别段仍按 T7 读来源和事件、按 T8 读论据；对象及参考清单仍只供参考；既有问题和组已可见；全文不截取；schema 已可表达同一问题的多条支持/反对证据；匹配只判断身份及证据新旧。schema、模型、reasoning、输出上限、全文、归组段、匹配和写入均不变。角色字符数和完整首请求字符数在运行前记录，实际输入 token 在运行后记录。不新增模型调用。
+    26	
+    27	## 本轮验证及停止条件
+    28	
+    29	使用 D160 同三篇输入、同六个独立序列，每臂三个新鲜样本，交错运行。每篇抽完并写完再读下一篇。沿用 D160 的 O1–O6 及金额原意判断，不因这次输出改答案；另列“第一篇是否已保留总成本”定位这次修改。原标准是否通过与新诊断项分别报告，不把补回算首篇通过。
+    30	
+    31	每条检查问题、答案条件、证据原句、链接、出处、最终成员及重复归并；读所有错误的原答。三次实验必须全部满足旧核心标准，且首篇总成本三次均保留，才说明这个开发案例修好。对照自身的差异也逐次报出。任何拒绝、未完成、错误链接均不是通过；不能靠多开问题掩盖证据缺失，也不要求逐字输出相同。
+    32	
+    33	这是开发案例验证，不是全抽取模块验收；即使通过，也不能直接封存全部类别或启用默认归组。通过后才固定其他类别的回归案例与默认接入方案；本轮不预授权一个未定输入和答案的付费测试。失败停止这轮，报告最大剩余原因，不暗改标准、补采或换模型。默认产品仍用 v16，只有通过完整后续验收才提升版本。
+    34	
+    35	## 状态 × 事件
+    36	
+    37	| 状态 | 事件 | 转移、写入、所用日期 |
+    38	|---|---|---|
+    39	| 未开始 | 审查、免费预检通过 | 新目录冻结两个角色、三个输入、配置、源码；保留 publication_day |
+    40	| 正在读一篇 | 成功、零候选、只有证据 | 同一 process 按 seq 检查并原子保存；使用该输入日 |
+    41	| 已保存 | 下一篇、下一日 | 读取本样本已提交的问题及组；不用日初快照 |
+    42	| 原答不合合同 | 首次拒绝或要求重试 | 留原答，结束该序列，不重抽；独立序列照原计划执行 |
+    43	| 调用在途 | 失败、崩溃、运行到期 | 留费用预留，结束整轮，不自动重发 |
+    44	| 正在写入 | 成功或异常 | 观点、证据及组同事务；异常回滚 |
+    45	| 任意 | 源文/配置改动、另一写者 | 冻结摘要或独占锁拒绝；不混合运行 |
+    46	| 六序列完成 | 通过、失败 | 按固定标准报告；不自动发布、重跑或改尺 |
+    47	
+    48	## 值 × 来源/写者 × 读者
+    49	
+    50	| 值 | 来源和唯一写者 | 读者 |
+    51	|---|---|---|
+    52	| control_role_path | prepare 显式参数；可省略保持旧默认 | manifest 摘要、run → context → model.call |
+    53	| role_path | 已有实验角色参数 | 同上；不能从环境或文件偶然存在推导 |
+    54	| 候选及证据 | 模型原答 | 原 schema、sift、matching、writing；不变 |
+    55	| 归属 | 原答及 write_threads | 下篇 context 和 thread_detail；不变 |
+    56	| 状态、费用、尝试数 | 原 runner / transport | 审计；不变 |
+    57	
+    58	## 新路径 × 原检查
+    59	
+    60	| 路径 | 检查 |
+    61	|---|---|
+    62	| 显式对照角色 | 非空，必须同时给实验角色，两者都冻结；入口测试断言两臂收到各自精确内容 |
+    63	| 省略对照角色 | 旧默认请求保持；已有入口测试继续验证 |
+    64	| 修改证据读法 | 仍需逐字原句、合法链接、来源及候选完整性；用全部旧原答和正反例先检查 |
+    65	| 三篇连续 | 沿用真实 SQLite 历史、重送、成员及出处核对；不新建保存路径 |
+    66	
+    67	## 既有决定与预算
+    68	
+    69	D42 要求证据连到问题；D47 只连直接讲的问题；D149 在抽取时归组；D155 清单是参考；D158 事件不套数字次年上限；D159 保持来源原意并顺序读写。本轮全部保持。D160 失败后曾提出新的证据存储合同，但原答不支持必须如此改，本轮不采用。
+    70	
+    71	最多 54 次请求、$1.50 估算保留额、30 分钟，不提高旧预算。D160 实测 36 次、$0.51142625；本轮估计约 $0.5–$0.9，估计不是测量。先跑 preflight，审查全部拒绝；先跑显式对照角色的入口测试及反向修改；只读设计审查通过后修改 runner。独立 session、日志和 pid；每次发送前预留费用；不自动重试。
+    72	
+    73	通过与否都完成相关套件、全套一次、逐模块推理刷新和最后 docs/check.py。结果另写，注册文本冻结后不修改。
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba poc/reports/2026-10-25-ohio-grouping-03/role-questions.txt && nl -ba poc/reports/2026-10-25-extraction-evidence-01/role-evidence.txt && nl -ba docs/prd/05-extraction.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点上；已有观点管不到的，写成候选观点，当场写全：问题、梯子、到期日，带上提出它的证据。
+     2	
+     3	开哪些观点：
+     4	- 先找这条材料正在争论、而已有观点管不到的重要问题：什么尚未发生的结果会改变公司的全年业务或重要分部？把它写成一个可以到期核对的问题。材料里的金额、条款、规模和风险是提出或检验问题的证据，不因每个数字存在就各开一条。
+     5	- 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。问题和每格条件保留原文的量与时间：拟议额度、担保、项目总价不改写成当年实际付款，规划容量不改写成当年产量。
+     6	- 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。
+     7	- 游戏、软件功能、工具和驱动的更新、促销、单款外设、高管任免、股东投票和章程细则、例行诉讼程序、回购授权不开观点。季度数和季度指引是全年问题的证据；护城河、竞争格局等没有可核对结果的宽泛话题不单独开。
+     8	- 已有观点里的同一个问题不再写候选，证据直接连到它；重要但不同的问题照常提出。同一件事只写一条。
+     9	
+    10	写观点的规矩：
+    11	- 一个观点只看一件东西：一个数（写明哪一年）或一件事。既要数字又要事件的，拆成两条。
+    12	- 问题写成一句问句，不写成断言；到期那天有一个数或一件事能判对错。
+    13	- 问的是一家公司的收入、利润、份额、产品进度，就是对象观点，object 写这家公司的股票代码，哪怕背后的原因是政策或宏观；主题观点只问世界会变成什么样（许可发不发、利率到哪、资本开支多少），不问某家公司因此怎样。
+    14	- 问题、看的是什么、梯子每一格的条件、一句话说清（one_line）都用中文写；原句（quote）照抄原文，不翻译。
+    15	- 梯子每一格的条件现在就要写得出具体的数或状态；条件要靠将来才公布的目标值、门槛值的，核对不了，不开。
+    16	- 梯子五格（只有是或否的问题两格）。对象观点（公司）的五格从「强烈看多」到「强烈看空」，说的是对这家公司业务好还是坏；主题观点（宏观、政策、行业）的五格是从一头排到另一头的五种结果，用结果命名，不说好坏。每一格是一个能核对的结果：一个数落在哪段区间，或一件事到了哪一步；格和格不重叠、不留空，到期时正好一格成立；中性那一格跟什么比写在条件里；没有含糊的「部分」。
+    17	- 到期日定在这个争论见分晓的那天。数字的观点，到期日就是这个数公布的那天；公司的数按它的财年，发布日所在的财年是今年、下一个财年是明年；不是公司的数按自然年。事件的观点写清到哪一天看它处在哪一格。
+    18	
+    19	写证据的规矩：
+    20	- 一条证据是信息里的一句原话或一个数，原文照抄（quote），不改一个字；另写一句离开原文也看得懂的话（one_line）：谁、做了什么、多少、哪一期。
+    21	- 每条证据写明谁说的（speaker），转述的写明最初是谁、哪天说的（original_who、original_day）；tier 只写这四个词之一：发生的事、当事人说的、第三方看法、传闻。发生的事指官方行动、公布的数、完成的交易；当事人说的指公司指引、管理层表态、官员讲话；第三方看法指卖方、媒体分析、专家；传闻指「知情人士称」和没有出处的说法。
+    22	- 每条证据连到它直接讲的那条观点上（links 写观点编号），可以连几条；已有观点管不到的，连到这次的候选观点上（写候选观点的编号）。一句话只连它直接讲的那条，不连间接相关的。没有观点可连的话不抽。
+    23	- 背景、套话、广告、导航文字不抽。
+    24	- 只凭这条信息写，不用你自己知道的别的事。
+    25	
+    26	每个候选观点另填一把键，让代码判断两条观点是不是同一个量：
+    27	- measure：从清单里选最贴的量。公司的数：total_revenue、segment_revenue、product_revenue、gross_margin、operating_margin、operating_expense_growth、total_expenses、operating_loss、tax_rate、capex、shipments_or_capacity、run_rate、design_wins；事件：event；世界的数：spend_total、financing_amount、price、capacity、growth_rate、policy_event；都不是：other。
+    28	- scope：量的实际限定范围；分部、产品、群体或事件对象。参考名称含义相同时沿用，没有限定写空字符串。
+    29	- period_start / period_end：这个量覆盖的起止日（ISO）。财年按财年说明换算；自然年 2026 = 2026-01-01 到 2026-12-31；事件写提出当年年初到到期日。
+    30	- basis：GAAP、non_GAAP 或 n/a。unit：USD、percent、count、GW、MW、TWD、multiple 或 n/a。event_type：measure 是 event 或 policy_event 时选 launch、shipment、licence、approval、deal_close、deployment、other，否则 n/a。
+    31	- 梯子每格另写 lo、hi：这一格数值区间的下界（含）和上界（不含），用 unit 的单位（美元写完整数字，百分比写 73 不写 0.73）；最低格 lo 写 null，最高格 hi 写 null；是/否两格都写 null。
+     1	你是一位资深对冲基金分析师。读完整条信息，保留能支持或削弱业务判断的证据，再决定复用已有问题还是提出候选观点。证据连到问题；候选观点写全问题、梯子、到期日，并带上提出它的证据。
+     2	
+     3	写证据的规矩：
+     4	- 先读出影响判断的事实、条款、规模、限制及支持或反对的理由。无需单独开问题的材料，仍可作已有或候选问题的证据。对安排能否落地的判断，保留其关键条件和风险论据。
+     5	- 一条证据是信息里的一句原话或一个数，原文照抄（quote），不改一个字；另写一句离开原文也看得懂的话（one_line）：谁、做了什么、多少、哪一期。
+     6	- 每条证据写明谁说的（speaker），转述的写明最初是谁、哪天说的（original_who、original_day）；tier 只写这四个词之一：发生的事、当事人说的、第三方看法、传闻。发生的事指官方行动、公布的数、完成的交易；当事人说的指公司指引、管理层表态、官员讲话；第三方看法指卖方、媒体分析、专家；传闻指「知情人士称」和没有出处的说法。
+     7	- 每条证据连到它直接讲的那条观点上（links 写观点编号），可以连几条；已有观点管不到的，连到这次的候选观点上（写候选观点的编号）。一句话只连它直接讲的那条，不连间接相关的。没有观点可连的话不抽。
+     8	- 背景、套话、广告、导航文字不抽。
+     9	- 只凭这条信息写，不用你自己知道的别的事。
+    10	
+    11	开哪些观点：
+    12	- 只有已有观点管不到的重要问题才开候选：什么尚未发生的结果会改变公司的全年业务或重要分部？写成到期可核对的问题，不因每个数字存在就各开一条。
+    13	- 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。问题和每格条件保留原文的量与时间：拟议额度、担保、项目总价不改写成当年实际付款，规划容量不改写成当年产量。
+    14	- 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。
+    15	- 游戏、软件功能、工具和驱动的更新、促销、单款外设、高管任免、股东投票和章程细则、例行诉讼程序、回购授权不开观点。季度数和季度指引是全年问题的证据；护城河、竞争格局等没有可核对结果的宽泛话题不单独开。
+    16	- 已有观点里的同一个问题不再写候选，证据直接连到它；重要但不同的问题照常提出。同一件事只写一条。
+    17	
+    18	写观点的规矩：
+    19	- 一个观点只问一个数（写明哪一年）或一件事，不捆绑。写成问句，到期用一个数或一件事判对错。
+    20	- 问的是一家公司的收入、利润、份额、产品进度，就是对象观点，object 写这家公司的股票代码，哪怕背后的原因是政策或宏观；主题观点只问世界会变成什么样（许可发不发、利率到哪、资本开支多少），不问某家公司因此怎样。
+    21	- 问题、看的是什么、梯子每一格的条件、一句话说清（one_line）都用中文写；原句（quote）照抄原文，不翻译。
+    22	- 梯子每一格的条件现在就要写得出具体的数或状态；条件要靠将来才公布的目标值、门槛值的，核对不了，不开。
+    23	- 梯子五格（只有是或否的问题两格）。对象观点（公司）的五格从「强烈看多」到「强烈看空」，说的是对这家公司业务好还是坏；主题观点（宏观、政策、行业）的五格是从一头排到另一头的五种结果，用结果命名，不说好坏。每一格是一个能核对的结果：一个数落在哪段区间，或一件事到了哪一步；格和格不重叠、不留空，到期时正好一格成立；中性那一格跟什么比写在条件里；没有含糊的「部分」。
+    24	- 到期日定在这个争论见分晓的那天。数字的观点，到期日就是这个数公布的那天；公司的数按它的财年，发布日所在的财年是今年、下一个财年是明年；不是公司的数按自然年。事件的观点写清到哪一天看它处在哪一格。
+    25	
+    26	每个候选观点另填一把键，让代码判断两条观点是不是同一个量：
+    27	- measure：从清单里选最贴的量。公司的数：total_revenue、segment_revenue、product_revenue、gross_margin、operating_margin、operating_expense_growth、total_expenses、operating_loss、tax_rate、capex、shipments_or_capacity、run_rate、design_wins；事件：event；世界的数：spend_total、financing_amount、price、capacity、growth_rate、policy_event；都不是：other。
+    28	- scope：量的实际限定范围；分部、产品、群体或事件对象。参考名称含义相同时沿用，没有限定写空字符串。
+    29	- period_start / period_end：这个量覆盖的起止日（ISO）。财年按财年说明换算；自然年 2026 = 2026-01-01 到 2026-12-31；事件写提出当年年初到到期日。
+    30	- basis：GAAP、non_GAAP 或 n/a。unit：USD、percent、count、GW、MW、TWD、multiple 或 n/a。event_type：measure 是 event 或 policy_event 时选 launch、shipment、licence、approval、deal_close、deployment、other，否则 n/a。
+    31	- 梯子每格另写 lo、hi：这一格数值区间的下界（含）和上界（不含），用 unit 的单位（美元写完整数字，百分比写 73 不写 0.73）；最低格 lo 写 null，最高格 hi 写 null；是/否两格都写 null。
+     1	# 抽取
+     2	
+     3	> 状态：第一版已冻结 · 2026-10-18（没定的：每一类提示词的具体写法） · D149 补入抽取时归组要求，尚未接入默认管线 · 更新：2026-10-25 · 依据：docs/DECISIONS.md D11、D13、D25–D28、D32、D33、D35–D37、D41、D42、D45–D47、D51–D54、D58–D60、D149、D155
+     4	> 设计页：docs/system-design.html › New › 抽取 › 展开。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+     5	
+     6	## 一句话
+     7	
+     8	抽取只做一件事：每条信息整份交给模型，用资深对冲基金分析师的视角、按这一类的提示词读完，交出两样东西：证据，连到这些对象已有的观点上（或这次的候选观点上）；候选观点，已有观点管不到、又要紧的事（你自己的备忘录另有说明，见提示词那一节）。每个候选观点同时带结构化研究归属，必要时声明新的研究主线。每条带出处，一起交给观点库。完整归组规矩见 [观点库](06-views.md#研究主线抽取时归组)。
+     9	
+    10	## 为什么这样设计
+    11	
+    12	- 系统做的事是在观点库里建观点、更新观点、关掉观点，抽取就是把每条信息读成证据和带研究归属的候选观点。怎么和库里已有的比、写进库，是观点库的事，不在这里。
+    13	- 推进来的每条信息都整份交给模型读：文件连同里面的表格一起读，表格数据一次发布整批读，不按文字、表格分开处理。
+    14	- 不同类别该读的东西不同：新闻读发生了什么、说法从哪来；研报读作者的看法和评级；政府决定读决定本身和生效时间。所以每个类别一份提示词，都用同一个提示词模板拼出来。
+    15	- 观点库里的观点是模型（分析师）的判断：一个问题、一把梯子和一个到期日；谁在哪条信息里说了什么，是客观的证据。多数信息只带来已有观点的证据，少数才提出一条新的候选观点。
+    16	- 证据要连在观点上才算证据：一句话算不算证据，只能对着一个问题来判断。所以提示词第 5 块给模型这些对象已有的观点，读的时候就把证据连上去（Alex：“evidence 怎么在抽取的时候不挂钩 thesis？这怎么可能。”）。已有的观点里也放上它们依赖的观点，因为一条公司的信息常常带着主题上的事：NVDA 的声明说美国保证会批许可证，这句话该连到“出口许可”那条主题观点上。
+    17	- 已有观点管不到的要紧事（正文点名的另一家公司、这个对象一个新的关键问题、宏观或政策上一件要紧的事），写成候选观点，带上提出它的证据；你自己的备忘录照提示词说明处理；是已有的哪一条还是新观点，由观点库比对时定。
+    18	- 每条观点和证据都带出处，以后能快速回到原文去查、去推理。
+    19	
+    20	## 一条信息，一步一步
+    21	
+    22	模型只做第 2 步，其余是代码。
+    23	
+    24	<!-- generated: steps -->
+    25	```
+    26	一条信息进来（带类别和顺序号）
+    27	  ↓ 1 拼提示词（代码）：按这条信息的类别，用同一个提示词模板拼出这一类的提示词；第 5 块由观点库给：相关对象开着的观点、它们依赖的观点，以及归组所需的已有主线
+    28	  ↓ 2 读（模型）：整份读完，交出两样：证据，连到第 5 块里的观点上，或连到这次的候选观点上；候选观点，第 5 块里没有一条观点管、又要紧的事，带上提出它的证据；你自己的备忘录照提示词说明处理。每个候选观点同时确定研究归属，按观点库的归组规矩交出引用；每条带出处
+    29	  ↓ 3 核对出处与归属引用（代码）：引用的原文（那一句，或表里那个单元格）在不在这条信息里、数字在不在引用的地方；证据连的必须是第 5 块里的观点或这次的候选观点；出处对不上的不要，记下原因；归属引用按观点库的完整交接规矩检查
+    30	  ↓ 4 交给观点库（代码）：证据、候选观点连同归属和必要的新主线定义，带着顺序号一起交给观点库；比对定观点身份，写入保留归属
+    31	```
+    32	<!-- /generated: steps -->
+    33	
+    34	## 读出两样东西：证据和候选观点
+    35	
+    36	一遍读完，交出证据和候选观点；候选观点的研究归属与必要的新主线定义随同交出。证据几乎每条信息都有，连到已有观点上，也可以连到这次的候选观点上；候选观点很少，只给已有观点管不到的要紧事（你自己的备忘录照提示词说明处理）。到了观点库，候选观点先和搜出来的几条已有观点比；它带的证据等它的去向定了，再和那条观点下已有的证据比，见 06-views.md。
+    37	
+    38	<!-- generated: two -->
+    39	|  | 证据 | 候选观点 |
+    40	|---|---|---|
+    41	| 是什么 | 信息里的一句话或一个数：谁说了什么、发生了什么 | 一个要盯的问题，当场写全：讲的是谁、问题、梯子、到期日和研究归属 |
+    42	| 多不多 | 几乎每条信息都有 | 少：第 5 块里没有一条观点管、又要紧的事；你自己的备忘录里的判断都算 |
+    43	| 连到哪 | 第 5 块里的观点（可以连几条），或者这次的候选观点 | 带着提出它的证据（你自己的备忘录读出的可以没有） |
+    44	| 到了观点库 | 和它那条观点下已有的证据比：重复、替代还是新证据 | 先定是哪一条（或它的一部分）、接续、新观点，还是不开；归属随最终观点保存，不再由比对重判 |
+    45	| 例子 | 8-K 里的“H20 出口中国要许可证” | 2025-04 那条规定管的这一档芯片对华出口许可，到 2026-04-15 处在哪一格？ |
+    46	
+    47	```
+    48	读到一句话或一个数｜它和哪条观点有关？（你自己的备忘录里的判断不走这棵树：都写成候选观点，可以不带证据）
+    49	├─ 第 5 块里的观点 → 证据：连到那条观点上（连在它直接讲的那条上；另一条依赖那条的，不再连给它）
+    50	├─ 第 5 块里没有，但要紧 → 候选观点：这句话是它的证据（先在抽取时交研究归属；是已有的哪一条，还是新观点，由观点库比对时定；一条观点只管到它的到期日，到期以后才发生的事也算这里）
+    51	└─ 都没关系 → 不抽（背景、套话）
+    52	```
+    53	<!-- /generated: two -->
+    54	
+    55	## 提示词模板
+    56	
+    57	所有类别用同一个提示词模板，由这五块拼成这一类的提示词；这一类的读法取自分类规则，不另写。
+    58	
+    59	<!-- generated: template -->
+    60	| 部分 | 写什么 | 从哪来 |
+    61	|---|---|---|
+    62	| 角色 | 你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点上；已有观点管不到、又要紧的事，写成候选观点，当场写全：问题、梯子、到期日和研究归属，带上提出它的证据。你自己的备忘录里的判断，都交成候选观点，可以不带证据，不当作证据。写观点的规矩：一个观点只看一件东西；梯子五格（只有是或否的问题两格），每格是一个能核对的结果，格和格不重叠、不留空，没有含糊的“部分”；到期日定在争论见分晓的那天，数字的观点就是这个数公布的那天；数字写明哪一年：今年、明年按这条信息的发布日算，公司的数按它的财年。 | 所有类别一样；写观点的规矩原样取自观点库 |
+    63	| 这一类是什么、怎么读 | 这一类的定义和读法，比如“看法和估计都算作者说的，不当成已经发生的事”。 | 取自分类规则，这里不另写 |
+    64	| 讲的是谁 | 这条信息的相关对象；另附研究对象名单里的全部主题，候选观点讲的是主题时，名单里有的从里面挑，没有的写清是什么事。 | 这条信息的标签；主题取自研究对象名单 |
+    65	| 这一类要读出什么 | 见下面的表，每类一行。 | 抽取模块 |
+    66	| 已有观点与研究主线 | 这条信息相关对象开着的观点，加上它们依赖的观点，写明谁依赖谁；只给问题、看的是什么和到期日，不给状态和证据；同一块另附可用的研究主线，内容按观点库的归组规矩提供。 | 观点库 |
+    67	<!-- /generated: template -->
+    68	
+    69	## 每一类有自己的提示词
+    70	
+    71	下面以 T7 新闻为例，看五块怎么拼在一起，每块只列要点。
+    72	
+    73	<!-- generated: prompt -->
+    74	```
+    75	T7 新闻的提示词（同一个提示词模板，第 2、4 块换成新闻这一类的）
+    76	├─ 1 角色 → 资深对冲基金分析师（读这条信息，是为了检验和形成观点：证据连到已有观点上；已有观点管不到的要紧事，写成候选观点，当场写全问题、梯子、到期日和研究归属）
+    77	├─ 2 这一类怎么读 → 媒体的报道（取自分类规则：媒体发的内容里，评论和分析归 T8，登记过的发布系列按系列归类，其余归这一类）
+    78	├─ 3 讲的是谁 → 这篇报道的相关对象（由代码填，比如 NVDA、AMD；另附名单里的全部主题）
+    79	├─ 4 要读出什么 → 发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁（官方确认的算发生的事；“知情人士称”算传闻）
+    80	└─ 5 已有观点与研究主线 → 这篇报道相关对象开着的观点，加上它们依赖的观点（由代码填，写明谁依赖谁，只给问题、看的是什么和到期日；比如“NVDA FY27 全年中国区收入，比 FY26 会怎样？”，和它依赖的“这一档芯片对华出口许可”；另附可用的研究主线）
+    81	```
+    82	
+    83	- 每一类都有自己的提示词：同一个提示词模板，第 2 块（这一类怎么读）和第 4 块（要读出什么）换成这一类的；第 1 块所有类别一样；第 3、5 块由代码按这条信息填进去。
+    84	- 研究对象会看的 15 类（T1–T15）各一份；T16 研究对象默认不看，用到时再写。
+    85	- 候选观点讲的是谁：主题从第 3 块附的主题里挑，名单里没有的写清是什么事；公司、加密货币、商品写代码（股票代码、加密货币代码、商品代码）或名字，由代码去参照数据里查，名字只认登记过的，和分类查公司名一样。
+    86	- 你自己的备忘录（作者是你的 T8）：里面的判断读成候选观点，不当作证据；这样的候选观点可以不带证据，开成观点以后，第一次连上证据以前，状态写“还没判”。
+    87	- 输出的格式（证据、候选观点及其归属、必要的新主线定义、出处各有哪几栏）由代码规定和检查，不写进提示词。
+    88	- 每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里，改一次就是一个新版本。
+    89	<!-- /generated: prompt -->
+    90	
+    91	## 16 个类别：每一类读出什么（提示词第 4 块）
+    92	
+    93	<!-- generated: categories -->
+    94	| 类别 | 这一类要读出什么 | 证据一般在哪一层 |
+    95	|---|---|---|
+    96	| T1 业绩发布 | 实际数、指引、管理层的解释 | 实际数是发生的事；指引和解释是当事人说的 |
+    97	| T2 定期报告 | 实际数、分部数；风险因素和业务描述里讲到的风险和变化 | 数是发生的事；风险和变化是当事人说的 |
+    98	| T3 法律与资本市场文件 | 交易条款（价格、对价、交割条件、时间表）；各方的说法和诉求 | 条款是发生的事；说法是当事人说的 |
+    99	| T4 电话会文字稿 | 管理层对关键问题的回答、口径的变化；分析师追问的焦点 | 回答是当事人说的；追问是第三方看法 |
+   100	| T5 演示材料 | 管理层给的中长期目标、资本配置的框架、新业务的规模 | 当事人说的 |
+   101	| T6 公司其他发布 | 发生了什么事（高管变动、并购、新产品、回购）；公布的经营数字（比如交付量） | 发生的事 |
+   102	| T7 新闻 | 发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁 | 官方确认的算发生的事；“知情人士称”算传闻 |
+   103	| T8 观点与分析 | 作者的看法、论据、预测、评级和目标价，以及它们的变化 | 第三方看法 |
+   104	| T9 访谈记录 | 说话人讲的经营情况（订单、价格、份额、库存）；他凭什么知道 | 第三方看法 |
+   105	| T10 官方行动与记录 | 决定或行动本身、什么时候生效、影响谁；后面的程序（上诉、截止日），可以用作到期日 | 发生的事 |
+   106	| T11 宏观政策与统计 | 公布的数字和政策决定，和上一次比差多少；官方措辞的变化 | 数和决定是发生的事；措辞是当事人说的 |
+   107	| T12 市场价格与成交 | 价格和成交的变化 | 发生的事 |
+   108	| T13 持仓与资金流 | 谁在买、谁在卖、规模多大 | 发生的事 |
+   109	| T14 日历 | 排定的日期，用作到期日 | 发生的事 |
+   110	| T15 第三方测量 | 测到的经营数据，作为量化证据 | 发生的事（注明是第三方测的） |
+   111	| T16 参照数据 | 研究对象默认不看 | — |
+   112	
+   113	每份文件都整份交给模型，里面的表格一起读；表格数据一次发布算一条，也整批交给模型。申报里的 XBRL 数字不另外推，文件本身已经有这些数。到期时要不要另外去查准确的数，等以后设计 Pull 模式时定。
+   114	<!-- /generated: categories -->
+   115	
+   116	## 例子：两条信息读出什么
+   117	
+   118	<!-- generated: example -->
+   119	```
+   120	两条信息读出什么（示意）
+   121	├─ 2025-04-15 NVDA 的 8-K → 库是空的，第 5 块里没有观点｜读出两条候选观点（T6 公司其他发布：H20 出口中国要许可证，预计最多约 55 亿美元的费用）
+   122	│   ├─ 候选观点（主题观点） → 2025-04 那条规定管的这一档芯片（H20、MI308 等）对华出口许可，到 2026-04-15 处在哪一格？（事件观点。五格：全面禁止；要许可，一个都不发；要许可，发了，但有附条件的；要许可，发了，都不附条件；不再要许可。到期日：2026-04-15。证据原文：“…requires a license for export to China … of the Company’s H20 integrated circuits…”，意思是 NVDA 披露 H20 出口中国要许可证，算发生的事。到了观点库，开成 #1）
+   123	│   └─ 候选观点（对象观点 NVDA） → NVDA FY26 全年中国区收入，比 FY25 会怎样？（数字观点。五格：涨 50% 及以上；涨 10% 及以上不到 50%；涨跌都不到 10%；降 10% 及以上不到 80%；降 80% 及以上。到期日：FY26 年报的财报日。证据原文：“…up to approximately $5.5 billion of charges…”，意思是公司预计最多约 55 亿美元的费用，算当事人说的。到了观点库，开成 #2，依赖 #1）
+   124	└─ 2025-07-14 NVDA 的声明 → 第 5 块：#2 和它依赖的 #1｜读出一条证据，没有候选观点
+   125	    └─ 证据 → 连到 #1（当事人说的；一句话说清：NVDA 称美国政府已保证会批准 H20 对华出口的许可（2025-07-14））
+   126	```
+   127	
+   128	出处：每条证据都记上游编号、所在段落和原文那一句（英文原句，中文只是说明）；代码核对“$5.5 billion”确实在那一句里。第一条信息进来时库是空的，第 5 块里没有观点，读到的要紧事只能写成候选观点；第二条信息进来时，第 5 块里已经有出口许可那条，NVDA 的声明就直接连上去。到了观点库，候选观点去和搜出来的已有观点比，证据去和它那条观点下已有的证据比，见观点库。两条候选观点同时归在“这一档芯片的对华许可与中国业务”主线下；第二篇只有证据，沿已有成员关系更新。归属不代替 #2 依赖 #1 的判断。例子用 NVDA，美股、期货、加密货币都走同一套。
+   129	<!-- /generated: example -->
+   130	
+   131	## 出处记什么
+   132	
+   133	<!-- generated: sources -->
+   134	```
+   135	一条出处
+   136	├─ 哪条信息 → 上游编号（每个版本有自己的编号；凭它去团队的库里取原文）
+   137	├─ 哪一类、哪天 → 类别、发布日
+   138	├─ 哪一处 → 第几节第几段、表里哪个单元格（表格数据写数据集和记录编号）
+   139	└─ 哪一句 → 原文那一句，或表里那个单元格（代码核对它真的在这条信息里，数字真的印在引用的地方）
+   140	```
+   141	
+   142	- 每条观点、每条证据、每一次由信息引起的变化都带出处；状态的每次变化写明依据哪几条证据（因为依赖的观点变了而重判的，也写那几条观点）。
+   143	- 抽取核对三件事：引用的原文（那一句，或表里那个单元格）在这条信息里；数字在引用的地方；证据连的是第 5 块里的观点，或者这次的候选观点。有一件不对，就不交出去。观点库核对：出处在处理记录里查不到的，不写进库。都记下原因。
+   144	- 两头都能查：从一条观点查到它的全部来源信息，从一条信息查到它产生和改动过的全部观点和证据。
+   145	- 整份信息不存，要看原文就凭上游编号去团队的库里取；原文里只存观点或证据的出处引用的那一句，或表里那个单元格。
+   146	- 同一条信息里说同一件事的几处（正文和表格里的同一个数），交成一条证据，带几个出处。
+   147	<!-- /generated: sources -->
+   148	
+   149	## 验收标准
+   150	
+   151	- 每条交进来的信息都整份交给模型，用这一类的提示词；用的是哪版设置，记在处理记录里。
+   152	- 每条证据都连在给它看的已有观点或这次的候选观点上；连在别处的、哪都没连的，不交给观点库，记下原因。
+   153	- 同一条信息里说同一件事的几处（正文和表格里的同一个数），交成一条证据，带几个出处。
+   154	- 每条证据带原文、一句话说清、谁说的、原始来源、哪一层、事情发生的时间；每个候选观点当场写全：讲的是谁（主题从第 3 块附的主题里挑，名单里没有的写清是什么事；公司、加密货币、商品写代码或名字）、对象观点还是主题观点、看的是什么、问题、梯子、到期日、研究归属，和至少一条证据（你自己的备忘录读出的，可以没有）。
+   155	- 每条观点和证据都有出处。引用的原文（那一句，或表里那个单元格）不在这条信息里、数字不在引用的地方的，不交给观点库，记下原因。
+   156	- 抽取不改观点库：证据、候选观点及其研究归属一起交出，不另加聚类调用。归组的引用与语义验收见 [观点库](06-views.md#研究主线抽取时归组)；名字相似或次数相同不等于归对。
+   157	- 失败从失败的那一步重试；重试只替换自己上次的结果。
+   158	
+   159	## 还没定的
+   160	
+   161	<!-- generated: open -->
+   162	- 每一类提示词的具体写法，建的时候在存下的信息上试过再定；每一版记在 Config 里。
+   163	- 候选观点的颗粒度，也就是一条观点管多大的范围（见观点库还没定的）：要让模型知道，观点不能全是财务指标，也不能把几件事捆成一条，或者把一件事拆得太碎；等调研完再写进提示词。
+   164	<!-- /generated: open -->
+   165	
+   166	## 相关决定
+   167	
+   168	- D149：研究归属是抽取的必交内容；目标要求与当前未接入的实现状态分开写。
+   169	
+   170	- D11：观点属于对象；正文提到的对象在抽取时标。
+   171	- D13：由信息推动。
+   172	- D25：只有一个抽取模块，按类别读，同一个分析师角色。
+   173	- D26：观点库是系统的核心；每条都带出处。
+   174	- D27：每条信息整份交给模型，按类别用提示词。
+   175	- D28：财报重新推进来。
+   176	- D32：表格数据一次发布算一条；XBRL 不另外推。
+   177	- D33：抽取只读；比对和写进库在观点库。
+   178	- D35：抽取第一版的最后复核。
+   179	- D37：第一版冻结（2026-10-18）；要改先记一条新决定。
+   180	- D41：为观点库的新设计，改了候选观点带什么、提示词第 5 块给什么。
+   181	- D42：证据连到已有观点或候选观点上，候选观点只给已有观点管不到的要紧事；两样分开交给观点库；已有观点里也放上它们依赖的观点。
+   182	- D45：只有 Alex 说过或定过的才算定了；提示词里不再要求事先写到期看哪个来源、主题观点管多大（那是 Claude 提的）。
+   183	- D46：候选观点在抽取时写全：问题、梯子、到期日，因为这时模型手里有整份原文。
+   184	- D47：用词对齐（证据“连到”观点）；第 5 块写明谁依赖谁；同一条信息新提的两条候选观点，一句话只连到它直接讲的那条。
+   185	- D51：还没定的只留 Alex 说过以后再定的：删了“主题观点要不要只收新的观察”（证据分层已经管了）；“抽取连错、漏掉的证据怎么查”归入比对标注的细节；第三方看法这一类不再写“用来算共识”。
+   186	- D58：第 5 块也给已有观点的到期日；一条观点只管到它的到期日，之后才发生的事写成候选观点；两件事等 Alex 定（候选观点讲的对象怎么写成名单里的；你自己的备忘录读出的观点没有别的证据时怎么办）。
+   187	- D59：候选观点讲的是主题时，从提示词第 3 块附的名单主题里挑，其余写代码或名字，照分类查；你自己的备忘录读出的观点可以不带证据，第一次连上证据以前状态写“还没判”。
+   188	- D60：按 Alex 的要求再深审一遍：把 D59 写全（备忘录里的判断都交成候选观点、“还没判”写进状态和各处重判的说法、对象写代码或名字），理顺几处说法和总图上两根线；没有加新规矩。
+   189	
+   190	## 抽取时同时确定研究归属
+   191	
+   192	<!-- generated: relations -->
+   193	- D149 已定要求：读全文时就决定候选观点属于哪个持续业务过程，称为研究主线。例如 Rubin 出货和 SK 工厂上线各有自己的问题，同时属于 Rubin 推出这条主线。归组随抽取完成，不留给前端或事后全库聚类。
+   194	- 证据和候选观点仍分开交；每个候选观点同时带结构化归属，需要新主线时附上名称和范围。只在解释里提到相关、没有可保存的引用，不算交完。抽取只读不落库，完整交接和保存规矩由观点库的“研究主线：抽取时归组”一节规定。
+   195	- 归组仍是目标要求，正式管线还没有归组交接。D155 已修复清单误挡、时期与范围改写及同批重复；这不证明归组有效。当前步骤和量化记录见 docs/poc/grouping-improvement-plan.md。
+   196	<!-- /generated: relations -->
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## .*D(149|155|158|159|160|161)'"' docs/DECISIONS.md && sed -n '1,84p' poc/hierarchy_study/ohio_sequence.py && tail -n 33 AGENTS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2170:## D149 · 2026-10-25 · Group association is required during extraction
+2239:## D155 · 2026-10-25 · 清单是参考，先修身份，再按顺序验证归组
+2261:## D158 · 2026-10-25 · 追查 Ohio 入口并在同一归组流程内对照
+2270:## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
+2278:## D160 · 2026-10-25 · 按原意检验三篇连续抽取，不用错误合并掩盖提问失真
+"""D157: a bounded, isolated two-article stream using the current Chinese pipeline.
+
+The registered scope and checks live in docs/research/2026-10-25-ohio-grouping-poc.md.
+No default pipeline configuration or historical ledger is modified.
+"""
+import argparse
+import copy
+import dataclasses
+import fcntl
+import hashlib
+import json
+import re
+import sqlite3
+import time
+import urllib.request
+from pathlib import Path
+
+import ingestion_threads as groups
+import study
+from hivemind import config, dispatch, extraction, model, universe
+from hivemind.views import matching, store, writing
+
+ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OUT = ROOT / 'poc/reports/2026-10-25-ohio-grouping-01'
+ITEMS_DB = ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite'
+PREFIX = ROOT / 'poc/reports/2026-10-25-direct-subjects-01/sample-2-retained/item2-result.json'
+ITEM_IDS = ('gnews:b25b5b3109fbe06f1a394164', 'gnews:bb0d23846735c94b7c1722d2')
+LABELS = tuple(f'{arm}-{sample}' for sample in range(1, 4) for arm in ('control', 'grouped'))
+MAX_REQUESTS, MAX_USD, MAX_SECONDS = 30, 1.5, 1800
+GROUP_PROMPT = '''同时把候选观点归入所谈的持续业务过程，例如产品推出、投资项目或政策过程；公司相同不够。
+可以复用下面展示的研究主线编号，也可以在 threads 声明有名称和范围的新主线；在候选的 thread_ids 引用。
+同一过程的不同问题可以共用主线，一个问题也可以属于多条。归组不合并问题，也不表示因果或依赖。
+只更新已有观点的证据时不用再造候选或主线。'''
+TABLES = ('views', 'view_keys', 'rungs', 'evidence', 'evidence_sources', 'evidence_links', 'replacements',
+          'threads', 'thread_members')
+
+
+class Refused(ValueError):
+    """A completed model answer did not meet the registered contract; do not resample."""
+
+
+def write(path, value):
+    study.write_json(Path(path), value)
+
+
+def read(path):
+    return json.loads(Path(path).read_text())
+
+
+def digest(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def schema(offered):
+    result = extraction.keyed_schema()
+    result['required'].append('threads')
+    result['properties']['threads'] = {'type': 'array', 'items': copy.deepcopy(groups.THREAD_SCHEMA)}
+    candidate = result['properties']['candidates']['items']
+    candidate['required'].append('thread_ids')
+    reference_pattern = r'^(?:t[1-9][0-9]*' + ''.join('|' + re.escape(g['thread_id']) for g in offered) + ')$'
+    candidate['properties']['thread_ids'] = {'type': 'array', 'minItems': 1,
+                                             'items': {'type': 'string', 'pattern': reference_pattern}}
+    return result
+
+
+def validate_references(raw, offered):
+    errors = model.check_schema(raw, schema(offered))
+    if errors:
+        raise Refused('; '.join(errors))
+    ids = [g['id'] for g in raw['threads']]
+    candidate_ids = [c['id'] for c in raw['candidates']]
+    if len(candidate_ids) != len(set(candidate_ids)):
+        raise Refused('ambiguous candidate IDs')
+    if len(ids) != len(set(ids)) or any(re.fullmatch(r't[1-9][0-9]*', ident) is None for ident in ids):
+        raise Refused('new groups need unique local t IDs')
+    if any(not g['name'].strip() or not g['scope'].strip() for g in raw['threads']):
+        raise Refused('group name and scope must be nonempty')
+    allowed = set(ids) | {g['thread_id'] for g in offered}
+    for c in raw['candidates']:
+        refs = c['thread_ids']
+        if not refs or len(refs) != len(set(refs)) or set(refs) - allowed:
+            raise Refused(f'{c["id"]}: invalid group references')
+
+
+
+The work is an architecture POC: the design page, one PRD per module and the decisions. No product code and no data
+files until Alex starts the build. `docs/check.py` checks (and rebuilds the PRD bundle the page reads from disk); the
+only other scripts generate page assets (`build_bundle.py`, `copy_old_design.py`, `embed_fonts.py`) or simulate
+classification (`simulate_classification.py`, not changed at this stage).
+
+- The design page is `docs/system-design.html` with its data in `docs/system-design/new-*.js`; each module's PRD is in
+  `docs/prd/` (index `README.md`). The page data is the one source: a PRD block marked `generated` comes from it and
+  is never edited by hand.
+- After any change, refresh by reasoning: re-read every module in the order and with the four questions of
+  `docs/prd/README.md` (D22), so that page, PRD and decisions say the same thing, and list each inconsistency fixed.
+  `python3 docs/check.py` runs last and checks only mechanically; its pass is never the refresh.
+- Design every data path from what a view (thesis) needs, never from what the data offers: no number warehouse (D24,
+  D28).
+- Write for a reader who did not follow the discussion: plain Chinese, one concrete example, processes as step cards
+  and decisions as trees; every detail page links to its PRD.
+- A rule is written in full in one place, its owner; summaries, other modules and the glossary name it or point to
+  it without restating its conditions, so a change lands once. A finding that one sentence missed a change is a
+  class: count every place that states the same thing before the first edit (§1).
+- Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`.
+  The prompt names the scope, the governing documents and what is out of scope; its report is a lead (§1).
+- Before a freeze, review in rounds. Each round runs read-only reviews by angle: an end-to-end simulation of
+  realistic items, state-by-event tables, wording against the glossary, whether an engineer could build each step
+  from the text, every rule against the decisions, an attack on Claude's own findings, a new reader answering
+  questions, every change read in context, and line-by-line reads by module. Each finding is checked against the
+  text before a change; rounds go on until one finds nothing; then the freeze is recorded and the design sealed.
+
+## Before finishing a slice
+
+1. The touched suites, the structural checks and then the full suite pass (in the design phase: the reasoning refresh,
+   then `python3 docs/check.py`). A red suite is fixed before a handoff, whoever's code it is.
+2. `docs/CURRENT_STATE.md` holds the status, the open defects and the one next task; a status update retires the
+   paragraphs it replaces. A changed choice is recorded in `docs/DECISIONS.md`.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS.md | sed -n '2164,2315p' && nl -ba poc/hierarchy_study/ohio_sequence.py | sed -n '234,366p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  2164	- First replay the three completed D147 streams from stored answers and separate extraction coverage from membership variation. Keep distinct questions and their real evidence links; names, local identifiers and extra small groups alone are not errors. Do not add a group-count target or delete small groups to make the counts agree.
+  2165	- Run the unchanged D147 process on two previously unused full articles, one about AMD growth and one about Google Cloud's Rubin deployment, starting from copies of the three different D147 states. Report missing connections, unrelated memberships, extraction gaps and rejected calls separately. This is descriptive boundary research with assistant-authored semantic checks, not a new overall quality acceptance threshold or a claim that the method improved.
+  2166	- New bounded continuation experiment: at most 18 requests/$2 estimated, same model/provider/settings. The completed D147 budget and artifacts stay unchanged. No production, Idea, UI, summary or separate clustering-call change. A failure is retained and reported without replacement samples. Contract and scope handoff: `docs/research/2026-10-25-grouping-consistency/plan.md`.
+  2167	- Before paid calls, source-level review corrected an earlier classification: sample 2's OpenAI deployment explicitly uses Rubin but belongs only to its new OpenAI group. This is one real missed membership among ten reviewed Rubin-related thesis instances, alongside two samples that did not extract that extra thesis. Pause the new-article continuation and first test the narrower cause: D147 stopped showing existing theses' stored group memberships. Run three fresh unchanged controls and three fresh requests that add only those already-stored membership IDs to the displayed theses, through the original matching/writing path, within the same 18-request/$2 ceiling. Preserve the earlier plan and review; no new prompt, schema, production rule or acceptance target.
+  2168	- Result: all six samples completed in 12 fresh requests, estimated $0.202629. Context samples preserved the OpenAI-to-Rubin link in 3/3, but one also placed the unrelated PC thesis in Rubin and another omitted delay evidence. Controls showed an omitted extraction, a rejected altered quote, and an OpenAI membership in the SK-specific group. Both controls that actually proposed OpenAI already referenced Rubin, so the original missed-membership mechanism is not proven repaired. The context variant is not adopted. All history/resend checks pass; the known semantic defects remain explicit. Findings and the proposed joint review with Claude's Idea work: `docs/research/2026-10-25-grouping-consistency/`.
+  2169	
+  2170	## D149 · 2026-10-25 · Group association is required during extraction
+  2171	
+  2172	- Alex asks to refresh the relevant PRDs so group association is implicitly needed during extraction. Organization is part of reading incoming information, not an optional later whole-library clustering step. Every proposed thesis carries structured membership in a continuing business subject; evidence-only updates follow the existing thesis memberships.
+  2173	- Preserve the D33 responsibility boundary: extraction decides membership while reading the full source; matching resolves thesis/evidence identity and dependencies without deciding membership again; the views writer preserves the association against final thesis IDs. The complete target contract is owned by `06-views.md`, with extraction's responsibility in `05-extraction.md` and summaries in the system overview and design page.
+  2174	- A group organizes related questions, including across companies, without turning them into the same question or automatically making one a scored parent. A single thesis can start a group. The longer-term overarching investment thesis for agents remains separate work, not a capability delivered by this refresh. D148's tolerance for minor naming or optional subgroup differences remains; wrong members and missing core connections still matter.
+  2175	- This changes the documented target, not the running pipeline. Keep D147's isolated handover implementation visibly separate from the required behavior and D148's rejected context variant. No production prompt/schema change, stored-data migration, new paid run, group-summary generation, MCP or UI change is authorized by this documentation slice. Adding a short reason for each membership remains an unvalidated proposal.
+  2176	- Record current implementation gaps in `docs/poc/pipeline-plan.md`; refresh status and the PRD bundle. Change census and reasoning refresh: `docs/research/2026-10-25-grouping-doc-refresh.md`.
+  2177	
+  2178	## D150 · 2026-10-25 · Test a source-based membership explanation within extraction
+  2179	
+  2180	- Alex asks to continue working on a clean grouping-consistency solution while Claude works on Idea. Continue isolated grouping research; do not change Idea or the default pipeline.
+  2181	- The census is 18 saved extraction answers, 19 candidates and 27 membership references. Wrong PC→Rubin and OpenAI→SK references are already in raw extraction; matching and storage retain them. Test whether requiring a short source-to-scope explanation before each chosen group ID reduces these errors. This is a hypothesis, not an adopted fix.
+  2182	- Keep the full original article, fixed two-article prefix, original model/settings, and original identity/source checks. Three fresh controls and three fresh explanation samples; only if the registered development conditions hold, measure the predefined Google article once with three samples per arm. New independent maximum: 24 HTTP attempts/$1 estimated; prior study budgets and records are untouched. Stop without replacement samples or automatic new arms.
+  2183	- The new output is validated before projection to the old membership IDs; explanations are archived, never treated as evidence or sent to identity matching. No separate clustering call, group-count target, production schema migration, or claim that rationale helps because Claude used it. Claude's latest per-driver rationale arm did not improve consistency.
+  2184	- Contract, state/event and value/reader tables, unchanged measurement definitions and read-only review: `docs/research/2026-10-25-grouping-basis/plan.md`.
+  2185	- Result: 12 fresh calls, estimated $0.199548. The basis arm had one correct OpenAI→Rubin result, one omission, and one PC→Rubin error; controls repeated OpenAI→SK and also produced PC→SK. No adoption or conditional Google run. Across D147/D148/D150, five wrong references and one missed membership remain visible; three wrong-reference answers also declare an appropriate new group but reference a different old one. A zero-call one-ID correction confirms the writer preserves the supplied reference. This does not establish why the model selected it or validate the next representation. All 135 tests and targeted mutants pass; source, history and resend checks pass. Findings: `docs/research/2026-10-25-grouping-basis/findings.md`.
+  2186	
+  2187	## D151 · 2026-10-25 · Before the NVDA rerun: the two sessions merged, two prompt rules corrected and proven on stored requests
+  2188	
+  2189	- Alex: "codex 做完了，你合并，然后解决你上面的顺序问题，开始跑小的验证快速的收敛这些问题。确认是真实的问题，不是你自己看错或是理解错误；务必不要scope creep乱搞". The merge is commit 7033c87 (one tree, both sessions' work, every suite passing).
+  2190	- Verified on the sealed run (`docs/poc/pipeline-plan.md`, 重跑前的基本面): nine product-trivia views and no H200 licence view (60 items mention it); two of 465 judgements read "no fact confirms" as the lowest rung; eight theme views that are anti-dumping or scrap-metal notices; the English requirement is a contract migration (137 Chinese literals in the pipeline's code, 13 KB of prompts, a Chinese-only ladder parser), not a prompt change.
+  2191	- Adopted for the rerun as `poc/config/poc-v14.json`: `role-v3` (a dated event opens a view only when it moves a full-year number or a segment; pending regulatory decisions open without a date, due at the fiscal year end) and `judging-v2` (missing confirmation is not the lowest rung). Proof on the stored requests with only the prompt changed: the three trivia items open nothing in 6 of 6 samples, the May 10-Q opens the H200 import-licence view in 2 of 2; the two misjudged cases move to rungs 4 and 3, the rung-5 control holds.
+  2192	- Not changed: grouping (D149, Codex's slice, still not in the default pipeline); the language (Alex's call: run in Chinese now or migrate first). The rerun reads the relabelled corpus `items-window-tags2-2026-10-24.sqlite`. A one-week run comes first.
+  2193	
+  2194	## D152 · 2026-10-25 · The rerun runs in Chinese first; grouping passes to Claude
+  2195	
+  2196	- Alex, on the language: "1. 可以吧。" The NVDA rerun runs on the Chinese pipeline with the corrected rules (poc-v14);
+  2197	  the English migration (137 Chinese literals in the pipeline's code, the four prompts, the ladder parser; D133) is a
+  2198	  separate slice, scheduled after it, measured on its own.
+  2199	- Alex, on grouping: "2. codex 已经停止了，要靠你来接着把这部分整好，你单独的把这块搞对". Grouping at extraction
+  2200	  (D142–D150) is Claude's slice from here, worked on its own: Codex's experiments, reports and handoff
+  2201	  (`docs/research/2026-10-25-grouping-basis/`, `poc/hierarchy_study/`) are the starting record; the default pipeline
+  2202	  stays without grouping until a measured design is accepted.
+  2203	
+  2204	## D153 · 2026-10-25 · Keyed views: the structural correction is the direction; the week run is read first
+  2205	
+  2206	- Alex, after the structural review (`docs/research/2026-10-25-structural-review.md`): "好就这么做。你需要看完trace 给出非常干净
+  2207	  的系统修正方案来解决我们上叙述的问题，从完整的写log 和计划按照这个来小范围的测试和改进，并量化的测量其效果".
+  2208	- Direction: A, the one-week run with poc-v14 finishes and its trace is read in full; B, the correction is designed as
+  2209	  one plan before any pipeline code changes: a view carries a key written by extraction and owned by code (measure
+  2210	  from a closed list, period as a date span, basis, unit, rung bounds as numbers), research subjects become objects of
+  2211	  the universe with aliases, each object carries the analyst's list of the quantities to watch, identity is a key
+  2212	  match in code and the model only fills keys or chooses among shown names. The full-night rerun waits for the keyed
+  2213	  design; the sealed ledger and the week run's data stay as they are.
+  2214	- Record: `docs/poc/keyed-views-plan.md` (the plan and its tables), `docs/poc/pipeline-tuning-log.md` (one row per
+  2215	  small test with its numbers). This decision departs from the frozen extraction and views design (D37, D58–D60) in
+  2216	  the direction stated; the detailed contract is recorded as its own decision when Alex accepts the plan.
+  2217	
+  2218	## D154 · 2026-10-25 · The keyed view contract as built and measured on the bootstrap documents (T1–T2d)
+  2219	
+  2220	- Under D153 (Alex: "T2可以按照你看完T1的结果自己思索之后开始动工…我要看的就是量化的结果收敛"), the contract of
+  2221	  `docs/poc/keyed-views-plan.md` was built into the default pipeline behind prompt version v4 (`poc/config/poc-v15.json`):
+  2222	  every candidate view carries `measure` (closed list), `scope`, `period_start/end`, `basis`, `unit`, `event_type`; every rung
+  2223	  carries numeric `lo/hi`; the ledger stores them (`view_keys`, rung bounds); the service judges claims on the numbers.
+  2224	- What the four small runs on the same twenty bootstrap documents taught, each turned into a code rule and a test
+  2225	  (`docs/poc/pipeline-tuning-log.md` T1–T2d): the key is a necessary, not a sufficient, condition of identity (T1: exact
+  2226	  keys over-merged a run-rate into revenue); the model must not spell the scope or convert the fiscal year (T2: four tax-rate
+  2227	  views, a wrong Compute & Networking period); a watched scope is recognised by the list's aliases (T2b: hyperscaler capex and
+  2228	  the H200 licence refused on spelling); the unit belongs to the key (a level and a growth rate collided); the model's answer
+  2229	  to "same quantity?" on a same-key pair is not stable between samples (T2c), so where code owns the key (scope from the
+  2230	  list or none) code decides identity, and a merge across periods or quantities is refused whatever the model says.
+  2231	- Result on the twenty documents: 11 views, 0 duplicate keys, 0 product-trivia views, the H200 licence, the Rubin shipment,
+  2232	  hyperscaler capex and the export rule all open (the sealed run opened 10 views with duplicates; poc-v14 opened 15 with four
+  2233	  duplicates). The watch-list gate was not exercised by filings (review pool empty); the week run (T4) exercises it.
+  2234	- Known limits recorded, not patched: a basis of n/a on an existing view accepts both GAAP and non-GAAP candidates (right for
+  2235	  NVIDIA's joint guidance, to be re-read on a company with distinct guidance); a statement about another year can still be
+  2236	  linked as evidence to this year's view by the extraction when no view of that year exists (an evidence-link class, not a
+  2237	  candidate class); grouping (research subjects as universe objects, 2.3) is not yet in the default pipeline.
+  2238	
+  2239	## D155 · 2026-10-25 · 清单是参考，先修身份，再按顺序验证归组
+  2240	
+  2241	- Alex 明确：公司清单可以作为初始参考，但清单外不能忽略；随后要求“总体的重新看一次系统设计”“完整的写一个 improvement plan”“一步一步的来解决并量化验证”。Codex 接手这一修复范围，保留 Claude 的并行修改。
+  2242	- 改进计划与每步的证据在 `docs/poc/grouping-improvement-plan.md`。D154 的清单门槛取消；范围别名可以帮助找候选，不能单凭部分文字命中改写范围并自动合并观点。完整单年与明确自然年分开处理，多年不再抓首个年份转财年。
+  2243	- 自动认定同一观点须完整键相同，包含事件类型；含糊的口径不能作为自动合并通配符。同一次交接中代码确定的同一问题只写一次，保留所有证据。搜索的宽松召回与身份判断分开。
+  2244	- D149 归组要求不变。先验证同次抽取的归属交接，再接入按分发顺序读写的新路径；当天开始的快照不能证明后续抽取看到了当天新主线。小实验不证明全市场搜索能力。
+  2245	- 当前只实施并验证计划中合同已完整的步骤；归组表示、原子写入与恢复的具体合同经原答验证和设计审查后再建。旧数据不回填，Idea、前端、交易、分类、Pull 和最终判定不在本次修改范围。
+  2246	
+  2247	## D156 · 2026-10-25 · 先校正归组验收，再评价模型方案
+  2248	
+  2249	- Alex 看过验收审查后要求「好你开始吧，我们一起看」。先修验收定义和离线检查入口，用已存结果及受控反例验证，不把旧关系保留或零次判断报成新归组成功。
+  2250	- 当前验收定义、已数清的测量缺陷、状态表和案例卡由 `docs/research/2026-10-25-grouping-acceptance.md` 统一维护。它替代名字实验旧计划的推广通过线；旧计划与原答保留为历史。
+  2251	- 本轮不修改产品的抽取、归组表示、身份、写入或提示词，不启动新的付费实验。业务样本按原文和已有研究分别判断应新增、更新证据、重复或不抽；语义未审不报正确，三次样本不推断总体可靠率。
+  2252	- D149、D155 的产品边界不变。修好测量之后再固定下一轮真实案例的逐项预期和对照；上层投资论点、跨市场规模能力不由本轮获证。
+  2253	
+  2254	## D157 · 2026-10-25 · 用当前中文管线验证 Ohio 两篇连续报道
+  2255	
+  2256	- Alex 要求「开始继续做」，继续 D156 留下的 Ohio 案例。登记、接口和验收见 `docs/research/2026-10-25-ohio-grouping-poc.md`；各三次新鲜对照和归组序列，固定两篇全文，不延用旧缓存前缀或英文抽取。
+  2257	- 只在隔离 POC 复用当前抽取、身份和证据写入，再由抽取携带业务组引用。下一篇能读组内真实成员；不凭相同名称合并组，不让比对替抽取补分组。归组不增加模型调用。
+  2258	- 本次限 30 次请求、$1.50 估算保留额；不自动重试不明请求、不提高预算。逐项核对风险判断、同源转述和金额口径，失败停止推广，不私改验收或续开新臂。默认管线与其它模块不变。
+  2259	- 实测已结束且业务验收失败：20 次调用、估算 $0.373923；三次归组只有一次接回风险判断，仍有错归与错连。实验自身漏传的编号 schema 约束已在原答上修正，未付费复测。原答和结果在 `poc/reports/2026-10-25-ohio-grouping-01/`；关于改变观点入口的建议尚未决定，不启动下一臂。
+  2260	
+  2261	## D158 · 2026-10-25 · 追查 Ohio 入口并在同一归组流程内对照
+  2262	
+  2263	- Alex 在 D157 失败后要求「根因是什么」「务必深度的看代码，trace 思考」「再重新尝试是否能解决」。据此重新诊断并做隔离实验，不沿用 D157 的失败配置直接推广。
+  2264	- 全链路诊断、事前设计与同一验收在 `docs/research/2026-10-25-ohio-root-cause.md`。两臂都使用已修编号 schema、相同连续归组读取和写入；唯一模型差异是把枚举数字的入口段改为先提出重要且可核对的业务问题。没有官方承诺日期时使用明确的研究检查日。仅供实验，默认 role-v5 不变；不增建存储类型或上层 thesis。
+  2265	- 另修已由原答证明的代码偏差：06 的次年限制针对数字，明确的 event / policy_event 不应被同一年度检查拒绝。其它检查照旧，重放全部范围列出差异。此修复不能解释或解决 Ohio 原答没提出事件的问题，独立报告。
+  2266	- 各三次新鲜完整两篇序列，原 O1–O6 不变；本轮独立 30 次请求、$1.50 估算保留额、30 分钟，不加预算、不自动重试，不从失败中私自续开第三臂。默认归组、前端、Idea、分类、Pull、最终判定和上层论点均不在本次工作范围。
+  2267	
+  2268	- D158 运行结果：免费重放 326 个答案，事件年度修复仅恢复 NAVER 一条部署事件及三条证据；两个反向修改和完整 211 项测试通过。在线第一条对照请求 180.342 秒超时，无模型回答；其余五个序列未开始，$0.105535 未知用量保留额不释放。新入口尚无在线效果结论，不推广、不自动重发。结果：`poc/reports/2026-10-25-ohio-grouping-02/results.md`。
+  2269	
+  2270	## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
+  2271	
+  2272	- Alex 要求重新看完整抽取、找已有观点、去重和归组流程，找结构性原因后修复，不做个案调参。诊断、表、固定案例与验证方案见 `docs/research/2026-10-25-pipeline-replay.md`。
+  2273	- 八个 v15 库有 834 次日初预抽取，其中 576 次之前已有同日新观点；此数是上下文暴露，不是错误数。删除预抽取，让一条写完下一条再抽，恢复 D31/D63 的顺序要求。D155 中这一顺序修复不再等待分组语义试验；分组仍不因此启用。未完成的旧并行交接明确拒绝恢复，保留原数据，不静默重抽。
+  2274	- Ohio 所查的既有问题均已搜到，不能统称数据库没召回。原拟用四个比对请求检验补充双方原句和来源，审查在调用前发现：165 的候选已变成年度实际出资，与旧担保金额不同；不能把合并算成功。该实验不运行，先把抽取改变含义与身份拆分分开评价。不换搜索、不增加专用合并规则、不改默认提示词。
+  2275	- 每个案例每臂三次，最多 24 次请求、$1.50 估算保留额、30 分钟；与 D158 超时请求及其未知费用分开，不自动重发。原文审阅形成的开发预期不是人工金标，结果不充当完整分组验收。前端、Idea、分类、Pull、最终判定和上层论点均不在本次范围。
+  2276	- 结果：顺序修复的 3 项入口测试、31 项相关测试、完整 214 项套件通过；恢复旧并行的反向修改被调用顺序断言抓住。身份试验的 24 次是草案上限，实际没有开始，生成费用为零。下一步先确认“同问题去重、同项目不同问题归组、原意改变归抽取”的验收界限，再固定最小实验；不得按被审查否决的预期启动。
+  2277	
+  2278	## D160 · 2026-10-25 · 按原意检验三篇连续抽取，不用错误合并掩盖提问失真
+  2279	
+  2280	- Alex 同意 D159 的界限并要求继续完整修复。以同一可核对问题判去重，以同一业务过程判归组；拟议担保改成当年实际付款属于抽取失真，不能强行合并算修复。
+  2281	- 最小下一步见 `docs/research/2026-10-25-extraction-continuity.md`：三个真实 Ohio 输入、两臂各三次连续样本，两臂都沿用已有组成员上下文、身份与原子保存，仅改变实验角色的阅读入口。默认角色和归组仍不改变；本轮不声称验证大库检索。
+  2282	- 独立登记最多 54 次请求（18 次抽取、最多 36 次比对），费用上限仍 $1.50，30 分钟。旧预算、超时记录和未知费用不动；不自动重试，不用失败样本改尺或续开臂。无关产品模块和上层投资论点仍不在范围内。
+  2283	
+  2284	- D160 实测结果：六个序列全部完成，36 次调用，估算 $0.51142625。新入口三次均把两项融资问题分别保留且归在同组，但风险论据和三种金额口径完整保留均只有 2/3，与对照覆盖相同；完整验收失败，不推广、不自动续开臂。18 条成员、54 次出处交接全部对应；完整 216 项 Python 测试通过。后两篇没有新候选，不能声称检验了旧身份拆分问题。结果和剩余合同问题见 `poc/reports/2026-10-25-ohio-grouping-03/results.md`。
+   234	def prepare(out, *, role_path=None, item_ids=None, max_requests=MAX_REQUESTS, design_path=None):
+   235	    if (out / 'manifest.json').exists() or any((out / label).exists() for label in LABELS):
+   236	        raise ValueError('Use a new experiment directory')
+   237	    if not (out / 'preflight.txt').is_file():
+   238	        raise ValueError('Run and inspect preflight first')
+   239	    item_ids = ITEM_IDS if item_ids is None else tuple(item_ids)
+   240	    if not item_ids or len(item_ids) != len(set(item_ids)) or max_requests < 1:
+   241	        raise ValueError('Provide unique input IDs and a positive registered request limit')
+   242	    with sqlite3.connect(f'file:{ITEMS_DB}?mode=ro', uri=True) as conn:
+   243	        conn.row_factory = sqlite3.Row
+   244	        items = []
+   245	        for ident in item_ids:
+   246	            row = conn.execute('select * from items where input_id=?', (ident,)).fetchone()
+   247	            if row is None or not row['text']:
+   248	                raise ValueError(f'Missing source item/text: {ident}')
+   249	            items.append(dict(row))
+   250	    if [i['publication_day'] for i in items] != sorted(i['publication_day'] for i in items):
+   251	        raise ValueError('Inputs must be in publication order')
+   252	    for item in items:
+   253	        item['object_identifiers'] = json.loads(item['object_identifiers'])
+   254	    seeds = [dict(g, seq=0, input_id='reference:' + g['input_id']) for g in read(PREFIX)['threads']]
+   255	    write(out / 'items.json', items)
+   256	    write(out / 'reference-groups.json', seeds)
+   257	    write(out / 'config.json', read(ROOT / 'poc/config/poc-v16.json'))
+   258	    write(out / 'universe.json', read(ROOT / 'poc/universe.json'))
+   259	    paths = list((ROOT / 'src/hivemind').rglob('*.py')) + list((ROOT / 'src/hivemind/prompts').glob('*'))
+   260	    paths += [Path(__file__), ROOT / 'poc/hierarchy_study/ingestion_threads.py', ROOT / 'poc/hierarchy_study/study.py',
+   261	              ROOT / 'docs/research/2026-10-25-ohio-grouping-poc.md', PREFIX]
+   262	    paths += [out / name for name in ('items.json', 'reference-groups.json', 'config.json', 'universe.json', 'preflight.txt')]
+   263	    if role_path is not None:
+   264	        role_path = Path(role_path).resolve()
+   265	        if not role_path.read_text().strip():
+   266	            raise ValueError('Experiment role must not be empty')
+   267	        paths += [role_path, ROOT / 'docs/research/2026-10-25-ohio-root-cause.md']
+   268	    if design_path is not None:
+   269	        design_path = Path(design_path).resolve()
+   270	        if not design_path.is_file():
+   271	            raise ValueError('Registered design must exist')
+   272	        paths.append(design_path)
+   273	    write(out / 'manifest.json', {'version': 'ohio-sequence-v1', 'labels': LABELS, 'max_requests': max_requests,
+   274	          'item_ids': item_ids, 'design_path': str(design_path) if design_path else None,
+   275	          'role_path': str(role_path) if role_path else None,
+   276	          'max_usd': MAX_USD, 'max_seconds': MAX_SECONDS, 'dependencies': {str(p.resolve()): digest(p) for p in paths if p.is_file()}})
+   277	    write(out / 'budget.json', {'attempts': [], 'reserved_or_spent': 0})
+   278	
+   279	
+   280	def verify(out):
+   281	    for path, sha in read(out / 'manifest.json')['dependencies'].items():
+   282	        if digest(path) != sha:
+   283	            raise ValueError(f'Frozen input/code changed: {path}')
+   284	
+   285	
+   286	def run(out):
+   287	    with (out / 'run.lock').open('a') as lock:
+   288	        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+   289	        verify(out)
+   290	        if read(out / 'budget.json')['attempts'] or any((out / label).exists() for label in LABELS):
+   291	            raise ValueError('Measurement already started; no automatic resume')
+   292	        items = read(out / 'items.json')
+   293	        role_path = read(out / 'manifest.json').get('role_path')
+   294	        role_text = Path(role_path).read_text() if role_path else None
+   295	        uni, cfg = universe.load(out / 'universe.json'), config.load(out / 'config.json')
+   296	        deadline = time.monotonic() + MAX_SECONDS
+   297	        statuses = {label: 'not_started' for label in LABELS}
+   298	        write(out / 'status.json', statuses)
+   299	        for label in LABELS:
+   300	            verify(out)
+   301	            folder = out / label
+   302	            folder.mkdir()
+   303	            conn = groups.open_db(folder / 'views.sqlite')
+   304	            archive = model.Archive(str(folder / 'calls.sqlite'))
+   305	            # A role experiment compares two grouped streams; D157's default keeps its original arms.
+   306	            grouped = role_text is not None or label.startswith('grouped')
+   307	            sample_role = role_text if label.startswith('grouped') else None
+   308	            if grouped:
+   309	                for g in read(out / 'reference-groups.json'):
+   310	                    conn.execute('insert into threads values (?,?,?,?,?)', tuple(g[k] for k in ('thread_id', 'name', 'scope', 'seq', 'input_id')))
+   311	                conn.commit()
+   312	            transport = BoundedTransport(out, label, deadline)
+   313	            try:
+   314	                first = None
+   315	                for index, item in enumerate(items, 1):
+   316	                    directory = folder / f'item{index}'
+   317	                    directory.mkdir()
+   318	                    result = process(conn, archive, cfg, uni, item, grouped, directory, transport, role_text=sample_role)
+   319	                    if result['route'] != 'written':
+   320	                        raise Refused(f'Expected extract route, got {result["route"]}')
+   321	                    if index == 1:
+   322	                        first = result
+   323	                historical = [groups.thread_detail(conn, g['thread_id'], first['seq']) for g in first['snapshot']['threads']]
+   324	                if historical != first['snapshot']['details']:
+   325	                    raise AssertionError('First article history changed')
+   326	                if any(dispatch.route(conn, item, uni).kind != 'skipped' for item in items):
+   327	                    raise AssertionError('Completed input not skipped on resend')
+   328	                write(folder / 'checks.json', {'history_unchanged': True, 'resend_skipped': True, 'semantic_status': 'pending'})
+   329	                statuses[label] = 'complete'
+   330	            except (Refused, model.SchemaError) as error:
+   331	                statuses[label] = 'refused'
+   332	                write(folder / 'failed.json', {'kind': type(error).__name__, 'reason': str(error)[:1000]})
+   333	            except Exception as error:
+   334	                statuses[label] = 'failed'
+   335	                write(folder / 'failed.json', {'kind': type(error).__name__, 'reason': str(error)[:1000]})
+   336	                write(out / 'status.json', statuses)
+   337	                raise
+   338	            finally:
+   339	                conn.rollback()
+   340	                conn.close()
+   341	                archive.conn.close()
+   342	            verify(out)
+   343	            write(out / 'status.json', statuses)
+   344	        print(json.dumps(statuses), flush=True)
+   345	
+   346	
+   347	def main():
+   348	    parser = argparse.ArgumentParser(description=__doc__)
+   349	    parser.add_argument('command', choices=('prepare', 'run'))
+   350	    parser.add_argument('--out', type=Path, default=DEFAULT_OUT)
+   351	    parser.add_argument('--role-path', type=Path, help='Prepare two grouped arms; only the grouped arm uses this role')
+   352	    parser.add_argument('--item-id', action='append', help='Prepare with these stored inputs, in stream order')
+   353	    parser.add_argument('--max-requests', type=int, default=MAX_REQUESTS, help='Registered attempt limit; dollar cap is unchanged')
+   354	    parser.add_argument('--design-path', type=Path, help='Freeze the registered design with the experiment')
+   355	    args = parser.parse_args()
+   356	    out = args.out.resolve()
+   357	    if args.command == 'prepare':
+   358	        prepare(out, role_path=args.role_path, item_ids=args.item_id, max_requests=args.max_requests, design_path=args.design_path)
+   359	    else:
+   360	        if args.role_path is not None or args.item_id is not None or args.design_path is not None or args.max_requests != MAX_REQUESTS:
+   361	            parser.error('run reads the frozen settings from the prepared manifest')
+   362	        run(out)
+   363	
+   364	
+   365	if __name__ == '__main__':
+   366	    main()
+
+codex
+The proposed role keeps the evidence-link, source, date, and question rules from the old role. I’m checking the fixed acceptance criteria and how the runner selects each arm’s prompt, since those determine whether the comparison is fair.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba docs/research/2026-10-25-extraction-continuity.md && nl -ba docs/research/2026-10-25-ohio-grouping-poc.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# 先保留原意，再连续归组
+     2	
+     3	2026-10-25，D160。Alex 已同意 D159 的验收界限并要求继续修复。范围是抽取、既有问题上下文、身份判断和归组保存；不改 Idea、UI、分类、Pull、最终判定或上层投资论点。
+     4	
+     5	具体例子：报道说双方正在谈 2500 亿美元担保，不等于今年已经支付或将支付 2500 亿美元。可以研究这项安排能否达成；下一篇批评它的风险，应回到同一项目。不同金额口径不是同一问题。
+     6	
+     7	## 已有证据与本次改动
+     8	
+     9	D159 已计数并修复同日旧快照，未接默认归组。八库 834 次预抽取中 576 次前面已经有同日新观点；这是暴露数，不是错误数。四篇 Ohio 抽取均未看到项目旧问题，后续匹配却已搜到。29 条融资观点中，当年实际出资的失真源于一份原答，存在三个运行。D158 的六个首篇原答中三个只问行业开支，另外三个共 16 个候选仍全是数字；模型尚未提出项目事件，存储不能补救。
+    10	
+    11	本轮只验证一个阅读合同：先读业务问题，保留金额、时间和不确定性的含义，数字可作为事件问题的证据。替换 D158 实验角色的入口段，在“项目额度不等于年度支出”处明确问题和答案条件都保持口径；不加 Ohio 专用词或答案，不改 schema 或筛选规则。沿用现有隔离 runner 的按条写入、项目成员上下文、匹配与原子保存。暂不把未经验证的角色或归组接入默认产品。
+    12	
+    13	两臂都给已提交的组及成员问题；唯一可控差异是角色文本。它们读取各自之前的结果，随后上下文的差别属于处理效果。既有原答可证明对象限定会漏掉四条项目上下文；本轮并不另证明全库搜索能力。小库全部组可见是刻意控制，不声称大库召回已解决。
+    14	
+    15	## 整份请求审查
+    16	
+    17	role-v5 强制三个数字类别各开，事件却要求官方期限；T7 承认传闻，T8 要读分析师论证，两者与该入口冲突。schema 本来容许事件和两格答案。新角色取消这两个额外门槛，明确研究检查日不是来源承诺，保留数字年度限制。键、证据来源和组引用都由后续代码读取，未删。组文字不改，不增加事后聚类调用。来源仍为整篇原文。旧角色 2630 字，新角色字数、请求长度及实际输入 token 由本轮产物记录。缺失角色文字不能靠检索补回；遗漏来源语义也不能靠强制合并补回。
+    18	
+    19	## 已固定的案例和测量
+    20	
+    21	每臂三条连续输入，每臂三次新鲜样本，共六个独立库，依次穿插对照与实验。模型、provider、温度、reasoning、schema、匹配、源码和三篇全文固定。
+    22	
+    23	1. `gnews:b25b5b3109fbe06f1a394164`：首次报道 Ohio 项目；应保留谈判中的重大安排及其出处，2500 亿担保、3500 亿芯片融资、项目总成本不混为同一金额。
+    24	2. `gnews:bb0d23846735c94b7c1722d2`：后续分析；Seaport 的 Jay Goldberg 对供应商融资的批评应以第三方判断保存到相关项目问题，转述 WSJ 不变成独立佐证。早前股权交易不冒充本次担保。
+    25	3. `gnews:eb74b9d16d227f0c2b7a39d8`：后续 Ctech 报道；不得把谈判额度变成当年实际付款；已有同一问题应复用，不同问题可以同组。若仅有新证据，零新候选是合法结果。
+    26	
+    27	O1–O6 沿用 D157；另外逐条判断 D159 的金额失真。三篇都从原文逐条看问题、每格条件、证据原句与链接、原始出处、最终组成员。身份以同一可核对问题为单位，不以相同公司、数字或来源为单位。每个错误都列出原答字段与实际落库位置。缺少核心问题或错误证据链接不能被“成功保存组”抵消。无模型候选不算归组成功，拒绝与未完成都不算通过。
+    28	
+    29	这是助手基于原文标注的开发案例，不是独立人工金标。三次样本逐次报告，先看同臂差异；不拿组名、组数或逐字问题一致率验收，也不由三次推断总体可靠率。失败不自行改尺、补采好样本或再开臂。完整链路达到所有条件才讨论默认接入；仅局部改善明确标为局部。
+    30	
+    31	## 状态 × 事件
+    32	
+    33	| 状态 | 事件 | 转移、写入与日期 |
+    34	|---|---|---|
+    35	| 未开始 | 预检和设计审查完成 | 新目录冻结配置、全文、角色、源码摘要；保存原 publication_day |
+    36	| 输入到达 | 首篇、后篇或跨对象 | dispatch 分配顺序号；抽取读本库已提交的组和问题；按输入日解释期限 |
+    37	| 已抽取 | 合法、无候选或只增证据 | 相同 sift 和 matching；当前 publication_day 与 seq 写入 |
+    38	| 检查拒绝 | 初次或再次要求恢复 | 保存原答，停止该序列；不重试，其他独立序列继续 |
+    39	| 调用中 | 外部失败、崩溃、到期仍在途 | 保留已预留费用，停止整轮；不自动重发 |
+    40	| 写入中 | 成功或异常 | 同一事务写观点、证据和组；异常回滚；不出现半条成员 |
+    41	| 已完成 | 重送或下一日输入 | 重送跳过；新输入读取已提交记录；历史按 seq 不改变 |
+    42	| 任意 | 配置/源文修订或另一进程 | 冻结摘要校验拒绝变更；独占运行锁；不混用两次配置 |
+    43	| 两个作用域 | 两臂或样本 | 独立库与 archive，禁止共享答案缓存；不同时请求 |
+    44	| 全部完成 | 语义通过或失败 | 固定逐项测量；失败报告根因，不自动推广或开下一臂 |
+    45	
+    46	## 值 × 来源/写者 × 读者
+    47	
+    48	| 值 | 来源和写者 | 读者与约束 |
+    49	|---|---|---|
+    50	| 角色文本 | 当前 role-v5 或新实验文件 | context → model.call；只替换实验臂 system |
+    51	| 三篇 item | 原 items SQLite，只读复制 | dispatch/context/sift；原日期、全文、作者不变 |
+    52	| 可见问题及组 | 本样本上条成功事务 | extraction，matching；不得跨样本或预读未来 |
+    53	| 候选、证据、组引用 | 原始模型回答 | schema、sift、matching、writing、write_threads；保留原答和过滤原因 |
+    54	| 组成员 | 现有 write_threads | 后篇 context、thread_detail；同一真实 view_id，多问题可同组 |
+    55	| 尝试/费用 | transport 先持久化预留，后填实际 usage | 预算判断、报告；未知用量不释放 |
+    56	| 实验清单 | prepare，显式参数 | run、verify；摘要包含实际执行源码、计划和角色 |
+    57	
+    58	## 新路径 × 原检查
+    59	
+    60	| 改动 | 检查 |
+    61	|---|---|
+    62	| 第三条真实输入 | 同一 process、schema、sift、身份及证据检查，不新增写入路径 |
+    63	| 研究检查日事件 | 原事件日期、两格、原文及键检查；不放松数字年度限制 |
+    64	| 拟议金额 | 语义人工审阅问题和每格条件；仅 quote 存在不能证明原意保持 |
+    65	| 连续三条 | 既有历史查询、重送跳过和组保存检查；新增入口测试确保三篇都真正执行 |
+    66	| 运行参数 | 日期、路径、上限显式输入；默认旧实验参数保持不变；拒绝错误数量或缺输入 |
+    67	
+    68	## 既有决定与预算
+    69	
+    70	D149：抽取时决定归属，比对不重判；D152：默认分组待测量；D155：参考清单不作门槛；D158：事件不套数字次年限制；D159：同问题去重，同项目不同问题归组，改变原意是抽取错误。保留这些边界。
+    71	
+    72	六序列各三篇最多 18 次抽取、18 次首次比对、18 次合并后证据比对：理论上限 54 次。新实验明确给 54 次请求容量，费用上限仍为 $1.50，最长 30 分钟；不变更任何旧实验预算。按 D157 20 次共 $0.373923 估计，36–54 次约 $0.67–$1.01，仅为估计；每次按最大输出预留后才发送，费用上限优先。第一次外部失败即停，不为凑齐样本超额。D158 超时请求的未知费用独立保留。
+    73	
+    74	先跑原答 preflight 并看拒绝原因；先用真实 SQLite 和已存答案检查显式三篇参数；只读审查后才开始付费。语义判读后，相关测试和全套一次，D22 推理刷新，docs/check.py 最后。
+     1	# Ohio：第二篇风险质疑能不能接回第一篇研究
+     2	
+     3	2026-10-25，D157。Alex 在校正验收后要求「开始继续做」。本次只跑两篇已存报道，分别用当前流程和同次抽取归组流程各三次。先登记，再运行；不接入默认产品，不改 Idea、前端、分类、Pull、判定或上层投资论点。
+     4	
+     5	## 1. 问题与固定输入
+     6	
+     7	第一篇说 NVIDIA 正在讨论为 OpenAI 的 Ohio 项目提供融资担保；第二篇转述该消息，并带来分析师对供应商为客户融资的质疑。实验要回答：后者能否留在前者的研究里，而不丢风险、不重复计算消息。
+     8	
+     9	原文及业务要求沿用 [Ohio 案例卡](../../poc/reports/2026-10-25-grouping-acceptance-01/ohio-case.md)。两篇全文来自 `poc/data/items-window-tags2-2026-10-24.sqlite`，顺序固定：
+    10	
+    11	1. `gnews:b25b5b3109fbe06f1a394164`，T7，保存的发布日 2026-07-26。
+    12	2. `gnews:bb0d23846735c94b7c1722d2`，T8，保存的发布日 2026-07-27。
+    13	
+    14	不把正文日期重写进上游日期，不用摘要替换全文。两篇是开发材料，不称留出样本。业务标注由助手据全文整理，Alex 已同意继续此例，不称人工金标准。
+    15	
+    16	起点：每次运行一个空观点库。归组版本另有两个参考组，名称和范围逐字取自 D147 `sample-2-retained/item2-result.json` 的 g1（Rubin 产品落地）和 g2（SK 韩国工厂），以 seq=0 的参考记录保存，不伪造任何成员或证据。它们不是预先给出的正确答案，Ohio 组必须自己建立。所有组都展示，故本次不测大库检索。
+    17	
+    18	## 2. 版本及唯一流程差异
+    19	
+    20	两版都用 `poc-v16`、中文 `role-v5`、相同研究对象名单、相同模型和原有出处、身份、证据、写入检查。旧实验英文 prompt 和名字投影不复用。相同名字不是相同组的凭证。
+    21	
+    22	| 版本 | 抽取所见及所写 | 后续步骤 |
+    23	|---|---|---|
+    24	| control | 当前 `build_prompt` 和 keyed schema；按对象及依赖找已有观点 | 当前比对、检查和 writer |
+    25	| grouped | 同样的请求，加已存组及其成员问题；成员也列入可连证据的已有观点。候选带 `thread_ids`，新组在 `threads` 声明 | 比对只管观点/证据；原 writer 决定最终观点后，已有隔离组 writer 保存对应成员；下一篇读取刚提交结果 |
+    26	
+    27	这比较的是完整的小段交接，不是单独证明编号比名字好。给下一篇看组的成员，是 D149 连续阅读的一部分。第一篇从空库走起，不借用缓存前缀。归组不增加模型调用；不得在比对阶段再让模型决定归属。
+    28	
+    29	新增中文段只说明当前请求缺少的业务组织任务：持续的产品、项目或政策过程可以容纳不同问题；公司相同不够；复用已展示组，或声明新组；同组不等于同一问题、因果或依赖；只更新证据时无需新候选。没有 Ohio 专用提示。当前 prompt 已要求直接证据链接，组成员提供合法链接目标，不允许用组编号替代观点编号。
+    30	
+    31	完整请求（system、user、schema）在调用前落盘。记录原版和归组版的字符数及本地 tokenizer 估算；新增任务必有增长，增长原因是原 schema 不具备表达归属的字段，不是对已存在指令再加质量口号。
+    32	
+    33	## 3. 接受合同和读写表
+    34	
+    35	schema 沿用当前 keyed schema，仅增加：新组 `id` 全匹配 `t[1-9][0-9]*`、非空 name/scope；候选 `thread_ids` 是不重复的非空数组，每项必须是已展示存储编号或本答新声明编号。新声明编号唯一。证据仍只链接展示的观点或本答候选。只保存最后确实成为观点的候选用到的新组。不开、不合法或被出处检查丢弃的候选不留空壳组。编号原样交接，不按名称合并。
+    36	
+    37	| 值、来源与写者 | 所有读者及约束 |
+    38	|---|---|
+    39	| 组声明和引用：原答 → 新隔离运行器校验 | `sift` 保留候选字段；比对请求构造器不呈现归属；组 writer 用原引用和最后观点映射，审查器逐项核对 |
+    40	| 最终观点映射：现有 matching / writing | 原有证据、依赖、键写入；组 writer 只能连已经保存的观点；同批复用保留各引用 |
+    41	| 组、成员：已有隔离 `write_threads` | 下一篇抽取、`thread_detail(seq)`、最终逐项审查；不进入默认 API/重判，不生成依赖 |
+    42	| 证据和出处：现有 writer | 通过真实成员及 evidence_links 读取；重复保留出处，新的第三方判断不是重复消息 |
+    43	| 请求/原答/检查/结果：隔离运行器 | 本次审查和重放；完整性不等于语义正确；无候选不是自动失败或通过 |
+    44	| 预算：单进程调用封装 | 每次网络请求前持久化保留额；成功按 usage 估算结算；未知结果仍扣保留额 |
+    45	
+    46	| 状态 × 事件 | 动作、保存和时间 |
+    47	|---|---|
+    48	| 开始前 | 新目录、冻结源码及输入摘要、配置；旧目录不覆盖；用原发布日、分发顺序号 |
+    49	| 未处理 / 已完成的相同输入 | 原 `dispatch.route` 分配序号 / 跳过；跳过不调用模型 |
+    50	| 读到第一篇 / 下一篇或后来日期 | 只读本库已提交记录；第二篇完整读取第一篇结果；不用墙钟作业务顺序 |
+    51	| 模型已返回 | 先归档原答；schema、引用及原 `sift`；丢弃原因逐项保存，不隐藏 |
+    52	| 比对拒绝 / 拒绝后的再提交 | 隔离试验在第一次拒绝停止该序列，不自动修答；与产品默认一次重试的差异明确记录，不把它报成产品最终失败率 |
+    53	| 写入中异常 / 进程中断 | 观点、证据、组、成员及完成标记同一事务；异常回滚；不自动重发不明结果的网络请求 |
+    54	| 已写完 | 从保存库读取并验证最终成员、证据及历史；第一篇历史在第二篇后不变；完成输入重送应跳过 |
+    55	| HTTP 失败、未知响应、预算不足 | 留失败记录；停止整个运行，不隐藏样本或提高预算；恢复需要新决定，不自动续跑 |
+    56	| 两个启动、另一写者 | 文件锁只准一个运行器；各样本独立数据库；本次不研究生产并发 |
+    57	| 配置/源码/输入变化或等待时输入被改 | 每个样本开始及结束核对摘要，不一致拒绝；本轮不解释新旧混杂结果 |
+    58	| 终态再次运行 | 完成/失败目录都拒绝重跑；原结果只读审查 |
+    59	
+    60	| 新路径 | 仍经过的旧检查 |
+    61	|---|---|
+    62	| 带归属的 keyed 候选 | keyed schema、梯子、年度/到期、出处、链接、对象名单、身份、依赖环、同批复用 |
+    63	| 组内展示的跨对象观点 | 来自真实 view 记录；作为 shown_views 进入 prompt、出处检查和比对；不得凭组名称合并观点 |
+    64	| 没有候选，仅已有观点证据 | 原 evidence matching 与 writer；通过旧成员读取新证据，不能用零新成员否定它 |
+    65	| 未展示组/错误新编号/空声明 | 付费写入前明确拒绝；不自动修引用或按名称猜测 |
+    66	
+    67	先前决定：D149「比对仍只判断观点和证据身份、依赖」；D155「先验证同次抽取的归属交接，再接入按分发顺序读写的新路径」；D156「三次样本不推断总体可靠率」。本次按此运行隔离 POC，不冻结新表示，不改变正式产品合同。
+    68	
+    69	## 4. 六次运行与业务判断
+    70	
+    71	顺序 control-1、grouped-1、control-2、grouped-2、control-3、grouped-3。每次两篇完整流，独立 archive，第一篇和第二篇都新调用。样本中途模型或技术拒绝记录为失败，不再调参补样本。语义统一在整轮固定样本结束后审查；严重错误使此配置不获推广，不设计下一轮臂。
+    72	
+    73	每个样本分别核对，均附原答、拒绝原因、库内编号和来源：
+    74	
+    75	| 编号 | 必须保留的含义 / 判据 |
+    76	|---|---|
+    77	| O1 | 第一篇留下 Ohio/OpenAI 项目融资研究；谈判或计划不能变成签署/支付/已建成 |
+    78	| O2 | 2500 亿担保不含芯片；最高 3500 亿芯片采购融资、预计超过 5000 亿项目总成本不得混成一个量。重要口径由证据保留即可，不要求三条数字观点 |
+    79	| O3 | 第二篇至少保留 Goldberg 对供应商融资风险的实质判断，保留作者与第三方性质，且能从第一篇的同一项目研究查到；仅保存金额转述不合格 |
+    80	| O4 | 第二篇的同一 WSJ 担保消息是新增出处，不是独立确认；检查最终 evidence/source 记录，不凭 prompt 写了规则算通过 |
+    81	| O5 | 归组版本的相关观点在同一持续项目下；所保留的第一篇重要问题与后续材料不得散落在互不相连的新组；组名、可选次级组数量不评分 |
+    82	| O6 | 不把该 Ohio 项目挂入 SK 专属或 Rubin 产品组；其他公司背景若另有研究，不强迫全篇同组 |
+    83	
+    84	control 的 O5/O6 为未提供能力，不拿零组算通过；其余内容与证据要求相同。除了六项，还逐条列出观点的错误合并/重复、其它重要遗漏、多造问题及检查丢弃。助手按全文审查、非关键词打分，不生成一个掩盖失误的总分。
+    85	
+    86	调用上限 30，保留额加实际估算总额上限 $1.50；每个请求按 UTF-8 请求字节数作为保守输入 token 数，加配置输出上限计价。每次只作一个 HTTP attempt，无隐藏重试。最长每请求 180 秒，整轮预计 4–15 分钟（估计，实际另报）；硬截止启动后 30 分钟，不在截止后启动新请求。一个归组序列与对照相同，通常 4–5 次调用，schema 增长须量出。价格沿用当前代码估算，不称账单实付。
+    87	
+    88	调用前跑 `scripts/preflight.py` 并与 D155 保存结果逐项比；新字段的检查用已存真实非空回答和受控反例先过免费验证。小实验的测试覆盖：当前中文请求/键、空库新组、跨对象后续证据、拒绝引用、原子回滚、历史和重送；破坏写成员/扩大合法引用/不回滚应在副本中失败。所有 paid 请求、调用数、时长、成本和失败都保存。硬上限导致未完成就如实报告，不提高上限。
+    89	
+    90	## 5. 运行记录
+    91	
+    92	待只读设计审查、免费检查与实际运行后填写。结果位于 `poc/reports/2026-10-25-ohio-grouping-01/`。
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'def build_prompt|def sift|role-v|category|def keyed_schema|def prompt|T7|T8' src/hivemind/extraction.py && rg --files src/hivemind/prompts" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2:category; the answer is evidence linked to the shown views or to this item's candidate views, and candidate views
+52:def keyed_schema():
+79:SELF_PUBLISHER_TYPE = 'self'      # the owner's own memo (02-classification T8, D59): its judgements are candidates without evidence
+95:def build_prompt(item, text, shown_views, universe, version='v1'):
+96:    """The five blocks of 05-extraction: role; this category and how to read it; who it is about plus the list's
+98:    category = item['category']
+100:    blocks = categories.get(category) or categories['T7']
+106:        f'【这一类是什么、怎么读】{category}。{blocks["what"]}',
+127:    parts.append(f'【信息】编号 {item["input_id"]}，类别 {category}，作者 {item.get("publisher")}（{item.get("publisher_type")}），发布日 {item.get("publication_day")}，标题：{item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
+160:    setting = cfg.extraction_setting(item['category'])
+184:def sift(data, item, text, shown_ids, universe=None):
+src/hivemind/prompts/categories-v5.json
+src/hivemind/prompts/role-v1.txt
+src/hivemind/prompts/role-v3.txt
+src/hivemind/prompts/role-v2.txt
+src/hivemind/prompts/role-v5.txt
+src/hivemind/prompts/categories-v4.json
+src/hivemind/prompts/role-v4.txt
+src/hivemind/prompts/judging-v2.txt
+src/hivemind/prompts/categories-v3.json
+src/hivemind/prompts/judging-v1.txt
+src/hivemind/prompts/categories-v2.json
+src/hivemind/prompts/idea-v8.txt
+src/hivemind/prompts/idea-v9.txt
+src/hivemind/prompts/idea-v4.txt
+src/hivemind/prompts/idea-v5.txt
+src/hivemind/prompts/idea-v7.txt
+src/hivemind/prompts/categories-v1.json
+src/hivemind/prompts/matching-v1.txt
+src/hivemind/prompts/idea-v6.txt
+src/hivemind/prompts/idea-v2.txt
+src/hivemind/prompts/idea-v3.txt
+src/hivemind/prompts/idea-v1.txt
+src/hivemind/prompts/idea-v10.txt
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/extraction.py | sed -n '1,290p' && nl -ba src/hivemind/prompts/categories-v5.json | sed -n '1,190p' && nl -ba poc/reports/2026-10-25-ohio-grouping-03/results.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Extraction (docs/prd/05-extraction.md): the whole item goes to the model with the five-block prompt of its
+     2	category; the answer is evidence linked to the shown views or to this item's candidate views, and candidate views
+     3	written in full. Code checks the sources (the quote is in the text, every link points at a shown view or a
+     4	candidate), the ladders (five rungs or two) and the rule that quarterly numbers are evidence, not views."""
+     5	import dataclasses
+     6	import datetime
+     7	import json
+     8	import os
+     9	import re
+    10	
+    11	from . import config, model
+    12	
+    13	PROMPTS = os.path.join(os.path.dirname(__file__), 'prompts')
+    14	TIERS = ['发生的事', '当事人说的', '第三方看法', '传闻']
+    15	MAX_TEXT_CHARS = 400_000
+    16	
+    17	SCHEMA = {
+    18	    'type': 'object', 'additionalProperties': False, 'required': ['evidence', 'candidates'],
+    19	    'properties': {
+    20	        'evidence': {'type': 'array', 'items': {
+    21	            'type': 'object', 'additionalProperties': False,
+    22	            'required': ['id', 'quote', 'one_line', 'speaker', 'original_who', 'original_day', 'tier', 'event_time', 'links'],
+    23	            'properties': {
+    24	                'id': {'type': 'string'}, 'quote': {'type': 'string'}, 'one_line': {'type': 'string'}, 'speaker': {'type': 'string'},
+    25	                'original_who': {'type': 'string'}, 'original_day': {'type': 'string'}, 'tier': {'type': 'string', 'enum': TIERS},
+    26	                'event_time': {'type': 'string'}, 'links': {'type': 'array', 'items': {'type': 'string'}}}}},
+    27	        'candidates': {'type': 'array', 'items': {
+    28	            'type': 'object', 'additionalProperties': False,
+    29	            'required': ['id', 'object', 'kind', 'looks_at', 'question', 'rungs', 'due_day', 'year', 'evidence_ids'],
+    30	            'properties': {
+    31	                'id': {'type': 'string'}, 'object': {'type': 'string'}, 'kind': {'type': 'string', 'enum': ['对象观点', '主题观点']},
+    32	                'looks_at': {'type': 'string'}, 'question': {'type': 'string'},
+    33	                'rungs': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['label', 'condition'],
+    34	                                                       'properties': {'label': {'type': 'string'}, 'condition': {'type': 'string'}}}},
+    35	                'due_day': {'type': 'string', 'pattern': r'^\d{4}-\d{2}-\d{2}$'},      # a date, enforced by the schema, not by prose
+    36	                'year': {'type': 'string'}, 'evidence_ids': {'type': 'array', 'items': {'type': 'string'}}}}},
+    37	    },
+    38	}
+    39	
+    40	# keyed-views-plan.md 2.1: the key a candidate carries from prompt version v4 on; the ladder's rungs carry numeric bounds
+    41	MEASURES = ['total_revenue', 'segment_revenue', 'product_revenue', 'gross_margin', 'operating_margin', 'operating_expense_growth', 'total_expenses', 'operating_loss',
+    42	            'tax_rate', 'capex', 'shipments_or_capacity', 'run_rate', 'design_wins', 'event', 'spend_total', 'financing_amount', 'price', 'capacity', 'growth_rate', 'policy_event', 'other']
+    43	EVENT_TYPES = ['launch', 'shipment', 'licence', 'approval', 'deal_close', 'deployment', 'other', 'n/a']
+    44	BASES = ['GAAP', 'non_GAAP', 'n/a']
+    45	UNITS = ['USD', 'percent', 'count', 'GW', 'MW', 'TWD', 'multiple', 'n/a']
+    46	KEY_FIELDS = {'measure': {'type': 'string', 'enum': MEASURES}, 'scope': {'type': 'string'},
+    47	              'period_start': {'type': 'string', 'pattern': r'^\d{4}-\d{2}-\d{2}$'}, 'period_end': {'type': 'string', 'pattern': r'^\d{4}-\d{2}-\d{2}$'},
+    48	              'basis': {'type': 'string', 'enum': BASES}, 'unit': {'type': 'string', 'enum': UNITS}, 'event_type': {'type': 'string', 'enum': EVENT_TYPES}}
+    49	BOUND = {'anyOf': [{'type': 'number'}, {'type': 'null'}]}
+    50	
+    51	
+    52	def keyed_schema():
+    53	    """SCHEMA with the key fields on every candidate and numeric bounds on every rung."""
+    54	    schema = json.loads(json.dumps(SCHEMA))
+    55	    candidate = schema['properties']['candidates']['items']
+    56	    candidate['properties'].update(KEY_FIELDS)
+    57	    candidate['required'] += list(KEY_FIELDS)
+    58	    rung = candidate['properties']['rungs']['items']
+    59	    rung['properties'].update({'lo': BOUND, 'hi': BOUND})
+    60	    rung['required'] += ['lo', 'hi']
+    61	    return schema
+    62	
+    63	
+    64	def schema_for(version):
+    65	    return keyed_schema() if version and int(version.lstrip('v') or 0) >= 4 else SCHEMA
+    66	
+    67	
+    68	@dataclasses.dataclass
+    69	class Handover:
+    70	    evidence: list
+    71	    candidates: list
+    72	    dropped: list
+    73	    call_id: int
+    74	    request_sha256: str
+    75	    cached: bool
+    76	    cost_usd: float
+    77	
+    78	
+    79	SELF_PUBLISHER_TYPE = 'self'      # the owner's own memo (02-classification T8, D59): its judgements are candidates without evidence
+    80	
+    81	
+    82	def _read(name):
+    83	    with open(config.prompt_path(name), encoding='utf-8') as handle:
+    84	        return handle.read()
+    85	
+    86	
+    87	def _categories(version):
+    88	    return json.loads(_read(f'categories-{version}.json'))
+    89	
+    90	
+    91	def normalise(text):
+    92	    return re.sub(r'\s+', ' ', text).strip().lower()
+    93	
+    94	
+    95	def build_prompt(item, text, shown_views, universe, version='v1'):
+    96	    """The five blocks of 05-extraction: role; this category and how to read it; who it is about plus the list's
+    97	    themes; what to read out; the objects' existing views with who depends on whom (no state, no evidence)."""
+    98	    category = item['category']
+    99	    categories = _categories(version)
+   100	    blocks = categories.get(category) or categories['T7']
+   101	    objects = [o['value'] for o in item.get('object_identifiers') or []]
+   102	    themes = '\n'.join(f'  - {theme_id}：{name}' for theme_id, name in universe.theme_list())
+   103	    fiscal = '\n'.join(note for note in (universe.fiscal_note(o, item['publication_day']) for o in objects) if note)
+   104	    system = _read(f'role-{version}.txt')
+   105	    parts = [
+   106	        f'【这一类是什么、怎么读】{category}。{blocks["what"]}',
+   107	        f'【讲的是谁】这条信息的相关对象：{"、".join(objects) or "（上游没有标）"}。候选观点讲的是公司时，object 写股票代码；讲的是主题时，从下面名单里挑一个写编号，名单里没有的写清是什么事：\n{themes}'
+   108	        + (f'\n财年说明（数字观点的年份和到期日按这个算）：\n{fiscal}' if fiscal else ''),
+   109	        f'【这一类要读出什么】{blocks["read"]}',
+   110	    ]
+   111	    if version and int(version.lstrip('v') or 0) >= 4:      # keyed-views-plan.md 2.4: the quantities the analyst watches, with the exact scope names to copy
+   112	        watched = []
+   113	        for o in objects:
+   114	            entries = universe.watch_list(o) if hasattr(universe, 'watch_list') else []
+   115	            if entries:
+   116	                watched.append(f'  - {o}：' + '；'.join(e['measure'] + (f"[{e['scope']}]" if e.get('scope') else '') + (f"({e['event_type']})" if e.get('event_type') else '') for e in entries))
+   117	        if watched:
+   118	            parts.append('【研究参考】已有的量和范围（measure[scope](event_type)）。含义相同可用现有名称；清单外的重要问题照常提出，保留实际范围：\n' + '\n'.join(watched))
+   119	    if shown_views:
+   120	        lines = []
+   121	        for v in shown_views:       # 05-extraction block 5: question, looks_at, due day and who depends on whom; no state, no evidence
+   122	            deps = f'；依赖：{"、".join(v["depends_on"])}' if v.get('depends_on') else ''
+   123	            lines.append(f'  - {v["view_id"]}（{v["object_id"]}，看的是「{v["looks_at"]}」，到期 {v["due_day"]}）：{v["question"]}{deps}')
+   124	        parts.append('【这些对象已有的观点】证据连到这些观点上，用它们的编号；它们管不到的才写候选观点：\n' + '\n'.join(lines))
+   125	    else:
+   126	        parts.append('【这些对象已有的观点】还没有。该开的都写成候选观点。')
+   127	    parts.append(f'【信息】编号 {item["input_id"]}，类别 {category}，作者 {item.get("publisher")}（{item.get("publisher_type")}），发布日 {item.get("publication_day")}，标题：{item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
+   128	    parts.append('按 JSON schema 交出 evidence 和 candidates。候选观点的 evidence_ids 填它自己的证据编号；证据的 links 填已有观点编号或这次候选观点的编号（如 c1）。没有可抽的就都交空数组。')
+   129	    return system, '\n\n'.join(parts)
+   130	
+   131	
+   132	OBJECT_LABELS = ['强烈看多', '看多', '中性', '看空', '强烈看空']
+   133	
+   134	
+   135	def check_ladder(rungs, kind):
+   136	    """None when the ladder is well formed, else the problem. An object ladder written from 强烈看空 up to 强烈看多
+   137	    (the model often orders a revenue ladder by rising value) is the same ladder; normalise_ladder turns it round."""
+   138	    if len(rungs) not in (2, 5):
+   139	        return f'ladder has {len(rungs)} rungs, needs 5 (or 2 for yes/no)'
+   140	    if any(not r['label'].strip() or not r['condition'].strip() for r in rungs):
+   141	        return 'a rung has an empty label or condition'
+   142	    if kind == '对象观点' and len(rungs) == 5:
+   143	        labels = [r['label'].strip() for r in rungs]
+   144	        if labels != OBJECT_LABELS and labels != OBJECT_LABELS[::-1]:
+   145	            return f'object view rungs must be {OBJECT_LABELS}, got {labels}'
+   146	    return None
+   147	
+   148	
+   149	def normalise_ladder(rungs, kind):
+   150	    """Position 1 is 强烈看多 (06-views): a reversed object ladder is turned round, label and condition together."""
+   151	    if kind == '对象观点' and len(rungs) == 5 and [r['label'].strip() for r in rungs] == OBJECT_LABELS[::-1]:
+   152	        return list(reversed(rungs))
+   153	    return rungs
+   154	
+   155	
+   156	QUARTERLY = re.compile(r'(\bQ[1-4]\b|第[一二三四1-4]季|季度|\bquarter(?!ly report)|fiscal Q[1-4]|\bH[12]\b 收入|上半年收入|下半年收入)', re.I)
+   157	
+   158	
+   159	def extract(archive, cfg, item, text, shown_views, universe, *, transport=None):
+   160	    setting = cfg.extraction_setting(item['category'])
+   161	    version = setting.prompt_version.rpartition('-')[2]
+   162	    system, user = build_prompt(item, text, shown_views, universe, version)
+   163	    answer = model.call(archive, cfg, setting, system, user, schema_for(version), 'extraction', 'extract', transport=transport)
+   164	    evidence, candidates, dropped = sift(answer.data, item, text, {v['view_id'] for v in shown_views}, universe)
+   165	    return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd)
+   166	
+   167	
+   168	def check_bounds(rungs):
+   169	    """None when the rungs' numeric bounds form one unbroken partition (or none carries bounds), else the problem."""
+   170	    bounded = [r for r in rungs if r.get('lo') is not None or r.get('hi') is not None]
+   171	    if not bounded:
+   172	        return None
+   173	    if len(bounded) != len(rungs):
+   174	        return 'some rungs carry bounds and some do not'
+   175	    ordered = sorted(rungs, key=lambda r: -1e300 if r.get('lo') is None else float(r['lo']))
+   176	    for a, b in zip(ordered, ordered[1:]):
+   177	        if a.get('hi') is None or b.get('lo') is None or float(a['hi']) != float(b['lo']):
+   178	            return 'rung bounds overlap or leave a gap'
+   179	    if ordered[-1].get('hi') is not None:
+   180	        return 'the top rung must be open above'
+   181	    return None
+   182	
+   183	
+   184	def sift(data, item, text, shown_ids, universe=None):
+   185	    """05-extraction step 3, the code checks on one answer: ladders, the quarter and year rules, due days, quotes in
+   186	    the text, links to shown views or kept candidates, one piece per sentence. Returns (evidence, candidates,
+   187	    dropped); the preflight runs it over every stored answer."""
+   188	    body = normalise(text)
+   189	    dropped = []
+   190	    candidates = []
+   191	    candidate_ids = set()
+   192	    for c in data.get('candidates', []):
+   193	        problem = check_ladder(c['rungs'], c['kind'])
+   194	        if problem:
+   195	            dropped.append((c['id'], f'candidate ladder: {problem}'))
+   196	            continue
+   197	        c = dict(c, rungs=normalise_ladder(c['rungs'], c['kind']))
+   198	        if QUARTERLY.search(c['looks_at'] + ' ' + c['question']) and c['kind'] == '对象观点':
+   199	            dropped.append((c['id'], 'quarterly number: evidence, not a view (06-views ladder rule 6)'))
+   200	            continue
+   201	        year_match = re.search(r'(\d{4})', c['year'] or '')
+   202	        if c.get('measure') not in ('event', 'policy_event') and year_match and int(year_match.group(1)) > int(item['publication_day'][:4]) + 1:
+   203	            dropped.append((c['id'], f'year {c["year"]} is beyond next year: not opened (06-views 不开)'))
+   204	            continue
+   205	        if not re.match(r'\d{4}-\d{2}-\d{2}$', c['due_day']):
+   206	            dropped.append((c['id'], f'due_day not a date: {c["due_day"]!r}'))
+   207	            continue
+   208	        if c['due_day'] <= item['publication_day']:
+   209	            dropped.append((c['id'], f'due_day {c["due_day"]} not after the item'))
+   210	            continue
+   211	        if c.get('measure'):          # keyed candidates keep their actual scope; reference lists do not gate admission (D155)
+   212	            problem = check_bounds(c['rungs'])
+   213	            if problem:
+   214	                dropped.append((c['id'], f'candidate ladder bounds: {problem}'))
+   215	                continue
+   216	            if universe is not None:
+   217	                object_id = universe.resolve(c['object']) or c['object']
+   218	                scope, source = universe.scope_and_source(object_id, c['measure'], c.get('scope', ''), c.get('event_type', 'n/a'))
+   219	                c = dict(c, object=object_id, scope=scope, scope_source=source, key_version=2)
+   220	                if c['measure'] not in ('event', 'policy_event'):
+   221	                    period = universe.fiscal_period(object_id, c.get('year', ''))                                                        # and the period of a yearly number
+   222	                    if period:
+   223	                        c = dict(c, period_start=period[0], period_end=period[1])
+   224	            try:
+   225	                start = datetime.date.fromisoformat(c['period_start'])
+   226	                end = datetime.date.fromisoformat(c['period_end'])
+   227	                if start > end:
+   228	                    raise ValueError('start after end')
+   229	            except (KeyError, ValueError):
+   230	                dropped.append((c['id'], 'invalid period: expected real dates with start <= end'))
+   231	                continue
+   232	        candidates.append(c)
+   233	        candidate_ids.add(c['id'])
+   234	    evidence = []
+   235	    kept_ids = set()
+   236	    by_quote = {}
+   237	    alias = {}
+   238	    for e in data.get('evidence', []):
+   239	        quote = normalise(e['quote'])
+   240	        if len(quote) < 8 or quote not in body:
+   241	            dropped.append((e['id'], 'quote not in item'))
+   242	            continue
+   243	        links = [l for l in e['links'] if l in shown_ids or l in candidate_ids]
+   244	        if not links:
+   245	            dropped.append((e['id'], f'links to nothing shown: {e["links"]}'))
+   246	            continue
+   247	        if quote in by_quote:            # the same sentence read out twice is one piece with both links
+   248	            first = by_quote[quote]
+   249	            first['links'].extend(l for l in links if l not in first['links'])
+   250	            alias[e['id']] = first['id']
+   251	            dropped.append((e['id'], f'same quote as {first["id"]}; merged'))
+   252	            continue
+   253	        e = dict(e, links=links)
+   254	        by_quote[quote] = e
+   255	        evidence.append(e)
+   256	        kept_ids.add(e['id'])
+   257	    final_candidates = []
+   258	    for c in candidates:
+   259	        ids = list(dict.fromkeys(alias.get(i, i) for i in c['evidence_ids'] if alias.get(i, i) in kept_ids))
+   260	        if not ids and item.get('publisher_type') != SELF_PUBLISHER_TYPE:
+   261	            dropped.append((c['id'], 'candidate without surviving evidence'))
+   262	            continue
+   263	        final_candidates.append(dict(c, evidence_ids=ids))
+   264	    for e in evidence:
+   265	        e['links'] = [l for l in e['links'] if l in shown_ids or any(c['id'] == l for c in final_candidates)]
+   266	    evidence = [e for e in evidence if e['links']]
+   267	    return evidence, final_candidates, dropped
+     1	{
+     2	 "_note": "05-extraction.md: block 2 (what this category is and how to read it, taken from the classification rules) and block 4 (what to read out of it). One entry per category present in the corpus. v2: same as v1 except T4 reads generically (no company-specific topics).",
+     3	 "T1": {
+     4	  "what": "业绩发布：一个财期的业绩稿、股东信、CFO 评论。实际数是发生的事；指引和管理层的解释是当事人说的。",
+     5	  "read": "实际数、指引、管理层的解释；分部的数（数据中心、游戏等）；和上一期比的变化；新提到的客户、产品、风险。"
+     6	 },
+     7	 "T2": {
+     8	  "what": "定期报告：10-K、10-Q、20-F。数是发生的事；风险因素和业务描述里讲到的风险和变化是当事人说的。",
+     9	  "read": "实际数、分部数；风险因素和业务描述里讲到的风险和变化；法律程序；客户集中度；出口管制、关税的影响。"
+    10	 },
+    11	 "T3": {
+    12	  "what": "法律与资本市场文件：合同、协议、证券文件。条款是发生的事；各方的说法是当事人说的。",
+    13	  "read": "交易条款（价格、对价、交割条件、时间表）；各方的说法和诉求；担保、融资的金额和期限。"
+    14	 },
+    15	 "T4": {
+    16	  "what": "电话会文字稿：公司在讲的会议。管理层的回答是当事人说的；分析师的追问是第三方看法。",
+    17	  "read": "管理层对关键问题的回答、口径的变化；指引；供需、产能、客户、地区、毛利率、竞争的表态；分析师追问的焦点。"
+    18	 },
+    19	 "T5": {
+    20	  "what": "演示材料：公司的幻灯片或演示稿。都是当事人说的。",
+    21	  "read": "管理层给的中长期目标、资本配置的框架、新业务的规模。"
+    22	 },
+    23	 "T6": {
+    24	  "what": "公司其他发布：新闻稿、博客、8-K 正文和非业绩附件、公司官方帖子。发生了什么事是发生的事；公司对未来的说法是当事人说的。",
+    25	  "read": "发生了什么事（高管变动、并购、新产品、回购、合作、投资、融资担保）；公布的经营数字；金额和时间表。"
+    26	 },
+    27	 "T7": {
+    28	  "what": "新闻：媒体发的报道。官方或公司确认的算发生的事；「知情人士称」「据报道」算传闻；文中引用的公司或官员的话算当事人说的；记者自己的判断算第三方看法。",
+    29	  "read": "发生了什么事、什么时候、涉及谁；说法从哪来，原始来源是谁、哪天说的；引用的数字。"
+    30	 },
+    31	 "T8": {
+    32	  "what": "观点与分析：卖方、独立研究、评论、个人帖子。作者的看法和估计都是第三方看法，不是发生的事；作者引用的公司原话算当事人说的。",
+    33	  "read": "作者的看法、论据、预测、评级和目标价，以及它们的变化；作者引用的事实和数字（注明出处）。"
+    34	 },
+    35	 "T10": {
+    36	  "what": "官方行动与记录：监管、法院、立法、行政机关的正式文件。决定或行动本身是发生的事；里面引述的说法算原来说话的人说的。",
+    37	  "read": "决定或行动本身、什么时候生效、影响谁、涉及哪些产品或国家；后面的程序和截止日（可以用作到期日）。"
+    38	 },
+    39	 "T11": {
+    40	  "what": "宏观政策与统计：央行的声明、纪要、讲话；统计发布稿。公布的数字和政策决定是发生的事；官方措辞是当事人说的。",
+    41	  "read": "公布的数字和政策决定，和上一次比差多少；官方措辞的变化；对未来的指引。"
+    42	 }
+    43	}     1	# 三篇连续抽取：有改善，但没有修完
+     2	
+     3	2026-10-25，D160。**本轮未通过完整验收，不接默认管线。** 六个序列全部完成，共 36 次调用，按项目价格表估算 $0.51142625，调用耗时合计 339.7 秒。没有网络失败、重试或补样本。
+     4	
+     5	具体变化：新入口三次都把“数据中心担保”和“芯片采购融资”作为两个问题，放进同一项目，后两篇沿用它们；但其中一次仍把分析师的风险判断和项目总成本漏掉。把组保存正确，不等于把研究保存完整。
+     6	
+     7	## 1. 每个样本，不只挑好的
+     8	
+     9	两臂都用相同的逐条读取、组成员上下文和保存机制，区别只有实验角色。三篇全文、模型设置、schema、身份及出处检查均未改。以下为助手逐条阅读原文、原答、问题条件和实际库后的标注，不是独立人工金标。
+    10	
+    11	| 样本 | 首篇项目问题落库 | 三种金额口径最终可查 | Goldberg 风险判断可查 | 后续同一 WSJ 担保只增出处 | 主要剩余问题 |
+    12	|---|---|---|---|---|---|
+    13	| control-1 | 否 | 否 | 否 | 未测到：首篇担保丢失 | 首篇担保原句抄错被拒；后篇项目材料连到行业支出 |
+    14	| control-2 | 是 | 是 | 是 | 是 | 行业支出混入项目组；第三篇担保材料连到芯片融资问题 |
+    15	| control-3 | 是 | 是 | 是 | 是 | 行业支出混入项目组 |
+    16	| grouped-1 | 是 | 否 | 否 | 是 | 漏总成本，也漏 Goldberg；第三篇的 Jefferies 评论有保留，不能代替第二篇的风险要求 |
+    17	| grouped-2 | 是 | 是 | 是 | 是 | 本轮核心项保留；不代表其他输入可靠 |
+    18	| grouped-3 | 是 | 是 | 是 | 是 | 本轮核心项保留；不代表其他输入可靠 |
+    19	
+    20	新入口的两条融资问题在三个样本中都分别保留、同组保存，后篇没有另开重复问题。六个序列均没有连到参考的 Rubin 或 SK 组。对照中的 control-2/3 把行业总支出也装进单个 Ohio 项目，这不是仅仅组名不同。
+    21	
+    22	金额口径最终可查为两臂各 2/3；Goldberg 风险判断为两臂各 2/3。**风险覆盖没有测出改善。** 新入口首篇三次均未抽项目总成本；后两篇只有 grouped-2/3 补回，因此不能把更少的问题和更低费用自动算成质量提升。
+    23	
+    24	D159 的“年度实际付款”失真在本轮两臂都没有重现（均 0/3）。只能说这批新结果没有犯，不能说新角色已证明修好它。后两篇共 12 次抽取都没提出新候选，所以没有测到候选再次进入身份匹配的去重分支；测到的是抽取直接沿用已有问题。旧 126/147 的匹配拆分问题不能由这个结果宣布关闭。
+    25	
+    26	## 2. 原答到落库的计数
+    27	
+    28	`python3 poc/reports/2026-10-25-ohio-grouping-03/audit.py` 可复算 `audit.json`。所有输入、样本和失败都在分母里；语义标签在脚本中明确标为人工阅读后的助手标注，不靠关键词评分。
+    29	
+    30	| 项目 | 实测 |
+    31	|---|---:|
+    32	| 完成输入 | 18/18 |
+    33	| 原答候选 → 通过检查 | 19 → 18 |
+    34	| 原答证据 → 通过检查 | 57 → 54 |
+    35	| 新成员逐条对照原引用及 SQLite | 18/18 一致 |
+    36	| 证据出处逐条对照 SQLite | 54/54 一致 |
+    37	| 后篇应看到的前序成员 | 36/36 已展示 |
+    38	| 后两篇新候选 | 0；该身份去重分支未测到 |
+    39	| 历史未变、完成输入重送跳过 | 6/6 序列 |
+    40	| 输入 token / 输出 token | 137117 / 34003 |
+    41	
+    42	三条出处拒绝都是 control 的原句删改，不是组 writer 丢数据：control-1 首篇 e1 删除了原句末尾“on Sunday”；其第二篇 e1 删除了句中的“(NVDA)”；control-2 首篇 e1 同样缩短原句。control-1 的担保候选只有这一条证据，随后被正常过滤。原文核对规则本身没有误拒；不能关掉它来得到好看的覆盖数。
+    43	
+    44	| 样本 | 调用数 | 估算美元 | 调用秒数 | 首篇输入 token |
+    45	|---|---:|---:|---:|---:|
+    46	| control-1 | 6 | 0.077784 | 53.6 | 5000 |
+    47	| grouped-1 | 6 | 0.064327 | 41.5 | 4847 |
+    48	| control-2 | 6 | 0.099662 | 63.0 | 5000 |
+    49	| grouped-2 | 6 | 0.082780 | 57.5 | 4847 |
+    50	| control-3 | 6 | 0.116941 | 77.4 | 5000 |
+    51	| grouped-3 | 6 | 0.069933 | 46.7 | 4847 |
+    52	
+    53	角色文本 2630 → 2415 字；首篇完整请求 15137 → 14919 字符；实际首篇输入 5000 → 4847 token。后篇上下文随各自写入结果变化，不能当成保持其他变量不动的长度比较。单个调用显示的费用经四舍五入，总额以预算记录为准。
+    54	
+    55	## 3. 剩下的问题到底在哪
+    56	
+    57	**已经排除的路径：** grouped-1 第二篇的 `context.json` 明确列出 g3 的 v1/v2；源文完整含 Goldberg；`extraction.json` 只有担保转述和两家公司未评论，没有 Goldberg；`handover.json` 没有拒绝任何证据；后续比对和 writer 不可能恢复没交来的内容。其余两个新样本读的是相同第二篇和相同类别要求，却保留了风险。数据库召回失败、归属编号错误、写入丢失，都不能解释这个漏项。
+    58	
+    59	**能确定的结论：** 改成事件问题解决了本例提问方向和组边界的一部分，但没解决抽取时的内容取舍。当前检查只会检查模型交出来的证据；未交出来的重要论据在进入匹配之前已消失。新入口还系统性省略首篇总成本，不能视为足够的完整修复。
+    60	
+    61	**不能确定的结论：** 本轮不能证明“只能连到具体问题”的合同必然导致漏风险。grouped-2/3 能用现有合同保存同一风险，是反证；也不能声称再加一句提示就会根治。模型内部为何漏掉某句不可直接观察，必须区分已定位的消失阶段与尚未证明的因果解释。
+    62	
+    63	下一步只应检验一个结构问题：读全文时，是否要先交出该项目的关键事实和支持/反对理由，再决定哪些构成新问题，而不是让“这次有没有写出一个问题”决定哪些理由能留下。若让这些理由在暂时没有合适问题时仍附于项目保存，将改变 05/06 当前“证据必须连到观点”和“主线只沿成员读证据”的合同；需要明确决定，不能当成普通提示词修改偷偷接入。只改输出顺序也不算新机制：当前 JSON 本来就先输出 evidence，再输出 candidates。
+    64	
+    65	本轮到此停止该实验路线，不再自动加提示、补样本、提高预算或开新臂。D159 顺序修复保留；尚未解决的抽取覆盖、旧身份拆分和大库召回继续列为开放问题。
+    66	
+    67	## 4. 代码与验证
+    68	
+    69	只扩展隔离 `ohio_sequence.py` 的显式输入、已登记请求数和设计摘要参数；原两篇默认行为保持，美元上限未改。新角色仅在本目录，产品默认配置未引用。
+    70	
+    71	- 原有加新增 runner 测试 12 项通过。真实三篇输入和真实临时 SQLite，只假外部模型，验证六个序列都实际走完第三篇。
+    72	- 临时副本中，跳过第三篇使 6 次请求断言失败；忽略登记限额使“应拒绝”断言失败。均读过失败位置，不以异常导入充当捕获。
+    73	- 核对器的等数量错成员反例：把 grouped-1 的 v2 从 g3 改到 g2，同一 SQLite 断言失败，成员总数未变。原数据未改。
+    74	- 完整 Python 套件 **216 项通过，20.51 秒**，在临时工作目录运行。
+    75	- 预检 315 个旧抽取原答：122 个候选、694 条证据保留；155 条旧比对有两条原有缺失决策拒绝，与 D159 相同。
+    76	
+    77	## 5. D22 文档核对
+    78	
+    79	按 01→02→03→04→05→06→07→08→09→00 的四个问题重读：名单、分类及上游日期不变；产品 Config 不引用新角色；分发顺序不变；05/06 目标和例子不变，仍要求抽取时归组但尚未默认接入；07/08 未动；09 不新增入口；00 不宣称产品已支持归组。页面生成块的目标与 PRD 相同，无需改写。
+    80	
+    81	本次修正的状态矛盾：CURRENT_STATE 撤下等待 Alex 同意 D159 的旧下一步；D160 记录已同意和本轮失败；两个 POC 计划链接到本轮实测，明确“风险覆盖没有改善、旧身份去重未测到”。机械 docs/check.py 在这些状态更新后最后执行，结果见 `docs-check.txt`。
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'from pathlib import Path; import difflib; a=Path(\"/Users/lchingen/hivemind/poc/reports/2026-10-25-ohio-grouping-03/role-questions.txt\").read_text(); b=Path(\"/Users/lchingen/hivemind/poc/reports/2026-10-25-extraction-evidence-01/role-evidence.txt\").read_text(); print(\"role characters:\", len(a), \"->\", len(b)); print(\"\".join(difflib.unified_diff(a.splitlines(True), b.splitlines(True), fromfile=\"role-questions\", tofile=\"role-evidence\")))'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+role characters: 2415 -> 2409
+--- role-questions
++++ role-evidence
+@@ -1,27 +1,27 @@
+-你是一位资深对冲基金分析师。读这条信息，是为了检验和形成观点：把支持或削弱已有观点的话和数挑出来，作为证据连到那条观点上；已有观点管不到的，写成候选观点，当场写全：问题、梯子、到期日，带上提出它的证据。
++你是一位资深对冲基金分析师。读完整条信息，保留能支持或削弱业务判断的证据，再决定复用已有问题还是提出候选观点。证据连到问题；候选观点写全问题、梯子、到期日，并带上提出它的证据。
++
++写证据的规矩：
++- 先读出影响判断的事实、条款、规模、限制及支持或反对的理由。无需单独开问题的材料，仍可作已有或候选问题的证据。对安排能否落地的判断，保留其关键条件和风险论据。
++- 一条证据是信息里的一句原话或一个数，原文照抄（quote），不改一个字；另写一句离开原文也看得懂的话（one_line）：谁、做了什么、多少、哪一期。
++- 每条证据写明谁说的（speaker），转述的写明最初是谁、哪天说的（original_who、original_day）；tier 只写这四个词之一：发生的事、当事人说的、第三方看法、传闻。发生的事指官方行动、公布的数、完成的交易；当事人说的指公司指引、管理层表态、官员讲话；第三方看法指卖方、媒体分析、专家；传闻指「知情人士称」和没有出处的说法。
++- 每条证据连到它直接讲的那条观点上（links 写观点编号），可以连几条；已有观点管不到的，连到这次的候选观点上（写候选观点的编号）。不连间接相关的。没有观点可连的话不抽。
++- 与所研究问题无关的背景、套话、广告、导航文字不抽。
++- 只凭这条信息写，不用你自己知道的别的事。
+ 
+ 开哪些观点：
+-- 先找这条材料正在争论、而已有观点管不到的重要问题：什么尚未发生的结果会改变公司的全年业务或重要分部？把它写成一个可以到期核对的问题。材料里的金额、条款、规模和风险是提出或检验问题的证据，不因每个数字存在就各开一条。
++- 只有已有观点管不到的重要问题才开候选：什么尚未发生的结果会改变公司的全年业务或重要分部？写成到期可核对的问题，不因每个数字存在就各开一条。
+ - 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。问题和每格条件保留原文的量与时间：拟议额度、担保、项目总价不改写成当年实际付款，规划容量不改写成当年产量。
+ - 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。
+ - 游戏、软件功能、工具和驱动的更新、促销、单款外设、高管任免、股东投票和章程细则、例行诉讼程序、回购授权不开观点。季度数和季度指引是全年问题的证据；护城河、竞争格局等没有可核对结果的宽泛话题不单独开。
+ - 已有观点里的同一个问题不再写候选，证据直接连到它；重要但不同的问题照常提出。同一件事只写一条。
+ 
+ 写观点的规矩：
+-- 一个观点只看一件东西：一个数（写明哪一年）或一件事。既要数字又要事件的，拆成两条。
+-- 问题写成一句问句，不写成断言；到期那天有一个数或一件事能判对错。
++- 一个观点只问一个数（写明哪一年）或一件事，不捆绑。写成问句，到期用一个数或一件事判对错。
+ - 问的是一家公司的收入、利润、份额、产品进度，就是对象观点，object 写这家公司的股票代码，哪怕背后的原因是政策或宏观；主题观点只问世界会变成什么样（许可发不发、利率到哪、资本开支多少），不问某家公司因此怎样。
+ - 问题、看的是什么、梯子每一格的条件、一句话说清（one_line）都用中文写；原句（quote）照抄原文，不翻译。
+ - 梯子每一格的条件现在就要写得出具体的数或状态；条件要靠将来才公布的目标值、门槛值的，核对不了，不开。
+ - 梯子五格（只有是或否的问题两格）。对象观点（公司）的五格从「强烈看多」到「强烈看空」，说的是对这家公司业务好还是坏；主题观点（宏观、政策、行业）的五格是从一头排到另一头的五种结果，用结果命名，不说好坏。每一格是一个能核对的结果：一个数落在哪段区间，或一件事到了哪一步；格和格不重叠、不留空，到期时正好一格成立；中性那一格跟什么比写在条件里；没有含糊的「部分」。
+ - 到期日定在这个争论见分晓的那天。数字的观点，到期日就是这个数公布的那天；公司的数按它的财年，发布日所在的财年是今年、下一个财年是明年；不是公司的数按自然年。事件的观点写清到哪一天看它处在哪一格。
+-
+-写证据的规矩：
+-- 一条证据是信息里的一句原话或一个数，原文照抄（quote），不改一个字；另写一句离开原文也看得懂的话（one_line）：谁、做了什么、多少、哪一期。
+-- 每条证据写明谁说的（speaker），转述的写明最初是谁、哪天说的（original_who、original_day）；tier 只写这四个词之一：发生的事、当事人说的、第三方看法、传闻。发生的事指官方行动、公布的数、完成的交易；当事人说的指公司指引、管理层表态、官员讲话；第三方看法指卖方、媒体分析、专家；传闻指「知情人士称」和没有出处的说法。
+-- 每条证据连到它直接讲的那条观点上（links 写观点编号），可以连几条；已有观点管不到的，连到这次的候选观点上（写候选观点的编号）。一句话只连它直接讲的那条，不连间接相关的。没有观点可连的话不抽。
+-- 背景、套话、广告、导航文字不抽。
+-- 只凭这条信息写，不用你自己知道的别的事。
+ 
+ 每个候选观点另填一把键，让代码判断两条观点是不是同一个量：
+ - measure：从清单里选最贴的量。公司的数：total_revenue、segment_revenue、product_revenue、gross_margin、operating_margin、operating_expense_growth、total_expenses、operating_loss、tax_rate、capex、shipments_or_capacity、run_rate、design_wins；事件：event；世界的数：spend_total、financing_amount、price、capacity、growth_rate、policy_event；都不是：other。
+
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-10-25-extraction-evidence.md && nl -ba poc/reports/2026-10-25-extraction-evidence-01/role-evidence.txt && rg -n 'control_role|control-role|def prepare|sample_role|grouped =' poc/hierarchy_study/ohio_sequence.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# 把重要论据保留下来，再决定要不要新开问题
+     2	
+     3	2026-10-25，D161。Alex 在 D160 失败后要求继续改进抽取，为后续运行和封存做准备。本轮只修抽取的阅读任务；不加新的证据存储层，不改观点身份、归组含义、UI、Idea、分类、Pull 或最终判定。
+     4	
+     5	例子：一项融资安排有拟议担保额度、项目总成本和分析师对风险的批评。这些内容可以共同检验一个项目问题，不需要每读到一个数字就新开问题；也不能因为不用新开问题，就把总成本和批评丢掉。
+     6	
+     7	## 先诊断
+     8	
+     9	范围是 D160 六个完整序列、18 次抽取，逐条读过全文、原答、交接和最终记录。完整计数见 `poc/reports/2026-10-25-ohio-grouping-03/audit.json` 和该目录的 `results.md`。
+    10	
+    11	| 原答中的缺失 | 旧默认角色，3 次 | D160 问题优先角色，3 次 |
+    12	|---|---:|---:|
+    13	| 第二篇没有 Goldberg 的风险判断 | 1 | 1 |
+    14	| 第一篇没有项目总成本证据 | 1 | 3 |
+    15	| 最终仍缺三种金额中的一种 | 1 | 1 |
+    16	
+    17	这是人工按证据字段及其原句所指事实逐项标注，不以关键词出现代替正确保留。已知正例是 grouped-2 的第二篇 e4–e6；反例是 grouped-1 第二篇全部原答只有两条证据。该请求已经显示两个项目问题、所属组以及全文；sift 零删除，后续原样保存。因此这里不是数据库没有召回，也不是存储丢失。三个新角色首篇都漏总成本，两个在第二篇补回；补回不代表首篇抽取正确。
+    18	
+    19	先查自己的改动：D160 取消逐个数字开问题，却主要解释如何开问题，证据段仍主要规定引用格式。模型可以把“不新开问题”执行成“不保留论据”。这是待验证的阅读机制；不是已经证明一句提示词能完全修好。两次成功保留批评也证明现有 schema 和证据必须连到问题的合同能表达它，无需据此另建存储层。
+    20	
+    21	## 一处修改、完整请求审查
+    22	
+    23	用 D160 角色作新鲜对照，不再拿更差的 role-v5 作主要对照。实验角色先要求保留直接影响判断的事实、条款及支持和反对的理由，再决定复用问题或新开问题。合并重复的“一个问题”和“同一个问题”要求；保留年度、研究检查日、来源原意、逐字引用、对象、梯子及键的合同。没有 Ohio、Goldberg 或某个金额的专用提示。
+    24	
+    25	逐层审查：system 是阅读任务；类别段仍按 T7 读来源和事件、按 T8 读论据；对象及参考清单仍只供参考；既有问题和组已可见；全文不截取；schema 已可表达同一问题的多条支持/反对证据；匹配只判断身份及证据新旧。schema、模型、reasoning、输出上限、全文、归组段、匹配和写入均不变。角色字符数和完整首请求字符数在运行前记录，实际输入 token 在运行后记录。不新增模型调用。
+    26	
+    27	## 本轮验证及停止条件
+    28	
+    29	使用 D160 同三篇输入、同六个独立序列，每臂三个新鲜样本，交错运行。每篇抽完并写完再读下一篇。沿用 D160 的 O1–O6 及金额原意判断，不因这次输出改答案；另列“第一篇是否已保留总成本”定位这次修改。原标准是否通过与新诊断项分别报告，不把补回算首篇通过。
+    30	
+    31	每条检查问题、答案条件、证据原句、链接、出处、最终成员及重复归并；读所有错误的原答。三次实验必须全部满足旧核心标准，且首篇总成本三次均保留，才说明这个开发案例修好。对照自身的差异也逐次报出。任何拒绝、未完成、错误链接均不是通过；不能靠多开问题掩盖证据缺失，也不要求逐字输出相同。
+    32	
+    33	这是开发案例验证，不是全抽取模块验收；即使通过，也不能直接封存全部类别或启用默认归组。通过后才固定其他类别的回归案例与默认接入方案；本轮不预授权一个未定输入和答案的付费测试。失败停止这轮，报告最大剩余原因，不暗改标准、补采或换模型。默认产品仍用 v16，只有通过完整后续验收才提升版本。
+    34	
+    35	## 状态 × 事件
+    36	
+    37	| 状态 | 事件 | 转移、写入、所用日期 |
+    38	|---|---|---|
+    39	| 未开始 | 审查、免费预检通过 | 新目录冻结两个角色、三个输入、配置、源码；保留 publication_day |
+    40	| 正在读一篇 | 成功、零候选、只有证据 | 同一 process 按 seq 检查并原子保存；使用该输入日 |
+    41	| 已保存 | 下一篇、下一日 | 读取本样本已提交的问题及组；不用日初快照 |
+    42	| 原答不合合同 | 首次拒绝或要求重试 | 留原答，结束该序列，不重抽；独立序列照原计划执行 |
+    43	| 调用在途 | 失败、崩溃、运行到期 | 留费用预留，结束整轮，不自动重发 |
+    44	| 正在写入 | 成功或异常 | 观点、证据及组同事务；异常回滚 |
+    45	| 任意 | 源文/配置改动、另一写者 | 冻结摘要或独占锁拒绝；不混合运行 |
+    46	| 六序列完成 | 通过、失败 | 按固定标准报告；不自动发布、重跑或改尺 |
+    47	
+    48	## 值 × 来源/写者 × 读者
+    49	
+    50	| 值 | 来源和唯一写者 | 读者 |
+    51	|---|---|---|
+    52	| control_role_path | prepare 显式参数；可省略保持旧默认 | manifest 摘要、run → context → model.call |
+    53	| role_path | 已有实验角色参数 | 同上；不能从环境或文件偶然存在推导 |
+    54	| 候选及证据 | 模型原答 | 原 schema、sift、matching、writing；不变 |
+    55	| 归属 | 原答及 write_threads | 下篇 context 和 thread_detail；不变 |
+    56	| 状态、费用、尝试数 | 原 runner / transport | 审计；不变 |
+    57	
+    58	## 新路径 × 原检查
+    59	
+    60	| 路径 | 检查 |
+    61	|---|---|
+    62	| 显式对照角色 | 非空，必须同时给实验角色，两者都冻结；入口测试断言两臂收到各自精确内容 |
+    63	| 省略对照角色 | 旧默认请求保持；已有入口测试继续验证 |
+    64	| 修改证据读法 | 仍需逐字原句、合法链接、来源及候选完整性；用全部旧原答和正反例先检查 |
+    65	| 三篇连续 | 沿用真实 SQLite 历史、重送、成员及出处核对；不新建保存路径 |
+    66	
+    67	## 既有决定与预算
+    68	
+    69	D42 要求证据连到问题；D47 只连直接讲的问题；D149 在抽取时归组；D155 清单是参考；D158 事件不套数字次年上限；D159 保持来源原意并顺序读写。本轮全部保持。D160 失败后曾提出新的证据存储合同，但原答不支持必须如此改，本轮不采用。
+    70	
+    71	最多 54 次请求、$1.50 估算保留额、30 分钟，不提高旧预算。D160 实测 36 次、$0.51142625；本轮估计约 $0.5–$0.9，估计不是测量。先跑 preflight，审查全部拒绝；先跑显式对照角色的入口测试及反向修改；只读设计审查通过后修改 runner。独立 session、日志和 pid；每次发送前预留费用；不自动重试。
+    72	
+    73	通过与否都完成相关套件、全套一次、逐模块推理刷新和最后 docs/check.py。结果另写，注册文本冻结后不修改。
+     1	你是一位资深对冲基金分析师。读完整条信息，保留能支持或削弱业务判断的证据，再决定复用已有问题还是提出候选观点。证据连到问题；候选观点写全问题、梯子、到期日，并带上提出它的证据。
+     2	
+     3	写证据的规矩：
+     4	- 先读出影响判断的事实、条款、规模、限制及支持或反对的理由。无需单独开问题的材料，仍可作已有或候选问题的证据。对安排能否落地的判断，保留其关键条件和风险论据。
+     5	- 一条证据是信息里的一句原话或一个数，原文照抄（quote），不改一个字；另写一句离开原文也看得懂的话（one_line）：谁、做了什么、多少、哪一期。
+     6	- 每条证据写明谁说的（speaker），转述的写明最初是谁、哪天说的（original_who、original_day）；tier 只写这四个词之一：发生的事、当事人说的、第三方看法、传闻。发生的事指官方行动、公布的数、完成的交易；当事人说的指公司指引、管理层表态、官员讲话；第三方看法指卖方、媒体分析、专家；传闻指「知情人士称」和没有出处的说法。
+     7	- 每条证据连到它直接讲的那条观点上（links 写观点编号），可以连几条；已有观点管不到的，连到这次的候选观点上（写候选观点的编号）。不连间接相关的。没有观点可连的话不抽。
+     8	- 与所研究问题无关的背景、套话、广告、导航文字不抽。
+     9	- 只凭这条信息写，不用你自己知道的别的事。
+    10	
+    11	开哪些观点：
+    12	- 只有已有观点管不到的重要问题才开候选：什么尚未发生的结果会改变公司的全年业务或重要分部？写成到期可核对的问题，不因每个数字存在就各开一条。
+    13	- 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。问题和每格条件保留原文的量与时间：拟议额度、担保、项目总价不改写成当年实际付款，规划容量不改写成当年产量。
+    14	- 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。
+    15	- 游戏、软件功能、工具和驱动的更新、促销、单款外设、高管任免、股东投票和章程细则、例行诉讼程序、回购授权不开观点。季度数和季度指引是全年问题的证据；护城河、竞争格局等没有可核对结果的宽泛话题不单独开。
+    16	- 已有观点里的同一个问题不再写候选，证据直接连到它；重要但不同的问题照常提出。同一件事只写一条。
+    17	
+    18	写观点的规矩：
+    19	- 一个观点只问一个数（写明哪一年）或一件事，不捆绑。写成问句，到期用一个数或一件事判对错。
+    20	- 问的是一家公司的收入、利润、份额、产品进度，就是对象观点，object 写这家公司的股票代码，哪怕背后的原因是政策或宏观；主题观点只问世界会变成什么样（许可发不发、利率到哪、资本开支多少），不问某家公司因此怎样。
+    21	- 问题、看的是什么、梯子每一格的条件、一句话说清（one_line）都用中文写；原句（quote）照抄原文，不翻译。
+    22	- 梯子每一格的条件现在就要写得出具体的数或状态；条件要靠将来才公布的目标值、门槛值的，核对不了，不开。
+    23	- 梯子五格（只有是或否的问题两格）。对象观点（公司）的五格从「强烈看多」到「强烈看空」，说的是对这家公司业务好还是坏；主题观点（宏观、政策、行业）的五格是从一头排到另一头的五种结果，用结果命名，不说好坏。每一格是一个能核对的结果：一个数落在哪段区间，或一件事到了哪一步；格和格不重叠、不留空，到期时正好一格成立；中性那一格跟什么比写在条件里；没有含糊的「部分」。
+    24	- 到期日定在这个争论见分晓的那天。数字的观点，到期日就是这个数公布的那天；公司的数按它的财年，发布日所在的财年是今年、下一个财年是明年；不是公司的数按自然年。事件的观点写清到哪一天看它处在哪一格。
+    25	
+    26	每个候选观点另填一把键，让代码判断两条观点是不是同一个量：
+    27	- measure：从清单里选最贴的量。公司的数：total_revenue、segment_revenue、product_revenue、gross_margin、operating_margin、operating_expense_growth、total_expenses、operating_loss、tax_rate、capex、shipments_or_capacity、run_rate、design_wins；事件：event；世界的数：spend_total、financing_amount、price、capacity、growth_rate、policy_event；都不是：other。
+    28	- scope：量的实际限定范围；分部、产品、群体或事件对象。参考名称含义相同时沿用，没有限定写空字符串。
+    29	- period_start / period_end：这个量覆盖的起止日（ISO）。财年按财年说明换算；自然年 2026 = 2026-01-01 到 2026-12-31；事件写提出当年年初到到期日。
+    30	- basis：GAAP、non_GAAP 或 n/a。unit：USD、percent、count、GW、MW、TWD、multiple 或 n/a。event_type：measure 是 event 或 policy_event 时选 launch、shipment、licence、approval、deal_close、deployment、other，否则 n/a。
+    31	- 梯子每格另写 lo、hi：这一格数值区间的下界（含）和上界（不含），用 unit 的单位（美元写完整数字，百分比写 73 不写 0.73）；最低格 lo 写 null，最高格 hi 写 null；是/否两格都写 null。
+234:def prepare(out, *, role_path=None, item_ids=None, max_requests=MAX_REQUESTS, design_path=None):
+306:            grouped = role_text is not None or label.startswith('grouped')
+307:            sample_role = role_text if label.startswith('grouped') else None
+318:                    result = process(conn, archive, cfg, uni, item, grouped, directory, transport, role_text=sample_role)
+
+codex
+No serious finding within the requested scope.
+tokens used
+77,398
+No serious finding within the requested scope.

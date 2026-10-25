@@ -12,7 +12,7 @@ import urllib.request
 
 SEARCH = 'https://api.deepseek.com/v1/tools/search'
 FETCH = 'https://api.deepseek.com/v1/tools/fetch'
-CREDENTIALS = os.path.expanduser('~/.config/tn-hivemind/credentials.json')
+CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
 
 
 def key():

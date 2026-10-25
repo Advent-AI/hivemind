@@ -1,55 +1,51 @@
-# 人工复核池
+# Human review pool
 
-> 状态：第一版已冻结 · 2026-10-18（只定了哪些东西会进来，输出先不设计） · 更新：2026-10-21 · 依据：docs/DECISIONS.md D16、D19、D27、D31、D33、D36、D37、D41、D47、D52、D53
-> 设计页：docs/system-design.html › New › 人工复核池。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+> Status: first version frozen, October 18, 2026; intake only, output deferred. English edition: October 25, 2026 (D163).
+> Design page: `docs/system-design.html` → New → Human review pool. Recorded decisions take precedence.
 
-## 一句话
+## Purpose
 
-对照表里查不到、规则判断不了的东西，系统不猜，先放进这个池子等人来看。
+Hold items that lookup tables or rules cannot resolve for a person to review. Do not guess.
 
-## 为什么要有它
+Classification already requires registering unknown table entries and identifiers, while an item with unresolved subjects can continue. Without a review destination, these gaps would accumulate unnoticed.
 
-分类规则里本来就写着：表里没有的要先登记，查不到的对象标识要有人补登记（这条信息照常处理）；但没有写由谁、在哪里登记。没有这个池子，这些情况只会悄悄堆着没人看。
+## Intake
 
-## 哪些东西会进来
-
-| 情况 | 那条信息怎么办 |
+| Condition | Item handling |
 |---|---|
-| 新出现的申报代码或数据集 | 不合格，暂不处理 |
-| 判断不了作者类型 | 不合格，暂不处理 |
-| 带了没登记的发布系列 | 按作者类型归类后照常处理 |
-| 查不到的公司、加密货币、商品或主题标识 | 照常处理，对象记为“查不到” |
-| 比对时发现候选观点讲的主题不在名单里（比如一场新的冲突） | 不建这条观点，记原因，作为建议新增的主题 |
-| 一条信息多次处理失败 | 停在失败的那一步，等人看 |
-| 信息缺东西（上游的问题） | 退回 |
+| Unknown filing code or dataset | Invalid; do not process yet |
+| Unresolved author type | Invalid; do not process yet |
+| Unregistered publication series | Classify by author rules and process normally |
+| Unresolved company, cryptocurrency, commodity or theme identifier | Process normally; mark subject unresolved |
+| Candidate proposes an out-of-universe theme, such as a new conflict | Do not open the thesis; record the reason and proposed theme |
+| Repeated processing failure | Remain at the failed step for review |
+| Missing upstream information | Return |
 
-## 哪些不进来
+## Exclusions
 
-查得到、只是不在名单里的公司、加密货币、商品不放。比如 Apple 的新闻里提到三星：三星在参照数据里查得到，只是不在研究对象名单里，这不算。
+A resolvable company, cryptocurrency or commodity merely outside the universe does not enter the pool. For example, Samsung in Apple news may resolve in reference data without belonging to our research universe.
 
-## 怎么记
+## Records
 
-同一个问题只记一条，附上出现了几次、举几个例子；不是一条信息记一条。
+Keep one entry per issue, with occurrence count and examples, rather than one entry per input item.
 
-## 输出
+## Output
 
-先不设计。
+Deferred.
 
-## 验收标准（只针对“哪些东西会进来”）
+## Intake acceptance
 
-- 上表每一种情况，都会在池子里出现对应的一条。
-- 查得到、只是不在名单里的公司、加密货币、商品，不会进池子。
-- 同一个缺口出现很多次，池子里只有一条，次数和例子都对。
+- Each intake condition creates the corresponding pool entry.
+- Resolvable out-of-universe assets do not enter.
+- Repeated occurrences produce one entry with accurate count and examples.
 
-## 还没定的
+## Open questions
 
-- 人看完以后，怎样更新对照表或研究对象名单、怎样生效。
-- 怎样通知、由谁来看。
+- How review updates lookup tables or the research universe and takes effect.
+- Notifications and review ownership.
 
-## 相关决定
+## Related decisions
 
-- D16：查不到的进人工复核池。
-- D19：只定输入，输出先不设计。
-- D27、D33、D41：观点库里建议新增的主题进人工复核池。
-- D31：多次处理失败的信息进人工复核池。
-- D37：第一版冻结（2026-10-18）；要改先记一条新决定。
+- D16: unresolved items enter human review. D19: intake only; output deferred.
+- D27/D33/D41: proposed library themes enter the pool. D31: repeated processing failures enter.
+- D37: first-version freeze; changes need a decision.

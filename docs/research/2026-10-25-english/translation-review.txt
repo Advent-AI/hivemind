@@ -1,0 +1,12 @@
+One material regression: the English glossary checker drops three existing terminology checks. For example, “The premise changed” now passes despite the glossary requiring “dependency.”
+
+- **Source:** `HEAD:docs/check.py:102–103` rejects `前提`, `检验条件|证实条件|证伪条件`, and `已证实|已证伪`, directing writers to dependency, ladder and freezing terminology.
+- **Changed text:** [docs/check.py:134](/Users/lchingen/hivemind/docs/check.py:134) replaces those rules without English equivalents. Its control pairs also omit them. Isolated read-only probes returned no findings for “The premise changed,” “Write the verification conditions,” and “The thesis is confirmed.”
+- **Conflict:** The English glossary still excludes these meanings at [00-system.md:96](/Users/lchingen/hivemind/docs/prd/00-system.md:96), [line 100](/Users/lchingen/hivemind/docs/prd/00-system.md:100) and [line 108](/Users/lchingen/hivemind/docs/prd/00-system.md:108).
+- **Smallest correction:** Restore the corresponding English rejection rules and rejected/corrected control pairs, preserving the historical-draft exclusions. This is a D163 control regression, not a pre-existing product gap.
+
+The three corrected prompt clauses preserve their required meanings. I found no additional material translation drift in the two full candidates or the reviewed page values.
+
+Inspected both audit reports, adopted baselines, relevant schemas/readers, PRDs 00–09, all five `new-*.js` files against saved strings/HEAD, English coverage controls and historical-anchor support. No requested portion remains unreviewed. Recorded pre-existing inconsistencies were excluded.
+
+No files changed, external services or models called, or `docs/check.py` run.

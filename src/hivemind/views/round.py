@@ -6,8 +6,8 @@ failed step itself) and never repeats a completed step."""
 import dataclasses
 import json
 
-from .. import dispatch, extraction
-from . import judging, matching, store, writing
+from .. import dispatch, extraction, vocabulary
+from . import jev_matching, judging, matching, store, writing
 
 
 @dataclasses.dataclass
@@ -36,9 +36,10 @@ def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence
     """One matching call with one retry on a refused check. Returns Checked, or None after marking the failure."""
     note = ''
     checked = None
-    for attempt in range(2):
+    engine = jev_matching if cfg.matching.engine == 'jev' else matching      # Jev answers once; a retry would be the same answer
+    for attempt in range(1 if engine is jev_matching else 2):
         try:
-            answer = matching.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport)
+            answer = engine.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport)
         except Exception as error:
             _fail(conn, item, seq, result, 'matched', 'matching_failed', 'matching: ' + repr(error), type(error).__name__)
             return None
@@ -48,7 +49,7 @@ def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence
         store.insert(conn, 'match_records', seq=seq, input_id=item['input_id'], call_no=call_offset + attempt + 1,
                      shown_json=json.dumps({'candidates': lists.candidate_lists, 'evidence': {f'{k[0]}|{k[1]}': v for k, v in lists.evidence_lists.items()}}),
                      request_sha256=answer.request_sha256, call_id=answer.call_id, decisions_json=json.dumps(answer.data, ensure_ascii=False),
-                     checks_json=json.dumps({'refusals': checked.refusals, 'not_opened': checked.not_opened}, ensure_ascii=False), written_json=None)
+                     checks_json=json.dumps({'refusals': checked.refusals, 'not_opened': checked.not_opened, 'notes': checked.notes}, ensure_ascii=False), written_json=None)
         if not checked.refusals:
             return checked
         note = '；'.join(checked.refusals)
@@ -101,17 +102,18 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
     if resume_from and resume_from != 'extracted':
         row = conn.execute('select handover_json from handovers where input_id=? order by id desc limit 1', (item['input_id'],)).fetchone()
         if row:
-            saved = json.loads(row['handover_json'])
-            handover = extraction.Handover(saved['evidence'], saved['candidates'], saved['dropped'], 0, '', True, 0.0)
+            saved = vocabulary.extraction_answer(json.loads(row['handover_json']))          # a handover saved by a Chinese version reads in the canonical vocabulary
+            handover = extraction.Handover(saved['evidence'], saved['candidates'], saved['dropped'], 0, '', True, 0.0, saved.get('new_groups') or [])
     if handover is None:
         try:
-            handover = extraction.extract(archive, cfg, item, item['text'], shown, universe, transport=transport)
+            shown_groups = store.groups_for_prompt(conn, objects, item.get('title') or '')
+            handover = extraction.extract(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
         except Exception as error:
             return _fail(conn, item, seq, result, 'extracted', 'extraction_failed', 'extraction: ' + repr(error), type(error).__name__)
         result.cost += handover.cost_usd
         result.cached_calls += int(handover.cached)
         store.insert(conn, 'handovers', input_id=item['input_id'], seq=seq,
-                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped}, ensure_ascii=False))
+                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped, 'new_groups': handover.new_groups}, ensure_ascii=False))
         dispatch.mark(conn, item, seq, 'extracted', 'ok', f'{len(handover.evidence)} evidence, {len(handover.candidates)} candidates, {len(handover.dropped)} dropped')
         conn.commit()
     result.evidence, result.candidates, result.dropped = len(handover.evidence), len(handover.candidates), len(handover.dropped)
@@ -130,7 +132,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
     for e in handover.evidence:
         for link in e['links']:
             outcome = checked.outcomes.get(link)
-            if outcome and outcome[0] == '归入已有的':
+            if outcome and outcome[0] == 'merge':
                 pending.append((e, outcome[1]))
     if pending:
         lists2 = matching.Lists({}, {(e['id'], view_id): matching.rank_evidence(conn, view_id, e['one_line'], cfg.search_top_n) for e, view_id in pending})
@@ -146,8 +148,11 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
         second_pass = checked2.evidence
     dispatch.mark(conn, item, seq, 'matched', 'ok', f'{len(checked.outcomes)} candidates placed')
     # write, and record what changed in the same commit (a resume at 'judged' reads it)
-    written = writing.write(conn, universe, seq, item, handover, checked, second_pass)
-    result.new_views = len(written.new_views)
+    try:
+        written = writing.write(conn, universe, seq, item, handover, checked, second_pass)
+    except Exception as error:
+        return _fail(conn, item, seq, result, 'written', 'writing_failed', 'writing: ' + repr(error), type(error).__name__)
+    result.new_views = len(set(written.new_views.values()))
     dispatch.mark(conn, item, seq, 'written', 'ok', json.dumps({'changed': sorted(written.changed_views), 'new': written.new_views, 'notes': written.notes[:20]}, ensure_ascii=False))
     dispatch.mark(conn, item, seq, 'handed_over', 'ok', '')
     conn.commit()

@@ -8,9 +8,10 @@ import json
 import re
 from decimal import Decimal
 
+from . import vocabulary
 from .views import store
 
-TIER_FACT = '发生的事'
+TIER_FACT = vocabulary.TIERS[0]          # 'fact'; a legacy ledger's '发生的事' compares equal through vocabulary.canonical
 COMPARATORS = ('>=', '<', '=')
 
 
@@ -154,7 +155,7 @@ def view(conn, view_id, as_of=None, record=None):
         'created_day': day_of_seq(conn, record['created_seq']), 'created_from': record['created_from_input'],
         'as_of': as_of, 'open': is_open_as_of(conn, view_id, as_of), 'rungs': rungs, 'state': state,
         'dependencies': dependencies(conn, view_id, as_of), 'dependants': dependants(conn, view_id, as_of),
-        'counts': {'rounds': state['rounds'] if state else 0, 'evidence': len(in_force), 'facts': sum(1 for e in in_force if e['tier'] == TIER_FACT)},
+        'counts': {'rounds': state['rounds'] if state else 0, 'evidence': len(in_force), 'facts': sum(1 for e in in_force if vocabulary.canonical('tier', e['tier']) == TIER_FACT)},
     }
 
 
@@ -211,7 +212,7 @@ def history(conn, view_id, from_day=None, to_day=None):
             piece = store.evidence(conn, link['evidence_id'])
             bucket = arrivals.setdefault(day, {'evidence': 0, 'facts': 0})
             bucket['evidence'] += 1
-            bucket['facts'] += int(piece['tier'] == TIER_FACT)
+            bucket['facts'] += int(vocabulary.canonical('tier', piece['tier']) == TIER_FACT)
     replacements = [{'day': day_of_seq(conn, r['seq']), 'old': r['old_evidence_id'], 'new': r['new_evidence_id'], 'said_day': r['said_day']}
                     for r in conn.execute('select r.* from replacements r join evidence_links l on l.evidence_id=r.new_evidence_id where l.view_id=?', (view_id,))
                     if day_of_seq(conn, r['seq']) and from_day <= day_of_seq(conn, r['seq']) <= to_day]
@@ -390,8 +391,28 @@ def band(condition):
     return (lo, lo_inc, hi, hi_inc)
 
 
+def numeric_bands(rungs):
+    """Bands from the rungs' own numeric bounds (keyed views): lower bound inclusive, upper exclusive, the two ends open;
+    None when a rung has no bounds."""
+    if not rungs or any(r.get('lo') is None and r.get('hi') is None for r in rungs):
+        return None
+    out = {}
+    for r in rungs:
+        lo = -INF if r.get('lo') is None else float(r['lo']); hi = INF if r.get('hi') is None else float(r['hi'])
+        out[r['position']] = (lo, True, hi, False)
+    return out
+
+
 def ladder_bands(rungs):
-    """Every rung's band, or None with the reason when the ladder is not one unbroken partition by amount."""
+    """Every rung's band, or None with the reason when the ladder is not one unbroken partition by amount. Rungs that
+    carry numeric bounds are read from them; the prose parser serves the views written before keys."""
+    numeric = numeric_bands(rungs)
+    if numeric is not None:
+        ordered = sorted(numeric.items(), key=lambda pb: pb[1][0])
+        for (p1, a), (p2, b) in zip(ordered, ordered[1:]):
+            if a[2] != b[0]:
+                return None, f'numeric bands of positions {p1} and {p2} overlap or leave a gap'
+        return numeric, None
     bands = [(r['position'], band(r['condition'])) for r in rungs]
     unreadable = [p for p, b in bands if b is None]
     if unreadable:

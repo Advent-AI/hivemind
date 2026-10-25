@@ -11,6 +11,7 @@ import dataclasses
 import hashlib
 import http.client
 import json
+import re
 import os
 import sqlite3
 import time
@@ -18,11 +19,15 @@ import uuid
 import urllib.error
 import urllib.request
 
-CREDENTIALS = os.path.expanduser('~/.config/tn-hivemind/credentials.json')
+CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
 ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
              'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
 # USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
-PRICES = {'gpt-6-luna': (1.25, 10.0), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96)}   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+# gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
+# cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
+# the published rate; the token columns are the measurement, the bill is the provider's.
+PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+          'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
 
 SCHEMA_SQL = """
 create table if not exists model_calls (
@@ -133,7 +138,7 @@ def openai_transport(provider, request, timeout=600):
 
 def check_schema(value, schema, path='$'):
     """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
-    array/items, string/enum, integer, number, boolean, null in anyOf."""
+    array/items, string/enum/pattern, integer, number, boolean, null in anyOf."""
     kind = schema.get('type')
     if 'anyOf' in schema:
         errors = []
@@ -168,6 +173,8 @@ def check_schema(value, schema, path='$'):
             return [f'{path}: expected string']
         if 'enum' in schema and value not in schema['enum']:
             return [f'{path}: {value!r} not in {schema["enum"]}']
+        if 'pattern' in schema and not re.search(schema['pattern'], value):
+            return [f'{path}: {value!r} does not match {schema["pattern"]}']
         return []
     if kind == 'integer':
         return [] if isinstance(value, int) and not isinstance(value, bool) else [f'{path}: expected integer']

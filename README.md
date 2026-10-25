@@ -1,98 +1,99 @@
 # Hivemind
 
-Hivemind 从不断推进来的信息里，用资深对冲基金分析师的眼光读出观点（thesis）和支持或削弱它的证据，建成一个观点库，并随着新信息不断更新。美股、期货、加密货币都走同一套。
+Hivemind reads a stream of information as a hedge-fund analyst would: it identifies theses, links supporting and opposing evidence, and updates its judgement as information arrives. Equities, commodities and cryptocurrencies use the same process.
 
-这个仓库是 Hivemind 的重新设计，旧系统在 `../tn-hivemind`。
+This repository rebuilds the earlier system in `../tn-hivemind`. The experimental implementation is in `src/hivemind`, `poc` and `scripts`. [Current state](docs/CURRENT_STATE.md) records measured results, open defects and the next task. Extraction and grouping have **not** passed semantic acceptance.
 
-## 做什么
+## How it works
 
+```text
+Research universe: what to research and which information categories to track
+  ↓ determines what upstream supplies
+Upstream (outside this system): obtain information and classify it
+  ↓
+Dispatch: validate each item, assign a sequence number and route it
+  ↓
+Extraction (read-only): read the whole item with the existing theses;
+  return evidence with sources and complete candidate theses
+  ↓
+Thesis library: search and match each candidate;
+  merge it, continue a previous period, open a new thesis, or skip it.
+  Compare evidence within its thesis: repeat, replacement, or new evidence.
+  Rejudge open theses whose inputs changed, dependencies first.
+  ↔ Save matching records for human labelling and future model training
 ```
-研究对象名单（研究什么、每样看哪几类信息）
-  ↓ 告诉上游推什么
-上游（不归本系统）：取得信息、贴好标签
-  ↓
-分发：检查每条信息，编上顺序号，决定去处
-  ↓
-抽取（只读）：按类别把每条信息整份交给模型，对着这些对象已有的观点读完，交出两样东西：
-              连到已有观点上的证据，和候选观点（当场写全问题、梯子、到期日），每条带出处
-  ↓
-观点库：候选观点先用搜索引擎从整个观点库搜出前几条，再由模型判是哪一条、接续上一期、开新的，还是不开；
-        证据和它那条观点下搜出来的证据比，是重复、替代还是新证据；开着的观点读的东西变了，由模型照观点库的规矩重判，先判被依赖的，再判依赖它的
-  ⇄ 比对标注：每次比对都记下来，人标一部分，以后训练一个更快的小模型接手
-```
 
-一条观点是一个问题、一把梯子和一个到期日，写下不改。对象观点（公司、加密货币、商品）的梯子从强烈看多到强烈看空，主题观点（宏观、政策、行业）的梯子用结果命名、不说好坏；只有是或否的问题用两格。一条观点只有一个状态：它处在梯子的哪一格，证据把它往一头或另一头推。观点之间互相影响只有一种方式：依赖（B 判断时要看 A 的结论）；接续只记哪一期接着哪一期。
+A thesis has a question, an outcome ladder and a due date, fixed when it is created. An asset thesis concerns a company, cryptocurrency or commodity; its five rungs run from strongly bullish to strongly bearish. A theme thesis concerns macroeconomics, policy or an industry; its rungs name outcomes without judging them as good or bad. A yes/no question has two rungs.
 
-旁边还有几块：
-- **Config**：抽取、观点库、最终判定各用哪版模型设置，和观点库搜索取前几条。
-- **Pull 模式**：按时间做的事都在这里：每天结束时、或按定时任务主动跑，把观点整体过一遍；到期的观点，状态定格、关掉。
-- **人工复核池**：查不到的标识、名单里没有的主题、多次处理失败的信息，放这里等人看。
+The thesis has one current state: a rung on its ladder. A dependency means one thesis reads another's conclusion when judged. Succession records which period follows which. Group association collects related business questions; it is distinct from a dependency or duplicate identity. Its extraction and storage requirements are specified, but it is not enabled in the default pipeline.
 
-例子：NVDA 在 2025-04-15 发了一份 8-K，说 H20 出口中国要许可证，预计最多约 55 亿美元的费用。库是空的，抽取读出两条候选观点，证据都是 8-K 里的原文：
-- 主题观点：“2025-04 那条规定管的这一档芯片（H20、MI308 等）对华出口许可，到 2026-04-15 处在哪一格”；
-- 对象观点（NVDA）：“NVDA FY26 全年中国区收入，比 FY25 会怎样”。
+Other modules:
 
-到了观点库，两条都开成新观点；比对时一起定下：NVDA 那条依赖出口许可那条。
+- **Config** selects model settings and the number of search results.
+- **Pull mode** owns time-based work: revisit theses at day-end or on a schedule, then freeze and close each thesis when due.
+- **Human review pool** holds unresolved identifiers, proposed themes outside the universe and repeated processing failures.
 
-第二天 AMD 的 8-K 说 MI308 也要许可证，读出的候选观点归入第一条；同一天路透的报道转述 NVDA 的 8-K，是重复，只多记一个出处，什么都不用重判。
+For example, NVIDIA's April 15, 2025 8-K says H20 exports to China require a licence and may cause a charge of up to $5.5 billion. With an empty library, extraction proposes a theme thesis about licences for the affected chips and an NVDA thesis about FY2026 China revenue versus FY2025. Each carries quotations from the filing. Matching can open both and record the revenue thesis's dependency on the licence thesis. AMD's subsequent MI308 filing can contribute to the same licence thesis. A Reuters retelling of the NVIDIA filing adds another source for existing evidence, not new corroboration.
 
-## 做到哪了
+## Design and implementation status
 
-现在是架构设计阶段：只有设计页、每个模块一份 PRD 和决定记录，还没有产品代码。除最终判定和 Pull 模式，整套设计已经冻结（2026-10-22，经过两遍分轮的深审）。
+The foundational design was frozen on October 22, 2026, except for pull mode and the final verdict. Later decisions authorize specific changes and the POC build. A design freeze does not imply that the implementation has passed acceptance.
 
-| 模块 | 状态 |
+| Module | Design status |
 |---|---|
-| 研究对象名单 | 第一版已冻结（具体主题还是草稿） |
-| 分类（上游完成） | 第一版已冻结 |
-| Config | 第一版已冻结 |
-| 分发 | 第一版已冻结 |
-| 抽取 | 第一版已冻结（没定的：每一类提示词的具体写法） |
-| 观点库（含比对标注） | 第一版已冻结（还没定的见 `docs/prd/06-views.md`） |
-| 人工复核池 | 第一版已冻结（只定了哪些东西会进来，输出先不设计） |
-| 最终判定 | 旧稿；到期那天状态定格已经定了，还要不要单独一步，以后和 Pull 模式一起定 |
-| Pull 模式 | 旧稿；只定了每天结束时、或按定时任务主动跑，到期的观点状态定格，其余以后设计 |
+| Research universe | First version frozen; specific themes remain a draft |
+| Upstream classification, Config, dispatch | First versions frozen |
+| Extraction | Foundation frozen; category prompts need validation; D149 grouping integration pending |
+| Thesis library and matching records | Foundation frozen; D149 grouping integration and listed open questions pending |
+| Human review pool | Intake frozen; output not yet designed |
+| Final verdict | Earlier draft; freezing the state on the due date is decided |
+| Pull mode | Earlier draft; day-end/scheduled work and due-date freezing are decided |
 
-冻结的模块要改，先在 `docs/DECISIONS.md` 记一条新决定。所有决定（D1–D61）都在 `docs/DECISIONS.md`，现状和下一步在 `docs/CURRENT_STATE.md`，观点库重建的讨论过程在 `docs/views-rebuild-log.md`。
+Changes to frozen modules require a recorded decision. [Decisions](docs/DECISIONS.md) contains the history; [Current state](docs/CURRENT_STATE.md) identifies active work. Historical records and original source material retain their original language. Maintained documentation and new product text use English under D163.
 
-## 怎么看系统架构
+## Open the design
 
-设计页是一个本地网页，不用装任何东西。在 GitHub 上点开 html 只能看到源码，要先 clone 下来：
+Clone the repository if needed:
 
-```
+```sh
 git clone https://github.com/Advent-AI/hivemind.git
 ```
 
-两种打开方式，任选一种：
+Open `docs/system-design.html` in a browser. Its PRDs load from `docs/system-design/prd-bundle.js` when opened from disk. Alternatively, serve the repository root:
 
-1. **直接打开**：用浏览器打开 `docs/system-design.html`（双击就行）。这时 PRD 读的是打包好的副本 `docs/system-design/prd-bundle.js`。
-2. **起本地服务**：在仓库根目录运行 `python3 -m http.server 8000`，再打开 http://localhost:8000/docs/system-design.html 。这时 PRD 直接读 `docs/prd/*.md`。服务一定要在仓库根目录起，不然 PRD 和图标找不到。
-
-页面怎么看：
-- 顶部 **New** 是新系统的设计，**Old** 是旧系统的源码对照图。
-- 点图上的模块或上面的序号，右边显示它的详情；带“已冻结”标签的是已冻结的模块，带“旧稿”标签的还没定。
-- 详情里点 **“展开……”** 打开这个模块的详细页：流程、判断树和例子；详细页里点 **“查看这个模块的 PRD ↗”** 看它的 PRD。
-- 页面顶部的 **“查看系统 PRD ↗”** 是系统总览，里面有用词表。
-
-## 目录
-
-| 路径 | 是什么 |
-|---|---|
-| `docs/system-design.html`、`docs/system-design/` | 设计页和它的数据：`new-*.js` 是新系统，`old-*.js` 是旧系统对照 |
-| `docs/prd/` | 每个模块一份 PRD，`README.md` 是目录 |
-| `docs/DECISIONS.md` | 所有决定，D1–D61 |
-| `docs/CURRENT_STATE.md` | 现状、已知问题、下一步 |
-| `docs/views-rebuild-log.md` | 观点库重建的讨论过程（第 1–51 步） |
-| `docs/check.py` | 改完设计后跑的检查 |
-| `docs/archive/` | 封存的稳定版本：v1（旧设计，2026-10-16）和 v15（冻结的设计，2026-10-22）；中间的 v2–v14 在 git 历史里（哪个版本在哪次提交，见 `docs/CURRENT_STATE.md`） |
-| `reports/`、`research_notes/` | 设计背后的调研报告、审稿记录和笔记 |
-| `AGENTS.md` | 协作规矩（`CLAUDE.md` 指向它） |
-
-## 改设计以后
-
-先按 `docs/prd/README.md` 把每个模块对一遍，确认设计页、PRD 和决定说的是同一件事；最后运行：
-
+```sh
+python3 -m http.server 8000
 ```
+
+Then open <http://localhost:8000/docs/system-design.html>. Serving the repository root preserves PRD and icon paths.
+
+- **New** shows this system; **Old** is the historical source-code comparison.
+- Select a module or its number to open details. Status labels distinguish frozen modules from earlier drafts.
+- Open a module's detailed flow, decision tree and examples, or follow its PRD link.
+- The system PRD contains the overview and glossary.
+
+## Repository map
+
+| Path | Purpose |
+|---|---|
+| `src/hivemind/`, `scripts/`, `poc/` | Experimental implementation, entry points and experiments |
+| `docs/system-design.html`, `docs/system-design/new-*.js` | Maintained design page and its source data |
+| `docs/system-design/old-*.js` | Historical system comparison |
+| `docs/prd/` | One specification per module and an index |
+| `docs/DECISIONS.md` | Recorded decisions |
+| `docs/CURRENT_STATE.md` | Status, known defects and next task |
+| `docs/views-rebuild-log.md` | Historical thesis-library design discussion |
+| `docs/check.py` | Mechanical design checks and PRD bundle refresh |
+| `docs/archive/` | Frozen design snapshots; intermediate snapshots remain in Git history |
+| `reports/`, `research_notes/` | Research and reviews behind the design |
+| `AGENTS.md` | Working rules; `CLAUDE.md` points to it |
+
+## After changing the design
+
+Read every module in the order and with the questions in [the PRD index](docs/prd/README.md). Reconcile the page, specifications and decisions, then run:
+
+```sh
 python3 docs/check.py
 ```
 
-它检查 PRD 里生成的表格和设计页是否一致、用词有没有违反用词表（每个禁用词都配了对照句子），并重新打包 PRD、跑分类仿真、确认设计页能打开。
+The script checks generated blocks, glossary controls, classification simulation and page rendering, and rebuilds the PRD bundle. A pass does not replace the reasoning review or establish product acceptance.

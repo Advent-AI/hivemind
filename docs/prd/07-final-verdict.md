@@ -1,96 +1,90 @@
-# 最终判定
+# Final verdict
 
-> 状态：旧稿，以后和 Pull 模式一起重做；到期定格已经定了（D54） · 更新：2026-10-22 · 依据：docs/DECISIONS.md D14、D29、D30、D31、D38、D41、D54–D56、D58
-> “旧稿”一节是按旧观点库写的（D29），检验条件、证实和证伪、前提、前提被削弱时的 7 天兜底复核、同一层来源有分歧就送来、“要等”都不再用（D38、D41、D54）。
-> 设计页：docs/system-design.html › New › 最终判定 › 展开。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+> Status: earlier draft, to be redesigned with pull mode. Due-date state freezing is decided (D54). English edition: October 25, 2026 (D163).
+> The earlier draft uses the pre-D38 library. Its verification conditions, confirmation/falsification, premises, seven-day fallback, same-tier-disagreement escalation and waiting rules no longer apply.
+> Design page: `docs/system-design.html` → New → Final verdict → Details. Recorded decisions take precedence.
 
-## 一句话
+## Current decision
 
-到期那天，观点的状态停在哪一格就定格、关掉，由 Pull 模式做；最终判定还要不要单独一步，以后和 Pull 模式一起定。旧稿里，它是一条观点关掉之前的一道关：模型把整条观点和全部证据完整看一遍，判关掉还是留下。
+Pull mode freezes a thesis at its current rung and closes it when due. Whether a separate final-verdict step is still needed remains open. The earlier draft used a complete model review before closure.
 
-## 已经定的
+- A thesis has one state and no separate settlement judgement. Decisive information, such as annual results or an official action, enters normally as evidence and can move the state.
+- Freeze the current rung on the due date and close the thesis. Dependencies read its closing state and reasons.
+- Pull mode runs at day-end or scheduled intervals without an additional wait.
+- Example: NVDA FY2027 China results move the thesis to “down at least 80%”. Day-end pull freezes that rung and closes it.
 
-- 一条观点只有一个状态，不另外定别的（Alex：“最后到期日的状态就定格就好”）。让争论见分晓的那条信息（年报、官方行动）照常作为证据进来，推状态。
-- 到期那天，状态停在哪一格就定格，观点关掉；依赖它的观点读它关掉时的状态和理由。
-- 定格由 Pull 模式做：每天结束时、或按定时任务的间隔主动跑，不另外等（Alex：“为什么要等？不合理啊”）。
-- 例子：NVDA FY27 全年中国区收入那条，到期那天业绩发布进来，重判把状态推到“降 80% 及以上”；当天结束时 Pull 模式跑，状态定格在这一格，观点关掉。
+## Open question
 
-## 还没定的
+The original rationale was to review all evidence before closure. Rejudgement now already reads all evidence still in force. Claude proposed handling closure in pull mode without a separate step; this is not approved. Retain final-verdict Config settings until the decision.
 
-- 最终判定还要不要单独一步：Alex 写旧稿时说过“让模型完整看一遍再关掉是稳妥的”；现在每次重判本来就从这条观点下没被替代的全部证据重新判。Claude 提议由 Pull 模式来做，不再单独成一步，没确认；以后和 Pull 模式一起定。Config 里最终判定那一套设置，在这之前先留着。
+## Earlier draft (D29): no longer the current contract
 
-## 旧稿（D29，按旧观点库写的，以后重做）
+Before closure, the model reads the thesis, all evidence, premise states and trigger, then closes it as confirmed, falsified or expired, or keeps it open.
 
-旧稿的一句话：一条观点要关之前，模型把它、它的全部证据、前提的现状和这次为什么被触发完整看一遍，判关掉（证实、证伪、过期）还是留下。
+### Original rationale
 
-### 为什么要有它
+Alex requested a complete review before closure. A single condition or evidence item shows only part of the picture. As with predeclared investment exit criteria, the earlier draft required predefined verification conditions and factual evidence; a larger number of opinions was insufficient.
 
-- Alex：“确实让模型完整看一遍再关掉是稳妥的，这边可以多画一个环节 block 就是来做 final verdict。”
-- 一条条件满足、一条证据进来，只看到局部。是不是真的该关，要把整条观点和全部证据放在一起看。
-- 买方的做法是事先写好止损条件；这里也一样，能把观点判成已证实或已证伪的，是事先写好的检验条件加上“发生的事”这一层的证据，而不是谁的看法多。
-
-### 什么时候送来
+### Triggers
 
 <!-- generated: triggers -->
-| 触发 | 谁发现 |
+| Trigger | Detected by |
 |---|---|
-| 证实条件或证伪条件满足 | 代码 |
-| 到了期限 | Pull 模式；要等发布日不晚于期限的文件都处理完再判 |
-| 前提的状态变了（证伪、过期、证实、被接替、不再跟踪） | 代码，马上 |
-| 前提被削弱 | 这个对象下一份文件进来时；最迟 7 天，由 Pull 模式兜底 |
-| “发生的事”这一层来了削弱证据 | 代码 |
-| 出现分歧：同一层里，独立来源有的支持、有的削弱 | 代码 |
-| 同一份文件出了修正版，观点没了依据 | 代码 |
+| Confirmation or falsification condition met | Code |
+| Deadline reached | Pull mode, after all items published no later than the deadline have been processed |
+| Premise status changes: falsified, expired, confirmed, superseded or no longer tracked | Code, immediately |
+| Premise weakened | At the subject's next item, or within seven days via pull mode |
+| Weakening evidence arrives in the fact tier | Code |
+| Disagreement: independent sources within one tier support and weaken the thesis | Code |
+| A revised source item removes the thesis's basis | Code |
 <!-- /generated: triggers -->
 
-### 判出什么
+### Outcomes
 
 <!-- generated: verdict -->
 ```
-最终判定｜这条观点还成立吗？（模型看：这条观点、全部证据、前提的现状、这次为什么被送来）
-├─ 证实条件满足，有“发生的事” → 关掉：已证实（写明依据哪几条证据）
-├─ 证伪条件满足，有“发生的事” → 关掉：已证伪（写明依据哪几条证据）
-├─ 到期，没有能判的证据 → 关掉：已过期（记“没有数据可验证”，不算对也不算错）
-└─ 其余情况 → 留下（可以去掉或换掉前提；可以加检验条件，写下“什么事实能定、什么时候能知道”）
+Final verdict | Does this thesis still hold? (The model reads the thesis, all evidence, premise states and trigger)
+├─ Confirmation condition met with factual evidence → Close: confirmed (Identify the evidence used)
+├─ Falsification condition met with factual evidence → Close: falsified (Identify the evidence used)
+├─ Deadline reached without decisive evidence → Close: expired (Record “no data to verify”, neither success nor failure)
+└─ Other cases → Keep open (May remove or replace premises and add verification conditions specifying decisive facts and when they can be known)
 ```
 <!-- /generated: verdict -->
 
-### 规则
+### Rules
 
 <!-- generated: rules -->
-1. 模型把这条观点、它的全部证据、前提的现状和这次为什么被触发一起看完，一次判完。
-2. 能判成已证实或已证伪的，只有检验条件加上“发生的事”这一层的证据；只凭第三方看法和传闻不能判。已过期不算判对错。
-3. 判完写成这条观点的新版本，写明依据哪几条证据和出处；关掉的观点留在库里，可以查历史。
-4. 一条观点关掉以后，以它为前提的观点各自再送一次最终判定。
-5. Pull 模式用的“现在”从外面传进来：上线用真实时间，测试用回放的时间。系统里没有自己的钟。
+1. The model reviews the thesis, all evidence, current premises and trigger in one judgement.
+2. Only verification conditions plus factual evidence can establish confirmation or falsification. Third-party views and rumours alone cannot. Expiry is not a correctness judgement.
+3. Write a new thesis version citing evidence and sources. Retain closed theses for historical lookup.
+4. Closing a thesis sends each thesis that uses it as a premise to another final verdict.
+5. Pass “now” into pull mode: real time in production, replay time in tests. The system owns no clock.
 <!-- /generated: rules -->
 
-### 例子
+### Example
 
-2025 年 8 月，据报道美国商务部开始发 H20 许可证。主题观点“未来一年美国对华 AI 芯片出口管制会收紧”的证伪条件是“美国批准 H20 对华出口”，条件满足了，代码把它送来。模型看完全部证据，判为已证伪，写明依据是那条报道官方动作的证据。
+In August 2025, reported Commerce issuance of H20 licences meets the old falsification condition for a tightening-controls thesis. Code sends it for a complete review, and the model closes it as falsified, citing the official-action report.
 
-这条主题观点关掉以后，以它为前提的 NVDA 观点“一年内中国数据中心收入基本归零”马上被送来，问“前提变了，这条还成立吗？”。据报道中国要求企业不要采购 H20，中国收入仍没回来，所以判为留下，前提换成一条新的主题观点。
+Its dependent NVDA thesis about China data-centre revenue approaching zero is then reviewed. Reported Chinese procurement restrictions still prevent revenue recovery, so that thesis remains with a new premise.
 
-### 验收标准
+### Earlier acceptance criteria
 
-- 没有经过最终判定的观点，不会被关掉。
-- 只凭第三方看法和传闻，判定结果不会是已证实或已证伪。
-- 到期没有任何能判的证据，结果是“没有数据可验证”，不算对也不算错。
-- 每次判定都写成观点的新版本，写明依据哪几条证据和出处，并记下用的是哪版 Config。
-- 到期判定只在发布日不晚于期限的文件都处理完以后才做。
-- 一条观点关掉以后，以它为前提的每条观点都会再送来一次。
+- No closure without a final verdict.
+- Third-party views and rumours alone cannot confirm or falsify a thesis.
+- At expiry without decisive evidence, record “no data to verify”, neither success nor failure.
+- Write a new version with evidence, sources and Config version.
+- Wait until all items published no later than the deadline are processed before an expiry verdict.
+- Closing a thesis sends every premise-dependent thesis for another review.
 
-### 旧稿里还没定的
+### Earlier open questions
 
-- 一个对象同时有好几条观点被触发时，是一条一条判，还是放在一次调用里判。
-- 兜底复核的 7 天是先定的数，要在数据上调。
+- Judge multiple triggered theses for one subject separately or in one call.
+- Validate the provisional seven-day fallback interval on data.
 
-## 相关决定
+## Related decisions
 
-- D14：Pull 模式负责到期和定时的事。
-- D29：要关观点之前先经过最终判定（旧稿；D54 改成到期状态定格）。
-- D30：说法互相矛盾时怎么算（旧稿是“只能留下并加检验条件”，D38 已经换掉，不再用）。
-- D31：前提变了以后，靠它的观点怎样跟着处理（旧稿；前提已换成依赖，D38）。
-- D54：到期那天状态定格就关掉，不另外定别的；Pull 模式每天结束时、或按定时任务跑，不另外等；最终判定还要不要单独一步，以后定。
-- D55：开头把旧稿里不再用的写全（加上 7 天兜底复核和有分歧就送来）；设计页卡片上旧稿的几栏都标“旧稿”。
-- D56：相关决定里 D30、D31 两行标明是旧稿。
+- D14: pull mode owns scheduled and expiry work.
+- D29: earlier pre-closure review, superseded by D54 state freezing.
+- D30/D31: earlier contradictory-statement and premise-change rules, superseded by D38 dependencies.
+- D54: freeze and close at the due date without a separate result or extra wait; decide the separate step later.
+- D55/D56: label obsolete rules and their historical decision references explicitly.

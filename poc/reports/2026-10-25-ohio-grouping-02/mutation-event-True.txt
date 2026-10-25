@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_stored_future_deployment_survives_while_capacity_is_refused _______
+
+    def test_stored_future_deployment_survives_while_capacity_is_refused():
+        """The real call lost both c1 (2028 capacity) and c2 (2028 deployment); only c2 should return."""
+        with sqlite3.connect(f'file:{ROOT}/poc/data/keyed-2026-10-25/archive-T2.sqlite?mode=ro', uri=True) as db:
+            raw = json.loads(db.execute('select answer_json from model_calls where call_id=217').fetchone()[0])
+        with sqlite3.connect(f'file:{ROOT}/poc/data/items-window-tags2-2026-10-24.sqlite?mode=ro', uri=True) as db:
+            db.row_factory = sqlite3.Row
+            item = dict(db.execute('select * from items where input_id=?', (
+                'nvidianews:naver-nvidia-and-brookfield-to-expand-koreas-national-ai-factory-infrastructure-buildout',)).fetchone())
+        evidence, candidates, _ = extraction.sift(raw, item, item['text'], set(), universe.load(ROOT / 'poc/universe.json'))
+>       assert [c['id'] for c in candidates] == ['c2']
+E       AssertionError: assert [] == ['c2']
+E         Right contains one more item: 'c2'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp79gd3m5f/tests/test_event_horizon.py:21: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp79gd3m5f/tests/test_event_horizon.py::test_stored_future_deployment_survives_while_capacity_is_refused
+1 failed in 0.03s

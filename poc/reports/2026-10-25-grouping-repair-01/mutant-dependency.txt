@@ -1,0 +1,21 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_coalesced_dependency_is_refused_before_matching_retry_ends ________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-316/test_coalesced_dependency_is_r0')
+
+    def test_coalesced_dependency_is_refused_before_matching_retry_ends(tmp_path):
+        conn = store.open_db(str(tmp_path / 'views.sqlite'))
+        a = candidate('c1', scope_source='watch')
+        b = dict(a, id='c2')
+        dep = {'view_id': 'c2', 'wait_chain_view_id': '', 'wait_year': '', 'direction': '同向'}
+        raw = {'candidates': [{'id': c['id'], 'outcome': '新观点', 'target_view_id': '', 'dependencies': [dep] if c is a else []} for c in [a, b]], 'evidence': []}
+        result = matching.check(conn, UNIVERSE, raw, [a, b], [], matching.Lists({'c1': [], 'c2': []}, {}), [])
+>       assert any('coalesced dependencies' in reason for reason in result.refusals)
+E       assert False
+E        +  where False = any(<generator object test_coalesced_dependency_is_refused_before_matching_retry_ends.<locals>.<genexpr> at 0x10d2b21f0>)
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-polu9p76/tests/test_identity_repair.py:88: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-polu9p76/tests/test_identity_repair.py::test_coalesced_dependency_is_refused_before_matching_retry_ends
+1 failed in 0.09s

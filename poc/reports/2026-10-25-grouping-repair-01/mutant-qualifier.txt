@@ -1,0 +1,16 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_restored_candidates_keep_department_and_cash_qualifiers _________
+
+    def test_restored_candidates_keep_department_and_cash_qualifiers():
+        """B value/reader: lifting the gate must not expose the old blanket scope erasure."""
+        for case, measure, scope in [(CASES[2], 'operating_loss', 'Reality Labs'), (CASES[3], 'capex', 'cash CapEx')]:
+            _, kept, _ = extraction.sift(case['answer'], case['item'], case['text'], set(case['shown_ids']), UNIVERSE)
+>           assert any(c['measure'] == measure and c['scope'] == scope and c['scope_source'] == 'model' for c in kept)
+E           assert False
+E            +  where False = any(<generator object test_restored_candidates_keep_department_and_cash_qualifiers.<locals>.<genexpr> at 0x10933e650>)
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-8cydk89y/tests/test_identity_repair.py:38: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-8cydk89y/tests/test_identity_repair.py::test_restored_candidates_keep_department_and_cash_qualifiers
+1 failed in 0.08s

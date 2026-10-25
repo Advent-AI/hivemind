@@ -1,0 +1,13 @@
+I found **two material wording issues across three candidate clauses**. For example, an event announced for June 30 no longer clearly receives June 30 as its due date.
+
+1. **The extraction translation drops the event-date requirement.**  
+   [Baseline role-v5:9](/Users/lchingen/hivemind/src/hivemind/prompts/role-v5.txt:9) explicitly makes the stated date or deadline the due date. [Candidate role-v6:6](/Users/lchingen/hivemind/docs/research/2026-10-25-english/role-v6.candidate.txt:6) retains the date requirement but drops that connection. Its general instruction to choose an assessment date does not restore it. Code checks that the date is valid and after publication, not that it equals the announced deadline ([extraction.py:205](/Users/lchingen/hivemind/src/hivemind/extraction.py:205)).  
+   **Smallest correction:** add “Use that date or deadline as the due date.” Keep the following exception for undated regulatory decisions.
+
+2. **The binary-ladder wording does not consistently preserve the supported meanings.**
+   - [Candidate role-v6:16](/Users/lchingen/hivemind/docs/research/2026-10-25-english/role-v6.candidate.txt:16) applies the five sentiment labels to “an asset ladder” without qualification. [Baseline role-v5:19](/Users/lchingen/hivemind/src/hivemind/prompts/role-v5.txt:19) explicitly limits that description to **five-rung** asset ladders. Code likewise applies those fixed labels only when there are five rungs ([extraction.py:142](/Users/lchingen/hivemind/src/hivemind/extraction.py:142)). **Smallest correction:** change “An asset ladder” to “A five-rung asset ladder.”
+   - [Candidate idea-v11:7](/Users/lchingen/hivemind/docs/research/2026-10-25-english/idea-v11.candidate.txt:7) newly says binary ladders “use yes/no.” The PRD also supports binary asset ladders labelled bullish/bearish ([06-views.md:47](/Users/lchingen/hivemind/docs/prd/06-views.md:47)), and Idea receives the actual current label ([idea.py:117](/Users/lchingen/hivemind/src/hivemind/idea.py:117)). A supplied “Bearish” label therefore need not mean “No.” **Smallest correction:** use “binary ladders use their supplied labels.” The [audit’s disposition at line 58](/Users/lchingen/hivemind/docs/research/2026-10-25-english/prompt-audit.md:58) should remain incomplete until this is corrected. The baseline’s universal five-rung description was already wrong; this finding concerns its replacement wording.
+
+No other serious findings in the five candidates, including all ten category entries. The recorded PRD gaps remain existing issues. Chinese wire values and dynamic headings remain pending migration.
+
+No files or databases were changed, and no external services or models were called.

@@ -1,0 +1,8 @@
+最新版 Step B 仍有 **1 个严重合同缺口：合并后的依赖冲突，缺少可纠正的重试路径。**
+
+例如，`c1`、`c2` 同键，且 `c1 → c2`。合并前没有环，合并后却变成自己依赖自己。
+
+- **证据：**[计划第 68 行](/Users/lchingen/hivemind/docs/poc/grouping-improvement-plan.md:68)要求拒绝这种结果，但恢复只规定取回原 handover。[当前依赖检查](/Users/lchingen/hivemind/src/hivemind/views/matching.py:318)仍按候选编号查环；最终写入发生在[模型纠错循环之后](/Users/lchingen/hivemind/src/hivemind/views/round.py:164)。恢复时，[纠错原因重新置空](/Users/lchingen/hivemind/src/hivemind/views/round.py:37)，相同请求会[命中原回答缓存](/Users/lchingen/hivemind/src/hivemind/model.py:183)，可能反复失败。
+- **最小补全：**在匹配检查通过前，按合并后的编号关系检查依赖；把自环、方向冲突和接续冲突送入现有拒绝重试。写入只执行通过检查的方案，并保留事务内复查。
+
+其余所查项目未发现额外严重合同缺口。未修改文件，未调用模型。

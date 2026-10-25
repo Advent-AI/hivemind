@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_d157_budget_refuses_before_network ____________________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-349/test_d157_budget_refuses_befor0')
+
+    def test_d157_budget_refuses_before_network(tmp_path):
+        """Budget state: a used-up request allocation sends zero further requests."""
+        ohio.write(tmp_path / 'budget.json', {'attempts': [{}] * ohio.MAX_REQUESTS, 'reserved_or_spent': 0})
+        sent = []
+        call = ohio.BoundedTransport(tmp_path, 'control-1', time.monotonic() + 60, send=answers([{}], sent))
+        request = {'model': 'gpt-6-luna', 'max_completion_tokens': 8000}
+>       with pytest.raises(RuntimeError, match='limit reached'):
+E       Failed: DID NOT RAISE <class 'RuntimeError'>
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:111: Failed
+----------------------------- Captured stdout call -----------------------------
+START control-1 call=31 reserve=$0.0801
+DONE control-1 usd=$0.0013 seconds=0.0
+=========================== short test summary info ============================
+FAILED ../../../../../../../Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py::test_d157_budget_refuses_before_network
+1 failed in 0.03s

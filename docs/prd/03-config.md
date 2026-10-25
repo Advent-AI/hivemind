@@ -1,64 +1,56 @@
 # Config
 
-> 状态：第一版已冻结 · 2026-10-18 · 更新：2026-10-21 · 依据：docs/DECISIONS.md D2、D3、D18、D19、D25、D27、D29、D33、D36、D37、D41、D45–D47、D51–D53
-> 设计页：docs/system-design.html › New › Config。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+> Status: first version frozen, October 18, 2026. English edition: October 25, 2026 (D163).
+> Design page: `docs/system-design.html` → New → Config. Recorded decisions take precedence over this PRD.
 
-## 一句话
+## Purpose
 
-只管人要亲自选的设置。模型设置分三种：抽取按类别各一套（用哪个模型、哪一版提示词），观点库的比对、重判各一套，最终判定一套；另外记观点库搜索取前几条。每一类读出什么、提示词模板怎么拼，写在抽取模块里。
+Config contains settings a person must choose: extraction model settings per category, separate matching and rejudgement settings, final-verdict settings, and the thesis search result count. Extraction owns category content and prompt assembly.
 
-## 为什么只留这些设置
+The old system had five overriding configuration layers and several presets. Multiple switches could control one feature, so a file did not reveal actual behaviour. Here the universe owns research scope, classification supplies item metadata, and code owns ordering and failure handling. Config retains only deliberate human choices.
 
-旧系统的配置分五层，后一层改掉前一层，还有几套预设同时存在；同一个功能由两处开关一起决定，看配置文件看不出实际跑的是什么。新系统里，研究什么、看哪几类信息归研究对象名单；信息本身的情况由分类给出；做事的顺序和失败处理由代码决定。Config 只剩下人必须亲自选的设置：读信息的、观点库的、最终判定的模型设置，加上观点库搜索取前几条。
-
-## 记了什么
+## Recorded settings
 
 <!-- generated: schema -->
-| 内容 | 说明 | 怎么来 |
+| Item | Meaning | Source |
 |---|---|---|
-| 版本号 | 每改一次设置，就是一个新版本。 | 改设置时生成 |
-| 校验码 | 由整份设置算出来的一串码。每次模型调用（读信息、比对、重判、最终判定……）的记录里都写下它，事后能查到当时用的是哪一版。 | 系统自动算 |
-| 模型设置、搜索取前几条 | 模型设置分三种。抽取按类别各一套，写明用哪个模型、哪一版提示词、让模型想得多深、温度（温度越低，回答越稳定）。观点库的比对、重判各一套。最终判定一套。另外记观点库搜索取前几条，先定 10。提示词里写什么，在抽取、观点库和最终判定模块里。一套定下来就不再改，要改就换一套新的。 | 人来定 |
+| Version | Every settings change creates a new version. | Created when settings change |
+| Checksum | Calculated from the complete configuration and recorded with every model call, including extraction, matching, rejudgement and final verdicts, so the exact version can be traced. | Calculated by code |
+| Model settings and search result count | Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching and rejudgement settings; final verdicts have their own. Config also sets the search result count, initially 10. Prompt content belongs to the extraction, thesis library and final-verdict modules. A settings version is immutable; a change creates a new one. | Chosen by a person |
 <!-- /generated: schema -->
 
-## 规则
+## Rules
 
 <!-- generated: rules -->
-1. Config 只管人要亲自选的设置：模型设置，加上观点库搜索取前几条。信息本身的情况（属于哪一类、哪天发的、讲的是谁）由上游分类给出；做事的顺序、失败了怎么办，由代码决定；研究什么、每样看哪几类信息，由研究对象名单决定。
-2. 不设预算和并发上限。
-3. 改任何一处都生成新版本，旧版本原样保留，不在旧版本上叠加修改。
-4. 设置里引用了不存在的模型设置，或者缺了必填的内容，整个版本不能用，也不会拿它去处理任何信息。
+1. Config owns human-selected model settings and the thesis search result count. Upstream classification supplies category, publication day and subjects. Code owns processing order and failure handling. The research universe owns subjects and tracked categories.
+2. Config does not set spending or concurrency limits.
+3. Any change creates a new version. Preserve old versions without modifying them.
+4. Missing required values or references to nonexistent model settings invalidate the entire version. It cannot process any item.
 <!-- /generated: rules -->
 
-## 例子
+## Example
 
-- 换了“新闻”这一类的提示词：生成一个新版本。之后抽取新闻都用新版本，别的类别不变；以前的处理记录仍然写着当时用的旧版本，能查到。
+Changing the news prompt creates a new configuration version. Subsequent news extraction uses it; other categories retain their settings. Earlier processing records still identify their original version.
 
-## 验收标准
+## Acceptance
 
-- 每次模型调用（读信息、比对、重判、最终判定）的记录里，都写下当时用的 Config 版本号和校验码。
-- 设置里引用了不存在的模型设置，或缺了必填内容，整个版本不能用。
-- 改任何一处都生成新版本，旧版本内容不变。
-- Config 里没有“处理哪些类别”，也没有预算和并发设置。
+- Every extraction, matching, rejudgement and final-verdict call records Config version and checksum.
+- Missing required values or nonexistent model settings invalidate the entire version.
+- Any change creates a new version without changing the old one.
+- Config does not select processed categories or contain spending/concurrency settings.
 
-## 还没定的
+## Open questions
 
 <!-- generated: open -->
-- 暂无。
+- None currently.
 <!-- /generated: open -->
 
-## 相关决定
+## Related decisions
 
-- D2：Config 只装人的选择。
-- D3：不设预算和并发上限。
-- D18：处理哪些类别移到研究对象名单。
-- D19：第一版冻结。
-- D25：每个类别一套设置；每类读出什么写在抽取模块里。
-- D27、D33：观点库“比对”一套设置。
-- D41：观点库每一种模型调用各一套（比对、连依赖、重判、查重）；设置里写温度。
-- D29：最终判定一套设置。
-- D37：第一版冻结（2026-10-18）；要改先记一条新决定。
-- D45：查重是 Claude 提的，Alex 还没定，先不设这一套。
-- D46：观点库搜索取前几条（N）也写在这里，先定 10。
-- D47：Config 管的是人要亲自选的设置，不只是模型设置。
-- D51：新观点的依赖在比对那一次一起挑，观点库不再有“连依赖”这一套设置，只剩比对、重判两套。
+- D2: human choices only. D3: no spending/concurrency limits in Config. D18: category selection belongs to the universe.
+- D19/D37: first-version freeze; changes need a decision.
+- D25: extraction settings per category; reading content belongs to extraction.
+- D27/D33: separate matching settings. D29: final-verdict settings.
+- D41: separate model-call settings and temperature. D45: proposed duplicate checks are not approved and receive no settings yet.
+- D46: search result count N, initially 10. D47: Config is not limited to model settings.
+- D51: dependency selection occurs within matching, so the library has matching and rejudgement settings, not a separate dependency call.

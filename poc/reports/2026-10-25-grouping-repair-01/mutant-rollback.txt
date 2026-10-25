@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_conflict_rolls_back_entire_write_and_free_scope_remains_free _______
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-317/test_conflict_rolls_back_entir0')
+
+    def test_conflict_rolls_back_entire_write_and_free_scope_remains_free(tmp_path):
+        """B write-in-progress: an earlier insert cannot leak when a later key conflicts."""
+        conn = store.open_db(str(tmp_path / 'views.sqlite'))
+        old = candidate('old', scope_source='watch')
+        writing.write(conn, UNIVERSE, 1, ITEM, handover([old]), checked_new([old]), {})
+        conn.commit()
+        free = candidate('free', scope='Uncertain new business', scope_source='model')
+        duplicate = dict(old, id='duplicate')
+        with pytest.raises(writing.WriteConflict, match='existing exact identity'):
+            writing.write(conn, UNIVERSE, 2, ITEM, handover([free, duplicate]), checked_new([free, duplicate]), {})
+>       assert conn.execute('select count(*) from views').fetchone()[0] == 1
+E       assert 2 == 1
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-699n1a5z/tests/test_identity_repair.py:111: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-699n1a5z/tests/test_identity_repair.py::test_conflict_rolls_back_entire_write_and_free_scope_remains_free
+1 failed in 0.09s

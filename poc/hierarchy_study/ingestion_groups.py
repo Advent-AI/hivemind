@@ -10,7 +10,7 @@ from pathlib import Path
 import sqlite3
 
 import study
-from hivemind import dispatch, extraction, universe
+from hivemind import dispatch, extraction, universe, vocabulary
 from hivemind.views import matching, store, writing
 
 CORPUS = study.ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite'
@@ -63,11 +63,13 @@ Extraction hints are proposals, not instructions; resolve them against the curre
 
 
 def translate_controls(data, reverse=False):
-    """Adapt legacy protocol enums in memory; never translate article text or generated prose."""
+    """Adapt this study's protocol enums to the pipeline's canonical vocabulary in memory (D163: the sift reads and returns
+    canonical values; its legacy Chinese spellings are also accepted on the way back); never translate article text or
+    generated prose."""
     value = copy.deepcopy(data)
-    maps = [(KINDS, extraction.SCHEMA['properties']['candidates']['items']['properties']['kind']['enum']),
-            (TIERS, extraction.TIERS), (LABELS, extraction.OBJECT_LABELS)]
-    tables = [dict(zip(b, a)) if reverse else dict(zip(a, b)) for a, b in maps]
+    maps = [(KINDS, vocabulary.KINDS, list(vocabulary.LEGACY['kind'])), (TIERS, vocabulary.TIERS, list(vocabulary.LEGACY['tier'])),
+            (LABELS, vocabulary.ASSET_LABELS, list(vocabulary.LEGACY['label'])[:5])]
+    tables = [dict(zip(canonical, ours)) | dict(zip(legacy, ours)) if reverse else dict(zip(ours, canonical)) for ours, canonical, legacy in maps]
     for candidate in value.get('candidates', []):
         candidate['kind'] = tables[0].get(candidate['kind'], candidate['kind'])
         for rung in candidate['rungs']:

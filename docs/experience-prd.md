@@ -1,257 +1,225 @@
-# 体验 PRD：agentic trading，从你听到的任何东西到一笔会结算的交易
+# Experience proposal: from incoming information to a tracked investment decision
 
-2026-10-23，第九版。第六版把写法换成了人话和表。第七版把起点从「盯着你的理由」改成模糊的东西，因为大多数人没有理由，有的是别人说过的东西、一个看法、一条新闻。第八版把「替你管钱的 agent」改掉，那个说法太窄：我们讲的是 agentic trading 和 investment，整条路由 agent 走。第九版把第一节改成讲故事的顺序：今天的人怎么做，今天用 GPT 或 Claude 得到什么，gap 在哪，所以要解决什么，我们做的东西长什么样。第二节以后不动。讨论稿，Alex 还没定。短版在 `docs/agentic-experience.md`。
+October 23, 2026, ninth draft. English edition: October 25 (D163). **Discussion proposal, not approved by Alex.** The [system PRDs](prd/README.md), recorded decisions and [current state](CURRENT_STATE.md) govern the product. This document preserves the proposed experience; it does not authorise trading or change the frozen design. Its examples, competitor observations and research figures are historical draft material, not newly verified measurements. The [original draft](research/2026-10-25-english/experience-prd.original.zh.md) retains the complete earlier wording; [the short version](agentic-experience.md) describes the central journey.
 
-## 一、一句话
+Earlier drafts moved from “monitor your investment reason” to a broader entry point: a user may bring news, somebody else's post or a vague belief. The proposed scope is agent-assisted trading and investment, not only an agent managing money. This edition uses the system glossary for Hivemind concepts and distinguishes proposed user actions from existing library behavior.
 
-**交易和投资正在变成 agent 做的事：读信息、做判断、定计划、下单、看仓位、复盘，整条路 agent 替人走。今天的 agent 不缺数据，不缺下单口，缺的是中间那段：把一条信息变成一个说得清、能核对、会到期的判断。这个产品做的就是这段。你给它的可以是任何东西，一条新闻、一个人的帖子、一句听来的话、一种感觉；它弄清楚这到底在押什么、现在证据站在哪边、什么时候有答案；然后按你给的授权去做，守着它直到对出答案。**
+## 1. Purpose
 
-**今天的人是怎么做的。** 2026 年 7 月 10 日，路透说中国可能允许阿里、字节、DeepSeek 买 H200。Alex 的爸爸在新闻里看到，觉得英伟达利好，当天买了。之后他每天看价格：涨了觉得自己对了，跌了不知道是这条消息黄了还是别的事。Joyce 的妈妈看到雪球上那位大 V 写了三条理由，跟着买，大 V 之后没再更新。Alex 自己拿着 NVDA，理由是「AI 需求」，昨天跌了他有点慌，说不清该不该卖。三个人手里都没有一个说得清的理由，有的是一条新闻、别人的三条理由、四个字的感觉。他们不知道这个东西到底在押公司的哪一件事，不知道该不该信，不知道什么时候才知道自己对不对。所以都从看到直接跳到下单，中间什么都没有，之后只能看价格。
+Turn incoming information into a clear, verifiable, time-bounded investment judgement that an agent can keep following. The surrounding stack can then turn the user's chosen outcome into a plan and act within explicit permissions.
 
-**今天用 GPT 或 Claude，得到的是什么。** 把那条消息贴进去，问「这对英伟达是利好吗，我该买吗」。它给一篇很好的分析：这条消息意味着什么，中国区过去几个季度的情况，出口管制的背景，利好三条、风险三条，最后一句「投资有风险，建议咨询专业人士」。追问「那我到底该不该买」，它会顺着你的口气说：你偏多它就偏多，你偏空它就偏空，研究里叫 sycophancy，是量过的。你买了。一个月后再问「我这笔还该拿着吗」，它重新写一篇分析，和上个月那篇没有关系：它不知道上个月自己说了什么，不知道这一个月里哪份文件动了什么，也不知道你当初押的到底是什么。它永远不会自己来找你。到期那天，没有人告诉你当初对没对。ChatGPT 有记忆和定时任务，Robinhood 的 agent 能读财报和新闻，这些能让它记住「我拿着 NVDA」，但记住一句话和维护一个判断是两回事。
+Consider three people in the draft's July 10, 2026 scenario. Alex's father reads a report suggesting Chinese buyers may receive H200 chips and buys NVDA. Joyce's mother follows an influential investor's three reasons on Xueqiu, but the author never updates them. Alex holds NVDA for “AI demand” and worries after a price drop. They have different inputs, but none has made explicit which business outcome the position depends on, what would disprove it or when an answer should be available. After buying, price becomes their only feedback.
 
-**gap 在哪。** 今天的 AI 给的是一篇篇分析，每一篇都是从零写的，它不维护任何东西。缺的是四样：一个事先定好、到期有答案的问题；一个根据证据维护、每次变动都有记录的判断；一个你在冷静时写下的出场条件，有人替你对着每一份新证据核；到期一次结算，对错留在账上。没有这四样，AI 再会写，用户的行为还是看到就买、跌了就慌，只是多读了一篇分析。
+A conversational assistant can explain the news, supply background and list opportunities and risks. The proposal argues that an isolated answer does not by itself maintain a dated question, a history of evidence-based changes, a previously chosen exit condition and a later outcome record. Memory and scheduled tasks can help, so this is a workflow distinction to demonstrate, not a claim that competing products can never provide it. Earlier broad claims about sycophancy and absent follow-up remain in the source draft, not established findings of this POC.
 
-**所以要解决的是。** 从一条信息到一笔交易中间那段专业的路：拆解、找驱动、看证据、定计划、跟踪、结算，第三节写了是哪十步。这个产品替用户走前面几步，把模糊的东西变成一个说得清、能核对、会到期的判断，再按授权守着它。用户要的不是一个记录自己想法的工具，他没有想法可记；他要的是有人替他把东西弄清楚，然后替他守着。
+The proposed product maps “I think AI demand will hold” to a maintained question such as annual NVDA data-center revenue growth, explains the mismatch between that question and the user's words, and shows the evidence behind its current state. The user chooses an expected rung and an exit condition. The agent follows new evidence, keeps a card beside the position and asks before acting if the judgement crosses the condition. At the due date, the proposal also wants an outcome record verified against published data; that extension remains subject to the system's final-verdict/pull-mode decisions.
 
-**我们做的东西长这样。** 你贴进来一条消息、一篇帖子，或者说一句「我觉得 AI 需求还能撑」。它回你：你这件事押的是 NVDA 四件事里的「全年数据中心收入比去年涨多少」，2027 年 2 月年报出来就有答案；现在的证据站在「涨五成以上」这边，推它的是公司 5 月的指引；你那句话和这个问题差在哪，说给你听。你信的话，押哪个区间，答案掉到哪个区间你就卖，你定下来。从这天起，它每天读新出的财报、公告和新闻，对着这个问题看一遍。平时它不打扰你。持仓旁边有一张固定的卡，写着你押的是什么、现在判断怎样、上一次核对是什么时候。哪天一份文件把判断推过了你定的那个出场条件，它拿着文件里那一句原文，和你当初定的动作，来问你：按你说的做吗？到期那天真实数字出来，它告诉你押对了还是押错了，记在账上。
+The desired changes to user behavior are concrete: know the business outcome before buying, learn when its supporting reason breaks, and distinguish an unchanged evidence-based judgement from a price move. No profit or market-timing advantage follows from these alone.
 
-**它改变你的三个动作。** 买之前，你知道自己押的到底是哪件事，不是一个标题。拿着的时候，推翻它的证据出来了你会知道，不会还以为没事。跌的时候，证据没变你不会慌着卖。它不替你赚钱，赚不赚看你押的方向对不对。它保证的是：你每一笔都知道押的是什么，每一笔到期都有账。
+The long-term stack has three owners: Hivemind maintains shared research; a trade-plan component translates the user's chosen outcome into a plan; an agent runtime monitors positions and executes authorised actions. Hivemind knows no individual user and holds no money. All agents read the same research record.
 
-**它往哪里去。** 整条路都由 agent 走。你的每一笔持仓都有一个问题和一个出场条件；新信息进来，agent 自己重判；触发了，按授权动手，从「先问我」到「直接替我做」；到期自己结算，记下自己的对错。人只定两件事：信不信，给多大授权。这一整套是 Alex 说的 autonomous capital stack，分三块：Hivemind 判断世界，trade plan 生成把判断变成买卖计划，agent hosted runtime 下单和看仓位。Hivemind 这一块不认识任何用户，不碰任何钱，只做一件事：把世界上每天发生的事，变成每家公司几个问题的当前判断，谁推的、哪天到期、过去判对判错都留着。所有 agent 读的是同一份。
+## 2. Terms in this proposal
 
-## 二、这份文档里的词，先说清楚
+Hivemind terms take their meaning from the [system glossary](prd/00-system.md#glossary). The user-facing planning terms below belong to the surrounding experience, not the thesis schema.
 
-| 词 | 意思 | NVDA 的例子 |
+| Term | Meaning here | Example |
 |---|---|---|
-| 问题 | 一家公司最要紧的两到四件事，每件写成一个到期会有真实答案的问句。按年开，到期日就是那个数字公布的那天 | 「FY27 全年数据中心收入，比 FY26 涨多少？」2027 年 2 月年报公布 |
-| 答案区间 | 每个问题事先把可能的答案分成五档，从最好到最差，一字不改 | 涨 50% 以上 / 涨 25% 到 50% / 涨 10% 到 25% / 涨不到 10% / 下降（示意，正式的要按冻结设计写） |
-| 当前判断 | Hivemind 根据到今天为止的全部证据，判断答案最可能落在哪个区间。证据变了才重判，每次改动都留记录，能查「2 月怎么判的」「哪份文件推的」 | 现在看：涨 50% 以上 |
-| 证据等级 | 每条证据按来源分四级：已经发生的事、公司自己说的、第三方的看法、传闻。传闻一般推不动判断 | 7 月 10 日路透「中国可能放行 H200」是传闻；5 月 20 日公司指引是公司自己说的 |
-| 出场条件 | 用户在冷静时写下的一句话：「当前判断掉到哪个区间，我就卖多少」。这是按理由出场，不是按价格。按亏多少钱出场的止损线在券商那边，用户自己设 | 「判断掉到『涨不到 10%』，清掉」 |
-| 触发 | 一份新证据把当前判断推过了用户的出场条件。触发的是「判断」，判断不一定等于事实，所以触发时一定带上推它的那条证据和它的等级 | 9 月某份公司文件 |
-| 押注卡 | 固定显示在持仓旁边的一张卡，五行：你押的是什么、盯的是哪个问题、当前判断、上次核对时间、出场条件。不推送，用户来看才看 | |
-| 检查点 | 到期之前的季度财报日。财报是证据，会改判断，但不是对答案的日子 | 8 月 26 日、11 月 17 日 |
-| 结算 | 到期那天的判断锁定不再改，拿公布的真实数字对照，落在哪个区间，记入这个问题和这个用户的记录 | 2027 年 2 月年报 |
-| 押注记录 | 用户对一个问题的全部承诺写在一起：押哪个区间、出场条件、金额、到期日、授权 | |
-| 三档授权 | 只通知我 / 先问我 / 直接替我做。第一版只做「先问我」 | |
+| Thesis | A question, fixed ladder and due date maintained by Hivemind | How will FY2027 data-center revenue compare with FY2026? |
+| Ladder / rung | The defined possible outcomes; five, or two for yes/no under the system rules | Annual growth ranges; the draft's ranges are illustrative, not approved settlement boundaries |
+| State / current judgement | Current rung judged from the evidence, with recorded reasons | Growth above 50% |
+| Evidence tier | Fact, party statement, third-party view or rumour | Company guidance is a party statement; an unconfirmed unnamed-source claim is a rumour |
+| Exit condition | The user's prior instruction linking a judgement change to a proposed position action | Sell all if judged growth falls below 10% |
+| Trigger | A new judgement crosses the chosen exit condition | Show the supporting source and tier, not just the new score |
+| Position card | A persistent display of belief, thesis, judgement, last check and exit condition | Available beside the holding, without routine push notifications |
+| Checkpoint | A relevant event before the due date that may provide new evidence | Quarterly earnings |
+| Outcome verification | The proposed check of published actuals against the ladder | Distinct from the currently decided freeze/close behavior; requires further design |
+| Commitment record | The user's expected rung, exit condition, amount, date and permission | Stored by the surrounding runtime, not Hivemind |
+| Permission level | Notify me / ask me first / act for me | First proposed version offers ask me first only |
 
-## 三、要解决的问题：从一条信息到一笔交易，中间有十步
+The earlier draft described two to four questions per company and five bullish-to-bearish outcomes. Those are journey examples, not a hard quota or a replacement for binary/theme ladders. Likewise, evidence tiers do not impose an automatic “rumours never move a state” rule.
 
-每个人每天都收到很多信息。从一条信息到一笔交易，专业投资者中间要走十步，散户只走第一步的一半和第七步，所以他们从信息直接跳到下单。用 2026 年 7 月 10 日那条消息举例：路透说中国可能允许阿里、字节、DeepSeek 买 H200。
+## 3. Ten steps from information to a decision
 
-| 步 | 要做的事 | 7 月 10 日那条消息怎么走 | 散户今天 |
-|---|---|---|---|
-| 1 分辨来源 | 关于谁、新不新、谁说的 | 路透转述知情人士，没有官方确认：传闻 | 做一半，看到标题 |
-| 2 拆成几个问题 | 一家公司不是一个故事，是两到四个到期有答案的问题 | NVDA 四个问题：全年数据中心收入涨多少；中国区收入能不能从零起来；放量以后毛利率守不守得住；云厂商的自研芯片会不会吃份额 | 不做，有的是「AI 很热」四个字 |
-| 3 找到对应的问题 | 这条消息动的是哪个问题 | 中国区那个 | 不做 |
-| 4 放进全部证据里判断 | 和这个问题已有的证据放在一起看，判断要不要改 | 已有：5 月 20 日公司指引按中国为零算，7 月 14 日公司按出口管制砍掉一半亚洲客户，都是公司自己说的。今天这条是传闻，一个来源，十二家转述。判断不动，等确认 | 不做 |
-| 5 看市场押了多少 | 这件事价格里已经反映了多少 | 第一版不做 | 不做，所以常常业务判对了、价格付错了 |
-| 6 定买卖计划 | 信的话买什么、买多少、什么时候进、什么情况算错、拿到什么时候 | 见第五节的计划草稿 | 凭感觉 |
-| 7 下单 | | | 只会这一步 |
-| 8 持续跟踪 | 以后每来一条新信息，一到四步重走一遍 | 8 月 26 日财报、9 月的公司文件 | 不做，或者天天看价格 |
-| 9 按计划执行 | 出场条件触发了，按事先写好的动。事先写好才做得到，临时决定做不到 | 9 月那一次 | 临时决定 |
-| 10 结算和复盘 | 拿真实数字对答案，当初押对没有 | 2027 年 2 月 | 不做 |
+Using the draft's H200-report scenario:
 
-这十步谁来做：
-
-| 步 | 谁做 | 今天的设计有没有 |
+| Step | Work | Example |
 |---|---|---|
-| 1 到 4 | Hivemind | 有：十六个信息类别、四级证据、每家两到四个问题、按年开、证据变了才重判。第二步问题的颗粒度怎么检验还没定；第三步对模糊的大 V 长文要试 |
-| 5 | 没定 | 第一版不做 |
-| 6 | trade plan 生成 | 已有 |
-| 7 | agent hosted runtime，接券商或链上 | 已有 |
-| 8 | Hivemind 判，runtime 盯 | 要加：判断变了带着证据主动推出去；从证据出现到判断更新的延迟有数 |
-| 9 | runtime，三档授权 | runtime 做 |
-| 10 | Hivemind 锁定判断，runtime 记押注 | 要加：结算用代码对真实数字核过；每个问题过去判对判错的记录 |
+| 1. Identify the source | Who is involved, who said it and whether it is new | An unnamed-source retelling lacks official confirmation |
+| 2. Identify the questions | Separate business outcomes with dates | Data-center growth, China revenue, margin and customers' own chips |
+| 3. Match the information | Find the question it directly affects | China revenue or export licensing |
+| 4. Weigh the evidence | Read it alongside evidence already in force | Twelve outlets retelling one report are not twelve independent sources |
+| 5. Consider market expectations | Ask what is already reflected in price | Deferred from the proposed first version |
+| 6. Draft the plan | Expected outcome, position size, entry, exit and horizon | A plan the user reviews |
+| 7. Execute | Submit the authorised order | Runtime/broker responsibility |
+| 8. Monitor | Repeat steps 1–4 when information arrives | Quarterly results or a new company filing |
+| 9. Follow the plan | Respond to the prior exit condition | Ask before taking the agreed action |
+| 10. Review the outcome | Compare the published result and retain the record | Annual result; keep research outcome separate from investment return |
 
-用户只做两个决定：第四步之后「我信不信，押哪个区间」；第六步「押多少，判断掉到哪个区间就卖」。
+The draft describes users often skipping from a headline to an order; this is a product hypothesis, not a measured population result.
 
-边界写死：Hivemind 不认识用户、不碰钱、不排名。另外两块不判问题、不改问题、不自己结算。
+| Steps | Owner | Status of the proposed capability |
+|---|---|---|
+| 1–4 | Hivemind | Categories, evidence, questions and rejudgement exist in the design. Granularity and matching vague input need validation |
+| 5 | Undecided | Deferred |
+| 6 | Trade-plan component | Separate component in the proposed stack |
+| 7 | Agent runtime with broker/on-chain access | Outside Hivemind |
+| 8 | Hivemind judges; runtime monitors | Change events carrying evidence and measured latency are proposed additions |
+| 9 | Runtime | Permission-controlled action |
+| 10 | Hivemind freezes research; runtime stores user commitments | Actual-number verification and outcome records remain proposed additions |
 
-## 四、给谁用：四种人
+The user chooses whether to believe the judged outcome, what to commit and the exit condition. Hivemind does not choose a user position, move money or rank investors. Other components do not silently rewrite its thesis or manufacture its outcome.
 
-| | Alex | Alex 的爸爸 | Joyce | Joyce 的妈妈 |
-|---|---|---|---|---|
-| 他是谁 | 自己做研究的个人投资者 | 每天看新闻，有看法，看不懂财报 | 受过专业训练的投资人，判断成形很快，会冲动下单 | 只信雪球上一位大 V |
-| 带进来的是什么 | 自己的一个看法：「AI 需求」 | 一条新闻 | 刚形成的一个判断 | 一篇大 V 长文 |
-| 信什么 | 自己的判断，但说不清这四个字是几件事 | 新闻 | 自己的分析 | 那个人 |
-| 怎么亏钱 | 理由模糊，跌的时候分不清是理由破了还是情绪 | 新闻当天就买，没人告诉他这条算不算数、什么时候有答案 | 冲进去，第四、五步走得快而糙，第八到第十步事后没时间做，复盘有能力但不做 | 大 V 只给进场理由，不给出场信号，帖子也不更新 |
-| 要产品给什么 | 把看法拆成几个问题，自己押、自己定出场条件 | 一句看得懂的话：说的是哪件事、现在算不算数、什么时候有答案；信的话押两百块 | 下单前三秒把她半小时的功课摆在面前；之后替她跟踪和复盘 | 大 V 的三条理由对的是哪三个问题；跟着押；哪条破了叫她，他不一定会说 |
-| 会不会看中间八步 | 会看第二步那张表 | 不看，也不该让他看 | 自己会走，没时间 | 不看 |
-| Joyce 那张八种需求图里的 | 有看法没精力盯 | 找机会别错过 | 有判断，形成得快，就往前走 | 信某个人想复制 |
+## 4. Four users
 
-四个人信的东西不一样，亏钱的方式一样：他们信的东西只给进场理由，从不给出场信号，而且四个人都说不清自己到底押的是哪件事。产品不替他们选信谁。它把四个人信的那件事变成同一种东西：一条有日期、会结算的押注记录，推翻它的证据出来了有人叫。
+| User | Input and difficulty | Desired experience |
+|---|---|---|
+| Alex | Own research compressed into “AI demand”; cannot separate a broken reason from anxiety about price | Separate the questions, choose the expected outcome and exit condition, inspect the reasoning |
+| Alex's father | News reader who cannot analyse financial statements; buys on the headline | Plain explanation of the affected question, evidence strength and date; a small commitment if he chooses |
+| Joyce | Professionally trained and fast to form a view; may trade impulsively and lacks time to monitor/review | Put the relevant research in front of her before the order, then track the plan and record outcomes |
+| Joyce's mother | Trusts one commentator whose posts supply entry reasons but no updates | Map the commentator's reasons to questions without rating the person; alert when evidence undermines a chosen reason |
 
-## 五、用户旅程：Alex 的一遍
+These correspond to four of the needs discussed in Joyce's earlier eight-needs framework. The proposal does not choose whom users should trust. It makes the business question and later evidence inspectable.
 
-问题按冻结的设计写：数字的问题按年开，到期六到十二个月，中间的季报是证据，不另开问题。所以问题是年度的，8 月 26 日的财报是检查点，不是结算。之前几版写成季度问题、8 月结算，是错的，Codex 审稿抓出来的。
+## 5. Alex's journey
 
-| 时间 | Alex 做什么 | 产品做什么 | Alex 看到什么 |
-|---|---|---|---|
-| 7 月 24 日 | 说一句：「我拿着 NVDA，我信的是数据中心的需求能撑到年底。昨天那一跌我有点慌。」 | 对应到 2 月 25 日起就在跟的那个问题；说出他的原话和问题的差别；回答昨天的下跌；列出 NVDA 另外三个问题；给一份计划草稿 | 下面那段原文 |
-| 7 月 25 日到 8 月 25 日 | 照常看价格 | 不说话。押注卡每天更新「上次核对」 | 卡上五行：你押的是什么（数据中心需求撑到年底）；盯的问题（FY27 全年数据中心收入比 FY26）；当前判断（涨 50% 以上）；上次核对（今天，没有够得上的变化）；出场条件（判断掉到「涨不到 10%」） |
-| 8 月 26 日，检查点 | | 财报当晚一句话 | 「Q2 数据中心收入 X 亿。这是证据，不是结算。判断还在『涨 50% 以上』，没动。你的出场条件没触发。下一个检查点 11 月 17 日。」 |
-| 9 月某天，触发 | 看原文，确认 | 一份公司文件把「中国区」那个问题的判断推到最差区间。Alex 后来也押了这个问题，出场条件就在最差区间 | 下午四点十二分：「中国区触发了你的出场条件。推它的是这份文件里的这一句（原文）。这是公司自己说的，不是推断。你当初定的是清掉。按它做吗？」 |
-| 2027 年 2 月，结算 | | 年报出来，锁定判断，对真实数字 | 「FY27 全年数据中心收入 Y 亿，比 FY26 涨 Z%，落在『涨 50% 以上』。你押的区间成立。」只说这一句。不说「你判断对了」，一个问题说明不了整笔持仓；更不说「你是运气」。股价涨跌另记一行 |
-| 第二年 | 看记录，决定要不要放大授权和金额 | 把记录摆出来 | 问过几次、批了几次、拒了几次、触发的那几次事后看对不对、有没有漏掉该叫的。批了七次只说明他同意，不说明它判得好 |
+The annual question remains open through interim earnings. August 26 is a checkpoint, not settlement. The examples below retain the original draft's illustrative dates and amounts.
 
-7 月 24 日那天 Alex 看到的原文：
+| Time | User action | Product response |
+|---|---|---|
+| July 24 | “I hold NVDA. I think data-center demand will last to year-end. Yesterday's drop worried me.” | Match the question tracked since February 25, explain the mismatch, show its history and other relevant questions, draft a plan |
+| July 25–August 25 | Check the holding as usual | Quietly update the position card's five lines: belief, thesis, current judgement, last check, exit condition |
+| August 26 checkpoint | Read the short update | Quarterly data-center revenue is evidence for the annual question; say whether the judgement or exit condition changed and give the next checkpoint |
+| A day in September | Read the source and confirm an action | A company filing crosses a separately chosen China-revenue condition; show its quote, tier and the previously chosen action |
+| February 2027 | Inspect the annual outcome | Proposed verification of actual revenue and growth against the ladder; record price performance separately |
+| Following year | Decide whether to change permissions or budget | Show requests, approvals, refusals, justified/unjustified triggers and omissions. Approval frequency is not accuracy |
 
+The July 24 response could be:
+
+```text
+Closest maintained question:
+How will NVDA FY2027 annual data-center revenue compare with FY2026?
+Current judgement: growth above 50%.
+Due: publication of the annual results in February 2027.
+
+Illustrative history: May 20 Q2 guidance of $91 billion moved the judgement up
+one rung. July 8 Foxconn AI-server revenue growth of 39.8% did not move it further.
+
+You said “demand lasts to year-end”; the thesis asks about annual revenue growth.
+Demand can hold while prices fall. Does this question represent your belief?
+We found no relevant evidence change explaining yesterday's move in this thesis.
+That is not a finding that the price move was unrelated.
+
+Draft plan:
+Expected outcome: growth above 50%.
+Position: retain the current holding, without adding.
+Exit condition: sell half if judged growth falls below 10%.
+Checkpoints: August 26 Q2 results; November 17 Q3 results.
+Due: February 2027 annual results.
+Permission: ask me first.
+Set any loss-based stop separately with your broker.
 ```
-你说的这件事，最接近的是我们从 2 月 25 日起就在跟的这个问题：
-  NVDA FY27 全年数据中心收入，比 FY26 涨多少？
-  当前判断：涨 50% 以上          答案：2027 年 2 月年报公布
-  这个判断的历史：5 月 20 日公司给出 Q2 指引 910 亿，判断往上调了一个区间；
-                 7 月 8 日富士康 AI 服务器收入 +39.8%，没有再推动。
-  注意：你说的是「需求撑到年底」，这个问题问的是「全年收入涨多少」。
-       差别在：需求撑住但价格跌了，收入也可能不达标。你认这个问题，还是要我另开一个？
-昨天的下跌：在我们跟的证据里，没有找到动到这个问题的变化。这不是「跟它没关系」，是「我们没看到」。
-你拿 NVDA，其实还牵着另外三个问题：中国区、毛利率、自研芯片。要不要也跟？
 
-计划草稿，你改：
-  你押：到期落在「涨 50% 以上」
-  仓位：现在就拿着，不加
-  出场条件：判断掉到「涨不到 10%」，减一半
-           按亏损金额出场的止损线在券商那边，请你自己设
-  检查点：8 月 26 日 Q2 财报、11 月 17 日 Q3 财报
-  到期：2027 年 2 月年报
-  授权：先问我
-```
+Alex changes “sell half” to “sell all” and confirms. The product records his instruction and the difference between his belief and the maintained question.
 
-他认了这个问题，把「减一半」改成「清掉」，确认。十秒钟，一个模糊的信念变成一个有问题、有出场条件、有到期日的计划，而且他知道了这个问题和他的原话差在哪。
+Other journeys retain the same structure. Alex's father gets a plain-language explanation of what the report affects and that it is not official confirmation. Joyce's mother sees the commentator's original words beside the mapped questions, then receives updates even if the post never changes. Joyce sees the relevant margin question before shorting after a memory-price report, along with its evidence tier and the honest absence of a market-expectations reading. The original draft's “seven of twelve” and “40% versus 65%” outcome examples are illustrative future records, not measured user results.
 
-另外三个人的一遍：
+## 6. The central experience
 
-| | 贴进来什么 | 产品第一句回什么 | 中间 | 到期或一年后 |
-|---|---|---|---|---|
-| Alex 的爸爸 | 一条新闻：「美国要放宽对华芯片出口」 | 「这条说的是英伟达四件事里『中国区』那件。现在的判断是起不来，因为公司 5 月按零算、7 月砍了一半客户。今天这条是记者说的，不是政府说的，还不算数。2027 年 2 月有答案。信的话押两百块，确认了或者反过来了我告诉你。」 | 不看 | 等那一句 |
-| Joyce 的妈妈 | 一篇大 V 长文 | 不评价大 V。「他的三条理由对的是这家公司的三个问题，各自现在的判断是这样。他没写日期，按最近一次结算算。跟着他押，哪条破了我叫你。」押注记录上写两行：他的原话、我们替他写成的问题，免得她觉得我们曲解他 | 四个月后一条破了，公司自己说的，他的帖子没更新。她自己决定 | 一年跟了十二笔，对了七笔。没取关，但知道他哪类话准。不给大 V 排名，只记押注 |
-| Joyce | 看到 HBM 又涨价，判断一下子成形：对毛利率不好，要做空，手已经在下单。她把那句话贴进来 | 三秒，给她的是她自己半小时才做出来的东西：动的是毛利率那个问题；放进全部证据里，这是第三方看法，不是公司说的；判断下调一个区间。市场押到哪，第一版没有这一行，老实写「没有市场读数」 | 两种结果：她还是要做，那这个冲动就变成一笔有出场条件、有到期日的押注；或者证据让她停手。之后第八到第十步替她走 | 年底一行字：你冲进去的押注对了四成，想过一天再下的对了六成半。她永远不会给自己算这个 |
+Remember the exit condition before the news arrives. When a filing moves the judgement across it, bring the exact source and the user's previously chosen action together for review.
 
-## 六、核心亮点是什么，什么不是
+A ten-second demonstration shows the saved commitment, the new quotation and movement, then the requested action. Label inference and historical replay. The visible history gives the first experience credibility; a subject without maintained history must be described honestly.
 
-两轮唱反调（我自己一轮，Codex 当三个人审一轮）之后，老实的答案。
+Do not rely on “three seconds for ten steps,” “GPT cannot do this,” or “rules can only monitor prices.” A polished interface or a single convincing answer does not establish a maintained research process. Its value must survive corrections, disagreement with the user's preferred story and visible historical errors. More approvals do not establish sufficient accuracy to expand a budget.
 
-**亮点是一个动作：它在新闻出来之前就记着你的出场条件。一份文件触发它的那天，它把文件里那一句原文和你当初写下的动作，一起放到你面前。** 动手的时候，你手里拿着的是文件和你自己的话，不是一个价格。这个动作的前提是第一天那件事：你贴进来的那个模糊的东西，已经被变成了一个问题和一个出场条件。没有第一天，就没有这一下。
+The strongest value may emerge late. An evidence-based exit can follow a price decline. A replay using a condition chosen today is explanatory; it cannot prove the system would have protected the user in the past.
 
-十秒钟的演示：前三秒，你存过的信念、对应的问题、你批过的出场条件和到期日。中间三秒，新来的那句原文，判断从哪个区间到了哪个区间，是推断的地方标推断。最后三秒，「这触发了你的出场条件，你当初定的是清掉，按它做吗」。用真实记录的案例演示，用历史回放的要标明是回放。
+## 7. Two limits
 
-不是亮点的，别再说：
+1. A trigger reflects a **judgement**, not necessarily an established fact. Show the evidence and its tier; distinguish source statements from inference.
+2. Evidence-based action can lag price. It addresses a broken investment reason, not a loss limit. The first proposed screen directs the user to a broker for loss-based stops.
 
-| 说法 | 为什么不能说 |
+## 8. Proposed first version
+
+Include mapping from arbitrary user input with an explicit mismatch, a draft plan, ask-first permission, original quotes and tiers at a trigger, the persistent position card, short checkpoint/outcome updates and a record of requests, approvals, refusals, errors and omissions.
+
+Defer market expectations, per-rung probabilities, recommendations, rankings, automatic execution, proprietary stop-losses, automatic budget growth and Sunday notifications. Do not infer an entire investment was correct from one question's outcome.
+
+## 9. Historical comparison hypotheses
+
+These observations belong to the October 23 draft. They require fresh verification before a competitive claim; translation does not validate them.
+
+| Comparison | Draft observation | Proposed use or question |
+|---|---|---|
+| Distilla | Drivers, causal explanations, facts, summary snapshots, dated documents and consensus; the inspected topic rows appeared to lack fixed outcomes, due dates and retained changes | Potential upstream input and control. Is a question/history system materially different, or readily added? See the original inspection |
+| Thesis workbenches | Investi, Jera Value, AlphaVue, InvestLab and Simply Wall St Narratives were cited as maintaining user theses and reviews | Test shared judgements, verified outcomes and agent interfaces rather than claiming nobody tracks theses. The draft cited seven million registered Narratives users; this is an unverified historical citation |
+| Robinhood agent / Loops | Document/news reading, order proposals, approval and scheduled workflows were described | Potential execution environment and comparison arm; determine what maintained research they actually provide |
+| ChatGPT with memory/scheduled tasks | Remembering user context and returning later | Compare maintained identity, evidence replacement and outcome history, not memory alone |
+
+The source draft also cites roughly six minutes of research per retail trade, noisy earnings-related trading and about one percentage point lower six-month returns associated with price alerts. These are historical research claims to verify before use. Their product implication was fewer unsolicited interruptions. The draft is not fully consistent on whether checkpoint updates are pushed or merely available: section 8 includes checkpoint updates while the original section 9 allowed only trigger/outcome pushes. That notification decision remains open; translation does not decide it.
+
+## 10. Joyce's fourteen challenges
+
+Full historical discussion: [Joyce's challenge](joyce-challenge.md).
+
+| # | Challenge | Proposed response, not proof |
+|---|---|---|
+| 1 | You only provide data | The intended product maintains questions and judgements; data is its input |
+| 2 | The gap is in the planning/execution layers; this is a data vendor | The stack supplies those components; shared research is intended as an agent-readable record |
+| 3 | Position sizing belongs in layer two | Agreed; Hivemind does not size positions |
+| 4 | There may be no incremental investment judgement in layer one | Do not promise market-pricing advantage; measure consistency, timeliness and honest outcome records |
+| 5 | GPT can do much of it | A single answer is not the comparison; test repeated maintenance and history |
+| 6 | Derive layer one's needs from trade planning | Use the component-responsibility table and interface requirements |
+| 7 | Wealthfront sells discipline; users have different needs | Prior exit conditions and explicit permissions address discipline; the four journeys differ |
+| 8 | Asset-based and volume-based fees create opposing incentives | Platform incentives and whom the product serves require Alex's decision |
+| 9 | Thesis monitoring reacts late, while Alex wants anticipation | Evidence-based exits may lag price; do not pretend otherwise |
+| 10 | Hivemind should generate and push ideas | This proposal begins with user-supplied information |
+| 11 | Pushed ideas become a screener | No screener or leaderboard in the proposed scope |
+| 12 | The journey is already short; what happens after losses? | A reviewed plan should make the failed assumption identifiable, without promising protection |
+| 13 | Where is the agent? | Monitoring and permission-controlled response to a judgement change |
+| 14 | Use a bounded opportunity mandate with real money | The memo proposed a small amount, one week and one opportunity type as a validation unit; no live test is authorised here |
+
+## 11. Proposed validation
+
+| Check | Method | Measurement |
+|---|---|---|
+| Mapping and explanation | 20 real inputs: own beliefs, news, commentator posts and a pre-trade judgement | Correct mappings; user can explain the mismatch |
+| Omissions | NVDA replay July 24–October 22, using only information available by each date | Correct/missed triggers and false “unchanged” days |
+| Existing alternative | A configured comparison agent on the same period | Omissions, delay and differing answers |
+| Willingness to use/pay | Proposed 50-person study covering the four profiles; the source draft suggests a 200-unit commitment over an earnings cycle | Actual participation, renewal and a second commitment; requires separate approval and currency definition |
+| Honest reporting | Include refusals, late arrivals and wrong outcomes | No success-only presentation |
+
+These are proposed acceptance studies, not completed measurements or permission to spend/trade. The first POC priority in this draft is mapping and omissions.
+
+## 12. Risks
+
+| Risk | Consequence | Proposed response |
+|---|---|---|
+| False reassurance from missed evidence | User continues holding after a material reason changed | Measure latency and omissions; show evidence tiers and the last completed check |
+| No market-expectations reading | Correct business outcome can still accompany a losing investment | State the missing input |
+| Wrong thesis granularity | Mapping and downstream plan follow the wrong question | Validate the questions first |
+| Vague commentator input | User feels the view was misrepresented | Preserve original words beside the mapped question |
+| Weak evidence moves judgement little | User may act independently on the headline anyway | Explain the evidence without claiming control over the user |
+| Evidence arrives after price moves | Exit feels late | Target patient monitoring, not a promise of price protection |
+| No maintained history | First experience resembles a fresh answer | State the lack of history |
+
+## 13. Proposed Hivemind additions
+
+The original proposal identified these gaps. Their current status must be read from CURRENT_STATE and the service PRD; this dated table is not a second implementation tracker.
+
+| Addition | Purpose |
 |---|---|
-| 「三秒走完十步」 | 三秒是界面的事。带搜索的模型二十秒也能给四个问题，用户第一眼分不出这是常年维护的表还是刚编的 |
-| 「GPT 做不到」「规则只能写价格」 | Robinhood 的 agent 已经能读文件和新闻，默认每笔批准，Loops 在路上；ChatGPT 有记忆和定时任务。一个肯折腾的人用这些加一条写好的指令能做到大半 |
-| 「所有人读同一份、有记录、会结算」是第一眼的差别 | 用户第一个月感觉不到。只在难的时候感觉到：来源被更正、agent 和他想听的故事唱反调、过去判错的那次还摆在那 |
-| 「昨天的跌和这件事没关系」 | 说过头了。能说的只有「我们跟的证据里没找到够得上的变化」 |
-| 「批了七次就放大预算」 | 同意不等于判得好 |
+| Push changed judgements with supporting evidence | Let an agent respond without repeatedly polling |
+| Expose processing records | Show the last completed check and what it processed |
+| Measure source-to-judgement latency | Detect false reassurance caused by delay |
+| Verify published outcomes in code | Do not let the model alone declare the realised answer |
+| Retain question-level outcome records | Inform later permission decisions without confusing agreement with accuracy |
 
-**亮点是后置的，要认。** 第一眼靠「它早就在盯」，这靠历史。上线第一天没有历史，没覆盖的公司没有历史，那一刻和 GPT 一样，要老实说「这家我们没有维护过」。安静的一个月只对已经信它的人是安心。触发那天的体感是混的，文件出来股价已经跌过。真正会被讲给朋友听的两句，「它卖我 NVDA 的时候手里拿着文件里那一句」和「它说我那次赚钱其实判断是错的」，都是事后的。所以这个产品是慢烧：拉新靠 stack 和平台，不靠一个消费级的第一眼。「你这个出场条件在过去六个月会在哪天触发」可以给人看，但只能当讲解，不能当「当时会救你」：条件是今天定的，今天的人知道后来怎样。
+Mapping vague, undated long-form opinions and choosing a valid horizon also need testing. Market expectations and probabilities remain deferred. Outcome verification must be considered with pull-mode/final-verdict design, not inserted into the existing freeze rule through this proposal.
 
-## 七、两件必须说老实的事
+## 14. Decisions requested in the original draft
 
-1. **触发的是判断，不一定是事实。** 判断是模型按带出处的证据判的，公司说的、第三方的看法、传闻都能推它。所以触发时必须把推它的那条证据和它的等级亮出来：是事实就说事实，是看法就说看法，是推断就标推断。
-2. **按判断出场比按价格慢。** 文件出来的时候股价已经动了。出场条件管的是「别拿着破了的理由」，不管「少亏」。少亏是券商止损线的事，第一屏要提醒用户去设。
+Alex was asked to decide the central experience, whether to serve all four users through an arbitrary-input entry point, the ask-first/card scope, component boundaries, whether to put section 13 on the design agenda and whether to begin with section 11's first two studies. This English edition does not treat those questions as approved.
 
-## 八、第一版做什么，不做什么
+## Source material
 
-| 做 | 为什么 |
-|---|---|
-| 贴任何东西，对应到一个问题，并说出原话和问题的差别 | 入口。不说差别就是偷换题目 |
-| 计划草稿 | 把信念变成有问题、有出场条件、有到期日的东西 |
-| 「先问我」授权 | 第一版唯一的授权档 |
-| 触发时带原文和证据等级 | 第七节第一条 |
-| 押注卡 | 不推送也能留住人，回答他本来就在问的那个问题 |
-| 检查点后的一句话、到期的一句话 | 只在这两种时候说话 |
-| 记录：问过、批过、拒过、对不对、漏没漏 | 放不放大授权看它 |
-
-| 不做 | 为什么 |
-|---|---|
-| 市场预期、每个区间的概率 | 第五步第一版没有，不假装有 |
-| 推荐、榜、大 V 排名 | 推出来就是一个筛选器，Joyce 第 11 条 |
-| 「直接替我做」授权、自己的止损线、自动放大预算 | 第一版不碰 |
-| 周日推送 | 提醒有害，见第九节 |
-| 「跟你无关」「你判断对了」「你是运气」这几种话 | 都说过头 |
-
-## 九、对照：市面上有什么
-
-| 对象 | 它有什么 | 它缺什么 | 我们怎么用它 |
-|---|---|---|---|
-| Distilla（Alex 说的粗颗粒版，细的在 `docs/distilla-reference.md`） | 每家一张 driver 表：话题加因果加支撑事实；六类摘要快照；单日涨跌的解释；带日期的文件和研报摘要；按周的一致预期 | 话题不是问题，判不了对错；没有答案区间和到期日，永远开着；整行原地覆盖，没有历史，这就是没有 lineage；公司说的和媒体说的混在一起；表和表不连；从不结算 | 当上游和对照组很好，当产品不行。两个警告：它做成话题加覆盖，大概是因为做成问题加记录贵得多、慢得多、会被打分；它有现成管线，加上问题、日期、记录就是我们 |
-| thesis 工作台（Investi、Jera Value、AlphaVue、InvestLab；Simply Wall St 的 Narratives 有七百万注册用户） | 存自己的 thesis，定时对着新证据重查，有的接只读券商账户 | 没有一家被证实做到「所有人读同一份判断、用代码对真实数字结算、公开的对错记录、给 agent 的事件口」 | 「替你盯 thesis 加日历」正在变成一个品类。「没人做」不能说了，能说的是「没人做到结算」 |
-| Robinhood agent、Loops | 读持仓、财报、新闻、文件，提议下单，默认每笔批准；Loops 做定时的研究和交易，在路上 | 没有一份常年维护的、按问题分的判断 | 第六、七、九步的执行环境之一，也是对照组 |
-| ChatGPT 记忆加定时任务 | 记住用户的话，定时回来 | 没有可信的历史账、没有一致维护的问题、没有证据替换规则、没有核过的结算 | 对照组 |
-
-**提醒本身是有害的，有证据。** 散户每笔交易的研究时间中位数约六分钟；财报前涌进、财报后撤出是噪音交易；价格提醒让六个月收益差约 1%；好看的财报图改变行为，不改善收益。所以 agent 只在两种时候说话：触发了、结算了。其余放在押注卡上，他来看才看。
-
-## 十、Joyce 的十四条挑战，一句一条
-
-十四条和每条的完整回应在 `docs/joyce-challenge.md`。
-
-| # | 她说 | 我们答 |
-|---|---|---|
-| 1 | 你们只是在给数据 | 给的是第一到四步和第八、十步的判断。数据只是第一步的原料 |
-| 2 | 黑洞在第二、三层，你们是 data vendor | 第六到九步是 stack 的基础设施，已经在做。卖给人看是 data vendor，卖给 agent 当账本不是 |
-| 3 | 仓位是第二层决定的 | 对。Hivemind 不碰仓位，第六步是 trade plan 生成 |
-| 4 | 不信第一层有增量的投资判断 | 不承诺第五步的优势。承诺第二到四步一致、第八步及时、第十步诚实 |
-| 5 | GPT 差不多能做 | 第二步一次能做；第四、八、十步做不了。但用户第一个月感觉不到差别 |
-| 6 | 从 trade plan 需要什么，反推第一层缺什么 | 七行需求表在第 6 条。这份文档第三节的「谁来做」就是按它写的 |
-| 7 | Wealthfront 卖的是纪律；八种需求 | 纪律落在第九步的三档授权和用户自己写的出场条件。四种人对应八种需求里的四种 |
-| 8 | 按资产收费和按量收费是反着走的钱 | 第六、七步在按量吃饭的平台上。一笔押注是一笔有理由的单，平台不反对。给谁打工，Alex 定 |
-| 9 | 盯 thesis 很右侧，Alex 要左侧体感 | 都不是。按判断出场比价格慢，管的是理由不是亏损 |
-| 10 | 要 Hivemind 自己产生 idea 推给用户 | 不产生 idea。只接用户自己带来的信息，走完十步 |
-| 11 | 推出来就是一个筛选器 | 不做筛选器，不做榜。入口是贴任何东西 |
-| 12 | 旅程已经很短，输了怎么办 | 看到就买的人只走第七步，不是目标用户。走完十步的人输了也知道是第几步错 |
-| 13 | agent 在哪 | 第八、九步。有一个会自己触发的理由 |
-| 14 | 她发的那篇备忘录：agent 管的机会，两百块限时任务 | 它的 pipeline 和这十步是同一条路。两百块、一周、一类机会的委托单位，和用真钱测，都采纳 |
-
-## 十一、怎么验
-
-| # | 验什么 | 怎么测 | 看什么 |
-|---|---|---|---|
-| 1 | 对应得准不准，差别说得清不清 | 20 句真实的信念：Alex 自己的、贴来的新闻、大 V 的话、Joyce 一句正要下单的判断，各对应一次 | 对应对的占几成；用户能不能复述「我的原话和问题差在哪」 |
-| 2 | 漏没漏 | NVDA 7 月 24 日到 10 月 22 日回放，只用当天以前的材料 | 触发的那几天问没问、问得对不对。专门数「判断说没动、事后看该动」的天数，这是最大的风险 |
-| 3 | 比现成的强在哪 | 同一段时间，一个配置好的 Robinhood agent 加一条写好的指令做同一件事 | 两边漏了什么、晚了几天、哪次答得不一样 |
-| 4 | 有没有人真掏钱 | 五十个人，四种都有，每人贴一条自己信的东西，划两百块押一个财报周期 | 几个人真划了、到期几个续了、几个加了第二笔 |
-| 5 | 诚实 | 把拒绝、晚到、结算错的案例一起摆出来 | 不只摆好看的 |
-
-## 十二、风险
-
-| 风险 | 后果 | 对策 |
-|---|---|---|
-| 假的「没事」：判断漏了一条要紧证据 | 用户看到「没动」就拿着亏下去。排第一 | 延迟和证据等级是硬要求；卡上写明按亏损出场在券商那边 |
-| 第五步第一版没有 | 业务判对了，价格付错了，照样亏 | 卡上说清 |
-| 第二步问题拆错 | 整段路都错 | 先验第二步 |
-| 大 V 的话模糊 | 对应错，用户觉得被曲解 | 押注记录上写两行：他的原话、我们写成的问题 |
-| 传闻推不动判断 | 爸爸会在新闻那天自己买 | 拦不住，说清楚 |
-| 按判断出场比价格慢 | 跌过了才叫 | 这个产品是给拿一个季度以上的人的，看到就买的那群人先不要 |
-| 上线第一天没有历史 | 第一眼和 GPT 一样 | 老实说「这家我们没有维护过」 |
-
-## 十三、Hivemind 要补什么
-
-第一到四步今天的设计有，第十步有到期锁定。要补五项：
-
-| 要补的 | 为什么 | 现状 |
-|---|---|---|
-| 判断变了，带着推它的证据主动推出去 | 第八步，agent 不用每天来问 | 今天只有查询 |
-| 处理记录对外可读 | 用户和 agent 能查「上次核对什么时候，看了什么」 | 没有 |
-| 从证据出现到判断更新的延迟有数 | 假「没事」的第一道防线 | 没有 |
-| 结算用代码对真实数字核过 | 到期那一句不能是模型说的 | 锁定有，核对没有 |
-| 每个问题过去判对判错的记录 | 用户放不放大授权看它 | 没有 |
-
-另外第三步对没日期、说法模糊的长文怎么找对应的问题、怎么定结算日，要试。第五步和每个区间的概率，第一版不要。
-
-## 十四、要 Alex 定的
-
-| # | 要定什么 | 建议 |
-|---|---|---|
-| 1 | 第一节那一句话和第六节的亮点，是不是就这么定 | 定。不许诺赚钱，不许诺比市场快 |
-| 2 | 四种人都接，入口先做「贴任何东西对应到一个问题」 | 接。第一版先做「先问我」和押注卡 |
-| 3 | 边界 | Hivemind 走第一到四步、第八步的判、第十步的锁定；trade plan 生成走第六步；agent hosted runtime 走第七步、第八步的盯、第九步、第十步的押注记录；第五步先不走 |
-| 4 | 第十三节的五项 | 进 Pull 模式和接口的设计议程 |
-| 5 | 验证顺序 | 按第十一节，POC 先做第 1、2 条 |
-
-## 附：这几轮的材料在哪
-
-`docs/joyce-challenge.md` Joyce 的十四条和每条的回应；`docs/granularity-research.md` 问题颗粒度的调研；`docs/killer-experience.md` 「一只股票是一捆赌注」那一版的方向和 Robinhood 的三件事；`docs/user-journey.md` 用户行为和入口；`docs/distilla-reference.md` Distilla 考察；`docs/agentic-experience.md` 这份的短版；`docs/research/2026-10-22-granularity/` 原始报告，含 Codex 的两轮审稿。
+[Short experience proposal](agentic-experience.md), [Joyce's challenge](joyce-challenge.md), [granularity research](granularity-research.md), [earlier product direction](killer-experience.md), [user journey](user-journey.md), [Distilla inspection](distilla-reference.md), and original reports in `docs/research/2026-10-22-granularity/`. Earlier discussion documents remain historical sources, not competing current definitions.

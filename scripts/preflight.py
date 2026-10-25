@@ -26,13 +26,14 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import config, extraction, model, testdb, universe  # noqa: E402
+from hivemind import config, extraction, model, testdb, universe, vocabulary  # noqa: E402
 from hivemind.views import judging, matching, store  # noqa: E402
 
 SCHEMAS = {'extract': extraction.SCHEMA, 'match': matching.SCHEMA, 'judge': judging.SCHEMA}
-ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 ')
-BLOCK5_VIEW = re.compile(r'^\s+- (v\d+)（', re.M)
-MATCH_SHOWN = re.compile(r'^· (v\d+)（', re.M)
+# the stored requests of both prompt languages (D163): Chinese headers up to extraction v5 / matching-v1, English from v6 / matching-v2
+ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 |\[Item\] id (\S+?), category ')
+BLOCK5_VIEW = re.compile(r'^\s+- (v\d+)\s?[（(]', re.M)
+MATCH_SHOWN = re.compile(r'^· (v\d+)\s?[（(]', re.M)
 
 
 def normalise_reason(text):
@@ -68,7 +69,7 @@ def part_a(archive_conn):
     return judged
 
 
-def part_b(archive_conn, items_conn):
+def part_b(archive_conn, items_conn, uni):
     reasons, examples = collections.Counter(), collections.defaultdict(list)
     judged = produced_e = kept_e = produced_c = kept_c = 0
     items_by_id = {}
@@ -77,17 +78,17 @@ def part_b(archive_conn, items_conn):
         user = request['messages'][1]['content']
         found = ITEM_ID.search(user)
         if not found:
-            continue
-        input_id = found.group(1)
+            raise ValueError('unidentifiable stored extraction request')
+        input_id = found.group(1) or found.group(2)
         if input_id not in items_by_id:
             row = items_conn.execute('select * from items where input_id=?', (input_id,)).fetchone()
             items_by_id[input_id] = dict(row) if row else None
         item = items_by_id[input_id]
         if not item:
-            continue
+            raise ValueError(f'missing source item: {input_id}')
         data = json.loads(answer_json)
         shown_ids = set(BLOCK5_VIEW.findall(user))
-        evidence, candidates, dropped = extraction.sift(data, item, item['text'] or '', shown_ids)
+        evidence, candidates, dropped = extraction.sift(data, item, item['text'] or '', shown_ids, uni, english=user.lstrip().startswith('[') or '[Item] id ' in user)
         judged += 1
         produced_e += len(data.get('evidence', [])); kept_e += len(evidence)
         produced_c += len(data.get('candidates', [])); kept_c += len(candidates)
@@ -144,22 +145,53 @@ def part_c(archive_conn, views_paths, uni):
 
 def part_d():
     missing = []
+    # each prompt file is checked against the enum set of its own version: Chinese up to role-v5 / matching-v1 / judging-v2, English after
     checks = [
-        ('role', extraction.TIERS + ['对象观点', '主题观点', '强烈看多', '看多', '中性', '看空', '强烈看空']),
-        ('matching', matching.OUTCOMES + matching.EVIDENCE_OUTCOMES),
-        ('judging', judging.PUSHES),
+        ('role', lambda v: (extraction.TIERS + vocabulary.KINDS + vocabulary.ASSET_LABELS) if extraction.is_english(v)
+                 else (extraction.LEGACY_TIERS + extraction.LEGACY_KINDS + list(vocabulary.LEGACY['label'])[:5])),
+        ('matching', lambda v: (matching.OUTCOMES + matching.EVIDENCE_OUTCOMES + vocabulary.DIRECTIONS) if matching.is_english(f'matching-{v}')
+                     else (matching.LEGACY_OUTCOMES + matching.LEGACY_EVIDENCE_OUTCOMES)),
+        ('judging', lambda v: judging.PUSHES if judging.is_english(f'judging-{v}') else judging.LEGACY_PUSHES),
     ]
     judged = 0
-    for kind, values in checks:
+    for kind, values_of in checks:
         for path in sorted(glob.glob(os.path.join(config.PROMPTS, f'{kind}-v*.txt'))):
             text = open(path, encoding='utf-8').read()
-            for value in values:
+            version = os.path.basename(path).rpartition('-')[2].removesuffix('.txt')
+            for value in values_of(version):
                 judged += 1
                 if value not in text:
                     missing.append(f'{os.path.basename(path)} lacks the enum value {value!r}')
     print(f'\n== D. schema enum values named in the prompts: judged {judged}, missing {len(missing)}')
     for line in missing:
         print('   ', line)
+    return judged
+
+
+def part_e(views_paths):
+    """Keyed ledgers (keyed-views-plan.md 5): how many open views carry a key, how many keys collide among open views (the
+    pipeline's identity rule says none should), and what the watch list sent to the review pool. A ledger written before
+    keys is reported as unkeyed, not failed."""
+    judged = 0
+    for path in views_paths:
+        conn = sqlite3.connect(f'file:{path}?mode=ro', uri=True)
+        conn.row_factory = sqlite3.Row
+        tables = {r[0] for r in conn.execute("select name from sqlite_master where type='table'")}
+        if 'view_keys' not in tables:
+            print(f'\n== E. keyed views in {os.path.basename(path)}: unkeyed ledger (written before keys)')
+            continue
+        open_ids = {r[0] for r in conn.execute('select view_id from view_switches where id in (select max(id) from view_switches group by view_id) and open=1')}
+        keys = collections.defaultdict(list)
+        for r in conn.execute('select k.*, v.object_id from view_keys k join views v on v.view_id=k.view_id'):
+            if r['view_id'] in open_ids:
+                keys[(r['object_id'], r['measure'], r['scope_key'], r['period_start'], r['period_end'], r['basis'], r['unit'], r['event_type'])].append(r['view_id'])
+        keyed = sum(len(v) for v in keys.values())
+        collisions = {k: v for k, v in keys.items() if len(v) > 1}
+        pool = conn.execute("select count(*) from review_pool_entries where kind='candidate_outside_watch'").fetchone()[0]
+        judged += keyed
+        print(f'\n== E. keyed views in {os.path.basename(path)}: open views {len(open_ids)}, keyed {keyed}, duplicate keys {len(collisions)} groups, review pool {pool} candidates outside the watch list')
+        for k, v in list(collisions.items())[:10]:
+            print(f'      {k[:3]} {k[3]}..{k[4]} → {v}')
     return judged
 
 
@@ -177,7 +209,8 @@ def main():
     uni = universe.load(args.universe)
     print('preflight over', args.archive, 'and', len(views_paths), 'views databases:', ', '.join(os.path.basename(os.path.dirname(p)) for p in views_paths))
     part_a(archive_conn)
-    counts = [part_b(archive_conn, items_conn), part_c(archive_conn, views_paths, uni), part_d()]
+    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, views_paths, uni), part_d()]
+    part_e(views_paths)          # informational for unkeyed ledgers; judged counts are reported per ledger
     if min(counts) == 0:
         print('\nUNEXERCISED: a check judged no case')
         sys.exit(1)

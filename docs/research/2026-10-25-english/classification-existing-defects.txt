@@ -1,0 +1,13 @@
+- `simulate_classification.py` resolves a ticker on the UTC date of `published_at`; the page says the New York
+  publication day (D9). It does not model the SEC filing day (D34), and has no cases for the macro rules (D15) or for
+  crypto, commodity and theme objects (D11). It merges a copy without looking at `supersedes`, so an update that names
+  the version it replaces is merged instead of classified as a new version; it does not check fields required only
+  in some cases (`has_readable_text` for text, `period` for reports and data, a text's genre); one sample is a single
+  XBRL fact, which is not pushed in (D32); one branch treats a same-issuer, same-day item as a copy without comparing
+  content; a 13F sample checks the related company of one split holding row, though a whole 13F is one item (D53). It
+  counts a 6-K exhibit as fiscal results only when its description says "results" (one sample); it returns two text-version
+  ownership filings (Form 4, SC 13G) as T13, though T13 takes the structured version; it reports the one data
+  interface that returns text and a listing as "not an input" instead of splitting it (D58). It reads related objects
+  from an old field name, `company_identifiers`, while the contract's field is `object_identifiers`, so its pass does
+  not test the current field (read under the current name, 392 of 411 stored items lose their related objects; D60).
+  The script is not changed at the POC stage.

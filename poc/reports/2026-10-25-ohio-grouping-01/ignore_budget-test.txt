@@ -1,0 +1,91 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_d157_budget_refuses_before_network ____________________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-337/test_d157_budget_refuses_befor0')
+
+    def test_d157_budget_refuses_before_network(tmp_path):
+        """Budget state: a used-up request allocation sends zero further requests."""
+        ohio.write(tmp_path / 'budget.json', {'attempts': [{}] * ohio.MAX_REQUESTS, 'reserved_or_spent': 0})
+        sent = []
+        call = ohio.BoundedTransport(tmp_path, 'control-1', time.monotonic() + 60, send=answers([], sent))
+        request = {'model': 'gpt-6-luna', 'max_completion_tokens': 8000}
+        with pytest.raises(RuntimeError, match='limit reached'):
+>           call('openai', request)
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ohio_sequence.BoundedTransport object at 0x10d08a470>
+provider = 'openai'
+request = {'max_completion_tokens': 8000, 'model': 'gpt-6-luna'}
+
+    def __call__(self, provider, request):
+        budget_path = self.out / 'budget.json'
+        budget = read(budget_path)
+        encoded = json.dumps(request, ensure_ascii=False).encode()
+        price_in, price_out = model.PRICES[request['model']]
+        reserve = (len(encoded) * price_in + request['max_completion_tokens'] * price_out) / 1e6
+        if time.monotonic() >= self.deadline or False or budget['reserved_or_spent'] + reserve > MAX_USD:
+            raise RuntimeError('Registered time/call/cost limit reached; no request sent')
+        record = {'status': 'started', 'label': self.label, 'request': request, 'reserved_usd': reserve}
+        budget['attempts'].append({'label': self.label, 'status': 'started', 'reserved_usd': reserve})
+        budget['reserved_or_spent'] += reserve
+        write(budget_path, budget)
+        path = self.out / self.label / f'call-{len(budget["attempts"]):02d}.json'
+        write(path, record)
+        started = time.monotonic()
+        print(f'START {self.label} call={len(budget["attempts"])} reserve=${reserve:.4f}', flush=True)
+        try:
+            if self.send is not None:
+                response = self.send(provider, request)
+            else:
+                url, _ = model.ENDPOINTS[provider]
+                headers = {'Authorization': f'Bearer {model._key(provider)}', 'Content-Type': 'application/json'}
+                req = urllib.request.Request(url, data=encoded, headers=headers, method='POST')
+                with urllib.request.urlopen(req, timeout=min(180, max(1, self.deadline - time.monotonic()))) as handle:
+                    response = json.loads(handle.read().decode())
+            record.update(status='complete', response=response, seconds=time.monotonic() - started)
+            usage = response.get('usage', {})
+            cost = (usage.get('prompt_tokens', 0) * price_in + usage.get('completion_tokens', 0) * price_out) / 1e6
+            if 'prompt_tokens' not in usage or 'completion_tokens' not in usage:
+                cost = reserve
+            budget['reserved_or_spent'] += cost - reserve
+            budget['attempts'][-1].update(status='complete', estimated_usd=cost)
+            record['estimated_usd'] = cost
+            write(path, record)
+            write(budget_path, budget)
+            print(f'DONE {self.label} usd=${cost:.4f} seconds={record["seconds"]:.1f}', flush=True)
+            return response
+        except Exception as error:
+            # Error type only: avoid logging headers or credential-bearing exception objects.
+            record.update(status='failed', error_type=type(error).__name__, seconds=time.monotonic() - started)
+            budget['attempts'][-1]['status'] = 'failed'
+            write(path, record)
+            write(budget_path, budget)
+>           raise RuntimeError(f'Network attempt failed ({type(error).__name__}); no resend') from None
+E           RuntimeError: Network attempt failed (StopIteration); no resend
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/ohio-mutant-8jid6pqf/ohio_sequence.py:225: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-337/test_d157_budget_refuses_befor0')
+
+    def test_d157_budget_refuses_before_network(tmp_path):
+        """Budget state: a used-up request allocation sends zero further requests."""
+        ohio.write(tmp_path / 'budget.json', {'attempts': [{}] * ohio.MAX_REQUESTS, 'reserved_or_spent': 0})
+        sent = []
+        call = ohio.BoundedTransport(tmp_path, 'control-1', time.monotonic() + 60, send=answers([], sent))
+        request = {'model': 'gpt-6-luna', 'max_completion_tokens': 8000}
+>       with pytest.raises(RuntimeError, match='limit reached'):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'limit reached'
+E        Input: 'Network attempt failed (StopIteration); no resend'
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:107: AssertionError
+----------------------------- Captured stdout call -----------------------------
+START control-1 call=31 reserve=$0.0801
+=========================== short test summary info ============================
+FAILED ../../../../../../../Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py::test_d157_budget_refuses_before_network
+1 failed in 0.04s

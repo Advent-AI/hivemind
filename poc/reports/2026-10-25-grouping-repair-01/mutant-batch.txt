@@ -1,0 +1,53 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_same_answer_coalesces_without_losing_evidence ______________
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-315/test_same_answer_coalesces_wit0')
+
+    def test_same_answer_coalesces_without_losing_evidence(tmp_path):
+        conn = store.open_db(str(tmp_path / 'views.sqlite'))
+        a = candidate('c1', scope_source='watch')
+        b = dict(a, id='c2', question='Another wording')
+        e = [dict(EVIDENCE[0], links=['c1']), dict(EVIDENCE[1], links=['c2'])]
+>       written = writing.write(conn, UNIVERSE, 1, ITEM, handover([a, b], e), checked_new([a, b]), {})
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-d4fvxz_3/tests/test_identity_repair.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-d4fvxz_3/src/hivemind/views/writing.py:75: in write
+    result = _write(conn, universe, seq, item, handover, checked, second_pass)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <sqlite3.Connection object at 0x1096c2940>
+universe = <hivemind.universe.Universe object at 0x109783fa0>, seq = 1
+item = {'category': 'T1', 'input_id': 'test:nvda-call', 'object_identifiers': [{'value': 'NVDA'}], 'publication_day': '2026-05-20', ...}
+handover = Handover(evidence=[{'id': 'e1', 'quote': '数据中心收入指引为全年三千亿美元以上', 'one_line': '数据中心收入指引三千亿以上', 'speaker': 'CFO', 'origina...D', 'event_type': 'n/a', 'scope_source': 'watch'}], dropped=[], call_id=0, request_sha256='', cached=False, cost_usd=0)
+checked = Checked(outcomes={'c1': ('新观点', None, []), 'c2': ('新观点', None, [])}, evidence={}, refusals=[], not_opened={}, notes=[])
+second_pass = {}
+
+    def _write(conn, universe, seq, item, handover, checked, second_pass):
+        """second_pass: {(handover evidence id, view_id): (outcome, target_evidence_id, said_day)} for candidate-linked
+        evidence compared after the candidates' destinations were known (new views' evidence is simply new)."""
+        changed, notes, new_views, evidence_ids = set(), [], {}, {}
+        candidate_ids = {c['id'] for c in handover.candidates}
+        aliases, problems = identity.batch_plan(handover.candidates, checked.outcomes)
+        if problems:
+            raise WriteConflict('; '.join(problems))
+        created = {}
+        # 1. new views, themes first
+        order = sorted(handover.candidates, key=lambda c: 0 if c['kind'] == '主题观点' else 1)
+        for c in order:
+            outcome, target, deps = checked.outcomes.get(c['id'], ('不开', None, []))
+            if outcome not in ('新观点', '接续'):
+                continue
+            canonical = aliases[c['id']]
+            if canonical in created:
+                new_views[c['id']] = created[canonical]
+                continue
+            if store.exact_key_views(conn, c):
+>               raise WriteConflict(f'candidate {c["id"]}: existing exact identity requires matching')
+E               hivemind.views.writing.WriteConflict: candidate c2: existing exact identity requires matching
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-d4fvxz_3/src/hivemind/views/writing.py:104: WriteConflict
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-d4fvxz_3/tests/test_identity_repair.py::test_same_answer_coalesces_without_losing_evidence
+1 failed in 0.10s

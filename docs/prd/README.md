@@ -1,28 +1,31 @@
-# PRD 目录
+# PRD index
 
-每个模块一份 PRD，用 Markdown 写。在设计页（docs/system-design.html）点开模块，右侧点“查看 PRD”就能看到；页面顶部的“查看系统 PRD”是总览。
+Each module has one Markdown specification. Select a module on `docs/system-design.html`, then open its PRD link. The system PRD link at the top opens the overview.
 
-| 文件 | 模块 | 状态 |
+| File | Module | Status |
 |---|---|---|
-| 00-system.md | 系统总览 | 主线已画出 |
-| 01-universe.md | 研究对象名单 | 第一版已冻结（具体主题还是草稿） |
-| 02-classification.md | 分类（上游完成） | 第一版已冻结 |
-| 03-config.md | Config | 第一版已冻结 |
-| 04-dispatch.md | 分发 | 第一版已冻结 |
-| 05-extraction.md | 抽取（只读） | 基础版已冻结；D149 补入抽取时归组要求，默认管线待接入（每类提示词仍需验证） |
-| 06-views.md | 观点库，含比对标注 | 基础版已冻结；D149 补入归组交接与保存要求，默认管线待接入（其余未定项见 PRD） |
-| 07-final-verdict.md | 最终判定 | 旧稿，以后和 Pull 模式一起重做（到期那天状态定格已经定了） |
-| 08-pull-mode.md | Pull 模式 | 旧稿，以后重做（每天结束时、或按定时任务主动跑，到期定格，已经定了） |
-| 09-review-pool.md | 人工复核池 | 第一版已冻结（只定了哪些东西会进来，输出先不设计） |
+| 00-system.md | System overview | Main flow defined |
+| 01-universe.md | Research universe | First version frozen; specific themes remain a draft |
+| 02-classification.md | Upstream classification | First version frozen |
+| 03-config.md | Config | First version frozen |
+| 04-dispatch.md | Dispatch | First version frozen |
+| 05-extraction.md | Extraction (read-only) | Foundation frozen; D149 grouping requirement added, default integration pending; category prompts still need validation |
+| 06-views.md | Thesis library and matching records | Foundation frozen; D149 group handoff and storage requirements added, default integration pending; other open items are in the PRD |
+| 07-final-verdict.md | Final verdict | Earlier draft, to be reconsidered with pull mode; due-date freezing is decided |
+| 08-pull-mode.md | Pull mode | Earlier draft; day-end/scheduled work and due-date freezing are decided |
+| 09-review-pool.md | Human review pool | First version frozen; intake defined, output deferred |
 
-## 规矩
+## Maintenance rules
 
-- 依据的顺序：Alex 的话 > docs/DECISIONS.md > PRD 和设计页。PRD 和 DECISIONS 不一致时，以 DECISIONS 为准，并改 PRD。
-- **有任何改动，都要把全部模块从头核对一遍：由 Claude 推理，不靠脚本。** 按这个顺序逐个模块过：研究对象名单 → 分类 → Config → 分发 → 抽取 → 观点库 → 最终判定 → Pull 模式 → 人工复核池 → 系统总览。每个模块对照 DECISIONS 问四件事：
-  1. 这次改动影响它吗？
-  2. 设计页和 PRD 说的是不是同一件事？
-  3. 例子还成立吗？
-  4. 验收标准和“还没定的”要不要改？
+Authority: Alex's instructions, then `docs/DECISIONS.md`, then the PRDs and design page. If a PRD contradicts a decision, correct the PRD.
 
-  发现不一致就改，最后列出改了哪里、为什么。DECISIONS 和 CURRENT_STATE 也在同一次改动里更新。
-- **最后一步才跑 `python3 docs/check.py`**，只做机械检查：PRD 里标着 `generated` 的段落和设计页的数据是否逐字一致（不一致只报告，由 Claude 改）、重新打包 PRD（直接双击打开设计页时读的是打包副本）、分类仿真、设计页能否正常打开。它通过不代表核对完了，推理那一遍才算。
+After **every change**, reason through every module in this order: research universe → classification → Config → dispatch → extraction → thesis library → final verdict → pull mode → human review pool → system overview. Compare each with the decisions and ask:
+
+1. Does this change affect the module?
+2. Do its page and PRD describe the same behaviour?
+3. Do the examples still work?
+4. Do the acceptance criteria or open questions need to change?
+
+Correct inconsistencies and list what changed and why. Update decisions and current state in the same slice.
+
+Run `python3 docs/check.py` **last**. It compares generated PRD blocks with page data, rebuilds the bundle used when the page opens from disk, runs the classification simulation and checks rendering. It reports mismatches rather than correcting their meaning. A pass is a mechanical result, not the reasoning review.

@@ -1,0 +1,81 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_old_parallel_handover_refuses_without_new_calls_or_processing ______
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-359/test_old_parallel_handover_ref0')
+
+    def test_old_parallel_handover_refuses_without_new_calls_or_processing(tmp_path):
+        """D159 legacy row: the actual five unfinished pre-extractions must not silently resume."""
+        args = setup_run(tmp_path)
+        source = ROOT / 'poc/data/views-2026-10-25-v15-T2b-aborted-fresh-archive.sqlite'
+        shutil.copyfile(source, args['views_path'])
+        db = store.open_db(args['views_path'])
+        before = db.execute('select count(*) from processing_steps').fetchone()[0]
+        pending = [r[0] for r in db.execute("select input_id from processing_steps where step='extracted'")]
+        assert len(pending) == 5
+        calls = []
+        with pytest.raises(replay.StaleHandoverError) as caught:
+>           replay.run(**args, transport=transport_for(args, calls))
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-sequence-mutants-zwsa1cij/tests/test_sequential_replay.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day, day0=None, spend_cap_usd=None,
+            transport=None, log=print, only_objects=None, max_items_per_day=None):
+        items_db = testdb.open_db(testdb_path)
+        conn = store.open_db(views_path)
+        # mutant: allow unfinished day-start handovers
+        last_done = store.last_completed_day(conn)
+        start = from_day
+        if last_done and from_day <= last_done:
+            next_day = (datetime.date.fromisoformat(last_done) + datetime.timedelta(days=1)).isoformat()
+            if next_day > until_day:
+                raise BackdatingError(f'views database already completed {last_done}; nothing to run before it')
+            log(f'resuming after the last completed day {last_done}')
+            start = next_day
+        last_written = conn.execute('select max(publication_day) from processing_steps where sequence_no > 0').fetchone()[0]
+        if last_written and start < last_written:
+            raise BackdatingError(f'views database already holds rounds of {last_written}; a replay cannot start before it (D31)')
+        totals = {'items': 0, 'extracted': 0, 'skipped': 0, 'merged': 0, 'not_processed': 0, 'returned': 0, 'failed': 0,
+                  'evidence': 0, 'new_views': 0, 'judged': 0, 'changed': 0, 'closed': 0}
+        calls_before, cost_before, *_ = archive.totals()
+        for day in calendar_days(start, until_day):
+            day_stats = {k: 0 for k in totals}
+            day_cost = 0.0
+            processed = 0
+            to_run = []
+            for item in testdb.feed(items_db, day, day):
+                if item['publication_day'] > day:
+                    raise LookAheadError(f'{item["input_id"]} is dated {item["publication_day"]}, after replay day {day}')
+                if only_objects and not any(o['value'] in only_objects for o in item['object_identifiers']):
+                    continue
+                if max_items_per_day and processed >= max_items_per_day:
+                    break
+                day_stats['items'] += 1
+                route = dispatch.route(conn, item, universe)
+                if route.kind != 'extract':
+                    day_stats[route.kind] += 1
+                    if route.kind == 'merged':
+                        dispatch.mark(conn, item, 0, 'merged', 'ok', route.reason)
+                        conn.commit()
+                    continue
+                processed += 1
+                to_run.append((item, route))
+            for item, route in to_run:
+                result = round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
+                day_stats['extracted'] += 1
+                day_stats['evidence'] += result.evidence
+                day_stats['new_views'] += result.new_views
+                day_stats['judged'] += result.judged
+                day_stats['changed'] += result.changed
+                day_cost += result.cost
+                if result.failed:
+                    day_stats['failed'] += 1
+                    log(f'  ! {item["input_id"][:60]}: {result.failed}')
+>                   raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
+E                   RuntimeError: item failed; day 2026-02-25 remains resumable: matching refused twice: candidate c2 has no decision；candidate c4 has no decision；candidate c5 has no decision；candidate c6 has no decision；candidate c7 has no decision；candidate c8 has no decision
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-sequence-mutants-zwsa1cij/src/hivemind/replay.py:102: RuntimeError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-sequence-mutants-zwsa1cij/tests/test_sequential_replay.py::test_old_parallel_handover_refuses_without_new_calls_or_processing
+1 failed in 0.06s

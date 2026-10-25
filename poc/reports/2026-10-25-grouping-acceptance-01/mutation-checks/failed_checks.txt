@@ -1,0 +1,28 @@
+.F..                                                                     [100%]
+=================================== FAILURES ===================================
+_____ test_result_file_alone_never_proves_completion[failed_checks-failed] _____
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-329/test_result_file_alone_never_p1')
+breach = 'failed_checks', state = 'failed'
+
+    @pytest.mark.parametrize('breach,state', [('missing_checks', 'incomplete'), ('failed_checks', 'failed'),
+                                             ('failed_with_result', 'failed'), ('missing_match', 'incomplete')])
+    def test_result_file_alone_never_proves_completion(tmp_path, breach, state):
+        """State table: failed.json wins and final completion checks are mandatory."""
+        out, sample = fixture(tmp_path)
+        if breach == 'missing_checks':
+            (sample / 'checks.json').unlink()
+        elif breach == 'failed_checks':
+            write(sample / 'checks.json', {'history_unchanged': False, 'resend': 'skipped'})
+        elif breach == 'missing_match':
+            (sample / 'item3-match.json').unlink()
+        else:
+            write(sample / 'failed.json', {'error': 'History check failed after result was written'})
+        code, report = run(out)
+>       assert code == 1 and report['states'] == {state: 1}
+E       assert (0 == 1)
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py:166: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py::test_result_file_alone_never_proves_completion[failed_checks-failed]
+1 failed, 3 passed, 17 deselected in 0.15s

@@ -1,0 +1,17 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_d157_wire_schema_refuses_real_unoffered_ids _______________
+
+    def test_d157_wire_schema_refuses_real_unoffered_ids():
+        """Request contract: the four actually refused references cannot pass the wire schema."""
+        path = ohio.DEFAULT_OUT / 'grouped-2/item1'
+        raw = ohio.read(path / 'extraction.json')
+        offered = ohio.read(path / 'context.json')['offered']
+        rule = ohio.schema(offered)['properties']['candidates']['items']['properties']['thread_ids']['items']
+>       assert 'pattern' in rule
+E       AssertionError: assert 'pattern' in {'description': '^(?:t[1-9][0-9]*|g1|g2)$', 'type': 'string'}
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:135: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py::test_d157_wire_schema_refuses_real_unoffered_ids
+1 failed in 0.04s

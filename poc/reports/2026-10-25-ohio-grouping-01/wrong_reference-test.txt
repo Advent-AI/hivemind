@@ -1,0 +1,115 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+____________ test_d157_unknown_reference_refuses_before_write[g999] ____________
+
+case = (<sqlite3.Connection object at 0x10b97e440>, <hivemind.model.Archive object at 0x10ba6ab00>, Config(version='poc-v16',...供融资。', ...}], 'threads': [{'id': 't1', 'name': 'Ohio project', 'scope': 'OpenAI Ohio financing and deployment'}]}, ...)
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-335/test_d157_unknown_reference_re0')
+bad = 'g999'
+
+    @pytest.mark.parametrize('bad', ['g999', 't2', ''])
+    def test_d157_unknown_reference_refuses_before_write(case, tmp_path, bad):
+        """Closed reference contract: only declared/actually offered IDs can reach the writer."""
+        db, archive, cfg, uni, items, first, _, _, _ = case
+        first['candidates'][0]['thread_ids'] = [bad]
+        with pytest.raises(ohio.Refused, match='invalid group references'):
+>           ohio.process(db, archive, cfg, uni, items[0], True, tmp_path / 'one', answers([first], []))
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:74: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/ohio-mutant-580zjmdy/ohio_sequence.py:147: in process
+    checked = match('matching', handover, matching.build_lists(conn, handover, shown, cfg.search_top_n), shown)
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/ohio-mutant-580zjmdy/ohio_sequence.py:131: in match
+    result = matching.decide(archive, cfg, conn, item, handover.candidates, handover.evidence, lists, shown,
+/Users/lchingen/hivemind/src/hivemind/views/matching.py:184: in decide
+    answer = model.call(archive, cfg, cfg.matching, system, user, SCHEMA, 'matching', 'match', transport=transport)
+/Users/lchingen/hivemind/src/hivemind/model.py:194: in call
+    response = (transport or openai_transport)(provider, request)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+provider = 'openai'
+request = {'max_completion_tokens': 12000, 'messages': [{'content': '你是观点库的比对员。抽取刚从一条信息里读出几个候选观点和几条证据。你不读原文，只看下面给你的东西，判三件事：\n\n一...观点的去向和依赖、每条证据的去向。没有的数组交空。target 没有就写空字符串。', 'role': 'user'}], 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', ...}
+
+    def transport(provider, request):
+        requests.append(copy.deepcopy(request))
+>       return {'choices': [{'message': {'content': json.dumps(next(stream), ensure_ascii=False)}}],
+                'usage': {'prompt_tokens': 200, 'completion_tokens': 100}}
+E       StopIteration
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:45: StopIteration
+_____________ test_d157_unknown_reference_refuses_before_write[t2] _____________
+
+case = (<sqlite3.Connection object at 0x10b97ed40>, <hivemind.model.Archive object at 0x10ba6bd90>, Config(version='poc-v16',...供融资。', ...}], 'threads': [{'id': 't1', 'name': 'Ohio project', 'scope': 'OpenAI Ohio financing and deployment'}]}, ...)
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-335/test_d157_unknown_reference_re1')
+bad = 't2'
+
+    @pytest.mark.parametrize('bad', ['g999', 't2', ''])
+    def test_d157_unknown_reference_refuses_before_write(case, tmp_path, bad):
+        """Closed reference contract: only declared/actually offered IDs can reach the writer."""
+        db, archive, cfg, uni, items, first, _, _, _ = case
+        first['candidates'][0]['thread_ids'] = [bad]
+        with pytest.raises(ohio.Refused, match='invalid group references'):
+>           ohio.process(db, archive, cfg, uni, items[0], True, tmp_path / 'one', answers([first], []))
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:74: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/ohio-mutant-580zjmdy/ohio_sequence.py:147: in process
+    checked = match('matching', handover, matching.build_lists(conn, handover, shown, cfg.search_top_n), shown)
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/ohio-mutant-580zjmdy/ohio_sequence.py:131: in match
+    result = matching.decide(archive, cfg, conn, item, handover.candidates, handover.evidence, lists, shown,
+/Users/lchingen/hivemind/src/hivemind/views/matching.py:184: in decide
+    answer = model.call(archive, cfg, cfg.matching, system, user, SCHEMA, 'matching', 'match', transport=transport)
+/Users/lchingen/hivemind/src/hivemind/model.py:194: in call
+    response = (transport or openai_transport)(provider, request)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+provider = 'openai'
+request = {'max_completion_tokens': 12000, 'messages': [{'content': '你是观点库的比对员。抽取刚从一条信息里读出几个候选观点和几条证据。你不读原文，只看下面给你的东西，判三件事：\n\n一...观点的去向和依赖、每条证据的去向。没有的数组交空。target 没有就写空字符串。', 'role': 'user'}], 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', ...}
+
+    def transport(provider, request):
+        requests.append(copy.deepcopy(request))
+>       return {'choices': [{'message': {'content': json.dumps(next(stream), ensure_ascii=False)}}],
+                'usage': {'prompt_tokens': 200, 'completion_tokens': 100}}
+E       StopIteration
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:45: StopIteration
+______________ test_d157_unknown_reference_refuses_before_write[] ______________
+
+case = (<sqlite3.Connection object at 0x10b97ee40>, <hivemind.model.Archive object at 0x10bba0f70>, Config(version='poc-v16',...供融资。', ...}], 'threads': [{'id': 't1', 'name': 'Ohio project', 'scope': 'OpenAI Ohio financing and deployment'}]}, ...)
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-335/test_d157_unknown_reference_re2')
+bad = ''
+
+    @pytest.mark.parametrize('bad', ['g999', 't2', ''])
+    def test_d157_unknown_reference_refuses_before_write(case, tmp_path, bad):
+        """Closed reference contract: only declared/actually offered IDs can reach the writer."""
+        db, archive, cfg, uni, items, first, _, _, _ = case
+        first['candidates'][0]['thread_ids'] = [bad]
+        with pytest.raises(ohio.Refused, match='invalid group references'):
+>           ohio.process(db, archive, cfg, uni, items[0], True, tmp_path / 'one', answers([first], []))
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:74: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/ohio-mutant-580zjmdy/ohio_sequence.py:147: in process
+    checked = match('matching', handover, matching.build_lists(conn, handover, shown, cfg.search_top_n), shown)
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/ohio-mutant-580zjmdy/ohio_sequence.py:131: in match
+    result = matching.decide(archive, cfg, conn, item, handover.candidates, handover.evidence, lists, shown,
+/Users/lchingen/hivemind/src/hivemind/views/matching.py:184: in decide
+    answer = model.call(archive, cfg, cfg.matching, system, user, SCHEMA, 'matching', 'match', transport=transport)
+/Users/lchingen/hivemind/src/hivemind/model.py:194: in call
+    response = (transport or openai_transport)(provider, request)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+provider = 'openai'
+request = {'max_completion_tokens': 12000, 'messages': [{'content': '你是观点库的比对员。抽取刚从一条信息里读出几个候选观点和几条证据。你不读原文，只看下面给你的东西，判三件事：\n\n一...观点的去向和依赖、每条证据的去向。没有的数组交空。target 没有就写空字符串。', 'role': 'user'}], 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', ...}
+
+    def transport(provider, request):
+        requests.append(copy.deepcopy(request))
+>       return {'choices': [{'message': {'content': json.dumps(next(stream), ensure_ascii=False)}}],
+                'usage': {'prompt_tokens': 200, 'completion_tokens': 100}}
+E       StopIteration
+
+/Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py:45: StopIteration
+=========================== short test summary info ============================
+FAILED ../../../../../../../Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py::test_d157_unknown_reference_refuses_before_write[g999]
+FAILED ../../../../../../../Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py::test_d157_unknown_reference_refuses_before_write[t2]
+FAILED ../../../../../../../Users/lchingen/hivemind/poc/hierarchy_study/test_ohio_sequence.py::test_d157_unknown_reference_refuses_before_write[]
+3 failed in 0.14s

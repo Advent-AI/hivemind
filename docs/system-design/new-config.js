@@ -6,28 +6,28 @@
 
   // What Config records: a version, its checksum and the model settings for reading text.
   const CONFIG_SCHEMA = [
-    { item: '版本号', meaning: '每改一次设置，就是一个新版本。', source: '改设置时生成' },
-    { item: '校验码', meaning: '由整份设置算出来的一串码。每次模型调用（读信息、比对、重判、最终判定……）的记录里都写下它，事后能查到当时用的是哪一版。', source: '系统自动算' },
-    { item: '模型设置、搜索取前几条', meaning: '模型设置分三种。抽取按类别各一套，写明用哪个模型、哪一版提示词、让模型想得多深、温度（温度越低，回答越稳定）。观点库的比对、重判各一套。最终判定一套。另外记观点库搜索取前几条，先定 10。提示词里写什么，在抽取、观点库和最终判定模块里。一套定下来就不再改，要改就换一套新的。', source: '人来定' },
+    { item: 'Version', meaning: 'Every settings change creates a new version.', source: 'Created when settings change' },
+    { item: 'Checksum', meaning: 'Calculated from the complete configuration and recorded with every model call, including extraction, matching, rejudgement and final verdicts, so the exact version can be traced.', source: 'Calculated by code' },
+    { item: 'Model settings and search result count', meaning: 'Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching and rejudgement settings; final verdicts have their own. Config also sets the search result count, initially 10. Prompt content belongs to the extraction, thesis library and final-verdict modules. A settings version is immutable; a change creates a new one.', source: 'Chosen by a person' },
   ];
 
   // The dispatch tree. A branch asks one question; each child is one answer (`answer`). A child without children is
   // where the item ends up: `act` marks the one that processes it.
   const DISPATCH_TREE = {
-    label: '一条信息进来', question: '信息完整吗？', note: '看有没有写明：谁发的、哪天发的、分类结果、上游编号',
+    label: 'An item arrives', question: 'Is the item complete?', note: 'Check author, publication day, classification result and upstream ID.',
     children: [
-      { answer: '不完整', label: '退回', note: '这是上游的问题，同时放进人工复核池' },
+      { answer: 'Incomplete', label: 'Return', note: 'This is an upstream problem; also place it in the human review pool.' },
       {
-        answer: '完整', label: '查处理记录', question: '以前处理过吗？', note: '同一个上游编号；更新版是新的一条，有自己的编号',
+        answer: 'Complete', label: 'Check processing records', question: 'Has it been processed?', note: 'Use the upstream ID. An updated version is a new item with its own ID.',
         children: [
-          { answer: '处理过', label: '跳过', note: '上游重发或测试重跑时，不重复花钱' },
+          { answer: 'Already processed', label: 'Skip', note: 'Do not pay again when upstream resends an item or a test reruns.' },
           {
-            answer: '没处理过', label: '看分类结果', question: '分类结果是什么？',
+            answer: 'Not processed', label: 'Read classification', question: 'What is the classification result?',
             children: [
-              { answer: '不合格', label: '不处理', note: '写明原因；对照表里查不到的，放进人工复核池' },
-              { answer: '不算材料', label: '不处理', note: '比如别人算好、我们自己就能算出来的指标，文件目录' },
-              { answer: '重复的信息', label: '并到原来那条', note: '算原来那条的另一个出处，不再处理一遍' },
-              { answer: '属于某一类', label: '交给抽取', note: '带上它的类别和顺序号；抽取按类别用不同的读法', act: true },
+              { answer: 'Invalid', label: 'Do not process', note: 'Record the reason; unresolved lookup entries go to the human review pool.' },
+              { answer: 'Not source material', label: 'Do not process', note: 'For example, derived indicators we can calculate ourselves, or a file listing.' },
+              { answer: 'Duplicate item', label: 'Merge with the original item', note: 'Record another source for the original item; do not process it again.' },
+              { answer: 'Assigned to a category', label: 'Send to extraction', note: 'Include its category and sequence number; extraction reads each category differently.', act: true },
             ],
           },
         ],
@@ -36,23 +36,23 @@
   };
 
   const TREE_NOTES = [
-    '灰色框：到这里就停了，不处理。黑框：交给抽取。',
-    '不看信息讲的是谁。推进来的信息都在研究对象名单的范围内，所以不再问“这一类要不要处理”。',
-    '每一类都交给抽取，按类别用不同的读法，不需要人来选。每一类读出什么，见抽取。',
-    '带了发布系列名、但发布系列表里没登记的，照常往下走，同时放进人工复核池。',
-    '顺序号按到达的先后编，不用电脑时钟；后面每一步都按它排先后。',
-    '“处理过”指已经处理完；上次没做完的，从记下的那一步接着做，不算处理过。',
+    'Grey boxes stop processing. The black box sends the item to extraction.',
+    'Do not filter by subject here. Incoming items are already within the research universe, so dispatch does not decide which categories to process.',
+    'Every category goes to extraction with its category-specific reading method; no manual selection. Extraction defines what each category yields.',
+    'An unregistered publication series does not stop processing; also record it in the human review pool.',
+    'Assign sequence numbers in arrival order, without using the computer clock. All later steps use that order.',
+    'Processed means completed. Resume unfinished work from its recorded step rather than treating it as completed.',
   ];
 
   const RULES = [
-    'Config 只管人要亲自选的设置：模型设置，加上观点库搜索取前几条。信息本身的情况（属于哪一类、哪天发的、讲的是谁）由上游分类给出；做事的顺序、失败了怎么办，由代码决定；研究什么、每样看哪几类信息，由研究对象名单决定。',
-    '不设预算和并发上限。',
-    '改任何一处都生成新版本，旧版本原样保留，不在旧版本上叠加修改。',
-    '设置里引用了不存在的模型设置，或者缺了必填的内容，整个版本不能用，也不会拿它去处理任何信息。',
+    'Config owns human-selected model settings and the thesis search result count. Upstream classification supplies category, publication day and subjects. Code owns processing order and failure handling. The research universe owns subjects and tracked categories.',
+    'Config does not set spending or concurrency limits.',
+    'Any change creates a new version. Preserve old versions without modifying them.',
+    'Missing required values or references to nonexistent model settings invalidate the entire version. It cannot process any item.',
   ];
 
   const OPEN = [
-    '暂无。',
+    'None currently.',
   ];
 
   function renderBranch(branch, escapeHtml, isRoot) {
@@ -82,16 +82,16 @@
   design.drilldowns = design.drilldowns || {};
 
   design.drilldowns.dispatch = {
-    button: '展开分发：怎么决定每条信息的去处',
-    kicker: '分发 · 详细说明',
+    button: 'Explore dispatch: where each item goes',
+    kicker: 'Dispatch · Details',
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
 
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">分发：每条信息怎么决定去处</h2>
-          <p class="drill__intro">每来一条信息，依次问三个问题：信息完整吗？以前处理过吗？分类结果是什么？最后只落到一个去处。哪些类别会推进来，由研究对象名单决定。</p>
+          <h2 class="drill__title">Dispatch: route each item</h2>
+          <p class="drill__intro">For each item, ask three questions in order: is it complete, has it been processed, and what is its classification? Each item has one destination. The research universe determines which categories arrive.</p>
           <div class="org"><div class="org-tree"><ul><li>${renderBranch(DISPATCH_TREE, escapeHtml, true)}</li></ul></div></div>
           <ul class="drill__rules">${TREE_NOTES.map((note) => `<li>${escapeHtml(note)}</li>`).join('')}</ul>
         </div>`;
@@ -101,8 +101,8 @@
   };
 
   design.drilldowns.config = {
-    button: '展开 Config',
-    kicker: 'Config · 详细说明',
+    button: 'Explore Config',
+    kicker: 'Config · Details',
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
@@ -111,20 +111,20 @@
 
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">Config：人要亲自选的设置</h2>
-          <p class="drill__intro">Config 只管人要亲自选的设置。模型设置分三种：抽取按类别各一套，观点库的比对、重判各一套，最终判定一套；另外记观点库搜索取前几条。每一类读出什么、提示词模板怎么拼，在抽取模块里；研究什么、看哪几类信息，在研究对象名单里。</p>
+          <h2 class="drill__title">Config: settings a person chooses</h2>
+          <p class="drill__intro">Config owns human-selected settings: extraction settings per category, matching, rejudgement, final verdicts and the search result count. Extraction defines what each category yields and how prompts are assembled. The research universe defines subjects and tracked categories.</p>
           <div class="drill__columns drill__columns--schema">
             <section>
-              <h3 class="drill__heading">记了什么</h3>
+              <h3 class="drill__heading">Recorded settings</h3>
               <table class="schema-table schema-table--compact">
-                <thead><tr><th>内容</th><th>说明</th><th>怎么来</th></tr></thead>
+                <thead><tr><th>Item</th><th>Meaning</th><th>Source</th></tr></thead>
                 <tbody>${schemaRows}</tbody>
               </table>
             </section>
             <section>
-              <h3 class="drill__heading">规则</h3>
+              <h3 class="drill__heading">Rules</h3>
               <ol class="drill__rules">${RULES.map((rule) => `<li>${escapeHtml(rule)}</li>`).join('')}</ol>
-              <h3 class="drill__heading drill__heading--spaced">还没定的</h3>
+              <h3 class="drill__heading drill__heading--spaced">Open questions</h3>
               <ul class="drill__rules">${OPEN.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
             </section>
           </div>

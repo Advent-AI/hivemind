@@ -1,0 +1,18 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_reference_list_does_not_veto_model_candidates ______________
+
+    def test_reference_list_does_not_veto_model_candidates():
+        trivia = candidate('c2', measure='event', scope='GeForce NOW', event_type='launch', looks_at='GeForce NOW 八月新游戏', question='八月是否上新 26 款？', evidence_ids=['e2'],
+                           rungs=[{'label': '是', 'condition': '是', 'lo': None, 'hi': None}, {'label': '否', 'condition': '否', 'lo': None, 'hi': None}], due_day='2026-08-31', year='2026')
+        other = candidate('c3', measure='other', scope='', evidence_ids=['e1'])
+        evidence, kept, dropped = extraction.sift({'candidates': [candidate('c1'), trivia, other], 'evidence': EVIDENCE}, ITEM, TEXT, set(), UNIVERSE)
+>       assert [c['id'] for c in kept] == ['c1', 'c2', 'c3']
+E       AssertionError: assert ['c1', 'c2'] == ['c1', 'c2', 'c3']
+E         Right contains one more item: 'c3'
+E         Use -v to get more diff
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-hkzxtreu/tests/test_keyed_views.py:40: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-mutant-hkzxtreu/tests/test_keyed_views.py::test_reference_list_does_not_veto_model_candidates
+1 failed in 0.06s

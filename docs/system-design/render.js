@@ -16,19 +16,19 @@
   const ZOOM_MAX = 1.5;
 
   const KINDS = {
-    control: '控制',
-    external: '外部输入',
-    model: '模型判断',
-    code: '代码 / 规则',
-    mixed: '代码 + 条件模型',
-    store: '存储',
+    control: 'Control',
+    external: 'External input',
+    model: 'Model decision',
+    code: 'Code / rules',
+    mixed: 'Code + conditional model',
+    store: 'Storage',
   };
   const LINE_STYLES = [
-    ['', '数据 / 执行'],
-    ['control', '控制 / 反馈'],
-    ['candidate', '仅本地路径'],
+    ['', 'Data / execution'],
+    ['control', 'Control / feedback'],
+    ['candidate', 'Local path only'],
   ];
-  const MIGRATION_LABELS = { carried: '已迁入 New', dropped: '不迁', open: '未决定' };
+  const MIGRATION_LABELS = { carried: 'Carried into New', dropped: 'Dropped', open: 'Undecided' };
   const MIGRATION_PILLS = { carried: 'pill pill--strong', dropped: 'pill pill--mixed', open: 'pill pill--quiet' };
 
   const elements = {
@@ -236,14 +236,14 @@
     const counts = migrationCounts();
     elements.heading.textContent = design.heading;
     elements.summary.textContent = design.summary;
-    const facts = [`${Object.keys(design.nodes).length} 个组件`, `${design.views.length} 张视图`];
+    const facts = [`${Object.keys(design.nodes).length} components`, `${design.views.length} views`];
     if (design.source) {
-      facts.unshift(`源码快照 ${design.source.snapshot} · ${design.source.revision} · main ${design.source.head.slice(0, 9)}`);
+      facts.unshift(`Source snapshot ${design.source.snapshot} · ${design.source.revision} · main ${design.source.head.slice(0, 9)}`);
     }
-    facts.push(`迁移：已迁入 ${counts.carried} · 不迁 ${counts.dropped} · 未决定 ${counts.open}`);
+    facts.push(`Migration: carried ${counts.carried} · dropped ${counts.dropped} · undecided ${counts.open}`);
     elements.meta.innerHTML = facts.map((fact) => `<span>${escapeHtml(fact)}</span>`).join('')
-      + (design.source ? `<a href="${escapeHtml(design.source.page)}" target="_blank" rel="noopener">原页面</a>` : '')
-      + (design.prd ? `<button class="text-button" type="button" data-prd-path="${escapeHtml(design.prd)}" data-prd-title="${escapeHtml(design.prdTitle || design.heading)}">查看系统 PRD ↗</button>` : '');
+      + (design.source ? `<a href="${escapeHtml(design.source.page)}" target="_blank" rel="noopener">Original page</a>` : '')
+      + (design.prd ? `<button class="text-button" type="button" data-prd-path="${escapeHtml(design.prd)}" data-prd-title="${escapeHtml(design.prdTitle || design.heading)}">Open system PRD ↗</button>` : '');
   }
 
   // ------------------------------------------------------------------ a view
@@ -342,17 +342,17 @@
 
   function nodeMarkers(design, nodeId, node) {
     const markers = [];
-    if (node.status) markers.push('<span class="pill pill--tiny pill--strong">已冻结</span>');
-    if (node.draft) markers.push('<span class="pill pill--tiny pill--mixed">旧稿</span>');
+    if (node.status) markers.push('<span class="pill pill--tiny pill--strong">Frozen</span>');
+    if (node.draft) markers.push('<span class="pill pill--tiny pill--mixed">Earlier draft</span>');
     const issueCount = openIssueCount(design, node);
     if (issueCount) {
-      markers.push(`<span class="pill pill--tiny pill--neutral" title="${issueCount} 个未解决问题">问题 ${issueCount}</span>`);
+      markers.push(`<span class="pill pill--tiny pill--neutral" title="${issueCount} unresolved issues">Issues ${issueCount}</span>`);
     }
     if (design.id === 'old') {
       const status = migrationStatus(nodeId);
       if (status !== 'open') markers.push(`<span class="${MIGRATION_PILLS[status]} pill--tiny">${MIGRATION_LABELS[status]}</span>`);
     }
-    if (design.drilldowns[nodeId]) markers.push('<span class="pill pill--tiny pill--quiet" title="点开有模块展开">展开 ↗</span>');
+    if (design.drilldowns[nodeId]) markers.push('<span class="pill pill--tiny pill--quiet" title="Open module details">Details ↗</span>');
     return markers.length ? `<span class="node__markers">${markers.join('')}</span>` : '';
   }
 
@@ -398,7 +398,7 @@
   function migrationBlock(design, nodeId, node) {
     if (design.id === 'old') {
       const status = migrationStatus(nodeId);
-      let body = '<p class="detail__text">还未决定：迁入 New，或者写进 new-design.js 的 dropped 并写明理由。</p>';
+      let body = '<p class="detail__text">Undecided: carry into New, or record it in new-design.js dropped with a reason.</p>';
       if (status === 'carried') {
         body = `<div class="jumps">${carriedInto(nodeId).map((newNodeId) => (
           `<button class="jump" type="button" data-go-design="new" data-go-node="${escapeHtml(newNodeId)}">→ ${escapeHtml(designs.new.nodes[newNodeId].title)}</button>`
@@ -406,11 +406,11 @@
       } else if (status === 'dropped') {
         body = `<p class="detail__text">${escapeHtml(designs.new.dropped[nodeId])}</p>`;
       }
-      return `<h3 class="detail__heading">在 New 中 <span class="${MIGRATION_PILLS[status]} pill--small">${MIGRATION_LABELS[status]}</span></h3>${body}`;
+      return `<h3 class="detail__heading">In New <span class="${MIGRATION_PILLS[status]} pill--small">${MIGRATION_LABELS[status]}</span></h3>${body}`;
     }
     const sources = node.from || [];
-    if (!sources.length) return '<h3 class="detail__heading">来自 Old</h3><p class="detail__text">新组件，不取代 Old 中的节点。</p>';
-    return `<h3 class="detail__heading">来自 Old</h3><div class="jumps">${sources.map((oldNodeId) => (
+    if (!sources.length) return '<h3 class="detail__heading">From Old</h3><p class="detail__text">New component; does not replace an Old node.</p>';
+    return `<h3 class="detail__heading">From Old</h3><div class="jumps">${sources.map((oldNodeId) => (
       `<button class="jump" type="button" data-go-design="old" data-go-node="${escapeHtml(oldNodeId)}">← ${escapeHtml(designs.old.nodes[oldNodeId]?.title || oldNodeId)}</button>`
     )).join('')}</div>`;
   }
@@ -437,10 +437,10 @@
     const drilldownButton = design.drilldowns[nodeId]
       ? `<button class="action" type="button" data-drilldown="${escapeHtml(nodeId)}">${escapeHtml(design.drilldowns[nodeId].button)} ↗</button>` : '';
     const prdButton = node.prd
-      ? `<button class="action action--quiet" type="button" data-prd-path="${escapeHtml(node.prd)}" data-prd-title="${escapeHtml(node.title)}">查看 PRD ↗</button>` : '';
+      ? `<button class="action action--quiet" type="button" data-prd-path="${escapeHtml(node.prd)}" data-prd-title="${escapeHtml(node.title)}">Open PRD ↗</button>` : '';
     const drilldown = drilldownButton || prdButton ? `<div class="detail__actions">${drilldownButton}${prdButton}</div>` : '';
     // A node shows only the fields it has, so a New node can start as a title and grow.
-    const facts = [['输入', node.inputs], ['输出', node.outputs], ['约束与边界', node.checks]]
+    const facts = [['Inputs', node.inputs], ['Outputs', node.outputs], ['Constraints and boundaries', node.checks]]
       .filter(([, value]) => value)
       .map(([label, value]) => `<dt>${label}</dt><dd>${escapeHtml(value)}</dd>`).join('');
     const issues = (node.issues || []).map((issueKey) => {
@@ -454,9 +454,9 @@
 
     elements.detail.innerHTML = `
       <div class="detail__nav">
-        <button class="text-button" type="button" data-step="-1"${index === 0 ? ' disabled' : ''}>← 上一个</button>
+        <button class="text-button" type="button" data-step="-1"${index === 0 ? ' disabled' : ''}>← Previous</button>
         <span class="num detail__count">${index + 1} / ${view.order.length}</span>
-        <button class="text-button" type="button" data-step="1"${index === view.order.length - 1 ? ' disabled' : ''}>下一个 →</button>
+        <button class="text-button" type="button" data-step="1"${index === view.order.length - 1 ? ' disabled' : ''}>Next →</button>
       </div>
       ${node.kind ? `<div class="detail__pills"><span class="pill pill--quiet"><i class="glyph glyph--${node.kind}"></i>${escapeHtml(KINDS[node.kind] || node.kind)}</span>${node.status ? `<span class="pill pill--strong">${escapeHtml(node.status)}</span>` : ''}${node.draft ? `<span class="pill pill--mixed">${escapeHtml(node.draft)}</span>` : ''}</div>` : ''}
       <h2 class="detail__title">${escapeHtml(node.title)}</h2>
@@ -465,12 +465,12 @@
       ${drilldown}
       ${variant}
       ${facts ? `<dl class="facts detail__facts">${facts}</dl>` : ''}
-      ${(node.inspect || []).length ? `<h3 class="detail__heading">检查顺序</h3><ol class="detail__steps">${node.inspect.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ol>` : ''}
-      ${(node.verified || []).length ? `<h3 class="detail__heading">验证</h3><ul class="detail__steps">${node.verified.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
-      ${(node.open || []).length ? `<h3 class="detail__heading">还没定的</h3><ul class="detail__steps">${node.open.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
-      ${connections ? `<h3 class="detail__heading">本视图中的连接</h3><ul class="connections">${connections}</ul>` : ''}
-      ${(node.refs || []).length ? `<h3 class="detail__heading">代码位置</h3><div class="refs">${referenceLinks(design, node.refs)}</div>` : ''}
-      ${issues ? `<h3 class="detail__heading">已记录的问题</h3><ul class="issues">${issues}</ul>` : ''}
+      ${(node.inspect || []).length ? `<h3 class="detail__heading">Inspection order</h3><ol class="detail__steps">${node.inspect.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ol>` : ''}
+      ${(node.verified || []).length ? `<h3 class="detail__heading">Verification</h3><ul class="detail__steps">${node.verified.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
+      ${(node.open || []).length ? `<h3 class="detail__heading">Open questions</h3><ul class="detail__steps">${node.open.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
+      ${connections ? `<h3 class="detail__heading">Connections in this view</h3><ul class="connections">${connections}</ul>` : ''}
+      ${(node.refs || []).length ? `<h3 class="detail__heading">Code references</h3><div class="refs">${referenceLinks(design, node.refs)}</div>` : ''}
+      ${issues ? `<h3 class="detail__heading">Recorded issues</h3><ul class="issues">${issues}</ul>` : ''}
       ${migrationBlock(design, nodeId, node)}`;
   }
 
@@ -501,10 +501,10 @@
     elements.migration.innerHTML = `
       <details class="migration__fold">
         <summary>
-          <h2 class="block__title">迁移清单</h2>
-          <p class="block__note">Old 共 ${Object.keys(designs.old.nodes).length} 个组件 · 已迁入 ${counts.carried} · 不迁 ${counts.dropped} · 未决定 ${counts.open}</p>
+          <h2 class="block__title">Migration inventory</h2>
+          <p class="block__note">Old: ${Object.keys(designs.old.nodes).length} components · carried ${counts.carried} · dropped ${counts.dropped} · undecided ${counts.open}</p>
         </summary>
-        <p class="migration__lead">每个 Old 组件只列在它第一次出现的视图下。点一下切到 Old 并选中它。</p>
+        <p class="migration__lead">Each Old component appears under its first view. Select it to open that component in Old.</p>
         <div class="migration__groups">${groups}</div>
       </details>`;
   }
@@ -605,7 +605,7 @@
     elements.sheetBody.scrollTop = 0;
     const node = design.nodes[nodeId];
     elements.sheetActions.innerHTML = node && node.prd
-      ? `<button class="action action--quiet" type="button" data-prd-path="${escapeHtml(node.prd)}" data-prd-title="${escapeHtml(node.title)}">查看这个模块的 PRD ↗</button>`
+      ? `<button class="action action--quiet" type="button" data-prd-path="${escapeHtml(node.prd)}" data-prd-title="${escapeHtml(node.title)}">Open module PRD ↗</button>`
       : '';
     elements.sheet.hidden = false;
     elements.sheetPanel.focus();
@@ -618,14 +618,14 @@
     state.focusBeforeSheet = document.activeElement;
     elements.sheetPanel.classList.add('sheet__panel--full');
     elements.sheetKicker.textContent = `PRD · ${title}`;
-    elements.sheetBody.innerHTML = '<p class="prd__source">正在打开…</p>';
+    elements.sheetBody.innerHTML = '<p class="prd__source">Opening…</p>';
     elements.sheet.hidden = false;
     elements.sheetPanel.focus();
     const backTo = Object.keys(design.nodes || {}).find((id) => design.nodes[id].prd === path && (design.drilldowns || {})[id]);
     elements.sheetActions.innerHTML = backTo
-      ? `<button class="action action--quiet" type="button" data-drilldown="${escapeHtml(backTo)}">← 回到展开页</button>` : '';
+      ? `<button class="action action--quiet" type="button" data-drilldown="${escapeHtml(backTo)}">← Back to details</button>` : '';
     const show = (markdown, fromBundle) => {
-      elements.sheetBody.innerHTML = `<p class="prd__source">来源：<code>${escapeHtml(path)}</code>${fromBundle ? '（打包副本）' : ''}</p>`
+      elements.sheetBody.innerHTML = `<p class="prd__source">Source: <code>${escapeHtml(path)}</code>${fromBundle ? ' (bundled copy)' : ''}</p>`
         + `<article class="prd">${window.HIVEMIND_MARKDOWN.render(markdown)}</article>`;
       elements.sheetBody.scrollTop = 0;
     };
@@ -635,7 +635,7 @@
       .then((markdown) => show(markdown, false))
       .catch(() => {
         if (bundled !== undefined) { show(bundled, true); return; }
-        elements.sheetBody.innerHTML = `<p class="prd__source">找不到 <code>${escapeHtml(path)}</code>：重跑 <code>python3 docs/prd/build_bundle.py</code> 后刷新。</p>`;
+        elements.sheetBody.innerHTML = `<p class="prd__source">Cannot find <code>${escapeHtml(path)}</code>: rerun <code>python3 docs/prd/build_bundle.py</code> and refresh.</p>`;
       });
   }
 

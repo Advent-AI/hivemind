@@ -44,6 +44,10 @@ class Setting:
     temperature: float
     reasoning_effort: str
     max_output_tokens: int
+    engine: str = 'llm'       # matching only: 'llm' (the generative call) or 'jev' (TypeSafe Jev, views/jev_matching.py)
+
+
+ENGINES = ('llm', 'jev')
 
 
 @dataclasses.dataclass(frozen=True)
@@ -74,9 +78,12 @@ def _setting(name, raw):
     missing = [key for key in REQUIRED if key not in raw]
     if missing:
         raise ConfigError(f'setting {name} lacks {missing}')
+    engine = str(raw.get('engine', 'llm'))
+    if engine not in ENGINES:
+        raise ConfigError(f'setting {name}: engine {engine!r} is not one of {ENGINES}')
     return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
                    temperature=float(raw['temperature']), reasoning_effort=str(raw['reasoning_effort']),
-                   max_output_tokens=int(raw['max_output_tokens']))
+                   max_output_tokens=int(raw['max_output_tokens']), engine=engine)
 
 
 def load(path):

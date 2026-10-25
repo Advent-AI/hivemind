@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_d162_incomplete_or_contradictory_disposition_refuses[missing] ______
+
+breach = 'missing'
+
+    @pytest.mark.parametrize('breach', ['missing', 'extra', 'both', 'neither', 'duplicate_relation'])
+    def test_d162_incomplete_or_contradictory_disposition_refuses(breach):
+        """Closed disposition contract: one explicit decision per source item, one relationship owner."""
+        source, organised = parts(ohio.read(OLD / 'control-1/item1/extraction.json'))
+        if breach == 'missing':
+            del organised['dispositions']['e1']
+        elif breach == 'extra':
+            organised['dispositions']['e999'] = {'links': [], 'omit_reason': 'not relevant'}
+        elif breach == 'both':
+            organised['dispositions']['e1']['omit_reason'] = 'not relevant'
+        elif breach == 'neither':
+            organised['dispositions']['e1']['links'] = []
+        else:
+            organised['candidates'][0]['evidence_ids'] = ['e2']
+>       with pytest.raises(ohio.Refused):
+E       Failed: DID NOT RAISE <class 'ohio_sequence.Refused'>
+
+poc/hierarchy_study/test_source_first.py:56: Failed
+=========================== short test summary info ============================
+FAILED poc/hierarchy_study/test_source_first.py::test_d162_incomplete_or_contradictory_disposition_refuses[missing]
+1 failed, 9 deselected in 0.04s

@@ -1,0 +1,64 @@
+....FF                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_same_count_wrong_target_and_missing_references_fail[stored_target-False] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-326/test_same_count_wrong_target_a4')
+names = False, breach = 'stored_target'
+
+    @pytest.mark.parametrize('names', [False, True])
+    @pytest.mark.parametrize('breach', ['swap', 'missing', 'stored_target'])
+    def test_same_count_wrong_target_and_missing_references_fail(tmp_path, names, breach):
+        """Both-format counterexamples: valid IDs, wrong target; no length proxy."""
+        out, sample = fixture(tmp_path, names)
+        if breach == 'stored_target':
+            path = sample / 'item3-result.json'
+            value = read(path)
+            value['bindings'][0]['thread_id'] = 'g1'
+        elif names:
+            path = sample / 'item3-extract-projection.json'
+            value = read(path)
+            value['thread_ids'][1] = ['g1'] if breach == 'swap' else []
+        else:
+            path = sample / 'item3-extract.json'
+            value = read(path)
+            value['answer']['candidates'][1]['thread_ids'] = ['g1'] if breach == 'swap' else []
+        write(path, value)
+        code, report = run(out)
+>       assert code == 1 and report['states'] == {'invalid': 1}, report
+E       AssertionError: {'acceptance': 'not_established', 'bindings_checked': 2, 'exit_code': 0, 'mode': 'stored_record_audit', ...}
+E       assert (0 == 1)
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py:124: AssertionError
+_ test_same_count_wrong_target_and_missing_references_fail[stored_target-True] _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-326/test_same_count_wrong_target_a5')
+names = True, breach = 'stored_target'
+
+    @pytest.mark.parametrize('names', [False, True])
+    @pytest.mark.parametrize('breach', ['swap', 'missing', 'stored_target'])
+    def test_same_count_wrong_target_and_missing_references_fail(tmp_path, names, breach):
+        """Both-format counterexamples: valid IDs, wrong target; no length proxy."""
+        out, sample = fixture(tmp_path, names)
+        if breach == 'stored_target':
+            path = sample / 'item3-result.json'
+            value = read(path)
+            value['bindings'][0]['thread_id'] = 'g1'
+        elif names:
+            path = sample / 'item3-extract-projection.json'
+            value = read(path)
+            value['thread_ids'][1] = ['g1'] if breach == 'swap' else []
+        else:
+            path = sample / 'item3-extract.json'
+            value = read(path)
+            value['answer']['candidates'][1]['thread_ids'] = ['g1'] if breach == 'swap' else []
+        write(path, value)
+        code, report = run(out)
+>       assert code == 1 and report['states'] == {'invalid': 1}, report
+E       AssertionError: {'acceptance': 'not_established', 'bindings_checked': 2, 'exit_code': 0, 'mode': 'stored_record_audit', ...}
+E       assert (0 == 1)
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py:124: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py::test_same_count_wrong_target_and_missing_references_fail[stored_target-False]
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/hivemind-acceptance-mutants-2rcg0biu/poc/hierarchy_study/test_review_subject_names.py::test_same_count_wrong_target_and_missing_references_fail[stored_target-True]
+2 failed, 4 passed, 15 deselected in 0.21s

@@ -1,0 +1,54 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_d158_prepared_role_experiment_runs_two_grouped_arms ___________
+
+case = (<sqlite3.Connection object at 0x10b112340>, <hivemind.model.Archive object at 0x10839eaa0>, Config(version='poc-v16',...供融资。', ...}], 'threads': [{'id': 't1', 'name': 'Ohio project', 'scope': 'OpenAI Ohio financing and deployment'}]}, ...)
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-353/test_d158_prepared_role_experi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1083437c0>
+
+    def test_d158_prepared_role_experiment_runs_two_grouped_arms(case, tmp_path, monkeypatch):
+        """D158 entry point: explicit frozen role changes only the experiment, both arms persist the event/risk."""
+        _, _, _, _, _, first, followup, new, update = case
+        c = first['candidates'][0]
+        c.update(measure='event', event_type='deal_close', unit='n/a', year='2027',
+                 period_start='2026-01-01', period_end='2027-07-26', due_day='2027-07-26',
+                 scope='OpenAI Ohio project financing guarantee', looks_at='Ohio 项目担保协议签署',
+                 question='截至2027-07-26，英伟达是否已签署为 OpenAI Ohio 项目提供融资担保的协议？',
+                 rungs=[{'label': '是', 'condition': '到检查日已签署担保协议', 'lo': None, 'hi': None},
+                        {'label': '否', 'condition': '到检查日未签署担保协议', 'lo': None, 'hi': None}])
+        out = tmp_path / 'experiment'
+        out.mkdir()
+        (out / 'preflight.txt').write_text('Controlled test; no external calls.')
+        role_path = out / 'role.txt'
+        role_text = (ohio.ROOT / 'poc/reports/2026-10-25-ohio-grouping-02/role-questions.txt').read_text()
+        role_path.write_text(role_text)
+        ohio.prepare(out, role_path=role_path)
+        sent = {}
+    
+        def transport_factory(out, label, deadline):
+            sent[label] = []
+            return answers(copy.deepcopy([first, new, followup, update]), sent[label])
+    
+        monkeypatch.setattr(ohio, 'BoundedTransport', transport_factory)
+        ohio.run(out)
+        assert set(ohio.read(out / 'status.json').values()) == {'complete'}
+        for label, requests in sent.items():
+            expected_role = role_text if label.startswith('grouped') else ohio.extraction._read('role-v5.txt')
+>           assert requests[0]['messages'][0]['content'] == expected_role + '\n\n' + ohio.GROUP_PROMPT
+E           AssertionError: assert '你是一位资深对冲基金分析...证据时不用再造候选或主线。' == '你是一位资深对冲基金分析...证据时不用再造候选或主线。'
+E             Skipping 98 identical leading characters in diff, use -v to show
+E               证据。
+E               
+E             - 开哪些观点：
+E             - - 先找这条材料正在争论、而已有观点管不到的重要问题：什么尚未发生的结果会改变公司的全年业务或重要分部？把它写成一个可以到期核对的问题。材料里的金额、条款、规模和风险是提出或检验问题的证据，不因每个数字存在就各开一条。
+E             - - 问题可以看一个数或一件事。数字只开今年、明年的全年数；公司的数按财年，其他数按自然年。项目总价、合同额度和规划容量不冒充某一年的支出或产能。
+E             - - 事件不以已获官方确认或已给承诺日期为前提。仍在谈判、等待落地的重大安排可以研究，传闻保留为传闻。已有明确期限就按期限；没有明确期限时，定一个一般在发布日后 6–12 个月的研究检查日，在问题中写清到那天核对哪个结果，不把检查日说成来源承诺的日期。只写能用材料支持的结果，不编造门槛。...
+E             
+E             ...Full output truncated (40 lines hidden), use '-vv' to show
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp79gd3m5f/poc/hierarchy_study/test_ohio_sequence.py:169: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"control-1": "complete", "grouped-1": "complete", "control-2": "complete", "grouped-2": "complete", "control-3": "complete", "grouped-3": "complete"}
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp79gd3m5f/poc/hierarchy_study/test_ohio_sequence.py::test_d158_prepared_role_experiment_runs_two_grouped_arms
+1 failed in 0.23s

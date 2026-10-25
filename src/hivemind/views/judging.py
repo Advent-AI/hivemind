@@ -1,28 +1,47 @@
 """06-views.md step 7: one re-judging round. Open views whose reading changed are judged in dependency order, each
 once; a view whose conclusion changed adds its open dependants. The model reads the evidence in force (with each
 replaced predecessor), the dependencies' current conclusions and its own last conclusion (for comparison only).
-Code checks every citation and that a rung move or a first judgement says changed; one retry, then the item fails."""
+Code checks every citation and that a rung move or a first judgement says changed; one retry, then the item fails.
+
+judging-v1 and v2 ask and answer in Chinese; judging-v3 and later ask and answer in English (D163). The schema, the
+request text and the retry note follow the prompt version; every answer is stored in the canonical vocabulary."""
 import dataclasses
 import json
 import os
 
-from .. import config, model
+from .. import config, model, vocabulary
 from . import store
 
 PROMPTS = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
-PUSHES = ['推向第一格', '推向最后一格', '不推']
+PUSHES = vocabulary.PUSHES
+LEGACY_PUSHES = list(vocabulary.LEGACY['push'])
+ENGLISH_FROM = 3                  # the first judging prompt version written in English
 
-SCHEMA = {
-    'type': 'object', 'additionalProperties': False,
-    'required': ['rung', 'reasons', 'cites', 'cites_views', 'pushes', 'changed', 'why_changed'],
-    'properties': {
-        'rung': {'type': 'integer'}, 'reasons': {'type': 'string'},
-        'cites': {'type': 'array', 'items': {'type': 'string'}}, 'cites_views': {'type': 'array', 'items': {'type': 'string'}},
-        'pushes': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['evidence_id', 'push'],
-                                              'properties': {'evidence_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': PUSHES}}}},
-        'changed': {'type': 'boolean'}, 'why_changed': {'type': 'string'},
-    },
-}
+
+def version_number(prompt_version):
+    return int(str(prompt_version or '').rpartition('-v')[2] or 0)
+
+
+def is_english(prompt_version):
+    return version_number(prompt_version) >= ENGLISH_FROM
+
+
+def schema_for(prompt_version):
+    pushes = PUSHES if is_english(prompt_version) else LEGACY_PUSHES
+    return {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['rung', 'reasons', 'cites', 'cites_views', 'pushes', 'changed', 'why_changed'],
+        'properties': {
+            'rung': {'type': 'integer'}, 'reasons': {'type': 'string'},
+            'cites': {'type': 'array', 'items': {'type': 'string'}}, 'cites_views': {'type': 'array', 'items': {'type': 'string'}},
+            'pushes': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['evidence_id', 'push'],
+                                                  'properties': {'evidence_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}},
+            'changed': {'type': 'boolean'}, 'why_changed': {'type': 'string'},
+        },
+    }
+
+
+SCHEMA = schema_for('judging-v1')          # the shape of the answers stored under judging-v1 and v2
 
 
 class JudgementRefused(Exception):
@@ -48,12 +67,7 @@ def topological(conn, view_ids):
     return ordered
 
 
-def build_prompt(conn, view_id, prompt_version='judging-v1'):
-    v = store.view(conn, view_id)
-    rungs = store.rungs_of(conn, view_id)
-    pieces = store.evidence_in_force(conn, view_id)
-    deps = store.dependencies_of(conn, view_id)
-    last = store.current_state(conn, view_id)
+def _lines_chinese(conn, view_id, v, rungs, pieces, deps, last):
     lines = [f'观点 {view_id}（{v["object_id"]}，{v["kind"]}，看的是「{v["looks_at"]}」，{v["year"] or ""}，到期 {v["due_day"]}）：{v["question"]}',
              '梯子：' + ' / '.join(f'第 {r["position"]} 格 {r["label"]}：{r["condition"]}' for r in rungs), '',
              f'【这条观点下没被替代的证据，{len(pieces)} 条】']
@@ -79,8 +93,54 @@ def build_prompt(conn, view_id, prompt_version='judging-v1'):
     else:
         lines.append('\n【上一次的结论】还没有，这是第一次判，changed 必须写 true。')
     lines.append('\n按 JSON schema 交回。cites 只能写上面列出的证据编号，cites_views 只能写上面列出的依赖观点编号。')
+    return lines
+
+
+def _lines_english(conn, view_id, v, rungs, pieces, deps, last):
+    lines = [f'Thesis {view_id} ({v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}',
+             'Ladder: ' + ' / '.join(f'rung {r["position"]} {r["label"]}: {r["condition"]}' for r in rungs), '',
+             f'[Evidence in force under this thesis, {len(pieces)} items]']
+    for p in pieces:
+        src = p['sources'][0] if p['sources'] else {}
+        lines.append(f'- {p["evidence_id"]} [{p["tier"]}; {p["speaker"]}; original source {p["original_who"]} {p["original_day"]}; from {src.get("input_id")} {src.get("publication_day")}] {p["one_line"]}\n    Quote: {p["quote"][:400]}')
+        if p.get('replaced'):
+            lines.append(f'    It replaces {p["replaced"]["evidence_id"]} ({p["replaced"]["original_day"]}): {p["replaced"]["one_line"]}')
+    if deps:
+        lines.append('\n[Current conclusions of the theses it depends on]')
+        for d in deps:
+            target = d['resolved_to']
+            if not target:
+                lines.append(f'- the {d["wait_year"]} thesis on chain {d["wait_chain_view_id"]}: not yet created ({d["direction"]})')
+                continue
+            tv = store.view(conn, target)
+            state = store.current_state(conn, target)
+            flag = 'historical only' if d['resolution'] == 'history_only' else ('closed' if not store.is_open(conn, target) else 'open')
+            rung_label = store.rungs_of(conn, target)[state['rung'] - 1]['label'] if state else 'not judged yet'
+            lines.append(f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now rung {state["rung"] if state else "-"} {rung_label}; reasons: {(state or {}).get("reasons", "")[:600]}')
+    if last:
+        lines.append(f'\n[Previous conclusion, for comparison only] rung {last["rung"]}; reasons: {last["reasons"][:800]}')
+    else:
+        lines.append('\n[Previous conclusion] none: this is the first judgement, so changed must be true.')
+    lines.append('\nAnswer per the JSON schema. cites may name only the evidence ids listed above; cites_views only the dependency thesis ids listed above.')
+    return lines
+
+
+def build_prompt(conn, view_id, prompt_version='judging-v1'):
+    v = store.view(conn, view_id)
+    rungs = store.rungs_of(conn, view_id)
+    pieces = store.evidence_in_force(conn, view_id)
+    deps = store.dependencies_of(conn, view_id)
+    last = store.current_state(conn, view_id)
+    build = _lines_english if is_english(prompt_version) else _lines_chinese
+    lines = build(conn, view_id, v, rungs, pieces, deps, last)
     with open(config.prompt_path(prompt_version + '.txt'), encoding='utf-8') as handle:
         return handle.read(), '\n'.join(lines)
+
+
+def retry_note(prompt_version, errors):
+    if is_english(prompt_version):
+        return '\n\nThe code returned the previous answer because: ' + '; '.join(errors) + '\nCorrect it and answer again, citing only the listed ids.'
+    return '\n\n上一次的答案被代码退回，原因：' + '；'.join(errors) + '\n请改正后再交（只能引用列出的编号）。'
 
 
 def check_answer(conn, view_id, data):
@@ -108,7 +168,7 @@ def check_answer(conn, view_id, data):
 
 
 def _record(conn, cfg, view_id, seq, item, answer):
-    data = answer.data
+    data = vocabulary.judgement_answer(answer.data)
     judgement_id = store.insert(conn, 'judgements', view_id=view_id, seq=seq, input_id=item['input_id'], rung=data['rung'],
                                 reasons=data['reasons'], cited_evidence_json=json.dumps(data['cites']), cited_views_json=json.dumps(data['cites_views']),
                                 pushes_json=json.dumps(data['pushes'], ensure_ascii=False), changed=1 if data['changed'] else 0,
@@ -120,13 +180,14 @@ def _record(conn, cfg, view_id, seq, item, answer):
 
 def judge_one(archive, cfg, conn, view_id, seq, item, *, transport=None):
     system, user = build_prompt(conn, view_id, cfg.rejudging.prompt_version)
+    schema = schema_for(cfg.rejudging.prompt_version)
     note = ''
     for attempt in range(2):
-        answer = model.call(archive, cfg, cfg.rejudging, system, user + note, SCHEMA, 'judgement', 'judge', transport=transport)
+        answer = model.call(archive, cfg, cfg.rejudging, system, user + note, schema, 'judgement', 'judge', transport=transport)
         errors = check_answer(conn, view_id, answer.data)
         if not errors:
             return _record(conn, cfg, view_id, seq, item, answer)
-        note = '\n\n上一次的答案被代码退回，原因：' + '；'.join(errors) + '\n请改正后再交（只能引用列出的编号）。'
+        note = retry_note(cfg.rejudging.prompt_version, errors)
     raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))
 
 
@@ -152,8 +213,10 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
     to the model concurrently (the prompts are built and the answers checked and written in this thread, so the
     database connection never crosses threads). A view waits while anything upstream of it is still pending, so a
     dependant always reads this round's conclusion of its dependency. A view with no evidence in force stays
-    还没判 (D59), and a view already judged at this sequence number (a resumed round) is not judged twice."""
+    unjudged (D59), and a view already judged at this sequence number (a resumed round) is not judged twice."""
     import concurrent.futures
+
+    schema = schema_for(cfg.rejudging.prompt_version)
 
     def eligible(view_id):
         return store.is_open(conn, view_id) and not store.has_judgement(conn, view_id, seq) and bool(store.evidence_in_force(conn, view_id))
@@ -166,7 +229,7 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
 
         def ask(view_id, note=''):
             system, user = prompts[view_id]
-            return model.call(archive, cfg, cfg.rejudging, system, user + note, SCHEMA, 'judgement', 'judge', transport=transport)
+            return model.call(archive, cfg, cfg.rejudging, system, user + note, schema, 'judgement', 'judge', transport=transport)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=JUDGE_WORKERS) as pool_:
             answers = dict(zip(level, pool_.map(ask, level)))
@@ -174,8 +237,7 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
             answer = answers[view_id]
             errors = check_answer(conn, view_id, answer.data)
             if errors:
-                note = '\n\n上一次的答案被代码退回，原因：' + '；'.join(errors) + '\n请改正后再交（只能引用列出的编号）。'
-                answer = ask(view_id, note)
+                answer = ask(view_id, retry_note(cfg.rejudging.prompt_version, errors))
                 errors = check_answer(conn, view_id, answer.data)
                 if errors:
                     raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))

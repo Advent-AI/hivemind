@@ -1,0 +1,170 @@
+{
+  "population": {
+    "sequences": 6,
+    "inputs": 18
+  },
+  "blank_objects": [
+    {
+      "sample": "grouped-3",
+      "input": 1,
+      "candidate": "c1"
+    }
+  ],
+  "wrong_group_references": [
+    {
+      "sample": "grouped-3",
+      "input": 1,
+      "candidate": "c1",
+      "groups": [
+        "g1"
+      ]
+    },
+    {
+      "sample": "grouped-3",
+      "input": 2,
+      "candidate": "c1",
+      "groups": [
+        "g1"
+      ]
+    }
+  ],
+  "matching_overrides": [
+    {
+      "sample": "grouped-2",
+      "input": 3,
+      "candidate": "c1",
+      "raw": {
+        "id": "c1",
+        "outcome": "归入已有的",
+        "target_view_id": "v1",
+        "reason": "候选观点与 v1 都关注 NVIDIA 是否与 OpenAI 达成报道所述约 2,500 亿美元的数据中心融资安排；俄亥俄州项目及融资用途是对该安排的具体描述。期限仅相差两天，仍是同一事件、同一期间。v2 关注的是最高 3,500 亿美元芯片采购融资，属于不同安排。",
+        "dependencies": []
+      },
+      "checked": [
+        "新观点",
+        null,
+        []
+      ],
+      "notes": [
+        "candidate c1: 归入已有的 into v1 refused by key (event[OpenAI 数据中心租赁和债务融资担保] 2026-01-01..2027-07-26 ≠ event[NVIDIA 与 OpenAI 就俄亥俄州数据中心项目的 2,500 亿美元融资安排] 2026-01-01..2027-07-28); opened as a new view"
+      ],
+      "not_opened": {}
+    },
+    {
+      "sample": "grouped-3",
+      "input": 1,
+      "candidate": "c1",
+      "raw": {
+        "id": "c1",
+        "outcome": "新观点",
+        "target_view_id": "",
+        "reason": "清单中没有已开观点；该观点针对英伟达与 OpenAI 是否签署这项约2500亿美元担保协议，属于具体安排，不能仅凭相关融资报道归入其他观点。期限为2027年1月26日，未超出今年和明年。",
+        "dependencies": []
+      },
+      "checked": [
+        "不开",
+        null,
+        []
+      ],
+      "notes": [],
+      "not_opened": {
+        "c1": "object '' not on the research list"
+      }
+    }
+  ],
+  "quote_drops": [
+    {
+      "sample": "grouped-3",
+      "input": 2,
+      "id": "e1",
+      "reason": "quote not in item"
+    }
+  ],
+  "equity_statement": [
+    {
+      "sample": "control-1",
+      "input": 2,
+      "id": "e12",
+      "one_line": "《金融时报》在2026年2月报道称，Nvidia退出了原于2025年9月宣布的1000亿美元协议，并以300亿美元股权投资取代。",
+      "correct": true
+    },
+    {
+      "sample": "grouped-1",
+      "input": 2,
+      "id": "e12",
+      "one_line": "《金融时报》在2026年2月报道称，英伟达退出了原于2025年9月公布的1000亿美元协议，改为30亿美元股权投资。",
+      "correct": false
+    },
+    {
+      "sample": "grouped-2",
+      "input": 2,
+      "id": "e11",
+      "one_line": "《金融时报》于2026年2月报道称，NVIDIA 将退出一项最初于2025年9月宣布的1,000亿美元协议，改为进行300亿美元股权投资。",
+      "correct": true
+    },
+    {
+      "sample": "grouped-3",
+      "input": 2,
+      "id": "e9",
+      "one_line": "MarketWatch转述《金融时报》报道称，英伟达于2026年2月退出此前在2025年9月宣布的1000亿美元协议，改为300亿美元股权投资。",
+      "correct": true
+    }
+  ],
+  "period_counterfactual": {
+    "stored_key": {
+      "view_id": "v1",
+      "measure": "event",
+      "scope": "OpenAI 数据中心租赁和债务融资担保",
+      "scope_key": "openai 数据中心租赁和债务融资担保",
+      "period_start": "2026-01-01",
+      "period_end": "2027-07-26",
+      "basis": "n/a",
+      "unit": "n/a",
+      "event_type": "deal_close",
+      "seq": 1,
+      "scope_source": "model",
+      "key_version": 2
+    },
+    "candidate": {
+      "id": "c1",
+      "object": "NVDA",
+      "kind": "对象观点",
+      "looks_at": "截至研究检查日，NVIDIA 是否已与 OpenAI 就报道所述俄亥俄州数据中心项目的 2,500 亿美元融资达成安排。",
+      "question": "截至 2027-07-28，NVIDIA 是否已与 OpenAI 就报道所述俄亥俄州数据中心项目的 2,500 亿美元融资达成安排？",
+      "rungs": [
+        {
+          "label": "是",
+          "condition": "截至 2027-07-28，NVIDIA 与 OpenAI 已就报道所述俄亥俄州数据中心项目的 2,500 亿美元融资达成安排。",
+          "lo": null,
+          "hi": null
+        },
+        {
+          "label": "否",
+          "condition": "截至 2027-07-28，NVIDIA 与 OpenAI 尚未就报道所述俄亥俄州数据中心项目的 2,500 亿美元融资达成安排。",
+          "lo": null,
+          "hi": null
+        }
+      ],
+      "due_day": "2027-07-28",
+      "year": "2027",
+      "measure": "event",
+      "scope": "NVIDIA 与 OpenAI 就俄亥俄州数据中心项目的 2,500 亿美元融资安排",
+      "period_start": "2026-01-01",
+      "period_end": "2027-07-28",
+      "basis": "n/a",
+      "unit": "n/a",
+      "event_type": "deal_close",
+      "thread_ids": [
+        "g3"
+      ],
+      "evidence_ids": [
+        "e3",
+        "e4"
+      ],
+      "scope_source": "model",
+      "key_version": 2
+    },
+    "original_conflict": true,
+    "same_period_conflict": false
+  }
+}

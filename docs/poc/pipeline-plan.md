@@ -1,233 +1,87 @@
-# POC 管线：按冻结设计的形状，做简洁版
+# POC pipeline: a minimal implementation of the design
 
-2026-10-23 晚。Alex：数据准备好、清洗干净就建管线；尽量按系统设计的形状，核心逻辑都在那里面，但做简洁一点；观点数量不设上限，模型定。这份是执行计划。长版（15 个任务、每个任务的测试）在 `docs/superpowers/plans/2026-10-23-nvda-poc.md`，这份是它的简洁版，以这份为准。
+Updated October 25, 2026 (D169). This is the working implementation overview. The original plan and detailed run history are preserved in the [historical snapshot](pipeline-plan-history-2026-10-25.zh.md). The original fifteen-task plan is `docs/superpowers/plans/2026-10-23-nvda-poc.md`; this shorter plan takes precedence where updated by recorded decisions.
 
-## 抽取时归组：目标与当前实现
+## Current result
 
-2026-10-25，D149：读信息时就要组织观点，这是目标要求，当前默认 POC 还没有接入。比如 Rubin 出货和 SK 工厂上线各自开观点，抽取同时指出它们属于 Rubin；写进库后仍能找到这份联系。完整规矩只在 [观点库 PRD](../prd/06-views.md#研究主线抽取时归组) 写一份，抽取职责见 [抽取 PRD](../prd/05-extraction.md#抽取时同时确定研究归属)。下文原管线和历史测量不能当作这项已经完成。
+The English library (D163–D166) runs end to end on extraction v10 (`role-v10`, `categories-v10`). D169 makes Jev the default matching engine: `poc/config/poc-v23.json` (extraction v10, `matching.engine: "jev"`, `jev-1.14.0`) is the default configuration of the replay, the service and the compose file; the generative matcher remains the configured alternative (`poc-v23-llm`). The measurement behind it (build log rows 41–49, `poc/reports/2026-10-25-benchmark-v23/`): two arms on the same extraction over the seed, the week of July 24–31 and August 1–15, scored per state against golds read from the texts. Jev matching equals the generative call on evidence and candidates, groups far better (required members 35/38 against 18/28), and costs 45% less at 4.8 times the speed; its two weak states, replacement and succession, were root-caused and corrected in D168 (probes on the stored requests: wrong replacements 17 to 1, successions 0/3 to 3/3). Open, shared by both engines: the same figure in another document judged new; one matter held by several groups; decisions naming a candidate of the same answer (part of the queued day-batch shape). The ledgers, archives and traces of the phase are listed in the [data manifest](../research/2026-10-25-english/data-manifest.md).
 
-| 位置 | 当前实现 | 为满足 D149 还缺什么 |
+Earlier in the phase, D162's [two-step extraction comparison](../../poc/reports/2026-10-25-source-first-01/results.md) failed end-to-end acceptance and no experimental role or grouping path was promoted from it.
+
+## Group during extraction: requirement versus implementation
+
+D149 requires the model to organise questions while reading the original item. Rubin shipments and SK factory deployment retain separate theses while sharing a business-process group. D165 (2026-10-25) implements this in the default pipeline as `poc-v20`: `thesis_groups` / `thesis_group_members`, extraction v8 with `group_refs` and `new_groups`, the writer resolving local ids and storing memberships with the theses; a company's own financial lines carry no group. The gap table below records the state before D165; the validation on the first week is logged in `docs/research/2026-10-25-english/build-log.md`. The [library PRD](../prd/06-views.md#research-groups-associate-during-extraction) owns the complete contract; [extraction](../prd/05-extraction.md#determine-associations-during-extraction) owns producing the associations. The existing pipeline and historical measurements do not establish this capability.
+
+| Path | Current implementation | Remaining requirement |
 |---|---|---|
-| `src/hivemind/extraction.py` 的 `SCHEMA`、`Handover`、`build_prompt` | 只有证据和候选观点；没有主线定义或归属字段，也没有可用主线上下文 | 在同一次抽取交接中表达并核对研究归属 |
-| `src/hivemind/views/round.py` 的 `run` | 存档和恢复证据、候选观点、剔除记录；依次比对和写入 | 归属随交接保存、恢复，交给最终写入；身份比对不重判归组 |
-| `src/hivemind/views/writing.py`、`store.py` | 写观点、证据及其关系，没有研究主线和成员 | 把抽取的归属连到最终观点，并与该步写入一起提交；按原顺序号读历史和来源 |
-| `poc/hierarchy_study/retained_membership.py` | D147 隔离原型已走通上述交接，保留候选观点的归属，并沿成员的真实证据连线读取 | 有已知漏归，不能直接视为默认管线的可靠实现；先解决语义一致性 |
-| `poc/hierarchy_study/grouping_consistency.py` | D148 仅测试给已有观点补回已存成员编号 | 变体未采用：有无关 PC 归入 Rubin、风险漏抽、客户专属组错归等问题，未证明解决原漏归 |
-| `poc/hierarchy_study/membership_basis.py` | D150 在同一次抽取内先写每条归属的依据，再选编号 | 变体未采用：三份仅一份正确提取并归入 OpenAI，一份漏抽，一份把 PC 归入 Rubin；见 [结果](../research/2026-10-25-grouping-basis/findings.md) |
+| `extraction.py`: schema, handover, prompt | Evidence and candidate theses, without default group definitions/references/context | Express and validate associations in the same extraction handoff |
+| `views/round.py` | Archive/resume evidence, candidates and drops, then match and write | Archive/resume associations and pass them to writing without regrouping in matching |
+| `views/writing.py`, `store.py` | Theses, evidence and their links | Resolve final thesis/group IDs and commit memberships atomically; retain historical reads |
+| `hierarchy_study/retained_membership.py` | D147 isolated handoff and real evidence-link reads | Semantic omissions remain; structural storage is not sufficient |
+| `hierarchy_study/grouping_consistency.py` | D148 member context experiment | Not adopted: PC/Rubin errors, omitted risk and wrong customer-specific groups |
+| `hierarchy_study/membership_basis.py` | D150 reason-first association experiment | Not adopted: one of three correctly extracted/grouped OpenAI; others omitted it or grouped PC under Rubin |
 
-D147 的三个样本保留了固定的 Rubin 出货、SK 工厂、SpaceX 卫星核心连接；D148 复查仍发现 OpenAI 部署漏归。结构上能保存不等于语义上能归对。逐份结果见 [一致性报告](../research/2026-10-25-grouping-consistency/findings.md)。
+D147 retained its core Rubin, SK and SpaceX links, but D148 still found omitted OpenAI membership. D152's three treatment responses and one control on the third article produced no new candidates, so new membership was unexercised. D156 corrected the measurement: retaining old membership is not a new association, an empty candidate list is not automatically an extraction miss, and failures/unstarted samples remain in the denominator. Detailed evidence remains in the linked research and report directories.
 
-本次只刷新目标和实现差距，不修改默认提示词、模型、数据库或实验数据。D150 已测试先写归属依据再选编号，仍有 PC 错归和 OpenAI 漏抽，未采用；既有关系的回填、主线合并拆分、给 agent 的上层投资论点和 MCP/UI 接入没有在这次实现。与 Claude 的 Idea 侧如何衔接，见 [工作区交接](../research/2026-10-25-grouping-basis/claude-handoff.md)。
+D155's identity/reference fixes are implemented; `poc-v16` does not enable grouping. D159 removed day-start pre-extraction: one item finishes writing before the next reads. In the old T4c run, 195 of 255 pre-extractions had earlier same-day new theses; that measures exposure to stale context, not 195 grouping errors. Sequence tests and a mutant verify the fix. No half-year rerun has started.
 
-## 看过的东西
+D157–D162 did not pass semantic acceptance. See the [grouping plan](grouping-improvement-plan.md) and current state for outcomes; do not continue a superseded experiment or promote grouping from a code-test pass.
 
-- 冻结设计：`docs/prd/00`–`06`、`08`，D7、D12–D14、D31、D38、D39、D44、D51、D54、D57、D58。管线的每一步都照它写，不改规矩。
-- 旧仓库：只借两个机制，模型调用按请求指纹缓存和存档（重跑不花钱、答案不变），记录只加不改、按知识日期切。它的 debates、loop、readmodel 不要。
-- 素材库：`poc/corpus/items.sqlite`，每条已经带分类字段和 T 标签、相关对象、转载指向、`feed` 标记。它就是 D7 说的「团队自己的库」，管线凭编号来取原文，自己不存。
+## Product path and POC simplifications
 
-## 设计里的模块，POC 里各做成什么
+The governing design is PRDs 00–06 and 08, with later decisions including D63, D149, D155 and D159. The old repository contributes requirements and two mechanisms: request-keyed model caching/archive and append-only historical records. Its debates, loop and readmodel are not ported. The corpus is the team's source store; the pipeline retrieves originals by ID rather than copying them into the thesis ledger.
 
-| 设计模块 | 设计说的 | POC 做的 | 简化了什么 |
-|---|---|---|---|
-| 研究对象名单 | 研究哪些对象、各看哪几类 | `poc/universe.json`：NVDA 加 14 家同行，12 个主题，各带类别 | 名单不出版本，手改 |
-| 分类（上游） | 16 类标签、相关对象、重复并到原来那条 | 素材库整理脚本已做：T1–T11、对象标签、`copy_of` | 对照表只覆盖抓到的渠道 |
-| 分发 | 完整吗 → 处理过吗 → 分类结果 → 编顺序号 | `dispatch.py`：同样三问；顺序号按到达；处理记录一步一行；复核池一行一条 | 退回上游只记录 |
-| 抽取 | 整份交给模型，五块提示词，交出证据和候选观点，代码核出处 | `extraction.py`：五块拼法照 05 的表；每类一个第 2、4 块文件；输出格式用 JSON schema 强制；代码核「原句在原文里、数字在原句里、连的是给它看过的观点」 | 第 2、4 块的措辞先写一版，跑过再改；T5、T9 没有材料 |
-| 观点库 | 问题、梯子、到期日；先搜再比；七步进库；只加不改 | `views/store.py` 全部是只加不改的表（触发器拒改拒删）；搜索用 SQLite 的 trigram 全文索引取前 10 | 没有人标、没有小模型；修正版（supersedes）不处理，进复核池 |
-| 比对（第 4 步） | 候选观点：归入、接续、新开、不开；证据：重复、替代、新证据；新观点挑依赖 | `views/matching.py`：两次模型调用（先候选观点和直接连已有观点的证据，候选观点有去向后再比连在它身上的证据）；代码查编号、开着、名单、接续唯一且方向不变、不绕圈 | 不开的四种情况写在提示词里让模型判，代码只查清单 |
-| 写进库（第 6 步） | 主题先写；重复加出处；替代按说的日期；晚到的旧说法只记一笔；依赖、接续 | `views/writing.py`：照做；等着的依赖（链上某一年还没建）在接续建出来时连上并触发重判 | 单进程，不做队列 |
-| 重判（第 7 步） | 读的东西变了才判；先判被依赖的；写明依据、推向、结论变不变 | `views/judging.py`：拓扑顺序，互不依赖的同时判；提示词给没被替代的证据连同被替掉的前一条、依赖的结论、上一次结论只供比较；代码核引用和「换格必说变了」；退一次再失败进复核池。**D63（2026-10-24）：一天判一次**，当天所有信息进完、pull 之前，对当天读的东西变了的观点判一轮（`round.judge_day`），不再每条信息判一次 | 一天一次是改了设计的「一轮一判」，记在 D63 |
-| Pull 模式 | 每天收盘定格到期的观点、关掉 | `pull.py`：每个日历日跑一次，到期的关掉 | 只做已定的这一件 |
-| 最终判定 | 待定 | 不做，Config 里留设置 | — |
-| 回放 | 测试库按发布顺序推进来，Pull 用回放的时间 | `replay.py`：按天推，当天以后的信息进不了一轮（代码守卫）；不能回到已完成的日子之前再跑；day 0 收盘存一份快照给 agent 层 | — |
-| 事件、处理记录可读、延迟、结算核数、命中记录（体验 PRD 第十三节） | Hivemind 要补的五项 | 事件：从判断记录里读「变了」和「碰到出场条件」；处理记录：`last_check`；延迟：回放里不可测，报告里写明；核数和命中：第二阶段 | — |
-| agent 层（stack 侧） | 一句话落到观点、出场条件、碰到带证据、押注卡、记录 | `poc/agent/`：只读观点库的 day-0 快照和之后的判断记录，自己的库另放 | 第一版只做「先问我」 |
-
-## 不设上限
-
-每家公司开几条观点由模型在抽取和比对时定；代码不查名额（D44）。提示词里只讲规矩（一个观点看一件东西、梯子五格能核对、到期日是见分晓那天、季报是证据不另开），不讲「两到四条」。
-
-## 模型
-
-2026-10-23 深夜 Alex 定：「那我觉得还是用 luna 吧，记录这个比较结果」。对比在本文末尾两节（D62）。
-
-OpenAI `gpt-6-luna`（旧系统用的，钥匙在、接口通，严格 JSON schema 可用）为默认；DeepSeek 的 `deepseek-v4-pro` 可切换（钥匙今天存了），不默认。知识截止日两家都没有公开数，报告里写明这是看不见的漏。Anthropic 没有钥匙。
-
-## 顺序
-
-1. 今晚：`config`、`model`（缓存和存档）、`store` 已写好并自测过；接着 `dispatch`、`extraction` 和十类提示词、`matching`、`writing`、`judging`、`round`、`pull`、`replay`。
-2. 先用 2 月 25 日和 5 月 20 日的公司文件跑一遍开题（几十次调用），把开出来的问题和梯子打出来看，不合设计的改提示词（只删不加）。
-3. 再按天回放 7 月 24 日到 10 月 22 日，先 NVDA 的材料，再放进全部材料；每天记一行：几条信息、几条证据、几条观点、几次重判、几次换格、花了多少。
-4. agent 层和报告：落题测试（20 句）、触发清单、假「没事」工作表、费用。
-5. 一遍 Codex 只读审查，对着 PRD 查每一步做没做、有没有偷看未来。
-
-## 验收（照体验 PRD 第十一节）
-
-- 每条判断都引用观点下没被替代的证据编号，代码核过；每次换格都写了「变了」。
-- 回放第二遍（同样的库和存档）一次模型都不调，日志一样。
-- 回放里没有一轮读到当天以后的信息（守卫没响）。
-- 落题 20 句的对错表；触发清单带原文；「判断说没动、事后看该动」的天数。
-
-## 风险
-
-- 提示词第一版开出来的问题太粗（全是财务线）或太碎：先跑开题那一步看，改措辞。
-- 一天的新闻几十条，每条一次抽取加一次比对，调用量大：有缓存，重跑免费；先跑 NVDA 层。
-- 模型知识截止在窗口之后：报告里写明。
-
-## 小跑之后改了什么（2026-10-23 夜）
-
-Alex：先小范围跑，别全跑完才发现不行。于是先跑 7 月 24 日到 31 日一周。这一周的跑法和一遍 Codex 只读审查（`docs/research/2026-10-23-poc-pipeline/`，每条的处理在 `disposition.md`）抓出的问题，数过类之后一起改了：
-
-| 问题 | 数到的 | 改法 |
+| Module | POC path | Limit or deliberate simplification |
 |---|---|---|
-| 同一天的信息共用顺序号 | 84 条信息只有 10 个号 | 分发时当场写下顺序号 |
-| 重判串着跑，一天二十分钟 | 一次 15–45 秒 | 互不依赖的观点同时判，上游还没判完的等 |
-| 依赖链 X→A→B，X 和 B 同时要判时 B 先于 A | 离线复现 | 一条观点等它上游所有待判的观点 |
-| 一条证据连两条观点，一边说重复一边说新证据，就存了两份 | 187 条里 6 条；库里 3 对重复原句 | 一条证据只存一份：任一去向说重复就连已有那条；替代也只存一份 |
-| 中途崩掉后重跑，整轮重来，观点和证据各多一份 | 离线复现 | 从处理记录的那一步接着；失败的那条保留顺序号；一轮一判（唯一索引） |
-| 第二次比对被退回也当新证据 | 代码路径 | 和第一次一样退一次，再失败整条进复核池 |
-| 第 5 块给了梯子和开关状态 | 05 的表写明只给问题、看的是什么、到期日 | 照 PRD |
-| 候选观点没证据也能开，只要作者是个人 | 02 和 D59 只豁免自己的备忘录 | 只豁免 publisher_type = self（语料里没有） |
-| 同一句原句抽成两条证据 | 2 对 | 并成一条 |
-| 季度观点漏网 | 1 条 | 正则对中文失效，改了 |
-| 高管入职、章程修改开成观点 | 2 条 | 角色提示词加一句 |
-| 比对提示词把 GAAP/非 GAAP 硬并成一条 | 06 说「同一样东西」 | 删那一句 |
-| 依赖只能从本候选的搜索结果里挑；没开的候选也能当依赖 | 代码 | 从这次调用看过的全部里挑；没开的候选退回；一个答案里不许绕圈，一个前期只许一个后期 |
-| 存档里失败的答案同一秒再记一次会撞键 | 离线复现 | 失败记录带随机后缀；重复记录取第一条 |
-| 提示词版本写在 Config 里但代码写死 | 03 | 按 Config 取文件，缺文件整版拒绝 |
-| agent 事件一个判断只给一个人；条件设定那一轮也算 | 代码 | 每人每判断一条；只算设定之后的 |
-| 数字观点开到了 2030 年（06：超出今年和明年的不开，提示词里写了，模型没照做） | 第二遍第一周 1 条（v9，全球数据中心 2030 年资本开支） | 代码决定：候选观点的年份超过发布年加一就不开 |
-| 跨媒体转述被判成新证据，热门观点一天重判十几次（Alex 问原因，追到两个机制叠在一起） | 7-27 给比对员看的 v2 证据清单 88 份，全是 2 月的 e1–e13：观点内搜索按词重叠排序，中文一句话只在标点处切开，整句成一个词，永远不重叠，于是排序退化成「最早的十条」；加上提示词把「另一家媒体」读成「另一个人说的」，CNBC「已确认」被判成新证据 | 代码：中文按两字切词再算重叠（改后 CNBC 那条的清单第一位就是路透原条，7-27 的 SSI 新闻排在前面的都是 7 月的证据）；提示词按 06 第 104 行原话写明「原始来源同一个、同一天、同一句话或同一个数，不管哪家媒体转述都是重复」，比对提示词 1,091 → 1,201 字，多的一句是审出来缺的。进程在 7 月 28 日停下再接着跑，停下时当天 43 条已做完 41 条，所以新去重从 7 月 29 日起生效，7 月 24–28 日是旧的 |
-| 判断「变了」但没换格（关键事实变了也算变，06 的定义），每条都成了给用户的事件 | 第二遍前三天 68 次判断里 9 次 | 管线照 06 不改；agent 层只把换格和碰到出场条件当事件，没换格的变化留在押注卡上 |
+| Research universe | `poc/universe.json`: NVDA, peers and themes with categories/references | Manually maintained POC list |
+| Classification | Corpus assembly supplies categories, subjects, copies and feed flags | Tables cover acquired channels, not full upstream design |
+| Dispatch | Three questions, arrival sequence, processing records and review pool | Return-to-upstream is recorded, not notified |
+| Extraction | Whole item, five prompt blocks, category content, JSON schema and source checks | Prompt quality remains experimental; corpus coverage varies by category |
+| Thesis storage | Append-only SQLite tables with mutation-refusal triggers; full-text search | No human labels or trained smaller model; input supersession remains a recorded limitation |
+| Matching | Jev by default (D169): per candidate one call asking the relation to each listed thesis and membership of each shown group; per evidence piece one call against its thesis's top-ranked pieces; code owns the key rules, succession direction and the checks shared with the generative matcher (ID, open-state, universe, succession and cycle) | Evidence recall@10 measured apart (36/36 and 46/49); the same figure in another document is still often judged new |
+| Writing | Themes first; repeated sources, date-ordered replacement, dependency/succession writes and waiting-year binding | Single process; no distributed queues |
+| Rejudgement | Dependency order, evidence in force plus replaced predecessor, dependency conclusions and prior conclusion for comparison | D63 explicitly changes cadence to once per day before pull, using `round.judge_day` |
+| Pull | Once per calendar day, freeze/close due theses | Only the decided due-date behaviour |
+| Final verdict | Not implemented; settings retained | Separate-step design unresolved |
+| Replay | Items advance by day with future-input guard; cannot replay before a completed day; day-zero snapshot for agents | D159 serial extraction after each preceding write; failures stop the day |
+| Agent layer | Reads day-zero snapshot and later judgements, keeps its own store | Initial consent mode is ask-first |
+| Experience measurements | Changed judgements/exit conditions, last check, event records | Replay cannot measure live latency; settlement-value checks and hit records are later work |
 
-照旧没做、写明的：出处的位置（第几段、哪个单元格）不存，只核原句在不在原文里；事件观点的依赖不跟着接续走（语料里接续 0 条）；搜索和依赖读的是库的最新状态，回放严格按天推进所以等于截至当天，中断后不能从更早的日子重跑（代码拒绝）；连在候选观点上又连在已有观点上的证据分两次比；模型自己知道的未来写在报告边界里。第一遍的数据在 `poc/data/old-2026-10-23-run1/`。
+The source check currently verifies quotations. Do not infer from that that generated numerical summaries are checked: D162 demonstrated a tenfold summary error despite an exact original quote.
 
-两遍开题开出的观点不一样，追了一下：同一份 2 月 25 日电话会，第一遍开了「Q1 收入、Rubin 下半年量产、H200 进口」，第二遍开了「数据中心全年收入、GAAP 毛利率、游戏收入、云厂资本开支」；把第二遍存档里的请求原样再发两次（同样的字节，不走缓存），得到「非 GAAP 毛利率、Rubin 量产」和「非 GAAP 毛利率、Rubin 进度」。所以是抽样本身的方差：一份五万字的电话会里「要紧的事」有十几件，提示词要它「少开」，开哪几件每次不同；角色提示词里「数据中心全年收入一定要开」也不是每次都照做。设计把「开哪些观点」交给模型、不设名额（D44），这是它的代价；设计里的兜底是用户带着一个库里没有的押注来时另开一条。可选的降方差办法（没做，等 Alex 定）：公司文件的抽取用更高的 reasoning_effort（Config 的选择，要跟低档各跑三次比）；开题时同一份文件抽几次、由比对归并。
+## Identity and volume
 
-## 抽取提示词 v2 和模型对比（2026-10-23 深夜）
+The model determines which questions to propose; there is no per-company quota. Prompt rules define a question, verifiable ladder, due date and quarterly evidence. D155 supplies bounded code-owned duplicate identity and treats research lists as references, not admission gates. See the [grouping plan](grouping-improvement-plan.md) for exact scope, period, event-type and legacy-key rules.
 
-Alex 不要「抽三次合并」（费钱费时），要提示词本身改到能稳定抽出来。按 §6 审了整个请求（角色、类别块、schema、第 5 块），v1 里让答案摇摆的地方：
+## Model and configuration
 
-- 自相矛盾：「财务线的复述不是观点」和「最要紧的那一两个数一定要开」同时在，模型每次各取一边。
-- 凭感觉的词：「要紧」「真有人在争」「能动股价几个百分点」「一般是证据」，没有一条能对着材料核对。
-- 写死的公司：「NVDA 的全年数据中心收入、全年毛利率」。
-- T4 的类别块里「中国区、自研芯片竞争」也是 NVDA 的话。
+Extraction and judging run on OpenAI `gpt-6-luna` (D62); matching runs on TypeSafe's Jev `jev-1.14.0` (D169). Keep provider/model explicit; never switch silently. `poc-v23` (extraction v10, Jev matching) is the default configuration; `poc-v16`/`role-v5` was the latest adopted extraction configuration before D163. Costs are computed from the archives' tokens at the published rates in `hivemind.model.PRICES`, never from an archive's stored cost. Experimental D160–D162 roles are not the default. Earlier DeepSeek comparisons and their original costs/results are historical evidence, not current availability or pricing claims. They are preserved in the snapshot.
 
-v2（`role-v2.txt`、`categories-v2.json`，1,494 → 1,551 字）把「开哪些」换成对着材料能核对的三条：这家公司的全年总收入和最大分部的全年收入各一条；材料里公司给了全年指引、目标或明确预期的每个数各一条；给了数字但不是这家公司自己的事写成主题观点。事件观点只开有日期或期限的待决事项。凭感觉的句子和公司名都删了。到期日改由 schema 强制成日期（`pattern`，OpenAI 严格模式接受），不再靠文字。
+D63 sets daily judgement: finish that day's item writes, gather changed theses, judge once in dependency order, then pull. Record the day judgement under `day:<date>` with the last sequence. Resume must not judge an already completed day twice. The historical run introduced daily judgement during the replay; its ledger retains both item- and day-labelled judgements from July 29, as measured in the [library build trace](../research/2026-10-25-english/english-library.md). Do not compare the old run as if it used one configuration.
 
-同一份 2 月 25 日电话会（5.2 万字），每种各发三次，不走缓存：
+## Verification and run discipline
 
-| 配置 | 三次开出的观点 | 稳不稳 | 每次秒数 | 每次费用 |
-|---|---|---|---|---|
-| v1 提示词，gpt-6-luna | ① 数据中心收入、GAAP 毛利率、游戏收入、云厂资本开支 ② 非 GAAP 毛利率、Rubin ③ 非 GAAP 毛利率、Rubin | 三次几乎不重合 | 25–30 | ≈0.05 美元 |
-| v2 提示词，gpt-6-luna | ① 总收入、数据中心收入、Rubin、云厂资本开支、毛利率、营业费用增幅 ② 同样六条写了出来，其中四条到期日写成文字被代码退回 ③ 同样六条加税率 | 核心六条三次都在；加了 schema 日期约束后第四次七条全过 | 26–31 | 0.045–0.052 美元 |
-| v2 提示词，deepseek-flash（endpoint 的 `deepseek-flash` 就是 DeepSeek-V4.1-Flash-1017，10 月 17 日那版；json_schema 模式返回「unavailable now」，只能 json_object；它默认 effort=high，每次先推理一万多 tokens，8k 输出不够用，开到 32k） | ① 数据中心收入、非 GAAP 毛利率、营业费用、税率、云厂资本开支、Rubin（漏了总收入），证据 23 条、原句全对 ② 把 schema 本身当答案交回 ③ 梯子里多塞了一个 note 字段 | 三次只有一次是合格的 JSON | 63–79（其中推理 9.5k–14.5k tokens） | 0.01–0.02 美元（输入几乎全命中缓存；输出按高峰价 1.2 美元/百万算） |
+Before paid work, run `scripts/preflight.py` over stored extraction answers and matching records, inspect every changed refusal class, and prove the decisive case on stored data. A cached replay establishes code behaviour, not model consistency.
 
-结论：v2 提示词解决了抽样方差，核心观点集合稳定；deepseek-flash 便宜三到五倍、慢两到三倍、证据抽得更多更全，但没有服务端的 schema 强制，三次两次格式不合格，要用它就得靠代码核对加重试，先不换。切到 v2 要从开题重跑（约 15 分钟、1.5 美元）；8 月的跑现在还是 v1。
+Use a small, registered comparison before a larger run. Each treatment needs a fresh control and at least three samples. Keep source inputs, prompts, schemas, limits and semantic expectations fixed. Record raw answers, checks, final writes, cost and failure reasons. Do not change prompts during a run or automatically repeat a failed acceptance.
 
-### DeepSeek-V4.1-Flash-1017 怎么拿到合格的 JSON（2026-10-23 深夜，Alex 要试 low、要查别人怎么做）
+The original product acceptance includes:
 
-网搜额度这一会话用完了，查的是 DeepSeek 自己的文档（chat completion 参数、JSON 模式、思考模式）：`response_format` 只有 `json_object`；文档建议提示词里给一个输出样例；工具调用有 `strict`；思考用 `thinking: {type, reasoning_effort: low/high/max}`，默认开、默认 high。同一份电话会，三种做法各三次：
+- Valid judgement citations to evidence in force and dependency theses; first judgements and score changes declare a changed conclusion.
+- Cached replay without model calls and with the same result.
+- No reads of future items during replay.
+- A labelled table for twenty user ideas, source-backed trigger records and false all-clear days.
 
-| 做法 | 合格 JSON | 秒 | 每次费用 | 开了什么 |
-|---|---|---|---|---|
-| 思考 low + json_object + 样例 | 1/3，两次 kind 写成「事件观点」（我提示词里的词，schema 没有；luna 的服务端 schema 把这类错挡掉了，DeepSeek 没有，于是暴露） | 55–82 | 0.014–0.023 | 合格那次七条全对，证据 20 |
-| 不思考 + json_object + 样例（改掉「事件观点」措辞后） | 2/3，一次 tier 写成「公布的数」（也是我提示词括号里的例子） | 12–26 | 0.008–0.013 | 核心六条都在，但第三次开了 16 条（主权 AI、网络、自由现金流、Meta、Anthropic……），开得太宽 |
-| 不思考 + 一个 strict 工具（参数就是我们的 schema）+ 强制调用（思考模式不许强制 tool_choice） | 3/3，服务端按 schema 强制 | 18–22 | 0.010–0.011 | 总收入、数据中心收入、毛利率、营业费用、税率、云厂资本开支、Rubin、H200 对华收入；一次把总收入和数据中心并成一条，一次漏了营业费用和税率；证据 29–31 条 |
+Those are separate from extraction/grouping semantic acceptance. Missing gold or unexercised paths must be reported, not counted as passed.
 
-两处被 DeepSeek 暴露的提示词和 schema 不一致（「事件观点」、tier 的括号例子）都改在 v2 里了。结论：要用 DeepSeek，走 strict 工具调用、不开思考，和 luna 一样是服务端强制格式；比 luna 便宜约五倍、快一点、证据抽得多三倍；候选观点的集合稍不如 luna v2 稳。比对和重判两类调用还没在它上面测。
+## Service and frontend
 
-## 第三遍：全部用新配置从开题重跑（2026-10-23 深夜）
+The read-only service provides search, historical thesis/evidence reads and threshold evaluation. The caller selects and arranges theses; Hivemind does not own user portfolios or trading decisions. See [service](service.md), [Idea card](idea-card.md) and [Thesis UI](thesis-ui.md) for current contracts. Historical mock iterations are preserved in the snapshot; superseded layouts and local matching rules are not the current specification.
 
-Alex：「现在就用新的吧」。第二遍停在 7 月 30 日，数据留在 `poc/data/old-2026-10-23-run2/`。第三遍用 `poc/config/poc-v2.json`（v2 抽取提示词、schema 强制到期日为日期、比对提示词的重复规则、中文切词的观点内搜索、年份上限、一条证据只存一份、恢复和顺序号的修法），从开题（2 月 25 日到 7 月 23 日，只 NVDA）跑到 8 月 31 日，day 0 仍是 7 月 24 日。跑完做 agent 层的落题和出场条件、出报告。
+## Known limits
 
-第三遍开题第一天的观察：v2 提示词开出的集合是对的（总收入、数据中心收入、毛利率、营业费用、税率、Rubin、云厂资本开支），问题带上了原因。两处重复：电话会说「2026 年下半年 Rubin 量产」、10-K 说「FY2027 下半年」，比对员看到了前一条，但因为「FY2027 下半年跨 2026 和 2027，不是同一期间」判成新观点；GAAP 税率和非 GAAP 税率各开一条。前者在比对提示词里加了一句「看一件事的观点，同一件事、期限只是写法不同的也是同一条」（1,201 → 1,245 字，从下一次比对起生效）；后者是 v2 规则 2「每个给了指引的数各一条」的字面后果，先不动，看 8 月的结果再说。
+Prompt quality can produce missing, overly broad or trivial questions. Exact quotes do not prove accurate summaries. Code keys do not prove semantic identity or correct grouping. Corpus classification covers only observed channels. Some original-source locations and input supersession paths remain simplified. Event-dependency succession and large-library recall need path-specific validation. Model knowledge can extend beyond a replay window, so a chronological input guard is not proof against model look-ahead. Live latency cannot be measured from replay. Consult current state before launching further work.
 
-第三遍开题第二次尝试在 5 月 20 日丢了电话会：模型把「2027 年云厂资本开支」提成 2026 年那条的接续，代码查「接续的梯子方向和上一期一致」时比的是第一格的标签文字，主题观点的标签是结果区间（「低于 6000 亿」对「低于 8000 亿」），文字必然不同，退了两次，整条信息进复核池，Q1 电话会的证据和候选观点都没进库。改成：对象观点仍比固定标签；主题观点比梯子条件里数量的走向（去掉年份、万亿换算成亿），走向相反才退，判不出来交给模型。在那个案例上：同向通过、镜像退回。因为开题少了最要紧的一份文件，第三遍再从开题重来一次（前两次的数据在 `old-2026-10-23-run3a/`、`run3b/`）。
+## Historical records
 
-## 跑前自检（2026-10-24 凌晨起的规矩）
-
-Alex：「do not get into this loop of doom fixing … fix the root cause once and for all」。四次重跑里三次的病根一样：代码检查和提示词没有先在存着的数据上过一遍，直接花钱跑整条管线靠结果发现错。`scripts/preflight.py` 把存档里全部模型答案和各次跑留下的比对记录过一遍现在的代码（0 美元），按检查列出判了多少、退了多少、退的原因和例子；AGENTS §5 写入：任何付费跑之前先过它，一次跑完不迭代，中途不改提示词和代码。第一次跑的结果（565 份抽取答案、287 条比对记录）：抽取的代码检查丢掉 26%（证据没连任何观点 289 条、连到被退回的候选 106 条、原句不在原文 37 条、到期日写成文字 13 条、季度 13 条、年份超限 8 条、对象梯子标签不对 9 条、同句并掉 6 条）；比对的代码检查退 5%，全是当时就退回重试过的（目标编号不在清单里 16、漏答 6），没有代码误退；四个提示词里 schema 的枚举值一个不缺。
-
-第三遍第三次尝试跑到 7 月 25 日时停下重来一次（第四次尝试，2026-10-24 01:10），这次是按新规矩做的：自检清单里「对象梯子标签不对，9 条」这一行追下去，是模型把对象观点的五格按数值从低到高写（第一格「强烈看空」），和 06 要求的「第一格强烈看多」正好相反，代码整条丢掉；丢的是 10-K 和电话会里的 FY27 总收入、数据中心收入、资本开支、Compute & Networking 收入，37 条对象候选里 9 条，24%。同一把梯子两种写法，代码把反着写的翻过来（标签和条件一起翻），标签不是这五个词的才丢。自检重跑：这一类退回 9 → 0，候选留下 115 → 129，其余各项不变。这是今晚唯一一次在存档上先证明、再重跑的重跑；运行中 7 月 24 日的 16 条观点、落题结果留在 `old-2026-10-23-run3c/`。另记下、这次不改的：v2 规则漏开没有日期的争论（对华 H200 许可这一遍没开，10-K 这次没提它）；同一天两份材料讲同一件事（SK Telecom AI 工厂）比对员没合并，理由是「没有信息表明是同一设施」；GAAP 和非 GAAP 税率各开一条。等 8 月跑完一起看。
-
-## 一天判一次、终点改到 8 月 15 日（2026-10-24 01:30，D63）
-
-Alex 看了费用（重判占一半）：「是的应该要一天一次」；「改成 8/15 吧；然后已有的结果封存，然后改一下重判的设置，然后继续跑完剩下的」。做法：每条信息的一轮到「写进库」为止；当天最后一条写完、pull 之前，`round.judge_day` 对当天「写进库」记录里变了的观点并集判一轮，记在 `day:<日期>` 的处理记录下，顺序号用当天最后一个；中途崩了重跑不会判第二次（离线检查过：两条信息同一天连到同一条观点，只判一次；判到一半崩掉再跑，还是一条）。reasoning_effort 这次不动，之后比。7 月 24 到 28 日是每条信息判一次的结果，封存在 `poc/data/sealed-2026-10-24-run3-through-0728/`；7 月 29 日起一天一次，跑到 8 月 15 日。
-
-## 第三遍跑完：2026-07-24 到 08-15 的结果（2026-10-24 03:20）
-
-跑完了，0 失败。结果封存在 `poc/data/sealed-2026-10-24-run3-through-0815/`（观点库、day 0 快照、agent 库、落题表、日志、报告，SHA256SUMS，只读）；报告文件在 `poc/reports/2026-10-24/`（timeline、events、hindsight 工作表和答案、beliefs、cost、limits）。
-
-- 规模：536 条信息进来，350 条处理，151 条没有研究对象不处理，6 条转载并掉；633 条证据（库里共 827 条、1,021 个出处，认出重复 194 次）；新开 58 条观点（库里 94 条，92 条开着，2 条到期定格）；窗口期判断 419 次（7 月 29 日起一天一轮，18 轮），129 次说变了，其中 41 次没换格，换格 4 次。
-- 费用：这一遍 26 美元（开题 1.3，每条信息判一次的 7 月 24–28 日 9.2，一天一判的 7 月 29 日–8 月 15 日 15.6，平均每天 0.6）。整晚 61.6 美元，含我重跑和对比烧掉的约 30。
-- 四个人：0 次事件。alex 和妈妈盯的数据中心收入 23 天都在第 2 格看多，爸爸盯的 Compute & Networking 分部收入没动；没有一件「发生的事」改变 FY27 的全年判断，所以没有警报，卡片上只会看到「上次核对」的日期在走。
-- 换格 4 次：云厂 2026 年资本开支 3→4（路透「超过 7000 亿」）、4→5（共识约 8000 亿）；CoreWeave FY26 调整后营业收入 2→3（模型重读原句发现指引是营业利润不是营业收入，自己纠正）；「2026 年 AI 基础设施支出」3→1：模型把「没有发生的事确认」判成了最低一格，这是对判断规则的误读（只有事实能定格、其余只能推），1 例。
-- 替代第一次被真实数据碰到：5 月 20 日电话会把 2 月的两条指引替掉（营业费用增幅「低 40%」→「高 40%」，税率 17–19% → 16–18%），正是设计要的。
-- 观点的分布：NVDA 23（9 条核心数字和事件，14 条来自新闻：SK Telecom AI 工厂 ×2、Gears of War DLSS ×2、黄仁勋见 Ted Cruz、DGX Spark ×2、GeForce NOW 新游戏、Sync 监视器、电源机架 ×2、卫星、Vera 收入、CPU）；ai-capex 主题 19（含 SpaceX 资本开支和算力 ×4、Uber L4 车辆数这种放错地方的）；AMD 10、AMZN 7、MSFT 7、CRWV 6、META 5，都是电话会按「每个给了指引的全年数」开的；美中关税主题 5 条全是商务部对石墨电极、薄页纸、铝箔之类的反倾销裁定。到期定格的两条是黄仁勋见 Cruz 和 Gears of War DLSS。
-- 没开的：对华 H200 许可（三家人问的）整遍没有；OpenAI 担保只开成了主题「担保融资金额」。原因是 v2 规则只开「有日期的待决事」和「给了指引的数」，没有日期的争论进不来。
-- 重复：GAAP 税率和非 GAAP 税率各一条；Compute & Networking 分部收入（到期日还写成 2028）和数据中心收入并存。
-- 复核池 8 条建议主题：亚美尼亚 AI 基础设施 ×4、AI 加速器市场规模、NVIDIA 带动的美国 GDP ×2、就业。
-- 证据四层：第三方看法 434、当事人说的 225、发生的事 115、传闻 53。
-
-### 逐条追踪页（2026-10-24 上午，Alex：「trace 一下每一笔你怎么抽取观点，抽了什么，为什么抽失败或是杂音多」）
-
-`scripts/trace_items.py` 从封存的观点库、模型档案和语料拼出 `poc/reports/2026-10-24/trace/index.html`（不问模型，0 美元）。每一条信息一行，点开是它走过的五步：路由（进不进流程、为什么）、抽取（模型写的每条证据和候选观点，代码丢了哪条、为什么，给模型看的已有观点清单）、比对（每个候选观点去哪、每条证据算新还是重复，附模型的理由和给它比的清单）、入库（存了几条、开了哪几条观点、改了哪几条的读法）、当天重判。原文、给模型的完整请求、模型原始答案是旁边的文件。诊断按规则打，不是人判：空手（模型一条都没写）、全被丢（写了但代码全丢）、杂音多（被扔掉的 ≥ 写出来的三分之一）、多为重复（留下的证据一半以上比对判重复）、正常。
-
-数出来的（02-25 到 08-15，语料 772 条，进流程 584 条）：
-- 诊断：正常 181、多为重复 67、杂音多 39、全被丢 38、空手 259。空手的 259 条里 T6 公司文件 115 条（10-K 的 EX-31、EX-32 之类的签字页和同意函）、T7 媒体 125 条（导航文字、打不开的页面，以及没有日期的话题——v2 规则说没有观点可连就不抽）。
-- 代码丢证据的三个原因：连的候选观点被代码丢了、证据跟着丢 80 条；一条观点都没连（links 空，T7 媒体 33、T8 分析师 29）65 条；原句不在原文里 34 条（表格数字、转写稿的句子被改了字）。
-- 代码丢候选观点的原因：到期日不在发布日之后 38 条（写的是已经发生的事：债券交割、一次会面、已公布的反倾销税率）；年份超出明年 20 条（2028、2031、2036 的数）；证据没了跟着丢 5 条；季度数 3 条。
-- 比对：候选观点 137 条留下，判新观点 94（都开了）、归入已有 33、不开 4、接续 0；另有 8 条判了新观点但对象不在研究名单上（亚美尼亚 AI 工厂、AI 加速器市场、美国 GDP 贡献、就业），代码没开，进复核池当建议主题。证据判重复的，在 67 条「多为重复」里集中出现，是同一句话多家转载，去重在工作，不是抽取写了废话。
-- 档案里的答案和交接记录逐条对上（0 条对不上；94 对候选观点→观点的问题和到期日逐一相同）。
-
-这些是数出来的事实，不是改法；要不要改、改哪条，等 Alex 看完页面定。
-
-### 语料标签收紧（2026-10-24 下午，Alex：「完整的扫一遍，让 codex subagent 帮着你好好扫描一次 tag 需要收紧的地方，之后重跑才不会出问题。先把这个解决了……先别帮我重跑」）
-
-标签指语料里每条信息身上的字段：讲的是谁（object_identifiers）、类别（T1…T11）、作者类型（publisher_type）、是不是转载（copy_of）、进不进流程（feed）。全部规则在一个地方写：`poc/corpus/scripts/assemble.py` 和它的三张表（`author-table.json`、`companies.json`、`topics.json`）。我先在冻结的窗口语料上按字段数了每条规则放进来什么、漏掉什么（`scratchpad/tag_census.py`，0 美元），Codex 读代码和库独立再扫一遍（`docs/research/2026-10-24-corpus-tags/`）。
-
-我的扫描找到三条，Codex 又找到七条（它的报告 `codex-review.md`，每条怎么处置在同目录 `disposition.md`）。收紧了十条，都是按已有规则的本意改的，不是加例外；每条有正反控制钉在真实数据上（`test_labels.py`，11 passed）：
-
-| 规则 | 原来 | 现在 | 全库改动 |
-|---|---|---|---|
-| 商务部联邦公报（fr-commerce）的对象 | 标题带 tariff / China 的贴「中美关税」，带 chip / export 的贴「芯片出口管制」 | 一律不带对象（它是故意放进去的 noise 档；出口管制走 BIS 的源，关税行动走 USTR 的源） | 105 条去掉主题标签 |
-| 签字页和政策附件（EX-19、21、23、31、32、97） | 算 T6，各算一条 | 「不算材料」，不进流程 | 72 条；上一遍跑过 40 条，0 条有产出 |
-| 聚合站（Yahoo 等）页面的作者 | 作者 = 域名 → 媒体 T7 | 作者 = 署名里的机构（作者规则 3）：署名行、电头、「first appeared on …」、版权行；认不出的保持媒体并记 author_unidentified | 72 页认出 39 页；30 条 T7 → T8 |
-| 作者表 | IBM、SK hynix、Naver、CoreWeave、OpenAI 等公司自有新闻室默认成媒体；TIKR、SemiAnalysis、Trefis 等研究站默认成媒体 | 13 个公司域名记 company → T6；9 个研究域名记 analyst → T8 | 20 条 |
-| 同行公司文件的主题标签 | 公司所属主题（MSFT → ai-capex）传给它每一份文件，连子公司名单、审计师同意函都带 | 只有业绩、定期报告、电话会（T1/T2/T4）带主题；合同、8-K 正文、其他附件只带公司 | 163 条去掉主题；路由不变（公司代码还在） |
-| 联邦公报文件的作者 | 写成「Federal Register」（渠道） | 写签发机构：商务部、BIS、USTR | 756 条 |
-| 转载 | 只在新闻之间认同一 URL；Google News 抓到的 NVIDIA 博客和新闻室页面和原件各算一条 | 任何两行同一 URL 就是转载，公司和官方原件优先当原件 | 28 条并掉 |
-| 8-K 业绩附件 | 读到目录里的 Item 2.02 就停，Amazon 两份业绩附件判成 T6 | 取正文里最长的 Item 2.02 段 | 2 条 T6 → T1 |
-| 6-K 附件 | 说明只有「EX-99.1」时落到 T6（台积电半年报） | 说明没内容就读附件自己的封面 | 6 条 T6 → T1 |
-| 视频页 | CNBC /video/ 页只有播放器说明和导航，当成全文喂了 | 路径含 /video/ 的覆盖记 video，不进流程 | 12 条 |
-| 新闻室业绩稿 | 标题带 financial results 就算 T1，「宣布业绩电话会时间」也算了 | 要「reports / announces … financial results」且不是 conference call | 1 条 |
-| 电话会对象的理由 | 写成 filer | 写「公司在自己的电话会上说」 | 13 条，只改解释文字 |
-
-窗口（02-25 到 08-15）效果：喂入 771 → 720 条；进流程 584 → 480（T10 38 → 6，T6 149 → 96，T7 300 → 251，T8 65 → 92，T1 11 → 14）；转载 8 → 29。改到的字段核对过只有这几个：publisher、object_identifiers、category、feed、document_format、publisher_type、copy_of、coverage、tier、extra。
-
-**分歧已按 Alex 的标准了结（2026-10-24，"你自己评价下是不是会有影响的 thesis"）。** Codex 认为商务部对中国家具、轮胎、纸张的反倾销／反补贴公告按案号（A-570/C-570 = 中国）属于中美关税，窗口里 29 条。用"会不会动名单里任何一条 thesis"来判：语料里点名中国的商务部公告共 89 条（窗口内 29 条），全文没有一条提到 semiconductor、server、data center、GPU、chip、NVIDIA 或 printed circuit（唯一提到 heat sink 的是铝型材公告的范围条款）；上一轮它们在账本里只开出 5 条"商务部能否在某日前发布某裁定"的日程题（v44、v64、v65、v66、v85，2 格是非题，各 1–2 条证据，0 条被依赖），15 家公司和其他主题的观点没有一条引用过商务部证据。结论：不动任何 thesis；规则维持"不带对象"（`official_objects`），商务部公告留在噪音层。
-
-**没改、记下的**：官方抓取的文件名按标题前 80 字命名，同日同前缀的公告共用一个文件，97 条（窗口 17 条，都没对象、没进流程）里 56 条读到的是别的公告的正文——这是抓取缺陷，`harvest_official.py` 的命名已改成带 URL 哈希，下次建语料前要重抓这批；美联储讲话一律 T11 和「利率」主题（9 条，窗口 0 条），要按发布系列登记，不是 URL 规则；栏目和发布系列（CNBC Investing Club 这类）语料里没有字段，分类 PRD 要的优先顺序表达不了。
-
-没动的、数过说明不用动的：
-- Google News「nvidia」话题贴 NVDA：422 条里 405 条标题就带 NVIDIA；不带的 17 条里 6 条有产出（Cramer 讲循环融资、CoreWeave AI 工厂）；正文提到 nvidia 不足 3 次的只有 4 条。标题或词频规则都会误伤，媒体稿里的「空手」是内容问题，由抽取规则定，不是标签问题。
-- 同行公司文件带主题标签（MSFT 带 ai-capex 等）：T1/T2/T4 全有产出；T6 里空手的 43 条是上面那条签字页规则覆盖的；8-K 正文 18 条 1 条有产出（正文通常只有一句「见附件」），每条几分钱，按设计保留。
-- NVIDIA 自己的技术博客（developer.nvidia.com 21 条、blogs.nvidia.com 19 条）：T6、公司，标签对；38/49 空手是内容太技术，0.75 美元，设计上 T6 就是看的。
-- 整页喂给模型（Alex：原始、不加工）：窗口 392 页媒体稿里正文只占整页一半（4.18M 字对 2.10M 字），多花约 0.65 美元；页面上的摘录改成跳过页头取正文是显示问题，另做。
-- 话题抓取（topics.json：资本开支、宏观、地缘各组）还没进语料库（库里只有 nvda 话题）；要是重跑想加宏观主题，先用同一套数法数一遍，`stock market today Wall Street` → 美联储利率这类查询词太松。
-
-结果写成新文件 `poc/data/items-window-tags2-2026-10-24.sqlite`（`poc/corpus/scripts/relabel.py --in poc/data/items-window.sqlite --out …`：把 assemble.py 现在的规则套到旧库的每一行上，只改上面列的字段，核对过其他字段一个没变）；冻结的 `items-window.sqlite` 和封存的结果不动。重跑时换这个文件即可；是否重跑、什么时候重跑，Alex 定（他说先别）。
-
-### Hivemind 作为「数据库 + 搜索引擎」的服务（2026-10-24 傍晚）
-
-Alex 定了下一步的范围：「hivemind 就是一个数据库上面有个搜索引擎」——观点库上面叠一个只读的服务：搜（一句话进来，返回最相关的观点 top-k，带分数；索引只用观点自己的文字，证据已经挂在观点下面，搜到观点就等于搜到证据）、读（某条观点截至某天判在哪、过去怎么走、证据、处理记录、哪些观点变了）、算（一个门槛对着判的那格成不成立）。挑哪几条、怎么排成 issue tree 是调用方（agent）的事，不做 `issue_tree` 接口；Hivemind 不认识用户、不存看法。设计和每个调用返回什么、给谁读：`docs/poc/service.md`；代码 `src/hivemind/service.py`、`src/hivemind/search.py`；两个薄壳 `scripts/hivemind_mcp.py`（MCP，stdio，8 个工具）和 `scripts/hivemind_api.py`（HTTP，127.0.0.1）；索引是派生文件 `poc/data/search-index.sqlite`（text-embedding-3-small，94 条观点约 0.0003 美元，按文本哈希缓存）。测试 `tests/test_service.py`、`tests/test_search.py` 在封存的观点库上跑（11 个，含 as_of 不看未来、索引可重建、无向量时退回全文索引）。`scripts/search_eval.py` 把页面的 4 个例子和 day 0 的 16 句搜了一遍：有对应观点的句子，对应观点在前三（数据中心收入、Rubin 量产、毛利率、HBM 对毛利率）；没有对应观点的句子（对华出口、拆股、「黄仁勋是个天才」）分数低、前几名是杂的——分数给调用方自己定阈值。Codex 只读审查在 `docs/research/2026-10-24-service/`。
-
-### 前端 mock（2026-10-24 下午，Alex：「一个用户有一个想法……会自动匹配当前的 thesis……show 他的 ladder 在过去期间的变化……用 NV 来举例子和真实数据……UI like catalyst.app，没有交易动作，换成我们的 ladder UI」）
-
-`poc/mock/index.html`（`scripts/mock_data.py` 从封存的观点库取 NVDA 和 ai-capex 的 42 条观点、375 次判断、1,089 条证据链接；`scripts/mock_translate.py` 用 gpt-6-luna 把页面要显示的中文（问题、看的是什么、梯子条件、证据一句话、每轮判断的理由）分批译成英文，枚举值按表映射，译文缓存在 `poc/mock/translations*.json`，重跑 0 美元；2,498 条、49 次调用、2.15 美元，含一轮补译把模型留在英文里的「300亿美元」「2026年8月26日」改成 $30 billion、Aug 26, 2026，英文数据里不再有中文；`scripts/mock_build.py` 把 `data.en.json` 嵌进 `index.template.html`）。Alex 2026-10-24 下午：「change all UI FE and the mock /data to english」「make the UI clean, mind the bento boundaries」「I don't like dots as separators, please use |」——界面和数据全英文；三列按 bento 排：固定列宽、固定间距，每一行的观点卡和梯子卡等高，看法卡和第一行等高，卡头和卡身之间一条细线；所有分隔符用「|」；时间轴标签先放起止日期再放放得下的月份，不重叠。Alex 又指出「Rung」这个词和 y 轴上的格名又乱又难懂（「what the fuck is Rung… it should be called a state… score it as +2, +1, 0, −1, −2, no need to show the state names on y axis」）：页面上梯子的五格一律显示成分数 +2 / +1 / 0 / −1 / −2（公司观点第 1 格最看多是 +2；主题观点的区间沿格位递增时，数值大的一端是 +2，所以「资本开支 7500 亿以上」是 +2；是/否两格显示 Yes / No），+2 永远画在最上面一条泳道，格名只作小字说明，y 轴只标分数；卡片是固定高度的 tile（216px），文字裁行、图表占满剩余高度，没有空白块；观点卡之间的依赖虚线去掉了，依赖只在侧栏列出；Alex 又指出「你的数」被套到了每一条观点上（数据中心收入 3000 亿套在总收入、分部收入的梯子上没有意义）：现在句子里的数只读成一条主张（「top $300B」= ≥ $300B：一个门槛加一个方向），只对照它讲的那条观点（匹配最高的那条）的梯子：门槛落在哪一格就显示那一格（$300B 落在 +1，300–350），再拿系统判的那格和门槛比——判的区间整个在门槛之上是 Holds，整个在门槛之下是 Not yet，门槛穿过判的区间是 Borderline；滑块拖的是门槛，往下拖越容易 Holds，往上拖越容易 Not yet（Alex 看到第一版把门槛以上所有格都列出来、往下拖反而变多，骂了一顿，改成现在这样）。区间从梯子条件的前两个数读，条件后面的比较句（「相较 FY2026 的 1940 亿」）不算。Alex 接着指出看法卡和第一张观点卡在说同一件事，「the thesis should map to multiple views that support this thesis, but a view is not a thesis」：再指出层级该是「看法 → 它对应的那条总括性观点 → 这条观点下面的因素」（「everything that you're showing right here as the views are actually factors that would go under this view in terms of hierarchy」）：改成三列树——左边看法卡（门槛、系统判断、结论、映射到哪条观点），中间一张「Thesis view」tile（数据中心收入这条观点：问题、状态、梯子轨迹），右边几张「Factor」tile（这条观点判断时依赖的观点：云厂商 2026 资本开支、Rubin 下半年量产），连线从看法到观点、从观点到因素；观点和梯子合成一张 tile，不再分两列；句子匹配到但不是因素的观点不再显示。因素只显示系统的判断，不套你的数；卡片减到最少：观点卡只有问题、一行「你押的 vs 判的」、三个标签；梯子卡只有标题、分数、轨迹、一行脚注，条件句和最近证据移到侧栏。画布式三列：左边一张「看法」卡（用户的一句话，带「你押的数」滑块）；中间每条匹配到的「观点」卡（问题、到期日、你押的数落在哪一格对比现在判在哪一格：一致 / 有差距）；右边对应的「梯子」卡（现在第几格、上次什么时候从哪格换过来、五格泳道上的判断轨迹、每天到的证据柱、最近一条推动判断的证据）。卡之间连线，观点卡之间的依赖画成虚线。所有梯子共用一条线性时间轴（全程 02-25 起 / 窗口 07-24 起 / 最近 30 天），轨迹画成台阶：换格那天拐一下，其余时间平着走；左上「回放」按日历天拖动或播放，播放时裁剪边和播放头平滑地从左扫到右，卡上的格位、轮数、证据数随日期跳，还没开出来的观点在它开出来那天之前写「还没开出来」（Alex：「replay 应该是 linear 的……smooth transition through the years as the time scale goes from left to right」）。画布从任何地方按住都能拖（控件除外），拖动不选中文字、拖完不算点击（Alex 指出拖动时卡片文字被选中）。点梯子卡开侧栏：完整轨迹、每一轮的判断理由和引用的证据、换格记录、依赖、按层分的全部证据。匹配在页面里按概念词做（正式系统由比对模型做同一件事），页面不调用模型。样式用 `web/design-system`（纸色、黑白灰、Geist）。
-
-要 Alex 定的（每条一句规则）：
-1. 开什么观点。v2 稳定但两头都不对：事件规则放进了琐事（游戏 DLSS、一次会面、一款监视器），数字规则开了税率这类没人押的数，而没有日期的争论（对华许可、OpenAI 担保）进不来。倾向：事件限定成产品量产或发布、许可审批、交易完成、法规生效、财报点名的风险这几类；数字限定成收入线、利润率、资本开支；再加一条「管理层明说不确定、待批的事，没有日期也开，到期日定在下一次年报」。改成 v3 后在三份文件上各发三次量过再用。
-2. 判断里「没有事实就判最低一格」的误读，1 例。倾向：先看 8 月 15 日之后还出不出，不急着改提示词。
-3. 一天一判保留（D63）；reasoning_effort 降 low 的比较之后做。
+The [snapshot](pipeline-plan-history-2026-10-25.zh.md) preserves the initial build sequence, three replay attempts, model comparisons, preflight diagnosis, daily-judgement change, sealed-run results, corpus-tag corrections and early UI iterations. Their original language, numbers and paths remain intact. Current instructions above and later decisions supersede historical proposals to rerun or tune.

@@ -1,119 +1,114 @@
-# 研究对象名单
+# Research universe
 
-> 状态：第一版已冻结 · 2026-10-18（具体主题还是草稿） · 更新：2026-10-22 · 依据：docs/DECISIONS.md D6、D11、D16、D18、D19、D26、D28、D36、D37、D41、D42、D45、D47、D51–D53、D58–D60
-> 设计页：docs/system-design.html › New › 研究对象名单。本文和 DECISIONS 不一致时，以 DECISIONS 为准，并改本文。
+> Status: first version frozen, October 18, 2026; specific themes remain a draft. English edition: October 25, 2026 (D163).
+> Design page: `docs/system-design.html` → New → Research universe. Recorded decisions take precedence over this PRD.
 
-## 一句话
+## Purpose
 
-决定两件事：研究哪些对象，以及每个对象要看哪几类信息。系统里只有这里决定“处理什么”。
+Define which subjects to research and which information categories to track for each. This is the sole owner of what the system processes.
 
-## 为什么要有它
+Tariff research needs government notices; company research needs news and company announcements; Bitcoin research needs on-chain data. A second global category switch would eventually conflict with this list.
 
-一类信息有没有用，取决于研究的是什么：研究关税要看政府公告，研究一家公司要看新闻和公司公告，研究比特币要看链上数据。如果在别处再放一个全局的“处理哪些类别”开关，它迟早会和名单打架。所以名单是唯一的开关。
+## Scope
 
-## 做什么 / 不做什么
+List over 500 US-listed companies, cryptocurrencies, commodities and macro themes, each with tracked categories. Supply this scope to upstream. Also supply all themes to extraction block 3 so theme candidates can select one.
 
-- 做：列出研究对象（500 多只美股、加密货币、商品、宏观主题）；写明每个对象要看哪几类信息；交给上游，作为上游推送的范围；名单里的全部主题也交给抽取（提示词第 3 块），候选观点讲的是主题时从里面挑。
-- 不做：不在系统里过滤信息（分发不看对象）；不决定模型怎么读（读法在抽取模块，模型设置在 Config）；不自动加入名单外的东西（查不到的标识和名单里没有的主题先进人工复核池，查得到的公司、加密货币、商品不进）。
+The universe does not filter items inside dispatch, choose reading methods or model settings, or automatically add subjects. Extraction owns reading methods; Config owns model settings. Unresolved identifiers and proposed themes go to human review; resolvable assets merely outside the universe do not.
 
-## 对象有四种
+D155's POC entries include research references without changing this information scope. See the [improvement plan](../poc/grouping-improvement-plan.md) for their purpose and identity limits.
+
+## Four subject kinds
 
 <!-- generated: kinds -->
-| 种类 | 用什么认出它 | 例子 |
+| Kind | Identifiers | Example |
 |---|---|---|
-| 公司 | 股票代码、CIK 或公司名 | 500 多只美股：Apple、Amazon、Meta…… |
-| 加密货币 | 加密货币代码 | 比特币、以太坊…… |
-| 商品 | 商品代码 | 黄金、原油、铜…… |
-| 主题 | 主题编号 | 美国通胀、中美关税、俄乌战争…… |
+| Company | Ticker, CIK or company name | Over 500 US-listed companies: Apple, Amazon, Meta… |
+| Cryptocurrency | Cryptocurrency symbol | Bitcoin, Ethereum… |
+| Commodity | Commodity symbol | Gold, crude oil, copper… |
+| Theme | Theme ID | US inflation, US–China tariffs, Russia–Ukraine war… |
 <!-- /generated: kinds -->
 
-## 每种对象默认要看哪几类信息
+## Default tracked categories
 
 <!-- generated: defaults -->
-| 种类 | 要看的信息 | 类别编号 |
+| Kind | Tracked information | Category IDs |
 |---|---|---|
-| 公司 | 公司自己发的（业绩稿、定期报告、电话会、演示材料、其他发布）、和它有关的法律与资本市场文件（不管谁提交的）、新闻、观点与分析、访谈、官方对它的行动、股价、持仓、日历、第三方测量 | T1–T10、T12–T15 |
-| 加密货币 | 新闻、观点与分析、官方行动（执法、ETF 审批）、价格、资金与持仓、解锁日历、链上数据 | T7、T8、T10、T12–T15 |
-| 商品 | 新闻、观点与分析、官方行动（OPEC 决定、制裁）、统计数据（EIA 库存）、价格、持仓（CFTC）、日历、航运和卫星数据 | T7、T8、T10–T15 |
-| 主题 | 没有默认，每个主题自己写 | — |
+| Company | Company publications (earnings, periodic reports, calls, presentations and other releases), related legal and capital-markets documents regardless of filer, news, opinion and analysis, interviews, official actions, prices, holdings, calendars and third-party measurements | T1–T10, T12–T15 |
+| Cryptocurrency | News, opinion and analysis, official actions (enforcement, ETF approvals), prices, flows and holdings, unlock calendars and on-chain data | T7, T8, T10, T12–T15 |
+| Commodity | News, opinion and analysis, official actions (OPEC decisions, sanctions), statistics (EIA inventories), prices, holdings (CFTC), calendars, shipping and satellite data | T7, T8, T10–T15 |
+| Theme | No default; define categories for each theme | — |
 <!-- /generated: defaults -->
 
-## 主题库草稿：12 组
+## Draft theme library: 12 groups
 
 <!-- generated: themes -->
-| 分组 | 主题 |
+| Group | Theme |
 |---|---|
-| 货币与利率 | 美联储政策利率 · 美债收益率曲线 · 欧央行、日本央行、人民银行政策 |
-| 通胀 | 美国通胀 · 工资增长 · 能源价格传导 |
-| 增长与就业 | 美国衰退风险 · 就业市场 · 消费支出 · 中国经济 · 欧洲经济 |
-| 财政 | 美国赤字与发债 · 债务上限与政府停摆 · 税收政策 |
-| 贸易与产业政策 | 中美关税 · 芯片出口管制 · 产业补贴（CHIPS 法案、IRA）· 供应链转移 |
-| 地缘政治与战争 | 俄乌战争 · 中东冲突 · 台海局势 · 制裁 |
-| 政治与选举 | 美国大选 · 政策走向 |
-| 监管与法律 | 美欧反垄断 · 数据与隐私 · AI 监管 · 金融监管 |
-| 能源与大宗 | 原油供给（OPEC）· 天然气 · 工业金属 |
-| 汇率与资本流动 | 美元强弱 · 人民币 · 日元 |
-| 产业周期 | AI 资本开支 · 半导体周期 · 云计算需求 |
-| 市场风险偏好 | 信用利差 · 波动率 · 流动性 |
+| Money and rates | Fed policy rate · US Treasury yield curve · ECB, BOJ and PBOC policy |
+| Inflation | US inflation · Wage growth · Energy price transmission |
+| Growth and employment | US recession risk · Labour market · Consumer spending · Chinese economy · European economy |
+| Fiscal policy | US deficits and debt issuance · Debt ceiling and government shutdowns · Tax policy |
+| Trade and industrial policy | US–China tariffs · Chip export controls · Industrial subsidies (CHIPS Act, IRA) · Supply-chain shifts |
+| Geopolitics and war | Russia–Ukraine war · Middle East conflict · Taiwan Strait · Sanctions |
+| Politics and elections | US elections · Policy direction |
+| Regulation and law | US/EU antitrust · Data and privacy · AI regulation · Financial regulation |
+| Energy and commodities | Crude oil supply (OPEC) · Natural gas · Industrial metals |
+| Exchange rates and capital flows | US dollar strength · Renminbi · Yen |
+| Industry cycles | AI capital expenditure · Semiconductor cycle · Cloud demand |
+| Market risk appetite | Credit spreads · Volatility · Liquidity |
 <!-- /generated: themes -->
 
-## 一个主题要看什么（例子）
+## Theme tracking examples
 
 <!-- generated: examples -->
-| 主题 | 要看的信息 | 类别编号 |
+| Theme | Tracked information | Category IDs |
 |---|---|---|
-| 美国通胀 | CPI、PCE 数据和 BLS 的发布稿，ISM 的物价分项，密歇根大学的通胀预期（宏观统计）；相关新闻；经济学家的预测 | T11、T7、T8 |
-| 中美关税 | USTR、商务部的公告（官方行动）；相关新闻和评论；提到关税的公司财报、电话会和公告 | T10、T7、T8、T1–T6 |
+| US inflation | CPI, PCE and BLS releases, ISM price components and University of Michigan inflation expectations (macro statistics); related news; economist forecasts | T11, T7, T8 |
+| US–China tariffs | USTR and Commerce Department announcements (official actions); related news and commentary; company reports, calls and announcements discussing tariffs | T10, T7, T8, T1–T6 |
 <!-- /generated: examples -->
 
-## 规则
+## Rules
 
 <!-- generated: rules -->
-1. 名单单独管理、单独出版本，不放在 Config 里。主题库是名单的一部分，不另外建一份。
-2. 名单决定两件事：研究哪些对象，以及每个对象要看哪几类信息。系统里只有这里决定“处理什么”。
-3. 公司、加密货币、商品各有一套默认要看的类别；主题没有默认，每个主题自己写，至少写一类。要看的类别必须是 16 类之一；名单里的对象在参照数据或主题库里查不到，这一版不能用。
-4. 上游只推名单范围内的信息，也就是名单里的对象，各自要看的那几类；测试代码也按这个范围推。推进来的都处理。
-5. 名单加了对象或改了要看的类别，就是一个新版本；上游按新名单把以前的相关信息补推一遍。
-6. 利率、汇率、指数不单独列，算在主题里（比如“美债收益率曲线”“美元强弱”）。
-7. 名单外的东西不会自动加进名单：查不到的标识，和名单里没有的主题，放进人工复核池，由人决定；查得到、只是不在名单里的公司、加密货币或商品（比如三星）不进，只在处理记录里留一笔。
-8. 宏观、地缘政治怎么连到公司：靠观点库里的“依赖”。主题观点讲世界会变成什么样，不说好坏；公司的对象观点依赖哪几条主题观点，写明对方的哪一头对它是看多；主题观点的结论变了，依赖它的观点照观点库重判的规矩重判。
+1. Manage and version the research universe separately from Config. The theme library is part of it, not a separate copy.
+2. The universe defines which subjects to research and which categories to track for each. It is the sole owner of what the system processes.
+3. Companies, cryptocurrencies and commodities each have default categories. Every theme explicitly specifies at least one category. Categories must come from the set of 16. A universe version is invalid if a subject cannot be resolved in reference data or the theme library.
+4. Upstream supplies only subjects and categories covered by the universe. Test code follows the same scope. Every supplied item is processed.
+5. Adding a subject or changing tracked categories creates a new version. Upstream backfills relevant historical items under the new universe.
+6. Rates, exchange rates and indices belong to themes, such as the US Treasury yield curve or US dollar strength, rather than separate subject kinds.
+7. Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry.
+8. Macro and geopolitical themes connect to companies through thesis dependencies. A theme thesis describes an outcome without calling it good or bad. An asset thesis records which theme theses it reads and which end of each is bullish for it. A changed conclusion triggers the library’s rejudgement rules for dependent theses.
 <!-- /generated: rules -->
 
-## 例子
+## Examples
 
-- 名单里有一行“Apple · 公司”，用公司的默认类别：上游就推 Apple 的业绩稿、10-K、电话会、新闻、股价等。
-- 名单里有一行“中美关税 · 主题 · 看官方行动、新闻、观点与分析，和公司与申报披露这一大类（T1–T6）”：上游就推 USTR 的公告、相关新闻和评论，以及提到关税的公司财报、电话会和公告。
-- 名单里加了一家新公司：生成新版本，上游按新名单把这家公司以前的相关信息补推一遍。
+- An Apple company row uses company defaults: upstream sends earnings, 10-Ks, calls, news, prices and other tracked categories.
+- A US–China tariff theme can track official actions, news, opinion/analysis and company disclosures T1–T6: upstream sends USTR announcements, related reporting and commentary, and company reports, calls and releases mentioning tariffs.
+- Adding a company creates a new universe version; upstream backfills its relevant historical information.
 
-## 验收标准
+## Acceptance
 
-- 每个名单版本都能列出：每个对象的种类、名称、要看的类别。
-- 以下任何一种情况，这一版不能用：要看的类别不是 16 类之一；主题没写要看的类别；对象在参照数据或主题库里查不到。
-- 改了任何一处都生成新版本，旧版本原样留着。
-- 分发里没有任何“看这条信息讲的是谁”的判断。
-- 名单外的东西不会自动进名单：查不到的标识和名单里没有的主题进人工复核池；查得到、只是不在名单里的公司、加密货币、商品不进。
+- Every version lists each subject's kind, name and tracked categories.
+- An invalid category, a theme with no categories, or an unresolved subject invalidates the version.
+- Any change creates a new version and preserves the previous one.
+- Dispatch contains no subject-based routing decision.
+- Nothing outside the universe is added automatically. Unresolved identifiers and new themes enter human review; resolvable out-of-universe companies, cryptocurrencies and commodities do not.
 
-## 还没定的
+## Open questions
 
-- 主题库里具体有哪些主题（现在是草稿）。
-- 上游怎样按名单推送；推送时用的是哪一版名单，记在哪里。
-- 名单存在哪里、由谁维护。
-- 检查“名单里的对象存不存在”要用到参照数据，而参照数据归上游（见分类 PRD），这件事要和上游一起定。
+- Specific themes in the draft library.
+- Upstream delivery and where its universe version is recorded.
+- Storage location and maintenance ownership.
+- Reference data used to validate subjects belongs to upstream; coordinate that contract with upstream.
 
-## 相关决定
+## Related decisions
 
-- D6：名单单独管理、单独出版本。
-- D11：对象有四种，主题库是名单的一部分。
-- D16：查不到的对象标识进人工复核池。
-- D18：只有名单决定处理什么；每种对象有默认要看的类别。
-- D19：第一版冻结。
-- D24、D28：D24 曾让财报不推；D28 改回来，公司默认重新看 T1、T2、T4。
-- D26、D41：宏观通过观点库里的“依赖”连到公司。
-- D42：对象的种类统一写“公司”；依赖怎么定，后来由 D46 定成模型像分析师一样判。
-- D45、D46：依赖由模型像分析师一样判，代码防绕圈；第 8 条只写依赖带方向、主题观点换了格就重判。
-- D47：名单外的东西：查不到的标识和名单里没有的主题进人工复核池，查得到的公司、加密货币、商品不进。
-- D51：第 8 条改成主题观点的结论变了（不只是换了一格），依赖它的观点才重判。
-- D37：第一版冻结（2026-10-18）；要改先记一条新决定。
-- D58：第 8 条写明依赖它的、还开着的观点才重判。
-- D59：名单里的全部主题交给抽取（提示词第 3 块），候选观点讲的是主题时从里面挑。
-- D60：第 8 条改成依赖它的观点照观点库重判的规矩重判，重判的条件只写在观点库里。
+- D6: separate management and versioning. D11: four subject kinds; themes are part of the universe.
+- D16: unresolved identifiers go to human review. D18: the universe alone selects subjects/categories and supplies defaults.
+- D19, D37: first-version freeze; changes need a decision.
+- D24/D28: the earlier exclusion of financial reports was reversed; company defaults include T1, T2 and T4.
+- D26/D41/D42: macro effects reach companies through dependencies; use company as the subject kind.
+- D45/D46: the model selects dependency direction and code prevents cycles.
+- D47: distinguish unresolved identifiers and new themes from resolvable out-of-universe assets.
+- D51/D58/D60: dependent open theses follow the library's rejudgement rule; a changed conclusion is broader than a changed rung.
+- D59: all themes appear in extraction block 3.

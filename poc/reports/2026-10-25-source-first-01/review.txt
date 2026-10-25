@@ -1,0 +1,9 @@
+发现 **2 个需要在实现前补齐的合同缺口**。例如，第二步可以把 `e1` 连给 `c1`，同时把它列成 `c2` 的依据；目前写下的条件不会拒绝。
+
+1. **两份证据关系可以互相矛盾。**  
+   [交接合同第 19 行](/Users/lchingen/hivemind/docs/research/2026-10-25-source-first.md:19)只要求候选的 `evidence_ids` 引用未省略的 observation，没有要求它与 `dispositions.links` 对应。[比对读取前者](/Users/lchingen/hivemind/src/hivemind/views/matching.py:158)，[写入读取后者](/Users/lchingen/hivemind/src/hivemind/views/writing.py:143)，可能导致比对使用了某条依据，最终观点却没有那条证据连接。应以一份关系为准生成另一份，或明确拒绝不一致的交接。
+
+2. **空结果分支没有闭合调用来源合同。**  
+   [第 21 行](/Users/lchingen/hivemind/docs/research/2026-10-25-source-first.md:21)规定零 observation 跳过第二步；[第 23 行](/Users/lchingen/hivemind/docs/research/2026-10-25-source-first.md:23)却规定最终交接指向第二步。现有 runner 会把调用编号、请求摘要和费用放进交接。应明确这个合法分支绑定第一步的真实调用，并记录第二步未执行，否则 reader 回调没有完整的返回合同。
+
+未编辑文件，未运行测试或模型实验。
