@@ -1,8 +1,10 @@
 # Current state
 
-As of October 25, 2026; decisions through D170. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
+As of October 25, 2026; decisions through D170, plus isolated experiment D177. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
 
 ## Status
+
+An isolated prompt candidate is published for review: `role-v11` and `poc-v24-admission-test` change only T6 extraction instructions. The [NAVER comparison](../poc/reports/2026-10-25-naver-admission/results.md) retained the planned 200 MW / 2028 project in 3/3 fresh treatments versus 2/3 controls. The default remains v23/T6-v10; no schema or horizon-policy change is adopted. The candidate needs wider source validation before adoption. The paid harness and database traces remain in the original experimental worktree; this branch includes the outputs and versioned prompt only.
 
 Sequential request construction was centralized without changing requests, schemas, cache identity or processing order. [Validation](research/2026-10-25-sequential-cleanup/README.md): all 3,595 preserved request identities match and all 123 product/corpus tests pass. This maintenance does not enable concurrency or change extraction eligibility.
 
@@ -35,18 +37,9 @@ The [pipeline overview](poc/pipeline-plan.md) separates the implementation from 
 
 Pull mode and the final verdict remain earlier drafts to redesign together. The decided rule freezes the current state and reasons at the due date and closes the thesis. Upstream supply and human-review handling remain deferred.
 
-## Next task: the day-batch shape (queued by Alex, 2026-10-25)
+## Next task: validate admission beyond the NAVER case
 
-Alex asked to record it as his next task, finish the runs first, then come back to it (his words are in build-log row 45). Today a day is a serial chain (extract, match, write, judge, one item after another; on July 27 the control arm took 11.8 minutes for 31 items, all of it API wait: median 7 s extraction, 6 s generative matching, 12 s judging). The shape to build:
-
-1. Route the day's items in sequence order (local).
-2. One wave of extraction for all of them. This needs the extraction request to stop carrying the ledger's groups (today item k's request shows the groups items before k wrote, D149/D166), so group membership moves to matching, where Jev already answers it (35/38 required members over the week and August).
-3. One concurrent round of Jev matching against the ledger as of the start of the day.
-4. A new intra-day pass comparing the day's new evidence pieces and candidates among themselves, ordered by sequence number (needed: 19–31% of repeat or replace targets were pieces first stored the same day; it also covers decisions naming a candidate of the same answer).
-5. Write in sequence order.
-6. One wave of judging over the changed theses.
-
-Expected effect: a day from about 12 minutes to about 45 seconds with the normal API and concurrency, bounded by the slowest call per wave (p90 13–22 s) and the provider's rate limits; the batch endpoint fits live daily operation (half price, hours per wave), not the replay. Before building: the state-by-event table for the intra-day pass, and Alex's decision on moving group membership from extraction to matching. Also: a 60-second timeout with retry to cut the roughly 320-second hung calls.
+Validate the unchanged candidate instruction on additional stored-source contexts before default adoption. One-source success does not establish general extraction quality. Broader concurrency investigations and their experimental runtime are outside this branch; no batching or regrouping change is included. No further paid run is launched by this status update.
 
 ## Previous experiments
 
