@@ -49,7 +49,7 @@ def calendar_days(from_day, until_day):
 
 
 def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day, day0=None, spend_cap_usd=None,
-        transport=None, log=print, only_objects=None, max_items_per_day=None):
+        transport=None, log=print, only_objects=None, max_items_per_day=None, day_runner=None):
     items_db = testdb.open_db(testdb_path)
     conn = store.open_db(views_path)
     refuse_unfinished_parallel(conn)
@@ -69,7 +69,7 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
     calls_before, cost_before, *_ = archive.totals()
     for day in calendar_days(start, until_day):
         day_stats = {k: 0 for k in totals}
-        day_cost = 0.0
+        day_cost_before = archive.totals()[1]
         processed = 0
         to_run = []
         for item in testdb.feed(items_db, day, day):
@@ -89,25 +89,35 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
                 continue
             processed += 1
             to_run.append((item, route))
-        for item, route in to_run:
-            result = round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
-            day_stats['extracted'] += 1
-            day_stats['evidence'] += result.evidence
-            day_stats['new_views'] += result.new_views
-            day_stats['judged'] += result.judged
-            day_stats['changed'] += result.changed
-            day_cost += result.cost
-            if result.failed:
-                day_stats['failed'] += 1
-                log(f'  ! {item["input_id"][:60]}: {result.failed}')
-                raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
-            if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
-                raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
+        results = (day_runner(conn, archive, cfg, universe, to_run, day=day, transport=transport, log=log) if day_runner else
+                   (round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
+                    for item, route in to_run))
+        finished = 0
+        try:
+            for index, result in enumerate(results):
+                if index >= len(to_run) or result.input_id != to_run[index][0]['input_id']:
+                    raise RuntimeError('day runner returned results out of input order')
+                finished += 1
+                day_stats['extracted'] += 1
+                day_stats['evidence'] += result.evidence
+                day_stats['new_views'] += result.new_views
+                day_stats['judged'] += result.judged
+                day_stats['changed'] += result.changed
+                if result.failed:
+                    day_stats['failed'] += 1
+                    log(f'  ! {result.input_id[:60]}: {result.failed}')
+                    raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
+                if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
+                    raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
+        finally:
+            if hasattr(results, 'close'):
+                results.close()
+        if finished != len(to_run):
+            raise RuntimeError('day runner did not complete every routed item')
         seq = store.next_sequence(conn) - 1
         judged = round_module.judge_day(conn, archive, cfg, day, seq, transport=transport, log=log)
         day_stats['judged'] += judged.judged
         day_stats['changed'] += judged.changed
-        day_cost += judged.cost
         if judged.failed:
             day_stats['failed'] += 1
             log(f'  ! day judging: {judged.failed}')
@@ -119,6 +129,7 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
         for key in totals:
             totals[key] += day_stats[key]
         calls, cost, _, _ = archive.totals()
+        day_cost = cost - day_cost_before  # Includes discarded speculative calls and repaired refusals.
         open_count = len(store.open_views(conn))
         log(f'{day} | items {day_stats["items"]:3d} extracted {day_stats["extracted"]:3d} merged {day_stats["merged"]:2d} skipped {day_stats["not_processed"]:2d} '
             f'failed {day_stats["failed"]:2d} | evidence {day_stats["evidence"]:3d} new views {day_stats["new_views"]:2d} judged {day_stats["judged"]:3d} '

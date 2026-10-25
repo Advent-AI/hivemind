@@ -1,0 +1,17 @@
+Yes—the shared-future rule closes the reported race at the design level. I found no other serious missing state/event row for the explicitly offline, single-writer, opt-in first slice.
+
+For example, if two candidates produce the same complete Jev request, both now receive answer A and archive ID A. The second consumer cannot receive answer B labelled with ID A—the inconsistency identified in the first review.
+
+The pieces address different parts of that failure:
+
+- One future per complete request hash prevents competing calls for identical requests.
+- Shared answer/ID preserves replay consistency.
+- Later consumers counted as cache hits preserves logical cost accounting.
+- Aggregation in original order preserves decisions and aggregate hashes.
+- Ordered per-call metadata makes ownership traceable.
+
+The remaining relevant events are covered: a shared request failing falls under matching failure and drain; interrupted work uses archived results and normal resume; stale extraction is revalidated at its turn; changed inputs are refused; writer failure rolls back; earlier failure prevents later authoritative progress.
+
+The decisive implementation check is two identical logical requests with a fake transport capable of returning different answers: assert one dispatch, identical answer/ID for both consumers, and correct ordered accounting and metadata.
+
+This confirms the written design, not implemented behavior. Live spending and multiple writers remain outside this slice’s stated guarantees.

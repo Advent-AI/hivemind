@@ -1,0 +1,5 @@
+# D180 execution refresh
+
+Read against the existing implementation plan and module PRDs in their defined order. Universe and classification retain the identical 53 source items. Config remains v23 for recorded-request reproduction and both live matching arms. Dispatch order, extraction context, source checks, group ownership, matching rules, writer transactions, judgment dependencies, pull and human-review contracts are unchanged. The new scripts are isolated proof/measurement entry points, not default product behavior.
+
+The status inconsistency corrected is that the implementation plan and CURRENT_STATE still described only the three-item diagnostic and future execution. They now identify the completed full-day eight-worker structural proof and the separate six-sample live matching measurement. Neither is relabelled as fresh full-pipeline latency. The historical three-item findings, interrupted API request and its reserved cost remain in their original reports. No PRD/page rule or gold label changes. Documentation check runs last.

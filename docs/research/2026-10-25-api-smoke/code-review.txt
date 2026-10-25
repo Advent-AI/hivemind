@@ -1,0 +1,5 @@
+发现 **2 个需要在付费 smoke 前修复的缺陷**。均用内存数据库和假发送器复现，未改文件或调用提供商。
+
+1. **取消后，尚未发送的请求仍会发送。** [budget.py:99](/Users/lchingen/hivemind/poc/concurrency_study/budget.py:99) 提交预留后释放锁，随后直接调用 `send`。例如，此时另一线程已执行 `stop()`，该请求仍会发出。停止与开始发送需要同步协调；[现有取消测试](/Users/lchingen/hivemind/tests/test_study_budget.py:82) 在发送器进入后才取消，漏掉这个窗口。
+
+2. **后提交的任务验证失败，不能及时关闭发送入口。** [smoke.py:130](/Users/lchingen/hivemind/poc/concurrency_study/smoke.py:130) 按提交顺序等待结果。若第二个任务先验证失败，第一个尚未发送，主线程仍在等第一个；它随后可以继续发送。复现时，第二个任务已失败，发送器读到的 `halted` 仍为 `None`。应在任一任务失败时立即关闭入口，再取消未发送任务并等待已发送任务结束。

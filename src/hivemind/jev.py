@@ -77,7 +77,7 @@ def validate(answers, questions):
 
 
 def request_for(setting, state, questions):
-    """Build the Jev payload used for requests and archival identity."""
+    """The complete Jev request used both for dispatch and in-flight identity."""
     return {'model': setting.model, 'state': state, 'questions': questions}
 
 

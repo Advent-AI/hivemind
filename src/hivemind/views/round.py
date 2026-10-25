@@ -32,22 +32,26 @@ def _fail(conn, item, seq, result, step, kind, detail, pool_key):
     return result
 
 
-def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence, lists, shown, *, extra_views=(), call_offset=0, transport=None):
+def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence, lists, shown, *, extra_views=(), call_offset=0, transport=None, workers=1):
     """One matching call with one retry on a refused check. Returns Checked, or None after marking the failure."""
     note = ''
     checked = None
     engine = jev_matching if cfg.matching.engine == 'jev' else matching      # Jev answers once; a retry would be the same answer
     for attempt in range(1 if engine is jev_matching else 2):
         try:
-            answer = engine.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport)
+            options = {'workers': workers} if engine is jev_matching else {}
+            answer = engine.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport, **options)
         except Exception as error:
             _fail(conn, item, seq, result, 'matched', 'matching_failed', 'matching: ' + repr(error), type(error).__name__)
             return None
         result.cost += answer.cost_usd
         result.cached_calls += int(answer.cached)
         checked = matching.check(conn, universe, answer.data, candidates, evidence, lists, shown)
+        shown_record = {'candidates': lists.candidate_lists, 'evidence': {f'{k[0]}|{k[1]}': v for k, v in lists.evidence_lists.items()}}
+        if getattr(answer, 'request_records', None):
+            shown_record['requests'] = answer.request_records
         store.insert(conn, 'match_records', seq=seq, input_id=item['input_id'], call_no=call_offset + attempt + 1,
-                     shown_json=json.dumps({'candidates': lists.candidate_lists, 'evidence': {f'{k[0]}|{k[1]}': v for k, v in lists.evidence_lists.items()}}),
+                     shown_json=json.dumps(shown_record),
                      request_sha256=answer.request_sha256, call_id=answer.call_id, decisions_json=json.dumps(answer.data, ensure_ascii=False),
                      checks_json=json.dumps({'refusals': checked.refusals, 'not_opened': checked.not_opened, 'notes': checked.notes}, ensure_ascii=False), written_json=None)
         if not checked.refusals:
@@ -89,7 +93,7 @@ def judge_day(conn, archive, cfg, day, seq, *, transport=None, log=print):
     return result
 
 
-def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print):
+def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print, extractor=None, matching_workers=1):
     result = RoundResult(item['input_id'])
     if resume_from in ('judged', 'handed_over'):       # written already; judging is the day's step
         dispatch.mark(conn, item, seq, 'handed_over', 'ok', 'resumed')
@@ -107,7 +111,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
     if handover is None:
         try:
             shown_groups = store.groups_for_prompt(conn, objects, item.get('title') or '')
-            handover = extraction.extract(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
+            handover = (extractor or extraction.extract)(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
         except Exception as error:
             return _fail(conn, item, seq, result, 'extracted', 'extraction_failed', 'extraction: ' + repr(error), type(error).__name__)
         result.cost += handover.cost_usd
@@ -123,7 +127,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
         return result
     # first matching call: the candidates and the evidence linked straight to existing views
     lists = matching.build_lists(conn, handover, shown, cfg.search_top_n)
-    checked = _match(conn, archive, cfg, universe, item, seq, result, handover.candidates, handover.evidence, lists, shown, transport=transport)
+    checked = _match(conn, archive, cfg, universe, item, seq, result, handover.candidates, handover.evidence, lists, shown, transport=transport, workers=matching_workers)
     if checked is None:
         return result
     # second call: evidence linked to candidates that attached to an existing view, compared under that view
@@ -142,7 +146,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
                 evidence2.append(dict(e, links=[v for x, v in pending if x['id'] == e['id']]))
                 seen.add(e['id'])
         checked2 = _match(conn, archive, cfg, universe, item, seq, result, [], evidence2, lists2, [], extra_views=sorted({v for _, v in pending}),
-                          call_offset=2, transport=transport)
+                          call_offset=2, transport=transport, workers=matching_workers)
         if checked2 is None:
             return result
         second_pass = checked2.evidence

@@ -1,0 +1,1588 @@
+Reading additional input from stdin...
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1737e-acf2-7401-96fd-35f2c071bdce
+--------
+user
+Review only docs/research/2026-10-25-api-smoke/plan.md against AGENTS.md, decisions D159 D171 D172, and current model/jev transports. Scope is isolated 36-call provider smoke and conservative reservation accounting. Production redesign, frozen PRDs, grouping, prompts, UI and broader evaluations are OUT OF SCOPE. Check state-event/value-reader completeness, isolation, budget bounds, true API-vs-concurrency claims, failure/cancel/crash behavior. Read only; no edits. Report serious blocking findings with exact references, or explicitly none. Do not treat this as an OpenAI Batch implementation.
+codex
+I’ll review the smoke plan against the named decisions and current transports, without editing files. I’ll focus on whether 36 calls stay isolated and within the reserved budget through failures, cancellation, and crashes.
+exec
+/opt/homebrew/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g '*model*' -g '*jev*' -g 'DECISIONS.md' -g 'plan.md' -g 'CURRENT_STATE.md' -g 'README.md'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind
+src/hivemind/views/jev_matching.py
+src/hivemind/model.py
+src/hivemind/jev.py
+AGENTS.md
+README.md
+docs/DECISIONS.md
+docs/prd/README.md
+docs/CURRENT_STATE.md
+docs/archive/2026-10-22-v15/DECISIONS.md
+docs/archive/2026-10-22-v15/prd/README.md
+docs/archive/2026-10-22-v15/CURRENT_STATE.md
+docs/archive/2026-10-16-v1/DECISIONS.md
+docs/archive/2026-10-16-v1/prd/06-model-extraction.md
+docs/archive/2026-10-16-v1/prd/README.md
+docs/archive/2026-10-16-v1/CURRENT_STATE.md
+docs/research/2026-10-24-main-thesis-basis/plan.md
+docs/research/2026-10-25-grouping-basis/plan.md
+docs/research/2026-10-25-subject-names/plan.md
+docs/research/2026-10-24-ingestion-groups/plan.md
+docs/research/2026-10-25-grouping-consistency/plan.md
+docs/research/2026-10-25-direct-subjects/plan.md
+docs/research/2026-10-25-retrieval-poc/codex-jev-usage-review-run.log
+docs/research/2026-10-25-retrieval-poc/jev-probe-2026-10-25.json
+docs/research/2026-10-25-retrieval-poc/codex-jev-usage-review.md
+docs/research/2026-10-25-retrieval-poc/codex-jev-research.md
+docs/research/2026-10-25-retrieval-poc/codex-jev-run.log
+docs/research/2026-10-25-retrieval-poc/jev-probe-2026-10-25-b.json
+docs/research/2026-10-25-english/plan.md
+docs/research/2026-10-24-hierarchy-poc/plan.md
+docs/research/2026-10-25-ingestion-threads/plan.md
+docs/research/2026-10-25-day-batch-review/plan.md
+docs/research/2026-10-24-main-thesis-replay/plan.md
+docs/research/2026-10-25-api-smoke/plan.md
+tests/test_jev_matching.py
+tests/test_jev_concurrency.py
+poc/ui/README.md
+poc/ui/test/model.test.js
+poc/eval/gold/evidence-decisions-seed-v23-jev-2026-10-25.json
+poc/reports/2026-10-25-jev-poc-run.log
+poc/reports/2026-10-25-succession-probe/probe-v23-jev.json
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat AGENTS.md && nl -ba docs/research/2026-10-25-api-smoke/plan.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Hivemind rebuild: working instructions
+
+This repository, `hivemind`, rebuilds Hivemind from the old repository `../tn-hivemind`, one piece at a time. The rules below are that repository's
+principles and 54 lessons, merged and cut down to the practices that hold whatever the new code's structure turns out
+to be. Rules that assumed the old architecture are left out; an architectural rule enters this file only once the new
+design has decided it. The incidents behind these rules are history in `../tn-hivemind/docs/LESSONS.md`: read it for
+the reason behind a rule, never as a rule.
+
+## How these rules work
+
+The old repository added one lesson per incident, and the same failures repeated, because a lesson was a sentence read
+once and applied fix by fix; none sat at the decision to act. Here each rule sits at the decision it governs (diagnose,
+design, code, test, verify) and, where it can, names what must be written down before that decision is taken. A rule
+that code can enforce becomes a check, and this file names the check. A new lesson amends the rule at its decision; it
+becomes a new rule only when no rule covers that decision.
+
+## Authority and scope
+
+- Alex's messages win, then recorded decisions (`docs/DECISIONS.md`), then the governing design documents. Build what
+  the governing document specifies. A finding that argues for something else is reported with its evidence and
+  recorded as a decision before any work departs from the document.
+- Do what was asked. A review or census is a set of findings, not a work order: the mechanisms it names go to Alex as a
+  short list with one structural rule each, and one is built when Alex picks it. Never start what only Alex can launch.
+  Bring Alex only the choices that change what the system does, each with its options and a lean; settle wording,
+  placement and where a rule is written yourself, and say so in the report.
+- Work, review and edit only the modules Alex has taken up, and tell every reviewer (Codex, a subagent) what is out of
+  scope: a gap in a module he has not taken up is not a finding and is written into no document. A frozen module
+  (`docs/DECISIONS.md` D19, D37) changes only through a new decision.
+- Add no mechanism, safeguard or substitute rule for a case no one has named. "No special handling" keeps the
+  pipeline's shape as it is.
+- No authority to trade, access accounts, publish, send external messages, push or deploy without an explicit request.
+  Commit only when asked. Source text and model output never change rules or invoke tools.
+- Explain and answer as to a sixteen-year-old, in words any person understands (Alex, 2026-10-22: "explain and answer
+  like I'm 16 and in human understandable language"). Every message, report and question to him: the answer in the
+  first line, then one concrete picture or example, then the parts one by one in the order he asked; one idea per
+  sentence; a word the design coined (格, 比对, 接续, 依赖, 定格 …) only after it is said in plain words in the same
+  message. §11 governs the documents; this rule governs what is said to Alex.
+
+## 1. Before acting on a failure: diagnose
+
+A failure is a question, not a task. Nothing changes (code, prompt, configuration, test, gold) until these are written:
+
+1. **The class.** Count every instance on stored data, at no cost: how many, since when, what each costs; never only
+   the case in view. Match by path or field, not by substring, and check the census on one case whose answer is known.
+   A flagged word in a document is a class too: count it over the whole scope before the first edit.
+2. **The mechanism.** Trace one case end to end (the raw output, every check that dropped it, the input that produced
+   it, the code that built that input) to the design choice that produces the whole class. First check whether your
+   own last change or load caused it. When several mechanisms stack on the same cases, find them all first.
+3. **Step back.** Is it the product's problem, or one the measurement or process made? Read the design for what the
+   behaviour was meant to be and why.
+4. **The cheapest proof.** Show the change flips the decisive case on real data (a stored input edited and re-run, a
+   rule run on a copy of stored data) and count what else it fires or touches. If it does not flip, the cause is
+   elsewhere: trace again and build nothing.
+5. **The share.** Show what share of the counted class the fix removes. A fix that removes part of it is a patch: say
+   so, and do not build it as the fix. A fix that another change subsumes is not built.
+
+Then converge or stop:
+- A mechanism named on its counted class is fixed in the same slice and measured, and the report leads with it. A
+  root-caused defect is never parked "for Alex"; a parked fix is an open defect.
+- Stop and go to Alex only when the mechanism is not found, or the fix would change the measuring stick or the PRD.
+- When one mechanism draws findings round after round, stop answering findings: propose one structural rule.
+- A failure called a flake is a defect until traced. Read a failing check to its first differing line before any
+  rerun; a passing rerun proves nothing.
+- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it, and
+  cite what you read, not the summary.
+
+## 2. Before writing code: design
+
+Speed is not progress: code written before the thinking costs rounds of review. A design holds these tables before code
+and before any review; a blank cell means it is not ready.
+
+1. **State × event**, for work that spans more than one step, run or day. Every state against every event it can
+   meet: success, refusal, a refused retry, an external failure, a crash midway, work still in flight when a run ends,
+   a later run on a later date, configuration changed in between, an input corrected while waiting, another writer of
+   the same data, two scopes at once. Each cell names the transition, what is written, and the date every read and
+   write uses. The rows include the work before its first step and after its terminal outcome.
+2. **Value × reader.** Every value a change writes, against every reader of it (found by searching the field) and
+   every input source the value can come from. A rule over a kind of data lists every writer of that kind. A change to
+   how often something fires is counted against every reader of its output.
+3. **New path × old checks.** For a new input, derived value, mode or changed data shape: every check the old path
+   passes, and whether the new one meets it. A changed shape re-derives every check written for the old one.
+4. **Prior decisions.** The decisions searched for the mechanism by name; any decision that rejected or bounded it is
+   quoted in the design and in the question to Alex.
+
+- A contract over text or shapes states the closed set of what passes (a full match); anything else fails or is not
+  judged. Enumerate the accepted set against every context and reader it meets before the first edit.
+- A blind review measures the tables. A serious finding they do not hold shows a missing dimension: add it and walk
+  every row again; never answer the finding alone. Code starts when the review finds nothing serious.
+- A design whose core contract is still open is a question, not something to build.
+- A foundation's acceptance carries a size and speed budget from its first control, not only correctness.
+
+## 3. Writing code
+
+- **One owner.** A rule lives where the data is written, and refuses: a warning that lets the run continue is a silent
+  failure. Fix the writer and delete its duplicate implementations in the same change; when a fix lands in one
+  consumer, search every consumer of the same key or rule.
+- **Code over prose.** A contract that code or a schema can enforce (an enum over allowed keys, a shape) is enforced
+  there, and stays out of prompts and documents.
+- **One word per concept.** The glossary in `docs/prd/00-system.md` (section 用词, D36) names each concept once, and
+  `docs/check.py` fails on a word it rules out. A new concept gets its row and its ruled-out words in the same change;
+  a new ruled-out word must catch the sentence it was written against and pass the corrected one.
+- **Identity.** An identifier names one thing for the life of its scope; a changed thing gets a new id. Equal values
+  alone never establish identity.
+- **Explicit inputs.** Library code takes runtime paths and configuration as arguments. A branch a run takes comes from
+  its configuration, never from whether an environment variable happens to be set; a configured step whose credential
+  is missing refuses the run.
+- **Never order by the wall clock.** It steps both ways; order comes from a sequence the program owns. In the new
+  design that sequence is dispatch's sequence number: the stream never reads the calendar, and only pull mode acts on
+  time, with its "now" passed in (D12, D13, D31).
+- **Strictness is code too.** A check added to prevent defects can itself fail; accept it on real data, not samples.
+- **Style.** Descriptive names. Docstrings and comments state behaviour, not history. The standard library unless a
+  measured need justifies a dependency.
+
+## 4. Tests
+
+- Every test names the requirement or table row it proves; a test that traces to none is deleted, and a retired
+  behaviour's tests leave with it. The suite stays lean.
+- Before writing a test, read every function its fixture drives: return shapes, failure classification, the data and
+  attributes it reads. Check that a name exists before calling it.
+- Real objects first (real storage on a temporary path, real records). Fake only external services (a model client, a
+  data source, an HTTP server). Fixture values are realistic (real ISO timestamps, not placeholders).
+- Write the one decisive assertion that fails without the code under test, and predict the run before running it. A
+  first failure for any other reason means the test was written blind: stop and read again. A test is never mended to
+  fit the code; it changes only when the spec changes, and the spec change is recorded first.
+- Mutate on a scratch copy: the test must fail on the mutant while the unmutated control passes. An error is not a
+  catch until its traceback is read. A negative assertion ("never called") needs a mutant that makes the call on the
+  tested path.
+- A check must judge something: it reports how many cases it judged, carries a positive control that fails for the
+  breach it holds, and fails when its own preconditions fail (exit status, a missing or unidentifiable input). A check
+  over an empty population is unexercised, not passed.
+- Tests never depend on the real date or the working directory: pin every date written and read, build paths from the
+  test file's location, write only inside temporary directories.
+- Test each entry point as its user calls it (with the defaults the user leaves unset, under the configuration the user
+  runs), not only the inner function with every argument set.
+
+## 5. Verification
+
+Verify at the point the change touches, at the sharpest level that shows it works or fails, and stop there:
+1. Stored data: reproduce the failing case, show the fix flips it, show a mutant of the fix fails the check ($0).
+2. Only when what the model is asked changed: re-send just the affected calls.
+3. The touched suites, plus any standing structural checks the change can affect; the full suite once.
+4. The gate once, at merge. The acceptance once, on the final configuration. Never a full rerun per fix.
+
+- A further check the change does not need is offered in one line, not run.
+- Before any paid run, `python3 scripts/preflight.py` replays every stored model answer and matching record through
+  the current code checks and prompts ($0) and prints, per check, the cases judged and the refusals with reasons;
+  a changed share or a refusal on a case a person would accept is diagnosed before the run, and a paid run is never
+  the way a check or a prompt is first tried (2026-10-23: three of four restarts in one night were avoidable this way).
+- An acceptance round is a measurement of the final configuration, not a verification step. A new finding in it is
+  recorded with its census, not answered with another round.
+- The product runs end to end before anything else is built, and every merge is accepted on the product's own path. A
+  gate passes only what it runs: name the check that runs a new path, or say that none does.
+- Measure before claiming. Label estimates as estimates, report every sample, and treat a number in a design document
+  as a measurement with a script behind it.
+
+## 6. Model calls and prompts
+
+- **Never grow a prompt to fix quality.** Read the whole request (system, schema, payload) as the model reads it, and
+  list every contradiction, rule written for another case, instruction that forces the defect, reference the model
+  cannot read, payload field the answer does not need, and call doing several jobs. Cut, merge or split. Add an
+  instruction only when the audit shows one is missing, and remove at least as much elsewhere. Report characters and
+  prompt tokens before and after; growth needs a written reason.
+- **Trace a miss to the raw answer first.** Class it as not written, refused (by which check) or split. Check that the
+  request shows what the answer needs and the schema can express it before changing any wording. A request never asks
+  for what a check refuses; a retry that repairs a refusal is a symptom, not handling.
+- **An example is an instruction.** It must agree with the schema and the code that reads the answer, or it goes.
+- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Every arm runs beside a
+  fresh control, on at least three samples; a bar the control fails against itself judges nothing. A cached replay
+  proves the code, never the model.
+- **Build where code decides.** A decision code can make is moved out of the model, not sampled.
+
+## 7. Evaluation
+
+- Never iterate against a measuring stick of your own. The stick (gold, unit, the judge's reading) is checked against
+  what the product uses and fixed with Alex before the first arm. A failed registered acceptance stops the line and
+  goes to Alex with its census; the next arm is never designed alone.
+- Measure the stick before using it: control against a second control, the criterion's null estimated (a conjunction
+  over many items fails by chance), and its workload sized from its rules.
+- Tune on dev, score test once per configuration; label model-authored gold and model judges as such.
+- Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind
+  a metric's largest values before reading it, and write down what a derived number reduces to.
+- Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was
+  not tuned on.
+- Weigh a case by what it carries in the product, not by count; spend arms only where its stake survives.
+
+## 8. Product thinking
+
+- Think like a hedge-fund analyst. A thesis is an argued view about the business and the world; its stance comes from
+  the argument weighed against what is priced. Extract the few metrics or segments that carry it; financial-statement
+  lines are its evidence, never its definition.
+- When a thesis-quality check fails, look first at the unit of thought (are these the arguments that move the stock?),
+  not deeper into the numbers. Numbers are verified by code where they exist.
+- Outcomes are tracked and shown, never a gate on what a view may say. Missing data is "no data to verify", never a
+  pass or a fail. A repeat is not new evidence, and model agreement is not corroboration.
+
+## 9. Workspace and operations
+
+- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting
+  stored data needs Alex's request, a backup, exactly identified items and a log entry.
+- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel
+  agents that edit shared modules.
+- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network
+  health; nothing heavy runs beside paid calls. A gate runs on a snapshot no one is editing.
+- Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
+- Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; tests never load
+  them. Never raise a spending cap, and never switch a provider or model silently.
+
+## 10. Rebuilding from ../tn-hivemind
+
+- Bring the system over one piece at a time. The product runs end to end at every step.
+- The old code is a source of requirements and stored cases, not a template. Before porting a piece, write what it
+  does, who reads what it writes, and which parts were patches (by their census); port the mechanism, leave the
+  patches.
+- A piece arrives with only the tests that trace to its requirements. An old rule arrives with the code it governs, as
+  a check where code can hold it.
+
+## 11. The design phase
+
+The work is an architecture POC: the design page, one PRD per module and the decisions. No product code and no data
+files until Alex starts the build. `docs/check.py` checks (and rebuilds the PRD bundle the page reads from disk); the
+only other scripts generate page assets (`build_bundle.py`, `copy_old_design.py`, `embed_fonts.py`) or simulate
+classification (`simulate_classification.py`, not changed at this stage).
+
+- The design page is `docs/system-design.html` with its data in `docs/system-design/new-*.js`; each module's PRD is in
+  `docs/prd/` (index `README.md`). The page data is the one source: a PRD block marked `generated` comes from it and
+  is never edited by hand.
+- After any change, refresh by reasoning: re-read every module in the order and with the four questions of
+  `docs/prd/README.md` (D22), so that page, PRD and decisions say the same thing, and list each inconsistency fixed.
+  `python3 docs/check.py` runs last and checks only mechanically; its pass is never the refresh.
+- Design every data path from what a view (thesis) needs, never from what the data offers: no number warehouse (D24,
+  D28).
+- Write for a reader who did not follow the discussion: plain Chinese, one concrete example, processes as step cards
+  and decisions as trees; every detail page links to its PRD.
+- A rule is written in full in one place, its owner; summaries, other modules and the glossary name it or point to
+  it without restating its conditions, so a change lands once. A finding that one sentence missed a change is a
+  class: count every place that states the same thing before the first edit (§1).
+- Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`.
+  The prompt names the scope, the governing documents and what is out of scope; its report is a lead (§1).
+- Before a freeze, review in rounds. Each round runs read-only reviews by angle: an end-to-end simulation of
+  realistic items, state-by-event tables, wording against the glossary, whether an engineer could build each step
+  from the text, every rule against the decisions, an attack on Claude's own findings, a new reader answering
+  questions, every change read in context, and line-by-line reads by module. Each finding is checked against the
+  text before a change; rounds go on until one finds nothing; then the freeze is recorded and the design sealed.
+
+## Before finishing a slice
+
+1. The touched suites, the structural checks and then the full suite pass (in the design phase: the reasoning refresh,
+   then `python3 docs/check.py`). A red suite is fixed before a handoff, whoever's code it is.
+2. `docs/CURRENT_STATE.md` holds the status, the open defects and the one next task; a status update retires the
+   paragraphs it replaces. A changed choice is recorded in `docs/DECISIONS.md`.
+     1	# Isolated API smoke test, October 25
+     2	
+     3	Alex asked for an isolated small test before any larger run, and for actual API documentation to be checked. This is a test of provider requests, accounting and completion order. It does not adopt concurrency, change extraction or grouping, change a gold, or measure end-to-end acceptance. D159, D171 and D172 still govern committed order. Existing databases are read-only inputs; all new files are under a fresh report directory.
+     4	
+     5	## Verified API contract
+     6	
+     7	Official pages read on October 25:
+     8	
+     9	- [OpenAI Batch guide](https://developers.openai.com/api/docs/guides/batch): asynchronous JSONL upload, Files API then Batches API, unique `custom_id`, results need not be in input order, `24h` completion window. A failed/expired job can contain billed completed requests. This is not the transport implemented in D172.
+    10	- [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna): pinned model supports Chat Completions, structured outputs and Batch. Max input 922,000, max output 128,000. Batch support does not establish account access or a seconds-level turnaround.
+    11	- [OpenAI pricing](https://developers.openai.com/api/docs/pricing): standard short input/output $0.10/$0.50 per million; long input/output $0.20/$0.75; highest listed long cache-write input $0.50. Regional premium may apply. The accounting reservation below deliberately exceeds ordinary charges.
+    12	- [TypeSafe API](https://docs.typesafe.ai/api/system-one) and [models](https://docs.typesafe.ai/models): POST `/v1/systemone`, named questions and named answers, billable input usage, pinned `jev-1.14.0`, $0.042/million input, free output, default 64k/request and 32k/question. There is no OpenAI Batch transport for these calls. This test does not pack additional questions or enable long context.
+    13	
+    14	## Fixed scope and measurement
+    15	
+    16	Read exactly calls 574, 575 (extraction) and 577, 578 (Jev) from the existing v23 Jev archive through SQLite read-only mode. Resend their unchanged full requests. Each of three samples has fresh serial control A, fresh serial control B, and a fresh two-worker arm. Each arm has its own empty archive. Total maximum: 36 provider requests; no retries; global $1.50 ceiling using conservative reservations. Estimated ordinary token charges from the saved usage are below $0.10; that estimate is not the ceiling or the eventual bill.
+    17	
+    18	Serial controls establish provider variation on these requests. Record every request identity, raw response, usage, schema validation, latency, completion order, answer equality and Jev choice differences. A smoke pass requires every response to validate, match its original request, and have billable usage; persistent unknown usage, API rejection or validation failure stops the study. Differences between fresh answers are reported, not automatically classified as pipeline defects. No gold score or 10x claim is made. A larger end-to-end comparison is a separate next step.
+    19	
+    20	## State × event
+    21	
+    22	| State | Event | Transition and durable write |
+    23	|---|---|---|
+    24	| Before first call | New absolute output directory | Hash all existing `poc/data` database files and sidecars; write immutable test manifest; create independent archives and accounting database |
+    25	| Before first call | Output already exists or input hash changed | Refuse; never reuse or overwrite a prior experiment |
+    26	| Ready | A permitted request arrives | In one lock/SQLite transaction, reserve worst-case cost and consume one of 36 dispatches before network I/O |
+    27	| Ready | Cap/count exhausted or earlier failure | Refuse before network I/O |
+    28	| Reserved | Valid response and usage | Persist raw response and measured time in accounting row; replace reservation with conservative usage-based charge |
+    29	| Reserved | Timeout, network/API error, malformed/missing usage | Preserve reservation, mark usage unknown and halt new dispatch; drain already-running calls; no retry |
+    30	| Reserved | Process crash | Reservation stays; reopening a database with unresolved work refuses all new calls |
+    31	| Completed | Schema refusal downstream | Keep response/cost; stop study; no broader test |
+    32	| Study end or failure | Other call in flight | Drain it, persist whatever is known, then compare protected database hashes |
+    33	| Study end | A protected hash differs | Report failure and path; do not claim the files were unchanged |
+    34	
+    35	The sequence of call/attempt rows is owned by SQLite, not wall time. Elapsed time uses a monotonic clock. Source dates and request bodies do not change. This smoke test never writes a product ledger, so there is no day-completion or publication-date transition.
+    36	
+    37	## Value × reader
+    38	
+    39	| Value | Writer and readers | Rule |
+    40	|---|---|---|
+    41	| Request body/hash | Existing archive → smoke adapter → provider/accounting/new archive | Complete body remains identical; model, prompt, schema and output cap do not change |
+    42	| Reservation | Transport → admission and final report | OpenAI $0.70/call exceeds all documented context/output limits at highest listed Standard rates including 10% regional premium; no Fast/custom tier accepted. Jev reserves 65,536 input tokens times `(question count + 1)` at its price, conservatively allowing repeated state billing. Unknown usage never releases funds |
+    43	| Usage charge | Provider → accounting | Nonnegative integer usage required; conservative published rate, not a claim about the bill; may not exceed reservation |
+    44	| Response | Provider → accounting → existing `model.call`/`jev.ask` validation | Persist even if downstream schema validation refuses it; secrets never persisted |
+    45	| Protected hashes | Read-only census → final comparison | Every existing database and sidecar in `poc/data`, not only the selected archive |
+    46	| Arm results | Existing validators → report | Separate archives prevent cached controls; completion order cannot change logical response order |
+    47	
+    48	## New path × old checks
+    49	
+    50	| Check | Proof |
+    51	|---|---|
+    52	| Exact request serialization | Rebuild each stored request through current builders and require matching hash before paid calls |
+    53	| Extraction schema | Existing `model.call` and current stored schema |
+    54	| Jev named-answer checks | Existing `jev.ask` / `jev.validate` |
+    55	| Admission is before send | Fake external HTTP transport and real temporary SQLite; cap refusal asserts no call |
+    56	| Concurrent admission | Two requests reserve under one lock; third cannot exceed cap |
+    57	| Unknown billing/crash | Timeout and reopen tests retain reservation and refuse later calls |
+    58	| Ordinary output accounting | Usage recorded before downstream JSON/schema validation |
+    59	| Database isolation | Read-only inputs, new directory, before/after hashes |
+    60	
+    61	Tests use no credentials. The live HTTP function loads configured credentials only after preflight, uses fixed documented endpoints, and makes exactly one attempt. The POC guard does not replace production accounting or change the default transport. No OpenAI Batch endpoint adapter is added in this slice.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D159|D171|D172|"'^## '"' docs/DECISIONS.md && nl -ba src/hivemind/model.py && nl -ba src/hivemind/jev.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+6:## D1 · 2026-10-15 · Input classification carries each input's related companies
+19:## D2 · 2026-10-15 · Config holds only the choices a person makes
+37:## D3 · 2026-10-15 · Config has no budget or concurrency limits
+44:## D4 · 2026-10-15 · Dispatch is by tag only, never by company
+56:## D5 · 2026-10-15 · Time is the material's own time and the run's day
+74:## D6 · 2026-10-15 · The research universe is its own module
+87:## D7 · 2026-10-15 · No input store; replay is a test database, not a design concern
+110:## D8 · 2026-10-16 · Classification's lookup tables: one data file, results are tags
+126:## D9 · 2026-10-16 · A day is cut in New York time; only the day counts
+140:## D10 · 2026-10-16 · The system starts at a stream of classified items
+161:## D11 · 2026-10-16 · Related objects and the theme library
+178:## D12 · 2026-10-16 · No current-day clock in the system
+193:## D13 · 2026-10-16 · The system is driven by information, not by the calendar
+205:## D14 · 2026-10-16 · Two modes, designed apart: stream and pull
+220:## D15 · 2026-10-16 · Macro, political and economic material in the classification
+244:## D16 · 2026-10-16 · A human review pool for what the tables do not know
+265:## D17 · 2026-10-16 · Receive is merged into dispatch
+276:## D18 · 2026-10-16 · One switch: the universe decides what is processed
+297:## D19 · 2026-10-16 · Freeze v1: everything up to classification
+341:## D20 · 2026-10-16 · A PRD per module, in Markdown, viewable from the design page
+363:## D21 · 2026-10-16 · Any change refreshes everything, by one command
+379:## D22 · 2026-10-16 · Refreshing is a reasoning pass; the script only checks
+404:## D23 · 2026-10-16 · Tables without XBRL tags are read by the model
+432:## D24 · 2026-10-16 · Financial reports are not streamed; pull mode reads them when a thesis needs them
+467:## D25 · 2026-10-16 · One extraction module, read by category from a senior hedge fund analyst's view
+501:## D26 · 2026-10-18 · The views database is the system's core
+532:## D27 · 2026-10-18 · Extraction reads the whole item by category, then matches it against the drivers
+566:## D28 · 2026-10-18 · Financial reports stream again
+575:## D29 · 2026-10-18 · A final verdict before any view is closed
+597:## D30 · 2026-10-18 · Conflicting sources and the consensus
+615:## D31 · 2026-10-18 · Order, one writer, and the link between the levels
+645:## D32 · 2026-10-18 · Table data comes one release at a time; XBRL is not pushed again
+664:## D33 · 2026-10-18 · Extraction only reads; matching and writing belong to the views database
+679:## D34 · 2026-10-18 · An SEC filing is dated by the day SEC makes it public
+694:## D35 · 2026-10-18 · Extraction v1 is final
+715:## D36 · 2026-10-18 · One word per concept in the input and extraction modules
+740:## D37 · 2026-10-18 · Freeze v1 of the input side and extraction
+752:## D38 · 2026-10-20 · The views database rebuilt: a view is a question with a five-rung ladder and a due date
+822:## D39 · 2026-10-20 · Writing into the views database: match by where a candidate belongs, then one round of re-judging
+868:## D40 · 2026-10-20 · The matching judge: a general model first, every match recorded, humans label, a small model later
+898:## D41 · 2026-10-20 · What the rebuilt views database changes outside it
+936:## D42 · 2026-10-20 · Extraction hands over evidence and candidate views as two things; evidence is matched to what its view already holds
+989:## D43 · 2026-10-20 · A second stable version of the design is sealed
+1001:## D44 · 2026-10-20 · Matching is the model's alone: no key matched by code
+1026:## D45 · 2026-10-20 · Only what Alex said or decided is decided; Claude's proposals are listed apart
+1063:## D46 · 2026-10-20 · Alex decides Claude's views proposals one by one
+1149:## D47 · 2026-10-20 · End-to-end consistency from the universe to the views database
+1196:## D48 · 2026-10-20 · The views database, with match labelling, is frozen as version 1
+1214:## D49 · 2026-10-20 · Code review of the frozen views database: contradictions fixed, no new mechanism
+1240:## D50 · 2026-10-20 · Clean-up after the freeze
+1255:## D51 · 2026-10-21 · Claude's open items settled: one re-judging rule, dependencies chosen in the matching call, no consensus
+1315:## D52 · 2026-10-21 · Plain, consistent wording across the design page and PRDs
+1349:## D53 · 2026-10-21 · A full line-by-line read of the page and PRDs, in rounds
+1407:## D54 · 2026-10-21 · A view's state is frozen at its due date; pull mode runs at the end of the day
+1448:## D55 · 2026-10-22 · The final verdict checked against the rebuilt views database; a removed object's views stop updating
+1476:## D56 · 2026-10-22 · A full sweep before sealing v12
+1505:## D57 · 2026-10-22 · A view has one switch: open or closed
+1533:## D58 · 2026-10-22 · A deep review before freezing everything but pull mode
+1595:## D59 · 2026-10-22 · How a candidate view names its object; a view from Alex's own memo
+1618:## D60 · 2026-10-22 · The deep review again, after D59
+1652:## D61 · 2026-10-22 · Clean-up: a code review, bloat removed, superseded seals out of the tree
+1675:## D62 · 2026-10-23 · The POC build: Alex's choices, in his words
+1684:## D63 · 2026-10-24 · Re-judging once a day; the first window ends on 2026-08-15
+1690:## D64 · 2026-10-24 · Hide the mock header's date label
+1694:## D65 · 2026-10-24 · Remove black focus outlines from the mock
+1698:## D66 · 2026-10-24 · Remove the canvas hint and shorten the search field
+1702:## D67 · 2026-10-24 · Simplify the view card headers
+1706:## D68 · 2026-10-24 · Put the current judgment in the card header
+1711:## D69 · 2026-10-24 · Use matching score circles on charts and state pills
+1716:## D70 · 2026-10-24 · Simplify the score display after visual review
+1720:## D71 · 2026-10-24 · Use black for Yes and white for No
+1724:## D72 · 2026-10-24 · Remove redundant card footer tags
+1728:## D73 · 2026-10-24 · Use one title style across canvas cards
+1732:## D74 · 2026-10-24 · Remove the change-summary line from view cards
+1736:## D75 · 2026-10-24 · Give daily evidence volume its own chart band
+1740:## D76 · 2026-10-24 · Hivemind is a database with a search engine on top; the caller chooses
+1746:## D77 · 2026-10-24 · Label the state chart
+1750:## D78 · 2026-10-24 · Name the user input Idea and stored questions Thesis
+1754:## D79 · 2026-10-24 · Align plot headings to the number column
+1758:## D80 · 2026-10-24 · Give the due date a separate card footer
+1762:## D81 · 2026-10-24 · Simplify the thesis detail panel
+1778:## D82 · 2026-10-24 · Use the same font for dates and labels
+1782:## D83 · 2026-10-24 · Center the fan-out and animate connected edges on hover
+1788:## D84 · 2026-10-24 · Use right-angle connectors
+1792:## D85 · 2026-10-24 · Thin connectors with directional arrowheads
+1796:## D86 · 2026-10-24 · Replace Idea and Thesis header icons
+1800:## D87 · 2026-10-24 · Hover highlights only the path into a card
+1804:## D88 · 2026-10-24 · Refine detail controls, dates and source presentation
+1810:## D89 · 2026-10-24 · Give the detail panel a clear visual hierarchy
+1815:## D91 · 2026-10-24 · An idea the library holds no view on gets null
+1821:## D92 · 2026-10-24 · Keep the existing monochrome theme
+1825:## D93 · 2026-10-24 · Simplify detail sections and move the due date
+1829:## D94 · 2026-10-24 · Merge the current assessment and its reasoning
+1833:## D95 · 2026-10-24 · Keep one divider at each section boundary
+1837:## D96 · 2026-10-24 · Present the current assessment as a quote
+1841:## D97 · 2026-10-24 · Make the lower detail sections consistent accordions
+1845:## D98 · 2026-10-24 · Highlight the assessment row with a quote accent
+1849:## D99 · 2026-10-24 · Put the related-thesis arrow before the title
+1853:## D100 · 2026-10-24 · Animate all detail expansions consistently
+1858:## D101 · 2026-10-24 · Separate the header dates with vertical bars
+1862:## D102 · 2026-10-24 · Shorten the evidence heading and use solid disclosure triangles
+1866:## D103 · 2026-10-24 · Align detail labels and values at one readable size
+1870:## D105 · 2026-10-24 · Animate disclosure content without moving its heading
+1876:## D104 · 2026-10-24 · A theme holds a document only if it can move a thesis; Commerce anti-dumping notices do not
+1882:## D106 · 2026-10-24 · Reserve scrollbar space without a track divider
+1887:## D107 · 2026-10-24 · Put expanded evidence dates after its sources
+1891:## D108 · 2026-10-24 · Combine source, type and date on one attribution line
+1895:## D109 · 2026-10-24 · Show the source in collapsed evidence rows too
+1899:## D110 · 2026-10-24 · Show thesis status in a pill
+1903:## D111 · 2026-10-24 · Use an in-page evidence type menu
+1908:## D112 · 2026-10-24 · The service runs in Docker; the FE asks it to read an idea; the user's thesis is the idea card
+1914:## D113 · 2026-10-24 · Add the colon to canvas due dates
+1918:## D114 · 2026-10-24 · Present score definitions as a table
+1922:## D115 · 2026-10-24 · Use a uniform Score change heading
+1926:## D116 · 2026-10-24 · Simplify history navigation to two right-aligned buttons
+1930:## D117 · 2026-10-24 · Strengthen chart headings and separate the two plots
+1934:## D118 · 2026-10-24 · Keep canvas chart subtitles smaller than detail headings
+1938:## D119 · 2026-10-24 · Inspect and anchor history by date
+1943:## D120 · 2026-10-24 · Remove the History hover label and navigation buttons
+1947:## D121 · 2026-10-24 · Make quiet-day History selection explicit
+1952:## D122 · 2026-10-24 · Lock clicked History anchors and keep endpoint dots whole
+1958:## D123 · 2026-10-24 · Remove the current-date dashed line from canvas cards
+1962:## D124 · 2026-10-24 · Remove canvas card footers
+1966:## D125 · 2026-10-24 · Center the initial graph in the usable canvas
+1971:## D126 · 2026-10-24 · Add the black TrueNorth mark beside Hivemind
+1975:## D127 · 2026-10-24 · Balance the Hivemind wordmark with its logo
+1979:## D128 · 2026-10-24 · Enlarge and center canvas navigation controls
+1983:## D129 · 2026-10-24 · Keep only Full and Last 30 days
+1987:## D130 · 2026-10-24 · Modular Thesis UI with a versioned data contract
+1993:## D131 · 2026-10-24 · Remove native hover text from card UI
+1997:## D132 · 2026-10-24 · Probing the idea route: aliases from the universe, Chinese text terms, a floor under null
+2003:## D133 · 2026-10-24 · Everything in data and code is English from now on, natively
+2008:## D134 · 2026-10-24 · The idea is read by an agent that calls Hivemind, the way a fresh Luna with the MCP would
+2013:## D136 · 2026-10-24 · Slide the Thesis detail drawer open and closed
+2018:## D135 · 2026-10-24 · The service does the looking up; the model is asked twice
+2024:## D137 · 2026-10-24 · Keep card connectors separate and attached to their cards
+2047:## D138 · 2026-10-24 · Idea cards share the Thesis header and connect every mapped thesis directly
+2069:## D139 · 2026-10-24 · Evaluate overarching main theses before building the next layer
+2075:## D140 · 2026-10-24 · Validate only two main-thesis update paths
+2081:## D141 · 2026-10-24 · Validate code-owned sources and current evidence before summaries
+2088:## D142 · 2026-10-24 · Test organization inside ingestion, not after extraction
+2095:## D143 · 2026-10-24 · Test one owner for ingestion relationships
+2103:## D144 · 2026-10-25 · Research continuing subject identity inside ingestion
+2112:## D145 · 2026-10-25 · The idea card keeps the full mapping contract
+2129:## D147 · 2026-10-25 · Continue grouping POCs with direct subject identity results
+2141:## D146 · 2026-10-25 · The idea gold set: twenty ideas judged as an analyst, authored by Claude, sealed
+2161:## D148 · 2026-10-25 · Check grouping consistency by research meaning, not identical group counts
+2170:## D149 · 2026-10-25 · Group association is required during extraction
+2178:## D150 · 2026-10-25 · Test a source-based membership explanation within extraction
+2187:## D151 · 2026-10-25 · Before the NVDA rerun: the two sessions merged, two prompt rules corrected and proven on stored requests
+2194:## D152 · 2026-10-25 · The rerun runs in Chinese first; grouping passes to Claude
+2204:## D153 · 2026-10-25 · Keyed views: the structural correction is the direction; the week run is read first
+2218:## D154 · 2026-10-25 · The keyed view contract as built and measured on the bootstrap documents (T1–T2d)
+2239:## D155 · 2026-10-25 · 清单是参考，先修身份，再按顺序验证归组
+2247:## D156 · 2026-10-25 · 先校正归组验收，再评价模型方案
+2254:## D157 · 2026-10-25 · 用当前中文管线验证 Ohio 两篇连续报道
+2261:## D158 · 2026-10-25 · 追查 Ohio 入口并在同一归组流程内对照
+2270:## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
+2278:## D160 · 2026-10-25 · 按原意检验三篇连续抽取，不用错误合并掩盖提问失真
+2280:- Alex 同意 D159 的界限并要求继续完整修复。以同一可核对问题判去重，以同一业务过程判归组；拟议担保改成当年实际付款属于抽取失真，不能强行合并算修复。
+2286:## D161 · 2026-10-25 · 继续修抽取，把保留论据与新开问题分开
+2293:## D162 · 2026-10-25 · 先验证分两步抽取的假设
+2301:## D163 · 2026-10-25 · English for the maintained project
+2309:## D164 · 2026-10-25 · Claude builds the English library on Codex's plan; the watch list is a reference, not a gate
+2316:## D165 · 2026-10-25 · Research groups enter the default pipeline; a group is an ongoing matter, a company's own financial lines carry none
+2323:## D166 · 2026-10-25 · Group identity and membership by names, in code
+2329:## D167 · 2026-10-25 · No hard-coded identity for aggregates; the judge gets the evidence, the vocabulary gets the missing measures, the writer owns replacement
+2337:## D168 · 2026-10-25 · Four corrections found by the D167 measurement: one repeat rule, one replace definition, one succession rule, one missing answer
+2345:## D169 · 2026-10-25 · Jev is the default matching engine
+2352:## D170 · 2026-10-25 · Phase close-out: what the code review removed, fixed and left
+2359:## D171 · 2026-10-25 · Review and free proofs for the day-batch acceleration proposal
+2364:- Recommendation awaiting Alex's choice: concurrent request preparation with exact read validation before sequential commits, retaining D149/D159 semantics; re-run requests whose inputs changed. A more aggressive day-start extraction contract must be decided and tested separately. The review defines both boundaries, failure/recovery states, local-ID namespacing, evaluation limits and staged tests.
+2368:## D172 · 2026-10-25 · Build the isolated ordered-concurrency POC
+2370:- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
+2371:- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
+     1	"""One model call, archived and replayable.
+     2	
+     3	`call()` sends a system and user message with a strict JSON schema to an OpenAI-compatible chat endpoint (OpenAI,
+     4	or DeepSeek through the same wire format), checks the answer against the schema, and records the exact request and
+     5	raw answer in an archive (SQLite, a POC artefact kept beside the test database, never inside the views database).
+     6	A request whose sha256 is already in the archive is answered from it without a network call, so a rerun of a
+     7	replay costs nothing and gives the same answers. The provider key is read from the owner-only credentials file and
+     8	never appears in the archive, logs or arguments.
+     9	"""
+    10	import dataclasses
+    11	import hashlib
+    12	import http.client
+    13	import json
+    14	import re
+    15	import os
+    16	import sqlite3
+    17	import time
+    18	import uuid
+    19	import urllib.error
+    20	import urllib.request
+    21	
+    22	CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
+    23	ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
+    24	             'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
+    25	# USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+    26	# gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
+    27	# cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
+    28	# the published rate; the token columns are the measurement, the bill is the provider's.
+    29	PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+    30	          'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+    31	
+    32	SCHEMA_SQL = """
+    33	create table if not exists model_calls (
+    34	  call_id integer primary key autoincrement, purpose text, config_version text, config_checksum text, model text,
+    35	  request_sha256 text unique, request_json text, response_json text, answer_json text, prompt_chars integer,
+    36	  input_tokens integer, output_tokens integer, cost_usd real, seconds real, created_at text
+    37	);
+    38	create index if not exists model_calls_sha on model_calls(request_sha256);
+    39	"""
+    40	
+    41	
+    42	class SchemaError(ValueError):
+    43	    pass
+    44	
+    45	
+    46	class TransportError(RuntimeError):
+    47	    pass
+    48	
+    49	
+    50	@dataclasses.dataclass
+    51	class Answer:
+    52	    data: dict
+    53	    call_id: int
+    54	    request_sha256: str
+    55	    cached: bool
+    56	    prompt_chars: int
+    57	    input_tokens: int
+    58	    output_tokens: int
+    59	    cost_usd: float
+    60	
+    61	
+    62	class Archive:
+    63	    """Shared by the extraction worker threads: one connection, every access under a lock."""
+    64	
+    65	    def __init__(self, path):
+    66	        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    67	        self.conn = sqlite3.connect(path, check_same_thread=False)
+    68	        self.conn.executescript(SCHEMA_SQL)
+    69	        import threading
+    70	        self.lock = threading.Lock()
+    71	
+    72	    def lookup(self, sha):
+    73	        with self.lock:
+    74	            return self.conn.execute('select call_id, answer_json, prompt_chars, input_tokens, output_tokens from model_calls where request_sha256=?', (sha,)).fetchone()
+    75	
+    76	    def record(self, **fields):
+    77	        """One row per distinct request; a second identical request recorded at the same moment (two threads, or a
+    78	        failed answer repeated within the same second) keeps the first row's id instead of failing."""
+    79	        columns = list(fields)
+    80	        with self.lock:
+    81	            cursor = self.conn.execute(f'insert or ignore into model_calls ({",".join(columns)}) values ({",".join("?" * len(columns))})',
+    82	                                       [fields[c] for c in columns])
+    83	            self.conn.commit()
+    84	            if cursor.rowcount == 0:
+    85	                return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
+    86	            return cursor.lastrowid
+    87	
+    88	    def totals(self):
+    89	        with self.lock:
+    90	            return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()
+    91	
+    92	
+    93	def _key(provider):
+    94	    name = ENDPOINTS[provider][1]
+    95	    if os.environ.get(name):
+    96	        return os.environ[name]
+    97	    with open(CREDENTIALS, encoding='utf-8') as handle:
+    98	        return json.load(handle)[name]
+    99	
+   100	
+   101	def build_request(setting, system, user, schema, schema_name, provider):
+   102	    request = {
+   103	        'model': setting.model,
+   104	        'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
+   105	        'response_format': {'type': 'json_schema', 'json_schema': {'name': schema_name, 'strict': True, 'schema': schema}},
+   106	    }
+   107	    if provider == 'openai':
+   108	        # gpt-6-luna is a reasoning model: it refuses any temperature but the default, so the setting's temperature
+   109	        # is recorded in Config but not sent; reasoning_effort is what steers it.
+   110	        request['max_completion_tokens'] = setting.max_output_tokens
+   111	        if setting.reasoning_effort:
+   112	            request['reasoning_effort'] = setting.reasoning_effort
+   113	    else:
+   114	        request['temperature'] = setting.temperature
+   115	        request['max_tokens'] = setting.max_output_tokens
+   116	    return request
+   117	
+   118	
+   119	def openai_transport(provider, request, timeout=600):
+   120	    url, _ = ENDPOINTS[provider]
+   121	    body = json.dumps(request).encode('utf-8')
+   122	    headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
+   123	    last = None
+   124	    for attempt in range(3):
+   125	        try:
+   126	            with urllib.request.urlopen(urllib.request.Request(url, data=body, headers=headers, method='POST'), timeout=timeout) as response:
+   127	                return json.loads(response.read().decode('utf-8'))
+   128	        except urllib.error.HTTPError as error:
+   129	            text = error.read().decode('utf-8', 'ignore')[:600]
+   130	            last = f'HTTP {error.code}: {text}'
+   131	            if error.code in (400, 401, 403, 404):
+   132	                raise TransportError(last)
+   133	        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, http.client.HTTPException) as error:   # a dropped or truncated response is retried like a network error
+   134	            last = repr(error)[:200]
+   135	        time.sleep(5 * (attempt + 1))
+   136	    raise TransportError(last or 'no answer')
+   137	
+   138	
+   139	def check_schema(value, schema, path='$'):
+   140	    """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
+   141	    array/items, string/enum/pattern, integer, number, boolean, null in anyOf."""
+   142	    kind = schema.get('type')
+   143	    if 'anyOf' in schema:
+   144	        errors = []
+   145	        for option in schema['anyOf']:
+   146	            errors = check_schema(value, option, path)
+   147	            if not errors:
+   148	                return []
+   149	        return errors or [f'{path}: matches no option']
+   150	    if kind == 'object':
+   151	        if not isinstance(value, dict):
+   152	            return [f'{path}: expected object']
+   153	        errors = []
+   154	        for name in schema.get('required', []):
+   155	            if name not in value:
+   156	                errors.append(f'{path}.{name}: required')
+   157	        properties = schema.get('properties', {})
+   158	        for name, item in value.items():
+   159	            if name in properties:
+   160	                errors.extend(check_schema(item, properties[name], f'{path}.{name}'))
+   161	            elif schema.get('additionalProperties') is False:
+   162	                errors.append(f'{path}.{name}: not allowed')
+   163	        return errors
+   164	    if kind == 'array':
+   165	        if not isinstance(value, list):
+   166	            return [f'{path}: expected array']
+   167	        errors = []
+   168	        for index, item in enumerate(value):
+   169	            errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]'))
+   170	        return errors
+   171	    if kind == 'string':
+   172	        if not isinstance(value, str):
+   173	            return [f'{path}: expected string']
+   174	        if 'enum' in schema and value not in schema['enum']:
+   175	            return [f'{path}: {value!r} not in {schema["enum"]}']
+   176	        if 'pattern' in schema and not re.search(schema['pattern'], value):
+   177	            return [f'{path}: {value!r} does not match {schema["pattern"]}']
+   178	        return []
+   179	    if kind == 'integer':
+   180	        return [] if isinstance(value, int) and not isinstance(value, bool) else [f'{path}: expected integer']
+   181	    if kind == 'number':
+   182	        return [] if isinstance(value, (int, float)) and not isinstance(value, bool) else [f'{path}: expected number']
+   183	    if kind == 'boolean':
+   184	        return [] if isinstance(value, bool) else [f'{path}: expected boolean']
+   185	    if kind == 'null':
+   186	        return [] if value is None else [f'{path}: expected null']
+   187	    return []
+   188	
+   189	
+   190	def request_identity(request):
+   191	    """The exact serialized request and its archive key, shared by callers and validation."""
+   192	    encoded = json.dumps(request, sort_keys=True, ensure_ascii=False)
+   193	    return encoded, hashlib.sha256(encoded.encode('utf-8')).hexdigest()
+   194	
+   195	
+   196	def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, transport=None):
+   197	    provider = cfg.provider
+   198	    request = build_request(setting, system, user, schema, schema_name, provider)
+   199	    request_json, sha = request_identity(request)
+   200	    hit = archive.lookup(sha)
+   201	    prompt_chars = len(system) + len(user)
+   202	    if hit:
+   203	        call_id, answer_json, _, input_tokens, output_tokens = hit
+   204	        return Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+   205	    started = time.time()
+   206	    response = (transport or openai_transport)(provider, request)
+   207	    seconds = round(time.time() - started, 1)
+   208	    try:
+   209	        content = response['choices'][0]['message']['content']
+   210	        data = json.loads(content)
+   211	    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+   212	        archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+   213	                       request_sha256=sha + ':malformed:' + uuid.uuid4().hex[:8], request_json=request_json,
+   214	                       response_json=json.dumps(response)[:200000], answer_json=None, prompt_chars=prompt_chars,
+   215	                       input_tokens=0, output_tokens=0, cost_usd=0.0, seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+   216	        raise SchemaError(f'malformed answer: {error}')
+   217	    errors = check_schema(data, schema)
+   218	    usage = response.get('usage') or {}
+   219	    input_tokens = int(usage.get('prompt_tokens') or 0)
+   220	    output_tokens = int(usage.get('completion_tokens') or 0)
+   221	    price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
+   222	    cost = round(input_tokens / 1e6 * price_in + output_tokens / 1e6 * price_out, 6)
+   223	    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+   224	                             request_sha256=sha if not errors else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+   225	                             response_json=json.dumps(response)[:200000], answer_json=json.dumps(data, ensure_ascii=False),
+   226	                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+   227	                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+   228	    if errors:
+   229	        raise SchemaError('; '.join(errors[:5]))
+   230	    return Answer(data, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+     1	"""TypeSafe Jev (https://docs.typesafe.ai): typed answers over one state, no generated text. A request is `{model, state,
+     2	questions}`; each question is `noul` (yes/no → a probability), `choice` (labelled options → `choice`, `probabilities`,
+     3	`confidence`) or `score`. Every call is archived in `model_calls` like every other model call, keyed by the request's
+     4	digest, so a byte-identical request is served from the archive; input is priced from `model.PRICES`, output is free."""
+     5	import json
+     6	import os
+     7	import time
+     8	import urllib.error
+     9	import urllib.request
+    10	import uuid
+    11	
+    12	from . import model
+    13	
+    14	ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
+    15	KEY_NAME = 'TYPESAFE_API_KEY'
+    16	RETRY_STATUSES = {429, 529}
+    17	
+    18	
+    19	def _key():
+    20	    if os.environ.get(KEY_NAME):
+    21	        return os.environ[KEY_NAME]
+    22	    with open(model.CREDENTIALS, encoding='utf-8') as handle:
+    23	        return json.load(handle)[KEY_NAME]
+    24	
+    25	
+    26	def transport(request, timeout=60):
+    27	    """POST the request; one retry after a pause on a rate-limit or overload status; any other failure is a TransportError.
+    28	    The body is the same sorted text the archive digests, so a cache hit is byte-identical to what was sent."""
+    29	    body = json.dumps(request, sort_keys=True, ensure_ascii=False).encode('utf-8')
+    30	    key = _key()
+    31	    for attempt in range(2):
+    32	        req = urllib.request.Request(ENDPOINT, body, {'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'})
+    33	        try:
+    34	            with urllib.request.urlopen(req, timeout=timeout) as response:
+    35	                raw = response.read()
+    36	            break
+    37	        except urllib.error.HTTPError as error:
+    38	            if error.code in RETRY_STATUSES and attempt == 0:
+    39	                time.sleep(2)
+    40	                continue
+    41	            raise model.TransportError(f'Jev HTTP {error.code}') from None
+    42	        except (urllib.error.URLError, OSError) as error:
+    43	            raise model.TransportError(f'Jev transport failed: {type(error).__name__}') from None
+    44	    if key.encode('utf-8') in raw:
+    45	        raise model.TransportError('Jev response echoed the credential; not archived')
+    46	    return json.loads(raw.decode('utf-8'))
+    47	
+    48	
+    49	# Jev reports each probability rounded to two decimals independently of the choice it made on the unrounded values, so the
+    50	# chosen option may print one unit below another (0.47 against 0.48; 1 of 2,353 archived choice answers on 2026-10-25).
+    51	ROUNDING = 0.01
+    52	
+    53	
+    54	def validate(answers, questions):
+    55	    """The answers of a response against the request's questions; a list of problems."""
+    56	    problems = []
+    57	    if not isinstance(answers, dict) or set(answers) != set(questions):
+    58	        return ['answer set differs from the questions asked']
+    59	    for qid, question in questions.items():
+    60	        answer = answers[qid]
+    61	        if not isinstance(answer, dict) or answer.get('type') != question['type']:
+    62	            problems.append(f'{qid}: answer type mismatch')
+    63	            continue
+    64	        if question['type'] == 'noul':
+    65	            if not isinstance(answer.get('noul'), (int, float)) or not 0 <= answer['noul'] <= 1:
+    66	                problems.append(f'{qid}: noul out of range')
+    67	        elif question['type'] == 'choice':
+    68	            probabilities = answer.get('probabilities')
+    69	            if answer.get('choice') not in question['criteria'] or not isinstance(probabilities, dict) or set(probabilities) != set(question['criteria']):
+    70	                problems.append(f'{qid}: choice or probabilities do not match the criteria')
+    71	            elif any(not isinstance(v, (int, float)) or isinstance(v, bool) or not 0 <= v <= 1 for v in probabilities.values()) \
+    72	                    or abs(sum(probabilities.values()) - 1) > 0.005 * len(probabilities) + 1e-9:
+    73	                problems.append(f'{qid}: probabilities are not a distribution')
+    74	            elif probabilities[answer['choice']] < max(probabilities.values()) - ROUNDING - 1e-9:
+    75	                problems.append(f'{qid}: choice is not the most probable option')
+    76	    return problems
+    77	
+    78	
+    79	def request_for(setting, state, questions):
+    80	    """The complete Jev request used both for dispatch and in-flight identity."""
+    81	    return {'model': setting.model, 'state': state, 'questions': questions}
+    82	
+    83	
+    84	def ask(archive, cfg, setting, state, questions, purpose, *, transport=None):
+    85	    """One Jev request, archived; returns model.Answer whose data is the `answers` map."""
+    86	    request = request_for(setting, state, questions)
+    87	    request_json, sha = model.request_identity(request)
+    88	    prompt_chars = len(request_json)
+    89	    hit = archive.lookup(sha)
+    90	    if hit:
+    91	        call_id, answer_json, _, input_tokens, output_tokens = hit
+    92	        return model.Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+    93	    started = time.time()
+    94	    response = (transport or globals()['transport'])(request)
+    95	    seconds = round(time.time() - started, 2)
+    96	    answers = response.get('answers') if isinstance(response, dict) else None
+    97	    problems = validate(answers, questions)
+    98	    usage = response.get('usage') or {} if isinstance(response, dict) else {}
+    99	    input_tokens, output_tokens = int(usage.get('input_tokens') or 0), int(usage.get('output_tokens') or 0)
+   100	    price_in, _ = model.PRICES.get(setting.model, (0.0, 0.0))
+   101	    cost = round(input_tokens / 1e6 * price_in, 6)
+   102	    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+   103	                             request_sha256=sha if not problems else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+   104	                             response_json=json.dumps(response, ensure_ascii=False)[:200000], answer_json=json.dumps(answers, ensure_ascii=False) if answers is not None else None,
+   105	                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+   106	                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+   107	    if problems:
+   108	        raise model.SchemaError('; '.join(problems[:5]))
+   109	    return model.Answer(answers, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-10-25-api-smoke/plan.md && rg -n -A 35 -B 3 '"'^## D(159|171|172)'"\\b' docs/DECISIONS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Isolated API smoke test, October 25
+     2	
+     3	Alex asked for an isolated small test before any larger run, and for actual API documentation to be checked. This is a test of provider requests, accounting and completion order. It does not adopt concurrency, change extraction or grouping, change a gold, or measure end-to-end acceptance. D159, D171 and D172 still govern committed order. Existing databases are read-only inputs; all new files are under a fresh report directory.
+     4	
+     5	## Verified API contract
+     6	
+     7	Official pages read on October 25:
+     8	
+     9	- [OpenAI Batch guide](https://developers.openai.com/api/docs/guides/batch): asynchronous JSONL upload, Files API then Batches API, unique `custom_id`, results need not be in input order, `24h` completion window. A failed/expired job can contain billed completed requests. This is not the transport implemented in D172.
+    10	- [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna): pinned model supports Chat Completions, structured outputs and Batch. Max input 922,000, max output 128,000. Batch support does not establish account access or a seconds-level turnaround.
+    11	- [OpenAI pricing](https://developers.openai.com/api/docs/pricing): standard short input/output $0.10/$0.50 per million; long input/output $0.20/$0.75; highest listed long cache-write input $0.50. Regional premium may apply. The accounting reservation below deliberately exceeds ordinary charges.
+    12	- [TypeSafe API](https://docs.typesafe.ai/api/system-one) and [models](https://docs.typesafe.ai/models): POST `/v1/systemone`, named questions and named answers, billable input usage, pinned `jev-1.14.0`, $0.042/million input, free output, default 64k/request and 32k/question. There is no OpenAI Batch transport for these calls. This test does not pack additional questions or enable long context.
+    13	
+    14	## Fixed scope and measurement
+    15	
+    16	Read exactly calls 574, 575 (extraction) and 577, 578 (Jev) from the existing v23 Jev archive through SQLite read-only mode. Resend their unchanged full requests. Each of three samples has fresh serial control A, fresh serial control B, and a fresh two-worker arm. Each arm has its own empty archive. Total maximum: 36 provider requests; no retries; global $1.50 ceiling using conservative reservations. Estimated ordinary token charges from the saved usage are below $0.10; that estimate is not the ceiling or the eventual bill.
+    17	
+    18	Serial controls establish provider variation on these requests. Record every request identity, raw response, usage, schema validation, latency, completion order, answer equality and Jev choice differences. A smoke pass requires every response to validate, match its original request, and have billable usage; persistent unknown usage, API rejection or validation failure stops the study. Differences between fresh answers are reported, not automatically classified as pipeline defects. No gold score or 10x claim is made. A larger end-to-end comparison is a separate next step.
+    19	
+    20	## State × event
+    21	
+    22	| State | Event | Transition and durable write |
+    23	|---|---|---|
+    24	| Before first call | New absolute output directory | Hash all existing `poc/data` database files and sidecars; write immutable test manifest; create independent archives and accounting database |
+    25	| Before first call | Output already exists or input hash changed | Refuse; never reuse or overwrite a prior experiment |
+    26	| Ready | A permitted request arrives | In one lock/SQLite transaction, reserve worst-case cost and consume one of 36 dispatches before network I/O |
+    27	| Ready | Cap/count exhausted or earlier failure | Refuse before network I/O |
+    28	| Reserved | Valid response and usage | Persist raw response and measured time in accounting row; replace reservation with conservative usage-based charge |
+    29	| Reserved | Timeout, network/API error, malformed/missing usage | Preserve reservation, mark usage unknown and halt new dispatch; drain already-running calls; no retry |
+    30	| Reserved | Process crash | Reservation stays; reopening a database with unresolved work refuses all new calls |
+    31	| Completed | Schema refusal downstream | Keep response/cost; stop study; no broader test |
+    32	| Study end or failure | Other call in flight | Drain it, persist whatever is known, then compare protected database hashes |
+    33	| Study end | A protected hash differs | Report failure and path; do not claim the files were unchanged |
+    34	
+    35	The sequence of call/attempt rows is owned by SQLite, not wall time. Elapsed time uses a monotonic clock. Source dates and request bodies do not change. This smoke test never writes a product ledger, so there is no day-completion or publication-date transition.
+    36	
+    37	## Value × reader
+    38	
+    39	| Value | Writer and readers | Rule |
+    40	|---|---|---|
+    41	| Request body/hash | Existing archive → smoke adapter → provider/accounting/new archive | Complete body remains identical; model, prompt, schema and output cap do not change |
+    42	| Reservation | Transport → admission and final report | OpenAI $0.70/call exceeds all documented context/output limits at highest listed Standard rates including 10% regional premium; no Fast/custom tier accepted. Jev reserves 65,536 input tokens times `(question count + 1)` at its price, conservatively allowing repeated state billing. Unknown usage never releases funds |
+    43	| Usage charge | Provider → accounting | Nonnegative integer usage required; conservative published rate, not a claim about the bill; may not exceed reservation |
+    44	| Response | Provider → accounting → existing `model.call`/`jev.ask` validation | Persist even if downstream schema validation refuses it; secrets never persisted |
+    45	| Protected hashes | Read-only census → final comparison | Every existing database and sidecar in `poc/data`, not only the selected archive |
+    46	| Arm results | Existing validators → report | Separate archives prevent cached controls; completion order cannot change logical response order |
+    47	
+    48	## New path × old checks
+    49	
+    50	| Check | Proof |
+    51	|---|---|
+    52	| Exact request serialization | Rebuild each stored request through current builders and require matching hash before paid calls |
+    53	| Extraction schema | Existing `model.call` and current stored schema |
+    54	| Jev named-answer checks | Existing `jev.ask` / `jev.validate` |
+    55	| Admission is before send | Fake external HTTP transport and real temporary SQLite; cap refusal asserts no call |
+    56	| Concurrent admission | Two requests reserve under one lock; third cannot exceed cap |
+    57	| Unknown billing/crash | Timeout and reopen tests retain reservation and refuse later calls |
+    58	| Ordinary output accounting | Usage recorded before downstream JSON/schema validation |
+    59	| Database isolation | Read-only inputs, new directory, before/after hashes |
+    60	
+    61	Tests use no credentials. The live HTTP function loads configured credentials only after preflight, uses fixed documented endpoints, and makes exactly one attempt. The POC guard does not replace production accounting or change the default transport. No OpenAI Batch endpoint adapter is added in this slice.
+2267-
+2268-- D158 运行结果：免费重放 326 个答案，事件年度修复仅恢复 NAVER 一条部署事件及三条证据；两个反向修改和完整 211 项测试通过。在线第一条对照请求 180.342 秒超时，无模型回答；其余五个序列未开始，$0.105535 未知用量保留额不释放。新入口尚无在线效果结论，不推广、不自动重发。结果：`poc/reports/2026-10-25-ohio-grouping-02/results.md`。
+2269-
+2270:## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
+2271-
+2272-- Alex 要求重新看完整抽取、找已有观点、去重和归组流程，找结构性原因后修复，不做个案调参。诊断、表、固定案例与验证方案见 `docs/research/2026-10-25-pipeline-replay.md`。
+2273-- 八个 v15 库有 834 次日初预抽取，其中 576 次之前已有同日新观点；此数是上下文暴露，不是错误数。删除预抽取，让一条写完下一条再抽，恢复 D31/D63 的顺序要求。D155 中这一顺序修复不再等待分组语义试验；分组仍不因此启用。未完成的旧并行交接明确拒绝恢复，保留原数据，不静默重抽。
+2274-- Ohio 所查的既有问题均已搜到，不能统称数据库没召回。原拟用四个比对请求检验补充双方原句和来源，审查在调用前发现：165 的候选已变成年度实际出资，与旧担保金额不同；不能把合并算成功。该实验不运行，先把抽取改变含义与身份拆分分开评价。不换搜索、不增加专用合并规则、不改默认提示词。
+2275-- 每个案例每臂三次，最多 24 次请求、$1.50 估算保留额、30 分钟；与 D158 超时请求及其未知费用分开，不自动重发。原文审阅形成的开发预期不是人工金标，结果不充当完整分组验收。前端、Idea、分类、Pull、最终判定和上层论点均不在本次范围。
+2276-- 结果：顺序修复的 3 项入口测试、31 项相关测试、完整 214 项套件通过；恢复旧并行的反向修改被调用顺序断言抓住。身份试验的 24 次是草案上限，实际没有开始，生成费用为零。下一步先确认“同问题去重、同项目不同问题归组、原意改变归抽取”的验收界限，再固定最小实验；不得按被审查否决的预期启动。
+2277-
+2278-## D160 · 2026-10-25 · 按原意检验三篇连续抽取，不用错误合并掩盖提问失真
+2279-
+2280-- Alex 同意 D159 的界限并要求继续完整修复。以同一可核对问题判去重，以同一业务过程判归组；拟议担保改成当年实际付款属于抽取失真，不能强行合并算修复。
+2281-- 最小下一步见 `docs/research/2026-10-25-extraction-continuity.md`：三个真实 Ohio 输入、两臂各三次连续样本，两臂都沿用已有组成员上下文、身份与原子保存，仅改变实验角色的阅读入口。默认角色和归组仍不改变；本轮不声称验证大库检索。
+2282-- 独立登记最多 54 次请求（18 次抽取、最多 36 次比对），费用上限仍 $1.50，30 分钟。旧预算、超时记录和未知费用不动；不自动重试，不用失败样本改尺或续开臂。无关产品模块和上层投资论点仍不在范围内。
+2283-
+2284-- D160 实测结果：六个序列全部完成，36 次调用，估算 $0.51142625。新入口三次均把两项融资问题分别保留且归在同组，但风险论据和三种金额口径完整保留均只有 2/3，与对照覆盖相同；完整验收失败，不推广、不自动续开臂。18 条成员、54 次出处交接全部对应；完整 216 项 Python 测试通过。后两篇没有新候选，不能声称检验了旧身份拆分问题。结果和剩余合同问题见 `poc/reports/2026-10-25-ohio-grouping-03/results.md`。
+2285-
+2286-## D161 · 2026-10-25 · 继续修抽取，把保留论据与新开问题分开
+2287-
+2288-- Alex 在 D160 失败后要求继续改进抽取和后续运行，为封存做准备。当前合同能够保存遗漏的风险论据；不采用前一轮提出但未获证的新证据存储层。
+2289-- 设计、计数、阅读机制和固定验证见 `docs/research/2026-10-25-extraction-evidence.md`。以 D160 角色为新鲜对照，仅重排并明确证据选择：关键条款及支持/反对理由可归入同一个问题，不因无需新开问题而丢掉。原问题边界、引用检查及存储保持。
+2290-- 六个独立三篇序列，每臂三次；原 O1–O6 不变，另报首篇总成本是否保留。最多 54 次请求、$1.50、30 分钟；不自动重试或超额。通过这个开发案例不等于全部抽取封存，也不启用默认归组。失败按原标准报告，不补采改尺。
+2291-- 实测失败：36 次调用、估算 $0.497585。新角色批评论据 3/3（对照 2/3），但首篇总成本只保留 1/3（对照 0/3），两臂各有一次把 Ohio 问题放进 Rubin 组。11 条成员及 66 次出处交接全部对应，说明错误已在原答，不是保存丢失。217 项测试通过。默认不变，抽取未封存；分两步读内容再建问题的建议尚未决定或实施。结果：`poc/reports/2026-10-25-extraction-evidence-01/results.md`。
+2292-
+2293-## D162 · 2026-10-25 · 先验证分两步抽取的假设
+2294-
+2295-- Alex 明确同意先测试 D161 的下一步假设。仅在隔离 POC 把抽取分为读取原文内容、组织问题及归属两个内部步骤；第二步须交代第一步每条内容的去向。最终仍交现有证据、候选观点及归属，不增加产品数据层。
+2296-- 注册设计见 `docs/research/2026-10-25-source-first.md`。对照为 D161 的证据优先角色，三篇原文、每臂三个独立新鲜序列，原语义标准保持；不同时改原文引用表示、模型或搜索。
+2297-- 最多 63 次请求，独立上限仍 $1.50、30 分钟；不自动重试、不调整旧预算。通过开发案例才谈后续验证，不直接启用默认管线或封存；失败报告，不自行改尺续开臂。
+2298-
+2299-- D162 result: the registered comparison failed end to end. All six sequences completed, 45 calls, estimated $0.6928525. First-step cost selection improved, but invalid ownership, wrong grouping, a period-check merge override and an inaccurate numerical summary remain. No default promotion. 227 Python tests passed. Evidence: `poc/reports/2026-10-25-source-first-01/results.md`.
+2300-
+2301-## D163 · 2026-10-25 · English for the maintained project
+2302-
+2303-- Alex: “let’s also use this chance to convert everything into english from chinese.” English becomes the language for maintained prompts, generated explanations, UI text and current documentation. Original source quotations and historical records retain their original language and identity.
+2304-- The D162 experiment finishes under its original frozen requests. Language conversion is a separate change, not an unregistered experimental arm and not evidence that the extraction defects are fixed.
+2305-- Inventory exact schema values and their readers before conversion. Preserve the ability to read existing records; no in-place rewriting of historical databases, frozen prompts, raw answers or prior decisions. New decisions and reports are written in English.
+--
+2356-- Fixed: the preflight's matching section now judges Jev records (it had skipped all 250 of the Jev ledger) and fails when every record of a ledger is skipped; the cost reports read the one price table (`model.PRICES`) and refuse an unpriced model; the benchmark stops when its evidence scorer fails; Jev succession eligibility has one rule (`jev_matching.can_succeed`); a test no longer reads the real credentials file, another no longer writes the real service archive; the newsroom category rule has one owner that its test exercises; the replay requires the ledger and archive it writes and defaults to `poc-v23` and the current item window; the compose file uses the adopted idea configuration `poc-v9`.
+2357-- Left, with the reason: the dependency-cycle pass in `matching.check` (its refusal wording reaches stored retry requests, so merging it would change replayed requests); the two ladder validators (admission of a new ladder and reading of a stored one are different jobs); splitting `matching.check`, `writing._write` and `idea.read_idea` (behaviour-preserving refactors of the core without a measurement round); unused parameters and result fields (signature churn across many call sites); the corpus harvesters' shared fetch code; the test-only `search.fake_embed` in the search module; `scripts/review_english_run.py` counting equal model-written scopes as a breach (D155 makes them a lead, not identity). The reviewers' lead that the API's `poc-v9` default was stale was wrong: it is the adopted idea configuration (D135/D145).
+2358-
+2359:## D171 · 2026-10-25 · Review and free proofs for the day-batch acceleration proposal
+2360-
+2361-- Alex asked to review the extraction/Jev/per-day acceleration plan deeply and test it against the stored golds and result databases. Scope is review and isolated offline proofs; no product-contract change, runtime adoption or paid comparison follows automatically.
+2362-- The [review](research/2026-10-25-day-batch-review/review.md) and its scripts reconstruct 960/960 extraction requests from the two saved v23 ledgers. Day-start context differs for 214/480 Jev-arm requests and 168/480 control requests; rechecking the same raw answers with day-start IDs loses 73/797 and 62/744 evidence items. Extraction depends on earlier theses as well as groups. The Jev arm has 86/320 final repeat/replace decisions targeting same-day evidence, and Jev membership alone cannot declare the 26 new groups.
+2363-- At 32 workers, a three-wave schedule using recorded Jev call durations projects 8.6× on July 27 and 3.2× over 31 nonempty days, before reconciliation/rate-limit overhead. This replaces the unsupported general 10× claim, not the speed target. It is a schedule estimate, not fresh measured latency. Judging already uses six workers per dependency level.
+2364-- Recommendation awaiting Alex's choice: concurrent request preparation with exact read validation before sequential commits, retaining D149/D159 semantics; re-run requests whose inputs changed. A more aggressive day-start extraction contract must be decided and tested separately. The review defines both boundaries, failure/recovery states, local-ID namespacing, evaluation limits and staged tests.
+2365-- Verification: 128 product/corpus/diagnostic tests passed; two diagnostic mutants were caught; preflight judged 250 stored Jev records with no skipped records. Existing golds remain unchanged. No batching runtime or fresh model-quality pass is claimed.
+2366-- A read-only review independently reproduced the 960 request message pairs and schemas, the stale-reference losses and the timing projection; no serious finding against the proposed contract. Runtime implementation and live measurement remain the next, separate steps.
+2367-
+2368:## D172 · 2026-10-25 · Build the isolated ordered-concurrency POC
+2369-
+2370-- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
+2371-- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
+2372-- The [first implementation slice](research/2026-10-25-day-batch-review/implementation.md) covers offline coordinator, independent Jev calls and failure/restart verification on temporary storage. No paid call, new spending cap or default activation is authorized by this slice. The current per-item spend check is not safe reservation accounting for concurrent paid calls; resolve it before a live comparison.
+2373-- Offline slice result: [ordered-concurrency POC](../poc/reports/2026-10-25-concurrency-poc/results.md). Shared request identity prevents conflicting concurrent answers under one archive ID. Bounded Jev submission cancels pending work on failure; the daily cost log includes discarded speculative work. Default replay remains serial. 143 tests pass; five intended mutants fail; 3,595 historical request hashes are unchanged. Final focused review finds no serious issue. Live accounting, fresh controls and speed measurement remain outstanding; no paid ingestion calls were made.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files docs/research/2026-10-25-api-smoke src/hivemind scripts tests poc/data && rg -n 'api.smoke|reserve|reservation|spend|cancel|timeout|transport' tests/test_jev_concurrency.py src/hivemind/concurrency.py docs/research/2026-10-25-day-batch-review/implementation.md scripts/preflight.py && rg -n 'archive|v23|jev' docs/CURRENT_STATE.md" in /Users/lchingen/hivemind
+ exited 2 in 0ms:
+src/hivemind/vocabulary.py
+docs/research/2026-10-25-api-smoke/plan.md
+docs/research/2026-10-25-api-smoke/review.log
+scripts/preflight.py
+scripts/review_english_run.py
+scripts/hivemind_api.py
+scripts/report.py
+scripts/idea_stability.py
+scripts/hivemind_mcp.py
+scripts/compare_ledgers.py
+scripts/idea_eval.py
+scripts/idea_gold.py
+scripts/idea_probe.py
+scripts/replay.py
+scripts/show_views.py
+scripts/mock_translate.py
+scripts/mock_build.py
+scripts/mock_data.py
+scripts/score_evidence_gold.py
+scripts/review_grouping_repair.py
+scripts/trace_items.py
+scripts/agent_day0.py
+scripts/recall_oracle.py
+scripts/search_eval.py
+scripts/benchmark_states.py
+src/hivemind/model.py
+src/hivemind/__init__.py
+src/hivemind/dispatch.py
+src/hivemind/config.py
+src/hivemind/pull.py
+src/hivemind/jev.py
+src/hivemind/service.py
+src/hivemind/bundle.py
+src/hivemind/replay.py
+src/hivemind/testdb.py
+src/hivemind/universe.py
+src/hivemind/search.py
+src/hivemind/extraction.py
+src/hivemind/idea.py
+src/hivemind/views/identity.py
+src/hivemind/views/jev_matching.py
+src/hivemind/views/round.py
+src/hivemind/views/matching.py
+src/hivemind/views/judging.py
+src/hivemind/views/groups.py
+src/hivemind/views/__init__.py
+src/hivemind/views/writing.py
+src/hivemind/views/store.py
+tests/test_groups.py
+tests/test_idea.py
+tests/test_sequential_replay.py
+tests/fixtures/sequential-rubin.json
+tests/fixtures/keyed-repair-cases.json
+tests/test_english.py
+tests/test_event_horizon.py
+tests/test_jev_matching.py
+tests/test_search.py
+tests/test_identity_repair.py
+tests/test_service.py
+tests/test_keyed_views.py
+tests/test_ui_bundles.py
+tests/test_concurrency.py
+tests/test_jev_concurrency.py
+tests/test_replacement_rule.py
+src/hivemind/prompts/idea-v7.txt
+src/hivemind/prompts/categories-v1.json
+src/hivemind/prompts/matching-v1.txt
+src/hivemind/prompts/idea-v6.txt
+src/hivemind/prompts/idea-v2.txt
+src/hivemind/prompts/idea-v3.txt
+src/hivemind/prompts/idea-v1.txt
+src/hivemind/prompts/role-v9.txt
+src/hivemind/prompts/categories-v7.json
+src/hivemind/prompts/role-v8.txt
+src/hivemind/prompts/idea-v10.txt
+src/hivemind/prompts/idea-v11.txt
+src/hivemind/prompts/categories-v6.json
+src/hivemind/prompts/categories-v2.json
+src/hivemind/prompts/idea-v8.txt
+src/hivemind/prompts/idea-v9.txt
+src/hivemind/prompts/idea-v4.txt
+src/hivemind/prompts/matching-v3.txt
+src/hivemind/prompts/role-v10.txt
+src/hivemind/prompts/matching-v2.txt
+src/hivemind/prompts/idea-v5.txt
+src/hivemind/prompts/judging-v2.txt
+src/hivemind/prompts/categories-v10.json
+src/hivemind/prompts/categories-v3.json
+src/hivemind/prompts/judging-v1.txt
+src/hivemind/prompts/categories-v4.json
+src/hivemind/prompts/role-v4.txt
+src/hivemind/prompts/judging-v3.txt
+src/hivemind/prompts/role-v5.txt
+src/hivemind/prompts/role-v7.txt
+src/hivemind/prompts/categories-v8.json
+poc/data/codex-pipeline.log
+src/hivemind/prompts/categories-v5.json
+src/hivemind/prompts/role-v1.txt
+src/hivemind/prompts/role-v3.txt
+src/hivemind/prompts/categories-v9.json
+src/hivemind/prompts/role-v2.txt
+src/hivemind/prompts/role-v6.txt
+poc/data/english-jev3-2026-10-25/views.sqlite
+poc/data/run-v15-T2b.out
+poc/data/english-jev3-2026-10-25/replay.log
+poc/data/english-jev3-2026-10-25/archive.sqlite
+poc/data/english-jev3-2026-10-25/run-seed.out
+poc/data/english-jev3-2026-10-25/run-seed.pid
+poc/data/run-v15-T2c.out
+poc/data/views.sqlite.day0.sqlite
+poc/data/agent-archive.sqlite
+poc/data/views.sqlite
+poc/data/run-v15-T2d.out
+poc/data/views-2026-10-25-v15-T2d.sqlite
+poc/data/old-2026-10-23-run3a/views.sqlite
+poc/data/old-2026-10-23-run3a/replay.log
+poc/data/old-2026-10-23-run3a/run3-bootstrap.out
+poc/data/english-2026-10-25/run-aug.out
+poc/data/english-2026-10-25/review-seed.txt
+poc/data/english-2026-10-25/search-index.sqlite
+poc/data/english-2026-10-25/idea-archive.sqlite
+poc/data/english-2026-10-25/run-week.out
+poc/data/english-2026-10-25/check/archive-1.sqlite
+poc/data/english-2026-10-25/check/archive-3.sqlite
+poc/data/english-2026-10-25/check/archive-2.sqlite
+poc/data/english-2026-10-25/views.sqlite
+poc/data/english-2026-10-25/review-week.txt
+poc/data/english-2026-10-25/run-aug.pid
+poc/data/english-2026-10-25/replay.log
+poc/data/english-2026-10-25/archive.sqlite
+poc/data/english-2026-10-25/run-seed.out
+poc/data/english-2026-10-25/aborted-1/views.sqlite
+poc/data/english-2026-10-25/aborted-1/replay.log
+poc/data/english-2026-10-25/aborted-1/run-seed.out
+poc/data/english-2026-10-25/run-seed.pid
+poc/data/views-2026-10-25-v15-T2b-aborted-fresh-archive.sqlite
+poc/data/english-2026-10-25/run-week.pid
+poc/data/run-v14-week.out
+poc/data/english-2026-10-25/aborted-2/views.sqlite
+poc/data/english-2026-10-25/aborted-2/replay.log
+poc/data/english-2026-10-25/aborted-2/run-seed.out
+poc/data/service/timing-2/poc-v11-summary.json
+poc/data/service/timing-2/poc-v11-sample-0.sqlite
+poc/data/service/timing-2/poc-v8-summary.json
+poc/data/service/timing-2/poc-v8-sample-0.sqlite
+poc/data/old-2026-10-23-run3b/views.sqlite
+poc/data/old-2026-10-23-run3b/replay.log
+poc/data/old-2026-10-23-run3b/run3-to-august.out
+poc/data/old-2026-10-23-run3b/run3-bootstrap.out
+poc/data/views-2026-10-25-v15-T2b.sqlite
+poc/data/run3-to-august.out
+poc/data/english-v23-jev-2026-10-25/views.week.sqlite
+poc/data/english-v23-jev-2026-10-25/archive.week.sqlite
+poc/data/english-v23-jev-2026-10-25/views.sqlite
+poc/data/english-v23-jev-2026-10-25/run-aug.pid
+poc/data/english-v23-jev-2026-10-25/replay.log
+poc/data/english-v23-jev-2026-10-25/archive.sqlite
+poc/data/english-v23-jev-2026-10-25/run-seed.out
+poc/data/english-v23-jev-2026-10-25/run-week.pid
+poc/data/english-v23-jev-2026-10-25/run-aug.out
+poc/data/english-v23-jev-2026-10-25/run-week.out
+poc/data/english-v23-jev-2026-10-25/run-seed.pid
+poc/data/views-2026-10-25-v15-T4c.sqlite
+poc/data/archive.sqlite
+poc/data/run-v15-T4b.out
+poc/data/sealed-2026-10-24-run3-through-0728/views.sqlite.day0.sqlite
+poc/data/sealed-2026-10-24-run3-through-0728/agent-archive.sqlite
+poc/data/sealed-2026-10-24-run3-through-0728/SHA256SUMS
+poc/data/sealed-2026-10-24-run3-through-0728/views.sqlite
+poc/data/sealed-2026-10-24-run3-through-0728/replay.log
+poc/data/sealed-2026-10-24-run3-through-0728/agent.sqlite
+poc/data/sealed-2026-10-24-run3-through-0728/run3-to-august.out
+poc/data/sealed-2026-10-24-run3-through-0728/mappings.csv
+poc/data/sealed-2026-10-24-run3-through-0728/run3-bootstrap.out
+poc/data/views-2026-10-25-v15-T4.sqlite
+poc/data/run-v15-T4.out
+poc/data/items-window-tags2-2026-10-24.sqlite
+poc/data/old-2026-10-23-run2/views.sqlite.day0.sqlite
+poc/data/old-2026-10-23-run2/agent-archive.sqlite
+poc/data/old-2026-10-23-run2/views.sqlite
+poc/data/old-2026-10-23-run2/run2-bootstrap.out
+poc/data/old-2026-10-23-run2/replay.log
+poc/data/old-2026-10-23-run2/agent.sqlite
+poc/data/old-2026-10-23-run2/run2-to-august.out
+poc/data/old-2026-10-23-run2/run2-week1.out
+poc/data/english-groups2-2026-10-25/views.sqlite
+poc/data/english-groups2-2026-10-25/replay.log
+poc/data/english-groups2-2026-10-25/archive.sqlite
+poc/data/english-groups2-2026-10-25/run-seed.out
+poc/data/english-groups2-2026-10-25/run-week.pid
+poc/data/english-groups2-2026-10-25/run-week.out
+poc/data/english-groups2-2026-10-25/run-seed.pid
+poc/data/service/stability/poc-v6-sample-1.sqlite
+poc/data/service/stability/poc-v9heldout-summary.json
+poc/data/service/stability/poc-v10-sample-2.sqlite
+poc/data/service/stability/poc-v13-sample-1.sqlite
+poc/data/service/stability/poc-v11-summary.json
+poc/data/service/stability/poc-v6-summary.json
+poc/data/service/stability/poc-v13heldout-sample-1.sqlite
+poc/data/service/stability/poc-v9-sample-1.sqlite
+poc/data/service/stability/poc-v10-summary.json
+poc/data/service/stability/poc-v10-sample-0.sqlite
+poc/data/service/stability/poc-v7-summary.json
+poc/data/service/stability/poc-v11-sample-0.sqlite
+poc/data/service/stability/poc-v9heldout-sample-1.sqlite
+poc/data/service/stability/poc-v7-sample-1.sqlite
+poc/data/service/stability/poc-v11-sample-2.sqlite
+poc/data/service/stability/poc-v12-sample-1.sqlite
+poc/data/service/stability/poc-v8-sample-1.sqlite
+poc/data/service/stability/poc-v9-sample-0.sqlite
+poc/data/service/stability/poc-v13heldout-sample-0.sqlite
+poc/data/service/stability/poc-v9-summary.json
+poc/data/service/stability/poc-v13-sample-0.sqlite
+poc/data/service/stability/poc-v6-sample-0.sqlite
+poc/data/service/stability/poc-v13-sample-2.sqlite
+poc/data/service/stability/poc-v10-sample-1.sqlite
+poc/data/service/stability/poc-v8-summary.json
+poc/data/service/stability/poc-v6-sample-2.sqlite
+poc/data/service/stability/poc-v13heldout-summary.json
+poc/data/service/stability/poc-v9-sample-2.sqlite
+poc/data/service/stability/poc-v13heldout-sample-2.sqlite
+poc/data/service/stability/poc-v12-summary.json
+poc/data/service/stability/poc-v9heldout-sample-0.sqlite
+poc/data/service/stability/poc-v12-sample-2.sqlite
+poc/data/service/stability/poc-v11-sample-1.sqlite
+poc/data/service/stability/poc-v7-sample-2.sqlite
+poc/data/service/stability/poc-v8-sample-2.sqlite
+poc/data/service/stability/poc-v8-sample-0.sqlite
+poc/data/service/stability/poc-v13-summary.json
+poc/data/service/stability/poc-v12-sample-0.sqlite
+poc/data/service/stability/poc-v9heldout-sample-2.sqlite
+poc/data/service/stability/poc-v7-sample-0.sqlite
+poc/data/keyed-2026-10-25/v14-week-keyed.sqlite
+poc/data/keyed-2026-10-25/sealed-keyed.sqlite
+poc/data/keyed-2026-10-25/v14-week-keying.log
+poc/data/keyed-2026-10-25/key-archive.sqlite
+poc/data/keyed-2026-10-25/smoke-keyed.sqlite
+poc/data/keyed-2026-10-25/archive-T2b-aborted.sqlite
+poc/data/keyed-2026-10-25/sealed-keying.log
+poc/data/keyed-2026-10-25/archive-T2.sqlite
+poc/data/english-jev-2026-10-25/views.sqlite
+poc/data/english-jev-2026-10-25/replay.log
+poc/data/service/timing/poc-v6-summary.json
+poc/data/service/timing/poc-v7-summary.json
+poc/data/service/timing/poc-v6-sample-0.sqlite
+poc/data/service/timing/poc-v8-summary.json
+poc/data/service/timing/poc-v8-sample-0.sqlite
+poc/data/service/timing/poc-v7-sample-0.sqlite
+poc/data/english-jev-2026-10-25/archive.sqlite
+poc/data/english-jev-2026-10-25/run-seed.out
+poc/data/english-jev-2026-10-25/run-seed.pid
+poc/data/run-v15-T2.out
+poc/data/search-index.sqlite
+poc/data/run3-bootstrap.out
+poc/data/english-jev2-2026-10-25/views.sqlite
+poc/data/english-jev2-2026-10-25/replay.log
+poc/data/english-jev2-2026-10-25/archive.sqlite
+poc/data/english-jev2-2026-10-25/run-seed.out
+poc/data/english-jev2-2026-10-25/run-week.pid
+poc/data/english-jev2-2026-10-25/run-week.out
+poc/data/english-jev2-2026-10-25/run-seed.pid
+poc/data/run-v15-T4c.out
+poc/data/agent.sqlite
+poc/data/items-window.sqlite
+poc/data/service/stability-pool/poc-v9-sample-1.sqlite
+poc/data/service/stability-pool/poc-v9-sample-0.sqlite
+poc/data/service/stability-pool/poc-v9-summary.json
+poc/data/service/stability-pool/poc-v9-sample-2.sqlite
+poc/data/service/search-index.sqlite
+poc/data/service/idea-archive.sqlite
+poc/data/old-2026-10-23-run3c/views.sqlite.day0.sqlite
+poc/data/old-2026-10-23-run3c/agent-archive.sqlite
+poc/data/old-2026-10-23-run3c/views.sqlite
+poc/data/old-2026-10-23-run3c/replay.log
+poc/data/old-2026-10-23-run3c/agent.sqlite
+poc/data/old-2026-10-23-run3c/run3-to-august.out
+poc/data/old-2026-10-23-run3c/run3-bootstrap.out
+poc/data/sealed-2026-10-24-run3-through-0815/views.sqlite.day0.sqlite
+poc/data/service/stability-fixed/poc-v11-summary.json
+poc/data/service/stability-fixed/poc-v9-sample-1.sqlite
+poc/data/service/stability-fixed/poc-v11-sample-0.sqlite
+poc/data/service/stability-fixed/poc-v11-sample-2.sqlite
+poc/data/service/stability-fixed/poc-v9-sample-0.sqlite
+poc/data/service/stability-fixed/poc-v9-summary.json
+poc/data/service/stability-fixed/poc-v9-sample-2.sqlite
+poc/data/service/stability-fixed/poc-v11-sample-1.sqlite
+poc/data/sealed-2026-10-24-run3-through-0815/SHA256SUMS
+poc/data/sealed-2026-10-24-run3-through-0815/views.sqlite
+poc/data/sealed-2026-10-24-run3-through-0815/replay.log
+poc/data/english-groups4-2026-10-25/views.sqlite
+poc/data/english-groups4-2026-10-25/review-week.txt
+poc/data/english-groups4-2026-10-25/replay.log
+poc/data/english-groups4-2026-10-25/archive.sqlite
+poc/data/english-groups4-2026-10-25/run-seed.out
+poc/data/english-groups4-2026-10-25/run-week.pid
+poc/data/english-groups4-2026-10-25/run-week.out
+poc/data/english-groups4-2026-10-25/run-seed.pid
+poc/data/english-groups3-2026-10-25/views.sqlite
+poc/data/english-groups3-2026-10-25/replay.log
+poc/data/english-groups3-2026-10-25/archive.sqlite
+poc/data/english-groups3-2026-10-25/run-seed.out
+poc/data/english-groups3-2026-10-25/run-seed.pid
+poc/data/replay.log
+poc/data/sealed-2026-10-24-run3-through-0815/report/events.md
+poc/data/sealed-2026-10-24-run3-through-0815/report/limits.md
+poc/data/sealed-2026-10-24-run3-through-0815/report/timeline.md
+poc/data/sealed-2026-10-24-run3-through-0815/report/hindsight-reviewer.csv
+poc/data/sealed-2026-10-24-run3-through-0815/report/cost.md
+poc/data/sealed-2026-10-24-run3-through-0815/report/beliefs.md
+poc/data/sealed-2026-10-24-run3-through-0815/report/hindsight-key.csv
+poc/data/sealed-2026-10-24-run3-through-0815/agent.sqlite
+poc/data/sealed-2026-10-24-run3-through-0815/mappings.csv
+poc/data/sealed-2026-10-24-run3-through-0815/run3-to-0815.out
+poc/data/english-v23-llm-2026-10-25/views.week.sqlite
+poc/data/english-v23-llm-2026-10-25/archive.week.sqlite
+poc/data/english-v23-llm-2026-10-25/views.sqlite
+poc/data/english-v23-llm-2026-10-25/run-aug.pid
+poc/data/english-v23-llm-2026-10-25/replay.log
+poc/data/english-v23-llm-2026-10-25/archive.sqlite
+poc/data/english-v23-llm-2026-10-25/run-seed.out
+poc/data/english-v23-llm-2026-10-25/run-week.pid
+poc/data/english-v23-llm-2026-10-25/run-aug.out
+poc/data/english-v23-llm-2026-10-25/run-week.out
+poc/data/english-v23-llm-2026-10-25/run-seed.pid
+poc/data/views-2026-10-25-v15-T2.sqlite
+poc/data/run-v14-week.pid
+poc/data/views-2026-10-25-v15-T2c.sqlite
+poc/data/run3-to-0815.out
+poc/data/views-2026-10-25-v14.sqlite
+poc/data/views-2026-10-25-v15-T4b.sqlite
+poc/data/old-2026-10-23-run1/agent-run2-first-scan.sqlite
+poc/data/old-2026-10-23-run1/run-bootstrap-0225.out
+poc/data/old-2026-10-23-run1/views.sqlite.day0.sqlite
+poc/data/old-2026-10-23-run1/agent-archive.sqlite
+poc/data/old-2026-10-23-run1/views.sqlite
+poc/data/old-2026-10-23-run1/run-window.out
+poc/data/old-2026-10-23-run1/replay.log
+poc/data/old-2026-10-23-run1/agent.sqlite
+poc/data/old-2026-10-23-run1/run-window-week1.out
+poc/data/old-2026-10-23-run1/run-bootstrap.out
+poc/data/english-groups-2026-10-25/run-seed.out
+poc/data/english-groups-2026-10-25/run-seed.pid
+poc/data/english-groups-2026-10-25/replay.log
+poc/data/english-groups-2026-10-25/archive.sqlite
+poc/data/english-groups-2026-10-25/views.sqlite
+rg: src/hivemind/concurrency.py: No such file or directory (os error 2)
+tests/test_jev_concurrency.py:36:    serial = jev_matching.decide(model.Archive(str(tmp_path / 'serial.sqlite')), CFG, conn, ITEM, [], copy.deepcopy(evidence), lists, [], transport=answer)
+tests/test_jev_concurrency.py:42:    parallel = jev_matching.decide(archive, CFG, conn, ITEM, [], copy.deepcopy(evidence), lists, [], transport=concurrent, workers=2)
+tests/test_jev_concurrency.py:71:    answer = jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=changing_provider, workers=2)
+tests/test_jev_concurrency.py:77:    cached = jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=changing_provider, workers=2)
+tests/test_jev_concurrency.py:94:        jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=failing, workers=2)
+tests/test_jev_concurrency.py:101:    answer = jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=retry, workers=2)
+tests/test_jev_concurrency.py:114:    def transport(request):
+tests/test_jev_concurrency.py:128:            return jev_matching.decide(archive, CFG, owned, ITEM, [], evidence, lists, [], transport=transport, workers=2)
+docs/research/2026-10-25-day-batch-review/implementation.md:5:The controlling rule is unchanged: an item's accepted extraction must be a response to the exact request built from the committed preceding items. Speculative calls may run early; their answers are not handovers until their turn and validation. This deliberately changes the experimental call schedule, not committed knowledge. D159's default no-later-call-on-failure test continues to hold on the default path. In the experimental path, earlier failure cancels pending work and drains already running requests without accepting later handovers or writes.
+docs/research/2026-10-25-day-batch-review/implementation.md:14:- The Jev coordinator submits at most the worker count at a time. It checks all completed requests for failure before filling open slots; on failure it submits no more work, cancels what has not started, and drains running requests. Completion order never controls output order.
+docs/research/2026-10-25-day-batch-review/implementation.md:64:The existing spend check runs after an item and is not a reservation for concurrent requests. Therefore this first POC entry uses explicit offline transports in tests. Before any live concurrent run, account for in-flight worst-case cost and timed-out unknown usage, and register the comparison's cap. Existing completed-run budgets are not reused. This is a live-launch prerequisite, not a claim that concurrency has been measured.
+
+codex
+The plan clearly separates this smoke test from production scheduling and OpenAI Batch. Both current transports retry automatically, so the planned one-attempt HTTP function is necessary to keep the 36-request limit. I’m checking the reservation bounds and shutdown behavior next.
+exec
+/opt/homebrew/bin/zsh -lc "cat /Users/lchingen/.codex/skills/.system/openai-docs/SKILL.md && nl -ba docs/research/2026-10-25-day-batch-review/implementation.md | sed -n '1,90p' && nl -ba AGENTS.md | sed -n '68,100p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+---
+name: "openai-docs"
+description: "Use for Codex models/pricing, scheduled tasks, skills, settings, setup, troubleshooting, customization, automations, and self-knowledge—including 'you,' 'your,' 'this app,' or 'this coding agent' when they refer to Codex—and for OpenAI APIs/products and ChatGPT Work. Also use for model choice/migration, prompting, SDKs, Responses, Realtime, agents, evals, and Chat/Work/Codex comparisons. Do not use for generic app/software tasks that merely mention Codex."
+metadata:
+  short-description: "Codex models/pricing, scheduled tasks, skills, settings, setup, troubleshooting, and self-knowledge; OpenAI APIs and ChatGPT Work. 'You'/'this app' means Codex only."
+---
+
+# OpenAI Docs
+
+Provide current, cited OpenAI product, API, model, and Codex guidance. Read zero or one primary reference.
+
+**First substantive action:** Search the user's exact requested official OpenAI documentation topic and any explicitly named model using a concise, topic-specific query of 2-6 essential terms. When an already-available direct official documentation search and page-retrieval capability is present, use it first: search, then fetch or open the matching official page before general web search. Otherwise, immediately use official-domain web search, then actually open or fetch the relevant official page. Complete this source order before reading a reference, inspecting local or repository files, running a Codex manual or model resolver, drafting a plan, or answering from memory. Use the actual fetched page, not a search snippet or an unopened link. If one official search or page does not establish the answer, search another appropriate official domain and actually open or fetch the result. Preserve the exact requested model; never substitute a newer model.
+
+**Only exception:** An explicitly requested, genuinely broad, cross-topic Codex setup, orientation, or system-map synthesis may use the manual first when shell execution and an allowed temporary cache are available. A specific Codex feature, setting, command, error, model, or requested citation remains docs-first. Mixed Chat/Work/Codex comparisons are official documentation questions, not manual-first Codex requests.
+
+For generic software tasks, answer the software task directly. OpenAI implementation, debugging, SDK, API, prompting, agent, and eval requests are not generic.
+
+For a straightforward factual or citation-only request, follow the source order and do not read a route reference. This includes straightforward API facts, ChatGPT Work or mixed Chat/Work/Codex comparisons, model tiers, aliases, Pro mode, reasoning settings, factual migration baselines, and narrow Codex facts. Prioritize `learn.chatgpt.com` for ChatGPT Work.
+
+## Choose one primary route
+
+Use the first matching route, and read its reference only when the requested task needs that specialized workflow:
+
+- **Explicitly requested local documentation integration:** Read [integration guidance](references/mcp-diagnostics.md) only when the user explicitly requests that local integration.
+- **Model migration, upgrades, or model-specific prompting:** Read [model-migration.md](references/model-migration.md) for actual migration planning, implementation, dynamic target resolution, or prompt changes. Preserve an explicitly requested target.
+- **Model selection and comparisons:** Read [model-selection.md](references/model-selection.md) only when nuanced current, latest, default, cost, latency, quality, or modality tradeoffs need more guidance. Do not run a migration resolver for selection alone.
+- **Product, API, ChatGPT Work, and mixed Chat/Work/Codex documentation:** Read [official-docs.md](references/official-docs.md) only when fetched official pages leave source selection, API schemas, or the requested implementation unresolved. This route is not manual-first.
+- **Explicitly broad Codex setup, orientation, or cross-topic synthesis:** Read [codex-self-knowledge.md](references/codex-self-knowledge.md) when the eligible Codex manual or deeper Codex procedures are needed.
+
+Read at most one primary reference. Do not open every route, bundled model guide, or helper script. Read a supporting reference or run a helper only when the chosen workflow demonstrably needs it.
+
+## Source and execution boundaries
+
+- Search, open, fetch, and cite only `developers.openai.com`, `platform.openai.com`, and `learn.chatgpt.com`. Cite the page that supports the claim. State uncertainty when official sources do not establish pricing, availability, account access, limits, or behavior.
+- Preserve an explicitly requested model for selection, migration, and prompting. Resolve an unspecified latest or current migration target only after searching and fetching current official guidance.
+- Use `references/latest-model.md` only as a disclosed fallback after current official model guidance does not answer the question. Read `references/upgrading-to-gpt-6-astra.md` only for an actual, requested GPT-6 migration; read `references/prompting-guide.md` only for requested prompting work.
+- Before building, running, editing, debugging, or testing an API-backed app or tool, use `openai-platform-api-key` first when available. Documentation, conceptual examples, model selection, and read-only guidance do not require an API key.
+- Say "OpenAI Docs" or "official OpenAI documentation" in user-facing answers. Keep exact official citations and examples concise.
+     1	# D172: isolated concurrency POC, first slice
+     2	
+     3	Alex accepted the D171 recommendation and asked to flag ordering or production contradictions immediately. This slice implements the offline coordinator and tests. It does not enable concurrent ingestion by default or launch paid calls.
+     4	
+     5	The controlling rule is unchanged: an item's accepted extraction must be a response to the exact request built from the committed preceding items. Speculative calls may run early; their answers are not handovers until their turn and validation. This deliberately changes the experimental call schedule, not committed knowledge. D159's default no-later-call-on-failure test continues to hold on the default path. In the experimental path, earlier failure cancels pending work and drains already running requests without accepting later handovers or writes.
+     6	
+     7	## Shape and ownership
+     8	
+     9	- `poc/concurrency_study/runner.py`: opt-in callable day runner, bounded extraction lookahead, request validation, immutable worker inputs, manifest and cleanup. Invoked through `replay.run(day_runner=...)`; default remains serial. The POC uses a single coordinator/writer and does not claim support for other processes writing this ledger.
+    10	- `model.request_identity`: one exact serialization/hash function shared by normal calls, Jev calls and validation. Same bytes and keys as before.
+    11	- `extraction.request_for`: one owner for extraction setting, complete prompt and schema; both extraction and validation use it.
+    12	- `round.run(extractor=..., matching_workers=...)`: dependency injection for the POC; the existing checks, two matching phases, writer, completion records, failure handling and daily judging remain the owners.
+    13	- `jev_matching.decide(workers=1)`: plan independent questions on the coordinator, send only immutable state/questions to threads, collect answers and mutate candidates/totals in original order. The default remains serial. A refused answer fails the item; successful concurrent responses remain archived for retry.
+    14	- The Jev coordinator submits at most the worker count at a time. It checks all completed requests for failure before filling open slots; on failure it submits no more work, cancels what has not started, and drains running requests. Completion order never controls output order.
+    15	- Identical Jev requests within a batch share one future, keyed by the complete request hash. Every logical consumer reads that same answer and archive ID. Later uses are accounted like cache hits, preserving the existing logical request order and aggregate hash. No second network answer may claim the first answer's call ID.
+    16	- Every new Jev matching record includes the ordered individual call IDs and request hashes in `shown_json.requests`, alongside the existing candidate/evidence lists. Existing readers select those list keys; legacy records remain readable without the new metadata. This makes concurrent matching traceable without inferring call ownership from arrival order.
+    17	- Persistent POC manifest: ordered input identities and source digests, sequence numbers, configuration, universe and code/prompt digests per day. Resume must match. A changed source/configuration is refused before speculative submission. Interrupted manifest creation refuses with a clear error rather than guessing.
+    18	
+    19	No writable thesis connection is passed to a worker. No worker writes handovers, memberships, matching records or completion markers. Archive access already has a lock; the network runs outside it. Local IDs remain scoped by input because the writer still handles one item at a time.
+    20	
+    21	## State × event
+    22	
+    23	| State | Event | Transition and write |
+    24	|---|---|---|
+    25	| Before day | Same manifest on resume | Reuse; default dispatch retains original sequences |
+    26	| Before day | Changed/corrupt manifest | Refuse before launching calls; no source or ledger rewrite |
+    27	| Prepared | Worker available | Submit bounded extraction with copied item/context and frozen configuration/universe |
+    28	| In flight | Later result returns first | Archive only; never an accepted handover |
+    29	| In flight | Failure | Retain exception until this request's turn; if stale, it does not invalidate a different current request |
+    30	| Item's turn | Same complete request and frozen semantics | Accept its prepared handover through the normal round |
+    31	| Item's turn | Changed request/schema/context | Cancel if pending; otherwise drain and keep the old archive record. Re-extract with current context; never remap old IDs |
+    32	| Item's turn | Changed configuration/universe/source | Refuse the run; do not combine contracts |
+    33	| Matching | Independent questions | Read on coordinator, run API calls concurrently, apply results in planned order |
+    34	| Matching | Identical complete request appears twice | One in-flight future and archive result; both consumers receive the same data/ID, with only one fresh-call cost |
+    35	| Matching | One question fails | Drain remaining calls; fail the item without a write; resume can reuse completed archived requests |
+    36	| Writing | Exception | Existing savepoint rollback and failed-step record; no later accepted item |
+    37	| Earlier item fails | Later speculative calls exist | Cancel queued calls, drain running calls, archive only; do not mark later items extracted or written |
+    38	| Restart | Saved accepted handover exists | Use normal resume; do not speculatively re-extract it |
+    39	| End of day | All items committed | Existing dependency-ordered judging and pull, then day completion |
+    40	| End of day | Any failure | Existing day remains incomplete |
+    41	
+    42	Dates in accepted records remain source publication days; ordering remains dispatch sequence. Wall time describes calls only.
+    43	
+    44	## Value × reader and old checks
+    45	
+    46	| Value | Writers/readers | Proof |
+    47	|---|---|---|
+    48	| Exact request JSON/hash | Model/Jev, validation, archives | Existing hash bytes unchanged; schema included |
+    49	| Prepared handover | Worker → coordinator → normal round | Used only for the same item, source, universe, settings and current request |
+    50	| Jev result | Worker → coordinator | Completion order cannot change candidate decisions, evidence decisions, group refs, call aggregation or request hash |
+    51	| Individual Jev call IDs/hashes | Jev coordinator → matching record → preflight/trace/recall readers | Ordered request metadata is additive; existing list readers retain candidate/evidence keys |
+    52	| Per-day manifest | POC coordinator → restart | Exact source/configuration/order match; no silent config or source replacement |
+    53	| Final IDs and writes | Existing writer → all readers | Identical fixture ledger to serial control after metadata/call IDs are removed |
+    54	| Failure/retry | Existing round and replay | No later authoritative progress; completed prefix reused on restart |
+    55	
+    56	Tests use real temporary databases and real stored source material where available; only model/provider responses are faked. Cases: independent overlap; schema-only invalidation; same-day new thesis; changed group membership; failed earlier call; out-of-order completion; accepted-handover resume; writer failure; no later-day work; Jev response ordering and partial failure/cache reuse; manifest mismatch. Positive controls and scratch mutants must fail for stale-answer acceptance and completion-order mutation. The default sequential tests remain unchanged.
+    57	
+    58	The first read-only design review found one serious missing row: concurrent identical Jev calls can return different sampled answers but share the archive's winning call ID. The complete-request shared-future rule above closes this row before implementation. The network remains outside the archive's SQLite lock.
+    59	
+    60	The first code review found a second failure dimension: submitting all Jev jobs up front allowed queued jobs to start after another request failed. The bounded submission rule above closes it. A ten-job/two-worker control holds one request in flight, fails another and checks that no remaining request starts. Day cost is read from the archive delta, including discarded speculative calls; accepted-item costs alone undercount the new path.
+    61	
+    62	## Limits before a live POC
+    63	
+    64	The existing spend check runs after an item and is not a reservation for concurrent requests. Therefore this first POC entry uses explicit offline transports in tests. Before any live concurrent run, account for in-flight worst-case cost and timed-out unknown usage, and register the comparison's cap. Existing completed-run budgets are not reused. This is a live-launch prerequisite, not a claim that concurrency has been measured.
+    65	
+    66	The coordinator is single-writer, as the current POC is. It does not make the production system safe for uncoordinated external writers. No such guarantee is claimed; that would require a separate ownership/transaction design.
+    67	
+    68	## Result
+    69	
+    70	The offline implementation is complete. [Results and evidence](../../../poc/reports/2026-10-25-concurrency-poc/results.md): 143 tests passed, five scratch mutants caught, and 3,595 historical request identities unchanged. The focused follow-up review found no serious issue after the duplicate-request and queued-work corrections. Live accounting and a fresh performance/quality comparison remain outstanding.
+    68	
+    69	Speed is not progress: code written before the thinking costs rounds of review. A design holds these tables before code
+    70	and before any review; a blank cell means it is not ready.
+    71	
+    72	1. **State × event**, for work that spans more than one step, run or day. Every state against every event it can
+    73	   meet: success, refusal, a refused retry, an external failure, a crash midway, work still in flight when a run ends,
+    74	   a later run on a later date, configuration changed in between, an input corrected while waiting, another writer of
+    75	   the same data, two scopes at once. Each cell names the transition, what is written, and the date every read and
+    76	   write uses. The rows include the work before its first step and after its terminal outcome.
+    77	2. **Value × reader.** Every value a change writes, against every reader of it (found by searching the field) and
+    78	   every input source the value can come from. A rule over a kind of data lists every writer of that kind. A change to
+    79	   how often something fires is counted against every reader of its output.
+    80	3. **New path × old checks.** For a new input, derived value, mode or changed data shape: every check the old path
+    81	   passes, and whether the new one meets it. A changed shape re-derives every check written for the old one.
+    82	4. **Prior decisions.** The decisions searched for the mechanism by name; any decision that rejected or bounded it is
+    83	   quoted in the design and in the question to Alex.
+    84	
+    85	- A contract over text or shapes states the closed set of what passes (a full match); anything else fails or is not
+    86	  judged. Enumerate the accepted set against every context and reader it meets before the first edit.
+    87	- A blind review measures the tables. A serious finding they do not hold shows a missing dimension: add it and walk
+    88	  every row again; never answer the finding alone. Code starts when the review finds nothing serious.
+    89	- A design whose core contract is still open is a question, not something to build.
+    90	- A foundation's acceptance carries a size and speed budget from its first control, not only correctness.
+    91	
+    92	## 3. Writing code
+    93	
+    94	- **One owner.** A rule lives where the data is written, and refuses: a warning that lets the run continue is a silent
+    95	  failure. Fix the writer and delete its duplicate implementations in the same change; when a fix lands in one
+    96	  consumer, search every consumer of the same key or rule.
+    97	- **Code over prose.** A contract that code or a schema can enforce (an enum over allowed keys, a shape) is enforced
+    98	  there, and stays out of prompts and documents.
+    99	- **One word per concept.** The glossary in `docs/prd/00-system.md` (section 用词, D36) names each concept once, and
+   100	  `docs/check.py` fails on a word it rules out. A new concept gets its row and its ruled-out words in the same change;
+
+codex
+I’m using the OpenAI Docs skill to check the published limits behind the reservation. This remains a read-only review; no provider calls or tests are being run.
+web search: 
+web search: site:developers.openai.com gpt-6-luna pricing context output limits
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import sqlite3,json; from pathlib import Path; p=Path(\"/Users/lchingen/hivemind/poc/data/english-v23-jev-2026-10-25/archive.sqlite\"); c=sqlite3.connect(p.as_uri()+\"?mode=ro\",uri=True); rows=c.execute(\"select call_id,purpose,model,request_json,input_tokens,output_tokens,cost_usd,request_sha256 from model_calls where call_id in (574,575,577,578) order by call_id\").fetchall(); [print(json.dumps(dict(call_id=r[0],purpose=r[1],model=r[2],keys=list(json.loads(r[3])),input_tokens=r[4],output_tokens=r[5],cost=r[6],request_hash=r[7],questions=len(json.loads(r[3]).get(\"questions\",{})),output_cap=json.loads(r[3]).get(\"max_completion_tokens\"),chars=len(r[3])))) for r in rows]; c.close()'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{"call_id": 574, "purpose": "extract", "model": "gpt-6-luna", "keys": ["max_completion_tokens", "messages", "model", "reasoning_effort", "response_format"], "input_tokens": 13205, "output_tokens": 5563, "cost": 0.004102, "request_hash": "a82baefd7e572f933613498b9181efb52b08e5650922a711d290182733015fb7", "questions": 0, "output_cap": 16000, "chars": 65379}
+{"call_id": 575, "purpose": "extract", "model": "gpt-6-luna", "keys": ["max_completion_tokens", "messages", "model", "reasoning_effort", "response_format"], "input_tokens": 4030, "output_tokens": 119, "cost": 0.000462, "request_hash": "5a47479842c800d005ebafeb06b783ba7ada6491db1ece9e8b45696a557cbc33", "questions": 0, "output_cap": 12000, "chars": 18742}
+{"call_id": 577, "purpose": "match", "model": "jev-1.14.0", "keys": ["model", "questions", "state"], "input_tokens": 4116, "output_tokens": 491, "cost": 0.000173, "request_hash": "b2f0326df5ef72870b104a5a2a28a5b52ef4e37ceaae2b5af1a8d0a39292e4be", "questions": 9, "output_cap": null, "chars": 13777}
+{"call_id": 578, "purpose": "match", "model": "jev-1.14.0", "keys": ["model", "questions", "state"], "input_tokens": 909, "output_tokens": 91, "cost": 3.8e-05, "request_hash": "83e34e05310b73b8dabc9ab98c281b6bedc69492db653d12fcafa615cbe8fdaa", "questions": 2, "output_cap": null, "chars": 2485}
+
+web search: 
+mcp: openaiDeveloperDocs/search_openai_docs started
+mcp: openaiDeveloperDocs/search_openai_docs (completed)
+web search: https://docs.typesafe.ai/api/system-one
+mcp: openaiDeveloperDocs/fetch_openai_doc started
+mcp: openaiDeveloperDocs/fetch_openai_doc (completed)
+web search: 
+web search: https://developers.openai.com/api/docs/pricing
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import sqlite3,json,hashlib; from pathlib import Path; p=Path(\"/Users/lchingen/hivemind/poc/data/english-v23-jev-2026-10-25/archive.sqlite\"); c=sqlite3.connect(p.as_uri()+\"?mode=ro\",uri=True); print(\"journal_mode:\",c.execute(\"pragma journal_mode\").fetchone()[0]); total=0; qs=[]; 
+for i,raw,sha in c.execute(\"select call_id,request_json,request_sha256 from model_calls where call_id in (574,575,577,578) order by call_id\"):
+ req=json.loads(raw); encoded=json.dumps(req,sort_keys=True,ensure_ascii=False); print(\"call\",i,\"identity_matches\",hashlib.sha256(encoded.encode()).hexdigest()==sha); qs.append(len(req.get(\"questions\",{})))
+print(\"Jev reservation per pair\",sum(65536*(q+1)*0.042/1e6 for q in qs if q)); print(\"OpenAI maximum reservation comparison\",(922000*0.50+128000*0.75)/1e6*1.1); c.close()'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+journal_mode: delete
+call 574 identity_matches True
+call 575 identity_matches True
+call 577 identity_matches True
+call 578 identity_matches True
+Jev reservation per pair 0.035782656
+OpenAI maximum reservation comparison 0.6127000000000001
+
+web search: 
+web search: '12h write' in https://developers.openai.com/api/docs/pricing
+codex
+One blocking design gap: **cancellation has no defined transition.**
+
+For example, if the user cancels while two calls are running and more work is queued, draining the executor can allow queued calls to start unless admission closes first.
+
+- [plan.md:26–32](/Users/lchingen/hivemind/docs/research/2026-10-25-api-smoke/plan.md:26) defines admission, errors, crashes and draining, but does not specify cancellation or what happens to requests not yet sent.
+- [AGENTS.md:72–76](/Users/lchingen/hivemind/AGENTS.md:72) requires these transitions before implementation. [D172](/Users/lchingen/hivemind/docs/DECISIONS.md:2371) explicitly distinguishes cancelling pending work from draining running calls.
+- **Required rule:** cancellation closes admission before draining, prevents unsent requests from starting, records the cancelled outcome, and retains reservations for sent requests whose usage remains unknown. Include a fake-transport check for this case.
+
+I found no other serious blocker within the requested scope. The plan keeps the smoke isolated, distinguishes ordinary concurrent requests from OpenAI Batch, and explicitly bypasses the existing transports’ automatic retries.
+
+Read only; no edits or paid calls.
+tokens used
+63,608
+One blocking design gap: **cancellation has no defined transition.**
+
+For example, if the user cancels while two calls are running and more work is queued, draining the executor can allow queued calls to start unless admission closes first.
+
+- [plan.md:26–32](/Users/lchingen/hivemind/docs/research/2026-10-25-api-smoke/plan.md:26) defines admission, errors, crashes and draining, but does not specify cancellation or what happens to requests not yet sent.
+- [AGENTS.md:72–76](/Users/lchingen/hivemind/AGENTS.md:72) requires these transitions before implementation. [D172](/Users/lchingen/hivemind/docs/DECISIONS.md:2371) explicitly distinguishes cancelling pending work from draining running calls.
+- **Required rule:** cancellation closes admission before draining, prevents unsent requests from starting, records the cancelled outcome, and retains reservations for sent requests whose usage remains unknown. Include a fake-transport check for this case.
+
+I found no other serious blocker within the requested scope. The plan keeps the smoke isolated, distinguishes ordinary concurrent requests from OpenAI Batch, and explicitly bypasses the existing transports’ automatic retries.
+
+Read only; no edits or paid calls.

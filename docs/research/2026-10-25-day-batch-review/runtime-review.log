@@ -1,0 +1,2771 @@
+Reading additional input from stdin...
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a17377-1aa8-7c52-9a59-bc80a783f154
+--------
+user
+Read-only code review of D172 implementation. Read implementation.md, then git diff for src/hivemind/{model,jev,extraction,replay}.py and views/{round,jev_matching}.py, plus poc/concurrency_study/runner.py and tests/test_{concurrency,jev_concurrency}.py. Focus on stale-answer acceptance, thread/SQLite ownership, shared request identity, ordered commit, failure/drain and restart. Default must stay serial; this is an offline single-writer opt-in POC and no paid calls are allowed. Report only serious bugs in the implementation, under 500 words. No edits, no delegation, no model/provider calls, no historical research or generated files.
+codex
+I’ll read `implementation.md` and the specified diff, then trace the concurrency paths for serious bugs. I’ll keep this read-only and make no model or provider calls.
+exec
+/opt/homebrew/bin/zsh -lc "pwd && git status --short && rg --files -g 'implementation.md' -g 'AGENTS.md' -g 'DECISIONS.md' -g 'CURRENT_STATE.md'" in /Users/lchingen/hivemind
+ succeeded in 1224ms:
+/Users/lchingen/hivemind
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-ejvFq7VF' (errno=Operation not permitted)
+2026-10-25 22:29:17.032 xcodebuild[89713:8716968]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 22:29:17.144 xcodebuild[89713:8716967] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-N4EOSjhf' (errno=Operation not permitted)
+2026-10-25 22:29:17.470 xcodebuild[89715:8716976]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 22:29:17.586 xcodebuild[89715:8716975] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+ M docs/CURRENT_STATE.md
+ M docs/DECISIONS.md
+ M src/hivemind/extraction.py
+ M src/hivemind/jev.py
+ M src/hivemind/model.py
+ M src/hivemind/replay.py
+ M src/hivemind/views/jev_matching.py
+ M src/hivemind/views/round.py
+?? docs/research/2026-10-25-day-batch-review/
+?? poc/concurrency_study/
+?? poc/reports/2026-10-25-concurrency-poc/
+?? poc/reports/2026-10-25-day-batch-review/
+?? tests/test_concurrency.py
+?? tests/test_jev_concurrency.py
+AGENTS.md
+docs/DECISIONS.md
+docs/CURRENT_STATE.md
+docs/archive/2026-10-22-v15/DECISIONS.md
+docs/archive/2026-10-22-v15/CURRENT_STATE.md
+docs/archive/2026-10-16-v1/DECISIONS.md
+docs/archive/2026-10-16-v1/CURRENT_STATE.md
+docs/research/2026-10-25-day-batch-review/implementation.md
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat /Users/lchingen/hivemind/docs/research/2026-10-25-day-batch-review/implementation.md && git diff -- src/hivemind/model.py src/hivemind/jev.py src/hivemind/extraction.py src/hivemind/replay.py src/hivemind/views/round.py src/hivemind/views/jev_matching.py poc/concurrency_study/runner.py tests/test_concurrency.py tests/test_jev_concurrency.py' in /Users/lchingen/hivemind
+ succeeded in 1190ms:
+# D172: isolated concurrency POC, first slice
+
+Alex accepted the D171 recommendation and asked to flag ordering or production contradictions immediately. This slice implements the offline coordinator and tests. It does not enable concurrent ingestion by default or launch paid calls.
+
+The controlling rule is unchanged: an item's accepted extraction must be a response to the exact request built from the committed preceding items. Speculative calls may run early; their answers are not handovers until their turn and validation. This deliberately changes the experimental call schedule, not committed knowledge. D159's default no-later-call-on-failure test continues to hold on the default path. In the experimental path, earlier failure cancels pending work and drains already running requests without accepting later handovers or writes.
+
+## Shape and ownership
+
+- `poc/concurrency_study/runner.py`: opt-in callable day runner, bounded extraction lookahead, request validation, immutable worker inputs, manifest and cleanup. Invoked through `replay.run(day_runner=...)`; default remains serial. The POC uses a single coordinator/writer and does not claim support for other processes writing this ledger.
+- `model.request_identity`: one exact serialization/hash function shared by normal calls, Jev calls and validation. Same bytes and keys as before.
+- `extraction.request_for`: one owner for extraction setting, complete prompt and schema; both extraction and validation use it.
+- `round.run(extractor=..., matching_workers=...)`: dependency injection for the POC; the existing checks, two matching phases, writer, completion records, failure handling and daily judging remain the owners.
+- `jev_matching.decide(workers=1)`: plan independent questions on the coordinator, send only immutable state/questions to threads, collect answers and mutate candidates/totals in original order. The default remains serial. A refused answer fails the item; successful concurrent responses remain archived for retry.
+- Identical Jev requests within a batch share one future, keyed by the complete request hash. Every logical consumer reads that same answer and archive ID. Later uses are accounted like cache hits, preserving the existing logical request order and aggregate hash. No second network answer may claim the first answer's call ID.
+- Every new Jev matching record includes the ordered individual call IDs and request hashes in `shown_json.requests`, alongside the existing candidate/evidence lists. Existing readers select those list keys; legacy records remain readable without the new metadata. This makes concurrent matching traceable without inferring call ownership from arrival order.
+- Persistent POC manifest: ordered input identities and source digests, sequence numbers, configuration, universe and code/prompt digests per day. Resume must match. A changed source/configuration is refused before speculative submission. Interrupted manifest creation refuses with a clear error rather than guessing.
+
+No writable thesis connection is passed to a worker. No worker writes handovers, memberships, matching records or completion markers. Archive access already has a lock; the network runs outside it. Local IDs remain scoped by input because the writer still handles one item at a time.
+
+## State × event
+
+| State | Event | Transition and write |
+|---|---|---|
+| Before day | Same manifest on resume | Reuse; default dispatch retains original sequences |
+| Before day | Changed/corrupt manifest | Refuse before launching calls; no source or ledger rewrite |
+| Prepared | Worker available | Submit bounded extraction with copied item/context and frozen configuration/universe |
+| In flight | Later result returns first | Archive only; never an accepted handover |
+| In flight | Failure | Retain exception until this request's turn; if stale, it does not invalidate a different current request |
+| Item's turn | Same complete request and frozen semantics | Accept its prepared handover through the normal round |
+| Item's turn | Changed request/schema/context | Cancel if pending; otherwise drain and keep the old archive record. Re-extract with current context; never remap old IDs |
+| Item's turn | Changed configuration/universe/source | Refuse the run; do not combine contracts |
+| Matching | Independent questions | Read on coordinator, run API calls concurrently, apply results in planned order |
+| Matching | Identical complete request appears twice | One in-flight future and archive result; both consumers receive the same data/ID, with only one fresh-call cost |
+| Matching | One question fails | Drain remaining calls; fail the item without a write; resume can reuse completed archived requests |
+| Writing | Exception | Existing savepoint rollback and failed-step record; no later accepted item |
+| Earlier item fails | Later speculative calls exist | Cancel queued calls, drain running calls, archive only; do not mark later items extracted or written |
+| Restart | Saved accepted handover exists | Use normal resume; do not speculatively re-extract it |
+| End of day | All items committed | Existing dependency-ordered judging and pull, then day completion |
+| End of day | Any failure | Existing day remains incomplete |
+
+Dates in accepted records remain source publication days; ordering remains dispatch sequence. Wall time describes calls only.
+
+## Value × reader and old checks
+
+| Value | Writers/readers | Proof |
+|---|---|---|
+| Exact request JSON/hash | Model/Jev, validation, archives | Existing hash bytes unchanged; schema included |
+| Prepared handover | Worker → coordinator → normal round | Used only for the same item, source, universe, settings and current request |
+| Jev result | Worker → coordinator | Completion order cannot change candidate decisions, evidence decisions, group refs, call aggregation or request hash |
+| Individual Jev call IDs/hashes | Jev coordinator → matching record → preflight/trace/recall readers | Ordered request metadata is additive; existing list readers retain candidate/evidence keys |
+| Per-day manifest | POC coordinator → restart | Exact source/configuration/order match; no silent config or source replacement |
+| Final IDs and writes | Existing writer → all readers | Identical fixture ledger to serial control after metadata/call IDs are removed |
+| Failure/retry | Existing round and replay | No later authoritative progress; completed prefix reused on restart |
+
+Tests use real temporary databases and real stored source material where available; only model/provider responses are faked. Cases: independent overlap; schema-only invalidation; same-day new thesis; changed group membership; failed earlier call; out-of-order completion; accepted-handover resume; writer failure; no later-day work; Jev response ordering and partial failure/cache reuse; manifest mismatch. Positive controls and scratch mutants must fail for stale-answer acceptance and completion-order mutation. The default sequential tests remain unchanged.
+
+The first read-only design review found one serious missing row: concurrent identical Jev calls can return different sampled answers but share the archive's winning call ID. The complete-request shared-future rule above closes this row before implementation. The network remains outside the archive's SQLite lock.
+
+## Limits before a live POC
+
+The existing spend check runs after an item and is not a reservation for concurrent requests. Therefore this first POC entry uses explicit offline transports in tests. Before any live concurrent run, account for in-flight worst-case cost and timed-out unknown usage, and register the comparison's cap. Existing completed-run budgets are not reused. This is a live-launch prerequisite, not a claim that concurrency has been measured.
+
+The coordinator is single-writer, as the current POC is. It does not make the production system safe for uncoordinated external writers. No such guarantee is claimed; that would require a separate ownership/transaction design.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-XWqQIW9Y' (errno=Operation not permitted)
+2026-10-25 22:29:20.102 xcodebuild[89747:8717331]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 22:29:20.219 xcodebuild[89747:8717330] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-9g8TyYqB' (errno=Operation not permitted)
+2026-10-25 22:29:20.552 xcodebuild[89749:8717343]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 22:29:20.665 xcodebuild[89749:8717342] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+diff --git a/src/hivemind/extraction.py b/src/hivemind/extraction.py
+index a9a841c..97da819 100644
+--- a/src/hivemind/extraction.py
++++ b/src/hivemind/extraction.py
+@@ -311,12 +311,20 @@ QUARTERLY = re.compile(r'(\bQ[1-4]\b|第[一二三四1-4]季|季度|\bquarter(?!
+                        r'|\bhalf[- ]year\s+(?:revenue|sales|net sales))', re.I)
+ 
+ 
+-def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
++def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
++    """Build the setting, complete prompt and schema without making a call."""
+     setting = cfg.extraction_setting(item['category'])
+     version = setting.prompt_version.rpartition('-')[2]
+     system, user = build_prompt(item, text, shown_views, universe, version, shown_groups)
+     group_ids = [g['group_id'] for g in shown_groups]
+-    answer = model.call(archive, cfg, setting, system, user, schema_for(version, group_ids), 'extraction', 'extract', transport=transport)
++    return setting, system, user, schema_for(version, group_ids)
++
++
++def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
++    setting, system, user, schema = request_for(cfg, item, text, shown_views, universe, shown_groups)
++    version = setting.prompt_version.rpartition('-')[2]
++    group_ids = [g['group_id'] for g in shown_groups]
++    answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
+     evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version), shown_group_ids=group_ids)
+     return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd, new_groups)
+ 
+diff --git a/src/hivemind/jev.py b/src/hivemind/jev.py
+index 4f51991..64d476f 100644
+--- a/src/hivemind/jev.py
++++ b/src/hivemind/jev.py
+@@ -2,7 +2,6 @@
+ questions}`; each question is `noul` (yes/no → a probability), `choice` (labelled options → `choice`, `probabilities`,
+ `confidence`) or `score`. Every call is archived in `model_calls` like every other model call, keyed by the request's
+ digest, so a byte-identical request is served from the archive; input is priced from `model.PRICES`, output is free."""
+-import hashlib
+ import json
+ import os
+ import time
+@@ -77,11 +76,15 @@ def validate(answers, questions):
+     return problems
+ 
+ 
++def request_for(setting, state, questions):
++    """The complete Jev request used both for dispatch and in-flight identity."""
++    return {'model': setting.model, 'state': state, 'questions': questions}
++
++
+ def ask(archive, cfg, setting, state, questions, purpose, *, transport=None):
+     """One Jev request, archived; returns model.Answer whose data is the `answers` map."""
+-    request = {'model': setting.model, 'state': state, 'questions': questions}
+-    request_json = json.dumps(request, sort_keys=True, ensure_ascii=False)
+-    sha = hashlib.sha256(request_json.encode('utf-8')).hexdigest()
++    request = request_for(setting, state, questions)
++    request_json, sha = model.request_identity(request)
+     prompt_chars = len(request_json)
+     hit = archive.lookup(sha)
+     if hit:
+diff --git a/src/hivemind/model.py b/src/hivemind/model.py
+index c0756df..057bf9f 100644
+--- a/src/hivemind/model.py
++++ b/src/hivemind/model.py
+@@ -187,11 +187,16 @@ def check_schema(value, schema, path='$'):
+     return []
+ 
+ 
++def request_identity(request):
++    """The exact serialized request and its archive key, shared by callers and validation."""
++    encoded = json.dumps(request, sort_keys=True, ensure_ascii=False)
++    return encoded, hashlib.sha256(encoded.encode('utf-8')).hexdigest()
++
++
+ def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, transport=None):
+     provider = cfg.provider
+     request = build_request(setting, system, user, schema, schema_name, provider)
+-    request_json = json.dumps(request, sort_keys=True, ensure_ascii=False)
+-    sha = hashlib.sha256(request_json.encode('utf-8')).hexdigest()
++    request_json, sha = request_identity(request)
+     hit = archive.lookup(sha)
+     prompt_chars = len(system) + len(user)
+     if hit:
+diff --git a/src/hivemind/replay.py b/src/hivemind/replay.py
+index 8b3f11c..90f0c3f 100644
+--- a/src/hivemind/replay.py
++++ b/src/hivemind/replay.py
+@@ -49,7 +49,7 @@ def calendar_days(from_day, until_day):
+ 
+ 
+ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day, day0=None, spend_cap_usd=None,
+-        transport=None, log=print, only_objects=None, max_items_per_day=None):
++        transport=None, log=print, only_objects=None, max_items_per_day=None, day_runner=None):
+     items_db = testdb.open_db(testdb_path)
+     conn = store.open_db(views_path)
+     refuse_unfinished_parallel(conn)
+@@ -89,20 +89,32 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
+                 continue
+             processed += 1
+             to_run.append((item, route))
+-        for item, route in to_run:
+-            result = round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
+-            day_stats['extracted'] += 1
+-            day_stats['evidence'] += result.evidence
+-            day_stats['new_views'] += result.new_views
+-            day_stats['judged'] += result.judged
+-            day_stats['changed'] += result.changed
+-            day_cost += result.cost
+-            if result.failed:
+-                day_stats['failed'] += 1
+-                log(f'  ! {item["input_id"][:60]}: {result.failed}')
+-                raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
+-            if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
+-                raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
++        results = (day_runner(conn, archive, cfg, universe, to_run, day=day, transport=transport, log=log) if day_runner else
++                   (round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
++                    for item, route in to_run))
++        finished = 0
++        try:
++            for index, result in enumerate(results):
++                if index >= len(to_run) or result.input_id != to_run[index][0]['input_id']:
++                    raise RuntimeError('day runner returned results out of input order')
++                finished += 1
++                day_stats['extracted'] += 1
++                day_stats['evidence'] += result.evidence
++                day_stats['new_views'] += result.new_views
++                day_stats['judged'] += result.judged
++                day_stats['changed'] += result.changed
++                day_cost += result.cost
++                if result.failed:
++                    day_stats['failed'] += 1
++                    log(f'  ! {result.input_id[:60]}: {result.failed}')
++                    raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
++                if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
++                    raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
++        finally:
++            if hasattr(results, 'close'):
++                results.close()
++        if finished != len(to_run):
++            raise RuntimeError('day runner did not complete every routed item')
+         seq = store.next_sequence(conn) - 1
+         judged = round_module.judge_day(conn, archive, cfg, day, seq, transport=transport, log=log)
+         day_stats['judged'] += judged.judged
+diff --git a/src/hivemind/views/jev_matching.py b/src/hivemind/views/jev_matching.py
+index 00fe8a9..41ed510 100644
+--- a/src/hivemind/views/jev_matching.py
++++ b/src/hivemind/views/jev_matching.py
+@@ -8,8 +8,10 @@ piece is the same statement, `replace` when the incoming piece supersedes it, el
+ Thresholds are pre-set (0.5); a membership above the threshold is added to the candidate's group references."""
+ import dataclasses
+ import hashlib
++import concurrent.futures
++import copy
+ 
+-from .. import jev, universe as _universe
++from .. import jev, model, universe as _universe
+ from . import identity, matching, store
+ 
+ THRESHOLD = 0.5
+@@ -41,6 +43,7 @@ class Decision:
+     output_tokens: int
+     cost_usd: float
+     calls: int = 0
++    request_records: list = dataclasses.field(default_factory=list)
+ 
+ 
+ def candidate_state(c, evidence):
+@@ -109,14 +112,67 @@ def _summary(answer):
+     return f'{top[0]} {top[1]:.2f}'
+ 
+ 
+-def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None):
+-    setting = cfg.matching
++def _answers(archive, cfg, jobs, workers, transport):
++    """Ask independent questions; equal concurrent requests share one archived result."""
++    if not isinstance(workers, int) or isinstance(workers, bool) or workers < 1:
++        raise ValueError('Jev workers must be a positive integer')
++
++    def ask(job):
++        state, questions = job
++        return jev.ask(archive, cfg, cfg.matching, state, questions, 'match', transport=transport)
++
++    if workers == 1:
++        return [ask(job) if job[1] else None for job in jobs]
++    results, futures, used = [], {}, set()
++    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
++        keys = []
++        for state, questions in jobs:
++            if not questions:
++                keys.append(None)
++                continue
++            _, key = model.request_identity(jev.request_for(cfg.matching, state, questions))
++            keys.append(key)
++            if key not in futures:
++                futures[key] = pool.submit(ask, (state, copy.deepcopy(questions)))
++        for key in keys:
++            if key is None:
++                results.append(None)
++                continue
++            answer = futures[key].result()
++            # A later logical use is exactly what a serial archive lookup would return.
++            results.append(dataclasses.replace(answer, cached=True, cost_usd=0.0) if key in used else answer)
++            used.add(key)
++    return results
++
++
++def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None, workers=1):
+     data = {'candidates': [], 'evidence': []}
+     total = Decision(data, 0, '', True, 0, 0, 0, 0.0)
+     shas = []
+-
+-    def ask(state, questions):
+-        answer = jev.ask(archive, cfg, setting, state, questions, 'match', transport=transport)
++    jobs, candidate_jobs, evidence_jobs = [], [], []
++    # All database reads and request construction stay on the coordinator thread.
++    for c in candidates:
++        listed = list(dict.fromkeys(list(lists.candidate_lists.get(c['id'], [])) + [v['view_id'] for v in shown_views]))
++        questions = {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
++        groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
++        for g in groups:
++            questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
++        candidate_jobs.append((c, listed, groups, len(jobs)))
++        jobs.append((candidate_state(c, evidence), questions))
++    for e in evidence:
++        pairs = [(e['id'], v) for v in e['links'] if (e['id'], v) in lists.evidence_lists]
++        if not pairs:
++            continue
++        questions = {f'piece__{v}__{x}': piece_question(matching.describe_evidence(conn, x, english=True)) for _, v in pairs for x in lists.evidence_lists[(e['id'], v)]}
++        said_day = e.get('original_day') or item['publication_day']
++        evidence_jobs.append((e, pairs, said_day, len(jobs)))
++        jobs.append((piece_state(e, said_day), questions))
++    replies = _answers(archive, cfg, jobs, workers, transport)
++
++    def answers_for(index):
++        answer = replies[index]
++        if answer is None:
++            return {}
+         total.cost_usd += answer.cost_usd
+         total.input_tokens += answer.input_tokens
+         total.output_tokens += answer.output_tokens
+@@ -125,16 +181,11 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
+         total.call_id = answer.call_id
+         total.calls += 1
+         shas.append(answer.request_sha256)
++        total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
+         return answer.data
+ 
+-    for c in candidates:
+-        listed = list(dict.fromkeys(list(lists.candidate_lists.get(c['id'], [])) + [v['view_id'] for v in shown_views]))   # the targets matching.check accepts
+-        questions = {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
+-        # D165: a company's own line may join a group another thesis founded, so membership is asked for every candidate; founding stays guarded in groups.plan
+-        groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
+-        for g in groups:
+-            questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
+-        answers = ask(candidate_state(c, evidence), questions) if questions else {}
++    for c, listed, groups, job_index in candidate_jobs:
++        answers = answers_for(job_index)
+         same = sorted(((answers[f'rel__{v}']['probabilities']['same_quantity_or_event'], v) for v in listed
+                        if answers[f'rel__{v}']['choice'] == 'same_quantity_or_event' and answers[f'rel__{v}']['probabilities']['same_quantity_or_event'] >= THRESHOLD),
+                       reverse=True)
+@@ -174,13 +225,8 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
+                 outcome, target = 'succession', successor_of
+         data['candidates'].append({'id': c['id'], 'outcome': outcome, 'target_view_id': target or '', 'dependencies': [],
+                                    'reason': f'jev: {reasons or "no list"}; groups joined: {joined or "none"}'})
+-    for e in evidence:
+-        pairs = [(e['id'], v) for v in e['links'] if (e['id'], v) in lists.evidence_lists]
+-        if not pairs:
+-            continue
+-        questions = {f'piece__{v}__{x}': piece_question(matching.describe_evidence(conn, x, english=True)) for _, v in pairs for x in lists.evidence_lists[(e['id'], v)]}
+-        said_day = e.get('original_day') or item['publication_day']
+-        answers = ask(piece_state(e, said_day), questions) if questions else {}
++    for e, pairs, said_day, job_index in evidence_jobs:
++        answers = answers_for(job_index)
+         for _, v in pairs:
+             scored = [(answers[f'piece__{v}__{x}'], x) for x in lists.evidence_lists[(e['id'], v)]]
+             repeats = sorted(((a['probabilities']['same_statement'], x) for a, x in scored if a['choice'] == 'same_statement' and a['probabilities']['same_statement'] >= THRESHOLD), reverse=True)
+diff --git a/src/hivemind/views/round.py b/src/hivemind/views/round.py
+index c5384d7..5348e0c 100644
+--- a/src/hivemind/views/round.py
++++ b/src/hivemind/views/round.py
+@@ -32,22 +32,26 @@ def _fail(conn, item, seq, result, step, kind, detail, pool_key):
+     return result
+ 
+ 
+-def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence, lists, shown, *, extra_views=(), call_offset=0, transport=None):
++def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence, lists, shown, *, extra_views=(), call_offset=0, transport=None, workers=1):
+     """One matching call with one retry on a refused check. Returns Checked, or None after marking the failure."""
+     note = ''
+     checked = None
+     engine = jev_matching if cfg.matching.engine == 'jev' else matching      # Jev answers once; a retry would be the same answer
+     for attempt in range(1 if engine is jev_matching else 2):
+         try:
+-            answer = engine.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport)
++            options = {'workers': workers} if engine is jev_matching else {}
++            answer = engine.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport, **options)
+         except Exception as error:
+             _fail(conn, item, seq, result, 'matched', 'matching_failed', 'matching: ' + repr(error), type(error).__name__)
+             return None
+         result.cost += answer.cost_usd
+         result.cached_calls += int(answer.cached)
+         checked = matching.check(conn, universe, answer.data, candidates, evidence, lists, shown)
++        shown_record = {'candidates': lists.candidate_lists, 'evidence': {f'{k[0]}|{k[1]}': v for k, v in lists.evidence_lists.items()}}
++        if getattr(answer, 'request_records', None):
++            shown_record['requests'] = answer.request_records
+         store.insert(conn, 'match_records', seq=seq, input_id=item['input_id'], call_no=call_offset + attempt + 1,
+-                     shown_json=json.dumps({'candidates': lists.candidate_lists, 'evidence': {f'{k[0]}|{k[1]}': v for k, v in lists.evidence_lists.items()}}),
++                     shown_json=json.dumps(shown_record),
+                      request_sha256=answer.request_sha256, call_id=answer.call_id, decisions_json=json.dumps(answer.data, ensure_ascii=False),
+                      checks_json=json.dumps({'refusals': checked.refusals, 'not_opened': checked.not_opened, 'notes': checked.notes}, ensure_ascii=False), written_json=None)
+         if not checked.refusals:
+@@ -89,7 +93,7 @@ def judge_day(conn, archive, cfg, day, seq, *, transport=None, log=print):
+     return result
+ 
+ 
+-def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print):
++def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print, extractor=None, matching_workers=1):
+     result = RoundResult(item['input_id'])
+     if resume_from in ('judged', 'handed_over'):       # written already; judging is the day's step
+         dispatch.mark(conn, item, seq, 'handed_over', 'ok', 'resumed')
+@@ -107,7 +111,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
+     if handover is None:
+         try:
+             shown_groups = store.groups_for_prompt(conn, objects, item.get('title') or '')
+-            handover = extraction.extract(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
++            handover = (extractor or extraction.extract)(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
+         except Exception as error:
+             return _fail(conn, item, seq, result, 'extracted', 'extraction_failed', 'extraction: ' + repr(error), type(error).__name__)
+         result.cost += handover.cost_usd
+@@ -123,7 +127,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
+         return result
+     # first matching call: the candidates and the evidence linked straight to existing views
+     lists = matching.build_lists(conn, handover, shown, cfg.search_top_n)
+-    checked = _match(conn, archive, cfg, universe, item, seq, result, handover.candidates, handover.evidence, lists, shown, transport=transport)
++    checked = _match(conn, archive, cfg, universe, item, seq, result, handover.candidates, handover.evidence, lists, shown, transport=transport, workers=matching_workers)
+     if checked is None:
+         return result
+     # second call: evidence linked to candidates that attached to an existing view, compared under that view
+@@ -142,7 +146,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
+                 evidence2.append(dict(e, links=[v for x, v in pending if x['id'] == e['id']]))
+                 seen.add(e['id'])
+         checked2 = _match(conn, archive, cfg, universe, item, seq, result, [], evidence2, lists2, [], extra_views=sorted({v for _, v in pending}),
+-                          call_offset=2, transport=transport)
++                          call_offset=2, transport=transport, workers=matching_workers)
+         if checked2 is None:
+             return result
+         second_pass = checked2.evidence
+
+exec
+/opt/homebrew/bin/zsh -lc 'wc -l poc/concurrency_study/runner.py tests/test_concurrency.py tests/test_jev_concurrency.py src/hivemind/model.py src/hivemind/jev.py src/hivemind/views/round.py && cat poc/concurrency_study/runner.py && cat tests/test_jev_concurrency.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     152 poc/concurrency_study/runner.py
+     266 tests/test_concurrency.py
+     102 tests/test_jev_concurrency.py
+     230 src/hivemind/model.py
+     109 src/hivemind/jev.py
+     163 src/hivemind/views/round.py
+    1022 total
+"""D172 offline POC: speculative extraction, validated at ordered commit time.
+
+The coordinator alone reads/writes the thesis ledger. Workers receive copied
+inputs and only write the thread-safe model archive. Use an explicit offline
+transport; live cost reservation is not implemented by this POC.
+"""
+import concurrent.futures
+import copy
+import dataclasses
+import hashlib
+import json
+from pathlib import Path
+
+from hivemind import extraction, model
+from hivemind.views import round as rounds, store
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def digest(path):
+    value = hashlib.sha256()
+    with path.open('rb') as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b''):
+            value.update(chunk)
+    return value.hexdigest()
+
+
+def environment_key(cfg, universe):
+    return model.request_identity({'config': dataclasses.asdict(cfg), 'universe': vars(universe)})[1]
+
+
+def runtime_key():
+    files = sorted((ROOT / 'src/hivemind').rglob('*.py')) + sorted((ROOT / 'src/hivemind/prompts').glob('*')) + [Path(__file__)]
+    return model.request_identity({str(path.relative_to(ROOT)): digest(path) for path in files if path.is_file()})[1]
+
+
+def item_key(item):
+    return model.request_identity(item)[1]
+
+
+def extraction_key(cfg, item, text, shown, universe, groups):
+    setting, system, user, schema = extraction.request_for(cfg, item, text, shown, universe, groups)
+    return model.request_identity(model.build_request(setting, system, user, schema, 'extraction', cfg.provider))[1]
+
+
+class DayRunner:
+    """Opt-in day_runner for replay.run; defaults remain on the serial path."""
+
+    def __init__(self, source_path, manifest_dir, *, extraction_workers=2, jev_workers=2):
+        for workers in (extraction_workers, jev_workers):
+            if not isinstance(workers, int) or isinstance(workers, bool) or workers < 1:
+                raise ValueError('worker counts must be positive integers')
+        self.source_path, self.manifest_dir = Path(source_path), Path(manifest_dir)
+        if not self.source_path.is_absolute() or not self.source_path.is_file() or not self.manifest_dir.is_absolute():
+            raise ValueError('use an existing absolute source path and an absolute manifest directory')
+        self.extraction_workers, self.jev_workers = extraction_workers, jev_workers
+        self.events = []
+
+    def _manifest(self, conn, cfg, universe, items, day):
+        self.manifest_dir.mkdir(parents=True, exist_ok=True)
+        path = self.manifest_dir / f'day-{day}.json'
+        metadata = {'day': day, 'environment': environment_key(cfg, universe), 'runtime': runtime_key(),
+                    'source': digest(self.source_path), 'extraction_workers': self.extraction_workers,
+                    'jev_workers': self.jev_workers}
+        entries = [{'input_id': item['input_id'], 'seq': route.sequence_no, 'hash': item_key(item)} for item, route in items]
+        if not path.exists():
+            if conn.execute("select 1 from processing_steps where publication_day=? and step in ('extracted','written','handed_over') limit 1", (day,)).fetchone():
+                raise ValueError('cannot adopt a partially processed day without its concurrency manifest')
+            with path.open('x', encoding='utf-8') as handle:
+                json.dump(dict(metadata, inputs=entries), handle, sort_keys=True)
+        try:
+            saved = json.loads(path.read_text())
+        except (OSError, ValueError) as error:
+            raise ValueError('unreadable concurrency manifest; refusing to guess its inputs') from error
+        if {k: saved.get(k) for k in metadata} != metadata:
+            raise ValueError('concurrency manifest source, configuration or runtime changed')
+        remaining = [entry for entry in saved['inputs'] if not store.is_processed(conn, entry['input_id'])]
+        if remaining != entries:
+            raise ValueError('concurrency manifest input order or content changed')
+        return metadata
+
+    def __call__(self, conn, archive, cfg, universe, items, *, day, transport=None, log=print):
+        if transport is None:
+            raise ValueError('offline concurrency POC requires an explicit transport; live cost reservation is not implemented')
+        if cfg.matching.engine != 'jev' and self.jev_workers != 1:
+            raise ValueError('parallel matching is only implemented for Jev')
+        metadata = self._manifest(conn, cfg, universe, items, day)
+        frozen_cfg, frozen_universe = copy.deepcopy(cfg), copy.deepcopy(universe)
+        pending, prepared_futures, next_index = {}, [], 0
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=self.extraction_workers)
+
+        def fill():
+            nonlocal next_index
+            while next_index < len(items) and len(pending) < self.extraction_workers:
+                item, route = items[next_index]
+                next_index += 1
+                if route.resume_from and route.resume_from != 'extracted':
+                    continue  # The authoritative saved handover is owned by normal recovery.
+                objects = [o['value'] for o in item.get('object_identifiers') or [] if frozen_universe.has(o['value'])]
+                shown = copy.deepcopy(store.views_for_prompt(conn, objects))
+                groups = copy.deepcopy(store.groups_for_prompt(conn, objects, item.get('title') or ''))
+                owned_item = copy.deepcopy(item)
+                key = extraction_key(frozen_cfg, owned_item, owned_item['text'], shown, frozen_universe, groups)
+                future = pool.submit(extraction.extract, archive, frozen_cfg, owned_item, owned_item['text'], shown,
+                                     frozen_universe, shown_groups=groups, transport=transport)
+                pending[item['input_id']] = (key, item_key(owned_item), future)
+                prepared_futures.append((item['input_id'], future))
+                self.events.append({'input_id': item['input_id'], 'event': 'prepared', 'request': key})
+
+        def accepted_extraction(current_archive, current_cfg, item, text, shown, current_universe, *, shown_groups=(), transport=None):
+            prior_key, source_key, future = pending[item['input_id']]
+            def validate_inputs():
+                if (environment_key(current_cfg, current_universe) != metadata['environment']
+                        or environment_key(cfg, universe) != metadata['environment'] or runtime_key() != metadata['runtime']):
+                    raise ValueError('configuration, universe or runtime changed during the day')
+                if item_key(item) != source_key or text != item['text']:
+                    raise ValueError('source changed after preparation')
+            validate_inputs()
+            current_key = extraction_key(current_cfg, item, text, shown, current_universe, shown_groups)
+            if current_key == prior_key:
+                answer = future.result()
+                validate_inputs()
+                if answer.request_sha256 != current_key:
+                    raise ValueError('prepared extraction does not match its validated request')
+                self.events.append({'input_id': item['input_id'], 'event': 'reused', 'request': current_key})
+                return answer
+            future.cancel()
+            self.events.append({'input_id': item['input_id'], 'event': 'stale', 'before': prior_key, 'request': current_key})
+            answer = extraction.extract(current_archive, current_cfg, item, text, shown, current_universe,
+                                        shown_groups=shown_groups, transport=transport)
+            validate_inputs()
+            return answer
+
+        try:
+            fill()
+            for item, route in items:
+                result = rounds.run(conn, archive, frozen_cfg, frozen_universe, item, route.sequence_no, resume_from=route.resume_from,
+                                    transport=transport, log=log, extractor=accepted_extraction, matching_workers=self.jev_workers)
+                self.events.append({'input_id': item['input_id'], 'event': 'failed' if result.failed else 'accepted'})
+                yield result
+                if result.failed:
+                    return
+                pending.pop(item['input_id'], None)
+                fill()
+        finally:
+            # Running calls may still archive a response; none can become a handover here.
+            for _, _, future in pending.values():
+                future.cancel()
+            pool.shutdown(wait=True, cancel_futures=True)
+            for input_id, future in prepared_futures:
+                if not future.cancelled() and future.exception() is not None:
+                    self.events.append({'input_id': input_id, 'event': 'speculative_error', 'error': type(future.exception()).__name__})
+"""D172: parallel Jev jobs retain serial decisions and exact archive identities."""
+import copy
+import json
+import threading
+
+import pytest
+
+from test_jev_matching import CFG, ITEM, ledger_with_view, piece
+from hivemind import model
+from hivemind.views import jev_matching, matching
+
+
+def response(request, choice='different'):
+    answers = {}
+    for key, question in request['questions'].items():
+        labels = list(question['criteria'])
+        probabilities = {label: 0.05 for label in labels}
+        probabilities[choice] = 0.9
+        answers[key] = {'type': 'choice', 'choice': choice, 'confidence': 0.9, 'probabilities': probabilities}
+    return {'answers': answers, 'usage': {'input_tokens': 1000, 'output_tokens': 0}}
+
+
+def jobs(conn):
+    first = piece('x1', 'First independent statement.', ['v1'])
+    second = piece('x2', 'Second independent statement.', ['v1'])
+    return [first, second], matching.Lists({}, {('x1', 'v1'): ['e1'], ('x2', 'v1'): ['e1']})
+
+
+def test_independent_jobs_overlap_but_decisions_and_hashes_keep_input_order(tmp_path):
+    """D172 ordered collection: completion order must not reorder the matching answer."""
+    conn, _ = ledger_with_view(tmp_path)
+    evidence, lists = jobs(conn)
+    def answer(request):
+        return response(request, 'same_statement' if 'First independent' in request['state'] else 'different')
+    serial = jev_matching.decide(model.Archive(str(tmp_path / 'serial.sqlite')), CFG, conn, ITEM, [], copy.deepcopy(evidence), lists, [], transport=answer)
+    barrier = threading.Barrier(2)
+    def concurrent(request):
+        barrier.wait(5)
+        return answer(request)
+    archive = model.Archive(str(tmp_path / 'parallel.sqlite'))
+    parallel = jev_matching.decide(archive, CFG, conn, ITEM, [], copy.deepcopy(evidence), lists, [], transport=concurrent, workers=2)
+    assert parallel.data == serial.data
+    assert parallel.request_sha256 == serial.request_sha256
+    assert [x['id'] for x in parallel.data['evidence']] == ['x1', 'x2']
+    assert len(parallel.request_records) == 2
+    for record in parallel.request_records:
+        row = archive.conn.execute('select request_sha256,answer_json from model_calls where call_id=?', (record['call_id'],)).fetchone()
+        assert row[0] == record['request_sha256']
+        assert json.loads(row[1])
+
+
+def test_identical_jobs_share_one_response_and_cost(tmp_path):
+    """D172 duplicate-request row: two logical requests cannot disagree under one archive ID."""
+    conn, _ = ledger_with_view(tmp_path)
+    evidence, lists = jobs(conn)
+    evidence[1] = dict(evidence[0], id='x2')  # IDs are not in Jev's state; these are byte-identical calls.
+    calls = []
+    lock = threading.Lock()
+    second_started = threading.Event()
+    def changing_provider(request):
+        with lock:
+            calls.append(request)
+            index = len(calls)
+        if index == 1:
+            second_started.wait(0.5)  # Force overlapping cache misses if the shared-future rule is removed.
+        else:
+            second_started.set()
+        return response(request, 'same_statement' if index == 1 else 'different')
+    archive = model.Archive(str(tmp_path / 'shared.sqlite'))
+    answer = jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=changing_provider, workers=2)
+    assert len(calls) == 1
+    assert [d['outcome'] for d in answer.data['evidence']] == ['repeat', 'repeat']
+    assert answer.request_records[0] == answer.request_records[1]
+    assert answer.calls == 2  # Logical requests retain their original order and aggregate hash.
+    assert answer.cost_usd == pytest.approx(0.000042)
+    cached = jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=changing_provider, workers=2)
+    assert cached.data == answer.data and cached.cached and cached.cost_usd == 0
+    assert len(calls) == 1
+
+
+def test_partial_failure_drains_and_reuses_the_successful_request_on_retry(tmp_path):
+    """D172 failed wave: successful calls stay archived but no partial decision is returned."""
+    conn, _ = ledger_with_view(tmp_path)
+    evidence, lists = jobs(conn)
+    archive = model.Archive(str(tmp_path / 'partial.sqlite'))
+    barrier = threading.Barrier(2)
+    def failing(request):
+        barrier.wait(5)
+        if 'First independent' in request['state']:
+            raise model.TransportError('one question failed')
+        return response(request)
+    with pytest.raises(model.TransportError, match='one question failed'):
+        jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=failing, workers=2)
+    assert archive.totals()[0] == 1
+    called = []
+    def retry(request):
+        assert 'First independent' in request['state']
+        called.append(request)
+        return response(request)
+    answer = jev_matching.decide(archive, CFG, conn, ITEM, [], evidence, lists, [], transport=retry, workers=2)
+    assert len(called) == 1 and len(answer.data['evidence']) == 2
+    assert archive.totals()[0] == 2
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat tests/test_concurrency.py && cat src/hivemind/model.py && cat src/hivemind/jev.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""D172: the opt-in coordinator preserves ordered knowledge on real temporary storage."""
+import collections
+import dataclasses
+import json
+from pathlib import Path
+import re
+import sqlite3
+import sys
+import threading
+
+import pytest
+
+from test_sequential_replay import CASES, setup_run
+from hivemind import config, extraction, model, replay, vocabulary
+from hivemind.views import store
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'poc'))
+from concurrency_study.runner import DayRunner, extraction_key  # noqa: E402
+
+
+def responses(*, reverse=False, fail_first=False, fail_current_second=False, fail_stale_second=False):
+    """Only the external model is faked. Both quotations come from the recorded Rubin cases."""
+    later_finished, lock = threading.Event(), threading.Lock()
+    calls = []
+
+    def send(provider, request):
+        name = request['response_format']['json_schema']['name']
+        text = request['messages'][1]['content']
+        second = CASES[1]['item']['input_id'] in text
+        current = CASES[0]['candidate']['question'] in text
+        with lock:
+            calls.append((name, second, current))
+        if name == 'extraction':
+            if second:
+                later_finished.set()
+                if current and fail_current_second:
+                    raise model.TransportError('second current request unavailable')
+                if not current and fail_stale_second:
+                    raise model.TransportError('unused speculative request unavailable')
+                data = ({'candidates': [], 'evidence': [dict(CASES[1]['evidence'], links=['v1'])]}
+                        if current else {'candidates': [CASES[1]['candidate']], 'evidence': [CASES[1]['evidence']]})
+            else:
+                if reverse:
+                    assert later_finished.wait(5), 'later extraction did not overlap the first'
+                if fail_first:
+                    raise model.TransportError('first request unavailable')
+                data = {'candidates': [CASES[0]['candidate']], 'evidence': [CASES[0]['evidence']]}
+        elif name == 'matching':
+            if '【候选观点】' in text:
+                data = {'candidates': [{'id': 'c1', 'outcome': '新观点', 'target_view_id': '', 'reason': 'new', 'dependencies': []}], 'evidence': []}
+            else:
+                data = {'candidates': [], 'evidence': [{'id': 'e1', 'view_id': 'v1', 'outcome': '新证据', 'target_evidence_id': '', 'said_day': '', 'reason': 'another statement'}]}
+        else:
+            assert name == 'judgement'
+            data = {'rung': 1, 'reasons': 'Production shipments are expected.',
+                    'cites': list(dict.fromkeys(re.findall(r'^- (e\d+)［', text, re.M))), 'cites_views': [], 'pushes': [],
+                    'changed': True, 'why_changed': 'First judgement.'}
+        return {'choices': [{'message': {'content': json.dumps(data)}}]}
+
+    return send, calls
+
+
+def runner(args, tmp_path):
+    return DayRunner(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=1)
+
+
+def logical_rows(path):
+    """Compare product records, excluding call identities and audit timestamps."""
+    ignored = {'created_at', 'call_id', 'request_sha256'}
+    with sqlite3.connect(path) as db:
+        db.row_factory = sqlite3.Row
+        return {table: [{k: row[k] for k in row.keys() if k not in ignored} for row in db.execute(f'select * from {table} order by rowid')]
+                for table in ('views', 'rungs', 'evidence', 'evidence_sources', 'evidence_links', 'dependencies',
+                              'successions', 'thesis_groups', 'thesis_group_members', 'judgements')}
+
+
+def test_reversed_answers_and_stale_context_match_the_serial_ledger(tmp_path):
+    """D172 current-prefix rule: the later speculative answer cannot create a second thesis."""
+    a = tmp_path / 'serial'; a.mkdir()
+    b = tmp_path / 'parallel'; b.mkdir()
+    serial, parallel = setup_run(a), setup_run(b)
+    send, _ = responses()
+    expected = replay.run(**serial, transport=send)
+    send, calls = responses(reverse=True)
+    day = runner(parallel, b)
+    actual = replay.run(**parallel, transport=send, day_runner=day)
+    assert logical_rows(serial['views_path']) == logical_rows(parallel['views_path'])
+    assert (actual['new_views'], actual['evidence'], actual['judged']) == (1, 2, 1)
+    assert expected['new_views'] == actual['new_views']
+    assert [e['input_id'] for e in day.events if e['event'] == 'accepted'] == [c['item']['input_id'] for c in CASES]
+    assert [e['input_id'] for e in day.events if e['event'] == 'stale'] == [CASES[1]['item']['input_id']]
+    assert collections.Counter((name, second) for name, second, _ in calls)[('extraction', True)] == 2
+
+
+def test_earlier_failure_accepts_no_later_handover_and_resume_preserves_order(tmp_path):
+    """D172 failure row: early calls may finish, but later knowledge cannot commit."""
+    args = setup_run(tmp_path)
+    day = runner(args, tmp_path)
+    send, _ = responses(reverse=True, fail_first=True)
+    with pytest.raises(RuntimeError, match='first request unavailable'):
+        replay.run(**args, transport=send, day_runner=day)
+    with sqlite3.connect(args['views_path']) as db:
+        assert db.execute('select count(*) from handovers').fetchone()[0] == 0
+        assert db.execute('select count(*) from views').fetchone()[0] == 0
+        assert db.execute('select count(*) from days_completed').fetchone()[0] == 0
+    send, _ = responses()
+    resumed = replay.run(**args, transport=send, day_runner=runner(args, tmp_path))
+    assert (resumed['new_views'], resumed['evidence']) == (1, 2)
+    with sqlite3.connect(args['views_path']) as db:
+        assert db.execute("select input_id,sequence_no from processing_steps where step='extracted' and result='ok' order by id").fetchall() == [(c['item']['input_id'], n) for n, c in enumerate(CASES, 1)]
+
+
+def test_writer_failure_resumes_the_accepted_handover_without_reextracting(tmp_path):
+    """D172 restart row: accepted extraction survives a rolled-back write."""
+    args = setup_run(tmp_path)
+    db = store.open_db(args['views_path'])
+    db.execute("create trigger refuse_piece before insert on evidence begin select raise(abort, 'offline storage fault'); end")
+    db.commit(); db.close()
+    send, calls = responses()
+    with pytest.raises(RuntimeError, match='offline storage fault'):
+        replay.run(**args, transport=send, day_runner=runner(args, tmp_path))
+    first_calls = sum(name == 'extraction' and not second for name, second, _ in calls)
+    with sqlite3.connect(args['views_path']) as db:
+        assert db.execute('select count(*) from views').fetchone()[0] == 0
+        assert db.execute('select count(*) from handovers').fetchone()[0] == 1
+        db.execute('drop trigger refuse_piece')
+    result = replay.run(**args, transport=send, day_runner=runner(args, tmp_path))
+    assert result['new_views'] == 1
+    assert sum(name == 'extraction' and not second for name, second, _ in calls) == first_calls
+
+
+def test_unused_stale_failure_does_not_replace_the_current_request(tmp_path):
+    """D172 stale failure: an unavailable old request cannot poison a changed valid request."""
+    args = setup_run(tmp_path)
+    day = runner(args, tmp_path)
+    send, _ = responses(reverse=True, fail_stale_second=True)
+    result = replay.run(**args, transport=send, day_runner=day)
+    assert (result['new_views'], result['evidence']) == (1, 2)
+    assert any(e['event'] == 'speculative_error' for e in day.events)
+
+
+def test_later_day_does_not_run_after_current_day_failure(tmp_path):
+    """D172 day boundary: a committed prefix is not a completed day."""
+    args = setup_run(tmp_path)
+    with sqlite3.connect(args['testdb_path']) as db:
+        columns = [r[1] for r in db.execute('pragma table_info(items)')]
+        db.row_factory = sqlite3.Row
+        item = dict(db.execute('select * from items limit 1').fetchone())
+        item.update(input_id='test:next-day', publication_day='2026-02-26', published_at='2026-02-26T21:00:00Z')
+        db.execute(f'insert into items ({",".join(columns)}) values ({",".join("?" for _ in columns)})', [item[c] for c in columns])
+    args['until_day'] = '2026-02-26'
+    send, _ = responses(fail_current_second=True)
+    requests = []
+    def checked(provider, request):
+        requests.append(request['messages'][1]['content'])
+        return send(provider, request)
+    with pytest.raises(RuntimeError, match='second current request unavailable'):
+        replay.run(**args, transport=checked, day_runner=runner(args, tmp_path))
+    assert not any('test:next-day' in request for request in requests)
+    with sqlite3.connect(args['views_path']) as db:
+        assert db.execute('select count(*) from views').fetchone()[0] == 1
+        assert db.execute('select count(*) from days_completed').fetchone()[0] == 0
+
+
+@pytest.mark.parametrize('change', ['source', 'config'])
+def test_changed_source_or_configuration_refuses_before_more_calls(tmp_path, change):
+    """D172 manifest row: restarting is not permission to replace the input contract."""
+    args = setup_run(tmp_path)
+    send, _ = responses(fail_first=True)
+    with pytest.raises(RuntimeError):
+        replay.run(**args, transport=send, day_runner=runner(args, tmp_path))
+    if change == 'source':
+        with sqlite3.connect(args['testdb_path']) as db:
+            db.execute('update items set text=text || ?', (' changed',))
+    else:
+        args['cfg'] = dataclasses.replace(args['cfg'], version='different-configuration')
+    def forbidden(*args):
+        raise AssertionError('manifest mismatch reached a model call')
+    with pytest.raises(ValueError, match='manifest .* changed'):
+        replay.run(**args, transport=forbidden, day_runner=runner(args, tmp_path))
+
+
+def test_group_membership_and_schema_changes_change_the_request_identity(tmp_path):
+    """D172 read set includes group members and the allowed response schema, not just thesis IDs."""
+    from test_jev_matching import ledger_with_view, CFG, UNIVERSE
+    conn, _ = ledger_with_view(tmp_path)
+    store.add_group(conn, group_id='g1', name='Rubin rollout', scope='production and deployment', seq=1,
+                    input_id='seed', object_ids=['NVDA'], aliases=['Rubin'])
+    store.add_member(conn, 'g1', 'v1', 1, 'seed')
+    item = dict(CASES[0]['item'], title='Rubin rollout')
+    shown = store.views_for_prompt(conn, ['NVDA'])
+    before = extraction_key(CFG, item, item['text'], shown, UNIVERSE, store.groups_for_prompt(conn, ['NVDA'], item['title']))
+    store.create_view(conn, view_id='v2', object_id='AMD', object_kind='company', kind='asset', looks_at='Rubin customer deployment',
+                      question='Will the customer deploy?', due_day='2027-12-31', year='2027', rungs=CASES[0]['candidate']['rungs'],
+                      seq=2, input_id='other', created_at='2026-02-25T22:00:00')
+    store.add_member(conn, 'g1', 'v2', 2, 'other')
+    assert store.views_for_prompt(conn, ['NVDA']) == shown
+    after = extraction_key(CFG, item, item['text'], shown, UNIVERSE, store.groups_for_prompt(conn, ['NVDA'], item['title']))
+    assert before != after
+    request = {'messages': [{'content': 'unchanged'}], 'response_format': {'schema': {'enum': ['v1']}}}
+    original = model.request_identity(request)[1]
+    request['response_format']['schema']['enum'].append('v2')
+    assert model.request_identity(request)[1] != original
+
+
+def test_opt_in_runner_never_implicitly_uses_credentials(tmp_path):
+    """D172 live-launch boundary: the offline POC cannot silently use default network transport."""
+    args = setup_run(tmp_path)
+    with pytest.raises(ValueError, match='explicit transport'):
+        replay.run(**args, day_runner=runner(args, tmp_path))
+
+
+def test_current_english_jev_pipeline_preserves_sources_groups_and_call_trace(tmp_path):
+    """D172 product path: v23 extraction, Jev, grouping, write, daily judgement and close marker."""
+    args = setup_run(tmp_path)
+    args['cfg'] = config.load(ROOT / 'poc/config/poc-v23.json')
+    later = threading.Event()
+    def send(*parameters):
+        request = parameters[-1]
+        if len(parameters) == 1:  # Jev uses its typed endpoint.
+            result = {}
+            for qid, question in request['questions'].items():
+                if question['type'] == 'noul':
+                    result[qid] = {'type': 'noul', 'noul': 0.9}
+                else:
+                    labels = question['criteria']
+                    result[qid] = {'type': 'choice', 'choice': 'different', 'confidence': 1.0,
+                                   'probabilities': {label: float(label == 'different') for label in labels}}
+            return {'answers': result, 'usage': {}}
+        text = request['messages'][1]['content']
+        stage = request['response_format']['json_schema']['name']
+        if stage == 'extraction':
+            second = CASES[1]['item']['input_id'] in text
+            if second:
+                later.set()
+            else:
+                assert later.wait(5)
+            case = CASES[int(second)]
+            raw = vocabulary.extraction_answer({'candidates': [case['candidate']], 'evidence': [case['evidence']]})
+            raw['new_groups'] = []
+            if second and '  - v1 (' in text:
+                raw['candidates'] = []
+                raw['evidence'][0]['links'] = ['v1']
+            else:
+                raw['candidates'][0]['group_refs'] = ['n1']
+                raw['new_groups'] = [{'id': 'n1', 'name': 'Rubin rollout', 'scope': 'Rubin production and deployment', 'aliases': ['Rubin']}]
+            return {'choices': [{'message': {'content': json.dumps(raw)}}]}
+        assert stage == 'judgement'
+        result = {'rung': 1, 'reasons': 'Both original sources expect production.',
+                  'cites': list(dict.fromkeys(re.findall(r'^- (e\d+) \[', text, re.M))), 'cites_views': [],
+                  'pushes': [], 'changed': True, 'why_changed': 'First judgement.'}
+        return {'choices': [{'message': {'content': json.dumps(result)}}]}
+    day = DayRunner(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=2)
+    result = replay.run(**args, transport=send, day_runner=day)
+    assert (result['new_views'], result['evidence'], result['judged']) == (1, 2, 1)
+    with sqlite3.connect(args['views_path']) as db:
+        assert db.execute('select name from thesis_groups').fetchall() == [('Rubin rollout',)]
+        assert db.execute('select group_id,view_id from thesis_group_members').fetchall() == [('g1', 'v1')]
+        assert db.execute('select quote from evidence order by rowid').fetchall() == [(c['evidence']['quote'],) for c in CASES]
+        assert db.execute('select day from days_completed').fetchall() == [('2026-02-25',)]
+        records = [json.loads(r[0]) for r in db.execute('select shown_json from match_records')]
+        requests = [entry for record in records for entry in record.get('requests', [])]
+    assert requests
+    for entry in requests:
+        assert args['archive'].conn.execute('select request_sha256 from model_calls where call_id=?', (entry['call_id'],)).fetchone()[0] == entry['request_sha256']
+"""One model call, archived and replayable.
+
+`call()` sends a system and user message with a strict JSON schema to an OpenAI-compatible chat endpoint (OpenAI,
+or DeepSeek through the same wire format), checks the answer against the schema, and records the exact request and
+raw answer in an archive (SQLite, a POC artefact kept beside the test database, never inside the views database).
+A request whose sha256 is already in the archive is answered from it without a network call, so a rerun of a
+replay costs nothing and gives the same answers. The provider key is read from the owner-only credentials file and
+never appears in the archive, logs or arguments.
+"""
+import dataclasses
+import hashlib
+import http.client
+import json
+import re
+import os
+import sqlite3
+import time
+import uuid
+import urllib.error
+import urllib.request
+
+CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
+ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
+             'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
+# USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+# gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
+# cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
+# the published rate; the token columns are the measurement, the bill is the provider's.
+PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+          'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+
+SCHEMA_SQL = """
+create table if not exists model_calls (
+  call_id integer primary key autoincrement, purpose text, config_version text, config_checksum text, model text,
+  request_sha256 text unique, request_json text, response_json text, answer_json text, prompt_chars integer,
+  input_tokens integer, output_tokens integer, cost_usd real, seconds real, created_at text
+);
+create index if not exists model_calls_sha on model_calls(request_sha256);
+"""
+
+
+class SchemaError(ValueError):
+    pass
+
+
+class TransportError(RuntimeError):
+    pass
+
+
+@dataclasses.dataclass
+class Answer:
+    data: dict
+    call_id: int
+    request_sha256: str
+    cached: bool
+    prompt_chars: int
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+
+
+class Archive:
+    """Shared by the extraction worker threads: one connection, every access under a lock."""
+
+    def __init__(self, path):
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        self.conn = sqlite3.connect(path, check_same_thread=False)
+        self.conn.executescript(SCHEMA_SQL)
+        import threading
+        self.lock = threading.Lock()
+
+    def lookup(self, sha):
+        with self.lock:
+            return self.conn.execute('select call_id, answer_json, prompt_chars, input_tokens, output_tokens from model_calls where request_sha256=?', (sha,)).fetchone()
+
+    def record(self, **fields):
+        """One row per distinct request; a second identical request recorded at the same moment (two threads, or a
+        failed answer repeated within the same second) keeps the first row's id instead of failing."""
+        columns = list(fields)
+        with self.lock:
+            cursor = self.conn.execute(f'insert or ignore into model_calls ({",".join(columns)}) values ({",".join("?" * len(columns))})',
+                                       [fields[c] for c in columns])
+            self.conn.commit()
+            if cursor.rowcount == 0:
+                return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
+            return cursor.lastrowid
+
+    def totals(self):
+        with self.lock:
+            return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()
+
+
+def _key(provider):
+    name = ENDPOINTS[provider][1]
+    if os.environ.get(name):
+        return os.environ[name]
+    with open(CREDENTIALS, encoding='utf-8') as handle:
+        return json.load(handle)[name]
+
+
+def build_request(setting, system, user, schema, schema_name, provider):
+    request = {
+        'model': setting.model,
+        'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
+        'response_format': {'type': 'json_schema', 'json_schema': {'name': schema_name, 'strict': True, 'schema': schema}},
+    }
+    if provider == 'openai':
+        # gpt-6-luna is a reasoning model: it refuses any temperature but the default, so the setting's temperature
+        # is recorded in Config but not sent; reasoning_effort is what steers it.
+        request['max_completion_tokens'] = setting.max_output_tokens
+        if setting.reasoning_effort:
+            request['reasoning_effort'] = setting.reasoning_effort
+    else:
+        request['temperature'] = setting.temperature
+        request['max_tokens'] = setting.max_output_tokens
+    return request
+
+
+def openai_transport(provider, request, timeout=600):
+    url, _ = ENDPOINTS[provider]
+    body = json.dumps(request).encode('utf-8')
+    headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
+    last = None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, data=body, headers=headers, method='POST'), timeout=timeout) as response:
+                return json.loads(response.read().decode('utf-8'))
+        except urllib.error.HTTPError as error:
+            text = error.read().decode('utf-8', 'ignore')[:600]
+            last = f'HTTP {error.code}: {text}'
+            if error.code in (400, 401, 403, 404):
+                raise TransportError(last)
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, http.client.HTTPException) as error:   # a dropped or truncated response is retried like a network error
+            last = repr(error)[:200]
+        time.sleep(5 * (attempt + 1))
+    raise TransportError(last or 'no answer')
+
+
+def check_schema(value, schema, path='$'):
+    """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
+    array/items, string/enum/pattern, integer, number, boolean, null in anyOf."""
+    kind = schema.get('type')
+    if 'anyOf' in schema:
+        errors = []
+        for option in schema['anyOf']:
+            errors = check_schema(value, option, path)
+            if not errors:
+                return []
+        return errors or [f'{path}: matches no option']
+    if kind == 'object':
+        if not isinstance(value, dict):
+            return [f'{path}: expected object']
+        errors = []
+        for name in schema.get('required', []):
+            if name not in value:
+                errors.append(f'{path}.{name}: required')
+        properties = schema.get('properties', {})
+        for name, item in value.items():
+            if name in properties:
+                errors.extend(check_schema(item, properties[name], f'{path}.{name}'))
+            elif schema.get('additionalProperties') is False:
+                errors.append(f'{path}.{name}: not allowed')
+        return errors
+    if kind == 'array':
+        if not isinstance(value, list):
+            return [f'{path}: expected array']
+        errors = []
+        for index, item in enumerate(value):
+            errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]'))
+        return errors
+    if kind == 'string':
+        if not isinstance(value, str):
+            return [f'{path}: expected string']
+        if 'enum' in schema and value not in schema['enum']:
+            return [f'{path}: {value!r} not in {schema["enum"]}']
+        if 'pattern' in schema and not re.search(schema['pattern'], value):
+            return [f'{path}: {value!r} does not match {schema["pattern"]}']
+        return []
+    if kind == 'integer':
+        return [] if isinstance(value, int) and not isinstance(value, bool) else [f'{path}: expected integer']
+    if kind == 'number':
+        return [] if isinstance(value, (int, float)) and not isinstance(value, bool) else [f'{path}: expected number']
+    if kind == 'boolean':
+        return [] if isinstance(value, bool) else [f'{path}: expected boolean']
+    if kind == 'null':
+        return [] if value is None else [f'{path}: expected null']
+    return []
+
+
+def request_identity(request):
+    """The exact serialized request and its archive key, shared by callers and validation."""
+    encoded = json.dumps(request, sort_keys=True, ensure_ascii=False)
+    return encoded, hashlib.sha256(encoded.encode('utf-8')).hexdigest()
+
+
+def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, transport=None):
+    provider = cfg.provider
+    request = build_request(setting, system, user, schema, schema_name, provider)
+    request_json, sha = request_identity(request)
+    hit = archive.lookup(sha)
+    prompt_chars = len(system) + len(user)
+    if hit:
+        call_id, answer_json, _, input_tokens, output_tokens = hit
+        return Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+    started = time.time()
+    response = (transport or openai_transport)(provider, request)
+    seconds = round(time.time() - started, 1)
+    try:
+        content = response['choices'][0]['message']['content']
+        data = json.loads(content)
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+        archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+                       request_sha256=sha + ':malformed:' + uuid.uuid4().hex[:8], request_json=request_json,
+                       response_json=json.dumps(response)[:200000], answer_json=None, prompt_chars=prompt_chars,
+                       input_tokens=0, output_tokens=0, cost_usd=0.0, seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+        raise SchemaError(f'malformed answer: {error}')
+    errors = check_schema(data, schema)
+    usage = response.get('usage') or {}
+    input_tokens = int(usage.get('prompt_tokens') or 0)
+    output_tokens = int(usage.get('completion_tokens') or 0)
+    price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
+    cost = round(input_tokens / 1e6 * price_in + output_tokens / 1e6 * price_out, 6)
+    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+                             request_sha256=sha if not errors else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+                             response_json=json.dumps(response)[:200000], answer_json=json.dumps(data, ensure_ascii=False),
+                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    if errors:
+        raise SchemaError('; '.join(errors[:5]))
+    return Answer(data, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+"""TypeSafe Jev (https://docs.typesafe.ai): typed answers over one state, no generated text. A request is `{model, state,
+questions}`; each question is `noul` (yes/no → a probability), `choice` (labelled options → `choice`, `probabilities`,
+`confidence`) or `score`. Every call is archived in `model_calls` like every other model call, keyed by the request's
+digest, so a byte-identical request is served from the archive; input is priced from `model.PRICES`, output is free."""
+import json
+import os
+import time
+import urllib.error
+import urllib.request
+import uuid
+
+from . import model
+
+ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
+KEY_NAME = 'TYPESAFE_API_KEY'
+RETRY_STATUSES = {429, 529}
+
+
+def _key():
+    if os.environ.get(KEY_NAME):
+        return os.environ[KEY_NAME]
+    with open(model.CREDENTIALS, encoding='utf-8') as handle:
+        return json.load(handle)[KEY_NAME]
+
+
+def transport(request, timeout=60):
+    """POST the request; one retry after a pause on a rate-limit or overload status; any other failure is a TransportError.
+    The body is the same sorted text the archive digests, so a cache hit is byte-identical to what was sent."""
+    body = json.dumps(request, sort_keys=True, ensure_ascii=False).encode('utf-8')
+    key = _key()
+    for attempt in range(2):
+        req = urllib.request.Request(ENDPOINT, body, {'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                raw = response.read()
+            break
+        except urllib.error.HTTPError as error:
+            if error.code in RETRY_STATUSES and attempt == 0:
+                time.sleep(2)
+                continue
+            raise model.TransportError(f'Jev HTTP {error.code}') from None
+        except (urllib.error.URLError, OSError) as error:
+            raise model.TransportError(f'Jev transport failed: {type(error).__name__}') from None
+    if key.encode('utf-8') in raw:
+        raise model.TransportError('Jev response echoed the credential; not archived')
+    return json.loads(raw.decode('utf-8'))
+
+
+# Jev reports each probability rounded to two decimals independently of the choice it made on the unrounded values, so the
+# chosen option may print one unit below another (0.47 against 0.48; 1 of 2,353 archived choice answers on 2026-10-25).
+ROUNDING = 0.01
+
+
+def validate(answers, questions):
+    """The answers of a response against the request's questions; a list of problems."""
+    problems = []
+    if not isinstance(answers, dict) or set(answers) != set(questions):
+        return ['answer set differs from the questions asked']
+    for qid, question in questions.items():
+        answer = answers[qid]
+        if not isinstance(answer, dict) or answer.get('type') != question['type']:
+            problems.append(f'{qid}: answer type mismatch')
+            continue
+        if question['type'] == 'noul':
+            if not isinstance(answer.get('noul'), (int, float)) or not 0 <= answer['noul'] <= 1:
+                problems.append(f'{qid}: noul out of range')
+        elif question['type'] == 'choice':
+            probabilities = answer.get('probabilities')
+            if answer.get('choice') not in question['criteria'] or not isinstance(probabilities, dict) or set(probabilities) != set(question['criteria']):
+                problems.append(f'{qid}: choice or probabilities do not match the criteria')
+            elif any(not isinstance(v, (int, float)) or isinstance(v, bool) or not 0 <= v <= 1 for v in probabilities.values()) \
+                    or abs(sum(probabilities.values()) - 1) > 0.005 * len(probabilities) + 1e-9:
+                problems.append(f'{qid}: probabilities are not a distribution')
+            elif probabilities[answer['choice']] < max(probabilities.values()) - ROUNDING - 1e-9:
+                problems.append(f'{qid}: choice is not the most probable option')
+    return problems
+
+
+def request_for(setting, state, questions):
+    """The complete Jev request used both for dispatch and in-flight identity."""
+    return {'model': setting.model, 'state': state, 'questions': questions}
+
+
+def ask(archive, cfg, setting, state, questions, purpose, *, transport=None):
+    """One Jev request, archived; returns model.Answer whose data is the `answers` map."""
+    request = request_for(setting, state, questions)
+    request_json, sha = model.request_identity(request)
+    prompt_chars = len(request_json)
+    hit = archive.lookup(sha)
+    if hit:
+        call_id, answer_json, _, input_tokens, output_tokens = hit
+        return model.Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+    started = time.time()
+    response = (transport or globals()['transport'])(request)
+    seconds = round(time.time() - started, 2)
+    answers = response.get('answers') if isinstance(response, dict) else None
+    problems = validate(answers, questions)
+    usage = response.get('usage') or {} if isinstance(response, dict) else {}
+    input_tokens, output_tokens = int(usage.get('input_tokens') or 0), int(usage.get('output_tokens') or 0)
+    price_in, _ = model.PRICES.get(setting.model, (0.0, 0.0))
+    cost = round(input_tokens / 1e6 * price_in, 6)
+    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+                             request_sha256=sha if not problems else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+                             response_json=json.dumps(response, ensure_ascii=False)[:200000], answer_json=json.dumps(answers, ensure_ascii=False) if answers is not None else None,
+                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    if problems:
+        raise model.SchemaError('; '.join(problems[:5]))
+    return model.Answer(answers, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+
+codex
+The coordinator checks each speculative answer against the current request before accepting it, and workers receive no ledger connection. I’m now checking restart paths and duplicate requests for ways those guarantees could break.
+exec
+/opt/homebrew/bin/zsh -lc "cat src/hivemind/views/round.py && cat src/hivemind/replay.py && cat src/hivemind/dispatch.py && cat src/hivemind/views/jev_matching.py && rg -n 'D172|D171|def (is_processed|save_handover|load_handover)|resume_from|def extraction_setting|@dataclasses|class Config' docs/DECISIONS.md src/hivemind/config.py src/hivemind/views/store.py src/hivemind/dispatch.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""One item = one round (06-views.md 进库): source check → store → lists → the matching calls → checks → write.
+Re-judging is the day's step (D63, 2026-10-24: once a day, over every view whose reading changed that day), run by
+the replay after the day's items and before pull mode; see judge_day. Each step appends its processing row in the
+same commit as its writes; a resume continues at the step the processing record names (after an ok step, or the
+failed step itself) and never repeats a completed step."""
+import dataclasses
+import json
+
+from .. import dispatch, extraction, vocabulary
+from . import jev_matching, judging, matching, store, writing
+
+
+@dataclasses.dataclass
+class RoundResult:
+    input_id: str
+    evidence: int = 0
+    candidates: int = 0
+    new_views: int = 0
+    judged: int = 0
+    changed: int = 0
+    cost: float = 0.0
+    cached_calls: int = 0
+    failed: str = ''
+    dropped: int = 0
+
+
+def _fail(conn, item, seq, result, step, kind, detail, pool_key):
+    dispatch.mark(conn, item, seq, step, 'failed', detail[:300])
+    store.pool(conn, kind, pool_key, {'input_id': item['input_id'], 'error': detail[:300]}, seq)
+    result.failed = detail[:200]
+    conn.commit()
+    return result
+
+
+def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence, lists, shown, *, extra_views=(), call_offset=0, transport=None, workers=1):
+    """One matching call with one retry on a refused check. Returns Checked, or None after marking the failure."""
+    note = ''
+    checked = None
+    engine = jev_matching if cfg.matching.engine == 'jev' else matching      # Jev answers once; a retry would be the same answer
+    for attempt in range(1 if engine is jev_matching else 2):
+        try:
+            options = {'workers': workers} if engine is jev_matching else {}
+            answer = engine.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport, **options)
+        except Exception as error:
+            _fail(conn, item, seq, result, 'matched', 'matching_failed', 'matching: ' + repr(error), type(error).__name__)
+            return None
+        result.cost += answer.cost_usd
+        result.cached_calls += int(answer.cached)
+        checked = matching.check(conn, universe, answer.data, candidates, evidence, lists, shown)
+        shown_record = {'candidates': lists.candidate_lists, 'evidence': {f'{k[0]}|{k[1]}': v for k, v in lists.evidence_lists.items()}}
+        if getattr(answer, 'request_records', None):
+            shown_record['requests'] = answer.request_records
+        store.insert(conn, 'match_records', seq=seq, input_id=item['input_id'], call_no=call_offset + attempt + 1,
+                     shown_json=json.dumps(shown_record),
+                     request_sha256=answer.request_sha256, call_id=answer.call_id, decisions_json=json.dumps(answer.data, ensure_ascii=False),
+                     checks_json=json.dumps({'refusals': checked.refusals, 'not_opened': checked.not_opened, 'notes': checked.notes}, ensure_ascii=False), written_json=None)
+        if not checked.refusals:
+            return checked
+        note = '；'.join(checked.refusals)
+    _fail(conn, item, seq, result, 'matched', 'matching_refused_twice', 'matching refused twice: ' + note, item['category'])
+    return None
+
+
+def changed_views_of_day(conn, day):
+    """The views whose reading changed on a replay day: the union of the 'written' records of that day's items."""
+    changed = set()
+    for row in conn.execute("select reason from processing_steps where step='written' and result='ok' and publication_day=?", (day,)):
+        changed.update(json.loads(row['reason']).get('changed', []))
+    return changed
+
+
+def judge_day(conn, archive, cfg, day, seq, *, transport=None, log=print):
+    """D63: one re-judging round per day over every open view whose reading changed that day, dependencies first,
+    recorded under the day's own processing record (input 'day:<date>'); a view already judged at this sequence
+    number (a resumed day) is not judged twice."""
+    marker = {'input_id': f'day:{day}', 'publication_day': day}
+    changed = changed_views_of_day(conn, day)
+    result = RoundResult(marker['input_id'])
+    if not changed:
+        return result
+    try:
+        judged = judging.round_of_judgements(archive, cfg, conn, sorted(changed), seq, marker, transport=transport)
+        result.judged = len(judged)
+        result.changed = sum(1 for j in judged if j['changed'])
+        result.cost += sum(j['cost'] for j in judged)
+        result.cached_calls += sum(1 for j in judged if j['cached'])
+        dispatch.mark(conn, marker, seq, 'judged', 'ok', f'{len(changed)} views changed, {len(judged)} judged, {result.changed} changed conclusions')
+        conn.commit()
+    except judging.JudgementRefused as error:
+        return _fail(conn, marker, seq, result, 'judged', 'judgement_refused_twice', 'judgement refused twice: ' + str(error), 'day')
+    except Exception as error:
+        return _fail(conn, marker, seq, result, 'judged', 'judging_failed', 'judging: ' + repr(error), type(error).__name__)
+    return result
+
+
+def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print, extractor=None, matching_workers=1):
+    result = RoundResult(item['input_id'])
+    if resume_from in ('judged', 'handed_over'):       # written already; judging is the day's step
+        dispatch.mark(conn, item, seq, 'handed_over', 'ok', 'resumed')
+        conn.commit()
+        return result
+    objects = [o['value'] for o in item.get('object_identifiers') or [] if universe.has(o['value'])]
+    shown = store.views_for_prompt(conn, objects)
+    # extraction (or its stored handover on resume)
+    handover = None
+    if resume_from and resume_from != 'extracted':
+        row = conn.execute('select handover_json from handovers where input_id=? order by id desc limit 1', (item['input_id'],)).fetchone()
+        if row:
+            saved = vocabulary.extraction_answer(json.loads(row['handover_json']))          # a handover saved by a Chinese version reads in the canonical vocabulary
+            handover = extraction.Handover(saved['evidence'], saved['candidates'], saved['dropped'], 0, '', True, 0.0, saved.get('new_groups') or [])
+    if handover is None:
+        try:
+            shown_groups = store.groups_for_prompt(conn, objects, item.get('title') or '')
+            handover = (extractor or extraction.extract)(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
+        except Exception as error:
+            return _fail(conn, item, seq, result, 'extracted', 'extraction_failed', 'extraction: ' + repr(error), type(error).__name__)
+        result.cost += handover.cost_usd
+        result.cached_calls += int(handover.cached)
+        store.insert(conn, 'handovers', input_id=item['input_id'], seq=seq,
+                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped, 'new_groups': handover.new_groups}, ensure_ascii=False))
+        dispatch.mark(conn, item, seq, 'extracted', 'ok', f'{len(handover.evidence)} evidence, {len(handover.candidates)} candidates, {len(handover.dropped)} dropped')
+        conn.commit()
+    result.evidence, result.candidates, result.dropped = len(handover.evidence), len(handover.candidates), len(handover.dropped)
+    if not handover.evidence and not handover.candidates:
+        dispatch.mark(conn, item, seq, 'handed_over', 'ok', 'nothing to match')
+        conn.commit()
+        return result
+    # first matching call: the candidates and the evidence linked straight to existing views
+    lists = matching.build_lists(conn, handover, shown, cfg.search_top_n)
+    checked = _match(conn, archive, cfg, universe, item, seq, result, handover.candidates, handover.evidence, lists, shown, transport=transport, workers=matching_workers)
+    if checked is None:
+        return result
+    # second call: evidence linked to candidates that attached to an existing view, compared under that view
+    second_pass = {}
+    pending = []
+    for e in handover.evidence:
+        for link in e['links']:
+            outcome = checked.outcomes.get(link)
+            if outcome and outcome[0] == 'merge':
+                pending.append((e, outcome[1]))
+    if pending:
+        lists2 = matching.Lists({}, {(e['id'], view_id): matching.rank_evidence(conn, view_id, e['one_line'], cfg.search_top_n) for e, view_id in pending})
+        evidence2, seen = [], set()
+        for e, view_id in pending:
+            if e['id'] not in seen:
+                evidence2.append(dict(e, links=[v for x, v in pending if x['id'] == e['id']]))
+                seen.add(e['id'])
+        checked2 = _match(conn, archive, cfg, universe, item, seq, result, [], evidence2, lists2, [], extra_views=sorted({v for _, v in pending}),
+                          call_offset=2, transport=transport, workers=matching_workers)
+        if checked2 is None:
+            return result
+        second_pass = checked2.evidence
+    dispatch.mark(conn, item, seq, 'matched', 'ok', f'{len(checked.outcomes)} candidates placed')
+    # write, and record what changed in the same commit (a resume at 'judged' reads it)
+    try:
+        written = writing.write(conn, universe, seq, item, handover, checked, second_pass)
+    except Exception as error:
+        return _fail(conn, item, seq, result, 'written', 'writing_failed', 'writing: ' + repr(error), type(error).__name__)
+    result.new_views = len(set(written.new_views.values()))
+    dispatch.mark(conn, item, seq, 'written', 'ok', json.dumps({'changed': sorted(written.changed_views), 'new': written.new_views, 'notes': written.notes[:20]}, ensure_ascii=False))
+    dispatch.mark(conn, item, seq, 'handed_over', 'ok', '')
+    conn.commit()
+    return result
+"""Replay the test database through the pipeline day by day with no look-ahead.
+
+For every calendar day from from_day to until_day: route each item published that day (dispatch), run its round
+(extraction → matching → writing), then the day's one re-judging round over the views whose reading changed (D63),
+then pull mode for that day. A guard refuses an item whose
+publication day is after the replay day. The views database refuses to run a day at or before the last day it
+completed (no backdating). After day0's pull the views database is copied to <views>.day0.sqlite for the agent
+layer. Every day prints one line and the archive's cumulative cost."""
+import datetime
+import shutil
+import time
+
+from . import dispatch, pull, testdb
+from .views import round as round_module, store
+
+
+class StaleHandoverError(RuntimeError):
+    """A saved parallel extraction cannot establish that it read its predecessors."""
+
+
+def refuse_unfinished_parallel(conn):
+    """D159: preserve old handovers, but never resume a day-start read as a sequential read."""
+    pending = conn.execute("""select p.input_id, p.reason from processing_steps p
+        where p.step='extracted' and p.result='ok'
+        and p.id=(select max(q.id) from processing_steps q
+                  where q.input_id=p.input_id and q.step='extracted' and q.result='ok')
+        and not exists (select 1 from processing_steps q
+                        where q.input_id=p.input_id and q.step='handed_over' and q.result='ok')
+        order by p.sequence_no""")
+    ids = [row['input_id'] for row in pending if row['reason'].endswith(' (parallel)')]
+    if ids:
+        raise StaleHandoverError('unfinished day-start extractions; keep this ledger and replay into a new one: ' + ', '.join(ids))
+
+
+class LookAheadError(RuntimeError):
+    pass
+
+
+class BackdatingError(RuntimeError):
+    pass
+
+
+def calendar_days(from_day, until_day):
+    day = datetime.date.fromisoformat(from_day)
+    last = datetime.date.fromisoformat(until_day)
+    while day <= last:
+        yield day.isoformat()
+        day += datetime.timedelta(days=1)
+
+
+def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day, day0=None, spend_cap_usd=None,
+        transport=None, log=print, only_objects=None, max_items_per_day=None, day_runner=None):
+    items_db = testdb.open_db(testdb_path)
+    conn = store.open_db(views_path)
+    refuse_unfinished_parallel(conn)
+    last_done = store.last_completed_day(conn)
+    start = from_day
+    if last_done and from_day <= last_done:
+        next_day = (datetime.date.fromisoformat(last_done) + datetime.timedelta(days=1)).isoformat()
+        if next_day > until_day:
+            raise BackdatingError(f'views database already completed {last_done}; nothing to run before it')
+        log(f'resuming after the last completed day {last_done}')
+        start = next_day
+    last_written = conn.execute('select max(publication_day) from processing_steps where sequence_no > 0').fetchone()[0]
+    if last_written and start < last_written:
+        raise BackdatingError(f'views database already holds rounds of {last_written}; a replay cannot start before it (D31)')
+    totals = {'items': 0, 'extracted': 0, 'skipped': 0, 'merged': 0, 'not_processed': 0, 'returned': 0, 'failed': 0,
+              'evidence': 0, 'new_views': 0, 'judged': 0, 'changed': 0, 'closed': 0}
+    calls_before, cost_before, *_ = archive.totals()
+    for day in calendar_days(start, until_day):
+        day_stats = {k: 0 for k in totals}
+        day_cost = 0.0
+        processed = 0
+        to_run = []
+        for item in testdb.feed(items_db, day, day):
+            if item['publication_day'] > day:
+                raise LookAheadError(f'{item["input_id"]} is dated {item["publication_day"]}, after replay day {day}')
+            if only_objects and not any(o['value'] in only_objects for o in item['object_identifiers']):
+                continue
+            if max_items_per_day and processed >= max_items_per_day:
+                break
+            day_stats['items'] += 1
+            route = dispatch.route(conn, item, universe)
+            if route.kind != 'extract':
+                day_stats[route.kind] += 1
+                if route.kind == 'merged':
+                    dispatch.mark(conn, item, 0, 'merged', 'ok', route.reason)
+                    conn.commit()
+                continue
+            processed += 1
+            to_run.append((item, route))
+        results = (day_runner(conn, archive, cfg, universe, to_run, day=day, transport=transport, log=log) if day_runner else
+                   (round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
+                    for item, route in to_run))
+        finished = 0
+        try:
+            for index, result in enumerate(results):
+                if index >= len(to_run) or result.input_id != to_run[index][0]['input_id']:
+                    raise RuntimeError('day runner returned results out of input order')
+                finished += 1
+                day_stats['extracted'] += 1
+                day_stats['evidence'] += result.evidence
+                day_stats['new_views'] += result.new_views
+                day_stats['judged'] += result.judged
+                day_stats['changed'] += result.changed
+                day_cost += result.cost
+                if result.failed:
+                    day_stats['failed'] += 1
+                    log(f'  ! {result.input_id[:60]}: {result.failed}')
+                    raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
+                if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
+                    raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
+        finally:
+            if hasattr(results, 'close'):
+                results.close()
+        if finished != len(to_run):
+            raise RuntimeError('day runner did not complete every routed item')
+        seq = store.next_sequence(conn) - 1
+        judged = round_module.judge_day(conn, archive, cfg, day, seq, transport=transport, log=log)
+        day_stats['judged'] += judged.judged
+        day_stats['changed'] += judged.changed
+        day_cost += judged.cost
+        if judged.failed:
+            day_stats['failed'] += 1
+            log(f'  ! day judging: {judged.failed}')
+            raise RuntimeError(f'judging failed; day {day} remains resumable: {judged.failed}')
+        closed = pull.end_of_day(conn, day, seq)
+        day_stats['closed'] = len(closed)
+        store.complete_day(conn, day, seq, time.strftime('%Y-%m-%dT%H:%M:%S'))
+        conn.commit()
+        for key in totals:
+            totals[key] += day_stats[key]
+        calls, cost, _, _ = archive.totals()
+        open_count = len(store.open_views(conn))
+        log(f'{day} | items {day_stats["items"]:3d} extracted {day_stats["extracted"]:3d} merged {day_stats["merged"]:2d} skipped {day_stats["not_processed"]:2d} '
+            f'failed {day_stats["failed"]:2d} | evidence {day_stats["evidence"]:3d} new views {day_stats["new_views"]:2d} judged {day_stats["judged"]:3d} '
+            f'changed {day_stats["changed"]:3d} closed {len(closed)} | open views {open_count} | day ${day_cost:.2f} total ${cost - cost_before:.2f} calls {calls - calls_before}')
+        if day0 and day == day0:
+            conn.commit()
+            shutil.copy(views_path, views_path + '.day0.sqlite')
+            log(f'day 0 snapshot written: {views_path}.day0.sqlite')
+    return totals
+"""Dispatch (docs/prd/04-dispatch.md): the only entrance. For each item, three questions in order: is it complete?
+was it processed before? what is its classification result? Items that go to extraction get a sequence number in
+arrival order; the processing record is a row per step; the review pool a row per occurrence."""
+import dataclasses
+import time
+
+from .views import store
+
+REQUIRED = ('input_id', 'publisher', 'published_at', 'publication_day', 'category', 'source_uri')
+
+
+@dataclasses.dataclass
+class Route:
+    kind: str                     # returned | skipped | not_processed | merged | extract
+    sequence_no: int = 0
+    resume_from: str = None       # extracted | matched | written | judged, for an unfinished item
+    reason: str = ''
+
+
+STEPS = ('dispatched', 'extracted', 'matched', 'written', 'judged', 'handed_over')
+
+
+def route(conn, item, universe):
+    missing = [field for field in REQUIRED if not item.get(field)]
+    if missing:
+        store.pool(conn, 'incomplete_item', ','.join(missing), {'input_id': item.get('input_id'), 'missing': missing}, 0)
+        return Route('returned', reason=f'missing {missing}')
+    input_id = item['input_id']
+    if store.is_processed(conn, input_id):
+        return Route('skipped', reason='already processed')
+    last = store.last_step(conn, input_id)
+    if last and last['step'] in STEPS and last['sequence_no']:
+        # unfinished work keeps its sequence number: after an ok step it continues at the next step, after a
+        # failed step it retries that step (06-views: 失败从失败的那一步重试)
+        position = STEPS.index(last['step'])
+        resume_from = STEPS[position + 1] if last['result'] == 'ok' else last['step']
+        return Route('extract', sequence_no=last['sequence_no'], resume_from=resume_from, reason='resuming')
+    if item.get('copy_of'):
+        return Route('merged', reason=f'copy of {item["copy_of"]}')
+    if item.get('supersedes'):
+        store.pool(conn, 'correction_not_supported', item['supersedes'], {'input_id': input_id}, 0)
+        return Route('not_processed', reason='correction (supersedes) not supported in the POC')
+    category = item['category']
+    objects = [o['value'] for o in item.get('object_identifiers') or [] if universe.has(o['value'])]
+    if not objects:
+        return Route('not_processed', reason='no object on the research list')
+    if not any(universe.watches(o, category) for o in objects):
+        return Route('not_processed', reason=f'category {category} not watched for {objects}')
+    # the sequence number is taken in arrival order and written at once, so two items routed before either is
+    # processed (a whole day is routed first, then run) never share a number
+    sequence_no = store.next_sequence(conn)
+    store.mark_step(conn, input_id, sequence_no, 'dispatched', 'ok', '', item.get('publication_day'), time.strftime('%Y-%m-%dT%H:%M:%S'))
+    conn.commit()
+    return Route('extract', sequence_no=sequence_no, reason='')
+
+
+def mark(conn, item, sequence_no, step, result='ok', reason=''):
+    store.mark_step(conn, item['input_id'], sequence_no, step, result, reason, item.get('publication_day'), time.strftime('%Y-%m-%dT%H:%M:%S'))
+"""The matching step answered by Jev instead of a generative call (log row 34). For each candidate: its relation to every
+thesis on its list (one `choice` per thesis) and its membership of every visible research group (one `noul` per group);
+for each incoming piece of evidence: its relation to every stored piece on its list under each linked thesis (one
+`choice` per stored piece). Code turns the probabilities into an answer in the matching schema, so `matching.check` and
+`writing.write` run unchanged: `merge` when a listed open thesis is the same quantity or event, `succession` when a
+listed thesis carries the same key for an earlier period and has no successor, else `new`; `repeat` when a stored
+piece is the same statement, `replace` when the incoming piece supersedes it, else `new`. Dependencies are not asked.
+Thresholds are pre-set (0.5); a membership above the threshold is added to the candidate's group references."""
+import dataclasses
+import hashlib
+import concurrent.futures
+import copy
+
+from .. import jev, model, universe as _universe
+from . import identity, matching, store
+
+THRESHOLD = 0.5
+RELATIONS = {"same_quantity_or_event": "both ask about the same defined quantity or the same event: alternative wordings, or two estimates or figures of that one quantity",
+             "same_quantity_other_period": "the same defined quantity or event series for another period, such as the next fiscal or calendar year",
+             "part_of": "one asks about a strict component or subset of the other, in either direction; not identical",
+             "same_matter_different_quantity": "one ongoing matter, two distinct quantities or events, neither a component of the other",
+             "different": "different matters; sharing a company or industry is not enough",
+             "cannot_tell": "the supplied material is insufficient or inconsistent"}
+MEMBER_CRITERIA = {"true": "the CANDIDATE tracks this matter, one of its stated components, its implementation, or a deployment the supplied material connects to it",
+                   "false": "the supplied material shows a different matter, or a question outside the GROUP's stated scope"}
+# 06-views.md, the evidence table: repeat = "the same evidence already exists under the thesis: a retelling, the same number in text and
+# table, or the same speaker repeating the same statement"; replace = "a later account of the same matter: a speaker revises guidance,
+# forecast or event progress; an official confirms/denies a rumour; or the original source revises its statement". The criteria carry
+# those words; the first seed run (log row 35) read "same occasion" into them and missed six cross-document repeats.
+PIECES = {"same_statement": "the same evidence: a retelling, the same number stated in text and in a table or in another document, or the same speaker repeating the same statement; wording, precision and document may differ",
+          "supersedes": "a later version of the same statement or number, changed: the same speaker revises that guidance, forecast or event-progress statement, an official confirms or denies that reported claim, or the original source revises that statement; another statement on the same topic is not this",
+          "different": "a different fact, figure or matter, or a figure for another period or quantity, even if on the same topic"}
+
+
+@dataclasses.dataclass
+class Decision:
+    data: dict
+    call_id: int
+    request_sha256: str
+    cached: bool
+    prompt_chars: int
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    calls: int = 0
+    request_records: list = dataclasses.field(default_factory=list)
+
+
+def candidate_state(c, evidence):
+    rungs = ' / '.join(f'{r["label"]}: {r["condition"]}' for r in c['rungs'])
+    fields = ', '.join(f'{f}={c[f]}' for f in ('measure', 'scope', 'period_start', 'period_end', 'basis', 'unit', 'event_type') if c.get(f) not in (None, '', 'n/a'))
+    own = ' | '.join(f'[{e["speaker"]} {e["original_day"]}] {e["quote"][:400]}' for e in evidence if e['id'] in c.get('evidence_ids', []))[:1600]
+    return (f'CANDIDATE ({c["kind"]}, object {c["object"]}, focus "{c["looks_at"]}", {c["year"]}, due {c["due_day"]}): {c["question"]}\n'
+            f'Key: {fields}\nLadder: {rungs}\nIts evidence: {own}')
+
+
+def thesis_text(conn, view_id):
+    """The thesis as the judge should see it: the card and the quotes that define it (its first two pieces in force)."""
+    pieces = store.evidence_in_force(conn, view_id)[:2]
+    quotes = ''.join(f'\n    Evidence: [{p["speaker"]} {p["original_day"]}] {p["quote"][:400]}' for p in pieces)
+    return matching.describe_view(conn, view_id, english=True) + quotes
+
+
+def group_text(group):
+    members = '; '.join(m['looks_at'] for m in group.get('members', []))
+    return f'{group["name"]}. Scope: {group["scope"]} Also called: {", ".join(group.get("aliases") or [])}. Member questions: {members or "(none yet)"}'
+
+
+def piece_state(e, said_day):
+    return f'INCOMING PIECE [{e["tier"]}; {e["speaker"]}; original source {e["original_who"]}, stated {said_day}] {e["one_line"]} | quote: {e["quote"][:600]}'
+
+
+def relation_question(text):
+    return {'type': 'choice', 'criteria': RELATIONS,
+            'instructions': 'What relationship holds between the CANDIDATE and the THESIS below? Use only the supplied text. Equal numbers and similar wording do not establish identity. THESIS:\n' + text}
+
+
+def member_question(text):
+    return {'type': 'noul', 'criteria': MEMBER_CRITERIA,
+            'instructions': 'Does the CANDIDATE belong to the ongoing matter defined by GROUP below? Use only the supplied text; a shared company, industry or word is not enough. GROUP:\n' + text}
+
+
+def piece_question(text):
+    return {'type': 'choice', 'criteria': PIECES,
+            'instructions': 'How does the INCOMING PIECE relate to the STORED PIECE below, already under the same thesis? Use only the supplied text. STORED PIECE:\n' + text}
+
+
+def can_succeed(conn, view_id, key, c):
+    """06-views succession: the candidate asks the same object's quantity (no typed field conflicts: measure, event type, a stated
+    basis or unit, a code-owned scope) for a later period that does not overlap, and the thesis has no successor yet."""
+    return bool(key) and (store.view(conn, view_id) or {}).get('object_id') == c['object'] \
+        and not identity.conflicts(key, c, merging=False) \
+        and bool(key.get('period_end') and c.get('period_start') and key['period_end'] < c['period_start']) \
+        and not conn.execute('select 1 from successions where succeeds=?', (view_id,)).fetchone()
+
+
+def succession_target(conn, c, listed):
+    """The succession code decides alone: the same scope as well (a model-worded scope that differs goes to the judge)."""
+    if not c.get('measure') or not c.get('period_start'):
+        return None
+    for view_id in listed:
+        key = store.view_key(conn, view_id)
+        if key and _universe.scope_key(key.get('scope', '')) == _universe.scope_key(c.get('scope', '')) and can_succeed(conn, view_id, key, c):
+            return view_id
+    return None
+
+
+def _summary(answer):
+    if answer['type'] == 'noul':
+        return f'{answer["noul"]:.2f}'
+    top = max(answer['probabilities'].items(), key=lambda kv: kv[1])
+    return f'{top[0]} {top[1]:.2f}'
+
+
+def _answers(archive, cfg, jobs, workers, transport):
+    """Ask independent questions; equal concurrent requests share one archived result."""
+    if not isinstance(workers, int) or isinstance(workers, bool) or workers < 1:
+        raise ValueError('Jev workers must be a positive integer')
+
+    def ask(job):
+        state, questions = job
+        return jev.ask(archive, cfg, cfg.matching, state, questions, 'match', transport=transport)
+
+    if workers == 1:
+        return [ask(job) if job[1] else None for job in jobs]
+    results, futures, used = [], {}, set()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        keys = []
+        for state, questions in jobs:
+            if not questions:
+                keys.append(None)
+                continue
+            _, key = model.request_identity(jev.request_for(cfg.matching, state, questions))
+            keys.append(key)
+            if key not in futures:
+                futures[key] = pool.submit(ask, (state, copy.deepcopy(questions)))
+        for key in keys:
+            if key is None:
+                results.append(None)
+                continue
+            answer = futures[key].result()
+            # A later logical use is exactly what a serial archive lookup would return.
+            results.append(dataclasses.replace(answer, cached=True, cost_usd=0.0) if key in used else answer)
+            used.add(key)
+    return results
+
+
+def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None, workers=1):
+    data = {'candidates': [], 'evidence': []}
+    total = Decision(data, 0, '', True, 0, 0, 0, 0.0)
+    shas = []
+    jobs, candidate_jobs, evidence_jobs = [], [], []
+    # All database reads and request construction stay on the coordinator thread.
+    for c in candidates:
+        listed = list(dict.fromkeys(list(lists.candidate_lists.get(c['id'], [])) + [v['view_id'] for v in shown_views]))
+        questions = {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
+        groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
+        for g in groups:
+            questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
+        candidate_jobs.append((c, listed, groups, len(jobs)))
+        jobs.append((candidate_state(c, evidence), questions))
+    for e in evidence:
+        pairs = [(e['id'], v) for v in e['links'] if (e['id'], v) in lists.evidence_lists]
+        if not pairs:
+            continue
+        questions = {f'piece__{v}__{x}': piece_question(matching.describe_evidence(conn, x, english=True)) for _, v in pairs for x in lists.evidence_lists[(e['id'], v)]}
+        said_day = e.get('original_day') or item['publication_day']
+        evidence_jobs.append((e, pairs, said_day, len(jobs)))
+        jobs.append((piece_state(e, said_day), questions))
+    replies = _answers(archive, cfg, jobs, workers, transport)
+
+    def answers_for(index):
+        answer = replies[index]
+        if answer is None:
+            return {}
+        total.cost_usd += answer.cost_usd
+        total.input_tokens += answer.input_tokens
+        total.output_tokens += answer.output_tokens
+        total.prompt_chars += answer.prompt_chars
+        total.cached = total.cached and answer.cached
+        total.call_id = answer.call_id
+        total.calls += 1
+        shas.append(answer.request_sha256)
+        total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
+        return answer.data
+
+    for c, listed, groups, job_index in candidate_jobs:
+        answers = answers_for(job_index)
+        same = sorted(((answers[f'rel__{v}']['probabilities']['same_quantity_or_event'], v) for v in listed
+                       if answers[f'rel__{v}']['choice'] == 'same_quantity_or_event' and answers[f'rel__{v}']['probabilities']['same_quantity_or_event'] >= THRESHOLD),
+                      reverse=True)
+        joined = [g['group_id'] for g in groups if answers[f'member__{g["group_id"]}']['noul'] >= THRESHOLD]
+        for group_id in joined:
+            if group_id not in (c.get('group_refs') or []) and group_id not in (c.get('jev_group_refs') or []):
+                c.setdefault('jev_group_refs', []).append(group_id)          # the writer records these with basis 'jev'
+        reasons = '; '.join(f'{qid[5:]}: {_summary(a)}' for qid, a in answers.items() if qid.startswith('rel__'))
+        outcome, target = 'new', ''
+        for _, v in same:
+            # the key decides what 'the same' may mean: a different quantity is declined here; the same quantity for a later period is a
+            # succession (06-views), when the thesis has no successor yet; otherwise a merge into an open thesis
+            key = store.view_key(conn, v) if c.get('measure') else None
+            if key and identity.conflicts(key, c, merging=False):
+                continue
+            if key and identity.conflicts(key, c, merging=True):          # the same quantity for another period
+                if can_succeed(conn, v, key, c):
+                    outcome, target = 'succession', v
+                    break
+                continue
+            if store.is_open(conn, v):
+                outcome, target = 'merge', v
+                break
+        if outcome == 'new':
+            # the judge says 'the same quantity for another period'; code decides the direction, the typed fields and the successor
+            other = sorted(((answers[f'rel__{v}']['probabilities']['same_quantity_other_period'], v) for v in listed
+                            if answers[f'rel__{v}']['choice'] == 'same_quantity_other_period' and answers[f'rel__{v}']['probabilities']['same_quantity_other_period'] >= THRESHOLD),
+                           reverse=True)
+            for _, v in other:
+                key = store.view_key(conn, v) if c.get('measure') else None
+                if can_succeed(conn, v, key, c):
+                    outcome, target = 'succession', v
+                    break
+        if outcome == 'new':
+            successor_of = succession_target(conn, c, listed)
+            if successor_of:
+                outcome, target = 'succession', successor_of
+        data['candidates'].append({'id': c['id'], 'outcome': outcome, 'target_view_id': target or '', 'dependencies': [],
+                                   'reason': f'jev: {reasons or "no list"}; groups joined: {joined or "none"}'})
+    for e, pairs, said_day, job_index in evidence_jobs:
+        answers = answers_for(job_index)
+        for _, v in pairs:
+            scored = [(answers[f'piece__{v}__{x}'], x) for x in lists.evidence_lists[(e['id'], v)]]
+            repeats = sorted(((a['probabilities']['same_statement'], x) for a, x in scored if a['choice'] == 'same_statement' and a['probabilities']['same_statement'] >= THRESHOLD), reverse=True)
+            replaces = sorted(((a['probabilities']['supersedes'], x) for a, x in scored if a['choice'] == 'supersedes' and a['probabilities']['supersedes'] >= THRESHOLD), reverse=True)
+            outcome, target = ('repeat', repeats[0][1]) if repeats else ('replace', replaces[0][1]) if replaces else ('new', '')
+            data['evidence'].append({'id': e['id'], 'view_id': v, 'outcome': outcome, 'target_evidence_id': target or '', 'said_day': said_day,
+                                     'reason': 'jev: ' + '; '.join(f'{x}: {_summary(a)}' for a, x in scored)})
+    total.request_sha256 = hashlib.sha256('+'.join(shas).encode('utf-8')).hexdigest() if shas else ''
+    return total
+src/hivemind/dispatch.py:12:@dataclasses.dataclass
+src/hivemind/dispatch.py:16:    resume_from: str = None       # extracted | matched | written | judged, for an unfinished item
+src/hivemind/dispatch.py:36:        resume_from = STEPS[position + 1] if last['result'] == 'ok' else last['step']
+src/hivemind/dispatch.py:37:        return Route('extract', sequence_no=last['sequence_no'], resume_from=resume_from, reason='resuming')
+src/hivemind/views/store.py:363:def is_processed(conn, input_id):
+src/hivemind/config.py:11:class ConfigError(ValueError):
+src/hivemind/config.py:39:@dataclasses.dataclass(frozen=True)
+src/hivemind/config.py:53:@dataclasses.dataclass(frozen=True)
+src/hivemind/config.py:54:class Config:
+src/hivemind/config.py:65:    def extraction_setting(self, category):
+docs/DECISIONS.md:2359:## D171 · 2026-10-25 · Review and free proofs for the day-batch acceleration proposal
+docs/DECISIONS.md:2368:## D172 · 2026-10-25 · Build the isolated ordered-concurrency POC
+docs/DECISIONS.md:2370:- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '2350,2395p' docs/DECISIONS.md && sed -n '1,145p' src/hivemind/extraction.py && sed -n '345,390p' src/hivemind/views/store.py && cat src/hivemind/config.py && cat src/hivemind/universe.py && rg -n 'def build_prompt|input_id|def feed|journal_mode|connect\\(' src/hivemind/extraction.py src/hivemind/testdb.py src/hivemind/views/store.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+- Not decided here: moving group membership from extraction to matching (D149/D166), which the queued day-batch shape needs; it comes with that task.
+
+## D170 · 2026-10-25 · Phase close-out: what the code review removed, fixed and left
+
+Alex: "我们跑一个code review 清理一下过程中stale code 和 bloat 然后准备写好文档push". Two read-only Codex reviews (product code with its tests; tooling), each finding checked against the code before acting (log row 50). The full measured state is commit `f4ff787`; everything removed here is there.
+- Removed: the retired research harness `poc/hierarchy_study/` (17 experiments and 15 test files, D146–D162, none adopted; its tests wrote three SQLite files to the repository root through a module-named path, also removed); five finished one-off scripts (`jev_poc.py`, `supersedes_probe.py`, `succession_probe.py`, `key_views.py`, `review_keyed_run.py`; results in the build log and `poc/reports/`); six product functions with no caller (`judging.judge_one`, `matching.same_orientation`, `Universe.canonical_scope`, `testdb.days_with_items`, `store.lineage_of_view`, `store.replaced_by`) and six unused constants.
+- Fixed: the preflight's matching section now judges Jev records (it had skipped all 250 of the Jev ledger) and fails when every record of a ledger is skipped; the cost reports read the one price table (`model.PRICES`) and refuse an unpriced model; the benchmark stops when its evidence scorer fails; Jev succession eligibility has one rule (`jev_matching.can_succeed`); a test no longer reads the real credentials file, another no longer writes the real service archive; the newsroom category rule has one owner that its test exercises; the replay requires the ledger and archive it writes and defaults to `poc-v23` and the current item window; the compose file uses the adopted idea configuration `poc-v9`.
+- Left, with the reason: the dependency-cycle pass in `matching.check` (its refusal wording reaches stored retry requests, so merging it would change replayed requests); the two ladder validators (admission of a new ladder and reading of a stored one are different jobs); splitting `matching.check`, `writing._write` and `idea.read_idea` (behaviour-preserving refactors of the core without a measurement round); unused parameters and result fields (signature churn across many call sites); the corpus harvesters' shared fetch code; the test-only `search.fake_embed` in the search module; `scripts/review_english_run.py` counting equal model-written scopes as a breach (D155 makes them a lead, not identity). The reviewers' lead that the API's `poc-v9` default was stale was wrong: it is the adopted idea configuration (D135/D145).
+
+## D171 · 2026-10-25 · Review and free proofs for the day-batch acceleration proposal
+
+- Alex asked to review the extraction/Jev/per-day acceleration plan deeply and test it against the stored golds and result databases. Scope is review and isolated offline proofs; no product-contract change, runtime adoption or paid comparison follows automatically.
+- The [review](research/2026-10-25-day-batch-review/review.md) and its scripts reconstruct 960/960 extraction requests from the two saved v23 ledgers. Day-start context differs for 214/480 Jev-arm requests and 168/480 control requests; rechecking the same raw answers with day-start IDs loses 73/797 and 62/744 evidence items. Extraction depends on earlier theses as well as groups. The Jev arm has 86/320 final repeat/replace decisions targeting same-day evidence, and Jev membership alone cannot declare the 26 new groups.
+- At 32 workers, a three-wave schedule using recorded Jev call durations projects 8.6× on July 27 and 3.2× over 31 nonempty days, before reconciliation/rate-limit overhead. This replaces the unsupported general 10× claim, not the speed target. It is a schedule estimate, not fresh measured latency. Judging already uses six workers per dependency level.
+- Recommendation awaiting Alex's choice: concurrent request preparation with exact read validation before sequential commits, retaining D149/D159 semantics; re-run requests whose inputs changed. A more aggressive day-start extraction contract must be decided and tested separately. The review defines both boundaries, failure/recovery states, local-ID namespacing, evaluation limits and staged tests.
+- Verification: 128 product/corpus/diagnostic tests passed; two diagnostic mutants were caught; preflight judged 250 stored Jev records with no skipped records. Existing golds remain unchanged. No batching runtime or fresh model-quality pass is claimed.
+- A read-only review independently reproduced the 960 request message pairs and schemas, the stale-reference losses and the timing projection; no serious finding against the proposed contract. Runtime implementation and live measurement remain the next, separate steps.
+
+## D172 · 2026-10-25 · Build the isolated ordered-concurrency POC
+
+- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
+- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
+- The [first implementation slice](research/2026-10-25-day-batch-review/implementation.md) covers offline coordinator, independent Jev calls and failure/restart verification on temporary storage. No paid call, new spending cap or default activation is authorized by this slice. The current per-item spend check is not safe reservation accounting for concurrent paid calls; resolve it before a live comparison.
+"""Extraction (docs/prd/05-extraction.md): the whole item goes to the model with the five-block prompt of its
+category; the answer is evidence linked to the shown views or to this item's candidate views, and candidate views
+written in full. Code checks the sources (the quote is in the text, every link points at a shown view or a
+candidate), the ladders (five rungs or two) and the rule that quarterly numbers are evidence, not views.
+
+Prompt versions 1–5 ask and answer in Chinese; version 6 and later ask and answer in English (D163). The schema,
+the request text and the retry note follow the version; every answer is read in the canonical vocabulary."""
+import dataclasses
+import datetime
+import json
+import re
+
+from . import config, model, vocabulary
+
+TIERS = vocabulary.TIERS
+LEGACY_TIERS = list(vocabulary.LEGACY['tier'])
+LEGACY_KINDS = list(vocabulary.LEGACY['kind'])
+MAX_TEXT_CHARS = 400_000
+ENGLISH_FROM = 6                  # the first extraction prompt version written in English
+GROUPS_FROM = 7                   # the first version whose candidates carry research-group membership (D149)
+ALIASES_FROM = 9                  # the first version whose declared groups carry aliases, so code decides identity and membership (D166)
+
+
+def version_number(version):
+    return int(str(version or '').lstrip('v') or 0)
+
+
+def is_english(version):
+    return version_number(version) >= ENGLISH_FROM
+
+
+def has_groups(version):
+    return version_number(version) >= GROUPS_FROM
+
+
+def base_schema(english):
+    kinds = vocabulary.KINDS if english else LEGACY_KINDS
+    tiers = TIERS if english else LEGACY_TIERS
+    return {
+        'type': 'object', 'additionalProperties': False, 'required': ['evidence', 'candidates'],
+        'properties': {
+            'evidence': {'type': 'array', 'items': {
+                'type': 'object', 'additionalProperties': False,
+                'required': ['id', 'quote', 'one_line', 'speaker', 'original_who', 'original_day', 'tier', 'event_time', 'links'],
+                'properties': {
+                    'id': {'type': 'string'}, 'quote': {'type': 'string'}, 'one_line': {'type': 'string'}, 'speaker': {'type': 'string'},
+                    'original_who': {'type': 'string'}, 'original_day': {'type': 'string'}, 'tier': {'type': 'string', 'enum': tiers},
+                    'event_time': {'type': 'string'}, 'links': {'type': 'array', 'items': {'type': 'string'}}}}},
+            'candidates': {'type': 'array', 'items': {
+                'type': 'object', 'additionalProperties': False,
+                'required': ['id', 'object', 'kind', 'looks_at', 'question', 'rungs', 'due_day', 'year', 'evidence_ids'],
+                'properties': {
+                    'id': {'type': 'string'}, 'object': {'type': 'string'}, 'kind': {'type': 'string', 'enum': kinds},
+                    'looks_at': {'type': 'string'}, 'question': {'type': 'string'},
+                    'rungs': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['label', 'condition'],
+                                                           'properties': {'label': {'type': 'string'}, 'condition': {'type': 'string'}}}},
+                    'due_day': {'type': 'string', 'pattern': r'^\d{4}-\d{2}-\d{2}$'},      # a date, enforced by the schema, not by prose
+                    'year': {'type': 'string'}, 'evidence_ids': {'type': 'array', 'items': {'type': 'string'}}}}},
+        },
+    }
+
+
+SCHEMA = base_schema(english=False)          # the shape of the answers stored under versions 1–3
+
+# keyed-views-plan.md 2.1: the key a candidate carries from prompt version v4 on; the ladder's rungs carry numeric bounds
+MEASURES = ['total_revenue', 'segment_revenue', 'product_revenue', 'gross_margin', 'operating_margin', 'operating_expense_growth', 'total_expenses', 'operating_loss',
+            'tax_rate', 'capex', 'shipments_or_capacity', 'run_rate', 'design_wins', 'event', 'spend_total', 'financing_amount', 'price', 'capacity', 'growth_rate', 'policy_event', 'other']
+EVENT_TYPES = ['launch', 'shipment', 'licence', 'approval', 'deal_close', 'deployment', 'other', 'n/a']
+BASES = ['GAAP', 'non_GAAP', 'n/a']
+UNITS = ['USD', 'percent', 'count', 'GW', 'MW', 'TWD', 'multiple', 'n/a']
+# D167 (2026-10-25): from version 10 the vocabulary names a market's size and a project's cost as their own measures; the week filed an
+# accelerator TAM and a data-center project's cost as spend_total, the aggregate of spending, which no identity rule could then tell apart
+MEASURES_V10 = MEASURES[:MEASURES.index('spend_total') + 1] + ['market_size', 'project_cost'] + MEASURES[MEASURES.index('spend_total') + 1:]
+MEASURES_V10_FROM = 10
+
+
+def key_fields(measures=MEASURES):
+    return {'measure': {'type': 'string', 'enum': list(measures)}, 'scope': {'type': 'string'},
+            'period_start': {'type': 'string', 'pattern': r'^\d{4}-\d{2}-\d{2}$'}, 'period_end': {'type': 'string', 'pattern': r'^\d{4}-\d{2}-\d{2}$'},
+            'basis': {'type': 'string', 'enum': BASES}, 'unit': {'type': 'string', 'enum': UNITS}, 'event_type': {'type': 'string', 'enum': EVENT_TYPES}}
+
+
+BOUND = {'anyOf': [{'type': 'number'}, {'type': 'null'}]}
+
+
+def keyed_schema(english=False, measures=MEASURES):
+    """The base schema with the key fields on every candidate and numeric bounds on every rung."""
+    schema = base_schema(english)
+    candidate = schema['properties']['candidates']['items']
+    fields = key_fields(measures)
+    candidate['properties'].update(fields)
+    candidate['required'] += list(fields)
+    rung = candidate['properties']['rungs']['items']
+    rung['properties'].update({'lo': BOUND, 'hi': BOUND})
+    rung['required'] += ['lo', 'hi']
+    return schema
+
+
+LOCAL_GROUP = r'n[1-9][0-9]*'
+# a company's own reported or guided lines: they belong to the company and never found a research group by themselves
+FINANCIAL_LINES = {'total_revenue', 'segment_revenue', 'gross_margin', 'operating_margin', 'operating_expense_growth', 'total_expenses', 'operating_loss', 'tax_rate', 'capex', 'run_rate'}
+
+
+def tracks_a_matter(candidate):
+    """A candidate that can start a research group: a theme quantity, an event or policy event, a product or market figure;
+    not a company's own financial line (which may join a group another thesis started, never found one)."""
+    return candidate.get('kind') == 'theme' or candidate.get('measure') not in FINANCIAL_LINES
+
+
+def grouped_schema(shown_group_ids, aliases=False, measures=MEASURES):
+    """The English keyed schema plus research-group membership (D149, the D147 reference shape): each candidate cites one or
+    more groups, each either a group id shown in this request or a local id declared in new_groups; the pattern is built
+    from the shown ids, so an unseen group cannot be cited."""
+    schema = keyed_schema(english=True, measures=measures)
+    pattern = '^(?:' + LOCAL_GROUP + ''.join('|' + re.escape(g) for g in shown_group_ids) + ')$'
+    candidate = schema['properties']['candidates']['items']
+    candidate['properties']['group_refs'] = {'type': 'array', 'items': {'type': 'string', 'pattern': pattern}}
+    candidate['required'].append('group_refs')
+    group_fields = {'id': {'type': 'string', 'pattern': '^' + LOCAL_GROUP + '$'}, 'name': {'type': 'string'}, 'scope': {'type': 'string'}}
+    if aliases:
+        group_fields['aliases'] = {'type': 'array', 'items': {'type': 'string'}}
+    schema['properties']['new_groups'] = {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': list(group_fields), 'properties': group_fields}}
+    schema['required'].append('new_groups')
+    return schema
+
+
+def schema_for(version, shown_group_ids=()):
+    number = version_number(version)
+    measures = MEASURES_V10 if number >= MEASURES_V10_FROM else MEASURES
+    if number >= GROUPS_FROM:
+        return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
+    if number >= ENGLISH_FROM:
+        return keyed_schema(english=True)
+    return keyed_schema() if number >= 4 else SCHEMA
+
+
+@dataclasses.dataclass
+class Handover:
+    evidence: list
+    candidates: list
+    dropped: list
+    call_id: int
+    request_sha256: str
+    cached: bool
+    cost_usd: float
+    return [r['view_id'] for r in conn.execute('select view_id from evidence_links where evidence_id=? order by id', (evidence_id,))]
+
+
+def evidence_ids_under(conn, view_id):
+    return [r['evidence_id'] for r in conn.execute('select evidence_id from evidence_links where view_id=?', (view_id,))]
+
+
+# ---------- processing record and pool ----------
+
+def mark_step(conn, input_id, sequence_no, step, result, reason, publication_day, at):
+    insert(conn, 'processing_steps', input_id=input_id, sequence_no=sequence_no, step=step, result=result, reason=reason, publication_day=publication_day, at=at)
+
+
+def last_step(conn, input_id):
+    row = conn.execute('select step, result, sequence_no from processing_steps where input_id=? order by id desc limit 1', (input_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def is_processed(conn, input_id):
+    return bool(conn.execute("select 1 from processing_steps where input_id=? and step='handed_over' and result='ok'", (input_id,)).fetchone())
+
+
+def next_sequence(conn):
+    row = conn.execute('select coalesce(max(sequence_no), 0) from processing_steps').fetchone()
+    return int(row[0]) + 1
+
+
+def pool(conn, kind, key, example, seq):
+    insert(conn, 'review_pool_entries', kind=kind, key=key, example_json=json.dumps(example, ensure_ascii=False)[:4000], seq=seq)
+
+
+def last_check(conn, view_id):
+    """The last round that read this view: its item's publication day and id (the card's 上次核对 line)."""
+    row = conn.execute('select input_id, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+    if row:
+        return row['publication_day'], row['input_id']
+    row = conn.execute('select s.publication_day, s.input_id from evidence_links l join evidence_sources s on s.evidence_id=l.evidence_id where l.view_id=? order by s.id desc limit 1', (view_id,)).fetchone()
+    return (row['publication_day'], row['input_id']) if row else (None, None)
+
+
+def complete_day(conn, day, seq, at):
+    insert(conn, 'days_completed', day=day, seq=seq, at=at)
+
+
+def last_completed_day(conn):
+    row = conn.execute('select day from days_completed order by id desc limit 1').fetchone()
+"""Config (docs/prd/03-config.md): a versioned file of the settings a person chooses, with a checksum written into
+every model call's record. A version that references a missing setting is refused whole."""
+import dataclasses
+import hashlib
+import json
+import os
+
+PROMPTS = os.path.join(os.path.dirname(__file__), 'prompts')
+
+
+class ConfigError(ValueError):
+    pass
+
+
+def prompt_path(name):
+    """The file of a prompt the config names, for example role-v1.txt or matching-v1.txt."""
+    return os.path.join(PROMPTS, name)
+
+
+def _prompt_files(extraction, matching, rejudging, idea=None):
+    """03-config: a version that names a prompt that does not exist is refused whole. An extraction setting's
+    prompt_version is '<category>-<v>': block 2 and 4 come from categories-<v>.json (the category's entry) and the
+    role from role-<v>.txt; matching, re-judging and the idea reading name their file without the extension."""
+    for category, setting in extraction.items():
+        prefix, _, version = setting.prompt_version.rpartition('-')
+        if prefix != category or not version:
+            raise ConfigError(f'extraction.{category}: prompt_version {setting.prompt_version!r} must be {category}-<version>')
+        categories_file = prompt_path(f'categories-{version}.json')
+        if not os.path.exists(categories_file) or not os.path.exists(prompt_path(f'role-{version}.txt')):
+            raise ConfigError(f'extraction.{category}: prompts for version {version!r} do not exist')
+        with open(categories_file, encoding='utf-8') as handle:
+            if category not in json.load(handle):
+                raise ConfigError(f'extraction.{category}: categories-{version}.json has no entry for {category}')
+    for setting in (matching, rejudging, idea):
+        if setting is not None and not os.path.exists(prompt_path(setting.prompt_version + '.txt')):
+            raise ConfigError(f'{setting.name}: prompt {setting.prompt_version}.txt does not exist')
+
+
+@dataclasses.dataclass(frozen=True)
+class Setting:
+    name: str
+    model: str
+    prompt_version: str
+    temperature: float
+    reasoning_effort: str
+    max_output_tokens: int
+    engine: str = 'llm'       # matching only: 'llm' (the generative call) or 'jev' (TypeSafe Jev, views/jev_matching.py)
+
+
+ENGINES = ('llm', 'jev')
+
+
+@dataclasses.dataclass(frozen=True)
+class Config:
+    version: str
+    checksum: str
+    provider: str
+    search_top_n: int
+    extraction: dict          # category -> Setting
+    matching: Setting
+    rejudging: Setting
+    final_verdict: Setting
+    idea: Setting = None      # the service's reading of a user's idea (docs/poc/idea-card.md); absent in pipeline-only configs
+
+    def extraction_setting(self, category):
+        setting = self.extraction.get(category)
+        if setting is None:
+            raise ConfigError(f'no extraction setting for category {category} in config {self.version}')
+        return setting
+
+
+REQUIRED = ('model', 'prompt_version', 'temperature', 'reasoning_effort', 'max_output_tokens')
+
+
+def _setting(name, raw):
+    if not isinstance(raw, dict):
+        raise ConfigError(f'setting {name} is missing')
+    missing = [key for key in REQUIRED if key not in raw]
+    if missing:
+        raise ConfigError(f'setting {name} lacks {missing}')
+    engine = str(raw.get('engine', 'llm'))
+    if engine not in ENGINES:
+        raise ConfigError(f'setting {name}: engine {engine!r} is not one of {ENGINES}')
+    return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
+                   temperature=float(raw['temperature']), reasoning_effort=str(raw['reasoning_effort']),
+                   max_output_tokens=int(raw['max_output_tokens']), engine=engine)
+
+
+def load(path):
+    with open(path, encoding='utf-8') as handle:
+        text = handle.read()
+    raw = json.loads(text)
+    for key in ('version', 'provider', 'search_top_n', 'extraction', 'matching', 'rejudging', 'final_verdict'):
+        if key not in raw:
+            raise ConfigError(f'config lacks {key}')
+    canonical = json.dumps({k: v for k, v in raw.items() if not k.startswith('_')}, sort_keys=True, ensure_ascii=False)
+    checksum = hashlib.sha256(canonical.encode('utf-8')).hexdigest()[:16]
+    extraction = {category: _setting(f'extraction.{category}', setting) for category, setting in raw['extraction'].items()}
+    matching, rejudging = _setting('matching', raw['matching']), _setting('rejudging', raw['rejudging'])
+    idea = _setting('idea', raw['idea']) if 'idea' in raw else None
+    _prompt_files(extraction, matching, rejudging, idea)       # final_verdict is kept in the file but no POC step calls it
+    return Config(version=str(raw['version']), checksum=checksum, provider=str(raw['provider']),
+                  search_top_n=int(raw['search_top_n']), extraction=extraction,
+                  matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea)
+"""The research list (docs/prd/01-universe.md): which objects exist and which categories each is watched in. The
+only place that decides what is processed. Loaded from poc/universe.json."""
+import json
+import re
+
+
+class Universe:
+    def __init__(self, raw):
+        self.version = raw['version']
+        self.companies = {c['id']: c for c in raw['companies']}
+        self.themes = {t['id']: t for t in raw['themes']}
+        self.theme_names = {t['name']: t['id'] for t in raw['themes']}
+        self.theme_names.update({t['legacy_name']: t['id'] for t in raw['themes'] if t.get('legacy_name')})
+
+    def has(self, object_id):
+        return object_id in self.companies or object_id in self.themes
+
+    def kind(self, object_id):
+        if object_id in self.companies:
+            return 'company'
+        if object_id in self.themes:
+            return 'theme'
+        return None
+
+    def resolve(self, text):
+        """An object named by ticker, theme id, theme name, company name or one of the object's aliases (a theme's
+        former name is an alias); None when not on the list."""
+        if not text:
+            return None
+        key = text.strip()
+        if key in self.companies or key in self.themes:
+            return key
+        if key in self.theme_names:
+            return self.theme_names[key]
+        upper = key.upper()
+        if upper in self.companies:
+            return upper
+        for company in self.companies.values():
+            if company['name'].lower() == key.lower():
+                return company['id']
+        for record in list(self.themes.values()) + list(self.companies.values()):
+            if any(alias.casefold() == key.casefold() for alias in record.get('aliases') or []):
+                return record['id']
+        return None
+
+    def watches(self, object_id, category):
+        record = self.companies.get(object_id) or self.themes.get(object_id)
+        return bool(record and category in record['categories'])
+
+    def theme_list(self, legacy=False):
+        """(id, name) per theme; legacy=True gives the name a Chinese prompt version printed (legacy_name, else name), so its stored requests replay byte-identical."""
+        return [(t['id'], (t.get('legacy_name') or t['name']) if legacy else t['name']) for t in self.themes.values()]
+
+    def watch_list(self, object_id):
+        """The analyst's quantities to watch for this object (keyed-views-plan.md 2.4); empty when the object has none."""
+        record = self.companies.get(object_id) or self.themes.get(object_id) or {}
+        return list(record.get('watch') or [])
+
+    SCOPELESS = {'total_revenue', 'gross_margin', 'operating_margin', 'operating_expense_growth', 'total_expenses', 'operating_loss', 'tax_rate', 'capex'}
+
+    def scope_and_source(self, object_id, measure, scope='', event_type='n/a'):
+        """Use a reference name only on an exact match; preserve actual business qualifiers (D155)."""
+        plain = re.sub(r'^(?:non[-_ ]?gaap|gaap)\s*', '', scope.strip(), flags=re.I)
+        redundant = {'', measure.replace('_', ' ')}
+        if measure in self.SCOPELESS and plain.casefold() in redundant:
+            return '', 'none'
+        for entry in self.watch_list(object_id):
+            if (entry.get('measure') == measure and entry.get('scope')
+                    and scope_key(entry['scope']) == scope_key(scope)
+                    and (not entry.get('event_type') or entry['event_type'] == event_type)):
+                return entry['scope'], 'watch'
+        return scope, 'model'
+
+    def fiscal_year_end_month(self, object_id):
+        """12 for a theme, a company whose fiscal year is the calendar year, or an unknown object."""
+        company = self.companies.get(object_id)
+        return int((company or {}).get('fiscal_year_end_month') or 12)
+
+    def fiscal_period(self, object_id, year, bare_is_calendar=False):
+        """Convert an entire single-year name. Explicit calendar years stay calendar; other spans return None. A bare year
+        (2026) is the company's fiscal year under the Chinese prompt versions (06-views: 公司的数按它的财年) and a calendar
+        year under the English ones, whose request defines "FY2027, or 2026 for a calendar year"."""
+        parsed = parse_year(year)
+        if not parsed:
+            return None
+        kind, y = parsed
+        month = 12 if kind == 'calendar' or (kind == 'bare' and bare_is_calendar) else self.fiscal_year_end_month(object_id)
+        if month == 12:
+            return f'{y}-01-01', f'{y}-12-31'
+        start = f'{y - 1}-{month + 1:02d}-01'
+        import calendar
+        return start, f'{y}-{month:02d}-{calendar.monthrange(y, month)[1]:02d}'
+
+    def canonical_year(self, object_id, year):
+        """One spelling per year for the join between a view's year and a waiting dependency's year: a fiscal form
+        (FY2027, fiscal year 2027, 2027财年) becomes FY2027 when the object's fiscal year differs from the calendar
+        year, else 2027; a calendar form (calendar year 2026, CY2026, 2026自然年) becomes 2026; a bare year keeps its
+        digits and is never reinterpreted as a fiscal year (an event dated "2026" means calendar 2026); text that is
+        not one single year stays as written (a multi-year span never resolves a waiting dependency)."""
+        parsed = parse_year(year)
+        if not parsed:
+            return (year or '').strip()
+        kind, y = parsed
+        if kind == 'fiscal' and self.fiscal_year_end_month(object_id) != 12:
+            return f'FY{y}'
+        return str(y)
+
+    def fiscal_note(self, object_id, publication_day, english=False):
+        """One line telling the model how this company's fiscal years map onto the calendar, so a number's year and
+        due day are written right (NVDA's FY2027 ends in January 2027, not 2028)."""
+        company = self.companies.get(object_id)
+        if not company:
+            return ''
+        month = int(company.get('fiscal_year_end_month') or 12)
+        year, pub_month = int(publication_day[:4]), int(publication_day[5:7])
+        if month == 12:
+            if english:
+                return (f"{object_id}'s fiscal year is the calendar year and ends in December: this year is FY{year}, next year is FY{year + 1}; "
+                        f'full-year figures are published in the annual report in January to March of the following year.')
+            return f'{object_id} 的财年和自然年一样，12 月结束：今年是 FY{year}，明年是 FY{year + 1}；全年数在次年 1 到 3 月的年报里公布。'
+        # the fiscal year is named by the calendar year in which it ends
+        current = year if pub_month <= month else year + 1
+        start_month = month % 12 + 1
+        start_year = current - 1 if start_month > month else current
+        report_month = month + 1 if month < 12 else 1
+        if english:
+            return (f"{object_id}'s fiscal year ends in month {month} and is named for the calendar year in which it ends: FY{current} runs from "
+                    f'{start_year}-{start_month:02d} to {current}-{month:02d}; the publication day {publication_day} falls in FY{current}, so this year is FY{current} '
+                    f"and next year is FY{current + 1}; FY{current}'s full-year figures are published in the annual report around {current}-{report_month:02d}; use that day as the due date.")
+        return (f'{object_id} 的财年在 {month} 月结束，财年按结束的那一年命名：FY{current} 从 {start_year}-{start_month:02d} 到 {current}-{month:02d}，'
+                f'发布日 {publication_day} 落在 FY{current}，所以今年是 FY{current}，明年是 FY{current + 1}；FY{current} 的全年数在 {current}-{report_month:02d} 前后的年报里公布，到期日按那天写。')
+
+
+# The accepted spellings of one year (docs/research/2026-10-25-english/plan.md, "Period text"): a full match, nothing else.
+FISCAL_YEAR = re.compile(r'(?:FY\s*|fiscal\s+(?:year\s+)?)(\d{4})|(\d{4})\s*财年|FY\s*(\d{2})', re.I)
+CALENDAR_YEAR = re.compile(r'(?:CY\s*|calendar\s+(?:year\s+)?)(\d{4})|(\d{4})\s*自然年|(\d{4})\s*calendar\s+year', re.I)
+BARE_YEAR = re.compile(r'(\d{4})\s*年?')
+
+
+def parse_year(text):
+    """('fiscal' | 'calendar' | 'bare', year) for text that names exactly one year, else None. A bare year takes the
+    object's fiscal year when its period is computed (06-views: 公司的数按它的财年)."""
+    value = (text or '').strip()
+    if not value:
+        return None
+    m = FISCAL_YEAR.fullmatch(value)
+    if m:
+        year = m.group(1) or m.group(2) or m.group(3)
+        return 'fiscal', int(year) if len(year) == 4 else 2000 + int(year)
+    m = CALENDAR_YEAR.fullmatch(value)
+    if m:
+        return 'calendar', int(m.group(1) or m.group(2) or m.group(3))
+    m = BARE_YEAR.fullmatch(value)
+    if m:
+        return 'bare', int(m.group(1))
+    return None
+
+
+def scope_key(scope):
+    """A scope name as compared: case, spacing, dashes and the words revenue/segment do not distinguish two scopes."""
+    s = re.sub(r'[\u2013\u2014]', '-', (scope or '')).replace('＋', '+').replace('&amp;', '&')
+    s = re.sub(r'\b(revenue|segment|business|division)\b', '', s, flags=re.I)
+    return re.sub(r'\s+', ' ', s).strip().casefold()
+
+
+def load(path):
+    with open(path, encoding='utf-8') as handle:
+        return Universe(json.load(handle))
+src/hivemind/testdb.py:13:    conn = sqlite3.connect(path)
+src/hivemind/testdb.py:18:def feed(conn, from_day, until_day):
+src/hivemind/views/store.py:18:    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text',
+src/hivemind/views/store.py:20:    'evidence_sources': 'id integer primary key autoincrement, evidence_id text, input_id text, category text, publication_day text, location text, seq integer',
+src/hivemind/views/store.py:26:    'handovers': 'id integer primary key autoincrement, input_id text, seq integer, handover_json text',
+src/hivemind/views/store.py:27:    'match_records': 'id integer primary key autoincrement, seq integer, input_id text, call_no integer, shown_json text, request_sha256 text, call_id integer, decisions_json text, checks_json text, written_json text',
+src/hivemind/views/store.py:28:    'processing_steps': 'id integer primary key autoincrement, input_id text, sequence_no integer, step text, result text, reason text, publication_day text, at text',
+src/hivemind/views/store.py:30:    'late_statements': 'id integer primary key autoincrement, input_id text, evidence_quote text, reason text, seq integer',
+src/hivemind/views/store.py:34:    'thesis_group_members': 'id integer primary key autoincrement, group_id text, view_id text, seq integer, input_id text, basis text',
+src/hivemind/views/store.py:45:    'create index if not exists steps_input on processing_steps(input_id, id)',
+src/hivemind/views/store.py:53:    conn = sqlite3.connect(path)
+src/hivemind/views/store.py:77:def create_view(conn, *, view_id, object_id, object_kind, kind, looks_at, question, due_day, year, rungs, seq, input_id, created_at):
+src/hivemind/views/store.py:79:           question=question, due_day=due_day, year=year, created_seq=seq, created_from_input=input_id, created_at=created_at)
+src/hivemind/views/store.py:206:    conn = sqlite3.connect(f'file:{os.path.abspath(path)}?mode=ro', uri=True)
+src/hivemind/views/store.py:291:def add_evidence(conn, *, evidence_id, quote, one_line, speaker, original_who, original_day, tier, event_time, seq, input_id):
+src/hivemind/views/store.py:293:           original_day=original_day, tier=tier, event_time=event_time, created_seq=seq, created_from_input=input_id)
+src/hivemind/views/store.py:296:def add_source(conn, evidence_id, input_id, category, publication_day, location, seq):
+src/hivemind/views/store.py:297:    insert(conn, 'evidence_sources', evidence_id=evidence_id, input_id=input_id, category=category, publication_day=publication_day, location=location, seq=seq)
+src/hivemind/views/store.py:326:    record['sources'] = [dict(s) for s in conn.execute('select input_id, category, publication_day, location from evidence_sources where evidence_id=? order by id', (evidence_id,))]
+src/hivemind/views/store.py:354:def mark_step(conn, input_id, sequence_no, step, result, reason, publication_day, at):
+src/hivemind/views/store.py:355:    insert(conn, 'processing_steps', input_id=input_id, sequence_no=sequence_no, step=step, result=result, reason=reason, publication_day=publication_day, at=at)
+src/hivemind/views/store.py:358:def last_step(conn, input_id):
+src/hivemind/views/store.py:359:    row = conn.execute('select step, result, sequence_no from processing_steps where input_id=? order by id desc limit 1', (input_id,)).fetchone()
+src/hivemind/views/store.py:363:def is_processed(conn, input_id):
+src/hivemind/views/store.py:364:    return bool(conn.execute("select 1 from processing_steps where input_id=? and step='handed_over' and result='ok'", (input_id,)).fetchone())
+src/hivemind/views/store.py:378:    row = conn.execute('select input_id, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+src/hivemind/views/store.py:380:        return row['publication_day'], row['input_id']
+src/hivemind/views/store.py:381:    row = conn.execute('select s.publication_day, s.input_id from evidence_links l join evidence_sources s on s.evidence_id=l.evidence_id where l.view_id=? order by s.id desc limit 1', (view_id,)).fetchone()
+src/hivemind/views/store.py:382:    return (row['publication_day'], row['input_id']) if row else (None, None)
+src/hivemind/views/store.py:396:def add_group(conn, *, group_id, name, scope, seq, input_id, object_ids=(), aliases=()):
+src/hivemind/views/store.py:399:    insert(conn, 'thesis_groups', group_id=group_id, name=name, scope=scope, aliases=json.dumps(list(aliases), ensure_ascii=False), created_seq=seq, created_from_input=input_id)
+src/hivemind/views/store.py:403:def add_member(conn, group_id, view_id, seq, input_id, basis='model'):
+src/hivemind/views/store.py:407:    insert(conn, 'thesis_group_members', group_id=group_id, view_id=view_id, seq=seq, input_id=input_id, basis=basis)
+src/hivemind/extraction.py:201:    parts.append(f'【信息】编号 {item["input_id"]}，类别 {category}，作者 {item.get("publisher")}（{item.get("publisher_type")}），发布日 {item.get("publication_day")}，标题：{item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
+src/hivemind/extraction.py:262:    parts.append(f'[Item] id {item["input_id"]}, category {category}, author {item.get("publisher")} ({item.get("publisher_type")}), published {item.get("publication_day")}, title: {item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
+src/hivemind/extraction.py:269:def build_prompt(item, text, shown_views, universe, version='v1', shown_groups=()):
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/views/jev_matching.py | sed -n '112,180p' && nl -ba poc/concurrency_study/runner.py | sed -n '55,160p' && sed -n '145,162p' src/hivemind/extraction.py && sed -n '1,85p' src/hivemind/testdb.py && rg -n 'universe\\.|\\[["'^]]+'"\\] =|setdefault|append' src/hivemind/extraction.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   112	    return f'{top[0]} {top[1]:.2f}'
+   113	
+   114	
+   115	def _answers(archive, cfg, jobs, workers, transport):
+   116	    """Ask independent questions; equal concurrent requests share one archived result."""
+   117	    if not isinstance(workers, int) or isinstance(workers, bool) or workers < 1:
+   118	        raise ValueError('Jev workers must be a positive integer')
+   119	
+   120	    def ask(job):
+   121	        state, questions = job
+   122	        return jev.ask(archive, cfg, cfg.matching, state, questions, 'match', transport=transport)
+   123	
+   124	    if workers == 1:
+   125	        return [ask(job) if job[1] else None for job in jobs]
+   126	    results, futures, used = [], {}, set()
+   127	    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+   128	        keys = []
+   129	        for state, questions in jobs:
+   130	            if not questions:
+   131	                keys.append(None)
+   132	                continue
+   133	            _, key = model.request_identity(jev.request_for(cfg.matching, state, questions))
+   134	            keys.append(key)
+   135	            if key not in futures:
+   136	                futures[key] = pool.submit(ask, (state, copy.deepcopy(questions)))
+   137	        for key in keys:
+   138	            if key is None:
+   139	                results.append(None)
+   140	                continue
+   141	            answer = futures[key].result()
+   142	            # A later logical use is exactly what a serial archive lookup would return.
+   143	            results.append(dataclasses.replace(answer, cached=True, cost_usd=0.0) if key in used else answer)
+   144	            used.add(key)
+   145	    return results
+   146	
+   147	
+   148	def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None, workers=1):
+   149	    data = {'candidates': [], 'evidence': []}
+   150	    total = Decision(data, 0, '', True, 0, 0, 0, 0.0)
+   151	    shas = []
+   152	    jobs, candidate_jobs, evidence_jobs = [], [], []
+   153	    # All database reads and request construction stay on the coordinator thread.
+   154	    for c in candidates:
+   155	        listed = list(dict.fromkeys(list(lists.candidate_lists.get(c['id'], [])) + [v['view_id'] for v in shown_views]))
+   156	        questions = {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
+   157	        groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
+   158	        for g in groups:
+   159	            questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
+   160	        candidate_jobs.append((c, listed, groups, len(jobs)))
+   161	        jobs.append((candidate_state(c, evidence), questions))
+   162	    for e in evidence:
+   163	        pairs = [(e['id'], v) for v in e['links'] if (e['id'], v) in lists.evidence_lists]
+   164	        if not pairs:
+   165	            continue
+   166	        questions = {f'piece__{v}__{x}': piece_question(matching.describe_evidence(conn, x, english=True)) for _, v in pairs for x in lists.evidence_lists[(e['id'], v)]}
+   167	        said_day = e.get('original_day') or item['publication_day']
+   168	        evidence_jobs.append((e, pairs, said_day, len(jobs)))
+   169	        jobs.append((piece_state(e, said_day), questions))
+   170	    replies = _answers(archive, cfg, jobs, workers, transport)
+   171	
+   172	    def answers_for(index):
+   173	        answer = replies[index]
+   174	        if answer is None:
+   175	            return {}
+   176	        total.cost_usd += answer.cost_usd
+   177	        total.input_tokens += answer.input_tokens
+   178	        total.output_tokens += answer.output_tokens
+   179	        total.prompt_chars += answer.prompt_chars
+   180	        total.cached = total.cached and answer.cached
+    55	            raise ValueError('use an existing absolute source path and an absolute manifest directory')
+    56	        self.extraction_workers, self.jev_workers = extraction_workers, jev_workers
+    57	        self.events = []
+    58	
+    59	    def _manifest(self, conn, cfg, universe, items, day):
+    60	        self.manifest_dir.mkdir(parents=True, exist_ok=True)
+    61	        path = self.manifest_dir / f'day-{day}.json'
+    62	        metadata = {'day': day, 'environment': environment_key(cfg, universe), 'runtime': runtime_key(),
+    63	                    'source': digest(self.source_path), 'extraction_workers': self.extraction_workers,
+    64	                    'jev_workers': self.jev_workers}
+    65	        entries = [{'input_id': item['input_id'], 'seq': route.sequence_no, 'hash': item_key(item)} for item, route in items]
+    66	        if not path.exists():
+    67	            if conn.execute("select 1 from processing_steps where publication_day=? and step in ('extracted','written','handed_over') limit 1", (day,)).fetchone():
+    68	                raise ValueError('cannot adopt a partially processed day without its concurrency manifest')
+    69	            with path.open('x', encoding='utf-8') as handle:
+    70	                json.dump(dict(metadata, inputs=entries), handle, sort_keys=True)
+    71	        try:
+    72	            saved = json.loads(path.read_text())
+    73	        except (OSError, ValueError) as error:
+    74	            raise ValueError('unreadable concurrency manifest; refusing to guess its inputs') from error
+    75	        if {k: saved.get(k) for k in metadata} != metadata:
+    76	            raise ValueError('concurrency manifest source, configuration or runtime changed')
+    77	        remaining = [entry for entry in saved['inputs'] if not store.is_processed(conn, entry['input_id'])]
+    78	        if remaining != entries:
+    79	            raise ValueError('concurrency manifest input order or content changed')
+    80	        return metadata
+    81	
+    82	    def __call__(self, conn, archive, cfg, universe, items, *, day, transport=None, log=print):
+    83	        if transport is None:
+    84	            raise ValueError('offline concurrency POC requires an explicit transport; live cost reservation is not implemented')
+    85	        if cfg.matching.engine != 'jev' and self.jev_workers != 1:
+    86	            raise ValueError('parallel matching is only implemented for Jev')
+    87	        metadata = self._manifest(conn, cfg, universe, items, day)
+    88	        frozen_cfg, frozen_universe = copy.deepcopy(cfg), copy.deepcopy(universe)
+    89	        pending, prepared_futures, next_index = {}, [], 0
+    90	        pool = concurrent.futures.ThreadPoolExecutor(max_workers=self.extraction_workers)
+    91	
+    92	        def fill():
+    93	            nonlocal next_index
+    94	            while next_index < len(items) and len(pending) < self.extraction_workers:
+    95	                item, route = items[next_index]
+    96	                next_index += 1
+    97	                if route.resume_from and route.resume_from != 'extracted':
+    98	                    continue  # The authoritative saved handover is owned by normal recovery.
+    99	                objects = [o['value'] for o in item.get('object_identifiers') or [] if frozen_universe.has(o['value'])]
+   100	                shown = copy.deepcopy(store.views_for_prompt(conn, objects))
+   101	                groups = copy.deepcopy(store.groups_for_prompt(conn, objects, item.get('title') or ''))
+   102	                owned_item = copy.deepcopy(item)
+   103	                key = extraction_key(frozen_cfg, owned_item, owned_item['text'], shown, frozen_universe, groups)
+   104	                future = pool.submit(extraction.extract, archive, frozen_cfg, owned_item, owned_item['text'], shown,
+   105	                                     frozen_universe, shown_groups=groups, transport=transport)
+   106	                pending[item['input_id']] = (key, item_key(owned_item), future)
+   107	                prepared_futures.append((item['input_id'], future))
+   108	                self.events.append({'input_id': item['input_id'], 'event': 'prepared', 'request': key})
+   109	
+   110	        def accepted_extraction(current_archive, current_cfg, item, text, shown, current_universe, *, shown_groups=(), transport=None):
+   111	            prior_key, source_key, future = pending[item['input_id']]
+   112	            def validate_inputs():
+   113	                if (environment_key(current_cfg, current_universe) != metadata['environment']
+   114	                        or environment_key(cfg, universe) != metadata['environment'] or runtime_key() != metadata['runtime']):
+   115	                    raise ValueError('configuration, universe or runtime changed during the day')
+   116	                if item_key(item) != source_key or text != item['text']:
+   117	                    raise ValueError('source changed after preparation')
+   118	            validate_inputs()
+   119	            current_key = extraction_key(current_cfg, item, text, shown, current_universe, shown_groups)
+   120	            if current_key == prior_key:
+   121	                answer = future.result()
+   122	                validate_inputs()
+   123	                if answer.request_sha256 != current_key:
+   124	                    raise ValueError('prepared extraction does not match its validated request')
+   125	                self.events.append({'input_id': item['input_id'], 'event': 'reused', 'request': current_key})
+   126	                return answer
+   127	            future.cancel()
+   128	            self.events.append({'input_id': item['input_id'], 'event': 'stale', 'before': prior_key, 'request': current_key})
+   129	            answer = extraction.extract(current_archive, current_cfg, item, text, shown, current_universe,
+   130	                                        shown_groups=shown_groups, transport=transport)
+   131	            validate_inputs()
+   132	            return answer
+   133	
+   134	        try:
+   135	            fill()
+   136	            for item, route in items:
+   137	                result = rounds.run(conn, archive, frozen_cfg, frozen_universe, item, route.sequence_no, resume_from=route.resume_from,
+   138	                                    transport=transport, log=log, extractor=accepted_extraction, matching_workers=self.jev_workers)
+   139	                self.events.append({'input_id': item['input_id'], 'event': 'failed' if result.failed else 'accepted'})
+   140	                yield result
+   141	                if result.failed:
+   142	                    return
+   143	                pending.pop(item['input_id'], None)
+   144	                fill()
+   145	        finally:
+   146	            # Running calls may still archive a response; none can become a handover here.
+   147	            for _, _, future in pending.values():
+   148	                future.cancel()
+   149	            pool.shutdown(wait=True, cancel_futures=True)
+   150	            for input_id, future in prepared_futures:
+   151	                if not future.cancelled() and future.exception() is not None:
+   152	                    self.events.append({'input_id': input_id, 'event': 'speculative_error', 'error': type(future.exception()).__name__})
+    cost_usd: float
+    new_groups: list = dataclasses.field(default_factory=list)      # the declared groups a kept candidate cites: {id, name, scope}
+
+
+SELF_PUBLISHER_TYPE = 'self'      # the owner's own memo (02-classification T8, D59): its judgements are candidates without evidence
+
+
+def _read(name):
+    with open(config.prompt_path(name), encoding='utf-8') as handle:
+        return handle.read()
+
+
+def _categories(version):
+    return json.loads(_read(f'categories-{version}.json'))
+
+
+def normalise(text):
+    return re.sub(r'\s+', ' ', text).strip().lower()
+"""The test database: the corpus items.sqlite built by poc/corpus/scripts/assemble.py, read as a stream in
+publication order. This is "the team's own database" of D7: the system keeps no copy of the material, only the
+processing record; an item's text is read from here when it is processed.
+
+Order inside a day (the arrival order upstream would give): company documents (filings, transcripts, releases),
+official material, then news by published_at. Only items with feed = 1 (an original, whole) or a copy of one are
+streamed; the rest stay in the database for the review.
+"""
+import json
+import sqlite3
+
+def open_db(path):
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def feed(conn, from_day, until_day):
+    """Yield items with from_day <= publication_day <= until_day in processing order."""
+    rows = conn.execute(
+        "select * from items where publication_day >= ? and publication_day <= ? and (feed = 1 or copy_of is not null) "
+        "order by publication_day, case klass when '公司材料' then 0 when '官方材料' then 1 else 2 end, "
+        "coalesce(published_at, ''), rowid", (from_day, until_day))
+    for row in rows:
+        item = dict(row)
+        item['object_identifiers'] = json.loads(item.get('object_identifiers') or '[]')
+        yield item
+
+
+def count(conn, from_day, until_day):
+    return conn.execute("select count(*) from items where publication_day >= ? and publication_day <= ? and feed = 1", (from_day, until_day)).fetchone()[0]
+117:    candidate['properties']['group_refs'] = {'type': 'array', 'items': {'type': 'string', 'pattern': pattern}}
+118:    candidate['required'].append('group_refs')
+121:        group_fields['aliases'] = {'type': 'array', 'items': {'type': 'string'}}
+122:    schema['properties']['new_groups'] = {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': list(group_fields), 'properties': group_fields}}
+123:    schema['required'].append('new_groups')
+169:        entries = universe.watch_list(o) if hasattr(universe, 'watch_list') else []
+172:            watched.append(f'  - {o}: ' + sep.join(e['measure'] + (f"[{e['scope']}]" if e.get('scope') else '') + (f"({e['event_type']})" if e.get('event_type') else '') for e in entries))
+177:    themes = '\n'.join(f'  - {theme_id}：{name}' for theme_id, name in universe.theme_list(legacy=True))
+178:    fiscal = '\n'.join(note for note in (universe.fiscal_note(o, item['publication_day']) for o in objects) if note)
+188:            entries = universe.watch_list(o) if hasattr(universe, 'watch_list') else []
+190:                watched.append(f'  - {o}：' + '；'.join(e['measure'] + (f"[{e['scope']}]" if e.get('scope') else '') + (f"({e['event_type']})" if e.get('event_type') else '') for e in entries))
+192:            parts.append('【研究参考】已有的量和范围（measure[scope](event_type)）。含义相同可用现有名称；清单外的重要问题照常提出，保留实际范围：\n' + '\n'.join(watched))
+197:            lines.append(f'  - {v["view_id"]}（{v["object_id"]}，看的是「{v["looks_at"]}」，到期 {v["due_day"]}）：{v["question"]}{deps}')
+198:        parts.append('【这些对象已有的观点】证据连到这些观点上，用它们的编号；它们管不到的才写候选观点：\n' + '\n'.join(lines))
+200:        parts.append('【这些对象已有的观点】还没有。该开的都写成候选观点。')
+201:    parts.append(f'【信息】编号 {item["input_id"]}，类别 {category}，作者 {item.get("publisher")}（{item.get("publisher_type")}），发布日 {item.get("publication_day")}，标题：{item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
+202:    parts.append('按 JSON schema 交出 evidence 和 candidates。候选观点的 evidence_ids 填它自己的证据编号；证据的 links 填已有观点编号或这次候选观点的编号（如 c1）。没有可抽的就都交空数组。')
+214:            out.append(entry['view_id'])
+216:            out.append(f'(waiting for the {entry["wait_year"]} thesis on chain {entry["wait_chain_view_id"]})')
+218:            out.append(f'（等 {entry["wait_chain_view_id"]} 这条链上 {entry["wait_year"]} 年的那条）')
+231:        lines.append(f'  - {g["group_id"]} "{g["name"]}": {g["scope"]}' + (f' (also: {names})' if names else '') + (f' — members: {members}' if members else ''))
+238:    themes = '\n'.join(f'  - {theme_id}: {name}' for theme_id, name in universe.theme_list())
+239:    fiscal = '\n'.join(note for note in (universe.fiscal_note(o, item['publication_day'], english=True) for o in objects) if note)
+249:        parts.append('[Research reference] Existing quantities and scopes (measure[scope](event_type)). Reuse a name only when the meaning is the same; '
+256:            lines.append(f'  - {v["view_id"]} ({v["object_id"]}, focus "{v["looks_at"]}", due {v["due_day"]}): {v["question"]}{tail}')
+257:        parts.append('[Existing theses of these objects] Link evidence to them by id; write a candidate thesis only for a question they do not cover:\n' + '\n'.join(lines))
+259:        parts.append('[Existing theses of these objects] None yet. Write every thesis that should open as a candidate.')
+261:        parts.append(groups_block(shown_groups))
+262:    parts.append(f'[Item] id {item["input_id"]}, category {category}, author {item.get("publisher")} ({item.get("publisher_type")}), published {item.get("publication_day")}, title: {item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
+263:    parts.append('Return evidence and candidates per the JSON schema. A candidate\'s evidence_ids are its own evidence ids; an evidence item\'s links are existing thesis ids '
+378:            dropped_refs.append((c['id'], f'candidate group: {problem}'))
+380:        checked['candidates'].append(c)
+400:            dropped.append((c['id'], f'candidate ladder: {problem}'))
+403:        if QUARTERLY.search(c['looks_at'] + ' ' + c['question']) and c['kind'] == 'asset':
+404:            dropped.append((c['id'], 'quarterly number: evidence, not a view (06-views ladder rule 6)'))
+408:            dropped.append((c['id'], f'year {c["year"]} is beyond next year: not opened (06-views 不开)'))
+411:            dropped.append((c['id'], f'due_day not a date: {c["due_day"]!r}'))
+414:            dropped.append((c['id'], f'due_day {c["due_day"]} not after the item'))
+419:                dropped.append((c['id'], f'candidate ladder bounds: {problem}'))
+422:                object_id = universe.resolve(c['object']) or c['object']
+423:                scope, source = universe.scope_and_source(object_id, c['measure'], c.get('scope', ''), c.get('event_type', 'n/a'))
+426:                    period = universe.fiscal_period(object_id, c.get('year', ''), bare_is_calendar=english)                             # and the period of a yearly number
+435:                dropped.append((c['id'], 'invalid period: expected real dates with start <= end'))
+437:        candidates.append(c)
+446:            dropped.append((e['id'], 'quote not in item'))
+450:            dropped.append((e['id'], f'links to nothing shown: {e["links"]}'))
+456:            dropped.append((e['id'], f'same quote as {first["id"]}; merged'))
+459:        by_quote[quote] = e
+460:        evidence.append(e)
+466:            dropped.append((c['id'], 'candidate without surviving evidence'))
+468:        final_candidates.append(dict(c, evidence_ids=ids))
+470:        e['links'] = [l for l in e['links'] if l in shown_ids or any(c['id'] == l for c in final_candidates)]
+
+codex
+Found one serious failure-handling bug.
+
+- **[P2] Queued Jev requests still start after the batch fails.** In [jev_matching.py:127](/Users/lchingen/hivemind/src/hivemind/views/jev_matching.py:127), `_answers()` submits every job upfront. If `future.result()` raises, the executor’s context manager waits for **all submitted work**, without cancelling queued futures. With two workers and twenty requests, failure of the first request can still cause the remaining queued requests to run before the item reports failure. This violates D172’s rule to cancel pending work and drain only requests already running, and can substantially delay stopping the day. Cancel pending futures on failure before waiting for running calls. The existing partial-failure test uses two jobs with two workers, so it cannot catch this queued-work case.
+tokens used
+51,139
+Found one serious failure-handling bug.
+
+- **[P2] Queued Jev requests still start after the batch fails.** In [jev_matching.py:127](/Users/lchingen/hivemind/src/hivemind/views/jev_matching.py:127), `_answers()` submits every job upfront. If `future.result()` raises, the executor’s context manager waits for **all submitted work**, without cancelling queued futures. With two workers and twenty requests, failure of the first request can still cause the remaining queued requests to run before the item reports failure. This violates D172’s rule to cancel pending work and drain only requests already running, and can substantially delay stopping the day. Cancel pending futures on failure before waiting for running calls. The existing partial-failure test uses two jobs with two workers, so it cannot catch this queued-work case.

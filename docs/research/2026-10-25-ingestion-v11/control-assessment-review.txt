@@ -1,0 +1,24 @@
+**这个 control 必须停止，不能进入 concurrent-1。** 核心计划已经保留，但新增了 3 条不符合直接挂接要求的链接。例如，“2028 年客户计划扩建机房”可以支持该项目的执行判断，却不能直接成为 NVIDIA FY2027 收入的证据。
+
+登记标准明确禁止用 Rubin 投产或泛化的 NVIDIA 收入问题替代 NAVER 部署，并要求后续报道回到适当的已有问题；出现实质错误信息就停止。[plan.md:13–23](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:13)
+
+核对 [views.sqlite](/Users/lchingen/hivemind/poc/reports/2026-10-25-ingestion-v11/control-1/views.sqlite) 的全部 6 条新增链接，以及 [archive.sqlite](/Users/lchingen/hivemind/poc/reports/2026-10-25-ingestion-v11/control-1/archive.sqlite) 的原始回答后：
+
+| 记录 | 判断 | 理由 |
+|---|---|---|
+| **e50、e51 → v13** | 合格 | 签署意向书、首座 SK 工厂计划于 2027 年上线，以及 DSX、Rubin、HBM4 信息都有来源，直接对应项目。 |
+| **e52 → v14** | 合格 | 正确保留 NAVER 从 55MW 扩至 200MW、目标 2028 年的计划。 |
+| **e52 → v3，link 63** | **错误的间接链接** | 后续报道新增了 FY2027 收入链接。项目规模说明潜在需求，但来源没有把这项 2028 年扩建连接到 FY2027 的采购、交付或收入。原有正确的 v14 链接不能抵消这一错误。 |
+| **e53 → v7，link 62** | **错误的间接链接** | NAVER 计划采用 Rubin，不直接回答 NVIDIA 是否在 **2026 年底前开始量产出货**。judgement 27 自己也称其为 “indirect”，并承认它没有实质改变出货判断。它直接属于 NAVER 项目。 |
+| **e54 → v3，link 64** | **不合格** | $500-billion-plus 是涵盖基础设施和内存合作的计划规模，不是 NVIDIA FY2027 销售额。重述的 SK 部署内容应回到相关项目问题；新增合作信息可以另行评估，不能靠金额巨大就成为当期收入证据。 |
+
+这里**没有要求证据必须复述收入数字**。有明确商业联系的订单、采购安排或交付进展，即使没有金额，也可能直接支持收入判断。本次缺的是连接到所问业务结果和时期的依据。[role-v11.txt:22–23](/Users/lchingen/hivemind/src/hivemind/prompts/role-v11.txt:22)、[05-extraction.md:49](/Users/lchingen/hivemind/docs/prd/05-extraction.md:49)、[06-views.md:126–127](/Users/lchingen/hivemind/docs/prd/06-views.md:126)
+
+其余标准应分开看：
+
+- **忠实状态通过。** e51–e54 都保留为公司计划；judgement 24–27 明确保留不确定性。这里的 **Yes 是方向判断，不是宣称已经完成**。
+- **重复处理部分通过。** match_record 14 将 NAVER 后续报道识别为 e52 的重复，source 81 追加来源，没有另造一份证据。但它同时新增错误的 v3 链接。SK 内容没有回到 v13；不过，e54 的合作金额与原有 e50/e51 并非完全相同陈述，不能仅凭两条记录就断言重复计算了同一证据。
+- **项目身份通过。** v13、v14 分开；SK 加入 Rubin rollout 群组合理，没有把两个客户项目混成一个。
+- **次要遗漏另记。** 后续报道的“约 100,000 GPUs”进入了原始抽取，却没有进入最终 e52 摘要或引文。这是新增规模细节的保留不足，不应单凭少了这个数字判失败。
+
+[结果](/Users/lchingen/hivemind/poc/reports/2026-10-25-ingestion-v11/control-1/result.json) 的机械审计无错误，但不能替代来源判断。**停止的确定理由是错误直接挂接，不是 Yes 标签、群组数量或少抄一个数字。** 本次仅作只读评估，未修改文件、调用外部服务或启动下一轮。

@@ -1,0 +1,7 @@
+No serious findings.
+
+The ten-job/two-worker test catches the original mechanism: one request stays blocked while another fails; the old executor would then start queued requests, triggering `unwanted` and exceeding two calls.
+
+The current code bounds submissions, checks completed futures before refill, and cancels/drains on failure. Duplicate requests still share one answer, results retain input order, and default one-worker calls remain serial. Day cost uses the archive delta.
+
+Static review only; no tests or provider calls run.

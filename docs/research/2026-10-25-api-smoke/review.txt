@@ -1,0 +1,11 @@
+One blocking design gap: **cancellation has no defined transition.**
+
+For example, if the user cancels while two calls are running and more work is queued, draining the executor can allow queued calls to start unless admission closes first.
+
+- [plan.md:26–32](/Users/lchingen/hivemind/docs/research/2026-10-25-api-smoke/plan.md:26) defines admission, errors, crashes and draining, but does not specify cancellation or what happens to requests not yet sent.
+- [AGENTS.md:72–76](/Users/lchingen/hivemind/AGENTS.md:72) requires these transitions before implementation. [D172](/Users/lchingen/hivemind/docs/DECISIONS.md:2371) explicitly distinguishes cancelling pending work from draining running calls.
+- **Required rule:** cancellation closes admission before draining, prevents unsent requests from starting, records the cancelled outcome, and retains reservations for sent requests whose usage remains unknown. Include a fake-transport check for this case.
+
+I found no other serious blocker within the requested scope. The plan keeps the smoke isolated, distinguishes ordinary concurrent requests from OpenAI Batch, and explicitly bypasses the existing transports’ automatic retries.
+
+Read only; no edits or paid calls.

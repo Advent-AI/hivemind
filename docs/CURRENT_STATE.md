@@ -1,12 +1,12 @@
 # Current state
 
-As of October 25, 2026; decisions through D170, plus isolated experiment D177. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
+As of October 25, 2026; decisions through D180. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
 
 ## Status
 
-An isolated prompt candidate is published for review: `role-v11` and `poc-v24-admission-test` change only T6 extraction instructions. The [NAVER comparison](../poc/reports/2026-10-25-naver-admission/results.md) retained the planned 200 MW / 2028 project in 3/3 fresh treatments versus 2/3 controls. The default remains v23/T6-v10; no schema or horizon-policy change is adopted. The candidate needs wider source validation before adoption. The paid harness and database traces remain in the original experimental worktree; this branch includes the outputs and versioned prompt only.
+Sequential request-construction cleanup was committed and pushed separately as [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) on `cleanup/sequential-requests`. It preserves all 3,595 archived request identities; 123 sequential product/corpus tests pass. It is not merged into `main`; experimental changes remain local.
 
-Sequential request construction was centralized without changing requests, schemas, cache identity or processing order. [Validation](research/2026-10-25-sequential-cleanup/README.md): all 3,595 preserved request identities match and all 123 product/corpus tests pass. This maintenance does not enable concurrency or change extraction eligibility.
+The tested NAVER prompt candidate and its six-sample evidence are committed and pushed as [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) on `fix/thesis-admission-v11`, based on the sequential cleanup. That branch contains no concurrent runtime. It is not merged or enabled by default.
 
 The English pipeline runs end to end. Extraction v10 (`role-v10`, `categories-v10`, `gpt-6-luna`) reads each item whole and declares groups for ongoing matters (D163–D166); matching runs on TypeSafe's Jev `jev-1.14.0` by default (D169, `poc/config/poc-v23.json`), with the generative matcher kept as the configured alternative (`poc-v23-llm`); the writer owns the replacement and succession rules (D167, D168); judging runs once a day before pull mode (D63).
 
@@ -37,9 +37,17 @@ The [pipeline overview](poc/pipeline-plan.md) separates the implementation from 
 
 Pull mode and the final verdict remain earlier drafts to redesign together. The decided rule freezes the current state and reasons at the due date and closes the thesis. Upstream supply and human-review handling remain deferred.
 
-## Next task: validate admission beyond the NAVER case
+## Parallel POC: implementation-plan execution completed
 
-Validate the unchanged candidate instruction on additional stored-source contexts before default adoption. One-source success does not establish general extraction quality. Broader concurrency investigations and their experimental runtime are outside this branch; no batching or regrouping change is included. No further paid run is launched by this status update.
+D180 followed the existing [implementation plan](research/2026-10-25-day-batch-review/implementation.md), without changing extraction semantics. The [full result](../poc/reports/2026-10-25-full-day-parallel-r4/results.md) covers all 53 July 27 inputs. Sequential and eight-worker recorded-response execution produce identical views, rungs, evidence, sources, links, dependencies, succession, groups, memberships and judgments. All 106 accepted handovers match their exact current-prefix requests and archived answers; 10 stale preparations were recomputed. A nonempty-handover mutation fails the audit. The full 156-test suite passes.
+
+A separate live comparison uses five identical Jev requests and one fixed snapshot, with three serial and three parallel samples. Median time is 3.959 versus 1.185 seconds (3.340x); actual concurrent provider peak is five. One borderline evidence decision varies in two parallel samples; the identical request's raw probabilities cross the existing threshold, and the other five decisions agree. The result records this variation and does not claim semantic stability or whole-pipeline 10x.
+
+The source fixture was completed under current code because historical matching requests predate D168's criterion correction. Exact cached calls were reused; only missing calls were sent. This fixture-completion time is not reported as a latency control. All 138 protected database files are unchanged. Across the earlier run and this continuation there are 140 of the allowed 144 attempts; $0.088577 in conservative known charges and the original $0.517 unknown-use reservation, total held $0.605577 under the unchanged $1.50 cap. No prompt, matching rule, threshold, default runtime or working library was changed.
+
+## Next task
+
+Measure fresh end-to-end latency on the complete fixed workload before claiming a whole-pipeline speedup or promoting the mode. Keep the full-day structural proof and the live matching-throughput proof separate. Existing extraction findings remain recorded; they are not a new prerequisite work order for the concurrency task. No further paid call is launched by this status update.
 
 ## Previous experiments
 
