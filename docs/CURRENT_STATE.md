@@ -4,6 +4,8 @@ As of October 25, 2026; decisions through D170. Governing design: `docs/system-d
 
 ## Status
 
+Sequential request construction was centralized without changing requests, schemas, cache identity or processing order. [Validation](research/2026-10-25-sequential-cleanup/README.md): all 3,595 preserved request identities match and all 123 product/corpus tests pass. This maintenance does not enable concurrency or change extraction eligibility.
+
 The English pipeline runs end to end. Extraction v10 (`role-v10`, `categories-v10`, `gpt-6-luna`) reads each item whole and declares groups for ongoing matters (D163–D166); matching runs on TypeSafe's Jev `jev-1.14.0` by default (D169, `poc/config/poc-v23.json`), with the generative matcher kept as the configured alternative (`poc-v23-llm`); the writer owns the replacement and succession rules (D167, D168); judging runs once a day before pull mode (D63).
 
 Measured on two arms with the same extraction over the seed (NVDA, February 25 to July 23), the week of July 24–31 and August 1–15, scored per state against golds read from the texts (log rows 41–49, `poc/reports/2026-10-25-benchmark-v23/`): Jev matching equals the generative call on evidence and candidates (merge 7/9 vs 7/7, new 82/82 vs 70/71, evidence repeat and new within a point or two), groups far better (required members 35/38 vs 18/28), and matches at 45% lower cost and 4.8 times the speed. Its two weak states were root-caused and corrected in D168, measured by re-sending the stored requests: wrong replacements 17 to 1, successions 0/3 to 3/3. Evidence retrieval is measured apart: recall@10 36/36 and 46/49. The whole run cost about $1 per arm at published rates.

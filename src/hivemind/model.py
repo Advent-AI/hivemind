@@ -187,11 +187,16 @@ def check_schema(value, schema, path='$'):
     return []
 
 
+def request_identity(request):
+    """The exact serialized request and its archive key, shared by callers and validation."""
+    encoded = json.dumps(request, sort_keys=True, ensure_ascii=False)
+    return encoded, hashlib.sha256(encoded.encode('utf-8')).hexdigest()
+
+
 def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, transport=None):
     provider = cfg.provider
     request = build_request(setting, system, user, schema, schema_name, provider)
-    request_json = json.dumps(request, sort_keys=True, ensure_ascii=False)
-    sha = hashlib.sha256(request_json.encode('utf-8')).hexdigest()
+    request_json, sha = request_identity(request)
     hit = archive.lookup(sha)
     prompt_chars = len(system) + len(user)
     if hit:

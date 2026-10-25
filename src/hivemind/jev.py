@@ -2,7 +2,6 @@
 questions}`; each question is `noul` (yes/no → a probability), `choice` (labelled options → `choice`, `probabilities`,
 `confidence`) or `score`. Every call is archived in `model_calls` like every other model call, keyed by the request's
 digest, so a byte-identical request is served from the archive; input is priced from `model.PRICES`, output is free."""
-import hashlib
 import json
 import os
 import time
@@ -77,11 +76,15 @@ def validate(answers, questions):
     return problems
 
 
+def request_for(setting, state, questions):
+    """Build the Jev payload used for requests and archival identity."""
+    return {'model': setting.model, 'state': state, 'questions': questions}
+
+
 def ask(archive, cfg, setting, state, questions, purpose, *, transport=None):
     """One Jev request, archived; returns model.Answer whose data is the `answers` map."""
-    request = {'model': setting.model, 'state': state, 'questions': questions}
-    request_json = json.dumps(request, sort_keys=True, ensure_ascii=False)
-    sha = hashlib.sha256(request_json.encode('utf-8')).hexdigest()
+    request = request_for(setting, state, questions)
+    request_json, sha = model.request_identity(request)
     prompt_chars = len(request_json)
     hit = archive.lookup(sha)
     if hit:

@@ -311,12 +311,20 @@ QUARTERLY = re.compile(r'(\bQ[1-4]\b|第[一二三四1-4]季|季度|\bquarter(?!
                        r'|\bhalf[- ]year\s+(?:revenue|sales|net sales))', re.I)
 
 
-def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
+def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
+    """Build the setting, complete prompt and schema without making a call."""
     setting = cfg.extraction_setting(item['category'])
     version = setting.prompt_version.rpartition('-')[2]
     system, user = build_prompt(item, text, shown_views, universe, version, shown_groups)
     group_ids = [g['group_id'] for g in shown_groups]
-    answer = model.call(archive, cfg, setting, system, user, schema_for(version, group_ids), 'extraction', 'extract', transport=transport)
+    return setting, system, user, schema_for(version, group_ids)
+
+
+def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
+    setting, system, user, schema = request_for(cfg, item, text, shown_views, universe, shown_groups)
+    version = setting.prompt_version.rpartition('-')[2]
+    group_ids = [g['group_id'] for g in shown_groups]
+    answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
     evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version), shown_group_ids=group_ids)
     return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd, new_groups)
 
