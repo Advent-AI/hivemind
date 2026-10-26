@@ -1,6 +1,6 @@
 # Current state
 
-As of October 26, 2026; decisions through D191. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
+As of October 26, 2026; decisions through D192. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
 
 ## Status
 
@@ -48,6 +48,8 @@ Fifteen consecutive days (August 1–15, 221 items) with every call answered by 
 What remains of the time is not scheduling: items that depend on the item just before them (~45–60 s), daily judging (D63), and each item's two matching phases in order (~17 s). Ten times end to end on this day would need those to shrink.
 
 ## Next task
+
+Extraction wording is exhausted (D192: v13 and v14 both failed their probes in opposite directions; v12 stays). The remaining levers for extraction quality are structural and Alex's call: the current view shown in block 5; three extraction samples with a majority vote on candidates by typed key; a first-contact pass. Then the D191 theme block in judging.
 
 Alex's choice among the trace review's mechanisms, in the proposed order: (1) matching asks whether a same-theme, same-measure, same-year candidate is a separate decision or another estimate of the shown question (06-views, Jev relation option); (2) a theme candidate names the asset thesis it feeds, schema-enforced (D187); (3) role v13: the labeller's tests instead of category lists, the first-contact rule, quarterly statements as evidence, net shorter than v12; (4) the current view shown in block 5 as an A/B; (5) the daily duplicate check (pull mode). Each with a stored-data proof, three fresh samples on the decisive cases, then one run over the same window scored by the same scorer. Open after it: a matching step that compares a candidate first with the thesis it names in `folds_into` (06-views, its own decision); D186 (rung labels) and D187 (private-company objects) as their own slices; the human pass on the gold (two labellers, agreement reported). Also still Alex's choice whether to merge `feat/parallel-day` (pushed after its code review, D183) into `main`. No paid run is open. Open for Alex, not started: whether to measure, on stored data at no cost, how much a day-start read followed by an ordered clean-up recovers of what day-start reading loses (D171: 73 of 797 evidence items), which would change D159's reading rule.
 

@@ -217,3 +217,23 @@ in the Goldman article, which the earlier 3-sample probe merged in 2 of 3), so i
 
 A first version of this comparison without the id translation lost 4 gold cases to shifted view ids in the recorded links;
 that reading is kept in `pinned-arm-v26-par.md` as the record of why the translation exists.
+
+## Role v13 and v14 probes (D192): wording is exhausted
+
+Probe: the gold's 20 items re-sent with the stored v12 user message and the candidate role's system prompt and schema, three
+samples, sifted, scored at the candidate level against the gold's must-open and must-not-open keys; the stored v12 answers of
+two runs are the controls (`role-probe/role-probe-v13.json`, `role-probe-v14.json`; $0.17 together).
+
+| per sample | v12 (r3) | v12 (r4) | v13: three tests, first contact, quarterly as evidence | v14: v12 + milestone clause |
+|---|---|---|---|---|
+| must-open keys proposed (of 15) | 9 | 8 | 8.7 | 4.7 |
+| must-not-open keys proposed | 0 | 1 | 3.7 | 0.7 |
+| candidates on these items | 30 | 30 | 33 | 17 |
+| Helios milestone (A14) | 1/1 | 0/1 | 3/3 | 2/3 |
+| Ohio guarantee (A07) | 0/1 | 0/1 | 2/3 | 1/3 |
+| data-center revenue and gross margin from the Feb 25 call (A01) | 2/2 | 2/2 | 2/2, 2/2, 2/2 | 0/2, 0/2, 0/2 |
+
+v13 raised two milestones and opened clutter (a tax-rate thesis from the press release in two samples, a Taiwan proceeding
+in two); v14 raised the same two milestones and dropped the two first-day theses every other version opens. Neither is
+adopted. The China revenue thesis (A03) was proposed by no version in any sample; Microsoft's capex (A13) by one sample in
+eleven. These are the model's settled judgements on these texts, not readings of a list.

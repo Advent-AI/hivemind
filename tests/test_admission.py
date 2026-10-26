@@ -106,3 +106,11 @@ def test_binding_obligation_horizon_applies_to_events_too():
     data = {'new_groups': [], 'evidence': [EVIDENCE[0]], 'candidates': [admitted('c1', opens_as='binding_obligation', measure='event', scope='Ohio guarantee', event_type='deal_close', year='2028', due_day='2028-06-30')]}
     _, kept, dropped, _ = extraction.sift_with_groups(data, ITEM, TEXT, set(), UNIVERSE, english=True)
     assert kept == [] and 'binding obligation due beyond 18 months' in dict(dropped)['c1']
+
+
+def test_v13_names_shared_quantity_and_v12_keeps_industry_aggregate():
+    v13 = extraction.schema_for('v13', [], ['v1'])['properties']['candidates']['items']['properties']['opens_as']['enum']
+    v12 = extraction.schema_for('v12', [], ['v1'])['properties']['candidates']['items']['properties']['opens_as']['enum']
+    assert v13 == ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation'] and v12 == extraction.ADMISSION_REASONS
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v27.json'))
+    assert all(s.prompt_version.endswith('-v13') for s in cfg.extraction.values()) and cfg.collision is not None

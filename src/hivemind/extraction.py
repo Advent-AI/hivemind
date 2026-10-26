@@ -22,6 +22,8 @@ ALIASES_FROM = 9                  # the first version whose declared groups carr
 ADMISSION_FROM = 12               # the first version whose candidates state why they open (D184): one of four reasons, the settling material, the loss if folded
 # D184: the closed set of reasons a candidate thesis may open; anything else is evidence to a shown thesis
 ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'binding_obligation']
+ADMISSION_REASONS_V13 = ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation']    # D191: a quantity or price outside any one company
+SHARED_QUANTITY_FROM = 13
 BINDING_HORIZON_DAYS = 548        # D185: a binding obligation is due within 18 months of the item, and is exempt from the next-year rule on quantities
 
 
@@ -128,7 +130,7 @@ def grouped_schema(shown_group_ids, aliases=False, measures=MEASURES):
     return schema
 
 
-def admission_schema(shown_view_ids, shown_group_ids, measures=MEASURES_V10):
+def admission_schema(shown_view_ids, shown_group_ids, measures=MEASURES_V10, reasons=ADMISSION_REASONS):
     """The grouped schema plus the admission fields (D184): opens_as names one of the four reasons; folds_into names the shown
     thesis the statement would otherwise attach to, or is empty (the pattern is built from the shown ids, so an unseen thesis
     cannot be named); lost_if_folded says what investment implication is lost if it only attached there; settled_by names the
@@ -136,7 +138,7 @@ def admission_schema(shown_view_ids, shown_group_ids, measures=MEASURES_V10):
     schema = grouped_schema(shown_group_ids, aliases=True, measures=measures)
     candidate = schema['properties']['candidates']['items']
     candidate['properties'].update({
-        'opens_as': {'type': 'string', 'enum': list(ADMISSION_REASONS)},
+        'opens_as': {'type': 'string', 'enum': list(reasons)},
         'folds_into': {'type': 'string', 'pattern': '^(?:' + ''.join('|' + re.escape(v) for v in shown_view_ids) + ')$'},
         'lost_if_folded': {'type': 'string'},
         'settled_by': {'type': 'string'}})
@@ -148,7 +150,7 @@ def schema_for(version, shown_group_ids=(), shown_view_ids=()):
     number = version_number(version)
     measures = MEASURES_V10 if number >= MEASURES_V10_FROM else MEASURES
     if number >= ADMISSION_FROM:
-        return admission_schema(shown_view_ids, shown_group_ids, measures=measures)
+        return admission_schema(shown_view_ids, shown_group_ids, measures=measures, reasons=ADMISSION_REASONS_V13 if number >= SHARED_QUANTITY_FROM else ADMISSION_REASONS)
     if number >= GROUPS_FROM:
         return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
     if number >= ENGLISH_FROM:
