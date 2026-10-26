@@ -2544,7 +2544,7 @@ Alex: "我们跑一个code review 清理一下过程中stale code 和 bloat 然�
 
 ## D196 · 2026-10-27 · `poc-v29` (the theme block) is the replay default
 
-- Measured once over the r4 window (`poc/reports/2026-10-26-theme-block/results.md`): 245 asset judgements carried the block, 194 named a theme push with signs that follow each thesis's own ladder; propagation added 121 judgements (+$0.20) and changed a conclusion one time in ten; reasons read the same or better on the five theses with the same question in both ledgers; one judge call in 307 ran out of output on the largest thesis and answered on resume. The whole run cost $1.59 against $1.33.
+- Measured once over the r4 window (`poc/reports/2026-10-26-theme-block/results.md`): 245 asset judgements carried the block, 194 named a theme push with signs that follow each thesis's own ladder; propagation added 121 judgements (+$0.20) and changed a conclusion one time in ten; reasons read the same or better on the five theses with the same question in both ledgers; one judge call in 307 ran out of output on the largest thesis and answered on resume. The whole run cost $1.46 against $1.21 with cached input at its published rate ($1.59 against $1.33 with every input token at the input rate; the cost column priced cached input at the full rate until 2026-10-27, build-log row 57).
 - Decided: `scripts/replay.py` defaults to `poc/config/poc-v29.json`; `poc-v26` stays as the control configuration. Not built: the block on the UI; a tighter aggregate-theme identity (the near-duplicate aggregates each take a line in every block).
 
 ## D197 · 2026-10-27 · A shared quantity is one thesis per theme, measure and period; its wording is not identity

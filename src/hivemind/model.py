@@ -28,6 +28,7 @@ ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_AP
 # the published rate; the token columns are the measurement, the bill is the provider's.
 PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
           'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+CACHED_INPUT_SHARE = 0.10          # cached input tokens are priced at 10% of the input rate (gpt-6-luna page, read again 2026-10-27)
 
 SCHEMA_SQL = """
 create table if not exists model_calls (
@@ -218,8 +219,9 @@ def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, t
     usage = response.get('usage') or {}
     input_tokens = int(usage.get('prompt_tokens') or 0)
     output_tokens = int(usage.get('completion_tokens') or 0)
+    cached_tokens = min(input_tokens, int((usage.get('prompt_tokens_details') or {}).get('cached_tokens') or 0))
     price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
-    cost = round(input_tokens / 1e6 * price_in + output_tokens / 1e6 * price_out, 6)
+    cost = round((input_tokens - cached_tokens) / 1e6 * price_in + cached_tokens / 1e6 * price_in * CACHED_INPUT_SHARE + output_tokens / 1e6 * price_out, 6)
     call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
                              request_sha256=sha if not errors else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
                              response_json=json.dumps(response)[:200000], answer_json=json.dumps(data, ensure_ascii=False),

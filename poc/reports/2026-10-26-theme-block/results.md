@@ -14,7 +14,8 @@ window 2026-02-25..07-23 NVDA only, then 07-24..08-15 every object. Script: `doc
 | of them, conclusions that said changed | — | 13 (10%) |
 | rung moves over the window | 9 | 13 |
 | judging cost at `model.PRICES` | $0.32 (186 calls) | $0.52 (307 calls) |
-| whole run | $1.33 | $1.59 |
+| whole run, every input token at the input rate | $1.33 | $1.59 |
+| whole run, cached input at its published rate (10% of the input rate; a quarter of extraction's input is cached, judging's 0–2%) | $1.21 | $1.46 |
 | judge calls that ran out of output (`finish_reason: length`) | 0 | 1 |
 | extraction gold (D194), full / fail | 4 / 16 | 5 / 15 |
 
