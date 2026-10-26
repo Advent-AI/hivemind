@@ -35,8 +35,8 @@ sys.path.insert(0, str(ROOT / 'poc'))
 from hivemind import config, model, replay, testdb, universe  # noqa: E402
 from hivemind import parallel_day  # noqa: E402
 from hivemind.views import round as rounds  # noqa: E402
-from concurrency_study.e2e import logical_rows, readonly  # noqa: E402
-from concurrency_study.proof import accepted_requests  # noqa: E402
+from concurrency_study.e2e import readonly  # noqa: E402
+from concurrency_study.proof import accepted_requests, ledger_rows  # noqa: E402
 
 SOURCE = ROOT / 'poc/data/english-v23-jev-2026-10-25'
 ITEMS = ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite'
@@ -228,8 +228,8 @@ def main():
     protected = {path: parallel_day.digest(path) for path in (START_LEDGER, RECORDED_ARCHIVE, ITEMS)}
     cfg, uni = config.load(ROOT / 'poc/config/poc-v23.json'), universe.load(ROOT / 'poc/universe.json')
     reports = {mode: run_mode(output, mode, cfg, uni, args.delay_scale) for mode in ('serial', 'parallel-16', 'parallel-16-mutant')}
-    serial_rows = logical_rows(output / 'serial' / 'views.sqlite')
-    compared = {mode: [table for table, rows in logical_rows(output / mode / 'views.sqlite').items() if rows != serial_rows[table]]
+    serial_rows = ledger_rows(output / 'serial' / 'views.sqlite')
+    compared = {mode: [table for table, rows in ledger_rows(output / mode / 'views.sqlite').items() if rows != serial_rows[table]]
                 for mode in ('parallel-16', 'parallel-16-mutant')}
     serial_requests = extraction_requests(output / 'serial' / 'archive.sqlite')
     serial, parallel = reports['serial'], reports['parallel-16']

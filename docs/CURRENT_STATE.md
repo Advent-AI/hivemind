@@ -1,10 +1,10 @@
 # Current state
 
-As of October 26, 2026; decisions through D182. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
+As of October 26, 2026; decisions through D183. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
 
 ## Status
 
-Branch `feat/parallel-day` holds the parallel day (D172–D182) on top of the two earlier pushed branches: the sequential request-construction cleanup [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) (all 3,595 archived request identities preserved) and the NAVER prompt candidate [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) (inactive by default). None of the three is merged into `main`.
+Branch `feat/parallel-day` holds the parallel day (D172–D183) on top of the two earlier pushed branches: the sequential request-construction cleanup [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) (all 3,595 archived request identities preserved) and the NAVER prompt candidate [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) (inactive by default). None of the three is merged into `main`.
 
 The English pipeline runs end to end. Extraction v10 (`role-v10`, `categories-v10`, `gpt-6-luna`) reads each item whole and declares groups for ongoing matters (D163–D166); matching runs on TypeSafe's Jev `jev-1.14.0` by default (D169, `poc/config/poc-v23.json`), with the generative matcher kept as the configured alternative (`poc-v23-llm`); the writer owns the replacement and succession rules (D167, D168); judging runs once a day before pull mode (D63).
 
@@ -16,7 +16,7 @@ The phase was closed out with a code review (D170, log row 50). The ledgers, arc
 
 - D155: reference lists no longer veto candidates; full-match period handling, exact scopes, event identity, same-answer coalescing, old-key trust and atomic write and resume.
 - D159: an item's accepted extraction answers the request built after every earlier item finished writing.
-- D172, D181: the parallel day (`hivemind.parallel_day`), opt-in with `scripts/replay.py --workers N`: later items' extraction requests are prepared early and prepared again right after any commit that changes them; each item accepts only a byte-identical request at its turn; matching questions within an item run concurrently and apply in order; one writer. The serial path stays the default.
+- D172, D181, D183: the parallel day (`hivemind.parallel_day`), the replay's default (`scripts/replay.py --workers 1` runs serially): later items' extraction requests are prepared early and prepared again right after any commit that changes them; each item accepts only a byte-identical request at its turn; matching questions within an item run concurrently and apply in order; one writer.
 - D163–D166: the English runtime (`vocabulary.py`, canonical values with legacy conversion on read), the fresh English library, research groups declared during extraction with aliases and decided by names in code (`views/groups.py`).
 - D167–D169: no hard-coded identity; the measure vocabulary gains `market_size` and `project_cost`; the Jev engine (`views/jev_matching.py`, client `jev.py`) with the PRD's replacement definition, the shared succession rule and an answer for "the same quantity, another period"; a repeat may name the piece shown for the same evidence under another thesis.
 - Idea service: the adopted two-call contract `poc-v9` / `idea-v7`, reasoning `none` (D135/D145); limits in the [Idea specification](poc/idea-card.md). The service still reads the sealed Chinese ledger with its search index.
@@ -37,17 +37,17 @@ The [pipeline overview](poc/pipeline-plan.md) separates the implementation from 
 
 Pull mode and the final verdict remain earlier drafts to redesign together. The decided rule freezes the current state and reasons at the due date and closes the thesis. Upstream supply and human-review handling remain deferred.
 
-## Parallel day (D172–D182)
+## Parallel day (D172–D183)
 
-Measured live on the complete July 27 day (53 items), three serial against three parallel trials interleaved ([result](../poc/reports/2026-10-26-e2e-parallel/results.md)): median 501.8 s → 112.5 s, **4.46× end to end**, 5.91× for item work; daily judging (~37–40 s) is the same code in both modes. Every trial's audit is clean; each parallel trial's runner accepted exactly the rebuilt exact-prefix request for all 53 items; each trial's answers replayed through the other mode give an identical ledger. Drift from the recorded sequential golden is inside the serial trials' own spread. The product entry point (`--workers 16`) ran the same day live in 135.5 s with the same checks clean. On recorded answers the parallel day equals the golden in all ten tables (D180, and again on the promoted module).
+The replay runs the parallel day by default (D183: Alex chose it to converge faster); `scripts/replay.py --workers 1` runs the serial path, needed to resume a day a serial run left unfinished. Measured live on the complete July 27 day (53 items), three serial against three parallel trials interleaved ([result](../poc/reports/2026-10-26-e2e-parallel/results.md)): median 501.8 s → 112.5 s, **4.46× end to end**, 5.91× for item work; daily judging (~37–40 s) is the same code in both modes. Every trial's audit is clean; each parallel trial's runner accepted exactly the rebuilt exact-prefix request for all 53 items; each trial's answers replayed through the other mode give an identical ledger. Drift from the recorded sequential golden is inside the serial trials' own spread. The product entry point (`--workers 16`) ran the same day live in 135.5 s with the same checks clean. On recorded answers the parallel day equals the golden in all ten tables (D180, and again on the promoted module).
 
-Fifteen consecutive days (August 1–15, 221 items) with every call answered by one deterministic oracle of the request bytes, at no cost (D182, [result](../poc/reports/2026-10-26-multi-day-oracle/results.md)): the parallel ledger equals the serial one in all 12 compared tables, its turns accepted exactly the serial run's 221 extraction requests, and a broken runner was caught. At recorded call durations the fifteen days take an estimated 2.79× less time (2,512 s → 900 s); a busy day gains 3.6–4.5×, a day of a few items 1.5–2×.
+Fifteen consecutive days (August 1–15, 221 items) with every call answered by one deterministic oracle of the request bytes, at no cost (D182, [result](../poc/reports/2026-10-26-multi-day-oracle/results.md)): the parallel ledger equals the serial one in all 20 product tables, its turns accepted exactly the serial run's 221 extraction requests, and a broken runner was caught. At recorded call durations the fifteen days take an estimated 2.79× less time (2,512 s → 900 s); a busy day gains 3.6–4.5×, a day of a few items 1.5–2×.
 
 What remains of the time is not scheduling: items that depend on the item just before them (~45–60 s), daily judging (D63), and each item's two matching phases in order (~17 s). Ten times end to end on this day would need those to shrink.
 
 ## Next task
 
-Alex's choice whether the parallel day becomes the replay default. Lean: no; keep the serial default, which reruns on saved answers free and fastest, and pass `--workers 16` to runs that call the models afresh (same ledger for the same answers, about 4× faster on a busy day, about 24% more cost) (D182). No paid run is open.
+Push `feat/parallel-day` after its code review. No paid run is open. Open for Alex, not started: whether to measure, on stored data at no cost, how much a day-start read followed by an ordered clean-up recovers of what day-start reading loses (D171: 73 of 797 evidence items), which would change D159's reading rule.
 
 ## Previous experiments
 

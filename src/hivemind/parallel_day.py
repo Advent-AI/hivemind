@@ -72,11 +72,12 @@ class ParallelDay:
                     'source': digest(self.source_path), 'extraction_workers': self.extraction_workers,
                     'jev_workers': self.jev_workers}
         entries = [{'input_id': item['input_id'], 'seq': route.sequence_no, 'hash': item_key(item)} for item, route in items]
-        if not path.exists():
-            if conn.execute("select 1 from processing_steps where publication_day=? and step in ('extracted','written','handed_over') limit 1", (day,)).fetchone():
-                raise ValueError('cannot adopt a partially processed day without its parallel-day manifest')
-            with path.open('x', encoding='utf-8') as handle:
-                json.dump(dict(metadata, inputs=entries), handle, sort_keys=True)
+        started = conn.execute("select 1 from processing_steps where publication_day=? and step in ('extracted','written','handed_over') limit 1", (day,)).fetchone()
+        if not started:
+            # Nothing of this day is written in this ledger: a manifest left by another run or ledger guards nothing here.
+            path.write_text(json.dumps(dict(metadata, inputs=entries), sort_keys=True), encoding='utf-8')
+        elif not path.exists():
+            raise ValueError('cannot adopt a partially processed day without its parallel-day manifest; finish it with --workers 1')
         try:
             saved = json.loads(path.read_text())
         except (OSError, ValueError) as error:

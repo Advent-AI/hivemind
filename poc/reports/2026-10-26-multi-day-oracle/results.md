@@ -27,9 +27,9 @@ items do depend on earlier ones: 121 early requests were changed by an earlier c
 
 | Check | Result |
 |---|---|
-| Parallel (16 extraction workers, 8 Jev) ledger equals the serial ledger | 12 of 12 tables identical, 3,418 rows |
+| Parallel (16 extraction workers, 8 Jev) ledger equals the serial ledger | 12 of 12 tables identical, 3,418 rows; recompared after the D183 review with all 20 product tables: identical, 5,805 rows |
 | Requests the parallel turns accepted equal the serial run's extraction requests | 221 of 221 |
-| Mutant without re-preparation and without the turn check | caught: 11 of 12 tables differ |
+| Mutant without re-preparation and without the turn check | caught: 11 of 12 tables differ (16 of 20) |
 | Inputs (start ledger, recorded archive, items) unchanged | yes (digests) |
 
 The same checks also passed with answers served instantly (no delay), a different interleaving of the same work.

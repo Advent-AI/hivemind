@@ -83,6 +83,8 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
             route = dispatch.route(conn, item, universe)
             if route.kind != 'extract':
                 day_stats[route.kind] += 1
+                if route.kind == 'skipped':
+                    processed += 1      # written by an earlier run of this day: a restart keeps the day's item limit
                 if route.kind == 'merged':
                     dispatch.mark(conn, item, 0, 'merged', 'ok', route.reason)
                     conn.commit()

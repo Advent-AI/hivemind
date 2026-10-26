@@ -79,10 +79,10 @@ Replay the item window into a new ledger with the default configuration (`poc/co
 ```sh
 python3 scripts/preflight.py --archive <an archive> --views <ledgers> --items poc/data/items-window-tags2-2026-10-24.sqlite   # $0, before any paid run
 python3 scripts/replay.py --from 2026-07-24 --until 2026-07-31 --views poc/data/<run>/views.sqlite --archive poc/data/<run>/archive.sqlite --cap 3
-python3 scripts/replay.py ... --workers 16      # the parallel day (D181): same ledger for the same answers, 4.46x faster on a busy day of fresh calls
+python3 scripts/replay.py ... --workers 1       # the serial path: resumes a day a serial run left unfinished
 ```
 
-`--workers N` prepares later items' extraction requests early and accepts each only if it is byte-identical, at its turn, to the request built from everything committed before it; `--jev-workers` sets the matching questions sent at a time. The serial path is the default and the right one for a rerun on saved answers: it sends no call and is fastest, while early requests the archive does not hold would be paid calls (D182). The live measurement and its checks are in `poc/reports/2026-10-26-e2e-parallel/results.md`.
+The replay runs the parallel day by default (D183): up to 16 later items' extraction requests are prepared early (`--workers`), and each is accepted only if it is byte-identical, at its turn, to the request built from everything committed before it; `--jev-workers` sets the Jev matching questions sent at a time (8; 1 for another matching engine). The ledger equals the serial one for the same answers, 4.46x faster on a busy day of fresh calls, at about 24% more cost; a rerun on saved answers pays for the early requests its archive lacks. The live measurement and its checks are in `poc/reports/2026-10-26-e2e-parallel/results.md`.
 
 Measure a ledger per state against the golds in `poc/eval/gold/` with `scripts/benchmark_states.py` (candidates, groups, evidence, threshold robustness, cost per stage at published rates), `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` (evidence retrieval measured apart); `scripts/trace_items.py` renders per-item trace pages. The ledgers, archives and traces of the 2026-10-25 phase are listed in the [data manifest](docs/research/2026-10-25-english/data-manifest.md); `poc/data/` is not in Git.
 

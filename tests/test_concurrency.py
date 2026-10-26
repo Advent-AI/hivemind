@@ -4,6 +4,7 @@ import dataclasses
 import json
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import sys
 import threading
@@ -11,10 +12,12 @@ import threading
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'poc'))
 from test_sequential_replay import CASES, setup_run  # noqa: E402
-from hivemind import config, extraction, model, replay, vocabulary  # noqa: E402
+from hivemind import config, extraction, jev, model, parallel_day, replay, vocabulary  # noqa: E402
 from hivemind.parallel_day import ParallelDay, extraction_key  # noqa: E402
 from hivemind.views import store  # noqa: E402
+from concurrency_study.proof import ledger_rows as logical_rows  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -63,16 +66,6 @@ def responses(*, reverse=False, fail_first=False, fail_current_second=False, fai
 
 def runner(args, tmp_path):
     return ParallelDay(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=1)
-
-
-def logical_rows(path):
-    """Compare product records, excluding call identities and audit timestamps."""
-    ignored = {'created_at', 'call_id', 'request_sha256'}
-    with sqlite3.connect(path) as db:
-        db.row_factory = sqlite3.Row
-        return {table: [{k: row[k] for k in row.keys() if k not in ignored} for row in db.execute(f'select * from {table} order by rowid')]
-                for table in ('views', 'rungs', 'evidence', 'evidence_sources', 'evidence_links', 'dependencies',
-                              'successions', 'thesis_groups', 'thesis_group_members', 'judgements')}
 
 
 def test_reversed_answers_and_stale_context_match_the_serial_ledger(tmp_path):
@@ -220,31 +213,111 @@ def test_group_membership_and_schema_changes_change_the_request_identity(tmp_pat
     assert extraction_key(CFG, item, item['text'], shown, UNIVERSE, groups) != after
 
 
-def test_replay_script_runs_the_parallel_day_with_default_transports(tmp_path, monkeypatch):
-    """D181 entry point: `scripts/replay.py --workers` reaches the parallel day and writes the serial ledger."""
+@pytest.mark.parametrize('extra_arguments, parallel', [([], True), (['--workers', '1'], False)])
+def test_replay_script_runs_the_parallel_day_by_default_and_serially_with_one_worker(tmp_path, monkeypatch, extra_arguments, parallel):
+    """D183 entry point: `scripts/replay.py` with its defaults runs the parallel day (16 workers; one matching question at
+    a time for a non-Jev matcher), `--workers 1` the serial path; both write the serial ledger."""
     import runpy
     serial_dir = tmp_path / 'serial'; serial_dir.mkdir()
     serial = setup_run(serial_dir)
     send, _ = responses()
     replay.run(**serial, transport=send)
     args = setup_run(tmp_path)
-    send, calls = responses(reverse=True)
+    send, calls = responses(reverse=parallel)
     monkeypatch.setattr(model, 'openai_transport', send)
     monkeypatch.setattr(model, '_key', lambda provider: pytest.fail('credentials read'))
     monkeypatch.setattr(sys, 'argv', ['replay.py', '--from', '2026-02-25', '--until', '2026-02-25', '--testdb', args['testdb_path'],
                                       '--views', args['views_path'], '--archive', str(tmp_path / 'cli-archive.sqlite'),
-                                      '--config', str(ROOT / 'poc/config/poc-v16.json'), '--workers', '2', '--jev-workers', '1'])
+                                      '--config', str(ROOT / 'poc/config/poc-v16.json')] + extra_arguments)
     runpy.run_path(str(ROOT / 'scripts/replay.py'), run_name='__main__')
-    assert (tmp_path / 'manifests' / 'day-2026-02-25.json').is_file()
-    assert sum(name == 'extraction' and second for name, second, _ in calls) == 2
+    assert (tmp_path / 'manifests' / 'day-2026-02-25.json').is_file() == parallel
+    assert sum(name == 'extraction' and second for name, second, _ in calls) == (2 if parallel else 1)
     assert logical_rows(serial['views_path']) == logical_rows(args['views_path'])
 
 
-def test_current_english_jev_pipeline_preserves_sources_groups_and_call_trace(tmp_path):
-    """D172 product path: v23 extraction, Jev, grouping, write, daily judgement and close marker."""
+def test_replay_script_defaults_run_the_default_jev_configuration_with_sixteen_and_eight_workers(tmp_path, monkeypatch):
+    """D183 entry point as the user calls it: no --config, --workers or --jev-workers; the default configuration (poc-v23,
+    Jev) runs the parallel day with 16 extraction and 8 Jev workers and writes the serial ledger."""
+    import runpy
+    serial_dir = tmp_path / 'serial'; serial_dir.mkdir()
+    serial = setup_run(serial_dir)
+    serial['cfg'] = config.load(ROOT / 'poc/config/poc-v23.json')
+    replay.run(**serial, transport=english_jev_send(require_overlap=False))
     args = setup_run(tmp_path)
-    args['cfg'] = config.load(ROOT / 'poc/config/poc-v23.json')
+    send = english_jev_send(require_overlap=True)
+    monkeypatch.setattr(model, 'openai_transport', lambda provider, request, timeout=600: send(provider, request))
+    monkeypatch.setattr(jev, 'transport', lambda request, timeout=60: send(request))
+    monkeypatch.setattr(model, '_key', lambda provider: pytest.fail('credentials read'))
+    monkeypatch.setattr(jev, '_key', lambda: pytest.fail('credentials read'))
+    built = []
+
+    class RecordedParallelDay(ParallelDay):
+        def __init__(self, *arguments, **options):
+            built.append(options)
+            super().__init__(*arguments, **options)
+    monkeypatch.setattr(parallel_day, 'ParallelDay', RecordedParallelDay)
+    monkeypatch.setattr(sys, 'argv', ['replay.py', '--from', '2026-02-25', '--until', '2026-02-25', '--testdb', args['testdb_path'],
+                                      '--views', args['views_path'], '--archive', str(tmp_path / 'cli-archive.sqlite')])
+    runpy.run_path(str(ROOT / 'scripts/replay.py'), run_name='__main__')
+    assert built == [{'extraction_workers': 16, 'jev_workers': 8}]
+    assert logical_rows(serial['views_path']) == logical_rows(args['views_path'])
+
+
+def test_restart_counts_the_days_items_already_written_toward_its_item_limit(tmp_path):
+    """D183 restart row: `max_items_per_day` counts the day's items an earlier run already wrote, so a restart selects
+    the same items (the parallel day's manifest accepts it) and never dispatches an item beyond the limit."""
+    args = setup_run(tmp_path)
+    send, _ = responses()
+
+    def judging_fails(provider, request):
+        if request['response_format']['json_schema']['name'] == 'judgement':
+            raise model.TransportError('judging unavailable')
+        return send(provider, request)
+    with pytest.raises(RuntimeError, match='judging failed'):
+        replay.run(**args, transport=judging_fails, max_items_per_day=1, day_runner=runner(args, tmp_path))
+    replay.run(**args, transport=send, max_items_per_day=1, day_runner=runner(args, tmp_path))
+    with sqlite3.connect(args['views_path']) as db:
+        assert db.execute('select count(*) from processing_steps where input_id=?', (CASES[1]['item']['input_id'],)).fetchone()[0] == 0
+        assert db.execute('select day from days_completed').fetchall() == [('2026-02-25',)]
+
+
+def test_fresh_ledger_starts_its_day_over_a_manifest_another_ledger_left(tmp_path):
+    """D183 manifest row: a manifest guards a ledger's unfinished day; a fresh ledger in the same folder, with nothing of
+    that day written, starts the day under its own configuration instead of refusing it."""
+    first_dir = tmp_path / 'first'; first_dir.mkdir()
+    first = setup_run(first_dir)
+    send, _ = responses()
+    replay.run(**first, transport=send, day_runner=ParallelDay(Path(first['testdb_path']), tmp_path / 'manifests',
+                                                                extraction_workers=2, jev_workers=1))
+    second = setup_run(tmp_path)
+    second['cfg'] = dataclasses.replace(second['cfg'], version='changed-after-the-first-ledger')
+    send, _ = responses()
+    replay.run(**second, transport=send, day_runner=runner(second, tmp_path))
+    with sqlite3.connect(second['views_path']) as db:
+        assert db.execute('select day from days_completed').fetchall() == [('2026-02-25',)]
+
+
+def test_ledger_comparison_covers_every_product_table(tmp_path):
+    """D182/D183 check: the serial-against-parallel comparison reads every product table; a replacement row, which the
+    earlier ten-table comparison did not read, makes two otherwise identical ledgers differ."""
+    args = setup_run(tmp_path)
+    send, _ = responses()
+    replay.run(**args, transport=send)
+    changed = tmp_path / 'changed.sqlite'
+    shutil.copyfile(args['views_path'], changed)
+    assert logical_rows(changed) == logical_rows(args['views_path'])
+    with sqlite3.connect(changed) as db:
+        db.execute("insert into replacements(old_evidence_id,new_evidence_id,said_day,seq) values ('e1','e2','2026-02-25',2)")
+    before, after = logical_rows(args['views_path']), logical_rows(changed)
+    assert set(after) == set(store.TABLES)
+    assert [table for table in after if after[table] != before[table]] == ['replacements']
+
+
+def english_jev_send(*, require_overlap):
+    """Fake OpenAI and Jev providers for the v23 English pipeline over the two recorded Rubin cases; with
+    `require_overlap` the first extraction answers only after the second was sent."""
     later = threading.Event()
+
     def send(*parameters):
         request = parameters[-1]
         if len(parameters) == 1:  # Jev uses its typed endpoint.
@@ -263,8 +336,8 @@ def test_current_english_jev_pipeline_preserves_sources_groups_and_call_trace(tm
             second = CASES[1]['item']['input_id'] in text
             if second:
                 later.set()
-            else:
-                assert later.wait(5)
+            elif require_overlap:
+                assert later.wait(5), 'later extraction did not overlap the first'
             case = CASES[int(second)]
             raw = vocabulary.extraction_answer({'candidates': [case['candidate']], 'evidence': [case['evidence']]})
             raw['new_groups'] = []
@@ -280,6 +353,15 @@ def test_current_english_jev_pipeline_preserves_sources_groups_and_call_trace(tm
                   'cites': list(dict.fromkeys(re.findall(r'^- (e\d+) \[', text, re.M))), 'cites_views': [],
                   'pushes': [], 'changed': True, 'why_changed': 'First judgement.'}
         return {'choices': [{'message': {'content': json.dumps(result)}}]}
+
+    return send
+
+
+def test_current_english_jev_pipeline_preserves_sources_groups_and_call_trace(tmp_path):
+    """D172 product path: v23 extraction, Jev, grouping, write, daily judgement and close marker."""
+    args = setup_run(tmp_path)
+    args['cfg'] = config.load(ROOT / 'poc/config/poc-v23.json')
+    send = english_jev_send(require_overlap=True)
     day = ParallelDay(Path(args['testdb_path']), tmp_path / 'manifests', extraction_workers=2, jev_workers=2)
     result = replay.run(**args, transport=send, day_runner=day)
     assert (result['new_views'], result['evidence'], result['judged']) == (1, 2, 1)

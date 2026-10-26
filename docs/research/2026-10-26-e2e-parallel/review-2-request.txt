@@ -1,0 +1,21 @@
+Read-only code review of branch feat/parallel-day before it is pushed. Repository: /Users/lchingen/hivemind-parallel-day-2026-10-26. Compare against main: `git diff main...HEAD` plus the uncommitted working-tree changes (`git diff`), which make the parallel day the default of scripts/replay.py (D183).
+
+Governing documents: AGENTS.md (working rules), docs/DECISIONS.md D159 (an accepted extraction answers the request built after every preceding write), D171-D183 (the parallel day: concurrent request preparation, validation at each item's turn, one ordered writer; D181 live measurement and promotion; D182 fifteen-day oracle study; D183 parallel by default), docs/CURRENT_STATE.md.
+
+In scope, by priority:
+1. Product code: src/hivemind/parallel_day.py, src/hivemind/replay.py, scripts/replay.py, src/hivemind/jev.py, src/hivemind/model.py, src/hivemind/extraction.py, src/hivemind/views/round.py, src/hivemind/views/jev_matching.py.
+2. Tests: tests/test_concurrency.py, tests/test_jev_concurrency.py, tests/test_jev_matching.py, tests/test_study_budget.py, tests/test_e2e_study.py.
+3. Study harnesses: poc/concurrency_study/{budget,e2e,full_day,proof,multi_day}.py.
+
+Questions:
+- Correctness: can any path accept an extraction answer that does not answer the byte-identical request the serial path would build at that item's turn? Ordering of commits, matching-question application order, thread safety (what crosses threads, what is shared), cancellation and failure handling, restart/resume of a partially processed day, the per-day manifest, multi-day runs (one ParallelDay object across days).
+- The new default (D183): `scripts/replay.py` with no --workers runs the parallel day; --jev-workers defaults to 8 for Jev and 1 for another engine. What breaks for a user who runs it with defaults: resuming ledgers written serially, configurations whose matching engine is not Jev, older (Chinese) configurations, reruns on saved answers, --only / --max-items-per-day, --day0, --cap.
+- Robustness: provider failures, retries, the spend cap.
+- Stale code, duplication, unused files (for example prompt files no configuration uses), bloat.
+- Test gaps: a test that would pass with the defect it names; an entry point not tested as the user calls it.
+
+Already decided, do not re-raise without new evidence: (a) a serial restart after a parallel failure resumes like a serial restart after a serial failure, because accepted handovers are serial-equivalent; (b) the product spend cap counts archived calls, so a retried attempt whose reply was lost is not counted (same as the OpenAI client); (c) in-flight early requests can pass the cap by at most the worker count's calls; (d) the parallel day costs more (discarded early requests) by design.
+
+Out of scope: extraction or matching quality, prompt wording, golds, modules the branch does not touch, the design pages under docs/system-design*, and the old repository.
+
+For each finding: severity (P1 correctness, P2 robustness or test gap, P3 cleanup), file:line, a concrete failure scenario (inputs and state, then the wrong outcome), and the fix. Say what you ran or read to check it. Report only findings you checked against the code; say so when there are none in a category.

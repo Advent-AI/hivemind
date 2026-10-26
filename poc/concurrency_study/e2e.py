@@ -26,16 +26,13 @@ from hivemind import config, model, replay, testdb, universe
 from hivemind.views import round as rounds, store
 from concurrency_study.budget import GuardedTransport, RetryableError, request_envelope, single_attempt_http
 from hivemind.parallel_day import ParallelDay, digest, runtime_key
-from concurrency_study.proof import accepted_requests, handover_errors
+from concurrency_study.proof import accepted_requests, handover_errors, ledger_rows
 
 DAY = '2026-07-27'
 FIXTURE = ROOT / 'poc/reports/2026-10-25-full-day-parallel-r4'   # start-of-day ledger, the day's items, recorded golden
 CONFIG = ROOT / 'poc/config/poc-v23.json'
 UNIVERSE = ROOT / 'poc/universe.json'
 ORDER = ('serial-1', 'parallel-1', 'parallel-2', 'serial-2', 'serial-3', 'parallel-3')
-TABLES = ('views', 'rungs', 'evidence', 'evidence_sources', 'evidence_links',
-          'dependencies', 'successions', 'thesis_groups', 'thesis_group_members', 'judgements')
-IGNORED = {'created_at', 'call_id', 'id', 'judgement_id'}
 LIMITS = {'cap_microdollars': 4000000, 'max_calls': 2000, 'outbound': 32, 'extraction_workers': 16, 'jev_workers': 8,
           'attempts_per_call': 3}
 
@@ -44,16 +41,6 @@ def readonly(path):
     conn = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True)
     conn.row_factory = sqlite3.Row
     return conn
-
-
-def logical_rows(path):
-    """Product records without row ids, call ids or audit timestamps, plus accepted handovers and match decisions."""
-    with readonly(path) as db:
-        rows = {table: [{k: r[k] for k in r.keys() if k not in IGNORED} for r in db.execute(f'select * from {table} order by rowid')]
-                for table in TABLES}
-        rows['handovers'] = [dict(r) for r in db.execute('select input_id,seq,handover_json from handovers order by id')]
-        rows['match_records'] = [dict(r) for r in db.execute('select seq,input_id,call_no,request_sha256,decisions_json,checks_json from match_records order by id')]
-    return rows
 
 
 def configuration():
@@ -217,7 +204,7 @@ def cross_replay(directory, trial, cfg, uni):
                    cfg=cfg, universe=uni, from_day=DAY, until_day=DAY, transport=transport, day_runner=runner, log=lambda s: None)
     finally:
         archive.conn.close()
-    expected, actual = logical_rows(folder / 'views.sqlite'), logical_rows(target / 'views.sqlite')
+    expected, actual = ledger_rows(folder / 'views.sqlite'), ledger_rows(target / 'views.sqlite')
     different = [table for table in expected if expected[table] != actual[table]]
     checked = audit(directory, target, cfg, uni, runner.events) if runner else None
     return {'mode': 'serial' if runner is None else 'parallel', 'different_tables': different,

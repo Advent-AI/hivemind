@@ -22,26 +22,16 @@ from snapshot_proof import snapshot
 from hivemind import config, model, replay, testdb, universe
 from hivemind.views import store
 from hivemind.parallel_day import ParallelDay, digest
-from concurrency_study.proof import accepted_requests, handover_errors
+from concurrency_study.proof import accepted_requests, handover_errors, ledger_rows
 
 SOURCE = ROOT / 'poc/data/english-v23-jev-2026-10-25'
 ITEMS = ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite'
-TABLES = ('views', 'rungs', 'evidence', 'evidence_sources', 'evidence_links',
-          'dependencies', 'successions', 'thesis_groups', 'thesis_group_members', 'judgements')
 
 
 def readonly(path):
     conn = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True)
     conn.row_factory = sqlite3.Row
     return conn
-
-
-def logical_rows(path):
-    ignored = {'created_at', 'call_id', 'id', 'judgement_id'}
-    with readonly(path) as db:
-        return {table: [{k: r[k] for k in r.keys() if k not in ignored}
-                        for r in db.execute(f'select * from {table} order by rowid')]
-                for table in TABLES}
 
 
 class RecordedProvider:
@@ -157,10 +147,10 @@ def run(directory, day, workers, delay_scale, source_directory=SOURCE):
         results[name] = info
         assert provider.peak <= workers
         archive.conn.close()
-    a, b = logical_rows(directory / 'serial/views.sqlite'), logical_rows(directory / 'parallel/views.sqlite')
-    differences = [table for table in TABLES if a[table] != b[table]]
+    a, b = ledger_rows(directory / 'serial/views.sqlite'), ledger_rows(directory / 'parallel/views.sqlite')
+    differences = [table for table in a if a[table] != b[table]]
     changed = [p for p, sha in protected.items() if digest(Path(p)) != sha]
-    summary = {'day': day, 'items': len(rows), 'logical_tables_compared': len(TABLES),
+    summary = {'day': day, 'items': len(rows), 'logical_tables_compared': len(a),
         'different_tables': differences, 'changed_protected': changed,
         'serial': {k: v for k, v in results['serial'].items() if 'events' not in k},
         'parallel': {k: v for k, v in results['parallel'].items() if 'events' not in k},

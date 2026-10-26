@@ -1,7 +1,9 @@
-"""One check shared by the study harnesses: every accepted handover answers the exact request built from the ledger
-committed before its item, and, where the parallel runner reported which request it accepted, that same request."""
+"""Checks shared by the study harnesses and tests: every accepted handover answers the exact request built from the
+ledger committed before its item (and, where the parallel runner reported which request it accepted, that same
+request), and two ledgers hold the same product state."""
 import json
 from pathlib import Path
+import sqlite3
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -10,6 +12,32 @@ from snapshot_proof import snapshot  # noqa: E402
 from hivemind import extraction  # noqa: E402
 from hivemind.parallel_day import extraction_key  # noqa: E402
 from hivemind.views import store  # noqa: E402
+
+
+# Row ids, call ids and wall-clock times differ between runs that write the same product state.
+INCIDENTAL = {'id', 'judgement_id', 'call_id', 'created_at', 'at'}
+
+
+def ledger_rows(path):
+    """Every product table of a ledger (`store.TABLES`) in write order, without incidental columns; a match record's
+    request trace keeps its request digests and drops its call ids."""
+    conn = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = {}
+        for table in store.TABLES:
+            records = []
+            for row in conn.execute(f'select * from {table} order by rowid'):
+                record = {k: row[k] for k in row.keys() if k not in INCIDENTAL}
+                if table == 'match_records' and record.get('shown_json'):
+                    shown = json.loads(record['shown_json'])
+                    shown['requests'] = [{k: v for k, v in request.items() if k != 'call_id'} for request in shown.get('requests', [])]
+                    record['shown_json'] = shown
+                records.append(record)
+            rows[table] = records
+        return rows
+    finally:
+        conn.close()
 
 
 def accepted_requests(events):

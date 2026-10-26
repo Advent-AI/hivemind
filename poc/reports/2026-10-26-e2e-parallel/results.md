@@ -62,6 +62,7 @@ Ten times end to end on this day would need judging and dependency chains to shr
 | Parallel answers replayed through the serial path, no network | 3/3 identical (998–1,031 rows over 12 tables) |
 | Serial answers replayed through the parallel runner | 3/3 identical (965–1,028 rows); the runner's discarded early requests 8–24 |
 | Recorded golden, full day, product module, 16 workers | all 10 tables identical ([summary](recorded-16/summary.json)) |
+| Recompared after the D183 review with all 20 product tables (not only ten plus handovers and match decisions) | identical: six cross-replays, the 16-worker recorded run, the product-entry run |
 | Deliberate mutant: accept the prepared answer without re-checking | caught: 17 handovers without an exact current-prefix request; cross-replay refuses |
 
 Drift census against the recorded sequential golden (fresh answers are samples; this is not an identity check):
