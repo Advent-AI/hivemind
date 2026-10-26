@@ -47,7 +47,7 @@ What remains of the time is not scheduling: items that depend on the item just b
 
 ## Next task
 
-Alex's choice whether the parallel day becomes the replay default (lean: yes at 16 workers: same ledger for the same answers, 4.46× faster, about 24% more cost). No paid run is open.
+Alex's choice whether the parallel day becomes the replay default. Lean: no; keep the serial default, which reruns on saved answers free and fastest, and pass `--workers 16` to runs that call the models afresh (same ledger for the same answers, about 4× faster on a busy day, about 24% more cost) (D182). No paid run is open.
 
 ## Previous experiments
 
