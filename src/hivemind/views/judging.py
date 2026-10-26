@@ -23,6 +23,9 @@ PUSHES = vocabulary.PUSHES
 LEGACY_PUSHES = list(vocabulary.LEGACY['push'])
 ENGLISH_FROM = 3                  # the first judging prompt version written in English
 THEME_BLOCK_FROM = 4              # the first judging prompt version with the theme block
+EVIDENCE_IN_VIEW_FROM = 5         # the first judging prompt version that reads the evidence in view, not everything in force (D198)
+READINGS = 5                      # a piece is shown in the thesis's first five judgements after it arrives
+BASIS = 10                        # and while one of the last ten judgements cited it
 THEME_REASONS_CHARS = 300
 UPDATED_MARK = 'updated since this thesis was last judged'
 
@@ -37,6 +40,25 @@ def is_english(prompt_version):
 
 def has_theme_block(prompt_version):
     return version_number(prompt_version) >= THEME_BLOCK_FROM
+
+
+def has_evidence_in_view(prompt_version):
+    return version_number(prompt_version) >= EVIDENCE_IN_VIEW_FROM
+
+
+def evidence_in_view(conn, view_id, prompt_version):
+    """(the pieces a judgement of this thesis reads, how many pieces in force are not shown). From judging-v5: the arrivals
+    (linked after the READINGS-th most recent judgement, or all when there are fewer) and the basis (cited by one of the last
+    BASIS judgements), both among the evidence in force; earlier versions read everything in force."""
+    in_force = store.evidence_in_force(conn, view_id)
+    if not has_evidence_in_view(prompt_version):
+        return in_force, 0
+    recent = store.recent_judgements(conn, view_id, BASIS)
+    arrivals_after = recent[READINGS - 1]['seq'] if len(recent) >= READINGS else -1
+    basis = {evidence_id for j in recent for evidence_id in j['cites']}
+    linked_at = {r['evidence_id']: r['seq'] for r in conn.execute('select evidence_id, seq from evidence_links where view_id=?', (view_id,))}
+    shown = [p for p in in_force if linked_at.get(p['evidence_id'], -1) > arrivals_after or p['evidence_id'] in basis]
+    return shown, len(in_force) - len(shown)
 
 
 def schema_for(prompt_version):
@@ -133,10 +155,13 @@ def _lines_chinese(conn, view_id, v, rungs, pieces, deps, last):
     return lines
 
 
-def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=()):
+def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidden=None):
+    """hidden: None reads everything in force (before judging-v5); a count names how many pieces in force are not shown."""
     lines = [f'Thesis {view_id} ({v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}',
              'Ladder: ' + ' / '.join(f'rung {r["position"]} {r["label"]}: {r["condition"]}' for r in rungs), '',
-             f'[Evidence in force under this thesis, {len(pieces)} items]']
+             f'[Evidence in force under this thesis, {len(pieces)} items]' if hidden is None else f'[Evidence in view under this thesis, {len(pieces)} items]']
+    if hidden:
+        lines.append(f'[Not shown: {hidden} more pieces in force, read in earlier judgements; the previous conclusion carries them]')
     for p in pieces:
         src = p['sources'][0] if p['sources'] else {}
         lines.append(f'- {p["evidence_id"]} [{p["tier"]}; {p["speaker"]}; original source {p["original_who"]} {p["original_day"]}; from {src.get("input_id")} {src.get("publication_day")}] {p["one_line"]}\n    Quote: {p["quote"][:400]}')
@@ -165,19 +190,21 @@ def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=()):
         lines.append(f'\n[Previous conclusion, for comparison only] rung {last["rung"]}; reasons: {last["reasons"][:800]}')
     else:
         lines.append('\n[Previous conclusion] none: this is the first judgement, so changed must be true.')
-    lines.append('\nAnswer per the JSON schema. cites may name only the evidence ids listed above; cites_views only the dependency thesis ids listed above.'
-                 + ('; theme_pushes only the theme ids listed above.' if themes else ''))
+    lines.append('\nAnswer per the JSON schema. cites may name only the evidence ids listed above; '
+                 + ('cites_views only the dependency thesis ids listed above' if deps else 'cites_views must be empty: this thesis depends on no other thesis')
+                 + ('; theme_pushes only the theme ids listed above; a theme id goes only in theme_pushes, never in cites or cites_views' if themes else '') + '.')
     return lines
 
 
 def build_prompt(conn, view_id, prompt_version='judging-v1'):
     v = store.view(conn, view_id)
     rungs = store.rungs_of(conn, view_id)
-    pieces = store.evidence_in_force(conn, view_id)
+    pieces, hidden = evidence_in_view(conn, view_id, prompt_version)
     deps = store.dependencies_of(conn, view_id)
     last = store.current_state(conn, view_id)
     if is_english(prompt_version):
-        lines = _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes_in_force(conn, view_id, prompt_version))
+        lines = _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes_in_force(conn, view_id, prompt_version),
+                               hidden=hidden if has_evidence_in_view(prompt_version) else None)
     else:
         lines = _lines_chinese(conn, view_id, v, rungs, pieces, deps, last)
     with open(config.prompt_path(prompt_version + '.txt'), encoding='utf-8') as handle:
@@ -196,6 +223,12 @@ def themes_shown_in(request_text):
     return set(re.findall(r'^- (v\d+) \(', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
 
 
+def evidence_shown_in(request_text):
+    """The evidence ids the request listed: the ids the answer may cite and push."""
+    block = request_text.split('\n[Evidence in ', 1)
+    return set(re.findall(r'^- (e\d+) \[', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
+
+
 def check_answer(conn, view_id, data, prompt_version='judging-v1', request_text=None):
     """request_text: the user message that was sent, so theme ids are checked against the block it carried (a theme may have
     closed or opened since); without it, against the block the ledger would build now."""
@@ -209,20 +242,28 @@ def check_answer(conn, view_id, data, prompt_version='judging-v1', request_text=
             elif entry['view_id'] not in shown:
                 errors.append(f'{entry["view_id"]} is not a theme in force shown to {view_id}')
             named.append(entry['view_id'])
-    in_force = {p['evidence_id'] for p in store.evidence_in_force(conn, view_id)}
+    if has_evidence_in_view(prompt_version):
+        # the closed set is what the request showed (D198), read from the text that was sent, else computed from the ledger
+        allowed = evidence_shown_in(request_text) if request_text is not None else {p['evidence_id'] for p in evidence_in_view(conn, view_id, prompt_version)[0]}
+        not_allowed = lambda e: f'{e} is not among the evidence shown to {view_id}'
+        bad_push = lambda e: f'push on {e} which was not shown to {view_id}'
+    else:
+        allowed = {p['evidence_id'] for p in store.evidence_in_force(conn, view_id)}
+        not_allowed = lambda e: f'{e} is not evidence in force under {view_id}' + (' (replaced)' if store.is_replaced(conn, e) else '')
+        bad_push = lambda e: f'push on {e} which is not under {view_id}'
     deps = {d['resolved_to'] for d in store.dependencies_of(conn, view_id) if d['resolved_to']}
     rungs = store.rungs_of(conn, view_id)
     if not 1 <= data['rung'] <= len(rungs):
         errors.append(f'rung {data["rung"]} outside 1..{len(rungs)}')
     for cited in data['cites']:
-        if cited not in in_force:
-            errors.append(f'{cited} is not evidence in force under {view_id}' + (' (replaced)' if store.is_replaced(conn, cited) else ''))
+        if cited not in allowed:
+            errors.append(not_allowed(cited))
     for cited in data['cites_views']:
         if cited not in deps:
             errors.append(f'{cited} is not a dependency of {view_id}')
     for push in data['pushes']:
-        if push['evidence_id'] not in in_force:
-            errors.append(f'push on {push["evidence_id"]} which is not under {view_id}')
+        if push['evidence_id'] not in allowed:
+            errors.append(bad_push(push['evidence_id']))
     last = store.current_state(conn, view_id)
     if last is None and not data['changed']:
         errors.append('first judgement must say changed')
@@ -321,9 +362,11 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
             answer = answers[view_id]
             errors = check_answer(conn, view_id, answer.data, version, prompts[view_id][1])
             if errors:
+                archive.retire(answer.call_id)                 # a refused answer never answers the same request again (a resume re-samples)
                 answer = ask(view_id, retry_note(version, errors))
                 errors = check_answer(conn, view_id, answer.data, version, prompts[view_id][1])
                 if errors:
+                    archive.retire(answer.call_id)
                     raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))
             result = _record(conn, cfg, view_id, seq, item, answer)
             done.add(view_id)

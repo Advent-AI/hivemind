@@ -86,6 +86,14 @@ class Archive:
                 return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
             return cursor.lastrowid
 
+    def retire(self, call_id):
+        """A code check refused this answer: the row stays for the record, but no later identical request is answered with it
+        (the same shape as a schema-refused or malformed row, whose hash carries a suffix)."""
+        with self.lock:
+            self.conn.execute("update model_calls set request_sha256 = request_sha256 || ':refused:' || ? where call_id=? and request_sha256 not like '%:refused:%'",
+                              (uuid.uuid4().hex[:8], call_id))
+            self.conn.commit()
+
     def totals(self):
         with self.lock:
             return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()

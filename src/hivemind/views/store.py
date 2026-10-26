@@ -313,6 +313,12 @@ def replace(conn, old_id, new_id, said_day, seq):
     insert(conn, 'replacements', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
 
 
+def recent_judgements(conn, view_id, n):
+    """The thesis's last n judgements, newest first: (seq, cited evidence ids)."""
+    rows = conn.execute('select seq, cited_evidence_json from judgements where view_id=? order by judgement_id desc limit ?', (view_id, n)).fetchall()
+    return [{'seq': r['seq'], 'cites': json.loads(r['cited_evidence_json'] or '[]')} for r in rows]
+
+
 def is_replaced(conn, evidence_id):
     return bool(conn.execute('select 1 from replacements where old_evidence_id=?', (evidence_id,)).fetchone())
 

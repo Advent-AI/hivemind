@@ -56,7 +56,7 @@ def tally(title, judged, refused, reasons, examples):
 
 def part_a(archive_conn):
     reasons, examples, judged = collections.Counter(), collections.defaultdict(list), 0
-    rows = archive_conn.execute("select purpose, request_sha256, answer_json from model_calls where request_sha256 like '%:schema:%' or request_sha256 like '%:malformed:%'")
+    rows = archive_conn.execute("select purpose, request_sha256, answer_json from model_calls where request_sha256 like '%:schema:%' or request_sha256 like '%:malformed:%' or request_sha256 like '%:refused:%'")
     for purpose, sha, answer_json in (tuple(r) for r in rows):
         judged += 1
         if ':malformed:' in sha or not answer_json:

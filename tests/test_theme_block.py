@@ -177,3 +177,37 @@ def test_a_ledger_written_before_the_theme_block_gains_the_column_when_opened_fo
                       rungs=ASSET_RUNGS, seq=1, input_id='i', created_at='2026-02-25T22:00:00Z')
     judged(reopened, 'v1', 2, 'first', 2, theme_pushes=[])
     assert reopened.execute("select theme_pushes_json from judgements where view_id='v1'").fetchone()[0] == '[]'
+
+
+def test_a_judgement_the_code_refused_is_not_served_from_the_archive_again(tmp_path):
+    """2026-10-27 05:30, day 2026-08-07: v11's two refused answers were archived under their requests' hashes, so every resume
+    replayed the same two answers and failed again. A refused answer stays on record but answers no later identical request."""
+    import pytest
+    conn = ledger(tmp_path)
+    judged(conn, 'v2', 2, 'not allowed', 1)
+    archive = model.Archive(str(tmp_path / 'archive.sqlite'))
+    attempts = []
+
+    def theme_cited_as_dependency_twice_then_right(provider, request):
+        attempts.append(1)
+        data = {'rung': 1, 'reasons': 'r', 'cites': [], 'cites_views': ['v2'] if len(attempts) <= 2 else [], 'pushes': [], 'changed': True,
+                'why_changed': 'first', 'theme_pushes': [{'view_id': 'v2', 'push': 'none'}]}
+        return {'choices': [{'message': {'content': json.dumps(data)}}]}
+
+    with pytest.raises(judging.JudgementRefused):
+        judging.round_of_judgements(archive, V4, conn, ['v1'], 2, DAY, transport=theme_cited_as_dependency_twice_then_right)
+    assert len(attempts) == 2
+    results = judging.round_of_judgements(archive, V4, conn, ['v1'], 2, DAY, transport=theme_cited_as_dependency_twice_then_right)   # the resume
+    assert len(attempts) == 3 and [r['view_id'] for r in results] == ['v1']       # re-sampled, not replayed from the archive
+    assert archive.conn.execute('select count(*) from model_calls').fetchone()[0] == 3   # the refused answers stay on record
+
+
+def test_the_request_names_the_closed_set_for_cites_views_when_no_dependency_is_listed(tmp_path):
+    """Four of the three-month run's five retried first answers (2026-10-27) put theme ids from the block into cites_views: the
+    request said "the dependency thesis ids listed above" when none were listed, and the theme ids were the only thesis ids shown."""
+    conn = ledger(tmp_path)
+    judged(conn, 'v2', 2, 'not allowed', 2)
+    _, request_text = judging.build_prompt(conn, 'v1', 'judging-v4')
+    assert 'cites_views must be empty: this thesis depends on no other thesis' in request_text
+    assert 'a theme id goes only in theme_pushes, never in cites or cites_views' in request_text
+    assert '.;' not in request_text
