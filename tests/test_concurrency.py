@@ -10,10 +10,11 @@ import threading
 
 import pytest
 
-from test_sequential_replay import CASES, setup_run
-from hivemind import config, extraction, model, replay, vocabulary
-from hivemind.parallel_day import ParallelDay, extraction_key
-from hivemind.views import store
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from test_sequential_replay import CASES, setup_run  # noqa: E402
+from hivemind import config, extraction, model, replay, vocabulary  # noqa: E402
+from hivemind.parallel_day import ParallelDay, extraction_key  # noqa: E402
+from hivemind.views import store  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 

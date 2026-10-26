@@ -1,10 +1,10 @@
 # Current state
 
-As of October 26, 2026; decisions through D181. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
+As of October 26, 2026; decisions through D182. Governing design: `docs/system-design.html` and `docs/prd/`. The POC build began October 23. The foundation is frozen except pull mode and the final verdict; changes to frozen modules need a recorded decision. One row per measured step is in the [build log](research/2026-10-25-english/build-log.md). Earlier states are in [the previous snapshot](research/2026-10-25-english/current-state.before-refresh.md) and, for this phase before the close-out, in commit `f4ff787`; they are not work orders.
 
 ## Status
 
-Branch `feat/parallel-day` holds the parallel day (D172–D181) on top of the two earlier pushed branches: the sequential request-construction cleanup [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) (all 3,595 archived request identities preserved) and the NAVER prompt candidate [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) (inactive by default). None of the three is merged into `main`.
+Branch `feat/parallel-day` holds the parallel day (D172–D182) on top of the two earlier pushed branches: the sequential request-construction cleanup [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) (all 3,595 archived request identities preserved) and the NAVER prompt candidate [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) (inactive by default). None of the three is merged into `main`.
 
 The English pipeline runs end to end. Extraction v10 (`role-v10`, `categories-v10`, `gpt-6-luna`) reads each item whole and declares groups for ongoing matters (D163–D166); matching runs on TypeSafe's Jev `jev-1.14.0` by default (D169, `poc/config/poc-v23.json`), with the generative matcher kept as the configured alternative (`poc-v23-llm`); the writer owns the replacement and succession rules (D167, D168); judging runs once a day before pull mode (D63).
 
@@ -37,9 +37,11 @@ The [pipeline overview](poc/pipeline-plan.md) separates the implementation from 
 
 Pull mode and the final verdict remain earlier drafts to redesign together. The decided rule freezes the current state and reasons at the due date and closes the thesis. Upstream supply and human-review handling remain deferred.
 
-## Parallel day (D172–D181)
+## Parallel day (D172–D182)
 
 Measured live on the complete July 27 day (53 items), three serial against three parallel trials interleaved ([result](../poc/reports/2026-10-26-e2e-parallel/results.md)): median 501.8 s → 112.5 s, **4.46× end to end**, 5.91× for item work; daily judging (~37–40 s) is the same code in both modes. Every trial's audit is clean; each parallel trial's runner accepted exactly the rebuilt exact-prefix request for all 53 items; each trial's answers replayed through the other mode give an identical ledger. Drift from the recorded sequential golden is inside the serial trials' own spread. The product entry point (`--workers 16`) ran the same day live in 135.5 s with the same checks clean. On recorded answers the parallel day equals the golden in all ten tables (D180, and again on the promoted module).
+
+Fifteen consecutive days (August 1–15, 221 items) with every call answered by one deterministic oracle of the request bytes, at no cost (D182, [result](../poc/reports/2026-10-26-multi-day-oracle/results.md)): the parallel ledger equals the serial one in all 12 compared tables, its turns accepted exactly the serial run's 221 extraction requests, and a broken runner was caught. At recorded call durations the fifteen days take an estimated 2.79× less time (2,512 s → 900 s); a busy day gains 3.6–4.5×, a day of a few items 1.5–2×.
 
 What remains of the time is not scheduling: items that depend on the item just before them (~45–60 s), daily judging (D63), and each item's two matching phases in order (~17 s). Ten times end to end on this day would need those to shrink.
 

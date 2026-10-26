@@ -4,9 +4,9 @@ import sys
 
 import pytest
 
-from hivemind import model
-
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'poc'))
+from hivemind import model  # noqa: E402
 from concurrency_study.budget import GuardedTransport, RetryableError, request_envelope  # noqa: E402
 from concurrency_study.e2e import LiveTransport  # noqa: E402
 
