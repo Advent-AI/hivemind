@@ -2,7 +2,7 @@
 
 D76, October 24, 2026; English edition and current-document refresh, October 25 (D163). Alex defined Hivemind as a database with a search engine on top. Its read service lets an agent or page find theses, choose what to use and inspect the state, history and evidence. Hivemind stores shared **theses**, not user ideas, positions or commitments. This distinction replaces the ambiguous use of “thesis” for both in the earlier document. The [historical source](../research/2026-10-25-english/service.original.md) retains prior wording and verification details.
 
-The core read service does not choose or arrange results for a caller. The separate [`POST /ideas` application flow](idea-card.md) decomposes an idea and maps it to theses through two model calls. Its optional analyst summary runs after selection; the Idea specification owns that contract and default configuration. The route returns a UI-ready response.
+The core read service does not choose or arrange results for a caller. The separate [`POST /ideas` application flow](idea-card.md) discovers candidate theses, then adopts and weights them in a final assessment. The default `poc-v32-idea` configuration uses two discovery calls and one final assessment; older configurations retain their own contracts. The Idea specification owns those steps and their response. The route returns a UI-ready response.
 
 ## Historical visibility
 
@@ -25,6 +25,7 @@ Field and route names are compatibility identifiers; `view` in an API name means
 | `changes(since_day, to_day)` | Changed judgements with previous/current positions, reasons and historically visible citations | Polling agent |
 | `evaluate(view_id, comparator, value_usd, as_of)` | Whether evaluable and why; otherwise claim position, judged position/label/condition and verdict | Numeric claim display |
 | `thesis_bundles(view_ids, as_of)` / `GET /thesis-bundles?ids=...` | Complete dated bundles with ladder, judgements, historical evidence, sources, dependencies and switches | `fromBundles` in the modular UI |
+| `thesis_library(as_of)` / `GET /library?as_of=...` | Complete dated library and research groups under the [library envelope](#current-library-envelope-d181) | Library UI and agents |
 | `POST /ideas` | Idea, search summary, mapped parts and chosen theses, related theses, evaluation, optional bundles, days, trace and cost | Idea application/UI; see its contract |
 | Derived index | Content hashes, embedding model, vectors, token counts and build timestamps | Search only; not the thesis ledger |
 
@@ -72,6 +73,8 @@ No query opens, closes or rejudges a thesis. No read route stores user commitmen
 - `Dockerfile`, `Dockerfile.mcp` and `docker-compose.yml` mount the ledger/items read-only and service index/archive storage read-write. Credentials remain server-side and are never included in a bundle.
 
 The October 24 environment check found both containers could answer local HTTP/MCP reads, but the host VPN did not carry Docker VM traffic for external model calls. The recorded options were host networking or an explicitly configured reachable proxy. This is an environment observation, not a current connectivity claim or authorisation to change networking.
+
+The [README](../../README.md#run-the-service-for-testing) owns executable startup and shutdown instructions. The HTTP default is port 8788. MCP defaults to stdio; port 8789 serves `/mcp` only when streamable HTTP is selected. Use `--lexical --config ''` on the HTTP front for reads without model calls; MCP's read-only tool set needs only `--lexical`. Local source databases are required and are not included in a clone.
 
 Verification requirements live in `tests/test_service.py`, `tests/test_search.py` and transport/bundle tests. New language behavior must retain their historical visibility, numeric, cache and failure guarantees. The [UI integration](../../poc/ui/README.md) documents the rendering boundary.
 

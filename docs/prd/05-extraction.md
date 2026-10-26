@@ -176,7 +176,7 @@ A source reference
 - D51: omit unapproved restrictions on theme observations; evidence-link quality checks belong with matching labels; no consensus calculation.
 - D58: include due dates in block 5; events after an existing due date can form candidates.
 - D59/D60: subject identification and personal-memo candidates; no judgement before evidence first links; wording and diagram alignment without new rules.
-- D149: associations are required extraction output; the default implementation has not yet integrated them.
+- D149: associations are required extraction output; D165 integrates them into the default implementation.
 - D155: current POC identity/reference changes are described in the improvement plan, not evidence of grouping acceptance.
 
 <a id="抽取时同时确定研究归属"></a>
@@ -186,5 +186,5 @@ A source reference
 <!-- generated: relations -->
 - D149 requirement: while reading the full text, decide which continuing business process each candidate belongs to, called a research group. Rubin shipments and SK factory deployment retain separate questions while sharing the Rubin rollout group. Group during extraction, not in the frontend or a later whole-library clustering pass.
 - Return evidence and candidates separately. Each candidate also carries structured associations; new groups have a name and scope. Mentioning a relationship only in prose is not a complete handoff. Extraction is read-only; the library's “Research groups: associate during extraction” section owns the full handoff and storage contract.
-- Grouping remains a target requirement, not a default-pipeline handoff. D155 fixed reference-list vetoes, period/scope rewriting and same-batch duplicates; that does not prove grouping works. See docs/poc/grouping-improvement-plan.md for steps and measurements.
+- D165 integrates grouping into the default extraction handoff. Integration alone does not establish semantic quality; see docs/poc/grouping-improvement-plan.md and the recorded benchmark results for steps, measurements and limits.
 <!-- /generated: relations -->

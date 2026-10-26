@@ -2356,6 +2356,83 @@ Alex: "我们跑一个code review 清理一下过程中stale code 和 bloat 然�
 - Fixed: the preflight's matching section now judges Jev records (it had skipped all 250 of the Jev ledger) and fails when every record of a ledger is skipped; the cost reports read the one price table (`model.PRICES`) and refuse an unpriced model; the benchmark stops when its evidence scorer fails; Jev succession eligibility has one rule (`jev_matching.can_succeed`); a test no longer reads the real credentials file, another no longer writes the real service archive; the newsroom category rule has one owner that its test exercises; the replay requires the ledger and archive it writes and defaults to `poc-v23` and the current item window; the compose file uses the adopted idea configuration `poc-v9`.
 - Left, with the reason: the dependency-cycle pass in `matching.check` (its refusal wording reaches stored retry requests, so merging it would change replayed requests); the two ladder validators (admission of a new ladder and reading of a stored one are different jobs); splitting `matching.check`, `writing._write` and `idea.read_idea` (behaviour-preserving refactors of the core without a measurement round); unused parameters and result fields (signature churn across many call sites); the corpus harvesters' shared fetch code; the test-only `search.fake_embed` in the search module; `scripts/review_english_run.py` counting equal model-written scopes as a breach (D155 makes them a lead, not identity). The reviewers' lead that the API's `poc-v9` default was stale was wrong: it is the adopted idea configuration (D135/D145).
 
+## D171 · 2026-10-25 · Review and free proofs for the day-batch acceleration proposal
+
+- Alex asked to review the extraction/Jev/per-day acceleration plan deeply and test it against the stored golds and result databases. Scope is review and isolated offline proofs; no product-contract change, runtime adoption or paid comparison follows automatically.
+- The [review](research/2026-10-25-day-batch-review/review.md) and its scripts reconstruct 960/960 extraction requests from the two saved v23 ledgers. Day-start context differs for 214/480 Jev-arm requests and 168/480 control requests; rechecking the same raw answers with day-start IDs loses 73/797 and 62/744 evidence items. Extraction depends on earlier theses as well as groups. The Jev arm has 86/320 final repeat/replace decisions targeting same-day evidence, and Jev membership alone cannot declare the 26 new groups.
+- At 32 workers, a three-wave schedule using recorded Jev call durations projects 8.6× on July 27 and 3.2× over 31 nonempty days, before reconciliation/rate-limit overhead. This replaces the unsupported general 10× claim, not the speed target. It is a schedule estimate, not fresh measured latency. Judging already uses six workers per dependency level.
+- Recommendation awaiting Alex's choice: concurrent request preparation with exact read validation before sequential commits, retaining D149/D159 semantics; re-run requests whose inputs changed. A more aggressive day-start extraction contract must be decided and tested separately. The review defines both boundaries, failure/recovery states, local-ID namespacing, evaluation limits and staged tests.
+- Verification: 128 product/corpus/diagnostic tests passed; two diagnostic mutants were caught; preflight judged 250 stored Jev records with no skipped records. Existing golds remain unchanged. No batching runtime or fresh model-quality pass is claimed.
+- A read-only review independently reproduced the 960 request message pairs and schemas, the stale-reference losses and the timing projection; no serious finding against the proposed contract. Runtime implementation and live measurement remain the next, separate steps.
+
+## D172 · 2026-10-25 · Build the isolated ordered-concurrency POC
+
+- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
+- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
+- The [first implementation slice](research/2026-10-25-day-batch-review/implementation.md) covers offline coordinator, independent Jev calls and failure/restart verification on temporary storage. No paid call, new spending cap or default activation is authorized by this slice. The current per-item spend check is not safe reservation accounting for concurrent paid calls; resolve it before a live comparison.
+- Offline slice result: [ordered-concurrency POC](../poc/reports/2026-10-25-concurrency-poc/results.md). Shared request identity prevents conflicting concurrent answers under one archive ID. Bounded Jev submission cancels pending work on failure; the daily cost log includes discarded speculative work. Default replay remains serial. 143 tests pass; five intended mutants fail; 3,595 historical request hashes are unchanged. Final focused review finds no serious issue. Live accounting, fresh controls and speed measurement remain outstanding; no paid ingestion calls were made.
+
+## D173 · 2026-10-25 · Isolated provider smoke before a larger concurrency test
+
+- Alex approved proceeding with a small test and required preserving the working database: “don't contaminate the current working db ... check the batch API usage correctly ... small scale test before moving forward”. All existing databases remain read-only; no merge or production activation is authorized.
+- The [registered smoke](research/2026-10-25-api-smoke/plan.md) repeats two unchanged extraction requests and two unchanged Jev requests, with three fresh samples of two serial controls and one two-worker arm. Maximum 36 requests; conservative $1.50 reservation ceiling; no automatic retries. This is ordinary API concurrency, not OpenAI's asynchronous Batch API, and is not end-to-end or 10x acceptance.
+- The isolated transport reserves money before dispatch, retains unknown usage after failures, and closes admission on any worker failure or cancellation. A synchronized dispatch decision separates work not yet committed to sending from in-flight work. The provider endpoints, pinned models, response shapes and price envelopes were checked against the official documentation. Existing prompts, product behavior, golds and default transports remain unchanged.
+- Result: [36-request smoke](../poc/reports/2026-10-25-api-smoke/results.md) completed with valid responses, no retries, and all 122 pre-existing database files unchanged. Median two-request speed ratios were 1.08x extraction and 1.77x Jev. Fresh extraction varied between controls; one of 27 Jev categorical comparisons differed. This passes API integration, not semantic or 10x acceptance. A small end-to-end comparison remains next; no production promotion.
+
+## D174 · 2026-10-25 · Three-document end-to-end concurrency diagnostic
+
+- Alex asked to keep going. The [registered comparison](research/2026-10-25-ingestion-smoke/plan.md) uses the whole SK, NAVER and follow-up documents from July 24 against the ordered pre-July-24 baseline. It runs through the product's replay path on separate scratch ledgers, with fresh archives, three serial controls and three concurrent trials; the first control is read before the next trial. This is diagnostic, not production acceptance.
+- The study shares at most two provider requests across all stages. It keeps the $1.50 total conservative ceiling and a 144-call ceiling, stops on failure, and does not alter production prompts, grouping rules, default transports or source/gold databases. Reservation now uses the existing request's actual output cap while retaining the full model input bound and conservative published rates.
+- Before paid calls, the snapshot was corrected for this study to explicitly omit unordered sequence-zero audit rows; the source records are retained untouched. The audit rebuilds each accepted request from its committed prefix and rechecks that exact archived answer into the saved handover. Worker-side schema checks close admission before releasing a slot, including during daily judging. Free full-path controls and a substituted-handover mutant pass/fail as intended; 156 tests passed. Read-only design and code follow-up reviews found no serious issue.
+- The first live serial control completed structurally but failed the NAVER-project check. The model expressed the 2028 expansion as capacity, which the numeric horizon refused; the older library expressed it as an event and accepted it. Evidence and its group disappeared with the candidate. The [result and census](../poc/reports/2026-10-25-ingestion-smoke/results.md) record the trace. No concurrent live trial followed; the journal is closed. Eligibility and the gold remain unchanged pending a product decision. This is not a concurrency acceptance failure or a measured speed regression.
+
+## D175 · 2026-10-25 · Publish sequential cleanup separately from experiments
+
+- Alex asked to commit and push fixes/cleanup that relate to the current sequential version. The pure request-construction cleanup was isolated in a separate worktree and pushed as `07aaff0` on `cleanup/sequential-requests`. It centralizes existing request and hash construction without changing payloads or processing behavior; all 3,595 archived request identities and 123 sequential product/corpus tests pass.
+- The branch contains no concurrent runner, parallel matching, experimental transport or project-eligibility change. It is pushed, not merged into `main`. Experimental work remains local in the original worktree.
+
+## D176 · 2026-10-25 · Judge business-question coverage, not mandatory project cards
+
+- After the D174 result, Alex asked for the hedge-fund-analyst interpretation and then a systematic clean solution. The clarified criterion is whether material source information informs an appropriate, testable business question, retaining attribution and distinguishing plans from orders or realized revenue. A named project does not automatically require its own thesis or group.
+- The earlier D174 mandatory-project-card interpretation is not itself sufficient to establish an extraction defect. Preserve that experiment and its original criterion; review evidence coverage, unsupported implications, wrong links and duplicate questions before changing the gold.
+- The [admission proposal](research/2026-10-25-thesis-admission/proposal.md) identifies the numeric-card recipe and overloaded measure/horizon decision, and proposes a minimal instruction-only causal comparison before any new schema. This records the investigation scope, not approval of the proposed schema, a wider numeric horizon, a production prompt change or another paid run.
+
+## D177 · 2026-10-25 · Modify and test NAVER admission on one frozen context
+
+- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
+- The treatment removes mandatory numeric-card instructions, asks first for a material uncovered business question, and distinguishes an announced milestone's quantitative completion criterion from an annual forecast. It names no NAVER-specific facts. The system message shrinks by 172 characters; non-system request content is identical.
+- Six isolated single-item rounds use the exact pre-NAVER state from the failed serial control, with a new $0.60/36-call ceiling and no network retries. Their scope ends after matching/writing; daily judging and wider extraction quality are not tested. The existing working databases remain read-only. No schema or general horizon-policy change is authorized by this experiment.
+
+- Result: [six fresh samples](../poc/reports/2026-10-25-naver-admission/results.md) retained appropriate project coverage in 3/3 treatments versus 2/3 controls. The other control attached platform-use evidence to Rubin production instead; the two passing controls also proposed discarded annual-capacity questions. Treatment preserved plan attribution and the 200 MW / 2028 milestone without that extra question. Twelve physical requests used $0.009831 at Standard list prices and $0.031480 conservative accounting; all 124 protected databases were unchanged. This supports the candidate on this source only; the default remains v23, with no schema or horizon-policy change.
+- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
+
+## D178 · 2026-10-25 · Resume the isolated acceleration POC with the tested T6 role
+
+- Alex asked to push the change and return to the acceleration POC. The prompt candidate is already pushed as `8848660`; it remains inactive by default. The [resumed comparison](research/2026-10-25-ingestion-v11/plan.md) uses the identical `poc-v24-admission-test` configuration in both modes, the same three complete source items and ordered baseline, and fresh scratch ledgers and archives.
+- Keep D174's two-request outbound limit, $1.50 conservative ceiling and 144-call maximum. No provider/model, production schema, horizon, grouping or writer changes. Add only an explicit study `--config` path whose path/content are frozen before any live call. The prior stopped journal is not resumed.
+- Read each trial before the next. Apply D176/D177's material coverage, direct attachment and faithful status criterion, preserving D174's original result. A failed control, structural error, unsupported material assertion or duplicate counting stops the comparison. Six small trials can measure this workload, not establish general 10x acceleration or production readiness.
+
+- Result: the first sequential control completed in 60.65 seconds and retained both project questions, but failed the direct-link criterion on three of six new links (NAVER future deployment to FY2027 revenue and 2026 Rubin shipments; SK partnership size to FY2027 revenue). The [trace and source review](../poc/reports/2026-10-25-ingestion-v11/results.md) locate the incorrect targets in raw extraction; matching only compares evidence identity inside those targets. The journal is halted before any concurrent trial. Twelve physical requests cost $0.007102 at Standard list prices ($0.020530 conservative accounting); all 138 protected databases remain unchanged. No speed comparison or new default is established.
+
+- Attribution correction after Alex challenged the repeated blocker: the accepted v23 Jev ledger already carries three NAVER-source evidence links to the FY2027 revenue question (archived extraction call 687). The direct-link finding is not established as introduced by acceleration or v11. Reconcile existing baseline issues and fresh-sample variation with introduced regressions before proposing another extraction work order. The study remains halted and no acceptance criterion is changed here.
+
+## D179 · 2026-10-25 · Roll back the unrelated extraction prerequisite
+
+- Alex explicitly requested that the mistaken change be undone. Withdraw D178's use of an existing evidence-association issue as a requirement to repair extraction before continuing the acceleration POC. Restore D171/D172's comparison of sequential behavior with concurrent preparation; report existing semantic issues, sampler variation and introduced regressions separately. Keep the structural correctness requirements.
+- No evidence-link repair had entered product code. Preserve the validated D177 NAVER prompt, the existing matcher/writer and source/gold databases. The historical plans, measurements and reviews remain; the [effective continuation](research/2026-10-25-ingestion-v11/resume.md) supersedes the withdrawn work order.
+- The only runtime state restored is the assistant-set semantic `settings.halted` flag in the isolated study budget journal. A backup precedes the update; all 12 completed attempts, charges and the original limits are unchanged. No unknown-usage or technical-failure state is reopened. The next trial is concurrent-1; no paid request is part of this rollback.
+
+- Continuation result: concurrent-1 completed in 43.03 seconds versus control-1 at 60.65 seconds. Both projects remain and structural checks pass; two stale preparations were recomputed. The single pair has different judgment workloads, so it is not an isolated speedup estimate. Concurrent-2 stopped on a TLS EOF before any new product record. One unknown-usage request retains its $0.517 reservation; no automatic retry or cap increase. The continuation summary (local artifact: `../poc/reports/2026-10-25-ingestion-v11/continuation-summary.json`) preserves all measured results. The next task remains acceleration measurement, not extraction modification.
+
+## D180 · 2026-10-25 · Execute the existing implementation plan on the complete busy day
+
+- Alex reiterated that the task is the parallel POC, instructed reading the existing implementation plan and told the assistant to complete it. Continue D172's implementation, not a source-first redesign or another extraction-quality work order.
+- Use all 53 July 27 items in the preserved v23 Jev library. First build a current-code canonical response fixture, reusing exact archived requests and completing only missing current requests. Older stored Jev calls predate D168 criterion wording and cannot be claimed as exact current requests. Keep the original files read-only. Fixture completion is not a fresh latency control.
+- Run the actual sequential and eight-worker coordinator over that full day with identical recorded responses and real scratch storage. Every accepted extraction must match a recorded request; unknown speculative responses cannot become authoritative. Compare all logical records and measure actual executor overlap. Synthetic timing is labelled synthetic, not model speed.
+- Any additional live checks retain the original combined $1.50 and 144-attempt limits: the earlier unknown reservation remains held; allocate only the remainder to a separate journal. No provider, model, prompt, schema, grouping or identity change, and no cap increase.
+
+- D180 result: [full-day proof and live matching measurement](../poc/reports/2026-10-25-full-day-parallel-r4/results.md). All 53 July 27 inputs complete in sequential and eight-worker recorded-response runs; 10 logical tables match, 106 handovers bind to exact requests/answers, and the deliberately altered nonempty handover is rejected. Ten stale preparations are recomputed. Separately, five identical Jev jobs across three serial and three parallel samples measure 3.959 versus 1.185 seconds median (3.340x), with five actual simultaneous provider calls. One near-threshold decision differs in two parallel samples; that variation is preserved. No whole-pipeline 10x or new semantic acceptance is claimed. 156 tests pass; all 138 protected databases remain unchanged. Combined use stays within the original 144-attempt/$1.50 cap, retaining unknown usage.
+
 ## D181 · 2026-10-26 · Rebuild the frontend around the collected English library
 
 - Alex asked to read the current backend and database and update the frontend to match. The [implementation contract](research/2026-10-26-library-ui/plan.md) covers the read-only projection, versioned UI data contract and library interface. Extraction, group assignment, matching, scoring and acceleration experiments are unchanged.
@@ -2576,3 +2653,107 @@ Alex: "我们跑一个code review 清理一下过程中stale code 和 bloat 然�
 
 - Alex requested frontend cleanup and a push. Consolidate the two drawers' tab interactions into one controller while keeping their content, lazy loading, focus and animation responsibilities unchanged. Remove three unused internal functions, 16 unused style rules and three overridden positioning blocks; split the large analysis templates into named renderers.
 - Preserve all package exports, historical response formats, confidence arithmetic, weights and current layout. Verify identical stored-response output, actual browser interactions, the existing suites and mutation checks. Commit the frontend with its previously requested Library/Idea service dependencies; leave unrelated extraction and concurrency work uncommitted. [Plan and verification](research/2026-10-26-frontend-cleanup/plan.md).
+
+## D219 · 2026-10-26 · Float and fold the Idea input
+
+- Alex requested the Idea input at the canvas's bottom centre. Submitting centres the Idea card and folds the input into a round TrueNorth-logo button at bottom right. Clicking it reopens the same input; clicking outside folds it again. Preserve unsent drafts and the existing in-flight guard. Use the existing graph-fit scale so connected theses remain visible, and leave manual pan/replay/fit behaviour intact.
+- The launcher is black and white. Hover adds only an ambient shadow; it does not turn the border black. Keep a keyboard focus indicator. [State/event and verification plan](research/2026-10-26-idea-composer.md).
+
+## D220 · 2026-10-26 · Smaller white launcher without a border
+
+- Alex requested a smaller, white launcher with no grey outline and a soft shadow. Reduce its diameter from 56px to 44px, keep the black mark, remove the border and use only shadow elevation for hover and keyboard focus. Keep its 24px edge offsets and all input interactions unchanged.
+
+## D221 · 2026-10-26 · Centre the generated Idea at readable size
+
+- Alex clarified that the default view after generation must make the Idea readable, even when the thesis column extends beyond the viewport. The explicit Idea-centering path uses 100% zoom, not whole-graph fitting. Keep the Idea centred in the canvas; progress and replay preserve the camera, and manual Fit to view remains available.
+
+## D222 · 2026-10-26 · Balance the whole tree horizontally
+
+- Alex clarified that the complete Idea/thesis tree must be centred by its occupied width. The current four-card graph is 1,060px wide at 100% zoom, but centring only the Idea leaves 740px on the left and 120px on the right in a 1,920px canvas.
+- Centre the bounding box of all cards at 100% zoom for pending, completed and failed Idea renders. The current graph then has 430px on each side. Preserve readable card size, manual pan/zoom, replay and the separate Fit to view control. The three submit call sites use the same explicit tree-centering mode; ordinary graph callers keep their existing fit behaviour.
+
+## D223 · 2026-10-26 · Reveal the completed Idea tree in sequence
+
+- Alex requested a default drawing animation: Idea first, then a connection traced from source to target, then that thesis, with the camera following. Visit roots in display order, finish each root's related children, and return to D222's balanced 100% view after the last connection.
+- Make the completed-result reveal one-shot. Progress and historical replay do not restart it. Pointer/wheel actions, keyboard zoom/fit, date changes, replacement, resize and teardown cancel pending work, reveal the complete graph and leave camera control with the reader. Reduced motion skips the sequence. [State/event contract and verification](research/2026-10-26-tree-reveal.md).
+
+## D225 · 2026-10-26 · Retain the current Idea across workspace tabs
+
+- Alex requested that Library / Explore navigation keep the submitted question and its content until another query is sent. Keep the mounted explorer, graph, selected date/range and camera; pause replay/reveal and close drawers when leaving. Returning to an already displayed result does not rebuild or animate it again.
+- A pending request continues while in Library. Queue progress and completed/error presentation until Explore is visible, so layout never measures a hidden canvas. Page teardown still aborts requests and destroys controllers; reload retains its existing reset behaviour. No persistent storage or backend change. [State/event contract and verification](research/2026-10-26-idea-tab-retention.md).
+
+## D226 · 2026-10-26 · Add an Idea confidence Trigger card
+
+- Alex requested a frontend Trigger connected to the Idea on its left, following the existing UI style. Use the shared white card/header, warm rules, Geist type and black controls. Reserve a compact slot in the existing right column, without changing thesis associations or weight ordering.
+- Start each query with `If AI confidence > 70%`. Support `>`, `>=`, `<`, `<=`, `=` and `!=`, with a synchronized 0–100 integer slider and percentage field. Scrolling either control adjusts its value without panning the canvas. Show Met / Not met from the same rounded confidence displayed by the Idea; missing confidence remains unavailable.
+- Retain the condition through completion, replay, range changes and workspace navigation. A new query resets it. Use the existing connection/reveal/cancellation lifecycle; remove select/listeners when replaced. This slice supplies frontend editing and status only, with no service request or external action from a condition change. [State/event contract and verification](research/2026-10-26-trigger-card.md).
+
+## D227 · 2026-10-27 · Scan the thesis reveal from top to bottom
+
+- Alex requested the thesis reveal move downward without returning to the Idea for each connection. Keep the displayed card order and draw each actual connection, but move the camera from its current pose directly toward the next target. Hold horizontal focus on the thesis column after the first target; the narrower Trigger does not pull the camera sideways.
+- Retain the single final return to the balanced overview, one-shot playback and existing cancellation/reduced-motion behaviour. No data or service changes. [Contract and verification](research/2026-10-27-reveal-scan.md).
+
+## D228 · 2026-10-27 · Move the Trigger to the left of the Idea
+
+- Alex corrected D226's placement: the Trigger belongs left of the Idea. Give it its own column, the existing 180px gap and the Idea's vertical centre. Connect Trigger → Idea; keep all Idea → Thesis connections and condition controls unchanged.
+- Show the Trigger alongside the initial Idea entrance, then scan the thesis column under D227. Preserve complete-tree centring and navigation retention. [Contract and verification](research/2026-10-27-trigger-left.md).
+
+## D229 · 2026-10-27 · Show the Trigger last and simplify its comparison control
+
+- Alex requested removal of the Trigger condition's arrow and a last-place entrance. Remove its dropdown chevron, keeping the comparison symbol and all six choices. Show no Trigger while a query is pending or failed.
+- On completion, show the Idea and theses in the existing order, return to the overview, then fade in the left-side Trigger and its connector. Cancellation still exposes the full final view immediately; reduced motion and later replay/navigation retain their existing behaviour. [State/event contract and verification](research/2026-10-27-trigger-last.md).
+
+## D230 · 2026-10-27 · Trigger connectors have no directional arrowhead
+
+- Alex clarified that D229's arrow removal meant the Trigger connector, not the comparison dropdown. Restore that dropdown's indicator. Every connector touching a Trigger is a plain line; normal thesis connections keep their arrowheads.
+- The canvas marks the connector's type when it creates the path; one CSS rule suppresses its marker through normal display, hover, replay/range redraw and final reveal. Geometry and last-place entrance stay unchanged. Browser checks judge the rendered marker for the Trigger and normal thesis edges, including hover and redraw. No data or service change. [Verification](research/2026-10-27-trigger-last.md#d230-connector-clarification).
+
+## D231 · 2026-10-27 · Style AI confidence as a selectable Trigger metric
+
+- Alex requested that AI confidence be a select control matching the comparison and percentage inputs, with no other metrics available yet. Keep `If` as text and use the shared select for one selected AI confidence option. Match the existing 30px control height and row spacing; add no backend field or alternative metric.
+- Opening, selecting, Escape/outside-close, pause and teardown use the existing select lifecycle. Selecting the only option changes no condition or request. Check the real browser's single-option menu, control alignment and existing comparison/threshold behaviour. Trigger timing and its plain connector remain unchanged.
+
+## D232 · 2026-10-27 · Use a bar slider handle and a metric value readout
+
+- Alex requested a vertical bar instead of the round slider handle, with `Current value:` beneath it. The slider still edits the threshold; the readout comes from the selected metric, currently AI confidence, and follows the Idea's selected replay date.
+- Keep drag, scroll and keyboard behaviour unchanged. The filled track and visible bar follow the threshold, while the readout remains the measured value. Check both values together so threshold edits cannot replace the current metric value. No new metric, calculation or backend field is added.
+
+## D233 · 2026-10-27 · Separate the current-value marker from the round threshold handle
+
+- Alex clarified D232: keep the draggable threshold handle round. Add a separate vertical line on the scale for the selected metric's current value, with `Current value: xx` directly below that line.
+- The round handle and track fill follow the threshold; the fixed marker and its label follow the displayed current metric value. Threshold edits must not move the current-value marker. Replay/metric updates move it; unavailable values hide the marker and show an unavailable readout. Keep labels inside the card at the ends of the scale. No data or scoring change.
+
+## D234 · 2026-10-27 · Rename the workspace navigation
+
+- Alex named the navigation tabs `Thesis Library` and `Explore Ideas`. Use those exact labels in the page shell, overriding the earlier sentence-case wording for these two names. IDs, navigation behaviour and retained Idea state stay unchanged.
+
+## D235 · 2026-10-27 · Add the Action preview and real NVIDIA prices
+
+- Alex requested an Action card left of the Trigger, with Buy / Spot / Market Order / Hyperliquid controls, the Hyperliquid logo, a 5.0% example-wallet allocation and a NVIDIA chart. The [Action contract](research/2026-10-27-action-card.md) owns its state, data and boundaries. It is an editable frontend preview with no order submission or wallet connection.
+- Show a dated TrueNorth snapshot of NVDA stock prices in USD, separate from the historical thesis replay. Preserve settings across replay and workspace tabs; reset them for a new query. Reveal Action after the Trigger. Both Trigger connections remain plain lines.
+- The fourth column participates in whole-tree centring. Where its width exceeds the viewport, reduce zoom only enough to fit that width, capped at 100%; never fit the tall thesis column by height for the default view. Manual Fit to view remains unchanged.
+
+## D236 · 2026-10-27 · Remove the Action header badge
+
+- Alex requested removal of the visible Preview tag. The Action header now contains only its icon and title. Delete the unused badge style; retain the existing controls, chart and behaviour.
+
+## D237 · 2026-10-27 · Simplify Action text and cancel unfinished allocation edits
+
+- Alex requested removal of the trailing wallet word, the chart's source/date footer and the timeframe suffix beside percentage change. Label the Action `NVDA-USDC | Hyperliquid-Spot`. The chart continues to use the captured NVDA stock reference prices; this label is the requested plan, not verification of a venue listing or a new price feed. Keep actual source, currency and capture time in the chart's accessible description.
+- Typed allocation values are drafts. Enter commits a bounded tenth-of-a-percent value. Escape, blur, leaving the workspace or replacement discards unfinished input and restores the last committed value. A wheel movement while editing changes the draft; an unfocused wheel adjustment retains its existing immediate behaviour. Range selection preserves the committed allocation. Reduce the card height by the removed footer's space.
+
+## D238 · 2026-10-27 · Show Monitoring in the Action header
+
+- Alex requested a robot icon with Monitoring beside it on the right of the Action header. Use the existing monochrome style, with a compact outlined robot and plain status text. This is the requested frontend status presentation; it adds no agent runtime or trading execution.
+
+## D239 · 2026-10-27 · Use a pulsing black Monitoring dot
+
+- Alex replaced the robot icon with a pulsing black dot beside Monitoring. Keep the same header position and text, use a gentle scale/halo pulse, and show a still black dot when reduced motion is requested. Remove the unused robot SVG.
+
+## D240 · 2026-10-27 · Default the Action chart to one year
+
+- Alex requested 1Y as the default price-chart range. Use it for a new Action and for each new Idea. Keep the selected range through existing replay and workspace navigation, and retain the other range controls.
+
+## D241 · 2026-10-27 · Clean up frontend component ownership
+
+- Alex requested frontend cleanup. Move the Action price display into an internal chart component, reuse its formatters and DOM references, and share the duplicated Action/Trigger percentage-input styling. Preserve public APIs, rendered output, settings, editing semantics and request behaviour. The [cleanup record](research/2026-10-27-frontend-cleanup.md) owns the scope and verification.

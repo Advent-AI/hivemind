@@ -13,7 +13,7 @@ User idea → POST /ideas → coverage search
                             → code searches each part
                             → model call 2: map parts to supplied theses and explain
                             → code validates IDs and claim, reads related theses
-                            → configured assessment: analyst TLDR and composite over the fixed selection
+                            → configured assessment: adopt and weight theses, write analyst TLDR
                             → return Idea card, evaluation and optional thesis bundles
 ```
 
@@ -46,7 +46,7 @@ A share-price, market-cap or valuation part is treated as a market reading and i
 | `idea` | Original text and `as_of` day | Idea heading/context |
 | `search` | Mode and initial candidate IDs | Trace/debug display |
 | `reading` | Summary, typed/mapped parts, chosen IDs, claim, dropped choices, search trace and language-slip count; null for no coverage | Idea adapter and card |
-| `reading.composite` | Version, method, requested date, named target/direction, representatives with supporting endpoints and impact percentages, exclusions and reasons | Composite chart, per-Idea card weights and calculation detail |
+| `reading.composite` | Version, method, requested date, named target/direction, adopted representatives with supporting endpoints, positive impact percentages and reasons; older versions retain their own fields | Composite chart, per-Idea card weights and calculation detail |
 | `reading.parts[]` | Subject, focus, period, query, candidates, direct/driver/context IDs, selected direct ID, market-reading flag and reason | Coverage explanation; does not create ledger records |
 | `evaluation` | Numeric verdict or null | Claim display |
 | `related[]` | Related thesis ID, `via`, upstream/downstream relation, direction and current judgement | Graph edges |
@@ -84,7 +84,7 @@ No redundant decomposition table is placed inside the Idea card. The legacy brow
 
 ## Idea confidence
 
-Every covered Idea in the default configuration returns a composite plan. The frontend does not match question text against a registry. The final assessment selects one representative per distinct economic driver, accounting for overlapping revenue and spending measures with explicit exclusions. It chooses by relevance rather than a favourable current score.
+Every covered Idea in the default configuration returns a composite plan. The frontend does not match question text against a registry. The final assessment selects adopted representatives for distinct economic drivers, accounting for overlapping revenue and spending measures by omitting redundant candidates from the plan. It chooses by relevance rather than a favourable current score. Older plan versions can include explicit exclusions; the default positive-selection format does not.
 
 Each adopted thesis has a `weight_percent` from 1 to 100 and a `weight_reason`. A nonempty plan must total exactly 100%; omitted candidates do not appear in it. Code aligns the endpoint with the claim direction and sums weight/100 times the signed score. Binary endpoints remain +2/-2. If an adopted thesis has no assessment on a historical date, that date has no score; its weight is not reallocated. An empty adopted set has no score. Legacy plans retain their previous behavior.
 
@@ -109,6 +109,6 @@ These measurements belong to the original October 24–25 runs, not the English 
 | Language slips | Two in 49 ideas, both re-asked | Checked-field behavior, not proof of all-field language quality |
 | Model-authored 20-idea gold | Correct direct 18/20; two traps; median wanted-driver recall 65%; canvas noise 22%; claim evaluation 20/20 | Gold is an analyst-model reading, not Alex's own labels |
 
-The adopted full contract retains per-part reasons because measured no-reason variants were less stable. The route's two serial model calls, retrieval coverage and semantic errors remain limitations. Older agent-loop counts, speedups and approximate floors are historical environment measurements, not promises for current hardware or providers.
+The adopted full contract retains per-part reasons because measured no-reason variants were less stable. Those measurements cover the earlier two-call flow. The current default adds a final adoption/weighting assessment; its three stages, retrieval coverage and semantic errors remain limitations. Older agent-loop counts, speedups and approximate floors are historical environment measurements, not promises for current hardware or providers.
 
 D186 preserves the original two mapping requests and adds the isolated TLDR after selection. Its focused development comparison and measured cost/latency are in [the TLDR report](../../poc/reports/2026-10-26-analyst-tldr/results.md); this does not establish broad Idea matching quality or meet the historical whole-flow latency target.

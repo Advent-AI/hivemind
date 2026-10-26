@@ -1,13 +1,13 @@
 # System overview
 
-> Status: foundation frozen except final verdict and pull mode. Universe, classification, Config, dispatch, extraction and human-review intake froze on October 18, 2026; the library and matching labels on October 20; the full review completed October 22. D149 adds extraction-time grouping, not yet integrated into the default pipeline. English edition: October 25, 2026 (D163).
+> Status: foundation frozen except final verdict and pull mode. Universe, classification, Config, dispatch, extraction and human-review intake froze on October 18, 2026; the library and matching labels on October 20; the full review completed October 22. D149 adds extraction-time grouping; D165 integrates it into the default pipeline. English edition: October 25, 2026 (D163).
 > Design page: `docs/system-design.html` → New → Open system PRD. Recorded decisions take precedence over this document.
 
 ## Purpose
 
 Maintain a thesis library: create theses, update their judgements and close them when due. Upstream continuously supplies classified information. Extraction reads each whole item as a senior hedge-fund analyst, alongside existing theses, and returns linked evidence and candidates with research-group associations, declaring new groups where needed. The library preserves those associations and compares identity: merge, succession, new thesis or skip; repeat, replace or new evidence. Each thesis has a question, ladder and due date. Evidence moves its state, which freezes when due.
 
-D149 requires organisation during full-text reading, with associations included in extraction output. See [the library's grouping contract](06-views.md#research-groups-associate-during-extraction) and [extraction's responsibility](05-extraction.md#determine-associations-during-extraction). Rubin shipments and SK factory deployment are separate questions in one continuing business process. Default integration is pending; the [improvement plan](../poc/grouping-improvement-plan.md) records implementation gaps, D155 identity changes and validation work.
+D149 requires organisation during full-text reading, with associations included in extraction output. See [the library's grouping contract](06-views.md#research-groups-associate-during-extraction) and [extraction's responsibility](05-extraction.md#determine-associations-during-extraction). Rubin shipments and SK factory deployment are separate questions in one continuing business process. D165 integrates grouping into the default pipeline; the [improvement plan](../poc/grouping-improvement-plan.md) records implementation gaps, D155 identity changes and validation work.
 
 ## Why rebuild
 
@@ -98,6 +98,8 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | State | Our current rung judgement; not yet judged before a memo thesis first receives evidence | A second parallel state |
 | Conclusion | State plus reasons; may change through key facts/numbers even within one rung | Equating changed conclusion with changed score only |
 | Idea confidence | An Idea's weighted thesis assessment displayed on a 0–100% scale; the Idea service specification owns its calculation | Treating the index as a calibrated outcome probability |
+| Trigger card | A frontend condition comparing an Idea's displayed confidence with a chosen percentage; the frontend specification owns its controls and status | Treating a met condition as an executed action |
+| Action card | An editable frontend plan preview beside the Trigger, with a separately dated price chart; the frontend specification owns its fields | Treating a preview as an executable order or a connected wallet |
 | Freeze | Preserve the current state and reasons at the due date, then close | A separate confirmed/falsified verdict in the current design |
 | Unavailable answer / pending publication | Proposed pull-mode cases, not yet approved | Treating proposals as implemented states |
 | Evidence tier | Fact, party statement, third-party view or rumour; only facts can establish the outcome | Mixing tiers with thesis kinds |
