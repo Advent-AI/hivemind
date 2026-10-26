@@ -205,3 +205,158 @@ extend (a universe change, Alex's call), not the lifecycle.
 - What to measure first, at no cost: on the r3 ledger, for each of the 23 NVDA theses, list the open theme theses tagged to
   its items on each judgement day and the count of judgements that would have carried a theme block (today 185 judgements,
   0 with a theme in view); then re-send three judgements with the block and read whether the sign is stated and right.
+
+## 8. Build design for the decided shape (2026-10-26, evening; AGENTS §2 tables; revised after the Codex review, 8.8)
+
+Alex: "做，先零成本数完再改；然后你得确认这个架构和逻辑是对的". §§1–6 and their tables describe the withdrawn `feeds` shape and
+stay as the record of what was rejected; this section is the design the build follows. One word: a **theme block** is the
+part of a judging request that lists the open theme theses and their current conclusions.
+
+### 8.1 What the stored ledgers say ($0, `theme_block_census.py`)
+
+| | r3 (`poc-v25`) | r4 (`poc-v26`, the default) |
+|---|---|---|
+| judgements: company / theme | 162 / 23 | 175 / 11 |
+| open theme theses in the window | 16 | 6 |
+| company judgements that would carry a theme block, one to all | 162 of 162 | 175 of 175 |
+| theme lines per block (min / median / max) | 1 / 11 / 16 | 2 / 3 / 6 |
+| company judgements with a theme tagged on the items behind its evidence (the narrow reading) | 12 | 14 |
+| theme judged in the same day round but after the company thesis | 88 | 9 |
+| theme judgements with a changed conclusion (first judgements among them) | 22 (16) | 10 (6; the other four: 3 rung moves, 1 facts only) |
+| theme change × open company thesis pairs; of them never judged again in the window | 525; 269 | 228; 109 |
+| additional judgement calls under propagation (distinct thesis × round, not judged in that round anyway); from first theme judgements | 209; 194 | 141; 100 |
+| judging cost of the window at `model.PRICES` | | 186 calls, $0.32; the additional calls about $0.24 |
+
+Three findings decide the shape. The narrow reading ("the themes the company's items were tagged with", D191's consequence
+note) shows a block in 14 of 175 judgements: items carry a ticker, rarely a theme, and the universe's themes list no members;
+Alex's rule is one to all, and that is the only one with data behind it. Ordering matters: in r4 nine company judgements
+would have read a theme's state from before the same round, because the round judges in dependency order only. Without
+propagation, half the open company theses never read a changed theme conclusion inside the window; with propagation on the
+`changed` flag the window's judging grows by 141 calls (100 of them because a theme thesis was judged for the first time,
+which the code marks changed).
+
+### 8.2 The shape
+
+1. **The block.** When an asset thesis is judged under `judging-v4`, its request carries, after the dependencies,
+   `[Themes in force, N]`: every open theme thesis with a current state, one line each: id, theme name, question, due day,
+   current rung label, the reasons of its last judgement (first 300 characters), the day of that judgement. A theme thesis
+   with no judgement yet, or closed, is not listed. A theme thesis's own judgement carries no block.
+2. **The answer.** The judgement schema for v4 gains `theme_pushes: [{view_id, push}]`, `push` in the existing `PUSHES` enum
+   (toward_first, toward_last, none): the same word as an evidence push, because it is the same thing, the direction this
+   conclusion moves this thesis (Codex 8.8/8: the vocabulary and the readers allow it). Code refuses an id not in the block, a
+   duplicate id, or a push outside the enum (one retry, then the item fails, as every judging error today). The judge lists
+   the themes it weighed; an unlisted theme was not used. `cites` and `cites_views` keep their meaning; a theme conclusion is
+   never cited as evidence (06-views: our own judgement is not evidence).
+3. **Stored and served.** `judgements` gains the column `theme_pushes_json` (added by `ensure_writable_columns`, as `rungs`
+   gained `lo`/`hi`). `service.state_as_of` (behind `service.view`) and `service.history` return it as `theme_pushes`; a
+   ledger written before the column (opened read-only, no migration) returns `[]`. The UI is unchanged in this slice: its
+   adapter keeps reasons and citations and drops `pushes` already (`poc/ui/src/adapters/bundle.js`), so the sign reaches a
+   reader through the reasons; showing the block on the page is its own slice.
+4. **Order in the round.** `round_of_judgements` judges theme theses before asset theses: an asset thesis waits while any
+   pending theme thesis is unjudged, the way it waits for its upstream dependencies today; dependency order still comes
+   first. A theme that depends on an asset thesis is a corner no current ledger can reach: the Jev matching path writes no
+   dependencies (`dependencies` has 0 rows in every v23-jev, v25 and v26 ledger; only the generative-matching and the
+   October 23 ledgers have any), so it is recorded in 8.3 as accepted, not designed around.
+5. **Propagation.** A theme judgement whose `changed` is true queues every open asset thesis with evidence in force, the
+   rule dependants follow today; each is judged once per round. `changed` already excludes a repeated statement (judging
+   prompt: "repetition or another source for the same statement does not alone change the conclusion"), and 06-views wants
+   a facts-only change to reach a dependant ("AMZN capex moving from 12% to 25% can trigger NVDA even within the same
+   rung"), so `changed` is the PRD's filter. **This reverses the consequence note under D191** ("a changed theme conclusion
+   does not fan out to every company thesis in the same round", written by the assistant, not Alex's words) and is the one
+   choice for Alex in 8.6; the census gives its price (141 calls, $0.24 on the window) and what the alternative costs (109 of
+   228 theme changes never read).
+6. **The round's queue comes from the ledger, not memory.** Today a round's pending set lives in memory: a crash or a refusal
+   after some judgements committed loses every dependant that a changed judgement had queued, and the resumed round (seeded
+   from the day's written changes, skipping views judged at this seq) never recovers them (Codex 8.8/1, reproduced on a
+   copy). The slice fixes it where the data is written: the round's starting set is the day's changed views ∪ the dependants
+   of every view judged at this seq with `changed` ∪ (v4) every open asset thesis with evidence in force when a theme thesis
+   was judged at this seq with `changed`; a view already judged at this seq is skipped. This is one derivation, used at
+   start and at resume, and it fixes the existing hole for explicit dependants on the same path.
+7. **Versioned.** `judging-v4` (prompt text: the block's reading rules; schema: `theme_pushes`), `poc-v29` = `poc-v26`
+   with `rejudging.prompt_version: judging-v4`. The block, the field, the theme-first order and the propagation are all
+   gated on the version (≥ 4): under v3 the round schedules exactly as today, so stored v3 requests and the "previous
+   conclusion" text they carry replay byte-identical. (`scripts/preflight.py` has no judge replay: its part A checks only
+   stored schema-refused answers; nothing here changes that.)
+8. **Explicit dependencies are unchanged**, including D191 point 2 (a dependency added to an existing thesis later), which
+   is not built in this slice.
+
+### 8.3 State × event (an asset thesis B, the open theme theses T)
+
+| State of B | Event | Transition; what is written; the date read |
+|---|---|---|
+| open, evidence in force, no judgement yet | its first judgement | request carries the block with every T judged so far; answer's `theme_pushes` stored on the judgement row; `changed` must be true (today's rule) |
+| open, judged | new evidence or replacement (today's triggers) | rejudged with the block as of this round, themes first |
+| open, judged | a T's judgement in this round says changed | B is queued in the same round (once); its request reads T's new state because T went first |
+| open, judged | a T's judgement in this round says not changed | nothing; B's next judgement reads the same state |
+| open, judged | a new T opens from today's item and is judged | T's first judgement says changed (rule) → B queued; B's block includes the new T |
+| open, judged | a day where only theme theses changed | the round starts with themes only; a changed T queues the open asset theses; a day with no change judges nothing (today) |
+| open, judged | a T closes (pull mode, D63 due-date freeze) | T leaves the block; B is not rejudged for the closure (nothing new was concluded); T's frozen outcome reaches B only through an explicit dependency (which reads a closing state, 06-views) or not at all. Accepted: a closed theme is history, as a closed asset thesis is |
+| open, no evidence in force | a T changes | not judged (D59: no evidence, no judgement); the block is read when evidence first links |
+| closed | anything | not judged (today's rule) |
+| open, judged earlier in this round | a T that depends on B changes after B (dependency order put B first) | B is not judged twice (once per round); reads T's new state at its next judgement, which only its own evidence or another theme change triggers. Accepted: unreachable on the Jev path (8.2/4) |
+| T open, evidence in force, never judged | B is judged | T is absent from the block (it has no state); T is judged in the round its evidence changed, so this is a crash corner that 8.2/6 closes |
+| any | the judgement answer names a theme not in the block | refused, one retry with the note, then `JudgementRefused` (today's path) |
+| any | crash or refusal mid-round | the day step fails; on resume the queue is re-derived from the ledger (8.2/6): judged views skipped, queued dependants and propagation targets recovered |
+| any | configuration changed in between (v3 → v4) | requests from the switch on carry the block; earlier judgements keep their rows; `config_checksum` on each row records which; no rejudgement of T is forced by the switch |
+| any | parallel day (D181) | judging is the day's serial step after the items (`replay.py`), then pull mode; unchanged |
+
+### 8.4 Value × reader
+
+| Value | Writer | Readers | Change |
+|---|---|---|---|
+| the theme block (request text) | `judging.build_prompt` for v4 and asset theses | the model; the archive (`request_json`); replay by sha | new, version-gated |
+| `theme_pushes` (answer) | the model; `check_answer` refuses bad ids | `judging._record` | new |
+| `judgements.theme_pushes_json` | `_record` | `service.state_as_of` / `view` and `service.history` (returned as `theme_pushes`); `bundle.py` (copies judgement rows for the UI bundle); the UI adapter (drops pushes today, unchanged); reports (`scripts/report.py`, `trace_items.py`, `show_views.py`, `review_english_run.py` read rung/reasons/changed only) | column by migration; explicit selects add it with an absent-column fallback |
+| `changed` on a theme judgement | the model (as today) | `round_of_judgements` (now: queues open asset theses); `service.changes` (lists every changed judgement with its evidence; propagation-only judgements that say changed appear there, as they should) | new reader of an existing value |
+| the number of judgements per thesis | the round | `service.state_as_of` (`rounds`), `service.record` (last check), `replay.py` day counters (`judged`, `changed`), `bundle.py`, the reports above; tests `test_service.py`, `test_english.py`, `test_sequential_replay.py` assert on these counts for v3 ledgers (unchanged under v3) | counts rise under v4 by the 8.1 numbers; no code change, the measurement reads them |
+| `rejudging.prompt_version` | config file | `judging.schema_for`, `build_prompt`, `retry_note`, `round_of_judgements` (order and propagation gate) | `judging-v4` added; `is_english` unchanged |
+| `object_kind` of a view | writer (`views` row) | `round_of_judgements` (theme first; propagation target set), `build_prompt` (block only for assets) | new readers of an existing value |
+
+### 8.5 New path × old checks
+
+| Old check | On the new path |
+|---|---|
+| `check_answer`: cites ⊆ evidence in force; cites_views ⊆ dependencies; rung in range; changed on the first judgement and on a rung move | unchanged; plus theme ids ⊆ block, no duplicates, push in the enum |
+| one judgement per view per seq (unique index) | unchanged; propagation and the re-derived queue cannot judge a view twice in a round |
+| dependency order (`topological`) and the upstream wait | unchanged; the theme-first wait is added after it |
+| D59: no evidence, no judgement | unchanged; propagation and the re-derived queue filter by `eligible` |
+| replay identity of stored requests (byte-identical under the same version) | v3 requests and scheduling unchanged; v4 is a new sha population |
+| `docs/check.py` glossary words | "theme block" is added to the glossary with its ruled-out words ("theme context", "macro block") |
+| tests of judging (`test_english.py`: v3 prompt text) | unchanged; v4 gets its own tests: the block lists only open judged themes; themes first in the round; a changed theme queues open asset theses once; a theme id outside the block is refused; the queue re-derived at resume recovers a queued dependant |
+
+### 8.6 Prior decisions searched, and the one choice for Alex
+
+- D191 (this design's decision): one to all; sign at judgement. Its consequence note (assistant's) says "a changed theme
+  conclusion does not fan out to every company thesis in the same round"; 8.2/5 proposes the opposite on the census. **Alex
+  decides:** (A) propagate on `changed`, as explicit dependants do today (141 extra calls, $0.24, on the window; every open
+  asset thesis reads a theme change in the same round); (B) keep the note: no propagation, a theme change is read at each
+  asset thesis's next own judgement (109 of 228 never inside the window); (C) propagate only on a rung move (3 of 10 events
+  in r4; a facts-only change such as a higher aggregate estimate does not reach the companies, against 06-views' AMZN
+  sentence). Lean: A; it is one rule for dependants and themes and the PRD's own filter.
+- D63 (daily judging round, due-date freeze) and D59 (no evidence, no judgement): kept; the block does not create judgements.
+- 06-views "Dependencies are the sole way theses influence each other" and "Choose dependencies only when B is created":
+  the first sentence is amended by this slice (the theme block is the second way, read-only, with the sign decided at
+  judgement); the second is amended by D191 point 2, not built here.
+- D181 (parallel day): judging is the day's serial step; untouched. D186/D187: not touched. D19/D37 (frozen inputs and
+  extraction): nothing here changes them (Codex 8.8/10).
+- D154/D155 (code owns identity, the model owns importance): the block adds context, decides nothing in code.
+
+### 8.7 Measurement for the slice
+
+1. Stored data ($0): the census above; the unit tests on a temporary ledger, including the resume recovery.
+2. Three stored v3 judgement requests of asset theses from r4 (one NVDA data-center revenue, one AMD, one a company whose
+   item is unrelated to the themes), rebuilt under v4 from the ledger as of that seq and re-sent once each (about $0.01):
+   read whether `theme_pushes` names the right themes with a sign a reader would give, and whether the reasons say why.
+3. One replay of the window under `poc-v29` beside r4: judgements, judgements carrying a non-empty `theme_pushes`,
+   propagation-only judgements and their `changed` share, judging cost, and ten reasons read side by side with r4's.
+
+### 8.8 The Codex read-only review (scratchpad `codex-theme-block-review.out.md`) and what it changed
+
+Twelve findings, each read against the code before acting: (1) a resumed round loses queued dependants (reproduced; pre-existing
+for explicit dependants) → 8.2/6; (2) a theme depending on an asset thesis judged after it → 8.3 row, accepted and shown
+unreachable on the Jev path; (3) "next round" not guaranteed → same row, stated plainly; (4) closure does not produce a successor
+→ 8.3 closure row corrected; (5) missing states → three rows added; (6) propagation reverses D191's note → 8.6, Alex's choice;
+(7) the census double-counted pairs and read tags from the day marker → script corrected, 8.1 numbers replaced (228 → 141
+additional calls; tagged 0 → 14); (8) `theme_pushes` vocabulary fine, UI drops pushes → 8.2/3 and 8.4 corrected; (9) readers of
+judgement counts missed → 8.4 rows; (10) frozen modules untouched; (11) `service.current` does not exist → `state_as_of`,
+absent-column fallback; (12) order and propagation must be version-gated, preflight has no judge replay → 8.2/7.
