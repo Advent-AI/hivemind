@@ -145,12 +145,14 @@ AVOIDED_WORDS = [
     (r"(?i)\bauthor's views?\b", "author's opinions"),
     (r"(?i)\bpremises?\b", "dependencies"),
     (r"(?i)\bopening reasons?\b", "admission reason"),
+    (r"(?i)\b(?:theme context|macro block)\b", "theme block"),
     (r"(?i)\b(?:verification|confirmation|falsification) conditions?\b", "ladder conditions"),
     (r"(?i)\b(?:thes(?:is|es)\s+(?:is|are|was|were|has been|have been)\s+(?:confirmed|falsified)|(?:confirmed|falsified)\s+thes(?:is|es))\b", "a frozen thesis state, not a separate verdict"),
 ]
 WORD_CONTROLS = [
     ("Open a company view.", "Open an asset thesis."),
     ("Open a theme view.", "Open a theme thesis."),
+    ("Show the theme context to the judge.", "Show the theme block to the judge."),
     ("Update active theses.", "Update open theses."),
     ("Read the thesis driver.", "Read the focus."),
     ("Choose an expiry bucket.", "Choose a due date."),

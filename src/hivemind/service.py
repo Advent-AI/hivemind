@@ -68,7 +68,7 @@ def is_open_as_of(conn, view_id, as_of):
 
 def state_as_of(conn, view_id, as_of):
     """The last judgement on or before the day, with the day the current position was first taken."""
-    rows = [dict(r) for r in conn.execute('select judgement_id, seq, rung, changed, why_changed, reasons, publication_day from judgements where view_id=? and publication_day<=? order by judgement_id', (view_id, as_of))]
+    rows = [dict(r) for r in conn.execute('select * from judgements where view_id=? and publication_day<=? order by judgement_id', (view_id, as_of))]
     if not rows:
         return None
     last = rows[-1]
@@ -79,7 +79,7 @@ def state_as_of(conn, view_id, as_of):
             break
         since = row['publication_day']
     return {'position': last['rung'], 'judgement_day': last['publication_day'], 'since_day': since, 'previous_position': previous,
-            'rounds': len(rows), 'why_changed': last['why_changed'], 'reasons': last['reasons']}
+            'rounds': len(rows), 'why_changed': last['why_changed'], 'reasons': last['reasons'], 'theme_pushes': _json(last.get('theme_pushes_json'))}
 
 
 def summaries(conn, as_of=None, include_closed=False):
@@ -201,7 +201,8 @@ def history(conn, view_id, from_day=None, to_day=None):
     previous = None
     for row in conn.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
         entry = {'day': row['publication_day'], 'seq': row['seq'], 'position': row['rung'], 'changed': bool(row['changed']), 'moved_from': previous if previous is not None and previous != row['rung'] else None,
-                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _json(row['cited_evidence_json']), 'pushes': _json(row['pushes_json']), 'round': row['input_id']}
+                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _json(row['cited_evidence_json']), 'pushes': _json(row['pushes_json']),
+                 'theme_pushes': _json(row['theme_pushes_json'] if 'theme_pushes_json' in row.keys() else None), 'round': row['input_id']}
         previous = row['rung']
         if from_day <= row['publication_day'] <= to_day:
             judgements.append(entry)

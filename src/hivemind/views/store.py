@@ -15,7 +15,7 @@ TABLES = {
     'rungs': 'view_id text, position integer, label text, condition text, lo real, hi real',
     'view_keys': 'view_id text primary key, measure text, scope text, scope_key text, period_start text, period_end text, basis text, unit text, event_type text, seq integer, scope_source text, key_version integer',
     'view_switches': 'id integer primary key autoincrement, view_id text, open integer, reason text, by_whom text, after_seq integer',
-    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text',
+    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text, theme_pushes_json text',
     'evidence': 'evidence_id text primary key, quote text, one_line text, speaker text, original_who text, original_day text, tier text, event_time text, created_seq integer, created_from_input text',
     'evidence_sources': 'id integer primary key autoincrement, evidence_id text, input_id text, category text, publication_day text, location text, seq integer',
     'evidence_links': 'id integer primary key autoincrement, evidence_id text, view_id text, seq integer',
@@ -138,6 +138,8 @@ def ensure_writable_columns(conn):
     for field in ('lo', 'hi'):
         if field not in columns:
             conn.execute(f'alter table rungs add column {field} real')
+    if 'theme_pushes_json' not in {r[1] for r in conn.execute('pragma table_info(judgements)')}:
+        conn.execute('alter table judgements add column theme_pushes_json text')     # D195: judgements written before the theme block read as []
 
 
 def view_key(conn, view_id):
