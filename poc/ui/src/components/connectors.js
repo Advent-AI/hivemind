@@ -5,7 +5,7 @@ const LEAD = 24;
 
 /** Leave room for distinct bends, with a straight lead at both card edges. */
 export function fanOutGap(count) {
-  return Math.max(120, LEAD * 2 + Math.max(0, count - 1) * LANE_SPACING);
+  return Math.max(180, LEAD * 2 + Math.max(0, count - 1) * LANE_SPACING);
 }
 
 /** Round a horizontal–vertical–horizontal route without moving its endpoints. */

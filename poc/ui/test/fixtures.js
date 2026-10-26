@@ -20,13 +20,16 @@ items=store.open_read_only(str(root/'poc/data/items-window.sqlite'))
 as_of=service.default_as_of(ledger)
 ids=[r[0] for r in ledger.execute('select view_id from views order by created_seq')]
 lookup=bundle.item_lookup(items)
-print(json.dumps({'sequence_days':service.seq_day_map(ledger),'live':{'as_of':as_of,'days':bundle.days(ledger,as_of),'views':[bundle.view_bundle(ledger,lookup,id,as_of) for id in ids]}},ensure_ascii=False))
+current_ledger=service.open_ledger(root/'poc/data/english-v23-jev-2026-10-25/views.sqlite')
+current_items=store.open_read_only(root/'poc/data/items-window-tags2-2026-10-24.sqlite')
+print(json.dumps({'current':bundle.library(current_ledger,current_items),'sequence_days':service.seq_day_map(ledger),'live':{'as_of':as_of,'days':bundle.days(ledger,as_of),'views':[bundle.view_bundle(ledger,lookup,id,as_of) for id in ids]}},ensure_ascii=False))
 `,
       root,
     ],
     { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
   ),
 );
+export const current = records.current;
 export const live = records.live;
 export const sequenceDays = records.sequence_days;
 export const english = JSON.parse(

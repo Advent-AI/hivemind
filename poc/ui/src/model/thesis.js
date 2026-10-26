@@ -1,7 +1,6 @@
 export const SCORES = ['+2', '+1', '0', '−1', '−2'];
 export const score = (thesis, position) =>
   thesis.rungs.find((r) => r.position === position)?.score ?? '—';
-export const scoreTable = (thesis) => thesis.rungs.map((r) => r.score);
 export const rungLabel = (thesis, position) => {
   const state = thesis.rungs.find((r) => r.position === position);
   return state && state.label !== state.score ? state.label : '';
@@ -33,16 +32,37 @@ export function snapshotThesis(thesis, day) {
   return {
     ...thesis,
     judgements: judgementsUpTo(thesis, day),
-    evidence: thesis.evidence.filter((e) => e.arrival_day <= day),
-    dependencies: thesis.dependencies.filter((d) => d.day <= day),
+    evidence: thesis.evidence
+      .filter((e) => e.arrival_day <= day)
+      .map((e) => ({
+        ...e,
+        sources: e.sources.filter((s) => s.arrival_day <= day),
+        replaced_by: e.replaced_by?.day && e.replaced_by.day > day ? null : e.replaced_by,
+      })),
+    dependencies: dependenciesAt(thesis, day),
+    successions: thesis.successions.filter((s) => s.day <= day),
     switches: thesis.switches.filter((s) => s.day <= day),
   };
 }
+export function dependenciesAt(thesis, day) {
+  return thesis.dependencies
+    .filter((d) => d.day <= day)
+    .map((d) => ({
+      ...d,
+      depends_on: d.resolutions.filter((r) => r.day <= day).at(-1)?.target ?? d.depends_on,
+      resolutions: d.resolutions.filter((r) => r.day <= day),
+    }));
+}
+export const isSuperseded = (evidence, day) =>
+  Boolean(evidence.replaced_by?.day && evidence.replaced_by.day <= day);
+export const groupsFor = (dataset, thesisId, day) =>
+  dataset.groups.filter(
+    (g) => g.created_day <= day && g.members.some((m) => m.thesis_id === thesisId && m.day <= day),
+  );
 export function relatedTheses(thesis, dataset, day) {
-  const ids = new Set(thesis.dependencies.filter((d) => d.day <= day).map((d) => d.depends_on));
+  const ids = new Set(dependenciesAt(thesis, day).map((d) => d.depends_on));
   for (const other of dataset.theses) {
-    if (other.dependencies.some((d) => d.depends_on === thesis.id && d.day <= day))
-      ids.add(other.id);
+    if (dependenciesAt(other, day).some((d) => d.depends_on === thesis.id)) ids.add(other.id);
   }
   return dataset.theses.filter((t) => ids.has(t.id) && t.created_day <= day);
 }

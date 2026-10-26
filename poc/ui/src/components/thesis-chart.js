@@ -7,22 +7,95 @@ import {
   dayRounds,
   changePoints,
   historyIndexAt,
+  assessmentAt,
 } from '../model/thesis.js';
-import { axisScore } from './primitives.js';
+import { axisScore, badgeHtml } from './primitives.js';
+import { esc } from './dom.js';
 
 export const CH = { W: 406, left: 34, right: 18, top: 24, laneH: 22, barH: 52, plotGap: 36 };
 export const chartStateY = (v, rung) =>
   CH.top + ((laneOf(v, rung) + 0.5) * CH.laneH * 5) / v.rungs.length;
-function stepPath(points, y) {
+
+function chartTitle(title, width, badge = '') {
+  return `<text class="plot-title" x="${CH.left - 31}" y="${CH.top - 12}">${esc(title)}</text>${badge ? `<foreignObject class="plot-score" x="${width * 0.4}" y="0" width="${width * 0.6 - CH.right}" height="${CH.top}"><div xmlns="http://www.w3.org/1999/xhtml" class="plot-badge">${badge}</div></foreignObject>` : ''}`;
+}
+function stepPath(points, y, valueOf = (point) => point.rung) {
   return points
     .map((p, k) => {
-      if (!k) return `M${p.x},${y(p.rung)}`;
+      if (!k) return `M${p.x},${y(valueOf(p))}`;
       const q = points[k - 1];
-      if (p.rung === q.rung) return `L${p.x},${y(p.rung)}`;
+      if (valueOf(p) === valueOf(q)) return `L${p.x},${y(valueOf(p))}`;
       const s = Math.min(10, Math.max(2, p.x - q.x));
-      return `L${p.x - s},${y(q.rung)} C${p.x - s / 2},${y(q.rung)} ${p.x - s / 2},${y(p.rung)} ${p.x},${y(p.rung)}`;
+      return `L${p.x - s},${y(valueOf(q))} C${p.x - s / 2},${y(valueOf(q))} ${p.x - s / 2},${y(valueOf(p))} ${p.x},${y(valueOf(p))}`;
     })
     .join(' ');
+}
+
+/** A fractional score history using the thesis chart's axes, margins and step-line styling. */
+export function scoreHistoryChart(
+  series,
+  { start, end, day, width = CH.W, scoreLabel = '', scale = 'score' },
+) {
+  const { left, right, top, laneH } = CH;
+  width = Number(width);
+  if (!Number.isFinite(width) || width <= left + right)
+    throw new TypeError('Chart width must be a finite number wider than its margins');
+  if (![start, end, day].every(isCalendarDay) || start > end || day < start || day > end)
+    throw new TypeError('Score chart dates must form a valid range');
+  const bottom = top + laneH * 5;
+  const x = (date) => calendarX(date, start, end, left, width - right);
+  const confidence = scale === 'confidence';
+  const marks = confidence ? [100, 75, 50, 25, 0] : [2, 1, 0, -1, -2];
+  const y = (value) => top + laneH * (2.5 - (confidence ? (value - 50) / 25 : value));
+  const labelOf = (value) =>
+    confidence
+      ? `${Math.round(value)}%`
+      : `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value)}`;
+  const current = series.findLast((point) => point.day <= day);
+  const available = current?.value !== null && current?.value !== undefined;
+  const axisCurrent = available && marks.includes(current.value);
+  const midpoint = confidence ? 50 : 0;
+  const tone =
+    current?.value > midpoint ? 'positive' : current?.value < midpoint ? 'negative' : 'neutral';
+  const badge = scoreLabel
+    ? `<span class="chip chip--state state--${tone}"><b>${esc(scoreLabel)}</b></span>`
+    : '';
+  const height = bottom + 24;
+  const title = confidence ? 'AI confidence' : 'AI score (composite)';
+  let html = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${title} history">${chartTitle(title, width, badge)}`;
+  for (const label of axisLabels(start, x, end))
+    html += `${label.day === end ? '' : `<line class="timeline-grid" x1="${label.x}" x2="${label.x}" y1="${top}" y2="${bottom}"/>`}<text class="timeline-date" x="${label.x}" y="${bottom + 20}" text-anchor="${label.anchor}">${label.text}</text>`;
+  for (const value of marks) {
+    html += `<line class="lane" x1="${left}" x2="${width - right}" y1="${y(value)}" y2="${y(value)}"/>`;
+    if (!axisCurrent || value !== current.value)
+      html += `<g class="axis-score" transform="translate(${left - 18} ${y(value)})"><text>${labelOf(value)}</text></g>`;
+  }
+  let segment = [];
+  const draw = () => {
+    if (segment.length)
+      html += `<path class="ribbon" d="${stepPath(segment, y, (point) => point.value)}"/>`;
+    segment = [];
+  };
+  const atStart = series.findLast((point) => point.day < start);
+  const points = [
+    ...(atStart ? [{ ...atStart, day: start }] : []),
+    ...series.filter((point) => point.day >= start && point.day <= day),
+  ];
+  if (current && current.day < day) points.push({ ...current, day });
+  for (const point of points) {
+    if (point.value === null) draw();
+    else segment.push({ x: x(point.day), value: point.value });
+  }
+  draw();
+  if (available) {
+    const text = confidence
+      ? labelOf(current.value)
+      : `${current.value > 0 ? '+' : current.value < 0 ? '−' : ''}${Math.abs(current.value).toFixed(2)}`;
+    if (axisCurrent)
+      html += `<g class="axis-score state--${tone} is-current" transform="translate(${left - 18} ${y(current.value)})"><rect x="-16" y="-9" width="32" height="18" rx="5"/><text>${text}</text></g>`;
+    html += `<circle class="now-dot" cx="${x(day)}" cy="${y(current.value)}" r="3.5"/>`;
+  }
+  return html + '</svg>';
 }
 function axisLabels(start, x, end) {
   if (start === end) return [{ day: start, text: fmtDay(start), anchor: 'middle', x: x(start) }];
@@ -43,7 +116,7 @@ function axisLabels(start, x, end) {
 }
 export function ladderChart(
   v,
-  { width = CH.W, start, end, day, scope = 'canvas', interactive = false },
+  { width = CH.W, start, end, day, scope = 'canvas', interactive = false, showScore = false },
 ) {
   const { left, right, top, laneH, barH, plotGap } = CH;
   const W = Number(width);
@@ -64,7 +137,7 @@ export function ladderChart(
   const cur = atStart.length ? lastOf(atStart).rung : null;
   const id = `clip-${scope}-${v.id}`.replace(/[^A-Za-z0-9_.:-]/g, '_');
   let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs><clipPath id="${id}"><rect class="js-clip" x="0" y="0" width="${day >= end ? W : x(day)}" height="${H}"/></clipPath></defs>`;
-  s += `<text class="plot-title" x="${left - 31}" y="${top - 12}">AI score</text>`;
+  s += chartTitle('AI score', W, showScore ? badgeHtml(v, assessmentAt(v, day)) : '');
   s += `<rect class="volume-bg" x="${left}" y="${volumeTop}" width="${W - left - right}" height="${barH}" rx="3"/>`;
   for (const l of axisLabels(start, x, end))
     s += `${l.day === end && !interactive ? '' : `<line class="timeline-grid" x1="${l.x}" x2="${l.x}" y1="${top}" y2="${baseY}"/>`}<line class="ax-tick" x1="${l.x}" x2="${l.x}" y1="${baseY}" y2="${baseY + 4}"/><text class="timeline-date" x="${l.x}" y="${baseY + 20}" text-anchor="${l.anchor}">${l.text}</text>`;

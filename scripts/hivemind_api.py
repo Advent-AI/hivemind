@@ -12,9 +12,11 @@ GET routes (query string parameters in brackets):
   /evaluate        [view_id, comparator (>=, <, =), value_usd, as_of]
   /days            the ledger's first and last completed day
   /thesis-bundles   [ids (comma-separated), as_of] complete dated frontend inputs
+  /library         [as_of] all collected theses and stored groups, without a model call
 POST route (JSON body):
-  /ideas           {text, as_of?, k?, bundles?} → the idea card (two model calls; none when no view is recorded); bundles:false leaves the
+  /ideas           {text, as_of?, k?, bundles?} → the idea card (mapping and optional analyst summary; none when no view is recorded); bundles:false leaves the
                    views' bundles out for a page that fetches /thesis-bundles itself
+                   Accept: application/x-ndjson streams progress then result, or an error record
 
 Every request opens its own connections (the server is threaded; an idea call takes seconds and must not block the
 page's reads). Usage: python3 scripts/hivemind_api.py [--host 127.0.0.1] [--port 8788] [--views DB] [--items DB]
@@ -36,16 +38,30 @@ PATHS = {}
 ALIASES = {}
 CFG = None
 SEMANTIC = True
+REQUEST_ERRORS = (KeyError, service.LedgerError, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+
+
+def error_response(error):
+    if isinstance(error, KeyError):
+        return 404, f'not found: {error}'
+    if isinstance(error, service.LedgerError):
+        return 500, str(error)
+    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+        return 502, f'{type(error).__name__}: {str(error)[:200]}'
+    return 400, str(error)
 
 
 class Connections:
     """The databases one request reads: opened on entry, closed on exit, never shared between threads."""
 
+    def __init__(self, read_only=False):
+        self.read_only = read_only
+
     def __enter__(self):
         self.ledger = service.open_ledger(PATHS['views'])
-        self.index = search.open_index(PATHS['index'])
+        self.index = None if self.read_only else search.open_index(PATHS['index'])
         self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
-        self.archive = model.Archive(PATHS['archive'])
+        self.archive = None if self.read_only else model.Archive(PATHS['archive'])
         return self
 
     def __exit__(self, *exc):
@@ -77,31 +93,50 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self._cors()
         self.end_headers()
 
-    def _answer(self, work):
+    def _answer(self, work, read_only=False):
+        try:
+            with Connections(read_only) as db:
+                self._send(200, work(db))
+        except REQUEST_ERRORS as error:
+            status, message = error_response(error)
+            self._send(status, {'error': message})
+
+    def _stream_answer(self, work):
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+        self.send_header('Cache-Control', 'no-store')
+        self._cors()
+        self.end_headers()
+
+        def emit(event):
+            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+            self.wfile.flush()
+
         try:
             with Connections() as db:
-                self._send(200, work(db))
-        except KeyError as error:
-            self._send(404, {'error': f'not found: {error}'})
-        except service.LedgerError as error:          # a record the service refuses to read is the ledger's fault, not the caller's
-            self._send(500, {'error': str(error)})
-        except (model.TransportError, model.SchemaError, config.ConfigError) as error:     # the model or its configuration, not the caller
-            self._send(502, {'error': f'{type(error).__name__}: {str(error)[:200]}'})
-        except (ValueError, TypeError) as error:
-            self._send(400, {'error': str(error)})
+                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+                emit({'type': 'result', 'data': card})
+        except (BrokenPipeError, ConnectionResetError):
+            return
+        except REQUEST_ERRORS as error:
+            status, message = error_response(error)
+            try:
+                emit({'type': 'error', 'status': status, 'message': message})
+            except (BrokenPipeError, ConnectionResetError):
+                pass
 
     def do_GET(self):
         url = urllib.parse.urlsplit(self.path)
         q = {k: v[0] for k, v in urllib.parse.parse_qs(url.query).items()}
         parts = [p for p in url.path.split('/') if p]
-        self._answer(lambda db: route(db, parts, q))
+        self._answer(lambda db: route(db, parts, q), read_only=parts in (['library'], ['thesis-bundles']))
 
     def do_POST(self):
         parts = [p for p in urllib.parse.urlsplit(self.path).path.split('/') if p]
         length = int(self.headers.get('Content-Length') or 0)
         raw = self.rfile.read(length) if length else b''
 
-        def work(db):
+        def work(db, on_progress=None):
             if parts != ['ideas']:
                 raise KeyError('/'.join(parts))
             try:
@@ -113,8 +148,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if CFG is None:
                 raise config.ConfigError('the server was started without --config, so it cannot read ideas')
             return idea.read_idea(db.ledger, db.index, db.items, db.archive, CFG, body['text'], body.get('as_of') or None,
-                                  int(body.get('k') or 10), aliases=ALIASES, semantic=SEMANTIC, bundles=body.get('bundles', True) is not False)
-        self._answer(work)
+                                  int(body.get('k') or 10), aliases=ALIASES, semantic=SEMANTIC, bundles=body.get('bundles', True) is not False,
+                                  on_progress=on_progress)
+        accepted = [part.split(';', 1)[0].strip() for part in self.headers.get('Accept', '').split(',')]
+        if parts == ['ideas'] and 'application/x-ndjson' in accepted:
+            self._stream_answer(work)
+        else:
+            self._answer(work)
 
 
 def flag(value):
@@ -123,6 +163,8 @@ def flag(value):
 
 def route(db, parts, q):
     ledger, as_of = db.ledger, q.get('as_of') or None
+    if parts == ['library']:
+        return bundle.library(ledger, db.items, as_of)
     if parts == ['thesis-bundles']:
         return bundle.thesis_bundles(ledger, db.items, [id.strip() for id in q.get('ids', '').split(',') if id.strip()], as_of)
     if parts == ['search']:
@@ -163,11 +205,11 @@ def route(db, parts, q):
 def main():
     global ALIASES, CFG, SEMANTIC
     parser = argparse.ArgumentParser()
-    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'sealed-2026-10-24-run3-through-0815', 'views.sqlite'))
-    parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-window.sqlite'), help='the items database, for source titles in the idea card')
-    parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service', 'search-index.sqlite'))
-    parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service', 'idea-archive.sqlite'), help='where idea model calls are archived for replay')
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v9.json'), help='the config whose idea setting names the model and prompt')
+    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'english-v23-jev-2026-10-25', 'views.sqlite'))
+    parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-window-tags2-2026-10-24.sqlite'), help='the items database, for source titles in the idea card')
+    parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
+    parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'idea-archive.sqlite'), help='where idea model calls are archived for replay')
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v32-idea.json'), help='the config whose idea settings name the mapping and final assessment models and prompts')
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=8788)
@@ -184,6 +226,8 @@ def main():
         print('no config: GET routes only, POST /ideas answers 502', flush=True)
     else:
         print(f'config {CFG.version}: ideas read by {CFG.idea.model} ({CFG.idea.prompt_version}, effort {CFG.idea.reasoning_effort}); archive {os.path.basename(args.archive)}', flush=True)
+        if CFG.idea_summary is not None:
+            print(f'analyst summary: {CFG.idea_summary.model} ({CFG.idea_summary.prompt_version}, effort {CFG.idea_summary.reasoning_effort})', flush=True)
     if args.lexical:
         print('--lexical: no embedding; every search answers in lexical mode', flush=True)
     else:

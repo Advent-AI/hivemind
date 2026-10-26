@@ -1,0 +1,151 @@
+{
+  "idea": {
+    "text": "Nvidia datacenter revenue will exceed expectation next quarter",
+    "as_of": "2026-08-15"
+  },
+  "search": {
+    "mode": "semantic",
+    "candidates": ["v3", "v9", "v2", "v10", "v5", "v17", "v4", "v12", "v11", "v16"]
+  },
+  "reading": {
+    "summary": "The case for Nvidia beating next quarter’s data-center revenue expectations is not established: the direct FY2027 revenue view is neutral, while stronger Compute & Networking is supportive but does not settle data-center sales. The key gap is a direct next-quarter data-center revenue or guidance view; 2027 capex estimates are too distant to resolve it.",
+    "parts": [
+      {
+        "index": 0,
+        "object": "NVDA",
+        "looks_for": "Datacenter revenue versus analyst expectations",
+        "period": "next fiscal quarter after 2026-08-15",
+        "query": "NVDA datacenter revenue next quarter consensus expectations",
+        "candidates": ["v3", "v2", "v9", "v10", "v5", "v4", "v11", "v17"],
+        "view_ids": ["v3", "v9"],
+        "direct": ["v3"],
+        "driver": ["v9"],
+        "context": ["v2", "v10"],
+        "service_direct": "v3",
+        "market_reading": false,
+        "clauses": {},
+        "why": "The direct FY2027 data-center revenue judgement is neutral; bullish Compute & Networking revenue offers a supportive driver, while total revenue is judged bearish and capital expenditures neutral."
+      },
+      {
+        "index": 1,
+        "object": "NVDA",
+        "looks_for": "Datacenter revenue guidance for the next fiscal quarter",
+        "period": "next fiscal quarter after 2026-08-15",
+        "query": "Nvidia datacenter revenue guidance next quarter",
+        "candidates": ["v3", "v2", "v9", "v10", "v5", "v4", "v11", "v17"],
+        "view_ids": ["v3", "v9"],
+        "direct": ["v3"],
+        "driver": ["v9"],
+        "context": ["v2", "v10"],
+        "service_direct": null,
+        "market_reading": false,
+        "clauses": {},
+        "why": "The library has no view directly on next-quarter guidance: FY2027 data-center revenue is judged neutral, with bullish Compute & Networking revenue as a supportive driver and mixed-to-neutral broader context."
+      },
+      {
+        "index": 2,
+        "object": "ai-capex",
+        "looks_for": "Cloud and hyperscaler AI capital expenditure that drives demand for Nvidia datacenter products",
+        "period": "next fiscal quarter after 2026-08-15",
+        "query": "hyperscaler AI capex next quarter Nvidia demand",
+        "candidates": ["v22", "v70", "v40", "v3", "v1", "v10", "v80", "v50"],
+        "view_ids": ["v1"],
+        "direct": ["v1"],
+        "driver": [],
+        "context": ["v22", "v70"],
+        "service_direct": null,
+        "market_reading": false,
+        "clauses": {},
+        "why": "The 2026 cloud-provider capex view is judged at $700 billion to below $800 billion; the 2027 capex views are near forecast and in the $900 billion to below $1.1 trillion range, so they provide only later-period context for next-quarter demand."
+      }
+    ],
+    "chosen": [
+      {
+        "view_id": "v3",
+        "why": "The direct FY2027 data-center revenue judgement is neutral; bullish Compute & Networking revenue offers a supportive driver, while total revenue is judged bearish and capital expenditures neutral.",
+        "part": "Datacenter revenue versus analyst expectations",
+        "fit": "direct"
+      },
+      {
+        "view_id": "v9",
+        "why": "The direct FY2027 data-center revenue judgement is neutral; bullish Compute & Networking revenue offers a supportive driver, while total revenue is judged bearish and capital expenditures neutral.",
+        "part": "Datacenter revenue versus analyst expectations",
+        "fit": "driver"
+      },
+      {
+        "view_id": "v1",
+        "why": "The 2026 cloud-provider capex view is judged at $700 billion to below $800 billion; the 2027 capex views are near forecast and in the $900 billion to below $1.1 trillion range, so they provide only later-period context for next-quarter demand.",
+        "part": "Cloud and hyperscaler AI capital expenditure that drives demand for Nvidia datacenter products",
+        "fit": "direct"
+      }
+    ],
+    "claim": null,
+    "dropped": [],
+    "trace": [
+      {
+        "tool": "search",
+        "part": 0,
+        "query": "NVDA datacenter revenue next quarter consensus expectations",
+        "canonical": "NVDA Datacenter revenue versus analyst expectations next fiscal quarter after 2026-08-15",
+        "returned": ["v3", "v2", "v9", "v10", "v5", "v4", "v11", "v17"]
+      },
+      {
+        "tool": "search",
+        "part": 1,
+        "query": "Nvidia datacenter revenue guidance next quarter",
+        "canonical": "NVDA Datacenter revenue guidance for the next fiscal quarter next fiscal quarter after 2026-08-15",
+        "returned": ["v3", "v2", "v9", "v10", "v5", "v4", "v11", "v17"]
+      },
+      {
+        "tool": "search",
+        "part": 2,
+        "query": "hyperscaler AI capex next quarter Nvidia demand",
+        "canonical": "ai-capex Cloud and hyperscaler AI capital expenditure that drives demand for Nvidia datacenter products next fiscal quarter after 2026-08-15",
+        "returned": ["v22", "v70", "v40", "v3", "v1", "v10", "v80", "v50"]
+      }
+    ],
+    "language_slips": 0,
+    "composite": {
+      "version": "idea-composite/2",
+      "method": "equal_weight",
+      "as_of": "2026-08-15",
+      "drivers": [
+        {
+          "thesis_id": "v3",
+          "question": "Can continued AI infrastructure demand and sequential growth through calendar 2026 lift NVIDIA FY2027 data-center revenue into which range?",
+          "label": "Data-center demand",
+          "supporting_end": "first",
+          "reason": "Higher data-center revenue supports the claim."
+        },
+        {
+          "thesis_id": "v1",
+          "question": "Will combined 2026 capital expenditure by the top five cloud providers and hyperscalers approach or exceed $700 billion?",
+          "label": "Cloud investment",
+          "supporting_end": "last",
+          "reason": "Higher customer spending supports demand."
+        }
+      ],
+      "excluded": [
+        {
+          "thesis_id": "v9",
+          "question": "Can continued growth in NVIDIA's Compute & Networking business bring FY2027 Compute & Networking segment revenue into which range?",
+          "reason": "Segment revenue overlaps the direct data-center revenue driver."
+        }
+      ],
+      "target": {
+        "outcome": "NVIDIA data-center revenue",
+        "direction": "higher"
+      }
+    }
+  },
+  "evaluation": null,
+  "related": [],
+  "cost": {
+    "usd": 0.000727,
+    "input_tokens": 4333,
+    "output_tokens": 587,
+    "seconds": 28.9,
+    "cached": false,
+    "turns": 3
+  }
+}

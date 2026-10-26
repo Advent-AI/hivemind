@@ -1,6 +1,7 @@
 import { fanOutGap } from '../components/connectors.js';
 
-const CARD = { width: 440, height: 380, gap: 24, top: 40 };
+export const CARD_WIDTH = 440;
+const CARD = { width: CARD_WIDTH, height: 380, gap: 24, top: 40 };
 
 /** Normalize legacy single-root callers and explicit Idea graphs before rendering. */
 export function resolveGraph(spec, dataset) {
@@ -56,7 +57,7 @@ export function layoutGraph({ rootIds, branches }, hasLeading = false) {
   );
   const slots = rootIds.reduce((sum, id) => sum + Math.max(1, children.get(id).length), 0);
   const height = Math.max(CARD.height, slots * (CARD.height + CARD.gap) - CARD.gap);
-  const rootLeft = hasLeading ? 40 + 360 + fanOutGap(rootIds.length) : 480;
+  const rootLeft = hasLeading ? 40 + CARD.width + fanOutGap(rootIds.length) : 480;
   const childLeft =
     rootLeft +
     CARD.width +
@@ -91,7 +92,7 @@ export function layoutGraph({ rootIds, branches }, hasLeading = false) {
           id: 'idea',
           left: 40,
           top: CARD.top + (height - CARD.height) / 2,
-          width: 360,
+          width: CARD.width,
           height: CARD.height,
         }
       : null,

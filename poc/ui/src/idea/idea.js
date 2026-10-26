@@ -4,6 +4,16 @@
  * states. It never chooses theses itself and never reads the clock; the day is the answer's as_of. */
 import { element, esc, SEP } from '../components/dom.js';
 import { cardHeaderHtml } from '../components/primitives.js';
+import { scoreHistoryChart } from '../components/thesis-chart.js';
+import {
+  compositeAt,
+  confidenceFromScore,
+  confidenceHistory,
+  formatConfidence,
+  byImpactWeight,
+} from './composite.js';
+import { ideaProgressHtml } from './progress.js';
+import { CARD_WIDTH } from '../model/graph.js';
 
 export class IdeaError extends Error {
   constructor(status, message) {
@@ -13,27 +23,75 @@ export class IdeaError extends Error {
 }
 
 /** POST the idea; resolves to the card the service returns, rejects with IdeaError on any non-200 answer. */
-export async function readIdea(api, text, { signal } = {}) {
-  let response;
+export async function readIdea(api, text, { signal, asOf, onProgress = () => {} } = {}) {
   try {
-    response = await fetch(`${api}/ideas`, {
+    const response = await fetch(`${api}/ideas`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, bundles: false }),
+      headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
+      body: JSON.stringify({ text, bundles: false, ...(asOf ? { as_of: asOf } : {}) }),
       signal,
     });
+    if (response.ok && response.headers.get('Content-Type')?.includes('application/x-ndjson'))
+      return await readIdeaEvents(response, onProgress);
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new IdeaError(response.status, body.error || response.statusText);
+    return body;
   } catch (error) {
-    if (error.name === 'AbortError') throw error;
+    if (error.name === 'AbortError' || error instanceof IdeaError) throw error;
     throw new IdeaError(0, `Cannot reach the service at ${api}`);
   }
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new IdeaError(response.status, body.error || response.statusText);
-  return body;
+}
+
+/** Decode newline records across arbitrary network and UTF-8 chunk boundaries. */
+export async function readIdeaEvents(response, onProgress) {
+  if (!response.body) throw new IdeaError(502, 'The service returned no analysis stream');
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let pending = '',
+    result,
+    completed = false;
+  const consume = (line) => {
+    if (!line.trim()) return;
+    let event;
+    try {
+      event = JSON.parse(line);
+    } catch {
+      throw new IdeaError(502, 'The service returned an invalid analysis update');
+    }
+    if (event.type === 'progress') onProgress(event.stage);
+    else if (event.type === 'result') {
+      result = event.data;
+      completed = true;
+    } else if (event.type === 'error') throw new IdeaError(event.status, event.message);
+    else throw new IdeaError(502, 'The service returned an unknown analysis update');
+  };
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      pending += decoder.decode(value, { stream: !done });
+      const lines = pending.split('\n');
+      pending = lines.pop();
+      for (const line of lines) consume(line);
+      if (done) break;
+    }
+    consume(pending);
+    if (!completed) throw new IdeaError(502, 'The service stopped before returning the analysis');
+    return result;
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
 }
 
 /** Chosen theses are peers; related theses attach to their explicit source. */
 export function graphOf(card) {
-  const chosen = card.reading?.chosen || [];
+  const weights = new Map(
+    (card.reading?.composite?.drivers || []).map((entry) => [
+      entry.thesis_id,
+      entry.weight_percent,
+    ]),
+  );
+  const chosen = byImpactWeight(card.reading?.chosen || [], (entry) => weights.get(entry.view_id));
   return chosen.length
     ? {
         rootIds: [...new Set(chosen.map((entry) => entry.view_id))],
@@ -95,13 +153,25 @@ export function statusOf(card, scoreOf = (position) => `position ${position}`) {
 }
 
 /** The card element the canvas leads with. `state` is one of pending, answered, failed. */
-export function ideaCard({ text, state, card, error, scoreOf }) {
+export function ideaCard({
+  text,
+  state,
+  card,
+  error,
+  scoreOf,
+  onOpen,
+  composite,
+  day,
+  chartStart,
+  progress = ['search'],
+  width = CARD_WIDTH,
+}) {
   let chip,
     line,
     summary = '';
   if (state === 'pending') {
-    chip = { badge: 'Reading…', cls: 'chip--line' };
-    line = 'Searching the library and reading the candidates';
+    chip = { badge: '', cls: '' };
+    line = '';
   } else if (state === 'failed') {
     chip = { badge: 'Error', cls: 'chip--line' };
     line = esc(
@@ -113,10 +183,36 @@ export function ideaCard({ text, state, card, error, scoreOf }) {
     line = status.line;
     summary = status.summary;
   }
-  const html = `${cardHeaderHtml('Idea', `<span class="chip ${chip.cls}">${esc(chip.badge)}</span>`)}
+  const point = composite ? compositeAt(composite, day || composite.as_of) : null;
+  const badge =
+    state === 'pending' || composite
+      ? ''
+      : `<span class="chip ${chip.cls}">${esc(chip.badge)}</span>`;
+  const chart = composite
+    ? `<div class="idea-composite">${scoreHistoryChart(confidenceHistory(composite), { start: chartStart || composite.start, end: composite.as_of, day: day || composite.as_of, width: width - 34, scoreLabel: formatConfidence(confidenceFromScore(point?.value ?? null)), scale: 'confidence' })}</div>`
+    : '';
+  const html = `${cardHeaderHtml('Idea', badge)}
     <div class="card__body"><div class="card__q card__q--two">${esc(text)}</div>
-    ${line ? `<div class="card__status">${line}</div>` : ''}${summary ? `<div class="card__summary">${summary}</div>` : ''}</div>`;
-  return element('div', 'card card--idea', html);
+    ${state === 'pending' ? ideaProgressHtml(progress) : ''}${line ? `<div class="card__status">${line}</div>` : ''}${summary ? `<div class="card__summary">${summary}</div>` : ''}${chart}</div>`;
+  const node = element('div', `card card--idea${composite ? ' has-composite' : ''}`, html);
+  if (state === 'pending') node.setAttribute('aria-busy', 'true');
+  if (state === 'answered' && onOpen) {
+    node.tabIndex = 0;
+    node.setAttribute('role', 'button');
+    node.setAttribute('aria-label', `View analysis for ${text}`);
+    const open = () => {
+      node.focus({ preventScroll: true });
+      onOpen();
+    };
+    node.addEventListener('click', open);
+    node.addEventListener('keydown', (event) => {
+      if (event.target === node && ['Enter', ' '].includes(event.key)) {
+        event.preventDefault();
+        open();
+      }
+    });
+  }
+  return node;
 }
 
 /** The theses' full records for the cards the canvas will draw, fetched after the card so the idea shows first. */

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hivemind.local/schemas/thesis-ui-v1.json",
-  "title": "Hivemind Thesis UI dataset v1",
+  "$id": "https://hivemind.local/schemas/thesis-ui-v2.json",
+  "title": "Hivemind Thesis UI dataset v2",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": "thesis-ui/1"
+      "const": "thesis-ui/2"
     },
     "as_of": {
       "$ref": "#/$defs/day"
@@ -16,7 +16,7 @@
       "items": {
         "$ref": "#/$defs/day"
       },
-      "minItems": 1,
+      "minItems": 0,
       "uniqueItems": true
     },
     "theses": {
@@ -24,9 +24,18 @@
       "items": {
         "$ref": "#/$defs/thesis"
       }
+    },
+    "coverage": {
+      "enum": ["library", "selection"]
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/group"
+      }
     }
   },
-  "required": ["schema_version", "as_of", "days", "theses"],
+  "required": ["schema_version", "as_of", "days", "theses", "coverage", "groups"],
   "$defs": {
     "day": {
       "type": "string",
@@ -71,7 +80,7 @@
           "maximum": 5
         },
         "score": {
-          "enum": ["+2", "+1", "0", "−1", "−2", "Yes", "No"]
+          "enum": ["+2", "+1", "0", "\u22121", "\u22122", "Yes", "No"]
         },
         "label": {
           "type": "string"
@@ -183,9 +192,19 @@
                 },
                 "said_day": {
                   "$ref": "#/$defs/day"
+                },
+                "day": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/day"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
-              "required": ["new_evidence_id", "said_day"]
+              "required": ["new_evidence_id", "said_day", "day"]
             },
             {
               "type": "null"
@@ -202,6 +221,18 @@
               "type": "null"
             }
           ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_record"
+          }
+        },
+        "event_time": {
+          "type": "string"
+        },
+        "original_date": {
+          "type": "string"
         }
       },
       "required": [
@@ -217,7 +248,10 @@
         "source",
         "outlets",
         "replaced_by",
-        "replaces"
+        "replaces",
+        "sources",
+        "original_date",
+        "event_time"
       ]
     },
     "dependency": {
@@ -225,8 +259,15 @@
       "additionalProperties": false,
       "properties": {
         "depends_on": {
-          "type": "string",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "direction": {
           "type": "string"
@@ -236,9 +277,25 @@
         },
         "day": {
           "$ref": "#/$defs/day"
+        },
+        "wait_chain_view_id": {
+          "type": ["string", "null"]
+        },
+        "resolutions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resolution"
+          }
         }
       },
-      "required": ["depends_on", "direction", "wait_year", "day"]
+      "required": [
+        "depends_on",
+        "direction",
+        "wait_year",
+        "day",
+        "wait_chain_view_id",
+        "resolutions"
+      ]
     },
     "switch": {
       "type": "object",
@@ -325,6 +382,25 @@
           "items": {
             "$ref": "#/$defs/switch"
           }
+        },
+        "year": {
+          "type": ["string", "null"]
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/identity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "successions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/succession"
+          }
         }
       },
       "required": [
@@ -341,8 +417,138 @@
         "judgements",
         "evidence",
         "dependencies",
-        "switches"
+        "switches",
+        "year",
+        "identity",
+        "successions"
       ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "measure": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "period_start": {
+          "type": "string"
+        },
+        "period_end": {
+          "type": "string"
+        },
+        "basis": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "event_type": {
+          "type": "string"
+        }
+      },
+      "required": ["measure", "scope", "period_start", "period_end", "basis", "unit", "event_type"]
+    },
+    "membership": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "thesis_id": {
+          "type": "string"
+        },
+        "day": {
+          "$ref": "#/$defs/day"
+        },
+        "basis": {
+          "type": "string"
+        }
+      },
+      "required": ["thesis_id", "day", "basis"]
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "created_day": {
+          "$ref": "#/$defs/day"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/membership"
+          }
+        }
+      },
+      "required": ["id", "name", "scope", "aliases", "created_day", "members"]
+    },
+    "succession": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "thesis_id": {
+          "type": "string"
+        },
+        "relation": {
+          "enum": ["previous", "next"]
+        },
+        "day": {
+          "$ref": "#/$defs/day"
+        }
+      },
+      "required": ["thesis_id", "relation", "day"]
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "day": {
+          "$ref": "#/$defs/day"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["target", "day", "seq"]
+    },
+    "source_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_id": {
+          "type": "string"
+        },
+        "day": {
+          "$ref": "#/$defs/day"
+        },
+        "arrival_day": {
+          "$ref": "#/$defs/day"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "required": ["input_id", "day", "arrival_day", "source"]
     }
   }
 }

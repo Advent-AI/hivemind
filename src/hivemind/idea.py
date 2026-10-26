@@ -1,15 +1,15 @@
-"""An idea read against the library in two model calls, with the service doing every lookup in between
+"""An idea mapped against the library in two model calls, with the service doing every lookup in between
 (docs/poc/idea-card.md, D112, D135). Call 1 breaks the idea into typed parts (object, what to look for, period,
 a search query) and reads a dollar claim. The service then searches once per part, keeps the candidates each part
 got, and asks call 2 to map each part to its candidates and write the summary. The service admits only candidate
 ids, follows the ledger's dependency graph from the mapped views to their upstream and downstream views, evaluates
-the claim itself, and builds the card with every view in the front end's shape. Nothing is stored; both calls are
-archived, so a card replays for $0."""
+the claim itself, and builds the card with every view in the front end's shape. An explicitly configured final
+call writes the analyst summary after selection. The calls are archived; exact requests replay for $0."""
 import json
 import re
 import time
 
-from . import bundle, config, model, search, service
+from . import bundle, config, idea_composite, model, search, service
 from .views import store
 
 DECOMPOSE = {
@@ -80,7 +80,9 @@ MAP_CLAUSE = {
 
 # the mapping schema and payload shape belong to the prompt that describes them (an example is an instruction):
 # a prompt version not listed here uses the idea-v7 contract
-CONTRACTS = {'idea-v8': (MAP_LEAN, lean_payload), 'idea-v9': (MAP_LEAN, full_payload), 'idea-v10': (MAP_CLAUSE, full_payload)}
+CONTRACTS = {'idea-v8': (MAP_LEAN, lean_payload), 'idea-v9': (MAP_LEAN, full_payload), 'idea-v10': (MAP_CLAUSE, full_payload), 'idea-v12': (MAP, lean_payload)}
+SUMMARY = {'type': 'object', 'additionalProperties': False, 'required': ['summary'],
+           'properties': {'summary': {'type': 'string'}}}
 MARKET_READING = re.compile(r'share price|stock price|price target|market cap|valuation|multiple|p/e\b|股价|市值|估值', re.I)
 CJK = re.compile(r'[\u4e00-\u9fff]')
 YEAR = re.compile(r'(FY\s?20\d\d|20\d\d)', re.I)
@@ -114,17 +116,27 @@ def object_list(ledger, as_of, aliases=None):
             + (f' Objects in the universe with no view yet: {", ".join(missing)}.' if missing else ''))
 
 
-def judged(ledger, view_id, as_of):
+def judged(ledger, view_id, as_of, detailed=False):
     state = service.state_as_of(ledger, view_id, as_of)
     if not state:
         return None
-    label = next((g['label'] for g in store.rungs_of(ledger, view_id) if g['position'] == state['position']), '')
-    return {'position': state['position'], 'label': label}
+    rung = next((g for g in store.rungs_of(ledger, view_id) if g['position'] == state['position']), {})
+    result = {'position': state['position'], 'label': rung.get('label', '')}
+    if detailed:
+        result.update(condition=rung.get('condition', ''), day=state['judgement_day'], reasons=state['reasons'])
+    return result
 
 
-def brief(ledger, results, as_of):
-    """A candidate as the mapping call sees it: id, object, what it looks at, the judged position."""
-    return [{'view_id': r['view_id'], 'object': r['object'], 'looks_at': r['looks_at'], 'judged': judged(ledger, r['view_id'], as_of)} for r in results]
+def brief(ledger, results, as_of, detailed=False):
+    """Candidate state at the requested date; analyst context is explicit and versioned by the caller."""
+    records = []
+    for result in results:
+        record = {'view_id': result['view_id'], 'object': result['object'], 'looks_at': result['looks_at'],
+                  'judged': judged(ledger, result['view_id'], as_of, detailed)}
+        if detailed:
+            record['question'] = result['question']
+        records.append(record)
+    return records
 
 
 def related_views(ledger, view_ids, as_of, exclude=()):
@@ -200,14 +212,16 @@ def merged(first, second, limit):
     return out[:limit]
 
 
-def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliases=None, semantic=True, transport=None, bundles=True, embed=search.openai_embeddings):
+def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliases=None, semantic=True, transport=None, bundles=True, embed=search.openai_embeddings, on_progress=None):
     """The idea card: idea, what the idea's own search found, the reading (typed parts, the candidates each got, the
     views each maps to, the summary, the claim), the related views from the dependency graph, the evaluation, every
-    view's bundle, the days, the trace of searches, and the cost of the two calls. No recorded view → no model call."""
+    view's bundle, the days, the trace of searches, and all call costs. No recorded view → no model call."""
     text = (text or '').strip()
     if not text:
         raise ValueError('an idea needs text')
     as_of = as_of or service.default_as_of(ledger)
+    report = on_progress or (lambda stage: None)
+    report('search')
     found = search.search(ledger, index, text, k, as_of, aliases=aliases, semantic=semantic, embed=embed)
     card = {'idea': {'text': text, 'as_of': as_of}, 'search': {'mode': found['mode'], 'candidates': [r['view_id'] for r in found['results'] or []]},
             'reading': None, 'evaluation': None, 'related': [], 'views': [], 'days': bundle.days(ledger, as_of),
@@ -230,6 +244,7 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
         cost['cached'] = cost['cached'] and answer.cached
 
     # call 1: the parts
+    report('decompose')
     user = f'Idea: {text}\nDay: {as_of} (the library as judged on this day)\n\n{object_list(ledger, as_of, aliases)}'
     made, slips = call_english(archive, cfg, setting, decompose_prompt, user, DECOMPOSE, 'idea_decompose', transport,
                                lambda d: [f for p in d['parts'] for f in (p['looks_for'], p['period'])])
@@ -238,7 +253,9 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
     first = made[-1]
     parts = [dict(p) for p in first.data['parts'][:MAX_PARTS]]
     # the service: one search per part, the candidates each part got
-    idea_rows = brief(ledger, found['results'][:IDEA_ROWS], as_of)
+    report('retrieve')
+    detailed = setting.prompt_version == 'idea-v12'
+    idea_rows = brief(ledger, found['results'][:IDEA_ROWS], as_of, detailed)
     trace, candidates, ranks = [], [], []
     queries = [((part.get('query') or '').strip() or canonical_query(part, aliases), canonical_query(part, aliases)) for part in parts]
     if semantic and found['mode'] == 'semantic':
@@ -248,11 +265,12 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
     for i, (part, (query, own)) in enumerate(zip(parts, queries)):
         hit = search.search(ledger, index, query, PER_PART, as_of, aliases=aliases, semantic=semantic, embed=embed)
         steady = search.search(ledger, index, own, PER_PART, as_of, aliases=aliases, semantic=semantic, embed=embed) if own.lower() != query.lower() else hit
-        rows = brief(ledger, merged(steady['results'] or [], hit['results'] or [], PER_PART), as_of)
+        rows = brief(ledger, merged(steady['results'] or [], hit['results'] or [], PER_PART), as_of, detailed)
         candidates.append(rows)
         ranks.append({r['view_id']: n for n, r in enumerate(hit['results'] or [])})      # the part's own search order, the tie-break among the model's direct views
         trace.append({'tool': 'search', 'part': i, 'query': query, 'canonical': own, 'returned': [r['view_id'] for r in rows]})
     # call 2: the mapping
+    report('map')
     map_schema, payload = CONTRACTS.get(setting.prompt_version, (MAP, full_payload))
     user = payload(text, as_of, parts, candidates, idea_rows)
     made, more = call_english(archive, cfg, setting, map_prompt, user, map_schema, 'idea_map', transport,
@@ -261,7 +279,6 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
     for answer in made:
         spend(answer)
     second = made[-1]
-    cost['seconds'] = round(time.time() - started, 1)
     # the service keeps the mapping honest: only candidates, in the parts' order; direct and driver views go on the
     # canvas, context stays on the card; the first part's direct view is the service's own pick when the rule holds
     idea_ids = {r['view_id'] for r in idea_rows}
@@ -285,7 +302,8 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
             elif view_id not in allowed:
                 dropped.append({'view_id': view_id, 'why': f'not among the candidates of part {i} ({part["looks_for"][:60]})'})
             elif all(view_id not in tiers[k] for k in tiers):
-                if fit == 'driver' and len(tiers['driver']) >= DRIVERS_PER_PART:
+                if fit == 'driver' and len(tiers['driver']) >= DRIVERS_PER_PART and not (
+                        cfg.idea_summary and cfg.idea_summary.prompt_version in ('idea-summary-v6', 'idea-summary-v7')):
                     tiers['context'].append(view_id)          # beyond the cap a driver is kept on the card, not the canvas
                 else:
                     tiers[fit].append(view_id)
@@ -315,11 +333,54 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
             claim = dict(claim, view_id=parts_out[claim['part']]['direct'][0])
             evaluation = service.evaluate(ledger, claim['view_id'], claim['comparator'], float(claim['value_usd']), as_of)
     related = related_views(ledger, parts_out[0]['view_ids'] if parts_out else [], as_of, exclude=[c['view_id'] for c in chosen])
-    card['reading'] = {'summary': second.data['summary'], 'parts': parts_out, 'chosen': chosen, 'claim': claim, 'dropped': dropped, 'trace': trace, 'language_slips': slips}
+    summary = second.data['summary']
+    composite = None
+    if cfg.idea_summary is not None:
+        report('summarize')
+        summary_setting = cfg.idea_summary
+        with open(config.prompt_path(summary_setting.prompt_version + '.txt'), encoding='utf-8') as handle:
+            summary_prompt = handle.read().strip()
+        records = {r['view_id']: r for r in service.summaries(ledger, as_of)}
+        context = {'idea': text, 'as_of': as_of, 'evaluation': evaluation,
+                   'parts': [{key: part[key] for key in ('object', 'looks_for', 'period', 'direct', 'driver', 'context', 'why')} for part in parts_out],
+                   'theses': brief(ledger, [records[c['view_id']] for c in chosen], as_of, detailed=True)}
+        composite_contract = idea_composite.contract(summary_setting.prompt_version, chosen, ledger)
+        if composite_contract:
+            context['theses'] = idea_composite.add_ladders(ledger, context['theses'], endpoints_only=summary_setting.prompt_version in ('idea-summary-v5', 'idea-summary-v6', 'idea-summary-v7'))
+            for part in context['parts']:
+                del part['why']
+            if summary_setting.prompt_version == 'idea-summary-v7':
+                context['candidate_theses'] = context.pop('theses')
+        schema, prose, bind_composite = composite_contract or (SUMMARY, lambda d: [d['summary']], None)
+        made, more = call_english(archive, cfg, summary_setting, summary_prompt, json.dumps(context, ensure_ascii=False),
+                                  schema, 'idea_summary', transport, prose)
+        slips += more
+        for answer in made:
+            spend(answer)
+        summary = made[-1].data['summary']
+        if bind_composite:
+            composite = bind_composite(made[-1].data, chosen, records, as_of)
+            if composite['version'] == 'idea-composite/4':
+                mapped = {entry['view_id']: entry for entry in chosen}
+                chosen = [mapped[entry['thesis_id']] for entry in composite['drivers']]
+                adopted = {entry['view_id'] for entry in chosen}
+                for part in parts_out:
+                    for key in ('view_ids', 'direct', 'driver', 'context'):
+                        part[key] = [ident for ident in part[key] if ident in adopted]
+                    if part['service_direct'] not in adopted:
+                        part['service_direct'] = None
+                    part['clauses'] = {ident: clause for ident, clause in part['clauses'].items() if ident in adopted}
+                if claim and claim['view_id'] not in adopted:
+                    claim, evaluation = None, None
+                related = []
+    card['reading'] = {'summary': summary, 'parts': parts_out, 'chosen': chosen, 'claim': claim, 'dropped': dropped, 'trace': trace, 'language_slips': slips}
+    if composite is not None:
+        card['reading']['composite'] = composite
     card['evaluation'] = evaluation
     card['related'] = related
     if bundles:        # a page that fetches /thesis-bundles itself asks for the card alone: 20 KB instead of 2.7 MB
         item_of = bundle.item_lookup(items)
         card['views'] = [bundle.view_bundle(ledger, item_of, view_id, as_of) for view_id in [c['view_id'] for c in chosen] + [r['view_id'] for r in related]]
+    cost['seconds'] = round(time.time() - started, 1)
     card['cost'] = cost
     return card

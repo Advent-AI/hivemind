@@ -1,73 +1,64 @@
 # Thesis UI: data and component boundaries
 
-This refactor covers thesis components and the page structure. Its initial scope left Idea judgement and matching in demo code. The subsequent October 24 update connected the Idea card to the service (`poc/ui/src/idea/idea.js`, `docs/poc/idea-card.md`): POST a sentence to `/ideas`, adapt the response with `fromIdeaResponse`, use `reading.chosen[0]` as the main card and the rest as supporting cards. The local `legacy/idea.js` matcher was removed at Alex's request.
+The page opens the collected English library, then lets the reader browse stored research groups or explore an Idea. All chosen Idea theses remain peers; only the service's supplied `via` links connect related cards (D138). A group is not a parent thesis and does not receive a generated score.
 
-For example, an agent retrieves the complete v3 record and passes it through one adapter. The card, history chart, evidence list and detail panel all read the same validated thesis instead of inferring separate field shapes.
+For example, the Vera Rubin group contains six stored member theses at August 15, 2026, and one at February 25. Loading a snapshot for either date shows that date's membership, assessments and sources. The frontend never re-runs extraction or assigns membership.
 
-## Scope and authority
+## Presentation rules
 
-- D76/D112: the service owns data retrieval and agent judgement. The UI does not call models, hold credentials or rewrite judgements.
-- D78/D81/D87/D97–D129: preserve agreed terminology, colours, charts, interactions, centring and typography.
-- The new entry accepts `thesis-ui/1`; existing `view_bundle` data passes through one adapter. The schema is the sole allowed-field list.
-- This refactor does not alter extraction, matching, scoring or Idea product design, or enable paid calls. Add the read-only `thesis_bundles` / `GET /thesis-bundles` entry using the existing bundle writer.
+Use sentence case for interface labels, navigation, section titles and controls. Never force interface text to all capitals. Preserve the spelling of tickers, acronyms, proper names and quoted source text. Separate adjacent metadata fields with `|`, using the shared separator; do not use middle dots or bullets as metadata separators.
 
-## Original inventory
+The library has no connection/Refresh region, Research library eyebrow, As of date control or duplicate count/date row above the cards (D182). The supplied snapshot defines the displayed date; charts and detail history retain their date behaviour. Automatic API loading keeps the current snapshot when unavailable.
 
-`data.en.json` contained 42 theses, 375 judgements, 1,089 evidence links, 44 lifecycle switches and 32 dependencies. Chinese and English files shared a structure. The former single page combined rendering, domain derivation, interaction and demo matching. Bundles supplied positions while the UI inferred scores from labels. Switches/dependencies had sequence numbers only; publication day was treated as arrival day, leaving insufficient dates for faithful historical replay.
+Use “Show more” for pagination actions in both the library and evidence list. Library statistics also use `|` between fields.
+
+Assessment citations use plain blue `[1]` text without a background, border or extra padding; hover adds an underline. Current and historical assessments share this style and retain their source-opening behaviour (D190).
+
+Default canvas connectors use a 1.5px stroke and darker grey (`#aaa99f`), shared with their arrowheads. Active highlighting and routing are unchanged (D199).
+
+Idea and Thesis canvas cards share a 440px width (D213). Canvas columns have at least 180px of horizontal space between cards; larger fan-outs retain any additional required room (D201).
+
+Card scores appear in a pill beside the chart's “AI score” title, aligned to the right on the same row and using the same 11px text size. This applies to library/canvas Thesis cards. The Idea chart instead shows “AI confidence” and a 0–100% pill, using the same title-row layout (D197). Both charts draw at their actual content width, so their 11px subtitles and 10px vertical-axis labels render at the same scale. Completed Idea cards fit their content with the normal bottom padding (D202). Card headers no longer contain a score. Replay updates the pill from the same selected-date assessment as the chart (D193).
+
+On an Idea canvas, each adopted Thesis card's upper-right header shows a scale icon and `xx%` from the validated Idea plan (D196/D198). Cards are ordered from highest to lowest weight; the analysis uses the same order, with ties retaining response order. These weights total 100%; omitted candidates have no associated card and no automatic related cards are added. The scale icon and percentage share a vertically centred line box; there is no weight tooltip (D200). This weight belongs to the Idea association, so the same thesis in the library has no weight badge. The analysis drawer explains each allocation and relevance; replay keeps the plan's weights fixed.
+
+The Idea input contains its send-arrow button. It is grey and disabled when trimmed input is empty, black when text is ready, and disabled while submitting. Click and Enter use the same form submission. The input is at most 500px wide and fits narrower screens (D183). Initial data loading updates the library without changing the user’s current view.
+
+Click the completed Idea card to open its analysis; Enter and Space do the same when the card is focused. There is no separate View analysis button. Dragging the canvas does not open the card. The preview uses the service's analyst summary, and the drawer shows it in full (D186).
+
+While an Idea is loading, leave the right side of the header empty. Show a connected vertical list of actual progress stages inside the card. Retain completed nodes and glimmer only the current node; append a node when the next stage arrives. Respect reduced motion. The [D187 contract](../research/2026-10-26-library-ui/idea-progress.md) owns the events and lifecycle.
+
+## Authority and contract
+
+D130 owns the modular component boundary, D138 the Idea graph, D163 English presentation and D181 the current-library integration. Existing typography, source attribution, score tables, historical crosshair, drawer animation and card layout remain shared.
+
+The closed schema is [`thesis-ui/2`](../../poc/ui/src/model/thesis.schema.json). `fromBundles` adapts HTTP/MCP/standalone exports into it; `parseDataset` validates, copies and freezes the result. Canonical v1 payloads upgrade at this boundary. Unknown legacy dates remain unknown. An invalid update leaves the displayed snapshot intact.
+
+The [D181 design and review resolution](../research/2026-10-26-library-ui/plan.md) owns this slice's state/event, value/reader and path/check tables. The [frontend integration guide](../../poc/ui/README.md) describes its public entry points. The [service specification](service.md) owns read semantics.
 
 ## Ownership
 
-| Module | Input | Responsibility | Excludes |
-|---|---|---|---|
-| `model/thesis.schema.json` | Canonical agent data | Versioned closed shape | Rendering |
-| `adapters/bundle.js` | Mock/API bundle | Explicit scores, dates and canonical theses | Network/model calls |
-| `model/contract.js` | Canonical data | Schema, reference and time validation; field-path errors | Repairing invalid data |
-| `model/thesis.js` | Validated data and date | Current judgement, state, evidence, relations and history selection | DOM |
-| `components/thesis-card.js` | Thesis and date range | Card | Idea matching |
-| `components/thesis-chart.js` | Thesis, date range, callbacks | Chart and selection coordinates | Fetching |
-| `components/thesis-detail.js` | Dataset, thesis ID, date | Overview/Evidence/History, local state and destruction | Global variables |
-| `components/canvas.js` | Selected cards and callbacks | Layout, edges, pan and zoom | Selecting Idea matches |
-| `idea/idea.js` | User input and service response | Service-backed Idea flow | The removed local demo matcher |
-
-## Value × reader
-
-| Value | Writer | Reader/contract |
-|---|---|---|
-| id | Ledger/agent | Cards, selection and dependencies; unique within dataset |
-| rung.position / score | Adapter/agent | Chart, badge and table; consecutive positions and explicit scores; two yes/no or five numeric states |
-| judgement.id / day / seq / rung / cited | Ledger/adapter | Historical reads ordered by day, sequence and stable ID; references exist and cannot cite future evidence |
-| evidence.day / arrival_day | Source/ledger | Display uses publication day; historical filtering and bars use arrival day |
-| switches.day / dependencies.day | Ledger sequence date | Only records existing by the selected date affect state/relations |
-| dataset.as_of / days | Host | Default date and replay bounds, never machine time |
-| URI | Source | Only http/https become links; escape text and attributes |
-
-## State × event
-
-| State/event | Result |
+| Module | Responsibility |
 |---|---|
-| Valid data + mount/update | Validate then replace atomically; all components share one snapshot |
-| Invalid data + update | Throw a field-path ContractError; preserve the existing view |
-| Judged/unjudged, not created, closed | Explicit empty states; no invented score; read the selected date's switch |
-| Unloaded relation target | Preserve reference; draw only loaded targets without inventing content |
-| Thesis/data switch | Remove old events/animations and reset local detail state |
-| Repeated expand/collapse | Reverse from current height; destruction cancels animation |
-| History hover/click/quiet day | Preserve D122 selection rules; never read future judgements |
-| Event after destruction | No listener or animation continues writing DOM |
-| Two instances | Separate roots, ID prefixes, data and lifecycles; no global DOM queries |
+| `src/hivemind/bundle.py` | Pin read transactions and project current or historical ledger data; preserve identity, sources and relationship dates |
+| `model/thesis.schema.json`, `contract.js` | Versioned allowed shapes, dates, IDs and references; legacy conversion |
+| `adapters/bundle.js` | One conversion from bundle values into UI labels and explicit scores |
+| `model/thesis.js`, `library.js` | Pure historical state, membership, dependency and filter selectors |
+| `components/library.js` | Group navigation, local text/subject/status filters, snapshot date and card grid |
+| `components/thesis-card.js`, `thesis-chart.js` | Shared card and history plots |
+| `components/thesis-detail.js`, `evidence.js`, `relations.js` | Drawer, citations, complete source list, identity and separately labelled relationship kinds |
+| `components/canvas.js` | Explicit graph layout, pan/zoom, replay; no thesis or group selection logic |
+| `idea/composite.js` | Idea plan validation, weighted historical calculation, confidence conversion, display ordering and coverage; no inferred direction |
+| `components/detail-tabs.js` | Shared tab selection, keyboard navigation and scroll reset; content remains owned by each drawer |
+| `idea/analysis.js` | Overview, expanded reading steps and original Response data in a read-only drawer; search records appear only in Response |
+| `bootstrap.js`, `idea/idea.js` | API requests and cancellation, complete snapshot replacement, explicit Idea submit |
 
-## Existing checks and new entry
+Full-library reads declare `coverage: library`. Selected-thesis reads declare `coverage: selection`; their group memberships refer only to loaded theses. They never claim a full group population. Sources retain the source date and the date they entered the ledger. Historical citation rendering uses the selected judgement date, even when the drawer opened at a later date.
 
-Mock and API bundles use the same adapter. Replay both languages' 42 mock theses, complete ledger bundles and stored `/ideas` samples without model calls. Cover missing/unknown fields, duplicate IDs, invalid dates/states/references, unordered input, source immutability, lifecycle/relation dates, time before first judgement, date gaps, replacement evidence and unsafe links.
+## Verification and budget
 
-Browser verification covers both ladder kinds, empty judgements, filtering, historical selection, reversing expansion and destruction. Run the Python suite once and `docs/check.py` last.
+The current corpus and older Chinese/translated fixtures pass through the same adapter. Real HTTP/MCP reads exercise the default English ledger, and explicit old-ledger tests retain the existing service regressions. Temporary real ledgers cover waiting dependencies, resolution and succession because the current English corpus contains none of those records.
 
-Keep the single-file mock build while organising source into ES modules. Use esbuild and Ajv for development; compile the schema to a standalone validator so the browser does not run a compiler. Budget: 200 KB JavaScript excluding data/fonts and 200 ms to validate the full sample. Report measurements separately from budgets. ESLint and Prettier are development-only.
+Browser checks cover filtering, date changes, citations, the history plot, score definitions, drawer motion, narrow-snapshot replacement and empty/invalid datasets. Source databases remain read-only. Results and input hashes are in [the D181 report](../../poc/reports/2026-10-26-library-ui/results.md).
 
-## Recorded refactor results (historical, not a new D163 run)
-
-- UI tests: 10 passed; both 42-thesis mock languages and 94 live bundles used the same contract.
-- Three mutants were rejected: future judgement as current, publication day as arrival day, and early closure.
-- Python: 31 tests passed, including real HTTP/MCP bundle reads.
-- Browser: two instances had unique DOM IDs; invalid updates retained old data; destroying one did not affect the other. Empty history, both ladders, replay, filters, expansion and selection worked.
-- Build: about 174 KB JavaScript; 42-thesis validation about 23 ms. Lint and format checks passed.
-- The read layer added IDs and dates without changing classification, extraction, matching, rejudgement or expiry rules.
+The production JavaScript budget remains 200 KiB, and full-corpus validation remains below a 200 ms budget. Production output is minified; sources remain formatted ES modules. Ajv and esbuild are existing build dependencies; no new UI framework is introduced.

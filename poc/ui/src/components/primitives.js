@@ -1,10 +1,17 @@
 import { esc, ICON } from './dom.js';
 import { score, rungLabel, stateTone } from '../model/thesis.js';
 
-export function cardHeaderHtml(kind, badge) {
+export function cardHeaderHtml(kind, badge = '') {
   const icon = { Idea: ICON.idea, Thesis: ICON.thesis }[kind];
   if (!icon) throw new TypeError(`Unknown card kind: ${kind}`);
   return `<div class="card__head"><span class="card__kind">${icon}<span>${kind}</span></span><span class="card__spacer"></span>${badge}</div>`;
+}
+
+export function weightBadgeHtml(weightPercent) {
+  if (weightPercent === undefined) return '';
+  if (!Number.isInteger(weightPercent) || weightPercent < 0 || weightPercent > 100)
+    throw new TypeError('Impact weight must be an integer percentage');
+  return `<span class="chip chip--line card__weight" aria-label="Impact weight: ${weightPercent}%"><span class="card__weight-icon" aria-hidden="true">${ICON.scale}</span><span class="card__weight-value">${weightPercent}%</span></span>`;
 }
 
 export function badgeHtml(thesis, judgement) {

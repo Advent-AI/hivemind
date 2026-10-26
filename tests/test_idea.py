@@ -20,7 +20,7 @@ import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import bundle, config, idea, model, search, service  # noqa: E402
+from hivemind import bundle, config, idea, idea_composite, model, search, service  # noqa: E402
 from hivemind.views import store  # noqa: E402
 
 LEDGER = os.path.join(ROOT, 'poc', 'data', 'sealed-2026-10-24-run3-through-0815', 'views.sqlite')
@@ -177,6 +177,375 @@ def test_the_service_decides_the_first_parts_direct_view():
     assert idea.service_direct(part, [], looks) is None
 
 
+def test_d186_analyst_briefs_include_only_the_requested_days_state():
+    current = service.open_ledger(os.path.join(ROOT, 'poc/data/english-v23-jev-2026-10-25/views.sqlite'))
+    try:
+        rows = [r for r in service.summaries(current, '2026-08-09') if r['view_id'] == 'v2']
+        past = idea.brief(current, rows, '2026-08-09', detailed=True)[0]
+        latest = idea.brief(current, rows, '2026-08-15', detailed=True)[0]
+        assert past['judged']['label'] == 'Neutral' and latest['judged']['label'] == 'Bearish'
+        saved = current.execute("select * from judgements where view_id='v2' and publication_day<='2026-08-09' order by judgement_id desc limit 1").fetchone()
+        assert past['judged']['reasons'] == saved['reasons']
+        assert past['judged']['day'] == saved['publication_day']
+        assert '400 billion' in past['judged']['condition']
+        assert past['question'] == rows[0]['question']
+        legacy = idea.brief(current, rows, '2026-08-09')[0]
+        assert set(legacy) == {'view_id', 'object', 'looks_at', 'judged'}
+        assert set(legacy['judged']) == {'position', 'label'}
+    finally:
+        current.close()
+
+
+def test_d186_summary_cannot_change_mapping_and_reads_only_chosen_states(ledger, items, index, tmp_path):
+    cfg = config.load(os.path.join(ROOT, 'poc/config/poc-v26-idea.json'))
+    text = 'Demand supports growth, but the next-quarter beat case remains unproven without a comparable earnings estimate.'
+    requests = []
+
+    def transport(provider, request):
+        requests.append(request)
+        schema = request['response_format']['json_schema']['schema']
+        if schema == idea.SUMMARY:
+            answer = {'summary': text}
+        elif schema == idea.DECOMPOSE:
+            answer = DECOMPOSED
+        else:
+            answer = {'parts': [{'index': 0, 'views': [{'view_id': offered(request)[0][0], 'fit': 'direct'}], 'why': 'Revenue supports earnings.'}], 'summary': 'Original summary'}
+        return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 100}}
+
+    original = idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'original.sqlite')),
+                              config.load(os.path.join(ROOT, 'poc/config/poc-v9.json')), IDEA,
+                              aliases=search.object_aliases(UNIVERSE), transport=transport, bundles=False)
+    before = requests[:]
+    requests.clear()
+    progress = []
+    result = idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'analyst.sqlite')), cfg, IDEA,
+                            aliases=search.object_aliases(UNIVERSE), transport=transport, bundles=False,
+                            on_progress=lambda stage: progress.append((stage, len(requests))))
+    assert progress == [('search', 0), ('decompose', 0), ('retrieve', 1), ('map', 1), ('summarize', 2)]
+    assert requests[:2] == before and len(requests) == 3
+    assert result['reading']['summary'] == text and original['reading']['summary'] == 'Original summary'
+    for field in ('parts', 'chosen', 'claim', 'dropped', 'trace'):
+        assert result['reading'][field] == original['reading'][field]
+    assert result['evaluation'] == original['evaluation'] and result['related'] == original['related']
+    payload = json.loads(requests[2]['messages'][1]['content'])
+    rows = payload['theses']
+    assert [row['view_id'] for row in rows] == [row['view_id'] for row in result['reading']['chosen']]
+    assert all('question' in row and {'condition', 'day', 'reasons'} <= set(row['judged']) for row in rows if row['judged'])
+    assert requests[2]['response_format']['json_schema']['schema'] == idea.SUMMARY
+    assert result['cost']['turns'] == 3 and result['cost']['input_tokens'] == 3000
+
+
+def test_d186_summary_configuration_requires_a_mapping_step(tmp_path):
+    raw = json.load(open(os.path.join(ROOT, 'poc/config/poc-v26-idea.json')))
+    raw.pop('idea')
+    path = tmp_path / 'config.json'
+    path.write_text(json.dumps(raw))
+    with pytest.raises(config.ConfigError, match='idea_summary requires an idea setting'):
+        config.load(path)
+
+
+def test_d188_composite_is_bound_to_the_unchanged_selection(ledger, items, index, tmp_path):
+    requests = []
+
+    def transport(provider, request):
+        requests.append(request)
+        schema = request['response_format']['json_schema']['schema']
+        if schema == idea.DECOMPOSE:
+            answer = DECOMPOSED
+        elif schema == idea.MAP:
+            answer = {'parts': [{'index': 0, 'views': [{'view_id': offered(request)[0][0], 'fit': 'direct'}], 'why': 'Relevant revenue.'}], 'summary': 'Mapped summary'}
+        else:
+            context = json.loads(request['messages'][1]['content'])
+            assert schema == idea_composite.endpoint_schema(context['theses'])
+            assert all('ladder' in t and len(t['ladder']) == 2 for t in context['theses'])
+            assert all('why' not in part for part in context['parts'])
+            answer = {'summary': 'Revenue is the direct driver.', 'outcome': 'Revenue', 'claim_direction': 'higher', 'composite': {
+                context['theses'][0]['view_id']: {'kind': 'driver', 'label': 'Revenue', 'raises_outcome_position': '1', 'reason': 'Higher revenue supports the claim.'}
+            }}
+        return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1, 'completion_tokens': 1}}
+
+    old = idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'old.sqlite')),
+                         config.load(os.path.join(ROOT, 'poc/config/poc-v9.json')), IDEA,
+                         aliases=search.object_aliases(UNIVERSE), transport=transport, bundles=False)
+    old_requests = requests[:]
+    requests.clear()
+    card = idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'new.sqlite')),
+                          config.load(os.path.join(ROOT, 'poc/config/poc-v30-idea.json')), IDEA,
+                          aliases=search.object_aliases(UNIVERSE), transport=transport, bundles=False)
+    assert len(requests) == 3 and requests[:2] == old_requests
+    for key in ('parts', 'chosen', 'claim', 'dropped', 'trace'):
+        assert card['reading'][key] == old['reading'][key]
+    composite = card['reading']['composite']
+    assert composite['version'] == 'idea-composite/2' and composite['method'] == 'equal_weight'
+    assert composite['as_of'] == card['idea']['as_of']
+    selected = card['reading']['chosen'][0]['view_id']
+    assert composite['drivers'][0]['thesis_id'] == selected
+    assert composite['drivers'][0]['question'] == store.view(ledger, selected)['question']
+    assert composite['target'] == {'outcome': 'Revenue', 'direction': 'higher'}
+
+
+def test_d196_final_associations_are_exactly_the_positive_model_selection(ledger, items, index, tmp_path):
+    """D196: omitted candidates have no association, bundle, related edge or orphan claim."""
+    requests = []
+    picked = []
+    def transport(provider, request):
+        requests.append(request)
+        schema = request['response_format']['json_schema']['schema']
+        if schema == idea.DECOMPOSE:
+            answer = DECOMPOSED
+        elif schema == idea.MAP:
+            ids = offered(request)[0][:3]
+            answer = {'summary': 'Mapped candidates.', 'parts': [{'index': 0, 'why': 'Candidate relevance.',
+                'views': [{'view_id': ident, 'fit': 'direct' if n == 0 else 'driver'} for n, ident in enumerate(ids)]}]}
+        else:
+            context = json.loads(request['messages'][1]['content'])
+            assert 'theses' not in context
+            assert schema == idea_composite.positive_schema(context['candidate_theses'])
+            thesis = context['candidate_theses'][-1]
+            picked.append(thesis['view_id'])
+            answer = {'summary': 'The selected driver provides directional support.', 'outcome': 'Revenue', 'claim_direction': 'higher',
+                'composite': [{'thesis_id': thesis['view_id'], 'label': 'Revenue driver', 'raises_outcome_position': str(thesis['ladder'][0]['position']),
+                               'reason': 'Raises revenue.', 'weight_percent': 100, 'weight_reason': 'The selected driver.'}]}
+        return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1, 'completion_tokens': 1}}
+    aliases = search.object_aliases(UNIVERSE)
+    idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'old.sqlite')),
+                  config.load(os.path.join(ROOT, 'poc/config/poc-v9.json')), IDEA, aliases=aliases, transport=transport)
+    old_requests = requests[:]
+    requests.clear()
+    archive = model.Archive(str(tmp_path / 'positive.sqlite'))
+    cfg = config.load(os.path.join(ROOT, 'poc/config/poc-v32-idea.json'))
+    card = idea.read_idea(ledger, index, items, archive, cfg, IDEA, aliases=aliases, transport=transport)
+    assert requests[:2] == old_requests and len(requests) == 3
+    assert [c['view_id'] for c in card['reading']['chosen']] == picked
+    assert [v['view_id'] for v in card['views']] == picked and card['related'] == []
+    plan = card['reading']['composite']
+    assert plan['version'] == 'idea-composite/4' and 'excluded' not in plan
+    assert [d['thesis_id'] for d in plan['drivers']] == picked
+    assert card['reading']['claim'] is None and card['evaluation'] is None
+    for part in card['reading']['parts']:
+        for key in ('view_ids', 'direct', 'driver', 'context'):
+            assert set(part[key]) <= set(picked)
+        assert part['service_direct'] is None or part['service_direct'] in picked
+    requests.clear()
+    again = idea.read_idea(ledger, index, items, archive, cfg, IDEA, aliases=aliases, transport=transport)
+    assert requests == [] and again['reading'] == card['reading']
+
+
+def test_d196_positive_selection_refuses_zero_duplicates_and_unknown_candidates(ledger):
+    """D196: the model returns a positive subset, not a partition containing zero-weight exclusions."""
+    import copy
+    selected = [{'view_id': ident} for ident in ('v3', 'v1', 'v9')]
+    theses = idea_composite.add_ladders(ledger, selected, endpoints_only=True)
+    records = {r['view_id']: r for r in service.summaries(ledger, '2026-08-15')}
+    answer = {'summary': 'Revenue supports the idea.', 'outcome': 'Revenue', 'claim_direction': 'higher',
+              'composite': [{'thesis_id': 'v3', 'label': 'Revenue', 'raises_outcome_position': '1',
+                             'reason': 'Raises revenue.', 'weight_percent': 100, 'weight_reason': 'Direct impact.'}]}
+    bind = lambda value: idea_composite.bind_positive(value, selected, records, '2026-08-15', theses)
+    assert len(bind(answer)['drivers']) == 1 and 'excluded' not in bind(answer)
+    for mutate in (
+        lambda a: a['composite'][0].update(weight_percent=0),
+        lambda a: a['composite'][0].update(weight_percent=99),
+        lambda a: a['composite'][0].update(thesis_id='v999'),
+        lambda a: a['composite'][0].update(raises_outcome_position='3'),
+        lambda a: a['composite'].append(a['composite'][0]),
+    ):
+        bad = copy.deepcopy(answer); mutate(bad)
+        with pytest.raises(model.SchemaError): bind(bad)
+    empty = copy.deepcopy(answer); empty['composite'] = []
+    assert bind(empty)['drivers'] == []
+
+
+def test_d194_weighted_call_preserves_mapping_and_caches_percentages(ledger, items, index, tmp_path):
+    """D194: three calls, the same first two requests, explicit saved weights and unchanged chosen IDs."""
+    requests = []
+
+    def transport(provider, request):
+        requests.append(request)
+        schema = request['response_format']['json_schema']['schema']
+        if schema == idea.DECOMPOSE:
+            answer = DECOMPOSED
+        elif schema == idea.MAP:
+            ids = offered(request)[0][:2]
+            answer = {'parts': [{'index': 0, 'views': [{'view_id': ident, 'fit': 'driver'} for ident in ids],
+                                 'why': 'Relevant drivers.'}], 'summary': 'Mapped summary'}
+        else:
+            context = json.loads(request['messages'][1]['content'])
+            assert schema == idea_composite.weighted_schema(context['theses'])
+            assert len(context['theses']) == 2
+            answer = {'summary': 'Revenue is the principal driver.', 'outcome': 'Revenue', 'claim_direction': 'higher',
+                      'composite': {t['view_id']: {'kind': 'driver', 'label': 'Revenue driver',
+                          'raises_outcome_position': str(t['ladder'][0]['position']), 'reason': 'Higher revenue supports the claim.',
+                          'weight_percent': weight, 'weight_reason': 'Its relative importance to revenue.'}
+                          for t, weight in zip(context['theses'], (70, 30))}}
+        return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1, 'completion_tokens': 1}}
+
+    aliases = search.object_aliases(UNIVERSE)
+    old = idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'old.sqlite')),
+                        config.load(os.path.join(ROOT, 'poc/config/poc-v9.json')), IDEA, aliases=aliases,
+                        transport=transport, bundles=False)
+    mapping_requests = requests[:]
+    requests.clear()
+    archive = model.Archive(str(tmp_path / 'weighted.sqlite'))
+    cfg = config.load(os.path.join(ROOT, 'poc/config/poc-v31-idea.json'))
+    result = idea.read_idea(ledger, index, items, archive, cfg, IDEA, aliases=aliases, transport=transport, bundles=False)
+    assert len(requests) == 3 and requests[:2] == mapping_requests
+    for field in ('parts', 'chosen', 'claim', 'dropped', 'trace'):
+        assert result['reading'][field] == old['reading'][field]
+    plan = result['reading']['composite']
+    assert (plan['version'], plan['method']) == ('idea-composite/3', 'weighted')
+    assert [d['weight_percent'] for d in plan['drivers']] == [70, 30]
+    requests.clear()
+    replay = idea.read_idea(ledger, index, items, archive, cfg, IDEA, aliases=aliases, transport=transport, bundles=False)
+    assert requests == [] and replay['reading']['composite'] == plan
+
+
+def test_d195_weighted_mapping_keeps_the_model_selected_thesis_count(ledger, items, index, tmp_path):
+    """D195: a model-selected fourth or fifth driver is not demoted by a display quota."""
+    def transport(provider, request):
+        schema = request['response_format']['json_schema']['schema']
+        if schema == idea.DECOMPOSE:
+            answer = DECOMPOSED
+        elif schema == idea.MAP:
+            ids = offered(request)[0][:5]
+            assert len(ids) == 5
+            answer = {'parts': [{'index': 0, 'views': [{'view_id': ident, 'fit': 'driver'} for ident in ids],
+                                 'why': 'Relevant drivers.'}], 'summary': 'Mapped summary'}
+        else:
+            context = json.loads(request['messages'][1]['content'])
+            assert len(context['theses']) == 5
+            answer = {'summary': 'Several factors drive revenue.', 'outcome': 'Revenue', 'claim_direction': 'higher',
+                      'composite': {t['view_id']: {'kind': 'driver', 'label': 'Revenue driver',
+                        'raises_outcome_position': str(t['ladder'][0]['position']), 'reason': 'Supports the outcome.',
+                        'weight_percent': 20, 'weight_reason': 'Material to the outcome.'} for t in context['theses']}}
+        return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1, 'completion_tokens': 1}}
+    card = idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'weighted.sqlite')),
+                         config.load(os.path.join(ROOT, 'poc/config/poc-v31-idea.json')), IDEA,
+                         aliases=search.object_aliases(UNIVERSE), transport=transport, bundles=False)
+    assert len(card['reading']['chosen']) == 5
+    assert sum(d['weight_percent'] for d in card['reading']['composite']['drivers']) == 100
+
+
+def test_d194_weight_contract_rejects_bad_totals_types_and_exclusion_weights(ledger):
+    """D194: a complete 100% plan or empty zero plan is accepted; invalid allocations are refused."""
+    import copy
+    selected = [{'view_id': ident} for ident in ('v3', 'v1', 'v9')]
+    records = {row['view_id']: row for row in service.summaries(ledger, '2026-08-15')}
+    theses = idea_composite.add_ladders(ledger, selected, endpoints_only=True)
+    answer = {'summary': 'Revenue has the most direct impact.', 'outcome': 'Revenue', 'claim_direction': 'higher',
+              'composite': {t['view_id']: {'kind': 'driver', 'label': 'Revenue driver',
+                  'raises_outcome_position': str(t['ladder'][0]['position']), 'reason': 'Raises revenue.',
+                  'weight_percent': weight, 'weight_reason': 'Relative importance to the revenue outcome.'}
+                  for t, weight in zip(theses[:2], (70, 30))}}
+    answer['composite']['v9'] = {'kind': 'excluded', 'weight_percent': 0, 'reason': 'Overlaps revenue.'}
+    bind = lambda value: idea_composite.bind_weighted(value, selected, records, '2026-08-15', theses)
+    plan = bind(answer)
+    assert sum(d['weight_percent'] for d in plan['drivers']) == 100
+    negative = copy.deepcopy(answer)
+    negative['claim_direction'] = 'lower'
+    assert bind(negative)['drivers'][0]['supporting_end'] != plan['drivers'][0]['supporting_end']
+    for weight in (-1, 0, 69, 101, True, 70.5):
+        invalid = copy.deepcopy(answer)
+        invalid['composite']['v3']['weight_percent'] = weight
+        with pytest.raises(model.SchemaError):
+            bind(invalid)
+    for change in (
+        lambda a: a['composite']['v9'].update(weight_percent=1),
+        lambda a: a['composite']['v3'].update(weight_reason=''),
+        lambda a: a['composite'].pop('v9'),
+        lambda a: a['composite'].update(v999=a['composite']['v9']),
+    ):
+        invalid = copy.deepcopy(answer)
+        change(invalid)
+        with pytest.raises(model.SchemaError):
+            bind(invalid)
+    empty = copy.deepcopy(answer)
+    empty['composite'] = {s['view_id']: {'kind': 'excluded', 'weight_percent': 0, 'reason': 'No directional link.'} for s in selected}
+    assert bind(empty)['drivers'] == []
+
+
+def test_d188_composite_requires_a_complete_unique_partition_of_chosen_theses():
+    import copy
+    selected = [{'view_id': 'v3'}, {'view_id': 'v1'}]
+    records = {'v3': {'question': 'Data-center revenue'}, 'v1': {'question': 'Capital expenditure'}}
+    plan = {'drivers': [{'thesis_id': 'v3', 'label': 'Demand', 'supporting_end': 'first', 'reason': 'Revenue supports growth.'}],
+            'excluded': [{'thesis_id': 'v1', 'reason': 'The period is outside the claim.'}]}
+    assert idea_composite.bind(plan, selected, records, '2026-08-15')['excluded'][0]['question'] == records['v1']['question']
+    empty = {'drivers': [], 'excluded': [{'thesis_id': row['view_id'], 'reason': 'No clear directional link.'} for row in selected]}
+    assert idea_composite.bind(empty, selected, records, '2026-08-15')['drivers'] == []
+    for change in (
+        lambda p: p['excluded'].clear(),
+        lambda p: p['excluded'].append(p['excluded'][0]),
+        lambda p: p['drivers'][0].update(thesis_id='v999'),
+        lambda p: p['drivers'][0].update(supporting_end='higher'),
+        lambda p: p['drivers'][0].update(weight=10),
+        lambda p: p['drivers'][0].update(reason=''),
+    ):
+        invalid = copy.deepcopy(plan)
+        change(invalid)
+        with pytest.raises(model.SchemaError):
+            idea_composite.bind(invalid, selected, records, '2026-08-15')
+
+
+def test_d188_keyed_schema_prevents_duplicate_missing_and_foreign_dispositions():
+    import copy
+    selected = [{'view_id': 'v3'}, {'view_id': 'v1'}]
+    records = {'v3': {'question': 'Data-center revenue'}, 'v1': {'question': 'Capital expenditure'}}
+    answer = {'summary': 'Demand remains uncertain.', 'composite': {
+        'v3': {'kind': 'driver', 'label': 'Demand', 'supporting_end': 'first', 'reason': 'Higher revenue supports the claim.'},
+        'v1': {'kind': 'excluded', 'reason': 'Its period is outside the claim.'}}}
+    bound = idea_composite.bind_dispositions(answer, selected, records, '2026-08-15')
+    assert [r['thesis_id'] for r in bound['drivers'] + bound['excluded']] == ['v3', 'v1']
+    for change in (
+        lambda a: a['composite'].pop('v1'),
+        lambda a: a['composite'].update(v999=a['composite']['v1']),
+        lambda a: a['composite']['v3'].update(kind='excluded'),
+        lambda a: a['composite'].update(drivers=[a['composite']['v3']]),
+    ):
+        invalid = copy.deepcopy(answer)
+        change(invalid)
+        with pytest.raises(model.SchemaError):
+            idea_composite.bind_dispositions(invalid, selected, records, '2026-08-15')
+    assert idea_composite.bind_dispositions({'summary': 'No coverage.', 'composite': {}}, [], {}, '2026-08-15')['drivers'] == []
+
+
+def test_d188_lower_claim_reverses_every_driver_once_in_code():
+    import copy
+    selected = [{'view_id': 'v3'}, {'view_id': 'v1'}]
+    records = {'v3': {'question': 'Data-center revenue'}, 'v1': {'question': 'Capital expenditure'}}
+    higher = {'summary': 'Demand supports revenue.', 'outcome': 'Data-center revenue', 'claim_direction': 'higher', 'composite': {
+        'v3': {'kind': 'driver', 'label': 'Revenue', 'raises_outcome_end': 'first', 'reason': 'The high-revenue end raises the outcome.'},
+        'v1': {'kind': 'driver', 'label': 'Capex', 'raises_outcome_end': 'last', 'reason': 'Higher customer spending supports revenue.'}}}
+    lower = copy.deepcopy(higher)
+    lower['claim_direction'] = 'lower'
+    up = idea_composite.bind_outcome(higher, selected, records, '2026-08-15')
+    down = idea_composite.bind_outcome(lower, selected, records, '2026-08-15')
+    assert [d['supporting_end'] for d in up['drivers']] == ['first', 'last']
+    assert [d['supporting_end'] for d in down['drivers']] == ['last', 'first']
+    lower['claim_direction'] = 'unclear'
+    with pytest.raises(model.SchemaError, match='unclear claim'):
+        idea_composite.bind_outcome(lower, selected, records, '2026-08-15')
+
+
+def test_d188_endpoint_ids_are_checked_before_claim_inversion():
+    import copy
+    selected = [{'view_id': 'v3'}, {'view_id': 'v1'}]
+    records = {'v3': {'question': 'Revenue'}, 'v1': {'question': 'Capex'}}
+    theses = [{'view_id': 'v3', 'ladder': [{'position': 1}, {'position': 5}]},
+              {'view_id': 'v1', 'ladder': [{'position': 1}, {'position': 5}]}]
+    answer = {'summary': 'Demand supports revenue.', 'outcome': 'Revenue', 'claim_direction': 'higher', 'composite': {
+        'v3': {'kind': 'driver', 'label': 'Revenue', 'raises_outcome_position': '1', 'reason': 'Higher revenue raises the outcome.'},
+        'v1': {'kind': 'driver', 'label': 'Capex', 'raises_outcome_position': '5', 'reason': 'More spending raises demand.'}}}
+    up = idea_composite.bind_endpoints(answer, selected, records, '2026-08-15', theses)
+    assert [d['supporting_end'] for d in up['drivers']] == ['first', 'last']
+    lower = copy.deepcopy(answer)
+    lower['claim_direction'] = 'lower'
+    down = idea_composite.bind_endpoints(lower, selected, records, '2026-08-15', theses)
+    assert [d['supporting_end'] for d in down['drivers']] == ['last', 'first']
+    answer['composite']['v1']['raises_outcome_position'] = '3'
+    with pytest.raises(model.SchemaError):
+        idea_composite.bind_endpoints(answer, selected, records, '2026-08-15', theses)
+
+
 def test_the_parts_queries_are_embedded_in_one_round_trip(ledger, items, tmp_path):
     # with real vectors (here fake ones under the real model name) an idea with three parts embeds its own query once and
     # the parts' six queries once more, not once per search; a second read finds everything cached
@@ -318,7 +687,7 @@ def free_port():
 
 def test_http_ideas_route_as_a_user_starts_the_server(tmp_path):
     port = free_port()
-    proc = subprocess.Popen([sys.executable, os.path.join(ROOT, 'scripts', 'hivemind_api.py'), '--port', str(port), '--lexical',
+    proc = subprocess.Popen([sys.executable, os.path.join(ROOT, 'scripts', 'hivemind_api.py'), '--views', LEDGER, '--items', os.path.join(ROOT, 'poc', 'data', 'items-window.sqlite'), '--port', str(port), '--lexical',
                              '--index', str(tmp_path / 'index.sqlite'), '--archive', str(tmp_path / 'archive.sqlite')],
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
@@ -343,3 +712,59 @@ def test_http_ideas_route_as_a_user_starts_the_server(tmp_path):
     finally:
         proc.terminate()
         proc.wait(timeout=10)
+
+
+def test_d187_http_progress_arrives_before_the_model_finishes(tmp_path, monkeypatch):
+    """D187: actual stage boundaries flush immediately; the terminal payload keeps the existing shape."""
+    import importlib.util
+    import threading
+    spec = importlib.util.spec_from_file_location('idea_progress_api', os.path.join(ROOT, 'scripts/hivemind_api.py'))
+    api = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(api)
+    api.PATHS.update(views=LEDGER, items=ITEMS, index=str(tmp_path / 'index.sqlite'), archive=str(tmp_path / 'archive.sqlite'))
+    api.CFG = config.load(os.path.join(ROOT, 'poc/config/poc-v26-idea.json'))
+    api.ALIASES = search.object_aliases(UNIVERSE)
+    api.SEMANTIC = False
+    entered, release = threading.Event(), threading.Event()
+
+    def transport(provider, request):
+        schema = request['response_format']['json_schema']['schema']
+        if schema == idea.DECOMPOSE:
+            entered.set()
+            assert release.wait(5), 'The client must receive progress before releasing the model'
+            answer = DECOMPOSED
+        elif schema == idea.SUMMARY:
+            answer = {'summary': 'The evidence leaves the outcome open.'}
+        else:
+            answer = {'parts': [{'index': 0, 'views': [{'view_id': offered(request)[0][0], 'fit': 'driver'}], 'why': 'Relevant revenue evidence.'}], 'summary': 'Mapping summary'}
+        return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1, 'completion_tokens': 1}}
+
+    monkeypatch.setattr(model, 'openai_transport', transport)
+    server = api.http.server.ThreadingHTTPServer(('127.0.0.1', 0), api.Handler)
+    server.daemon_threads = True
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    url = f'http://127.0.0.1:{server.server_port}/ideas'
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/x-ndjson'}
+    try:
+        request = urllib.request.Request(url, data=json.dumps({'text': IDEA, 'as_of': '2026-08-15', 'bundles': False}).encode(), headers=headers)
+        with urllib.request.urlopen(request, timeout=5) as response:
+            assert response.headers.get_content_type() == 'application/x-ndjson'
+            assert entered.wait(2)
+            events = [json.loads(response.readline()), json.loads(response.readline())]
+            assert events == [{'type': 'progress', 'stage': 'search'}, {'type': 'progress', 'stage': 'decompose'}]
+            assert not release.is_set()
+            release.set()
+            events.extend(json.loads(line) for line in response)
+        assert [e['stage'] for e in events if e['type'] == 'progress'] == ['search', 'decompose', 'retrieve', 'map', 'summarize']
+        assert events[-1]['type'] == 'result'
+        assert events[-1]['data']['reading']['summary'] == 'The evidence leaves the outcome open.'
+        assert events[-1]['data']['cost']['turns'] == 3
+        bad = urllib.request.Request(url, data=b'{}', headers=headers)
+        with urllib.request.urlopen(bad, timeout=5) as response:
+            assert json.loads(response.readline()) == {'type': 'error', 'status': 400, 'message': 'POST /ideas needs a JSON body with text'}
+    finally:
+        release.set()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)

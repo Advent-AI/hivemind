@@ -1,6 +1,9 @@
 :where(.hm-ui) .stage {
-  position: fixed;
-  inset: 56px 0 0 0;
+  --connector-color: #aaa99f;
+  position: relative;
+  inset: auto;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
   cursor: grab;
   background-color: var(--paper);
@@ -27,8 +30,7 @@
 :where(.hm-ui) .edges {
   pointer-events: none;
 }
-:where(.hm-ui) .card input,
-:where(.hm-ui) .card .chip--dep {
+:where(.hm-ui) .card input {
   pointer-events: auto;
 }
 :where(.hm-ui) .edges {
@@ -39,8 +41,8 @@
 }
 :where(.hm-ui) .edge {
   fill: none;
-  stroke: var(--rule-strong);
-  stroke-width: 1;
+  stroke: var(--connector-color);
+  stroke-width: 1.5;
   stroke-linecap: round;
 }
 :where(.hm-ui) .edge--on {
@@ -123,9 +125,6 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-:where(.hm-ui) .card__q--one {
-  -webkit-line-clamp: 1;
-}
 :where(.hm-ui) .card__q--two {
   -webkit-line-clamp: 2;
 }
@@ -148,22 +147,6 @@
 :where(.hm-ui) .card__status .sep {
   color: var(--ink-4);
 }
-:where(.hm-ui) .card__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-  margin-top: 10px;
-  font: 400 12.5px/18px var(--sans);
-  color: var(--ink-3);
-}
-:where(.hm-ui) .card__row b {
-  color: var(--ink);
-  font-weight: 500;
-}
-:where(.hm-ui) .card__row .sep {
-  color: var(--ink-4);
-}
 :where(.hm-ui) .chip {
   display: inline-flex;
   align-items: center;
@@ -182,6 +165,33 @@
 :where(.hm-ui) .chip--line {
   background: transparent;
   border: 1px solid var(--rule-strong);
+}
+:where(.hm-ui) .card__weight {
+  height: 20px;
+  font-size: 11px;
+  line-height: 16px;
+  gap: 4px;
+}
+:where(.hm-ui) .card__weight-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 12px;
+  height: 16px;
+}
+:where(.hm-ui) .card__weight-icon > svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+:where(.hm-ui) .card__weight-value {
+  display: block;
+  line-height: 16px;
 }
 :where(.hm-ui) .state--positive {
   --state-bg: var(--ink);
@@ -219,9 +229,6 @@
   border-color: color-mix(in srgb, currentColor 22%, transparent);
   font: 500 11px/14px var(--sans);
 }
-:where(.hm-ui) .chip--state .js-label:empty {
-  display: none;
-}
 :where(.hm-ui) .axis-score rect {
   fill: var(--state-bg);
   stroke: var(--state-border);
@@ -241,54 +248,11 @@
   fill: var(--state-fg);
   font-weight: 600;
 }
-:where(.hm-ui) .chip--dep {
-  cursor: pointer;
-}
-:where(.hm-ui) .chip--dep:hover {
-  background: var(--wash-strong);
-}
 :where(.hm-ui) .muted {
   color: var(--ink-4);
 }
-:where(.hm-ui) .idea__num {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--wash);
-  font: 400 12px/16px var(--sans);
-  color: var(--ink-3);
-}
-:where(.hm-ui) .idea__num-val {
-  font: 600 15px/18px var(--sans);
-  color: var(--ink);
-}
-:where(.hm-ui) .idea__slider {
-  width: 100%;
-  margin: 0;
-  accent-color: var(--ink);
-}
-:where(.hm-ui) .idea__gap {
-  margin-top: auto;
-  font: 400 12.5px/18px var(--sans);
-  color: var(--ink-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-:where(.hm-ui) .idea__gap b {
-  color: var(--ink);
-  font-weight: 500;
-}
 :where(.hm-ui) .ladder__chart {
   margin-top: 10px;
-}
-:where(.hm-ui) .card__row--foot {
-  margin-top: auto;
-  padding-top: 8px;
 }
 :where(.hm-ui) .ladder__chart svg {
   display: block;
@@ -337,9 +301,34 @@
   font: 600 14px var(--sans);
   fill: var(--ink-2);
 }
-:where(.hm-ui) .ladder__chart .plot-title {
+:where(.hm-ui) .ladder__chart .plot-title,
+:where(.hm-ui) .idea-composite .plot-title {
   font-size: 11px;
   font-weight: 500;
+}
+:where(.hm-ui) .plot-badge {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+:where(.hm-ui) .plot-badge .chip {
+  max-width: 100%;
+  min-width: 0;
+  height: 18px;
+  padding: 0 5px;
+  gap: 4px;
+  border-radius: 5px;
+  font: 500 11px/14px var(--sans);
+}
+:where(.hm-ui) .plot-badge .chip b,
+:where(.hm-ui) .plot-badge .state-label {
+  font: inherit;
+}
+:where(.hm-ui) .plot-badge .state-label {
+  padding-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 :where(.hm-ui) .volume-scale {
   font: 400 10px var(--sans);
@@ -356,9 +345,9 @@
   fill: var(--ink);
 }
 :where(.hm-ui) .replay {
-  position: fixed;
+  position: absolute;
   left: 20px;
-  top: 76px;
+  top: 20px;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -412,7 +401,7 @@
   color: var(--ink);
 }
 :where(.hm-ui) .zoom {
-  position: fixed;
+  position: absolute;
   left: 20px;
   bottom: 20px;
   z-index: 5;
@@ -464,19 +453,6 @@
   margin-bottom: 6px;
 }
 
-:where(.hm-ui) .stage {
-  position: relative;
-  inset: auto;
-  height: 100%;
-  width: 100%;
-}
-:where(.hm-ui) .zoom {
-  position: absolute;
-}
-:where(.hm-ui) .replay {
-  position: absolute;
-  top: 20px;
-}
 :where(.hm-ui) .card__open {
   border: 0;
   padding: 0;

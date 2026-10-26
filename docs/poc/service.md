@@ -2,7 +2,7 @@
 
 D76, October 24, 2026; English edition and current-document refresh, October 25 (D163). Alex defined Hivemind as a database with a search engine on top. Its read service lets an agent or page find theses, choose what to use and inspect the state, history and evidence. Hivemind stores shared **theses**, not user ideas, positions or commitments. This distinction replaces the ambiguous use of “thesis” for both in the earlier document. The [historical source](../research/2026-10-25-english/service.original.md) retains prior wording and verification details.
 
-The core read service does not choose or arrange results for a caller. The separate [`POST /ideas` application flow](idea-card.md) decomposes an idea and maps it to theses through two model calls, then returns a UI-ready response. This supersedes the earlier one-call and agent-loop descriptions.
+The core read service does not choose or arrange results for a caller. The separate [`POST /ideas` application flow](idea-card.md) decomposes an idea and maps it to theses through two model calls. Its optional analyst summary runs after selection; the Idea specification owns that contract and default configuration. The route returns a UI-ready response.
 
 ## Historical visibility
 
@@ -28,7 +28,7 @@ Field and route names are compatibility identifiers; `view` in an API name means
 | `POST /ideas` | Idea, search summary, mapped parts and chosen theses, related theses, evaluation, optional bundles, days, trace and cost | Idea application/UI; see its contract |
 | Derived index | Content hashes, embedding model, vectors, token counts and build timestamps | Search only; not the thesis ledger |
 
-The service returns stored prose as stored. D163's new English-generation path is not yet active; historical Chinese records remain readable. The choice between a fresh English library and cross-language continued ingestion is pending. Do not infer cross-language matching guarantees from enum compatibility.
+The service returns stored prose as stored. D181 points the read-service defaults at the collected English Jev library and its matching items database, with a separate derived-index directory. Explicit old-ledger paths remain supported. This changes neither matching semantics nor the configured Idea prompt.
 
 ## Numeric claim evaluation
 
@@ -74,3 +74,9 @@ No query opens, closes or rejudges a thesis. No read route stores user commitmen
 The October 24 environment check found both containers could answer local HTTP/MCP reads, but the host VPN did not carry Docker VM traffic for external model calls. The recorded options were host networking or an explicitly configured reachable proxy. This is an environment observation, not a current connectivity claim or authorisation to change networking.
 
 Verification requirements live in `tests/test_service.py`, `tests/test_search.py` and transport/bundle tests. New language behavior must retain their historical visibility, numeric, cache and failure guarantees. The [UI integration](../../poc/ui/README.md) documents the rendering boundary.
+
+## Current library envelope (D181)
+
+`GET /library?as_of=YYYY-MM-DD` and MCP `thesis_library` return all dated theses, including closed ones, and stored research groups. They call the same read-only bundle writer as `GET /thesis-bundles` / MCP `thesis_bundles`. The complete read is pinned in SQLite read transactions. No search, model call or ledger write occurs. HTTP bundle/library requests do not open an index or model archive.
+
+The envelope declares `coverage: library` or `coverage: selection`. Group members refer only to theses included in that envelope. Identity fields, all evidence source records, replacement recording dates, dependency resolution history and succession are projected from their existing tables. The UI adapts this into its [versioned contract](../../poc/ui/README.md). Original publication and recording dates are separate; membership and relationship visibility follow recording dates.

@@ -2355,3 +2355,224 @@ Alex: "我们跑一个code review 清理一下过程中stale code 和 bloat 然�
 - Removed: the retired research harness `poc/hierarchy_study/` (17 experiments and 15 test files, D146–D162, none adopted; its tests wrote three SQLite files to the repository root through a module-named path, also removed); five finished one-off scripts (`jev_poc.py`, `supersedes_probe.py`, `succession_probe.py`, `key_views.py`, `review_keyed_run.py`; results in the build log and `poc/reports/`); six product functions with no caller (`judging.judge_one`, `matching.same_orientation`, `Universe.canonical_scope`, `testdb.days_with_items`, `store.lineage_of_view`, `store.replaced_by`) and six unused constants.
 - Fixed: the preflight's matching section now judges Jev records (it had skipped all 250 of the Jev ledger) and fails when every record of a ledger is skipped; the cost reports read the one price table (`model.PRICES`) and refuse an unpriced model; the benchmark stops when its evidence scorer fails; Jev succession eligibility has one rule (`jev_matching.can_succeed`); a test no longer reads the real credentials file, another no longer writes the real service archive; the newsroom category rule has one owner that its test exercises; the replay requires the ledger and archive it writes and defaults to `poc-v23` and the current item window; the compose file uses the adopted idea configuration `poc-v9`.
 - Left, with the reason: the dependency-cycle pass in `matching.check` (its refusal wording reaches stored retry requests, so merging it would change replayed requests); the two ladder validators (admission of a new ladder and reading of a stored one are different jobs); splitting `matching.check`, `writing._write` and `idea.read_idea` (behaviour-preserving refactors of the core without a measurement round); unused parameters and result fields (signature churn across many call sites); the corpus harvesters' shared fetch code; the test-only `search.fake_embed` in the search module; `scripts/review_english_run.py` counting equal model-written scopes as a breach (D155 makes them a lead, not identity). The reviewers' lead that the API's `poc-v9` default was stale was wrong: it is the adopted idea configuration (D135/D145).
+
+## D181 · 2026-10-26 · Rebuild the frontend around the collected English library
+
+- Alex asked to read the current backend and database and update the frontend to match. The [implementation contract](research/2026-10-26-library-ui/plan.md) covers the read-only projection, versioned UI data contract and library interface. Extraction, group assignment, matching, scoring and acceleration experiments are unchanged.
+- The default page browses the collected English Jev library directly. Stored groups organize peer theses; ungrouped theses remain visible. No parent thesis, group score or dependency is invented. The existing Idea submission and graph remain a separate explicit user action.
+- A full-library HTTP/MCP read and the standalone build share the same dated bundle writer. Expose stored identity, group memberships, all evidence sources, replacement arrival, dependency resolutions and succession. Historical reads use recording dates; original source text is preserved. A new snapshot replaces scoped IDs as a whole.
+- Default read-service and standalone-build ledger/items paths align with the completed English library. Existing explicit path overrides and old bundle adapters remain supported. No paid request, prompt/model switch, ingestion, deployment, commit or push is part of this slice.
+
+- Result: [current-library frontend](../poc/reports/2026-10-26-library-ui/results.md) renders all 90 theses, 18 groups and 51 memberships, with complete identity/source projection and dated relationship display. The full Python suite passes 151 tests; 27 UI tests and eight mutation checks pass, and eight final-build browser lifecycle checks pass. JavaScript is 141,125 bytes; current-corpus validation is 25.3 ms in the final local sample. All three protected database hashes are unchanged. Existing semantic/index limitations and the acceleration work remain separate.
+
+## D182 · 2026-10-26 · Sentence-case interface labels and bar-separated metadata
+
+- Alex required removing the connection/Refresh region, Research library eyebrow, As of date control and duplicate result count/date row. The collected library remains browsable and can still load from its configured API automatically.
+- Interface labels use sentence case and metadata uses `|`; tickers, acronyms, names and original quotations retain their spelling. The [UI specification](poc/thesis-ui.md#presentation-rules) owns the presentation rule. The [cleanup scope](research/2026-10-26-library-ui/presentation-cleanup.md) records the census and affected readers.
+
+- Result: [presentation cleanup](../poc/reports/2026-10-26-ui-presentation/results.md) removes all four requested regions, replaces all six middle-dot template uses through removal or bar formatting, and changes both pagination actions to “Show more”. The open page is refreshed. 27 UI tests, 151 Python tests, eight mutation checks and nine browser lifecycle checks pass; no protected database changes.
+
+## D183 · 2026-10-26 · Inline send control for Idea input
+
+- Alex requested a send-arrow button inside the Idea input, grey while blank and black when it contains text, with Enter submission. The existing form owns both mouse and keyboard submission. The button is disabled for whitespace and while its request is pending; success, failure and cancellation restore state from the retained input.
+- The [control contract](research/2026-10-26-library-ui/idea-send-control.md) covers the UI change. Request schemas, model settings, search and graph selection do not change.
+
+- Follow-up: Alex requested half width and statistics separators. The composer is capped at 500px; statistics use the shared bar separator. [Browser verification](../poc/reports/2026-10-26-idea-send/results.md) covers disabled/typed/pending states and successful Enter submission using cached responses. An initial library load no longer navigates away from the user's Idea view. 27 UI tests and 151 Python tests pass; source database hashes are unchanged.
+
+## D184 · 2026-10-26 · Inspect the returned Idea analysis
+
+- Alex asked to see the complete analysis behind the clipped Idea summary. A View analysis action opens the full returned summary, per-part explanations and selected matches, search/candidate trace, dropped choices and structured response details. The [implementation contract](research/2026-10-26-library-ui/idea-analysis.md) defines lifecycle and data readers.
+- Display the existing service response; do not generate extra reasoning or expose a nonexistent internal reasoning stream. Model settings, retrieval, chosen theses and graph relations remain unchanged.
+
+- Result: [Idea analysis detail](../poc/reports/2026-10-26-idea-analysis/results.md) exposes the current response's complete summary, three part explanations and four search entries, with close/reopen and response data verified. 29 UI tests, nine mutation checks and 151 Python tests pass. The deliberate summary-truncation mutant is caught. No new model call or source-database change.
+
+## D185 · 2026-10-26 · Calculate and preview a composite-history Idea card
+
+- Alex approved a trial calculation and thesis-style line chart on the Idea card. The [trial contract](research/2026-10-26-library-ui/composite-trial.md) defines an optional, explicitly reviewed basket for the current NVIDIA example; generic code contains no company or thesis-ID special cases.
+- Average available signed representative scores with equal weight, show coverage, and label the current basket's retrospective history as a trial. Missing assessments are not neutral. Directions and representative choices are trial input because the current Idea response does not supply them. This is not an automatic production scorer or an earnings-beat probability.
+
+- Result: [composite UI trial](../poc/reports/2026-10-26-composite/results.md) computes 0 → +0.50 → 0 from the two reviewed representatives and renders the line on the Idea card. Replay, 30-day range and calculation detail are verified. 33 UI tests, ten mutation checks and 151 Python tests pass; no source database changes or new model calls. Automatic representative/direction selection remains outside this preview.
+
+## D186 · 2026-10-26 · Whole-card analysis and an analyst-written default TLDR
+
+- Alex requested removing View analysis, clicking the Idea card to open its detail, and making the default AI JSON summary a discretionary analyst/investment-manager assessment grounded in thesis states.
+- The existing `summary` field remains the single TLDR field. The [implementation and validation plan](research/2026-10-26-library-ui/analyst-tldr.md) provides dated state meaning and reasons to the final call, replaces repeated candidate briefs with one table and versions the prompt/config. The combined mapping/TLDR candidates changed relations in both development comparisons and are not enabled. Preserve the original two mapping-flow requests and thesis/claim rules exactly; an explicit optional `idea_summary` setting adds a summary-only JSON call after selection. This is the new default; old configurations keep two calls. The provider/model remain unchanged. The extra call and cost are reported.
+
+- D186 result: [clickable card and isolated analyst TLDR](../poc/reports/2026-10-26-analyst-tldr/results.md). The final default is `poc-v26-idea`; original mapping requests and ten selected IDs are unchanged on the stored example. Three final summary samples take 2.0/2.2/2.7 seconds, at about $0.00041 estimated per added call. 154 Python tests, 33 UI tests and ten UI mutation checks pass; sources remain unchanged. Broad Idea matching quality remains unaccepted.
+
+## D187 · 2026-10-26 · Show actual Idea progress as a connected timeline
+
+- Alex requested removing the pending header chip and showing successive thinking-style steps, connected vertically with the current step glimmering. The [contract](research/2026-10-26-library-ui/idea-progress.md) displays actual service stages, not private reasoning or timer-generated steps.
+- Optional NDJSON negotiation adds progress events to the existing Idea endpoint without changing its final JSON, prompts, model calls, matching or dates. The browser retains completed nodes and appends each new stage; reduced-motion settings disable animation.
+
+- D187 result: [live progress timeline](../poc/reports/2026-10-26-idea-progress/results.md). 155 Python tests, 37 UI tests and 12 mutation checks pass. Real HTTP progress arrives before the model finishes; the normal JSON result and model requests remain unchanged. The actual cached API replay costs $0 and preserves all protected source hashes.
+
+## D188 · 2026-10-26 · Make the composite chart a default Idea requirement
+
+- Alex requested the general default after the current datacenter-revenue question showed no chart. Retire exact-question matching from the default path. The [contract](research/2026-10-26-library-ui/default-composite.md) retains equal-weight, distinct drivers from D185 and D186's fixed mapping boundary.
+- The final assessment call returns the analyst summary and a validated representative/end-point plan. Code supplies identity/date metadata and computes history from existing states; the model cannot assign weights, scores or alter the selected theses. No extra call or ledger change. Missing support stays unavailable, not zero.
+
+- D188 result: [default composite](../poc/reports/2026-10-26-default-composite/results.md). `poc-v30-idea` uses explicit endpoint positions and low reasoning in the third call; matching remains unchanged. The live Data Center Idea renders +0.50 from two non-overlapping representatives. 160 Python tests, 40 UI tests and 13 UI mutation checks pass, with source hashes unchanged. The final nine-sample comparison has no invalid identities or endpoint signs; selection and prose variation remain measured limitations. Earlier array, keyed-sign and word-based endpoint candidates are not enabled.
+
+## D189 · 2026-10-26 · Simplify the Idea score chart caption
+
+- Alex requested removing the driver-count/current-basket caption below the chart and renaming its title to “AI score (composite)”. Census: one footer renderer, one corresponding CSS rule and one shared composite-chart title. The header score, calculation, replay and full analysis remain unchanged.
+- State/event: every composite-card render uses the new title and no caption; pending/error cards are unaffected. Value/readers: only the shared chart caption and its accessible name change; coverage stays in the response and analysis drawer. Path/checks: no data-shape or model change; use existing UI tests, lint/format and browser verification. D188 still owns the calculation.
+
+## D190 · 2026-10-26 · Plain blue inline citations
+
+- Alex requested plain blue `[1]` references without a highlighted box. The shared `.evidence-citation` rule owns the current and historical assessment appearance; the English fixture renders 1,358 references across 137 assessments in 33 theses. Its existing background and padding create the box.
+- Change only that shared style: inherit the surrounding text size, use blue text, remove background/padding/rounding, and underline on hover. Keep the existing evidence ID, accessible label, keyboard operation and current/historical source-opening handlers. No new state, date, data field, model call or navigation path. Verify the rendered current and historical references and source opening, then run the existing UI checks. D181 owns citation identity and historical reads.
+- Browser inspection also found duplicated brackets: stored `[e9]` became `[[1]]`. There are 580 parenthesized/bracketed reference-only groups in stored assessments, including 20 with hyphen/en-dash ranges. The shared renderer removes that outer wrapper only for reference lists separated by commas, hyphens or en dashes, when every named reference resolves; ordinary parentheses and unresolved references are preserved. Each clickable reference owns its single `[n]` pair.
+
+## D191 · 2026-10-26 · Put card scores beside their chart title
+
+- Alex requested moving every card's upper-right score to the right of “AI score”, matching its subtitle size. The shared thesis-card renderer serves library and canvas cards; the Idea renderer serves the composite card. Canvas replay also rewrites the old header badge and must update the relocated score instead.
+- Show the existing score and state label in a right-aligned pill beside the chart title; Alex explicitly confirmed retaining the pill. Keep card headers for the kind/icon; pending and failed Idea status handling is unchanged. Pill text and the card subtitle both use 11px. No score calculation, source, date or response changes.
+- Render/replay/range events read the same selected-date assessment. Missing assessments still say “Not assessed yet”; an unavailable composite remains unavailable. Existing standalone/detail charts keep their defaults. Validate current/historical display and replay in the browser, all current-library score labels, and the existing UI suite; no model calls are needed.
+
+## D192 · 2026-10-26 · Put the score pill below the chart title
+
+- Alex moved the pill from beside the chart title to a separate line below it. One shared title renderer supplies both card types; the library uses the same Thesis card as the canvas. Keep the pill shape and 11px text from D191, left-align it with the title, and reserve a 24px row so long labels do not collide with the plot.
+- Add the row only to charts that display a score pill. Preserve the chart's existing coordinates inside a translated plot group; replay updates stay in those local coordinates. Canvas cards gain the same 24px of height so plots remain contained and routing reads the new card bounds. Standalone/detail charts without a pill retain their layout.
+- Rendering, replay and range changes keep the same score/date inputs and missing-state behaviour. No data, model, prompt or calculation change. Verify all 90 library cards, the cached Idea graph, chart containment and replay, then run the existing UI checks.
+
+## D193 · 2026-10-26 · Restore the score pill beside AI score
+
+- Alex clarified the final placement: beside “AI score”, in the same row, retaining the pill and matching text size. This supersedes D192 and restores D191's shared title layout.
+- Remove D192's extra row and plot translation; restore the prior canvas card height. Library and canvas Thesis cards and the Idea composite use the same placement. Replay, data, score calculations and standalone chart behaviour are unchanged. Verify title/pill alignment and containment in the browser and run the existing UI checks.
+
+## D194 · 2026-10-26 · Model-returned impact percentages and weighted Idea history
+
+- Alex requested explicit Luna JSON weights for the connected theses, visible on card headers and summing to 100%, and deterministic weighted composite history. The [weighted-composite contract](research/2026-10-26-library-ui/weighted-composite.md) replaces D188's equal-weight rule while preserving its selected-thesis boundary and polarity handling.
+- Weight belongs to the Idea association, not the shared thesis. The final assessment supplies positive integer percentages and reasons; exclusions carry zero. Code rejects invalid totals and computes the weighted history without silently reallocating missing weight. Empty or incomplete historical coverage is unavailable. Old response versions keep their old behavior.
+- Use a new prompt/config with the existing model and three-call flow. No extraction, group assignment, probability conversion, source database changes, commit or push. The curve remains a retrospective of the current returned plan. Live verification uses the bounded design experiment before activating the new local default.
+
+## D195 · 2026-10-26 · Let the model choose the weighted thesis set
+
+- Alex clarified: let the model decide which theses participate and assign their impact percentages. Do not add rules to force a preferred allocation or force every candidate to participate. Variation between fresh model answers is recorded, not repaired with a quota or a new eligibility rule.
+- The weighted Idea configuration does not apply the legacy three-driver-per-part display cap. Identity validation, explicit direction, percentage totals and deterministic arithmetic remain code-owned. Historical configurations retain their original behavior. No new prompt arm is needed for this clarification; the valid D194 samples remain as returned.
+
+- D194/D195 result: [weighted Idea pipeline](../poc/reports/2026-10-26-weighted-composite/results.md). The default is `poc-v31-idea`; the real UI displays 60% / 40% / 0% and calculates +0.40. 163 Python tests, 43 UI tests and three focused mutants pass. Three fresh weighted answers all satisfy the contract; allocation variation is retained. The first two requests and source database hashes are unchanged; no fourth call is added. Six live comparison calls cost an estimated $0.002993.
+
+## D196 · 2026-10-26 · An Idea contains only its positively weighted theses
+
+- Alex clarified that every thesis adopted by an Idea must carry a positive weight; zero means it is not part of that Idea. The [positive-selection contract](research/2026-10-26-library-ui/positive-weight-selection.md) replaces the complete candidate partition in D194. Do not merely hide zero-weight cards.
+- The final model call selects a variable-length list from supplied candidates and returns a positive weight for each; a nonempty list sums to 100. There is no excluded/zero-weight branch in the new JSON. Final associations, bundles, part links, graph and calculation all use exactly that selected set; no related cards are appended automatically. Search candidates remain read-only trace context.
+- Preserve existing model/provider, the first two candidate-discovery requests and deterministic weighted arithmetic. Old response/config versions remain readable. No library database, extraction or grouping changes. Model choice is not replaced by a fixed thesis count, weight quota or post-hoc zero filter.
+
+- Result: [positive-weight association verification](../poc/reports/2026-10-26-positive-weight-selection/results.md). Three fresh v7 answers contain only positive weights totaling 100. The real endpoint and UI agree on 55% / 20% / 25% and +0.45; a stored subset case proves omitted candidates have no association or bundle. 165 Python tests, 44 UI tests and the projection mutant check pass. All source hashes are unchanged.
+
+## D197 · 2026-10-26 · Display Idea confidence on a 0–100% scale
+
+- Alex reiterated that the Idea result must be a confidence percentage, not a displayed weighted score. Preserve the positive model-selected weights and convert the deterministic aggregate as `confidence = 50 + 25 × aggregate`, mapping −2/0/+2 to 0%/50%/100%. The current +0.45 becomes 61.25%, shown as 61% on the compact card.
+- State/event: every available current or historical Idea point uses the same conversion; a missing point stays unavailable. Values/readers: the card pill, chart title/axes, accessible chart name and analysis headline show confidence. Individual Thesis scores and impact weights are unchanged. The detail table shows percentage-point effects around 50%, not the raw aggregate. No prompt, API shape, model call or database change.
+- Keep the existing raw chart default for standalone callers; the Idea chart explicitly uses the confidence scale. Verify five anchor points, inversion, missing history, the actual cached Idea, replay and the current chart range; then the existing suites and documentation checks. This is the defined confidence index, not a newly fitted forecast-probability model.
+
+## D198 · 2026-10-26 · Label and rank Idea thesis weights
+
+- Alex requested `Weight: xx%` on the Thesis header and descending weight from top to bottom. The live response contains three adopted theses in 55 / 20 / 25 order; the renderer currently follows response order and prints only the percentage. Sorting those same three associations gives 55 / 25 / 20 and removes the one inverted adjacent pair.
+- Presentation only: one shared ordering helper sorts copies by descending impact weight, preserving incoming order for equal or absent weights. The Idea graph and its analysis use it; header pills say `Weight: 55%`. The source response, adoption, weights and confidence arithmetic do not change. Unweighted library cards remain unlabelled.
+- State/event: initial completion, replay and chart-range changes retain that order; pending/error cards have no weighted theses. Value/readers: the model's existing `weight_percent` supplies graph order, contribution-row order, explanation order and header text. Existing identity, membership, date and layout checks still apply. D196 owns selection and D197 owns confidence. Verify the actual cached response and browser at 55 / 25 / 20, then run existing UI checks; no model or source database change.
+- Alex also requested a scale icon for Weight, with `Weight factor` on hover. Put the icon inside the existing pill and expose the same tooltip on keyboard focus. This changes only the header presentation, with no new data or action.
+- Final clarification: remove the visible `Weight:` words. The pill contains only the scale icon and percentage; keep the `Weight factor` tooltip and descending order.
+
+## D199 · 2026-10-26 · Slightly stronger default connectors
+
+- Alex requested slightly thicker, darker grey default connector lines. The shared canvas has one line style and a separate default arrow fill. Set a canvas-local connector colour to `#aaa99f`, use it for both, and increase stroke width from 1px to 1.5px. Keep active highlighting and routes unchanged. This applies on rendering and replay without new data or states; verify the actual three-branch Idea and existing UI suite.
+
+## D200 · 2026-10-26 · Remove the weight tooltip and align the icon
+
+- Alex reports the new tooltip covering card content and the scale icon sitting off-centre against the percentage. D198 introduced both through one shared header renderer and CSS rule; all three weighted cards in the current Idea use them. Remove the tooltip, its focus target and help cursor. Keep the accessible weight description on the pill.
+- Give the icon and percentage explicit, equal-height line boxes and centre the SVG inside its box. Initial rendering and replay use the same static header; unweighted cards remain unchanged. Weight values, ordering, confidence, dates and data contracts do not change. This supersedes D198's tooltip requirement only. Verify the three real cards visually and run the existing UI checks; no model or database write is needed.
+
+## D201 · 2026-10-26 · Increase default horizontal card spacing
+
+- Alex requested more horizontal space between canvas cards. Increase the shared minimum column gap from 120px to 180px; the existing fan-out formula can still reserve more room for many connections. Both Idea-to-Thesis and Thesis-to-related-Thesis columns use this function. Vertical spacing, card sizes, attachment points and data stay unchanged.
+- Initial render and range changes use the wider layout; replay keeps it. Existing route tests cover every current fan-out size and the actual multi-column graph. Verify the real three-thesis Idea in the browser and run those checks with the full UI suite.
+
+## D202 · 2026-10-26 · Match chart typography and fit the Idea card to content
+
+- Alex requested the same subtitle and vertical-axis sizes as the Thesis chart, and removal of the Idea card's excess bottom space. The actual Idea uses a 406-unit SVG inside 326px of content, shrinking its shared 11px title and 10px axis text. Its fixed 380px card leaves about 60px below the chart; all Idea composites share these two mechanisms.
+- Pass the canvas's card width to the Idea renderer and draw the chart at that width minus the existing 16px padding and 1px border on each side. Keep title typography in the shared chart rule. Size completed composite Idea cards to their content after mounting, retain normal bottom padding, and centre their actual height in the reserved layout block. Connectors already read actual card bounds.
+- Initial completion and range renders receive layout width; replay replacements receive the existing card width and preserve its centre. Pending/error cards retain their prior layout. No score, axis values, dates, weights or source data change. Verify rendered text scale against Thesis, bottom padding, replay, range switching and actual connector endpoints; then run the existing UI checks.
+
+## D203 · 2026-10-26 · Confidence and creation date under the Idea detail title
+
+- Alex requested an `AI confidence: xx%` pill followed by `| Idea created: date`, matching Thesis detail metadata. The existing bare date is the library's `as_of`, not an Idea creation date; do not relabel it.
+- The UI records the browser-local calendar date once when the user submits the Idea, and passes it explicitly to its detail drawer. This is session metadata for the current submission, not an added backend record. Legacy callers without it display `Not recorded`; no date is invented. Replay changes the confidence to the selected-day value and leaves creation date fixed. Missing confidence remains unavailable.
+- Reuse the shared pill, state colours, separator and date formatter. New submissions replace the previous session metadata; model response, caching, extraction, database and score calculation are unchanged. Verify the real cached UI submission, replay and missing-value presentation with the existing frontend checks.
+
+## D204 · 2026-10-26 · Simplify the Idea analysis and structure thesis explanations
+
+- Alex requested removal of the extra confidence/driver-count/date row and cleanup of the following thesis explanations to match the Thesis detail hierarchy. One composite renderer supplies the row and all three repeated explanation blocks in the current response.
+- Keep the confidence pill in the D203 header and the contribution table. Each explanation now has one full thesis title beside the shared icon/weight pill, then separately labelled relevance and weight rationale in the same body type. Remove the duplicate short title and repeated fixed-weight footer from the current format. Sort order and returned explanation text stay unchanged.
+- All dates and scores retain their current sources; only presentation changes. Older unweighted formats retain their relevant footer information. Update the assertion for the deliberately removed row to check the header confidence instead; verify all three actual explanation blocks and the header in the browser. No prompt, model or database change.
+
+## D205 · 2026-10-26 · Replace the confidence table and paragraph with contextual help
+
+- Alex requested removing the contribution table and moving the confidence-method paragraph into a question-mark popup beside the Idea analysis's AI confidence subtitle. One renderer owns both elements. The shared table CSS remains for Thesis score definitions.
+- Keep confidence, weights, calculation and thesis explanations unchanged. The help popup shows the same explanation on hover or keyboard focus, with wrapped text inside the detail panel. Update the retired table assertions to verify calculation separately and the new weight pills/help markup. Verify the actual drawer and existing UI suite; no model, date or database change.
+
+## D206 · 2026-10-26 · Refine explanation labels and popup placement
+
+- Alex requested no divider before thesis explanations, the confidence popup to the right of its question mark, and black Relevance / Weight rationale labels at least as large as their following text. One shared explanation style affects all three current thesis blocks; the popup has one shared position rule.
+- Remove the explanation border while retaining its spacing. Use the body font for labels, with black colour and semibold weight. Place the popup eight pixels to the right of the icon, sizing it within the remaining heading-row width. Hover belongs to the icon, and keyboard focus still reveals the explanation. Content, weights and calculations are unchanged; verify the actual drawer and existing UI checks.
+
+## D207 · 2026-10-26 · Restore section dividers and remove stacked spacing
+
+- Alex clarified that only the divider before the first thesis was to be removed, not all dividers. D206 removed the shared border from all three explanation blocks. The current layout also stacks hero/body padding (52px before Summary) and heading margin plus block margin/padding (56px before the first thesis).
+- Follow the Thesis detail's 24px section margin and 20px inner padding for major section dividers and between consecutive thesis blocks. Keep the first thesis free of a divider and use a single 20px gap below the confidence heading. Remove the extra Idea body top padding, leaving the hero's 24px. Keep the right-hand tooltip and black body-size labels.
+- This changes only Idea detail layout. Content, ordering, calculation and dates stay unchanged. Verify the actual section gaps and divider scope, including the first and later thesis blocks, then the existing UI suite and docs check.
+
+## D208 · 2026-10-26 · Balance confidence help and centre its icon
+
+- Alex requested at most three lines in the current confidence popup, without an orphan final word, and a question icon visually centred beside the subtitle. Increase the popup's desktop width limit from 340px to 440px, retaining the available-width limit, and balance its wrapping without truncating the explanation.
+- Centre the heading and icon containers and remove the icon's top alignment. This is the same popup and text as D205; hover/focus behaviour and its right-hand placement stay unchanged. Verify the actual popup line count, complete text and heading/icon alignment together with D207's spacing and divider scope.
+
+## D209 · 2026-10-26 · Put the weight before the thesis title
+
+- Alex requested the weight tag before each thesis for easier reading. In the Idea detail's three explanation headings, render the existing shared weight pill before the question, with an 8px gap. Preserve alignment, descending weight order and all content. This is presentation only; verify all three headings in the browser and run the existing UI checks.
+
+## D210 · 2026-10-26 · Organise the reading trace into expandable steps
+
+- Alex found the reading trace hard to read. Its current three parts repeat long explanations and thesis titles in one continuous list. Render each part as a closed-by-default disclosure using the existing Thesis detail disclosure interaction and separators.
+- Each summary shows the numbered topic and subject/period metadata. Expanding it reveals the unchanged explanation, direct matches and related drivers in consistent body type. All returned text and trace data remain available; no model or data change. Verify the collapsed list, opening and closing a real step, and the weight-before-title change from D209.
+
+## D211 · 2026-10-26 · Match weight badge height and optically align help
+
+- Alex requested a taller, squarer weight tag matching its thesis title and corrected the help icon's visual alignment. The three detail headings share a 20px badge beside taller wrapped titles. The help SVG has geometric centring but sits low against the text glyphs.
+- Stretch only the detail weight badge to the title row, use a 56px width and 4px corners, and centre its existing contents. Leave canvas badges unchanged. Raise the 16px help glyph by 1px for optical alignment; keep its interaction area and popup position. Verify the actual headings and help rendering; no data or calculation changes.
+
+## D212 · 2026-10-26 · Name the adopted-thesis section and remove its help
+
+- Alex clarified that the section lists theses: rename its heading to `Theses` and remove the question icon and popup. Keep the separate confidence pill in the detail header and the Idea chart unchanged. Delete only the now-unused help markup/styles; retain the existing section spacing, weights and explanations. Verify the actual drawer and existing UI checks.
+
+## D213 · 2026-10-26 · Give Idea and Thesis cards the same width
+
+- Alex requested the Idea card match the Thesis card width. Use one 440px width constant for both, including the Idea renderer's default. Compute the next column from that shared width so the 180px gap and card-edge routing remain correct.
+- Pending, completed, replay and range renders receive the same width; the completed Idea retains content-fit height. No data, text, scores or associations change. Verify both rendered widths, chart width and connectors with the actual response, plus the existing UI checks.
+
+## D214 · 2026-10-26 · Give Idea details Overview, Trace and Response tabs
+
+- Alex requested the same top navigation as Thesis details, with Overview, Trace and Response. Overview holds the summary and adopted theses. Trace holds the expandable reading steps, search requests/results and excluded choices. Response directly shows the existing structured response.
+- State/event: opening an Idea selects Overview; clicking or using arrow/Home/End keys selects a tab, cancels active disclosure animations and resets content scroll. Opening another Idea resets to Overview. Closing preserves the existing drawer behaviour. No tab makes a request or changes the saved response.
+- Values/readers: one response supplies all three sections. Search disclosures show the query, canonical query when supplied, candidate count and named candidate rows; IDs and ordering stay intact. Scoped tab/panel IDs and roving keyboard focus use the shared Thesis tab styling. Missing trace data stays explicit.
+- Verify panel membership on stored responses, all three tab actions and keyboard switching, readable search expansion, default reset and unchanged response JSON; then existing UI checks. D210's reading steps remain available under Trace. No pipeline, model or source-database change.
+
+## D215 · 2026-10-26 · Remove search-count and mode subtitles
+
+- Alex requested removing the candidate counts and `semantic` label from the search rows. Delete the subtitle from all four current search disclosures; keep their titles, expandable query/results and unchanged raw Response data. No retrieval or model change. Verify the actual Trace rows and existing UI checks.
+
+## D216 · 2026-10-26 · Prioritise reading steps in Trace
+
+- Alex wants reading steps expanded by default and considers the search trace secondary. Open every reading-step disclosure initially; place the search details under one collapsed Search trace group at the bottom. Its existing search rows and full results remain available on expansion. Use the existing disclosure behaviour; no content, retrieval or model changes.
+
+## D217 · 2026-10-26 · Remove the Search trace UI
+
+- Alex explicitly requested removing Search trace from the interface. Delete the group and its search-only rendering/styles from Trace; retain the expanded reading steps and excluded choices. The original search fields remain unmodified in Response. Update presentation assertions to reflect the removed search list; verify the actual tab and existing UI checks. No retrieval or model change.
+
+## D218 · 2026-10-26 · Clean up the frontend without changing behaviour
+
+- Alex requested frontend cleanup and a push. Consolidate the two drawers' tab interactions into one controller while keeping their content, lazy loading, focus and animation responsibilities unchanged. Remove three unused internal functions, 16 unused style rules and three overridden positioning blocks; split the large analysis templates into named renderers.
+- Preserve all package exports, historical response formats, confidence arithmetic, weights and current layout. Verify identical stored-response output, actual browser interactions, the existing suites and mutation checks. Commit the frontend with its previously requested Library/Idea service dependencies; leave unrelated extraction and concurrency work uncommitted. [Plan and verification](research/2026-10-26-frontend-cleanup/plan.md).

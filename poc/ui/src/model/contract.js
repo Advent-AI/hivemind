@@ -39,6 +39,7 @@ function freeze(value) {
 }
 /** Validate without changing the caller's data; return an owned, immutable snapshot. */
 export function parseDataset(input) {
+  if (input?.schema_version === 'thesis-ui/1') input = upgradeV1(input);
   if (!validate(input)) {
     const error = validate.errors[0];
     throw new ContractError(error.instancePath || '/', error.message);
@@ -54,6 +55,26 @@ export function parseDataset(input) {
     );
   });
   unique(data.theses, (t) => t.id, '/theses');
+  unique(data.groups, (g) => g.id, '/groups');
+  const thesisById = new Map(data.theses.map((t) => [t.id, t]));
+  data.groups.forEach((g, i) => {
+    requireThat(
+      g.created_day <= data.as_of,
+      `/groups/${i}/created_day`,
+      'group is later than as_of',
+    );
+    unique(g.members, (m) => m.thesis_id, `/groups/${i}/members`);
+    g.members.forEach((m, n) =>
+      requireThat(
+        thesisById.has(m.thesis_id) &&
+          m.day >= g.created_day &&
+          m.day >= thesisById.get(m.thesis_id).created_day &&
+          m.day <= data.as_of,
+        `/groups/${i}/members/${n}`,
+        'missing thesis or membership outside the snapshot',
+      ),
+    );
+  });
   data.theses.forEach((thesis, i) => {
     const path = `/theses/${i}`;
     const scores = thesis.rungs.map((r) => r.score);
@@ -79,13 +100,26 @@ export function parseDataset(input) {
     unique(thesis.evidence, (e) => e.id, `${path}/evidence`);
     unique(thesis.judgements, (j) => j.id, `${path}/judgements`);
     const evidence = new Map(thesis.evidence.map((e) => [e.id, e]));
-    thesis.evidence.forEach((e, index) =>
+    thesis.evidence.forEach((e, index) => {
       requireThat(
         e.arrival_day <= data.as_of,
         `${path}/evidence/${index}/arrival_day`,
         'evidence is later than as_of',
-      ),
-    );
+      );
+      if (e.replaced_by?.day)
+        requireThat(
+          e.replaced_by.day <= data.as_of,
+          `${path}/evidence/${index}/replaced_by`,
+          'replacement is later than as_of',
+        );
+      e.sources.forEach((s, n) =>
+        requireThat(
+          s.arrival_day <= data.as_of,
+          `${path}/evidence/${index}/sources/${n}`,
+          'source is later than as_of',
+        ),
+      );
+    });
     thesis.judgements.forEach((j, index) => {
       requireThat(
         j.day <= data.as_of && j.day >= thesis.created_day,
@@ -111,7 +145,7 @@ export function parseDataset(input) {
         ),
       );
     });
-    for (const field of ['switches', 'dependencies']) {
+    for (const field of ['switches', 'dependencies', 'successions']) {
       thesis[field].forEach((entry, index) =>
         requireThat(
           entry.day <= data.as_of,
@@ -120,6 +154,16 @@ export function parseDataset(input) {
         ),
       );
     }
+    thesis.dependencies.forEach((d, index) =>
+      d.resolutions.forEach((r, n) => {
+        const previous = d.resolutions[n - 1];
+        requireThat(
+          r.day >= d.day && r.day <= data.as_of && (!previous || r.seq >= previous.seq),
+          `${path}/dependencies/${index}/resolutions/${n}`,
+          'resolution outside the snapshot or out of order',
+        );
+      }),
+    );
     thesis.switches.forEach((entry, index) => {
       const previous = thesis.switches[index - 1];
       requireThat(
@@ -132,4 +176,32 @@ export function parseDataset(input) {
     });
   });
   return freeze(data);
+}
+
+/** Old canonical payloads retain their known data; no group or arrival date is inferred. */
+function upgradeV1(input) {
+  return {
+    ...input,
+    schema_version: 'thesis-ui/2',
+    coverage: input.coverage ?? 'selection',
+    groups: input.groups ?? [],
+    theses: input.theses?.map((t) => ({
+      ...t,
+      year: t.year ?? null,
+      identity: t.identity ?? null,
+      successions: t.successions ?? [],
+      evidence: t.evidence?.map((e) => ({
+        ...e,
+        sources: e.sources ?? [],
+        original_date: e.original_date ?? '',
+        event_time: e.event_time ?? '',
+        replaced_by: e.replaced_by ? { ...e.replaced_by, day: e.replaced_by.day ?? null } : null,
+      })),
+      dependencies: t.dependencies?.map((d) => ({
+        ...d,
+        wait_chain_view_id: d.wait_chain_view_id ?? null,
+        resolutions: d.resolutions ?? [],
+      })),
+    })),
+  };
 }

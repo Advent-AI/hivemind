@@ -131,7 +131,7 @@ test('D163: a falling English ladder keeps the default order, and an asset thesi
 });
 
 test('D163: an English ladder without bounds or condition_zh cannot be oriented and keeps the default order', () => {
-  const prose = thesis({ rungs: thesis().rungs.map(({ lo, hi, ...rest }) => rest) });
+  const prose = thesis({ rungs: thesis().rungs.map(({ lo: _lo, hi: _hi, ...rest }) => rest) });
   assert.deepEqual(
     fromBundles({ views: [prose], days: ['2026-02-25'] }).theses[0].rungs.map((r) => r.score),
     ['+2', '+1', '0', '−1', '−2'],

@@ -97,6 +97,7 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | Due date | When the debate can resolve; a number's publication day | Expiry bucket |
 | State | Our current rung judgement; not yet judged before a memo thesis first receives evidence | A second parallel state |
 | Conclusion | State plus reasons; may change through key facts/numbers even within one rung | Equating changed conclusion with changed score only |
+| Idea confidence | An Idea's weighted thesis assessment displayed on a 0–100% scale; the Idea service specification owns its calculation | Treating the index as a calibrated outcome probability |
 | Freeze | Preserve the current state and reasons at the due date, then close | A separate confirmed/falsified verdict in the current design |
 | Unavailable answer / pending publication | Proposed pull-mode cases, not yet approved | Treating proposals as implemented states |
 | Evidence tier | Fact, party statement, third-party view or rumour; only facts can establish the outcome | Mixing tiers with thesis kinds |

@@ -1,20 +1,14 @@
 import { element, esc, SEP, ICON } from './dom.js';
 import { longDay } from '../model/dates.js';
-import {
-  lastOf,
-  score,
-  rungLabel,
-  statusAt,
-  snapshotThesis,
-  relatedTheses,
-  humanise,
-} from '../model/thesis.js';
+import { lastOf, score, rungLabel, statusAt, snapshotThesis } from '../model/thesis.js';
 import { ladderChart, bindHistoryChart } from './thesis-chart.js';
 import { badgeHtml } from './primitives.js';
-import { assessmentHtml, evidenceHtml } from './evidence.js';
+import { assessmentHtml, assessmentText, evidenceHtml } from './evidence.js';
 import { createDisclosures } from './disclosure.js';
 import { createSelect } from './select.js';
 import { createDrawerMotion } from './drawer-motion.js';
+import { createDetailTabs } from './detail-tabs.js';
+import { relationsHtml, identityHtml } from './relations.js';
 
 let instanceCount = 0;
 export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
@@ -31,7 +25,6 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
   root.append(sheet);
   const scopeSelector = (selector) =>
     selector.replace(/#([\w-]+)/g, (_, id) => `[data-ui-id="${id}"]`);
-  const query = (selector) => sheet.querySelector(scopeSelector(selector));
   const all = (selector) => sheet.querySelectorAll(scopeSelector(selector));
   const find = (id) => sheet.querySelector(`[data-ui-id="${id}"]`);
   function setHTML(node, html) {
@@ -52,6 +45,17 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
     `<div class="sheet__scrim" id="sheetScrim"></div><aside class="sheet__panel" id="sheetPanel" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="sheet__top"><span class="card__kind" id="sheetKicker"></span><button class="sheet-close" id="sheetClose" type="button" aria-label="Close thesis details"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="sheet__body" id="sheetBody"></div></aside>`,
   );
   const disclosures = createDisclosures(find('sheetBody'));
+  const tabs = createDetailTabs(sheet, {
+    beforeSelect() {
+      disclosures.cancel();
+      closeEvidenceType();
+    },
+    onSelect(tab) {
+      const panel = find(`panel-${tab}`);
+      if (tab === 'evidence' && !panel.dataset.ready) renderEvidence();
+      if (tab === 'history' && !panel.dataset.ready) renderHistory();
+    },
+  });
   const motion = createDrawerMotion({
     sheet,
     panel: find('sheetPanel'),
@@ -65,6 +69,38 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
   }
   find('sheetClose').addEventListener('click', close, { signal: events.signal });
   find('sheetScrim').addEventListener('click', close, { signal: events.signal });
+  sheet.addEventListener(
+    'click',
+    (event) => {
+      const citation = event.target.closest('[data-citation]');
+      if (!citation || !detail) return;
+      const evidence = detail.thesis.evidence.find((e) => e.id === citation.dataset.citation);
+      if (!evidence) return;
+      const historical = citation.closest('[role="tabpanel"]')?.dataset.uiId === 'panel-history';
+      if (historical) {
+        const row = find('historyAssessment').querySelector(`[data-evidence-id="${evidence.id}"]`);
+        if (row) {
+          row.open = true;
+          row.parentElement.closest('details').open = true;
+          row.scrollIntoView({ block: 'nearest' });
+        }
+        return;
+      }
+      detail.query = evidence.one_line;
+      detail.tier = '';
+      selectControl?.destroy();
+      selectControl = null;
+      delete find('panel-evidence').dataset.ready;
+      tabs.select('evidence');
+      find('evidenceSearch').value = detail.query;
+      const row = sheet.querySelector(`[data-evidence-id="${evidence.id}"]`);
+      if (row) {
+        row.open = true;
+        row.scrollIntoView({ block: 'nearest' });
+      }
+    },
+    { signal: events.signal },
+  );
   document.addEventListener(
     'keydown',
     (event) => {
@@ -91,7 +127,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
   function open(id, day = data.as_of) {
     const thesis = thesisById[id];
     if (!thesis) throw new Error(`Unknown thesis: ${id}`);
-    if (day > data.as_of || day < data.days[0])
+    if (day > data.as_of || day < (data.days[0] || data.as_of))
       throw new Error(`Date outside loaded history: ${day}`);
     onOpen(id);
     selectControl?.destroy();
@@ -123,7 +159,6 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
       .filter((e) => citations.has(e.id))
       .sort((a, b) => b.day.localeCompare(a.day) || b.seq - a.seq)
       .slice(0, 3);
-    const related = relatedTheses(v, data, detail.day).length;
     setHTML(
       find('sheetBody'),
       `
@@ -145,54 +180,9 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
       <details class="detail-disclosure"><summary>Recent evidence</summary><div class="detail-disclosure-body">${keyEvidence.length ? keyEvidence.map((e) => evidenceHtml(e, detail.day)).join('') : '<p class="detail-muted">No evidence cited in this assessment.</p>'}</div></details>`
           : '<p class="detail-copy">There is no assessment for this thesis at the selected date.</p>'
       }
-      ${related ? '<details class="detail-disclosure"><summary>Related theses</summary><div class="detail-disclosure-body" id="detailRelated"></div></details>' : ''}
-      <details class="detail-disclosure"><summary>About this thesis</summary><dl class="detail-definitions"><dt>First seen</dt><dd>${esc(longDay(v.created_day))}</dd><dt>Original source</dt><dd>${esc(v.created_from.title)}</dd><dt>Status</dt><dd><span class="chip chip--line">${statusAt(v, detail.day)}</span></dd></dl></details>
+      ${relationsHtml(v, data, detail.day)}
+      <details class="detail-disclosure"><summary>About this thesis</summary><dl class="detail-definitions">${identityHtml(v)}<dt>First seen</dt><dd>${esc(longDay(v.created_day))}</dd><dt>Original source</dt><dd>${esc(v.created_from.title)}</dd><dt>Status</dt><dd><span class="chip chip--line">${statusAt(v, detail.day)}</span></dd></dl></details>
     </section><section id="panel-evidence" role="tabpanel" aria-labelledby="tab-evidence" hidden></section><section id="panel-history" role="tabpanel" aria-labelledby="tab-history" hidden></section></div>`,
-    );
-    all('.detail-tab').forEach((button) => {
-      button.onclick = () => setDetailTab(button.dataset.tab);
-      button.onkeydown = (e) => {
-        const keys = ['overview', 'evidence', 'history'];
-        let i = keys.indexOf(button.dataset.tab);
-        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-        e.preventDefault();
-        i =
-          e.key === 'Home'
-            ? 0
-            : e.key === 'End'
-              ? 2
-              : (i + (e.key === 'ArrowRight' ? 1 : -1) + 3) % 3;
-        setDetailTab(keys[i]);
-        find(`tab-${keys[i]}`).focus();
-      };
-    });
-    if (related) renderRelated();
-  }
-  function setDetailTab(tab) {
-    disclosures.cancel();
-    closeEvidenceType();
-    all('.detail-tab').forEach((button) => {
-      const selected = button.dataset.tab === tab;
-      button.setAttribute('aria-selected', selected);
-      button.tabIndex = selected ? 0 : -1;
-    });
-    for (const id of ['overview', 'evidence', 'history']) find(`panel-${id}`).hidden = id !== tab;
-    const panel = find(`panel-${tab}`);
-    if (tab === 'evidence' && !panel.dataset.ready) renderEvidence();
-    if (tab === 'history' && !panel.dataset.ready) renderHistory();
-    query('.detail-content').scrollTop = 0;
-  }
-  function renderRelated() {
-    const v = detail.thesis;
-    const related = relatedTheses(v, data, detail.day);
-    setHTML(
-      find('detailRelated'),
-      related
-        .map(
-          (t) =>
-            `<button class="related-item" type="button" data-thesis="${esc(t.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><span>${esc(t.question)}</span></button>`,
-        )
-        .join(''),
     );
     all('[data-thesis]').forEach(
       (button) => (button.onclick = () => open(button.dataset.thesis, detail.day)),
@@ -246,7 +236,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
             .map((e) => evidenceHtml(e, detail.day))
             .join('') +
             (rows.length > detail.evidenceLimit
-              ? '<button type="button" class="detail-link detail-more" id="moreEvidence">Show more evidence</button>'
+              ? '<button type="button" class="detail-link detail-more" id="moreEvidence">Show more</button>'
               : '')
         : '<p class="detail-muted">No evidence matches.</p>',
     );
@@ -260,7 +250,8 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
     const v = detail.thesis;
     detail.selected = index;
     const j = v.judgements[index];
-    detail.historyAnchorDay = anchorDay === null ? null : j?.day || anchorDay || data.days[0];
+    detail.historyAnchorDay =
+      anchorDay === null ? null : j?.day || anchorDay || data.days[0] || data.as_of;
     all('#historyChart .node').forEach((node) =>
       node.classList.toggle('node--now', Boolean(j && v.judgements[+node.dataset.i].day === j.day)),
     );
@@ -276,11 +267,11 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
     setHTML(
       find('historyAssessment'),
       `<div class="history-head"><h3 class="detail-heading">${esc(longDay(j.day))}</h3>${badgeHtml(v, j)}</div>${assessmentHtml(v, j, 'history')}
-    ${j.changed && j.why_changed ? `<details class="detail-disclosure"><summary>Score change</summary><p class="detail-copy">${esc(humanise(v, j.why_changed))}</p></details>` : ''}
+    ${j.changed && j.why_changed ? `<details class="detail-disclosure"><summary>Score change</summary><p class="detail-copy">${assessmentText(v, j.why_changed)}</p></details>` : ''}
     <details class="detail-disclosure"><summary>Cited evidence</summary>${
       v.evidence
         .filter((e) => ids.has(e.id))
-        .map((e) => evidenceHtml(e, detail.day))
+        .map((e) => evidenceHtml(e, j.day))
         .join('') || '<p class="detail-muted">No evidence cited.</p>'
     }</details>`,
     );
@@ -304,7 +295,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
       chart,
       ladderChart(v, {
         width: Math.max(280, panel.clientWidth),
-        start: data.days[0],
+        start: data.days[0] || data.as_of,
         end: detail.day,
         day: detail.day,
         scope: 'detail',
@@ -313,7 +304,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
     );
     chartController = bindHistoryChart(chart, {
       thesis: v,
-      start: data.days[0],
+      start: data.days[0] || data.as_of,
       end: detail.day,
       onSelect: selectAssessment,
     });
@@ -338,6 +329,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
       motion.destroy();
       chartController?.destroy();
       disclosures.destroy();
+      tabs.destroy();
       selectControl?.destroy();
       events.abort();
       sheet.remove();

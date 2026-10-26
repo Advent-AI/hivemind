@@ -39,7 +39,9 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     leading = null;
   let displayed = [];
   const start = () =>
-    range === 'all' ? data.days[0] : [data.days[0], addDays(data.as_of, -30)].sort().at(-1);
+    range === 'all'
+      ? data.days[0] || data.as_of
+      : [data.days[0] || data.as_of, addDays(data.as_of, -30)].sort().at(-1);
   const apply = () => {
     world.style.transform = `translate(${pan.x}px,${pan.y}px) scale(${zoom})`;
   };
@@ -109,6 +111,11 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     });
     return node;
   }
+  function fitLeading(node, centerY) {
+    if (!node.classList.contains('has-composite')) return;
+    node.style.height = 'auto';
+    node.style.top = `${centerY - node.offsetHeight / 2}px`;
+  }
   function connect(source, targets) {
     const bounds = (node) => ({
       left: node.offsetLeft,
@@ -139,7 +146,8 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     const byId = new Map(data.theses.map((t) => [t.id, t]));
     const nodesById = new Map();
     if (plan.leading) {
-      leading = addCard(spec.leadingCard(), 'idea', plan.leading);
+      leading = addCard(spec.leadingCard({ width: plan.leading.width }), 'idea', plan.leading);
+      fitLeading(leading, plan.leading.top + plan.leading.height / 2);
       nodesById.set('idea', leading);
     }
     function thesisNode(thesis, rect) {
@@ -148,6 +156,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
         start: start(),
         end: data.as_of,
         scope,
+        weightPercent: spec.weightPercents ? (spec.weightPercents[thesis.id] ?? 0) : undefined,
         onOpen: (id) => {
           if (!moved) {
             stop();
@@ -166,7 +175,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
       return node;
     }
     for (const rect of plan.nodes) nodesById.set(rect.id, thesisNode(byId.get(rect.id), rect));
-    edges.innerHTML = `<defs><marker id="${scope}-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--rule-strong)"/></marker><marker id="${scope}-active-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--ink)"/></marker></defs>`;
+    edges.innerHTML = `<defs><marker id="${scope}-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--connector-color)"/></marker><marker id="${scope}-active-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--ink)"/></marker></defs>`;
     const outgoing = new Map();
     for (const edge of plan.edges) {
       if (!outgoing.has(edge.sourceId)) outgoing.set(edge.sourceId, []);
@@ -187,7 +196,8 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
   }
   function updateLeading() {
     if (!leading || !graph.leadingCard) return;
-    const replacement = graph.leadingCard();
+    const centerY = leading.offsetTop + leading.offsetHeight / 2;
+    const replacement = graph.leadingCard({ width: leading.offsetWidth });
     replacement.classList.add('is-on');
     Object.assign(replacement.style, {
       left: leading.style.left,
@@ -198,6 +208,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     replacement.dataset.id = 'idea';
     leading.replaceWith(replacement);
     leading = replacement;
+    fitLeading(leading, centerY);
     leading.addEventListener('mouseenter', () => highlight('idea'));
     leading.addEventListener('mouseleave', () => highlight(null));
   }
@@ -233,9 +244,9 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
       node
         .querySelectorAll('.lane')
         .forEach((lane, i) => lane.classList.toggle('lane--cur', i + 1 === judgement?.rung));
-      node.querySelector('.chip').outerHTML = badgeHtml(thesis, judgement);
+      node.querySelector('.plot-badge').innerHTML = badgeHtml(thesis, judgement);
     }
-    onDayChange(day);
+    onDayChange(day, { start: start(), end: data.as_of });
     updateLeading();
   }
   scrub.addEventListener(
@@ -252,8 +263,8 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
       () => {
         range = button.dataset.range;
         day = day < start() ? start() : day;
+        onDayChange(day, { start: start(), end: data.as_of });
         render({ ...graph, day }, { center: false });
-        onDayChange(day);
       },
       { signal: events.signal },
     ),

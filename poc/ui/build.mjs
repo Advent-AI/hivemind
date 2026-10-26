@@ -14,6 +14,7 @@ const result = await build({
   platform: 'browser',
   target: ['es2022'],
   charset: 'utf8',
+  minify: true,
   logLevel: 'silent',
   legalComments: 'none',
 });

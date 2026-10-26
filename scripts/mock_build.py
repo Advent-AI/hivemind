@@ -11,20 +11,28 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from hivemind import service  # noqa: E402
+from hivemind import bundle, service  # noqa: E402
+from hivemind.views import store  # noqa: E402
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    default_data = ROOT / 'poc/mock/data.en.json'
-    if not default_data.exists():
-        default_data = ROOT / 'poc/mock/data.json'
-    parser.add_argument('--data', type=Path, default=default_data)
-    parser.add_argument('--ledger', type=Path, default=ROOT / 'poc/data/sealed-2026-10-24-run3-through-0815/views.sqlite')
+    parser.add_argument('--data', type=Path, help='explicit legacy JSON export; otherwise read the current ledger')
+    parser.add_argument('--ledger', type=Path, default=ROOT / 'poc/data/english-v23-jev-2026-10-25/views.sqlite')
+    parser.add_argument('--items', type=Path, default=ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite')
     parser.add_argument('--out', type=Path, default=ROOT / 'poc/mock/index.html')
+    parser.add_argument('--composite-trials', type=Path, help='explicit JSON trial baskets for the Idea score preview')
     args = parser.parse_args()
-    data = json.loads(args.data.read_text())
-    if not data.get('schema_version') and args.ledger.exists():
+    if args.data:
+        data = json.loads(args.data.read_text())
+    else:
+        conn, items = service.open_ledger(str(args.ledger)), store.open_read_only(str(args.items))
+        try:
+            data = bundle.library(conn, items)
+        finally:
+            conn.close()
+            items.close()
+    if args.data and not data.get('schema_version') and args.ledger.exists():
         conn = service.open_ledger(str(args.ledger))
         try:
             data['sequence_days'] = service.seq_day_map(conn)
@@ -45,6 +53,8 @@ def main():
     template = (ROOT / 'poc/mock/index.template.html').read_text()
     page = template.replace('__STYLES__', built['style']).replace('__SCRIPT__', built['script'].replace('</script', '<\\/script'))
     page = page.replace('__DATA__', prepared.stdout.replace('<', '\\u003c'))
+    trials = json.loads(args.composite_trials.read_text()) if args.composite_trials else []
+    page = page.replace('__COMPOSITE_TRIALS__', json.dumps(trials, ensure_ascii=False).replace('<', '\\u003c'))
     output = args.out.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(output.suffix + '.tmp')

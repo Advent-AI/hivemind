@@ -185,7 +185,7 @@ def free_port():
 
 def test_http_front_answers_as_a_user_starts_it(tmp_path):
     port = free_port()
-    proc = subprocess.Popen([sys.executable, os.path.join(ROOT, 'scripts', 'hivemind_api.py'), '--port', str(port), '--index', str(tmp_path / 'index.sqlite'), '--archive', str(tmp_path / 'idea-archive.sqlite'), '--lexical'],
+    proc = subprocess.Popen([sys.executable, os.path.join(ROOT, 'scripts', 'hivemind_api.py'), '--views', LEDGER, '--items', os.path.join(ROOT, 'poc', 'data', 'items-window.sqlite'), '--port', str(port), '--index', str(tmp_path / 'index.sqlite'), '--archive', str(tmp_path / 'idea-archive.sqlite'), '--lexical'],
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         def get(path):

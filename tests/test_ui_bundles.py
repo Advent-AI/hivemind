@@ -68,6 +68,13 @@ def test_http_bundle_endpoint_as_the_agent_calls_it(tmp_path):
                 if attempt == 39:
                     raise
                 time.sleep(0.05)
+        with urllib.request.urlopen(f'http://127.0.0.1:{port}/library', timeout=5) as response:
+            library = json.load(response)
+        assert library['coverage'] == 'library'
+        assert len(library['views']) == 90 and len(library['groups']) == 18
+        assert library['views'][0]['question'].isascii()
+        assert not (tmp_path / 'index.sqlite').exists()
+        assert not (tmp_path / 'archive.sqlite').exists()
         with pytest.raises(urllib.error.HTTPError) as error:
             urllib.request.urlopen(f'http://127.0.0.1:{port}/thesis-bundles?ids=missing', timeout=5)
         assert error.value.code == 404
@@ -88,4 +95,8 @@ def test_mcp_bundle_tool_as_the_agent_calls_it(tmp_path):
                 assert not result.isError
                 payload = result.structuredContent or json.loads(result.content[0].text)
                 assert_payload(payload)
+                result = await session.call_tool('thesis_library', {})
+                assert not result.isError
+                payload = result.structuredContent or json.loads(result.content[0].text)
+                assert len(payload['views']) == 90 and len(payload['groups']) == 18
     asyncio.run(run())
