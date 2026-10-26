@@ -8,6 +8,7 @@ must-not-open keys they propose. The stored answers of one or more ledgers are s
 """
 import argparse
 import collections
+import dataclasses
 import json
 import pathlib
 import re
@@ -71,6 +72,9 @@ def main():
     ap.add_argument('--gold', required=True); ap.add_argument('--source', required=True); ap.add_argument('--control', action='append', default=[])
     ap.add_argument('--version', required=True); ap.add_argument('--config', required=True); ap.add_argument('--archive', required=True)
     ap.add_argument('--out', required=True); ap.add_argument('--samples', type=int, default=3)
+    ap.add_argument('--reasoning', default=None, help='override the extraction setting reasoning_effort (gpt-6-luna ignores temperature)')
+    ap.add_argument('--with-state', action='store_true', help='append each shown thesis\'s current rung and last reasons (from the source ledger at that time) to block 5')
+    ap.add_argument('--label', default=None, help='arm name in the output (default: the version)')
     args = ap.parse_args()
     gold = json.loads(pathlib.Path(args.gold).read_text())
     uni = universe.load(ROOT / 'poc' / 'universe.json')
@@ -80,6 +84,8 @@ def main():
     controls = {pathlib.Path(p).name: stored_requests(pathlib.Path(p) / 'archive.sqlite') for p in [args.source] + args.control}
     archive = model.Archive(args.archive)
     system = (ROOT / 'src' / 'hivemind' / 'prompts' / f'role-{args.version}.txt').read_text(encoding='utf-8')
+    label = args.label or args.version
+    source_views = ro(pathlib.Path(args.source) / 'views.sqlite') if args.with_state else None
     rows, spent = [], 0.0
     totals = collections.defaultdict(lambda: [0, 0, 0, 0, 0])
     for case in gold['cases']:
@@ -93,6 +99,24 @@ def main():
         groups = re.findall(r'\n  - (g\d+) "', request['messages'][1]['content'])
         schema = extraction.schema_for(args.version, groups, sorted(shown))
         setting = cfg.extraction_setting(item['category'])
+        if args.reasoning:
+            setting = dataclasses.replace(setting, reasoning_effort=args.reasoning)
+        user_text = request['messages'][1]['content']
+        if args.with_state and shown:
+            seq_row = source_views.execute('select seq from handovers where input_id=?', (item_id,)).fetchone()
+            seq = seq_row['seq'] if seq_row else 10 ** 9
+            labels = {}
+            for v in shown:
+                j = source_views.execute('select rung, reasons from judgements where view_id=? and seq<? order by seq desc limit 1', (v, seq)).fetchone()
+                if j:
+                    rung = source_views.execute('select label from rungs where view_id=? and position=?', (v, j['rung'])).fetchone()
+                    labels[v] = f"; current view: {rung['label'] if rung else j['rung']} — {j['reasons'][:200]}"
+            lines = user_text.split('\n')
+            for i, line in enumerate(lines):
+                m = re.match(r'  - (v\d+) \(', line)
+                if m and m.group(1) in labels:
+                    lines[i] = line + labels[m.group(1)]
+            user_text = '\n'.join(lines)
         row = {'case': case['id'], 'item': item_id, 'arms': {}}
         for name, store_ in controls.items():
             if item_id in store_:
@@ -101,11 +125,11 @@ def main():
                 row['arms'][name] = [score(uni, case, cands)]
         arm = []
         for s in range(args.samples):
-            answer = model.call(archive, cfg, setting, system, request['messages'][1]['content'] + f'\n[sample {s + 1}]', schema, 'extraction', 'extract')
+            answer = model.call(archive, cfg, setting, system, user_text + f'\n[sample {s + 1}]', schema, 'extraction', 'extract')
             spent += answer.cost_usd
             _, cands, dropped, _ = extraction.sift_with_groups(answer.data, item, item['text'] or '', shown, uni, english=True, shown_group_ids=groups)
             arm.append(score(uni, case, cands))
-        row['arms'][args.version] = arm
+        row['arms'][label] = arm
         for name, scores in row['arms'].items():
             for sc in scores:
                 for i in range(5):
@@ -113,7 +137,7 @@ def main():
         rows.append(row)
         print(f"{case['id']}: " + ' | '.join(f"{n}: " + ', '.join(f'{m}/{M} must, {b}/{B} bad, {n_} cand' for m, M, b, B, n_ in sc) for n, sc in row['arms'].items()), flush=True)
     out = pathlib.Path(args.out); out.mkdir(parents=True, exist_ok=True)
-    (out / f'role-probe-{args.version}.json').write_text(json.dumps({'rows': rows, 'totals': dict(totals), 'spent_usd': spent}, ensure_ascii=False, indent=1))
+    (out / f'role-probe-{label}.json').write_text(json.dumps({'rows': rows, 'totals': dict(totals), 'spent_usd': spent}, ensure_ascii=False, indent=1))
     print('totals (must proposed / must total / bad proposed / bad total / candidates), summed over samples:')
     for name, t in totals.items():
         print(f'  {name}: {t}')

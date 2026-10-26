@@ -237,3 +237,21 @@ v13 raised two milestones and opened clutter (a tax-rate thesis from the press r
 in two); v14 raised the same two milestones and dropped the two first-day theses every other version opens. Neither is
 adopted. The China revenue thesis (A03) was proposed by no version in any sample; Microsoft's capex (A13) by one sample in
 eleven. These are the model's settled judgements on these texts, not readings of a list.
+
+## Two structural arms probed the same way (D193): reasoning effort and the current view
+
+| per sample, on the gold's 20 items | must-open keys proposed (of 15) | must-not-open keys proposed | candidates | note |
+|---|---|---|---|---|
+| v12, run r3 | 9 | 0 | 30 | stored |
+| v12, run r4 | 8 | 1 | 30 | stored |
+| v12 + reasoning_effort medium (config only) | 8.3 | 0.7 | 25 | calls 1.8× slower; $0.14 for the probe against $0.08 |
+| v12 + each shown thesis's current rung and last reasons in block 5 | 8.3 | 1.7 | 29 | the China numeric thesis proposed once in 11 samples across all arms, here |
+| v13 | 8.7 | 3.7 | 33 | D192 |
+| v14 | 4.7 | 0.7 | 17 | D192 |
+
+Five arms, one window, same scorer: coverage of the gold's must-open theses sits at 8–9 of 15 per sample for every arm but one,
+whatever the wording, the reasoning effort or the context shown. The misses are the same six judgements each time (a numeric
+China-revenue thesis, Microsoft's calendar capex and Intelligent Cloud from the call, AMD's data-center FY2026 line and the
+Helios milestone, CoreWeave's revenue beside its capex), each proposed in 0–2 of 3 samples by every arm. Three of the six are
+readings the gold could accept as alternatives (China as a policy stage; Microsoft's capex as evidence to the aggregate;
+CoreWeave's capex as the one thesis); three are misses by any reading (Helios, AMD data-center FY2026, Microsoft's cloud line).
