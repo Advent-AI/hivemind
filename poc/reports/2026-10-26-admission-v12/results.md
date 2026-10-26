@@ -255,3 +255,27 @@ China-revenue thesis, Microsoft's calendar capex and Intelligent Cloud from the 
 Helios milestone, CoreWeave's revenue beside its capex), each proposed in 0–2 of 3 samples by every arm. Three of the six are
 readings the gold could accept as alternatives (China as a policy stage; Microsoft's capex as evidence to the aggregate;
 CoreWeave's capex as the one thesis); three are misses by any reading (Helios, AMD data-center FY2026, Microsoft's cloud line).
+
+## The six misses read against the texts (D194): one gold key removed, scores unchanged
+
+Each persistent miss was read in its transcript beside every candidate the four v12 runs wrote for that item (archives of r1–r4,
+$0). One is the gold's: the call gives no full-year 2026 data-center figure for AMD, only the Q3 guide, second-half server growth
+and "more than double in 2027", and every run opens the 2027 line; the FY2026 key (v23's `v53`) is removed from A14 and the
+gold resealed (14 must-open keys). Five are the model's: the China policy candidates name the U.S. as the authority the text
+leaves open (r1, r4) or nothing is opened on China (r2, r3); Microsoft's $175bn goes to the aggregate as evidence (r3) or
+opens as FY2027 capex (r4) while the Microsoft page has no capex question of its own; Helios ("initial shipments on track to
+begin later this quarter"), Intelligent Cloud ($40.95–41.25bn guided, Azure +45%) and CoreWeave's raised revenue guidance
+($12.4–13.2bn) are stated figures the model never opened, each on the first call of its company in the window, where it opened
+one or two theses and stopped.
+
+Rescored against the corrected gold, no ledger moves (A14 still fails on Helios):
+
+| ledger | full | partial | fail |
+|---|---|---|---|
+| v23 baseline (`english-v23-jev-2026-10-25`) | 3 | 7 | 10 |
+| v25 r3 | 9 | 0 | 11 |
+| v26 r4 | 4 | 0 | 16 |
+| pinned control v25 | 9 | 0 | 11 |
+| pinned arm v26 (remap) | 8 | 0 | 12 |
+
+The per-sample tables above count must-open keys of 15; the removed key was proposed by no stored run, so read them as of 14.
