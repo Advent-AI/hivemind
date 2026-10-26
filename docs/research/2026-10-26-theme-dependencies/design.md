@@ -1,5 +1,7 @@
 # Theme theses and their links to companies: design
 
+> **Decided 2026-10-26 (D191).** Alex rejected the requirement that a theme name the company thesis it feeds: "一个政策影响非常的广 … 不可能所有的公司都 map 到 … 默认这些宏观的东西和所有公司都有影响 … 1 to all mapping … thesis 的 state 对每个不同公司的影响需要别的方法来判断". Points 2, 3 and 4 were accepted. §1 (`feeds` on theme candidates) and the first row of §2 are therefore withdrawn; the replacement is §7 below. The rest stands as the record of the alternatives considered.
+
 Alex, 2026-10-26: macro, policy and cross-company themes ("geopolitics in the Middle East may impact prices positively but
 inflation … cross-correlations … overarching themes … we didn't have a clean idea on how to design for that"); "可以的我觉得
 可以做，你也并行的来做深度思考怎么做是最贴近系统设计，PRD 还有一个 hedge fund analyst brain 的". This is a design, not a
@@ -178,3 +180,28 @@ extend (a universe change, Alex's call), not the lifecycle.
 2. Allow a dependency to be added to an existing thesis by a later item (changes 06-views "only when B is created").
 3. The cold case: a theme from a macro-only item opens only when the theme is in the universe's list; otherwise refused.
 4. Composition (component ↔ aggregate) stays evidence, not dependency, as the PRD has it.
+
+## 7. The decided shape: one theme, every company; the sign decided at judgement
+
+- A theme thesis opens on its own admission test (D184 `policy_stage` / `shared_quantity`: a stage or quantity outside any one
+  company that several companies move on, with the authority or the settling figure named); from a macro-only item only when
+  the theme is in the universe's list (point 3). No edge is written at extraction for themes.
+- Every company thesis is judged with the open theme theses of its themes in view: the judging request gains a block "Themes in
+  force" listing, for each open theme thesis of a theme the company's items were tagged with, its question, current rung and
+  the reasons of its last judgement. The judge states, per theme it uses, the sign it applies to this company ("licences
+  granted: favourable for China revenue") in the judgement's reasons; code checks that a cited theme is open and tagged, as it
+  checks cited evidence today. This is the "别的方法": the sign lives in the company judgement, where the analyst decides it,
+  not in a table written in advance.
+- Propagation: a theme's changed conclusion is not fanned out to every company thesis in the same round (06-views: a repeated
+  Fed statement must not trigger hundreds of dependants); each company thesis reads the current theme states at its next
+  judgement, which its own evidence triggers. A theme whose state changed with no company item that day is caught by the daily
+  judging round of its tagged companies' open theses (D63), bounded by the count of open theses, not of edges.
+- Explicit dependencies remain for what a document states (a company thesis that reads another thesis's conclusion), may be
+  added later (point 2), and keep the cycle check.
+- Research groups keep organising; the admission test keeps proceedings out (a prosecutor's charging decision names no stage
+  of a policy that several companies move on).
+- Value × reader change: judging's request builder (new block), judging's answer check (cited themes), the UI (a company card
+  can show the themes in force), the idea route (themes as context). The dependencies table is unchanged.
+- What to measure first, at no cost: on the r3 ledger, for each of the 23 NVDA theses, list the open theme theses tagged to
+  its items on each judgement day and the count of judgements that would have carried a theme block (today 185 judgements,
+  0 with a theme in view); then re-send three judgements with the block and read whether the sign is stated and right.

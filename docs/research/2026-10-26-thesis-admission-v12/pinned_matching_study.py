@@ -24,7 +24,12 @@ STAGES = [('2026-02-25', '2026-07-23', {'NVDA'}), ('2026-07-24', '2026-07-31', N
 class Pinned:
     """Extraction: the recorded answer of the same item. Collision: the real model. Judgement: synthetic. Jev: real."""
 
-    def __init__(self, source_archive):
+    def __init__(self, source_archive, source_views=None, own_views=None):
+        self.source_views, self.own_views = source_views, own_views        # recorded view ids are translated to this arm's ids by (item, question)
+        self.identity = {}
+        if source_views:
+            with sqlite3.connect(f'file:{source_views}?mode=ro', uri=True) as db:
+                self.identity = {vid: (inp, q) for vid, inp, q in db.execute('select view_id, created_from_input, question from views')}
         self.recorded = {}
         with sqlite3.connect(f'file:{source_archive}?mode=ro', uri=True) as db:
             for request_json, answer_json in db.execute("select request_json, answer_json from model_calls where purpose='extract' order by call_id"):
@@ -59,6 +64,11 @@ class Pinned:
                     if 'folds_into' in c:
                         c['folds_into'] = ''
                 answer['new_groups'] = []
+                if self.own_views and os.path.exists(self.own_views):
+                    with sqlite3.connect(f'file:{self.own_views}?mode=ro', uri=True) as db:
+                        own = {(inp, q): vid for vid, inp, q in db.execute('select view_id, created_from_input, question from views')}
+                    for e in answer.get('evidence', []):
+                        e['links'] = [own.get(self.identity.get(l), l) if l.startswith('v') else l for l in e['links']]
             return {'choices': [{'message': {'content': json.dumps(answer)}}]}
         self.counts['judgement'] += 1
         data = {'rung': 1, 'reasons': 'pinned study: synthetic judgement', 'cites': [], 'cites_views': [], 'pushes': [], 'changed': True, 'why_changed': 'synthetic'}
@@ -71,7 +81,7 @@ def run_arm(name, cfg_path, source, out):
     cfg = config.load(cfg_path)
     uni = universe.load(ROOT / 'poc' / 'universe.json')
     archive = model.Archive(str(folder / 'archive.sqlite'))
-    transport = Pinned(source / 'archive.sqlite')
+    transport = Pinned(source / 'archive.sqlite', source / 'views.sqlite', str(folder / 'views.sqlite'))
     log_path = folder / 'replay.log'
 
     def log(*parts):

@@ -193,3 +193,27 @@ one-step change from the sampler. The rule for the next arms: a matching change 
 11/18 against 8/18) and by the census of duplicates (6 → 2); an extraction change is measured over three fresh runs, or with
 the extraction answers pinned and only the changed step re-run. The 9 → 4 swing is therefore not evidence against the judge,
 and the earlier 3 → 9 gain is a one-sample estimate with the same width.
+
+## The judge measured with extraction pinned (D190 confirmation)
+
+Both arms replay the same window with every extraction request answered by r3's recorded answer for that item (recorded view
+ids translated to the arm's own ids by item and question; group references and fold targets stripped), Jev live, judging
+synthetic; the arm adds the collision judge. Only the matcher differs (`docs/research/2026-10-26-thesis-admission-v12/pinned_matching_study.py`,
+ledgers `poc/data/pinned-matching-2026-10-26/`).
+
+| | control (poc-v25) | arm (poc-v26, judge) |
+|---|---|---|
+| theses | 60 (reproduces r3 exactly) | 56 |
+| 2026 aggregate theses | 6 | 3 |
+| evidence rows / links | 707 / 830 | 711 / 806 |
+| collision verdicts / merges | — | 31 / 6, $0.011 |
+| gold full / fail | 9 / 11 | 8 / 12 |
+
+The one gold case that differs (A04) differs because the judge merged FactSet's five-company candidate into the call's
+aggregate and the $690bn sentence was then stored as a repeat of the CFO's "$700bn" statement (a source reference on the
+existing piece), which the scorer's quote pattern cannot see; nothing was lost. No merge removed a thesis the gold wants. The
+judge missed two aggregate duplicates it should have merged ("AI spending by big tech companies"; the five companies named
+in the Goldman article, which the earlier 3-sample probe merged in 2 of 3), so it takes the class from six to three, not to one.
+
+A first version of this comparison without the id translation lost 4 gold cases to shifted view ids in the recorded links;
+that reading is kept in `pinned-arm-v26-par.md` as the record of why the translation exists.
