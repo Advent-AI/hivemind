@@ -14,7 +14,7 @@ A thesis has an immutable question, ladder and due date. Evidence moves its stat
 - A fixed, verifiable ladder states in advance what would disprove the view, analogous to explicit analyst scenarios or predefined investment exit conditions. Do not change it after observing the outcome.
 - The model judges from all evidence still in force and dependency conclusions, at low temperature, rather than adjusting its previous score. Replacement follows statement date, so late old statements do not restore obsolete evidence.
 - A theme's outcome can help one asset and harm another. Theme ladders describe outcomes; asset dependencies specify their own direction.
-- A thesis contains one period and one due date, generally 6–12 months; intermediate quarterly reports are evidence.
+- A thesis contains one period and one due date, generally 6–12 months; intermediate quarterly reports are evidence. A thesis on a binding obligation a universe company takes on (a guarantee, financing, an equity stake, a purchase commitment) may set its own check day up to 18 months after the item, because the signing can be checked long before what it finances is built (D185).
 - Search finds plausible matches and the model compares their meaning. A match inherits the existing ladder and due date; a merely similar question is new. D155's current POC additionally gives code ownership of fully determined duplicate identity, with its limits in the improvement plan.
 - Evidence needs the same search-then-compare discipline. Otherwise February's 12% capex guidance and April's 25% revision remain side by side, forcing every judgement to rediscover which is current.
 - Record repeat/replacement decisions once. Keep replaced evidence in history. A retelling alone should not require another model judgement to establish that nothing changed.
@@ -353,7 +353,6 @@ Choose storage location and database during implementation.
 
 <!-- generated: open -->
 - Search method and ranking remain open: semantic, keyword or both. Test on stored information during implementation. Start with top 10 and adjust during experiments.
-- Thesis granularity needs a separate decision. Current rules merge a part into its existing thesis and reject overly broad questions. A material segment deserves its own question: NVDA China revenue must not disappear into total revenue. Overly broad units reduce all theses to financial metrics, which is wrong. Research what hedge-fund theses look like, what to merge/split and how many questions to track per subject; the discussion assumes analysts focus on 2–3 per company.
 - Labelling details remain open: who, how many, which interface, model evaluation and training, handover to a smaller model, and checks for omitted or mislinked extraction evidence.
 - Design pull mode later: day-end/scheduled execution, overall review, and whether final verdict remains a separate step.
 <!-- /generated: open -->

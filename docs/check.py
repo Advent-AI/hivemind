@@ -144,6 +144,7 @@ AVOIDED_WORDS = [
     (r"(?i)\bviews to track\b", "candidate theses"),
     (r"(?i)\bauthor's views?\b", "author's opinions"),
     (r"(?i)\bpremises?\b", "dependencies"),
+    (r"(?i)\bopening reasons?\b", "admission reason"),
     (r"(?i)\b(?:verification|confirmation|falsification) conditions?\b", "ladder conditions"),
     (r"(?i)\b(?:thes(?:is|es)\s+(?:is|are|was|were|has been|have been)\s+(?:confirmed|falsified)|(?:confirmed|falsified)\s+thes(?:is|es))\b", "a frozen thesis state, not a separate verdict"),
 ]
@@ -161,6 +162,7 @@ WORD_CONTROLS = [
     ("The user's opinions are views to track.", "The user's opinions become candidate theses."),
     ("Read the author's view.", "Read the author's opinion."),
     ("The premise changed.", "The dependency changed."),
+    ("State the opening reason.", "State the admission reason."),
     ("Write the verification conditions.", "Write the ladder conditions."),
     ("Write a confirmation condition.", "Write a rung condition."),
     ("Write falsification conditions.", "Write ladder conditions."),

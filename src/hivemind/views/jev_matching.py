@@ -11,10 +11,17 @@ import hashlib
 import concurrent.futures
 import copy
 
-from .. import jev, model, universe as _universe
+from .. import config, jev, model, universe as _universe
 from . import identity, matching, store
 
 THRESHOLD = 0.5
+# D190: the collision judge. Jev reads wording and calls a population variant of one aggregate 'part of' (six 2026 aggregates on the r3
+# ledger, each judged 'new'); the generative model, asked the analyst's question, merged five of six. It is asked only for the theses of
+# the candidate's own object and measure, and its verdict on those replaces Jev's.
+COLLISION_RELATIONS = ['same_question', 'same_question_other_period', 'distinct_question_same_matter', 'different']
+COLLISION_SCHEMA = {'type': 'object', 'additionalProperties': False, 'required': ['relations'],
+                    'properties': {'relations': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['thesis_id', 'relation', 'why'],
+                                   'properties': {'thesis_id': {'type': 'string'}, 'relation': {'type': 'string', 'enum': COLLISION_RELATIONS}, 'why': {'type': 'string'}}}}}}
 RELATIONS = {"same_quantity_or_event": "both ask about the same defined quantity or the same event: alternative wordings, or two estimates or figures of that one quantity",
              "same_quantity_other_period": "the same defined quantity or event series for another period, such as the next fiscal or calendar year",
              "part_of": "one asks about a strict component or subset of the other, in either direction; not identical",
@@ -168,7 +175,26 @@ def _answers(archive, cfg, jobs, workers, transport):
     return results
 
 
-def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None, workers=1):
+def collision_peers(conn, c, listed):
+    """The listed theses of the candidate's own object and measure: where one question may be held twice under other words."""
+    peers = []
+    for v in listed:
+        key = store.view_key(conn, v) if c.get('measure') else None
+        if key and key.get('measure') == c.get('measure') and (store.view(conn, v) or {}).get('object_id') == c['object']:
+            peers.append(v)
+    return peers
+
+
+def ask_collision_judge(archive, cfg, conn, state, peers, llm_transport):
+    """One generative call: the candidate's state and the peers' thesis texts; returns {thesis_id: relation}."""
+    with open(config.prompt_path(cfg.collision.prompt_version + '.txt'), encoding='utf-8') as handle:
+        system = handle.read()
+    user = state + '\n\nTHESES:\n' + '\n'.join(f'--- {v}\n{thesis_text(conn, v)}' for v in peers) + '\n\nFor each thesis id, state the relation.'
+    answer = model.call(archive, cfg, cfg.collision, system, user, COLLISION_SCHEMA, 'collision', 'match', transport=llm_transport)
+    return answer, {r['thesis_id']: r['relation'] for r in answer.data['relations'] if r['thesis_id'] in peers}
+
+
+def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None, llm_transport=None, workers=1):
     data = {'candidates': [], 'evidence': []}
     total = Decision(data, 0, '', True, 0, 0, 0, 0.0)
     shas = []
@@ -246,8 +272,37 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
             successor_of = succession_target(conn, c, listed)
             if successor_of:
                 outcome, target = 'succession', successor_of
+        peers = collision_peers(conn, c, listed) if getattr(cfg, 'collision', None) else []
+        judged = ''
+        if peers:
+            answer, verdicts = ask_collision_judge(archive, cfg, conn, candidate_state(c, evidence), peers, llm_transport)
+            total.cost_usd += answer.cost_usd
+            total.input_tokens += answer.input_tokens
+            total.output_tokens += answer.output_tokens
+            total.calls += 1
+            total.cached = total.cached and answer.cached
+            shas.append(answer.request_sha256)
+            total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
+            judged = '; collision judge: ' + ', '.join(f'{v}: {verdicts.get(v, "(no answer)")}' for v in peers)
+            if target in peers and verdicts.get(target) not in ('same_question', 'same_question_other_period'):
+                outcome, target = 'new', ''                      # Jev's merge or succession on a peer the judge keeps apart
+            if outcome == 'new':
+                for v in peers:
+                    key = store.view_key(conn, v)
+                    if verdicts.get(v) == 'same_question' and not identity.conflicts(key, c, merging=False):
+                        if identity.conflicts(key, c, merging=True):
+                            if can_succeed(conn, v, key, c):
+                                outcome, target = 'succession', v
+                                break
+                            continue
+                        if store.is_open(conn, v):
+                            outcome, target = 'merge', v
+                            break
+                    if verdicts.get(v) == 'same_question_other_period' and can_succeed(conn, v, key, c):
+                        outcome, target = 'succession', v
+                        break
         data['candidates'].append({'id': c['id'], 'outcome': outcome, 'target_view_id': target or '', 'dependencies': [],
-                                   'reason': f'jev: {reasons or "no list"}; groups joined: {joined or "none"}'})
+                                   'reason': f'jev: {reasons or "no list"}; groups joined: {joined or "none"}{judged}'})
     for e, pairs, said_day, job_index in evidence_jobs:
         answers = answers_for(job_index)
         for _, v in pairs:

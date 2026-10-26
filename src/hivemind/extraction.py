@@ -19,6 +19,10 @@ MAX_TEXT_CHARS = 400_000
 ENGLISH_FROM = 6                  # the first extraction prompt version written in English
 GROUPS_FROM = 7                   # the first version whose candidates carry research-group membership (D149)
 ALIASES_FROM = 9                  # the first version whose declared groups carry aliases, so code decides identity and membership (D166)
+ADMISSION_FROM = 12               # the first version whose candidates state why they open (D184): one of four reasons, the settling material, the loss if folded
+# D184: the closed set of reasons a candidate thesis may open; anything else is evidence to a shown thesis
+ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'binding_obligation']
+BINDING_HORIZON_DAYS = 548        # D185: a binding obligation is due within 18 months of the item, and is exempt from the next-year rule on quantities
 
 
 def version_number(version):
@@ -124,9 +128,27 @@ def grouped_schema(shown_group_ids, aliases=False, measures=MEASURES):
     return schema
 
 
-def schema_for(version, shown_group_ids=()):
+def admission_schema(shown_view_ids, shown_group_ids, measures=MEASURES_V10):
+    """The grouped schema plus the admission fields (D184): opens_as names one of the four reasons; folds_into names the shown
+    thesis the statement would otherwise attach to, or is empty (the pattern is built from the shown ids, so an unseen thesis
+    cannot be named); lost_if_folded says what investment implication is lost if it only attached there; settled_by names the
+    public material that resolves the question."""
+    schema = grouped_schema(shown_group_ids, aliases=True, measures=measures)
+    candidate = schema['properties']['candidates']['items']
+    candidate['properties'].update({
+        'opens_as': {'type': 'string', 'enum': list(ADMISSION_REASONS)},
+        'folds_into': {'type': 'string', 'pattern': '^(?:' + ''.join('|' + re.escape(v) for v in shown_view_ids) + ')$'},
+        'lost_if_folded': {'type': 'string'},
+        'settled_by': {'type': 'string'}})
+    candidate['required'] += ['opens_as', 'folds_into', 'lost_if_folded', 'settled_by']
+    return schema
+
+
+def schema_for(version, shown_group_ids=(), shown_view_ids=()):
     number = version_number(version)
     measures = MEASURES_V10 if number >= MEASURES_V10_FROM else MEASURES
+    if number >= ADMISSION_FROM:
+        return admission_schema(shown_view_ids, shown_group_ids, measures=measures)
     if number >= GROUPS_FROM:
         return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
     if number >= ENGLISH_FROM:
@@ -317,7 +339,7 @@ def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
     version = setting.prompt_version.rpartition('-')[2]
     system, user = build_prompt(item, text, shown_views, universe, version, shown_groups)
     group_ids = [g['group_id'] for g in shown_groups]
-    return setting, system, user, schema_for(version, group_ids)
+    return setting, system, user, schema_for(version, group_ids, [v['view_id'] for v in shown_views])
 
 
 def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
@@ -356,6 +378,27 @@ def check_group_refs(c, shown_group_ids, declared):
     unknown = [r for r in refs if r not in shown_group_ids and r not in declared]
     if unknown:
         return f'group_refs cites a group neither shown nor declared: {unknown}'
+    return None
+
+
+def check_admission(c, shown_ids, publication_day):
+    """None when a version-12 candidate's admission fields are well formed (D184/D185), else the problem:
+    settled_by is not blank, folds_into is empty or a shown thesis, lost_if_folded is not blank when folds_into names one, and a binding
+    obligation is due within 18 months."""
+    if not str(c.get('settled_by', '')).strip():
+        return 'settled_by is empty'
+    if c.get('folds_into') and c['folds_into'] not in shown_ids:
+        return f'folds_into names a thesis not shown: {c["folds_into"]!r}'
+    if c.get('folds_into') and not str(c.get('lost_if_folded', '')).strip():      # a named thesis it could attach to needs the reason it does not
+        return 'lost_if_folded is empty although folds_into names a thesis'
+    if c['opens_as'] == 'binding_obligation':
+        limit = datetime.date.fromisoformat(publication_day) + datetime.timedelta(days=BINDING_HORIZON_DAYS)
+        try:
+            due = datetime.date.fromisoformat(c['due_day'])
+        except ValueError:                       # the schema's pattern admits 2026-06-31
+            return f'due_day is not a real date: {c["due_day"]!r}'
+        if due > limit:
+            return f'binding obligation due beyond 18 months ({c["due_day"]} > {limit.isoformat()})'
     return None
 
 
@@ -404,7 +447,8 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
             dropped.append((c['id'], 'quarterly number: evidence, not a view (06-views ladder rule 6)'))
             continue
         year_match = re.search(r'(\d{4})', c['year'] or '')
-        if c.get('measure') not in ('event', 'policy_event') and year_match and int(year_match.group(1)) > int(item['publication_day'][:4]) + 1:
+        if c.get('measure') not in ('event', 'policy_event') and c.get('opens_as') != 'binding_obligation' \
+                and year_match and int(year_match.group(1)) > int(item['publication_day'][:4]) + 1:
             dropped.append((c['id'], f'year {c["year"]} is beyond next year: not opened (06-views 不开)'))
             continue
         if not re.match(r'\d{4}-\d{2}-\d{2}$', c['due_day']):
@@ -413,6 +457,11 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
         if c['due_day'] <= item['publication_day']:
             dropped.append((c['id'], f'due_day {c["due_day"]} not after the item'))
             continue
+        if 'opens_as' in c:           # a version-12 answer (D184): the schema guarantees the fields, code checks their shape
+            problem = check_admission(c, shown_ids, item['publication_day'])
+            if problem:
+                dropped.append((c['id'], f'candidate admission: {problem}'))
+                continue
         if c.get('measure'):          # keyed candidates keep their actual scope; reference lists do not gate admission (D155)
             problem = check_bounds(c['rungs'])
             if problem:

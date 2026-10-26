@@ -156,7 +156,6 @@
 
   const EXTRACT_OPEN = [
     "Validate each category prompt on stored items before settling it; record its version in Config.",
-    "Research thesis granularity: avoid only financial metrics, bundling separate questions or splitting one question too finely. See the library's open questions; reflect the decision in prompts after research.",
   ];
 
   // ------------------------------------------------------------------ views database (D38–D45)
@@ -462,7 +461,6 @@
 
   const VIEWS_OPEN = [
     "Search method and ranking remain open: semantic, keyword or both. Test on stored information during implementation. Start with top 10 and adjust during experiments.",
-    "Thesis granularity needs a separate decision. Current rules merge a part into its existing thesis and reject overly broad questions. A material segment deserves its own question: NVDA China revenue must not disappear into total revenue. Overly broad units reduce all theses to financial metrics, which is wrong. Research what hedge-fund theses look like, what to merge/split and how many questions to track per subject; the discussion assumes analysts focus on 2–3 per company.",
     "Labelling details remain open: who, how many, which interface, model evaluation and training, handover to a smaller model, and checks for omitted or mislinked extraction evidence.",
     "Design pull mode later: day-end/scheduled execution, overall review, and whether final verdict remains a separate step.",
   ];

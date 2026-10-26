@@ -17,7 +17,7 @@ def prompt_path(name):
     return os.path.join(PROMPTS, name)
 
 
-def _prompt_files(extraction, matching, rejudging, idea=None):
+def _prompt_files(extraction, matching, rejudging, idea=None, collision=None):
     """03-config: a version that names a prompt that does not exist is refused whole. An extraction setting's
     prompt_version is '<category>-<v>': block 2 and 4 come from categories-<v>.json (the category's entry) and the
     role from role-<v>.txt; matching, re-judging and the idea reading name their file without the extension."""
@@ -31,7 +31,7 @@ def _prompt_files(extraction, matching, rejudging, idea=None):
         with open(categories_file, encoding='utf-8') as handle:
             if category not in json.load(handle):
                 raise ConfigError(f'extraction.{category}: categories-{version}.json has no entry for {category}')
-    for setting in (matching, rejudging, idea):
+    for setting in (matching, rejudging, idea, collision):
         if setting is not None and not os.path.exists(prompt_path(setting.prompt_version + '.txt')):
             raise ConfigError(f'{setting.name}: prompt {setting.prompt_version}.txt does not exist')
 
@@ -61,6 +61,7 @@ class Config:
     rejudging: Setting
     final_verdict: Setting
     idea: Setting = None      # the service's reading of a user's idea (docs/poc/idea-card.md); absent in pipeline-only configs
+    collision: Setting = None # D190: the analyst question asked of the generative model when a candidate lists a thesis of its own object and measure; absent: Jev alone
 
     def extraction_setting(self, category):
         setting = self.extraction.get(category)
@@ -98,7 +99,8 @@ def load(path):
     extraction = {category: _setting(f'extraction.{category}', setting) for category, setting in raw['extraction'].items()}
     matching, rejudging = _setting('matching', raw['matching']), _setting('rejudging', raw['rejudging'])
     idea = _setting('idea', raw['idea']) if 'idea' in raw else None
-    _prompt_files(extraction, matching, rejudging, idea)       # final_verdict is kept in the file but no POC step calls it
+    collision = _setting('collision', raw['collision']) if 'collision' in raw else None
+    _prompt_files(extraction, matching, rejudging, idea, collision)       # final_verdict is kept in the file but no POC step calls it
     return Config(version=str(raw['version']), checksum=checksum, provider=str(raw['provider']),
                   search_top_n=int(raw['search_top_n']), extraction=extraction,
-                  matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea)
+                  matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea, collision=collision)

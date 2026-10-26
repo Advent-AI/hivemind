@@ -33,7 +33,7 @@ An item arrives with category and sequence number
 
 ## Two outputs: evidence and candidates
 
-One reading returns evidence, candidates, group associations and necessary new group definitions. Evidence may link to shown theses or current candidates. Candidates are reserved for important uncovered questions, subject to the personal-memo rule. The library first resolves a candidate's destination, then compares its evidence within that thesis.
+One reading returns evidence, candidates, group associations and necessary new group definitions. Evidence may link to shown theses or current candidates. Candidates are reserved for important uncovered questions, subject to the personal-memo rule. From extraction version 12 (D184) a candidate opens only for one of four admission reasons, stated in the answer: an annual quantity that carries the company's value, guided or not; one industry aggregate per calendar year; a stage of a policy process; a binding obligation a universe company takes on (due within 18 months, D185). The candidate also names the public material that settles it, the shown thesis the statement would otherwise attach to (or none) and what is lost if it only attached there. Code checks the shape of these fields; the model keeps the judgement of importance (D154/D155). A later estimate, another population or another wording of a shown aggregate is evidence to it. The library first resolves a candidate's destination, then compares its evidence within that thesis.
 
 <!-- generated: two -->
 |  | Evidence | Candidate thesis |
@@ -151,7 +151,7 @@ A source reference
 - Give the model every whole item with its category prompt; record the settings version.
 - Every evidence link targets a shown thesis or current candidate. Reject missing or invalid targets with reasons.
 - Repeated statements of the same fact within one item, including text/table repetitions, produce one evidence item with multiple references.
-- Evidence contains a quotation, standalone summary, speaker, original source, tier and event time. A candidate contains subject, asset/theme kind, focus, question, ladder, due date, association and at least one evidence item; personal-memo candidates may lack evidence. Themes select from block 3 or clearly identify a new issue; assets use a symbol or registered name.
+- Evidence contains a quotation, standalone summary, speaker, original source, tier and event time. A candidate contains subject, asset/theme kind, focus, question, ladder, due date, association, admission reason, settling material, the thesis it would otherwise attach to (or none), the loss if folded, and at least one evidence item; personal-memo candidates may lack evidence. A blank loss or settling material, an unshown thesis in the fold field, or a binding obligation due beyond 18 months is refused with its reason. Themes select from block 3 or clearly identify a new issue; assets use a symbol or registered name.
 - Every thesis and evidence item has a source. Reject absent quotes/cells or numbers not printed in the cited location, recording the reason.
 - Extraction does not mutate the library. Return evidence, candidates and associations together without a separate clustering call. Reference and semantic criteria are owned by the [grouping contract](06-views.md#research-groups-associate-during-extraction); similar names or equal counts do not prove correct grouping.
 - Retry from the failed step and replace only that attempt's own result.
@@ -160,7 +160,6 @@ A source reference
 
 <!-- generated: open -->
 - Validate each category prompt on stored items before settling it; record its version in Config.
-- Research thesis granularity: avoid only financial metrics, bundling separate questions or splitting one question too finely. See the library's open questions; reflect the decision in prompts after research.
 <!-- /generated: open -->
 
 ## Related decisions

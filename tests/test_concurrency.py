@@ -207,7 +207,7 @@ def test_group_membership_and_schema_changes_change_the_request_identity(tmp_pat
     groups = store.groups_for_prompt(conn, ['NVDA'], item['title'])
     _, system, user, schema = extraction.request_for(CFG, item, item['text'], shown, UNIVERSE, groups)
     schema_for = extraction.schema_for
-    monkeypatch.setattr(extraction, 'schema_for', lambda version, ids: dict(schema_for(version, ids), description='changed schema only'))
+    monkeypatch.setattr(extraction, 'schema_for', lambda version, ids, views=(): dict(schema_for(version, ids, views), description='changed schema only'))
     _, system2, user2, schema2 = extraction.request_for(CFG, item, item['text'], shown, UNIVERSE, groups)
     assert (system2, user2) == (system, user) and schema2 != schema
     assert extraction_key(CFG, item, item['text'], shown, UNIVERSE, groups) != after
@@ -236,12 +236,12 @@ def test_replay_script_runs_the_parallel_day_by_default_and_serially_with_one_wo
 
 
 def test_replay_script_defaults_run_the_default_jev_configuration_with_sixteen_and_eight_workers(tmp_path, monkeypatch):
-    """D183 entry point as the user calls it: no --config, --workers or --jev-workers; the default configuration (poc-v23,
-    Jev) runs the parallel day with 16 extraction and 8 Jev workers and writes the serial ledger."""
+    """D183/D189 entry point as the user calls it: no --config, --workers or --jev-workers; the default configuration (poc-v25,
+    extraction v12 on Jev) runs the parallel day with 16 extraction and 8 Jev workers and writes the serial ledger."""
     import runpy
     serial_dir = tmp_path / 'serial'; serial_dir.mkdir()
     serial = setup_run(serial_dir)
-    serial['cfg'] = config.load(ROOT / 'poc/config/poc-v23.json')
+    serial['cfg'] = config.load(ROOT / 'poc/config/poc-v25.json')
     replay.run(**serial, transport=english_jev_send(require_overlap=False))
     args = setup_run(tmp_path)
     send = english_jev_send(require_overlap=True)
@@ -341,6 +341,8 @@ def english_jev_send(*, require_overlap):
             case = CASES[int(second)]
             raw = vocabulary.extraction_answer({'candidates': [case['candidate']], 'evidence': [case['evidence']]})
             raw['new_groups'] = []
+            if 'opens_as' in request['response_format']['json_schema']['schema']['properties']['candidates']['items']['properties']:     # a version-12 request (D184)
+                raw['candidates'][0].update(opens_as='main_driver', folds_into='', lost_if_folded='', settled_by='the FY2027 annual report')
             if second and '  - v1 (' in text:
                 raw['candidates'] = []
                 raw['evidence'][0]['links'] = ['v1']

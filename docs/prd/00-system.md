@@ -65,6 +65,7 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | Term | Meaning | Avoid |
 |---|---|---|
 | Research group | Theses organised around a continuing business process; association is decided during extraction under the library contract | Treating a group as an overarching investment thesis |
+| Admission reason | The one of four reasons a candidate thesis may open (D184): a main driver, an industry aggregate, a policy stage, a binding obligation; the answer states it as opens_as | Opening reason |
 | Item | One upstream unit processed by classification, dispatch and extraction | Using file for every kind of item |
 | File | Text-form source such as earnings, a report or news; qualify filesystem files as data/configuration files | Confusing source form with category |
 | Table data | Fixed-field information; one release, such as a 13F or statistical release, is one item | Treating every cell as an item |

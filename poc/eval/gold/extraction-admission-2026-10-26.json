@@ -1,0 +1,2036 @@
+{
+ "version": "extraction-admission-2026-10-26",
+ "label": "assistant",
+ "note": "Assistant-labelled (Claude, 2026-10-26) from reports/对冲基金论点粒度与金标.md §3, §5, research_notes/对冲基金论点粒度与金标/ (ledger census Q3-Q4, Codex challenger §5); human review pending (report §8 决定 4, D188). Passages are verbatim after whitespace normalisation from poc/data/items-window-tags2-2026-10-24.sqlite; system_v23 reads poc/data/english-v23-jev-2026-10-25/views.sqlite.",
+ "cases": [
+  {
+   "id": "A01",
+   "title": "One guidance paragraph is not one thesis per line (NVDA FY2027 gross margin)",
+   "items": [
+    "truenorth:transcript:NVDA:2026-02-25"
+   ],
+   "window": "seed",
+   "passage": "For the full year, we continue to see gross margins in the mid-70s.",
+   "source": "report §5 例 1 / Codex 例 1 / ledger note G6 | 2026-10-26 correction after the first v25 seed run: the Data Center FY2027 thesis is a must-open (report §2: every house's first NVDA debate; §4 keeps v3); total revenue beside it is a must-not-open (rule 3).",
+   "must_open": [
+    {
+     "gist": "NVDA FY2027 non-GAAP gross margin in which range (mid-70s guidance)",
+     "object": "NVDA",
+     "measure": "gross_margin",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "main_driver",
+     "alternatives": []
+    },
+    {
+     "gist": "NVDA FY2027 Data Center revenue (the street's bogey; opened from the call although NVIDIA guides only quarterly)",
+     "object": "NVDA",
+     "measure": "segment_revenue",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "data.?cen",
+     "opens_as": "main_driver",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "Operating-expense growth thesis from the same paragraph (v5)",
+     "object": "NVDA",
+     "measure": "operating_expense_growth",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Tax-rate thesis from the same paragraph (v6; v12 GAAP variant later)",
+     "object": "NVDA",
+     "measure": "tax_rate",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "FY2027 total revenue beside the Data Center thesis (v2: the segment carries the value, the total is its shadow)",
+     "object": "NVDA",
+     "measure": "total_revenue",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": ""
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "mid-70s",
+     "target": "self:NVDA FY2027 non-GAAP gross margin in which range (mid-70s guidance)"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v4",
+     "v5",
+     "v6"
+    ],
+    "score": "partial",
+    "why": "The gross-margin thesis (v4) is right, but three ordinary model inputs were opened beside it (v5 opex growth, v6 tax rate; v12 GAAP tax rate from the May commentary)."
+   }
+  },
+  {
+   "id": "A02",
+   "title": "Samples shipped is not production started (Vera Rubin)",
+   "items": [
+    "truenorth:transcript:NVDA:2026-02-25"
+   ],
+   "window": "seed",
+   "passage": "We shipped our first Vera Rubin samples to customers earlier this week, and we remain on track to commence production shipments in the second half of the year.",
+   "source": "report §5 例 2 / Codex 例 2 | 2026-10-26 review: the Rubin key names production shipments, not samples.",
+   "must_open": [
+    {
+     "gist": "NVDA begins Vera Rubin production shipments by 2026-12-31 (second half of the year)",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2026",
+     "event_type": "shipment",
+     "scope_regex": "rubin.*(production|volume|commence|begin)|(production|volume|commence|begin).*rubin",
+     "opens_as": "main_driver",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "A deployment-complete thesis made from the same sentence",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2026",
+     "event_type": "deployment",
+     "scope_regex": "rubin",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Combined booked Blackwell and Rubin revenue 2025-2027 (v17; three calendar years, no reporting line)",
+     "object": "NVDA",
+     "measure": "product_revenue",
+     "year": "2025–2027",
+     "event_type": "n/a",
+     "scope_regex": "blackwell|rubin|booked",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "first Vera Rubin samples",
+     "target": "self:NVDA begins Vera Rubin production shipments by 2026-12-31 (second half of the year)"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v7"
+    ],
+    "score": "full",
+    "why": "v7 is right (21 links, 12 judgements); the report counts v17 as a separate failure, but the ledger shows v17 was created from gnews:5d4b94245e962f4185fcd9f3, not from this call."
+   }
+  },
+  {
+   "id": "A03",
+   "title": "Export licence, import permission and revenue are three things (China H200)",
+   "items": [
+    "truenorth:transcript:NVDA:2026-02-25",
+    "edgar:NVDA:0001045810-26-000051:q1fy27cfocommentary.htm"
+   ],
+   "window": "seed",
+   "passage": "While small amounts of H200 products for China-based customers were approved by the U.S. government, we have yet to generate any revenue. And we do not know whether any imports will be allowed into China.",
+   "source": "report §5 例 3 / Codex 例 3 / ledger note G5 | 2026-10-26 review: the China permission key cannot match a U.S.-licence thesis.",
+   "must_open": [
+    {
+     "gist": "NVDA FY2027 China data-center compute revenue vs FY2026",
+     "object": "NVDA",
+     "measure": "segment_revenue",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "china",
+     "opens_as": "main_driver",
+     "alternatives": [
+      {
+       "gist": "China H200 import permission as a licensing stage, authority China (theme ladder)",
+       "object": "chip-export-controls",
+       "measure": "policy_event",
+       "year": "2026",
+       "event_type": "licence",
+       "scope_regex": "chinese authorities|china.{0,40}(permit|allow|import permission)",
+       "opens_as": "",
+       "alternatives": []
+      },
+      {
+       "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+       "object": "NVDA",
+       "measure": "event",
+       "year": "FY2027",
+       "event_type": "licence",
+       "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+       "opens_as": "",
+       "alternatives": []
+      },
+      {
+       "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+       "object": "NVDA",
+       "measure": "event",
+       "year": "2026",
+       "event_type": "licence",
+       "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+       "opens_as": "",
+       "alternatives": []
+      }
+     ]
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "\"Will U.S. authorities allow H200 imports into China\" (v8: mixes the granted U.S. licence with the open China permission)",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "FY2027",
+     "event_type": "licence",
+     "scope_regex": "u\\.?s\\.? (authorities|government)",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "4\\.6 billion",
+     "target": {
+      "gist": "NVDA FY2027 China data-center compute revenue vs FY2026",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "china",
+      "opens_as": "main_driver",
+      "alternatives": [
+       {
+        "gist": "China H200 import permission as a licensing stage, authority China (theme ladder)",
+        "object": "chip-export-controls",
+        "measure": "policy_event",
+        "year": "2026",
+        "event_type": "licence",
+        "scope_regex": "china|h200",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "FY2027",
+        "event_type": "licence",
+        "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "2026",
+        "event_type": "licence",
+        "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    },
+    {
+     "quote_regex": "not assuming any Data Center compute revenue from China",
+     "target": {
+      "gist": "NVDA FY2027 China data-center compute revenue vs FY2026",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "china",
+      "opens_as": "main_driver",
+      "alternatives": [
+       {
+        "gist": "China H200 import permission as a licensing stage, authority China (theme ladder)",
+        "object": "chip-export-controls",
+        "measure": "policy_event",
+        "year": "2026",
+        "event_type": "licence",
+        "scope_regex": "china|h200",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "FY2027",
+        "event_type": "licence",
+        "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "2026",
+        "event_type": "licence",
+        "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    },
+    {
+     "quote_regex": "4\\.5 billion charge associated with H20",
+     "target": {
+      "gist": "NVDA FY2027 non-GAAP gross margin (v4)",
+      "object": "NVDA",
+      "measure": "gross_margin",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v8",
+     "v12"
+    ],
+    "score": "fail",
+    "why": "Only v8 exists (yes/no on U.S. authorities), judged \"rung 1 established\" on 2026-08-12 from a U.S. licence report; no numeric China revenue thesis; e41 fanned to v2, v8, v3, v4, v11."
+   }
+  },
+  {
+   "id": "A04",
+   "title": "Five, four and three companies of capex are one aggregate",
+   "items": [
+    "truenorth:transcript:NVDA:2026-02-25",
+    "gnews:b5b9996d85745b7ba41d94a7",
+    "gnews:e6eab7a05d5c77130cb231ca"
+   ],
+   "window": "week",
+   "passage": "Analyst expectations for 2026 CapEx across the top 5 cloud providers and hyperscalers who collectively account for a little over 50% of our data center revenue are up nearly $120 billion since the start of the year and approaching $700 billion.",
+   "source": "report §5 例 4 / Codex 例 4 / ledger note G4, Q3",
+   "must_open": [
+    {
+     "gist": "Five named hyperscalers combined 2026 capex, one thesis (v1 or v41 as representative)",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "five|top 5|top five|alphabet.*oracle",
+     "opens_as": "industry_aggregate",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "\"About $1 trillion per year over the next few years\" made into a 2026 $1tn thesis (v40)",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "trillion|openai|anthropic|major cloud",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "approaching \\$700 billion",
+     "target": "self:Five named hyperscalers combined 2026 capex, one thesis (v1 or v41 as representative)"
+    },
+    {
+     "quote_regex": "690 billion",
+     "target": "self:Five named hyperscalers combined 2026 capex, one thesis (v1 or v41 as representative)"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v1",
+     "v41",
+     "v40"
+    ],
+    "score": "fail",
+    "why": "One thesis became nine 2026 aggregates (v1, v18, v40, v41, v51, v81, v84, v85, v88) that put the same ~$730-745bn estimate in different rungs; the Futuriom average opened v40."
+   }
+  },
+  {
+   "id": "A05",
+   "title": "NAVER project announcement: zero new theses",
+   "items": [
+    "nvidianews:naver-nvidia-and-brookfield-to-expand-koreas-national-ai-factory-infrastructure-buildout"
+   ],
+   "window": "week",
+   "passage": "NAVER and NVIDIA team plan to expand the initial NVIDIA DSX AI factory buildout at GAK Sejong data center from 55 megawatts to 200 megawatts by 2028.",
+   "source": "report §3, §5 例 5 / Codex 例 5 / ledger note G1",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "200 MW by 2028 milestone thesis (v16)",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2028",
+     "event_type": "deployment",
+     "scope_regex": "naver|sejong",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Same milestone written on 2027",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2027",
+     "event_type": "deployment",
+     "scope_regex": "naver|sejong",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Brookfield $9bn nonbinding term sheet as a thesis",
+     "object": "NVDA",
+     "measure": "financing_amount",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "brookfield|9 billion",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "55 megawatts to 200 megawatts",
+     "target": {
+      "gist": "NVDA FY2027 data-center segment revenue (v3)",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "data.?cen",
+      "opens_as": "",
+      "alternatives": [
+       {
+        "gist": "NVDA begins Vera Rubin production shipments by 2026-12-31 (v7)",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "2026",
+        "event_type": "shipment",
+        "scope_regex": "rubin",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v16",
+     "v3"
+    ],
+    "score": "partial",
+    "why": "Facts faithful (55->200 MW, 2028) and e56-e58 linked to v3, but v16 (due 2028-12-31) and group g5 were opened, and the $1bn NAVER stake, the only sentence that changes NVDA's own risk, was not extracted."
+   }
+  },
+  {
+   "id": "A06",
+   "title": "SK project announcement: zero new theses, gross-margin input kept",
+   "items": [
+    "nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory"
+   ],
+   "window": "week",
+   "passage": "This cloud will use the NVIDIA ® DSX™ platform and deploy NVIDIA Vera Rubin accelerated computing powered by SK hynix HBM4, with the first AI factory planned to come online in 2027.",
+   "source": "report §3, §5 例 6 / Codex 例 5 / ledger note G2; must_not_link from docs/research/2026-10-25-ingestion-v11 results (e54 -> v3 indirect)",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "SK Telecom first AI factory online by 2027-12-31 (v15)",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2027",
+     "event_type": "deployment",
+     "scope_regex": "sk|telecom",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "$500bn letter-of-intent headline as a quantity thesis",
+     "object": "NVDA",
+     "measure": "financing_amount",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "500",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "$500bn headline as spend",
+     "object": "NVDA",
+     "measure": "spend_total",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "500|sk",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "2 GW as a capacity thesis",
+     "object": "NVDA",
+     "measure": "capacity",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "gigawatt|gw|sk",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "HBM4",
+     "target": {
+      "gist": "NVDA FY2027 non-GAAP gross margin (v4)",
+      "object": "NVDA",
+      "measure": "gross_margin",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "",
+      "opens_as": "",
+      "alternatives": []
+     }
+    },
+    {
+     "quote_regex": "first AI factory planned to come online in 2027",
+     "target": {
+      "gist": "NVDA begins Vera Rubin production shipments by 2026-12-31 (v7)",
+      "object": "NVDA",
+      "measure": "event",
+      "year": "2026",
+      "event_type": "shipment",
+      "scope_regex": "rubin",
+      "opens_as": "",
+      "alternatives": [
+       {
+        "gist": "NVDA FY2027 data-center segment revenue (v3)",
+        "object": "NVDA",
+        "measure": "segment_revenue",
+        "year": "FY2027",
+        "event_type": "n/a",
+        "scope_regex": "data.?cen",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    }
+   ],
+   "must_not_link": [
+    {
+     "quote_regex": "500.?billion",
+     "target": {
+      "gist": "NVDA FY2027 data-center segment revenue (v3)",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "data.?cen",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "system_v23": {
+    "views": [
+     "v15",
+     "v7",
+     "v17"
+    ],
+    "score": "fail",
+    "why": "Of three evidence targets only v7 was hit; the HBM4 gross-margin input (v4) was lost; v15 and group g4 were opened and absorbed e53/e55; e54 also linked to v17."
+   }
+  },
+  {
+   "id": "A07",
+   "title": "Ohio: the lease guarantee and chip financing are NVDA's own risk",
+   "items": [
+    "gnews:9e7560cfe0a707f9c14c7071",
+    "gnews:3561dee8ab82ef4e42d8e315",
+    "gnews:b25b5b3109fbe06f1a394164"
+   ],
+   "window": "week",
+   "passage": "OpenAI is in advanced talks to lease SB Energy's 10 GW data center campus in Piketon, Ohio, with Nvidia in discussions to guarantee roughly $250 billion of the financing behind it, the Wall Street Journal reported on Sunday, citing unnamed people familiar with the matter.",
+   "source": "report §3, §5 例 7 / Codex 例 6 / ledger note G3, G12",
+   "must_open": [
+    {
+     "gist": "NVDA signs a binding lease or financing guarantee for the OpenAI Ohio (SB Energy, Piketon) campus by 2026-12-31",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2026",
+     "event_type": "deal_close",
+     "scope_regex": "ohio|guarantee|backstop|openai",
+     "opens_as": "binding_obligation",
+     "alternatives": [
+      {
+       "gist": "Same obligation with event_type other",
+       "object": "NVDA",
+       "measure": "event",
+       "year": "2026",
+       "event_type": "other",
+       "scope_regex": "ohio|guarantee|backstop|openai",
+       "opens_as": "",
+       "alternatives": []
+      },
+      {
+       "gist": "Same obligation written on the NVDA fiscal year",
+       "object": "NVDA",
+       "measure": "event",
+       "year": "FY2027",
+       "event_type": "deal_close",
+       "scope_regex": "ohio|guarantee|backstop|openai",
+       "opens_as": "",
+       "alternatives": []
+      },
+      {
+       "gist": "Same obligation, fiscal year, event_type other",
+       "object": "NVDA",
+       "measure": "event",
+       "year": "FY2027",
+       "event_type": "other",
+       "scope_regex": "ohio|guarantee|backstop|openai",
+       "opens_as": "",
+       "alternatives": []
+      },
+      {
+       "gist": "Numeric form (ledger note G12): NVDA disclosed guarantees, backstops and financing commitments at FY2027 year-end",
+       "object": "NVDA",
+       "measure": "financing_amount",
+       "year": "FY2027",
+       "event_type": "n/a",
+       "scope_regex": "guarantee|backstop|commit|financ",
+       "opens_as": "",
+       "alternatives": []
+      },
+      {
+       "gist": "Numeric form on the calendar year",
+       "object": "NVDA",
+       "measure": "financing_amount",
+       "year": "2026",
+       "event_type": "n/a",
+       "scope_regex": "ohio|openai|guarantee|backstop|financ",
+       "opens_as": "",
+       "alternatives": []
+      }
+     ]
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "\"Tech giants' AI spending > $700bn\" from the Reuters background clause (v18)",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "tech giants",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "OpenAI $750bn compute spend through 2030 as a thesis",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "openai|750|2030",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Project cost $500bn / $250bn / $350bn each as its own thesis",
+     "object": "NVDA",
+     "measure": "project_cost",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "ohio|openai|250|350|500",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "250 ?b(illio)?n",
+     "target": "self:NVDA signs a binding lease or financing guarantee for the OpenAI Ohio (SB Energy, Piketon) campus by 2026-12-31"
+    },
+    {
+     "quote_regex": "350 ?b(illio)?n",
+     "target": "self:NVDA signs a binding lease or financing guarantee for the OpenAI Ohio (SB Energy, Piketon) campus by 2026-12-31"
+    },
+    {
+     "quote_regex": "top \\$700 billion",
+     "target": {
+      "gist": "Five named hyperscalers combined 2026 capex (v1 or v41)",
+      "object": "ai-capex",
+      "measure": "spend_total",
+      "year": "2026",
+      "event_type": "n/a",
+      "scope_regex": "five|top 5|top five|alphabet.*oracle",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "must_not_link": [
+    {
+     "quote_regex": "62\\.6 billion",
+     "target": {
+      "gist": "NVDA FY2027 total revenue (v2)",
+      "object": "NVDA",
+      "measure": "total_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "system_v23": {
+    "views": [
+     "v18",
+     "v3",
+     "v2"
+    ],
+    "score": "fail",
+    "why": "Reuters opened only v18 from the closing background clause; Tom's Hardware gave 4 evidence rows to v3/v2, 0 candidates, 2 dropped; Quartz 0/0. No financing thesis until the unverifiable v80 on 2026-08-11."
+   }
+  },
+  {
+   "id": "A08",
+   "title": "Quarterly press release: all evidence, no new thesis",
+   "items": [
+    "edgar:NVDA:0001045810-26-000051:q1fy27pr.htm",
+    "edgar:NVDA:0001045810-26-000051:q1fy27cfocommentary.htm"
+   ],
+   "window": "seed",
+   "passage": "Revenue is expected to be $91.0 billion, plus or minus 2%. NVIDIA is not assuming any Data Center compute revenue from China in its outlook. • GAAP and non-GAAP gross margins are expected to be 74.9% and 75.0%, respectively, plus or minus 50 basis points.",
+   "source": "report §5 例 8 / ledger note G6 | 2026-10-26: the outlook sentence is stored as a repeat of the CFO commentary; the table cell \"75.0\\n%\" carries the PR source, so the pattern tolerates the line break.",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "A second tax-rate thesis on a GAAP basis (v12)",
+     "object": "NVDA",
+     "measure": "tax_rate",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Compute & Networking segment thesis (v9)",
+     "object": "NVDA",
+     "measure": "segment_revenue",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "compute|networking",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Dividend or $80bn buyback as a thesis",
+     "object": "NVDA",
+     "measure": "other",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "repurchase|buyback|dividend",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "91\\.0 billion",
+     "target": {
+      "gist": "NVDA FY2027 data-center segment revenue (v3)",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "data.?cen",
+      "opens_as": "",
+      "alternatives": [
+       {
+        "gist": "NVDA FY2027 total revenue (v2)",
+        "object": "NVDA",
+        "measure": "total_revenue",
+        "year": "FY2027",
+        "event_type": "n/a",
+        "scope_regex": "",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    },
+    {
+     "quote_regex": "75(\\.0)?\\s*%",
+     "target": {
+      "gist": "NVDA FY2027 non-GAAP gross margin (v4)",
+      "object": "NVDA",
+      "measure": "gross_margin",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v12",
+     "v9",
+     "v3",
+     "v4",
+     "v6"
+    ],
+    "score": "partial",
+    "why": "Press release: 7 evidence, 0 candidates (right), though e41 fanned to five theses; CFO commentary opened v12 (GAAP tax rate, a second basis of v6) and linked e37 to v9."
+   }
+  },
+  {
+   "id": "A09",
+   "title": "Analyst opinion: one evidence line, not six; the opposing view is not dropped",
+   "items": [
+    "gnews:ba8e52b6f010b77f770e4483",
+    "gnews:bb0d23846735c94b7c1722d2"
+   ],
+   "window": "week",
+   "passage": "Our understanding is that Nvidia is providing backstops to some neoclouds, enabling them to receive better financing terms for buildouts in exchange for sharing some of their AI hosting revenue with Nvidia. Sharon AI and Firmus are two such deals for Nvidia.",
+   "source": "report §5 例 9 / ledger note G7",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "$280 fair value as a thesis",
+     "object": "NVDA",
+     "measure": "price",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "fair value|280",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Fair value on the fiscal year",
+     "object": "NVDA",
+     "measure": "other",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "fair value|280",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "token usage continues to rise",
+     "target": {
+      "gist": "NVDA FY2027 data-center segment revenue (v3)",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "data.?cen",
+      "opens_as": "",
+      "alternatives": []
+     }
+    },
+    {
+     "quote_regex": "Sharon AI|Firmus",
+     "target": {
+      "gist": "NVDA signs a binding lease or financing guarantee for the OpenAI Ohio (SB Energy, Piketon) campus by 2026-12-31",
+      "object": "NVDA",
+      "measure": "event",
+      "year": "2026",
+      "event_type": "deal_close",
+      "scope_regex": "ohio|guarantee|backstop|openai",
+      "opens_as": "binding_obligation",
+      "alternatives": [
+       {
+        "gist": "Same obligation with event_type other",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "2026",
+        "event_type": "other",
+        "scope_regex": "ohio|guarantee|backstop|openai",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Same obligation written on the NVDA fiscal year",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "FY2027",
+        "event_type": "deal_close",
+        "scope_regex": "ohio|guarantee|backstop|openai",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Same obligation, fiscal year, event_type other",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "FY2027",
+        "event_type": "other",
+        "scope_regex": "ohio|guarantee|backstop|openai",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Numeric form (ledger note G12): NVDA disclosed guarantees, backstops and financing commitments at FY2027 year-end",
+        "object": "NVDA",
+        "measure": "financing_amount",
+        "year": "FY2027",
+        "event_type": "n/a",
+        "scope_regex": "guarantee|backstop|commit|financ",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Numeric form on the calendar year",
+        "object": "NVDA",
+        "measure": "financing_amount",
+        "year": "2026",
+        "event_type": "n/a",
+        "scope_regex": "ohio|openai|guarantee|backstop|financ",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    },
+    {
+     "quote_regex": "don't end well",
+     "target": {
+      "gist": "NVDA signs a binding lease or financing guarantee for the OpenAI Ohio (SB Energy, Piketon) campus by 2026-12-31",
+      "object": "NVDA",
+      "measure": "event",
+      "year": "2026",
+      "event_type": "deal_close",
+      "scope_regex": "ohio|guarantee|backstop|openai",
+      "opens_as": "binding_obligation",
+      "alternatives": [
+       {
+        "gist": "Same obligation with event_type other",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "2026",
+        "event_type": "other",
+        "scope_regex": "ohio|guarantee|backstop|openai",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Same obligation written on the NVDA fiscal year",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "FY2027",
+        "event_type": "deal_close",
+        "scope_regex": "ohio|guarantee|backstop|openai",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Same obligation, fiscal year, event_type other",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "FY2027",
+        "event_type": "other",
+        "scope_regex": "ohio|guarantee|backstop|openai",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Numeric form (ledger note G12): NVDA disclosed guarantees, backstops and financing commitments at FY2027 year-end",
+        "object": "NVDA",
+        "measure": "financing_amount",
+        "year": "FY2027",
+        "event_type": "n/a",
+        "scope_regex": "guarantee|backstop|commit|financ",
+        "opens_as": "",
+        "alternatives": []
+       },
+       {
+        "gist": "Numeric form on the calendar year",
+        "object": "NVDA",
+        "measure": "financing_amount",
+        "year": "2026",
+        "event_type": "n/a",
+        "scope_regex": "ohio|openai|guarantee|backstop|financ",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v2",
+     "v3"
+    ],
+    "score": "fail",
+    "why": "Six evidence rows (e119, e136-e140) each linked to v2 and v3, 2 dropped; the MarketWatch opposing view produced 0 evidence, 3 dropped: the supportive side counted six times, the opposing side lost."
+   }
+  },
+  {
+   "id": "A10",
+   "title": "SpaceX compute: evidence to NVDA data-center demand, not three events",
+   "items": [
+    "gnews:c475c48b857a2b98a73dd2c4",
+    "gnews:4a6db5f4d17bc985e47b0e49",
+    "gnews:f2bbeb9e369dca841a5a0381"
+   ],
+   "window": "august",
+   "passage": "SpaceX’s CapEx climbed to $18.4 billion in the second quarter from $10.1 billion in Q1, with approximately $15.8 billion earmarked for AI infrastructure and data center expansion. On a positive note, SpaceX has signed $6.7 billion in additional cloud/compute contracts since the end of Q2 and expects year-end compute capacity to exceed 2 gigawatts",
+   "source": "report §5 例 10 / ledger note G8 (Codex reading primary; ledger-note SpaceX-object reading kept as alternative; report §8 决定 5)",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "Starmind satellite launch as a thesis (v62)",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2027",
+     "event_type": "launch",
+     "scope_regex": "starmind|satellite",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "SpaceX capacity under the ai-capex object (v67)",
+     "object": "ai-capex",
+     "measure": "capacity",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "spacex",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "SpaceX 2027 capacity under the ai-capex object, opened early (v89)",
+     "object": "ai-capex",
+     "measure": "capacity",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "spacex",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Morgan Stanley \"$110bn in 2028\" estimate as a thesis",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2028",
+     "event_type": "n/a",
+     "scope_regex": "spacex|110",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "18\\.4 billion",
+     "target": {
+      "gist": "NVDA FY2027 data-center segment revenue (v3)",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "data.?cen",
+      "opens_as": "",
+      "alternatives": [
+       {
+        "gist": "Ledger-note reading (G8): SpaceX compute capacity online at 2026-12-31 vs >2 GW, object SpaceX",
+        "object": "SpaceX",
+        "measure": "capacity",
+        "year": "2026",
+        "event_type": "n/a",
+        "scope_regex": "compute|gigawatt|gw",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    },
+    {
+     "quote_regex": "exclusively",
+     "target": {
+      "gist": "NVDA FY2027 data-center segment revenue (v3)",
+      "object": "NVDA",
+      "measure": "segment_revenue",
+      "year": "FY2027",
+      "event_type": "n/a",
+      "scope_regex": "data.?cen",
+      "opens_as": "",
+      "alternatives": [
+       {
+        "gist": "NVDA begins Vera Rubin production shipments by 2026-12-31 (v7)",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "2026",
+        "event_type": "shipment",
+        "scope_regex": "rubin",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    },
+    {
+     "quote_regex": "Starmind|NVL72",
+     "target": {
+      "gist": "NVDA begins Vera Rubin production shipments by 2026-12-31 (v7)",
+      "object": "NVDA",
+      "measure": "event",
+      "year": "2026",
+      "event_type": "shipment",
+      "scope_regex": "rubin",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v67",
+     "v89",
+     "v62",
+     "v17",
+     "v3"
+    ],
+    "score": "fail",
+    "why": "Report: partial under reading one (quantity right, object wrong, v62 extra, v89 early) / fail under reading two (Codex: no thesis, all evidence to v3), which this gold encodes; e345/e357 also linked to v17."
+   }
+  },
+  {
+   "id": "A11",
+   "title": "TSMC: one segment, one revenue thesis; FY2027 only with a 2027 statement",
+   "items": [
+    "edgar:0001046179-26-000471:tsm-revenue20260810.htm",
+    "edgar:0001046179-26-000541:a2026q2consolidatedreport-.htm"
+   ],
+   "window": "august",
+   "passage": "Revenue for January through July 2026 totaled NT$2,872.06 billion, an increase of 37.0 percent compared to the same period in 2025.",
+   "source": "report §5 例 11 / Codex 例 8 / ledger note G9",
+   "must_open": [
+    {
+     "gist": "TSMC FY2026 consolidated revenue (TWD), v69 as written",
+     "object": "TSM",
+     "measure": "total_revenue",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "main_driver",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "\"Foundry segment\" revenue thesis when the filing says there is one segment (v86)",
+     "object": "TSM",
+     "measure": "segment_revenue",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "foundry",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "FY2027 revenue thesis from an H1 2026 report with no 2027 statement (v87)",
+     "object": "TSM",
+     "measure": "total_revenue",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "2,872\\.06",
+     "target": "self:TSMC FY2026 consolidated revenue (TWD), v69 as written"
+    },
+    {
+     "quote_regex": "2,404,483,690|2,404\\.5",
+     "target": "self:TSMC FY2026 consolidated revenue (TWD), v69 as written"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v69",
+     "v86",
+     "v87"
+    ],
+    "score": "fail",
+    "why": "Report: full for the monthly report (v69) / fail for the H1 report, which made two extra revenue theses (v86, v87) and linked e423 to all three; successions table has 0 rows."
+   }
+  },
+  {
+   "id": "A12",
+   "title": "CoreWeave: keep the two crossings the street watches",
+   "items": [
+    "truenorth:transcript:CRWV:2026-08-11",
+    "edgar:0001769628-26-000366:crwv-20260630.htm"
+   ],
+   "window": "august",
+   "passage": "raising our full year 2026 revenue guidance to $12.4 billion to $13.2 billion and adjusted operating income to $960 million to $1.15 billion.",
+   "source": "report §5 例 12 / ledger note G10",
+   "must_open": [
+    {
+     "gist": "CRWV FY2026 total revenue vs the $12.4-13.2bn guidance (v72)",
+     "object": "CRWV",
+     "measure": "total_revenue",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "main_driver",
+     "alternatives": []
+    },
+    {
+     "gist": "CRWV FY2026 capex $35-39bn, NVDA GPU demand (v74)",
+     "object": "CRWV",
+     "measure": "capex",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "main_driver",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "Year-end annualized run-rate revenue as a parallel thesis (v75; it is the FY2027 starting point)",
+     "object": "CRWV",
+     "measure": "run_rate",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "annualized",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "12\\.4 billion",
+     "target": "self:CRWV FY2026 total revenue vs the $12.4-13.2bn guidance (v72)"
+    },
+    {
+     "quote_regex": "35 billion to \\$39 billion",
+     "target": "self:CRWV FY2026 capex $35-39bn, NVDA GPU demand (v74)"
+    },
+    {
+     "quote_regex": "104 billion|103\\.7 billion",
+     "target": "self:CRWV FY2026 total revenue vs the $12.4-13.2bn guidance (v72)"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v72",
+     "v73",
+     "v74",
+     "v75",
+     "v76",
+     "v77",
+     "v83"
+    ],
+    "score": "partial",
+    "why": "Core theses present (v72, v74; v73/v76 debated, v77 left to Alex); v75 opened as an extra; v83 FY2027 opened from the 10-Q with no succession record."
+   }
+  },
+  {
+   "id": "A13",
+   "title": "MSFT call: the one line the street argues about was not opened",
+   "items": [
+    "truenorth:transcript:MSFT:2026-07-29"
+   ],
+   "window": "week",
+   "passage": "Capital expenditures were $41 billion, including the impact from higher component pricing, as noted in our guide. Roughly 2/3 of our CapEx was for short-lived assets, primarily CPUs and GPUs as customers increasingly build solutions that leverage both AI and non-AI infrastructure.",
+   "source": "report §5 例 13 / ledger note G11",
+   "must_open": [
+    {
+     "gist": "MSFT calendar-2026 capex ~$175bn (component of the five-company aggregate)",
+     "object": "MSFT",
+     "measure": "capex",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "main_driver",
+     "alternatives": [
+      {
+       "gist": "Same quantity written on the MSFT fiscal year",
+       "object": "MSFT",
+       "measure": "capex",
+       "year": "FY2027",
+       "event_type": "n/a",
+       "scope_regex": "",
+       "opens_as": "",
+       "alternatives": []
+      }
+     ]
+    },
+    {
+     "gist": "MSFT Intelligent Cloud FY2027 revenue, Azure proxy (v30)",
+     "object": "MSFT",
+     "measure": "segment_revenue",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "intelligent cloud|azure",
+     "opens_as": "main_driver",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "Total revenue (v29)",
+     "object": "MSFT",
+     "measure": "total_revenue",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Opex growth (v31)",
+     "object": "MSFT",
+     "measure": "operating_expense_growth",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Tax rate (v33)",
+     "object": "MSFT",
+     "measure": "tax_rate",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "M365, Server, Windows OEM, Xbox growth lines (v34-v37)",
+     "object": "MSFT",
+     "measure": "growth_rate",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Productivity and Business Processes segment (v39, from the 8-K)",
+     "object": "MSFT",
+     "measure": "segment_revenue",
+     "year": "FY2027",
+     "event_type": "n/a",
+     "scope_regex": "productivity|business processes",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "175 billion",
+     "target": "self:MSFT calendar-2026 capex ~$175bn (component of the five-company aggregate)"
+    },
+    {
+     "quote_regex": "41 billion",
+     "target": "self:MSFT calendar-2026 capex ~$175bn (component of the five-company aggregate)"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v29",
+     "v30",
+     "v31",
+     "v32",
+     "v33",
+     "v34",
+     "v35",
+     "v36",
+     "v37",
+     "v1",
+     "v18"
+    ],
+    "score": "fail",
+    "why": "Nine theses opened, none on capex; the $175bn guidance (e218) was linked only to v1 and v18."
+   }
+  },
+  {
+   "id": "A14",
+   "title": "AMD call: three core theses, five to seven extras",
+   "items": [
+    "truenorth:transcript:AMD:2026-08-04"
+   ],
+   "window": "august",
+   "passage": "In server CPUs with very strong customer demand and improved supply, we now expect server revenue to grow more than 80% year-over-year in the second half of 2026 and more than 70% for the full year 2027, off a much higher base. Taken together, we now expect data center segment revenue to more than double year-over-year in 2027.",
+   "source": "report §5 例 14 / ledger note G14 | 2026-10-26 correction: the transcript says \"more than 80%\", not 70%; the server-growth thesis is an acceptable link target (Codex reading). | 2026-10-26: a growth-rate question on the data-center line settles on the same print and is an acceptable alternative.",
+   "must_open": [
+    {
+     "gist": "AMD Data Center segment FY2026 revenue (v53)",
+     "object": "AMD",
+     "measure": "segment_revenue",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "data.?cen",
+     "opens_as": "main_driver",
+     "alternatives": [
+      {
+       "gist": "AMD Data Center segment FY2026 revenue (v53) as a growth-rate question on the same line (same settling print, rule 4)",
+       "object": "AMD",
+       "measure": "growth_rate",
+       "year": "2026",
+       "event_type": "n/a",
+       "scope_regex": "data.?cen",
+       "opens_as": "main_driver",
+       "alternatives": []
+      }
+     ]
+    },
+    {
+     "gist": "AMD Data Center segment FY2027 revenue (v54)",
+     "object": "AMD",
+     "measure": "segment_revenue",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "data.?cen",
+     "opens_as": "main_driver",
+     "alternatives": [
+      {
+       "gist": "AMD Data Center segment FY2027 revenue (v54) as a growth-rate question on the same line (same settling print, rule 4)",
+       "object": "AMD",
+       "measure": "growth_rate",
+       "year": "2027",
+       "event_type": "n/a",
+       "scope_regex": "data.?cen",
+       "opens_as": "main_driver",
+       "alternatives": []
+      }
+     ]
+    },
+    {
+     "gist": "AMD initial Helios shipments by 2026-09-30 (v58)",
+     "object": "AMD",
+     "measure": "event",
+     "year": "2026",
+     "event_type": "shipment",
+     "scope_regex": "helios",
+     "opens_as": "main_driver",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "Total revenue FY2027 (v52)",
+     "object": "AMD",
+     "measure": "total_revenue",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Total revenue FY2026 (v60, from the slides 8-K)",
+     "object": "AMD",
+     "measure": "total_revenue",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Design wins, no reporting line (v56)",
+     "object": "AMD",
+     "measure": "design_wins",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Anthropic first-gigawatt milestone as a thesis (v59)",
+     "object": "AMD",
+     "measure": "event",
+     "year": "2027",
+     "event_type": "deployment",
+     "scope_regex": "anthropic|mi450",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Tax rate (v61, from the slides 8-K)",
+     "object": "AMD",
+     "measure": "tax_rate",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "server revenue to grow more than \\d\\d%",
+     "target": {
+      "gist": "AMD Data Center segment FY2027 revenue (v54)",
+      "object": "AMD",
+      "measure": "segment_revenue",
+      "year": "2027",
+      "event_type": "n/a",
+      "scope_regex": "data.?cen",
+      "opens_as": "main_driver",
+      "alternatives": [
+       {
+        "gist": "AMD server revenue growth FY2027 (v55, the Codex reading keeps it)",
+        "object": "AMD",
+        "measure": "growth_rate",
+        "year": "2027",
+        "event_type": "n/a",
+        "scope_regex": "server",
+        "opens_as": "main_driver",
+        "alternatives": []
+       }
+      ]
+     }
+    },
+    {
+     "quote_regex": "first gigawatt|2 gigawatts of MI450",
+     "target": "self:AMD Data Center segment FY2027 revenue (v54)"
+    },
+    {
+     "quote_regex": "Helios is now in production",
+     "target": "self:AMD initial Helios shipments by 2026-09-30 (v58)"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v52",
+     "v53",
+     "v54",
+     "v55",
+     "v56",
+     "v57",
+     "v58",
+     "v59"
+    ],
+    "score": "partial",
+    "why": "The three core theses are right; five to seven extras (v52, v55, v56, v57, v59 from the call; v60, v61 from the slides 8-K)."
+   }
+  },
+  {
+   "id": "A15",
+   "title": "META call: capex is the one thesis this corpus needs",
+   "items": [
+    "truenorth:transcript:META:2026-07-29"
+   ],
+   "window": "week",
+   "passage": "Capital expenditures, including principal payments on finance leases, were $31.1 billion, driven by investments in servers, data centers and network infrastructure.",
+   "source": "report §5 例 15 / ledger note G13",
+   "must_open": [
+    {
+     "gist": "META FY2026 capex $130-145bn, component of the five-company aggregate (v27)",
+     "object": "META",
+     "measure": "capex",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "main_driver",
+     "alternatives": []
+    }
+   ],
+   "must_not_open": [
+    {
+     "gist": "Total revenue (v24; same ladder as v25)",
+     "object": "META",
+     "measure": "total_revenue",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Total expenses (v26)",
+     "object": "META",
+     "measure": "total_expenses",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Tax rate (v28)",
+     "object": "META",
+     "measure": "tax_rate",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Reality Labs loss (v42, from the 10-Q)",
+     "object": "META",
+     "measure": "operating_loss",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "reality labs",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "El Paso transaction as a thesis (v43, from the 10-Q; evidence to v27)",
+     "object": "META",
+     "measure": "event",
+     "year": "2026",
+     "event_type": "deal_close",
+     "scope_regex": "el paso",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "31\\.1 billion",
+     "target": "self:META FY2026 capex $130-145bn, component of the five-company aggregate (v27)"
+    },
+    {
+     "quote_regex": "130 billion to \\$145 billion",
+     "target": "self:META FY2026 capex $130-145bn, component of the five-company aggregate (v27)"
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v24",
+     "v25",
+     "v26",
+     "v27",
+     "v28"
+    ],
+    "score": "partial",
+    "why": "v27 is right; four more theses from the call (v24-v26, v28; v25/v38 debated) and three from the filings (v38, v42, v43)."
+   }
+  },
+  {
+   "id": "A16",
+   "title": "CoreWeave managed-inference ARR: acceptable thesis, not required (alternatives only)",
+   "items": [
+    "truenorth:transcript:CRWV:2026-08-11"
+   ],
+   "window": "august",
+   "passage": "In the past few months since its launch, booked ARR for our managed inference platform has grown from $1 million to more than $100 million. We expect to exit 2026 with at least $250 million of managed inference ARR.",
+   "source": "Codex 例 7 / report §5 例 12 (v77 left to Alex)",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "ARR counted as full-year recognised revenue",
+     "object": "CRWV",
+     "measure": "total_revenue",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "inference|\\bARR\\b",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Company-wide annualized revenue run rate mistaken for managed-inference ARR",
+     "object": "CRWV",
+     "measure": "run_rate",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "inference.*(company|total|annualized revenue)",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "250 million",
+     "target": {
+      "gist": "Ledger reading: company growth evidence to FY2026 revenue (v72)",
+      "object": "CRWV",
+      "measure": "total_revenue",
+      "year": "2026",
+      "event_type": "n/a",
+      "scope_regex": "",
+      "opens_as": "",
+      "alternatives": [
+       {
+        "gist": "Codex reading: CRWV managed inference ARR at 2026-12-31 vs >=$250m (v77)",
+        "object": "CRWV",
+        "measure": "run_rate",
+        "year": "2026",
+        "event_type": "n/a",
+        "scope_regex": "inference|ARR",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v77"
+    ],
+    "score": "full",
+    "why": "v77 opened with the right business scope, unit and year-end date (Codex 例 7 full-score condition); whether to keep it is left to Alex in report §5 例 12."
+   }
+  },
+  {
+   "id": "A17",
+   "title": "Four-company $745bn is evidence to the five-company aggregate, not a new aggregate",
+   "items": [
+    "gnews:61ba718265df905f5dcc9dad"
+   ],
+   "window": "august",
+   "passage": "Combined 2026 capital spending across the four largest hyperscalers is tracking near $745 billion, an outlay academic Aswath Damodaran recently characterized as “betting, not investing.”",
+   "source": "report §5 例 4 / Codex 例 4 / ledger note G4, Q3 (v81)",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "Any new calendar-2026 aggregate from this article (v81: four largest hyperscalers)",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "745 billion",
+     "target": {
+      "gist": "Five named hyperscalers combined 2026 capex (v1 or v41)",
+      "object": "ai-capex",
+      "measure": "spend_total",
+      "year": "2026",
+      "event_type": "n/a",
+      "scope_regex": "five|top 5|top five|alphabet.*oracle",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v81",
+     "v2",
+     "v3",
+     "v4",
+     "v8",
+     "v11"
+    ],
+    "score": "fail",
+    "why": "Opened v81, a ninth 2026 aggregate; the $745bn estimate put v81 at rung 3 while the same family of numbers sits at rung 4 on v41 and v1 (report 例 4: fail)."
+   }
+  },
+  {
+   "id": "A18",
+   "title": "Bloomberg retelling of the NAVER investment: a late statement, zero theses",
+   "items": [
+    "gnews:c46e192520be10cb02a54ca8"
+   ],
+   "window": "week",
+   "passage": "Late Friday, Nvidia also said it will invest $1 billion in Naver Corp. to help finance an AI data center under construction in South Korea. The funding will allow Naver, an internet and cloud service provider, to more than triple the size of the facility.",
+   "source": "ledger note G1 (late_statements id 2) / report §5 例 5",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "NAVER milestone thesis from the retelling (v16 shape)",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2028",
+     "event_type": "deployment",
+     "scope_regex": "naver|sejong",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "NAVER milestone on 2027",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2027",
+     "event_type": "deployment",
+     "scope_regex": "naver|sejong",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "The $1bn NAVER stake opened here instead of from the 2026-07-24 release",
+     "object": "NVDA",
+     "measure": "financing_amount",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "naver",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "\"$750bn of AI deals\" headline as an aggregate",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "750|deals",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v7",
+     "v15",
+     "v17"
+    ],
+    "score": "full",
+    "why": "No thesis created; the NAVER sentence was recorded as a late older statement and not linked (late_statements id 2); the article's SK sentence reused e54, linked to v7, v15, v17."
+   }
+  },
+  {
+   "id": "A19",
+   "title": "Taiwan \"weighing tighter policies\": one clause in a smuggling story, evidence not thesis",
+   "items": [
+    "gnews:f02b5d42ede081d1514a4777"
+   ],
+   "window": "week",
+   "passage": "Taiwan does not currently have its own restrictions on AI chip sales to China, though President Lai Ching-te's administration is weighing tighter policies.",
+   "source": "report §5 例 3 不得提取 / ledger note G5 (v23)",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "Taiwan restrictions as an NVDA event thesis (v23)",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "FY2027",
+     "event_type": "other",
+     "scope_regex": "taiwan",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Same on the calendar year",
+     "object": "NVDA",
+     "measure": "event",
+     "year": "2026",
+     "event_type": "other",
+     "scope_regex": "taiwan",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Taiwan \"weighing\" as a policy stage (no stage, no instrument)",
+     "object": "chip-export-controls",
+     "measure": "policy_event",
+     "year": "2026",
+     "event_type": "other",
+     "scope_regex": "taiwan",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "Taiwan under the taiwan-strait theme",
+     "object": "taiwan-strait",
+     "measure": "policy_event",
+     "year": "2026",
+     "event_type": "other",
+     "scope_regex": "chip|export|china",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "weighing tighter policies",
+     "target": {
+      "gist": "China H200 import permission as a licensing stage, authority China (theme ladder)",
+      "object": "chip-export-controls",
+      "measure": "policy_event",
+      "year": "2026",
+      "event_type": "licence",
+      "scope_regex": "china|h200",
+      "opens_as": "",
+      "alternatives": [
+       {
+        "gist": "NVDA FY2027 China data-center compute revenue vs FY2026",
+        "object": "NVDA",
+        "measure": "segment_revenue",
+        "year": "FY2027",
+        "event_type": "n/a",
+        "scope_regex": "china",
+        "opens_as": "main_driver",
+        "alternatives": [
+         {
+          "gist": "China H200 import permission as a licensing stage, authority China (theme ladder)",
+          "object": "chip-export-controls",
+          "measure": "policy_event",
+          "year": "2026",
+          "event_type": "licence",
+          "scope_regex": "china|h200",
+          "opens_as": "",
+          "alternatives": []
+         },
+         {
+          "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+          "object": "NVDA",
+          "measure": "event",
+          "year": "FY2027",
+          "event_type": "licence",
+          "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+          "opens_as": "",
+          "alternatives": []
+         },
+         {
+          "gist": "China allows H200 commercial imports by 2027-01-31 (authority China, not U.S.)",
+          "object": "NVDA",
+          "measure": "event",
+          "year": "2026",
+          "event_type": "licence",
+          "scope_regex": "^(?!.*u\\.?s\\.? (authorities|government)).*china",
+          "opens_as": "",
+          "alternatives": []
+         }
+        ]
+       },
+       {
+        "gist": "The ledger's only shown China thesis (v8), accepted as a target for want of the right one",
+        "object": "NVDA",
+        "measure": "event",
+        "year": "FY2027",
+        "event_type": "licence",
+        "scope_regex": "china",
+        "opens_as": "",
+        "alternatives": []
+       }
+      ]
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v23"
+    ],
+    "score": "fail",
+    "why": "Opened v23 (\"Will Taiwan adopt tighter restrictions ... by January 31, 2027\") from one clause; the report lists it under 不得提取 of 例 3."
+   }
+  },
+  {
+   "id": "A20",
+   "title": "Goldman aggregates via the Fool: evidence to the 2026 aggregate; no new aggregate, no early 2027",
+   "items": [
+    "gnews:4a6db5f4d17bc985e47b0e49"
+   ],
+   "window": "august",
+   "passage": "Collectively, those hyperscalers are forecast to invest about $800 billion in AI infrastructure in 2026, while total AI-related capex is projected to top $1 trillion, according to Goldman Sachs .",
+   "source": "report §5 例 4 (v88) and 例 10 (v89) / ledger note Q3, G8. Note: the plan calls this \"the Goldman 2027 aggregate\"; the item text has no 2027 figure (both Goldman numbers are 2026).",
+   "must_open": [],
+   "must_not_open": [
+    {
+     "gist": "\"Total AI-related capex > $1tn\" as a tenth 2026 aggregate (v88)",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2026",
+     "event_type": "n/a",
+     "scope_regex": "total ai|ai-related|trillion",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "SpaceX 2027 capacity opened early under ai-capex (v89)",
+     "object": "ai-capex",
+     "measure": "capacity",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "spacex",
+     "opens_as": "",
+     "alternatives": []
+    },
+    {
+     "gist": "A 2027 aggregate from an article with no 2027 figure",
+     "object": "ai-capex",
+     "measure": "spend_total",
+     "year": "2027",
+     "event_type": "n/a",
+     "scope_regex": "",
+     "opens_as": "",
+     "alternatives": []
+    }
+   ],
+   "evidence_targets": [
+    {
+     "quote_regex": "800 billion",
+     "target": {
+      "gist": "Five named hyperscalers combined 2026 capex (v1 or v41)",
+      "object": "ai-capex",
+      "measure": "spend_total",
+      "year": "2026",
+      "event_type": "n/a",
+      "scope_regex": "five|top 5|top five|alphabet.*oracle",
+      "opens_as": "",
+      "alternatives": []
+     }
+    }
+   ],
+   "must_not_link": [],
+   "system_v23": {
+    "views": [
+     "v88",
+     "v89",
+     "v17"
+    ],
+    "score": "fail",
+    "why": "Opened v88 (a ninth 2026 aggregate, rung around $1tn) and v89 (SpaceX 2027 under ai-capex); the $800bn five-hyperscaler estimate reached no shared aggregate; e519 linked to v17."
+   }
+  }
+ ]
+}
