@@ -14,6 +14,7 @@ with a changed conclusion, and the asset theses a changed theme queues), so a re
 commit had queued."""
 import dataclasses
 import json
+import re
 
 from .. import config, model, vocabulary
 from . import store
@@ -189,10 +190,18 @@ def retry_note(prompt_version, errors):
     return '\n\n上一次的答案被代码退回，原因：' + '；'.join(errors) + '\n请改正后再交（只能引用列出的编号）。'
 
 
-def check_answer(conn, view_id, data, prompt_version='judging-v1'):
+def themes_shown_in(request_text):
+    """The theme ids of the block a request carried: the ids the answer may name, whatever the ledger says now."""
+    block = request_text.split('\n[Themes in force, ', 1)
+    return set(re.findall(r'^- (v\d+) \(', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
+
+
+def check_answer(conn, view_id, data, prompt_version='judging-v1', request_text=None):
+    """request_text: the user message that was sent, so theme ids are checked against the block it carried (a theme may have
+    closed or opened since); without it, against the block the ledger would build now."""
     errors = []
     if has_theme_block(prompt_version):
-        shown = {theme['view_id'] for theme in themes_in_force(conn, view_id, prompt_version)}
+        shown = themes_shown_in(request_text) if request_text is not None else {theme['view_id'] for theme in themes_in_force(conn, view_id, prompt_version)}
         named = []
         for entry in data.get('theme_pushes', []):
             if entry['view_id'] in named:
@@ -253,15 +262,21 @@ def open_asset_views(conn):
     return [v for v in store.open_views(conn) if store.view(conn, v)['object_kind'] != 'theme']
 
 
+def queued_by_change(conn, view_id, themed):
+    """What a changed conclusion of this view queues: its dependants and, under the theme block, every open asset thesis when it
+    is a theme thesis. The one rule, read for a live judgement and for the judgements a resumed round finds committed."""
+    queued = store.dependants_of(conn, view_id)
+    if themed and store.view(conn, view_id)['object_kind'] == 'theme':
+        queued = queued + open_asset_views(conn)
+    return queued
+
+
 def queued_by_ledger(conn, seq, themed):
-    """What the judgements already committed at this sequence number queued: the dependants of every view whose judgement
-    said changed and, when the version carries the theme block and such a view is a theme thesis, every open asset thesis.
-    A fresh round finds nothing here; a resumed round finds what the interrupted one had queued in memory."""
+    """What the judgements already committed at this sequence number queued; a fresh round finds nothing here, a resumed round
+    finds what the interrupted one had queued in memory."""
     queued = []
     for row in conn.execute('select view_id from judgements where seq=? and changed=1 order by judgement_id', (seq,)):
-        queued.extend(store.dependants_of(conn, row['view_id']))
-        if themed and store.view(conn, row['view_id'])['object_kind'] == 'theme':
-            queued.extend(open_asset_views(conn))
+        queued.extend(queued_by_change(conn, row['view_id'], themed))
     return queued
 
 
@@ -304,18 +319,17 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
             answers = dict(zip(level, pool_.map(ask, level)))
         for view_id in level:
             answer = answers[view_id]
-            errors = check_answer(conn, view_id, answer.data, version)
+            errors = check_answer(conn, view_id, answer.data, version, prompts[view_id][1])
             if errors:
                 answer = ask(view_id, retry_note(version, errors))
-                errors = check_answer(conn, view_id, answer.data, version)
+                errors = check_answer(conn, view_id, answer.data, version, prompts[view_id][1])
                 if errors:
                     raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))
             result = _record(conn, cfg, view_id, seq, item, answer)
             done.add(view_id)
             results.append(result)
             if result['changed']:
-                queued = store.dependants_of(conn, view_id) + (open_asset_views(conn) if themed and is_theme(view_id) else [])
-                for dependant in queued:
+                for dependant in queued_by_change(conn, view_id, themed):
                     if dependant not in done and dependant not in pending and eligible(dependant):
                         pending.append(dependant)
         pending = [v for v in topological(conn, pending) if v not in done and eligible(v)]

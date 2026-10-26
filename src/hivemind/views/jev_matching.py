@@ -219,12 +219,14 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
     # All database reads and request construction stay on the coordinator thread.
     for c in candidates:
         listed = list(dict.fromkeys(list(lists.candidate_lists.get(c['id'], [])) + [v['view_id'] for v in shown_views]))
-        questions = {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
+        fixed = shared_quantity_target(conn, c)                       # D197: code decides a shared quantity's destination; Jev is not asked its relations
+        questions = {} if fixed else {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
         groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
         for g in groups:
             questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
-        candidate_jobs.append((c, listed, groups, len(jobs)))
-        jobs.append((candidate_state(c, evidence), questions))
+        candidate_jobs.append((c, listed, groups, len(jobs) if questions else None, fixed))
+        if questions:
+            jobs.append((candidate_state(c, evidence), questions))
     for e in evidence:
         pairs = [(e['id'], v) for v in e['links'] if (e['id'], v) in lists.evidence_lists]
         if not pairs:
@@ -250,21 +252,20 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
         total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
         return answer.data
 
-    for c, listed, groups, job_index in candidate_jobs:
-        answers = answers_for(job_index)
-        same = sorted(((answers[f'rel__{v}']['probabilities']['same_quantity_or_event'], v) for v in listed
-                       if answers[f'rel__{v}']['choice'] == 'same_quantity_or_event' and answers[f'rel__{v}']['probabilities']['same_quantity_or_event'] >= THRESHOLD),
-                      reverse=True)
+    for c, listed, groups, job_index, fixed in candidate_jobs:
+        answers = answers_for(job_index) if job_index is not None else {}
         joined = [g['group_id'] for g in groups if answers[f'member__{g["group_id"]}']['noul'] >= THRESHOLD]
         for group_id in joined:
             if group_id not in (c.get('group_refs') or []) and group_id not in (c.get('jev_group_refs') or []):
                 c.setdefault('jev_group_refs', []).append(group_id)          # the writer records these with basis 'jev'
-        reasons = '; '.join(f'{qid[5:]}: {_summary(a)}' for qid, a in answers.items() if qid.startswith('rel__'))
-        fixed = shared_quantity_target(conn, c)
         if fixed:                                                # D197: one aggregate per theme, measure and period; the wording is not identity
             data['candidates'].append({'id': c['id'], 'outcome': fixed[0], 'target_view_id': fixed[1], 'dependencies': [],
-                                       'reason': f'shared quantity: {fixed[0]} by key (D197); jev: {reasons or "no list"}; groups joined: {joined or "none"}'})
+                                       'reason': f'shared quantity: {fixed[0]} by key (D197); groups joined: {joined or "none"}'})
             continue
+        same = sorted(((answers[f'rel__{v}']['probabilities']['same_quantity_or_event'], v) for v in listed
+                       if answers[f'rel__{v}']['choice'] == 'same_quantity_or_event' and answers[f'rel__{v}']['probabilities']['same_quantity_or_event'] >= THRESHOLD),
+                      reverse=True)
+        reasons = '; '.join(f'{qid[5:]}: {_summary(a)}' for qid, a in answers.items() if qid.startswith('rel__'))
         outcome, target = 'new', ''
         for _, v in same:
             # the key decides what 'the same' may mean: a different quantity is declined here; the same quantity for a later period is a

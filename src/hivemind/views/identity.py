@@ -12,7 +12,7 @@ EVENT_MEASURES = ('event', 'policy_event')
 
 def is_shared(value):
     """A shared quantity: by its admission reason on a candidate, by its stored scope source on a key."""
-    return value.get('measure') not in EVENT_MEASURES and (value.get('scope_source') == 'shared' or value.get('opens_as') in SHARED_REASONS)
+    return value.get('measure') not in (None, 'other', *EVENT_MEASURES) and (value.get('scope_source') == 'shared' or value.get('opens_as') in SHARED_REASONS)
 
 
 def automatic_key(value, object_id=None):

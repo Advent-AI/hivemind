@@ -1,6 +1,5 @@
 """D197: a shared quantity (an aggregate opened as industry_aggregate / shared_quantity) is one thesis per theme, measure and period;
-its scope is wording, so code decides identity (D155) and neither Jev nor the collision judge is asked whether two wordings of
-one aggregate are one question. Real ledgers on temporary paths; scripted transports."""
+its scope is wording, so code decides identity (D155): Jev is not asked a relation question about it and the collision judge is not asked at all. Real ledgers on temporary paths; scripted transports."""
 import json
 import os
 import sys
@@ -18,7 +17,7 @@ USD = [dict(r, label=l) for r, l in zip(RUNGS, ['$800bn or more', '$700–800bn'
 
 
 def aggregate(cid, scope, year='2026', **over):
-    return candidate(cid, object='ai-capex', kind='theme', measure='spend_total', scope=scope, scope_source='model', opens_as='industry_aggregate',
+    return candidate(cid, object='ai-capex', kind='theme', measure=over.pop('measure', 'spend_total'), scope=scope, scope_source='model', opens_as='industry_aggregate',
                      settled_by='the five companies\' reported capital expenditures', folds_into='', lost_if_folded='',
                      period_start=f'{year}-01-01', period_end=f'{year}-12-31', year=year, due_day=f'{int(year) + 1}-04-30', unit='USD', basis='n/a', event_type='n/a',
                      looks_at=f'{scope}, calendar {year}', question=f'How much will {scope} spend in calendar {year}?', rungs=USD, **over)
@@ -73,3 +72,44 @@ def test_matching_merges_another_wording_of_the_aggregate_by_code_and_succeeds_i
     own = candidate('c4', object='MSFT', measure='capex', scope='', scope_source='none', opens_as='main_driver', period_start='2026-01-01', period_end='2026-12-31', year='2026',
                     looks_at='calendar-2026 capex', question='MSFT capex 2026?', unit='USD', basis='n/a', event_type='n/a')
     assert store.exact_key_views(conn, own) == []
+
+
+def no_relation_questions(request):
+    """Jev may be asked about group membership, never about a shared quantity's relation to a thesis (code decides that)."""
+    assert not any(q.startswith('rel__') for q in request['questions']), 'Jev was asked a relation question about a shared quantity'
+    return scripted({})(request)
+
+
+def test_an_unknown_measure_is_never_a_shared_identity():
+    vague = aggregate('c1', 'AI spending', measure='other')
+    assert not identity.is_shared(vague) and identity.automatic_key(vague) is None
+
+
+def test_two_wordings_of_the_next_years_aggregate_in_one_answer_become_one_successor(tmp_path):
+    conn = store.open_db(str(tmp_path / 'views.sqlite'))
+    v = writing.write(conn, UNIVERSE, 1, ITEM, extraction.Handover([], [aggregate('c1', 'the top five cloud providers')], [], 0, '', False, 0.0),
+                      matching.Checked({'c1': ('new', None, [])}, {}, [], {}), {}).new_views['c1']
+    a, b = aggregate('c2', 'hyperscaler data-center capex', year='2027'), aggregate('c3', 'Big Tech AI outlays', year='2027')
+    lists = matching.build_lists(conn, extraction.Handover([], [a, b], [], 0, '', False, 0.0), [], 10)
+    assert lists.candidate_lists['c2'] == [v] and lists.candidate_lists['c3'] == [v]        # the predecessor is on a shared candidate's list
+    answer = jev_matching.decide(model.Archive(str(tmp_path / 'archive.sqlite')), CFG, conn, ITEM, [a, b], [], lists, [], transport=no_relation_questions, llm_transport=never_judge)
+    assert {d['id']: (d['outcome'], d['target_view_id']) for d in answer.data['candidates']} == {'c2': ('succession', v), 'c3': ('succession', v)}
+    checked = matching.check(conn, UNIVERSE, answer.data, [a, b], [], lists, [])
+    assert checked.refusals == []
+    written = writing.write(conn, UNIVERSE, 2, ITEM, extraction.Handover([], [a, b], [], 0, '', False, 0.0), checked, {})
+    assert written.new_views['c2'] == written.new_views['c3'] != v                           # one successor, both wordings
+    assert conn.execute('select count(*) from successions where succeeds=?', (v,)).fetchone()[0] == 1
+
+
+def test_a_predecessor_outside_the_search_window_is_still_on_the_list(tmp_path):
+    conn = store.open_db(str(tmp_path / 'views.sqlite'))
+    v26 = writing.write(conn, UNIVERSE, 1, ITEM, extraction.Handover([], [aggregate('c1', 'the top five cloud providers')], [], 0, '', False, 0.0),
+                        matching.Checked({'c1': ('new', None, [])}, {}, [], {}), {}).new_views['c1']
+    store.close_view(conn, v26, 'due', 'pull', 2)                                            # closed: no period overlap, no open key match
+    conn.commit()
+    c = aggregate('c2', 'AI hyperscaler capex', year='2027')
+    lists = matching.build_lists(conn, extraction.Handover([], [c], [], 0, '', False, 0.0), [], 10)
+    assert v26 in lists.candidate_lists['c2']
+    answer = jev_matching.decide(model.Archive(str(tmp_path / 'archive.sqlite')), CFG, conn, ITEM, [c], [], lists, [], transport=no_relation_questions, llm_transport=never_judge)
+    assert answer.data['candidates'][0]['outcome'] == 'succession' and answer.data['candidates'][0]['target_view_id'] == v26
+    assert matching.check(conn, UNIVERSE, answer.data, [c], [], lists, []).refusals == []

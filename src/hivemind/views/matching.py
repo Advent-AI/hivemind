@@ -134,6 +134,11 @@ def build_lists(conn, handover, shown_views, top_n):
     candidate_lists = {}
     for c in handover.candidates:
         same_key = key_matches(conn, c)
+        if identity.is_shared(c):         # D197: a shared quantity is compared with every thesis of its theme and measure, its predecessors included
+            family = [r['view_id'] for r in conn.execute('select k.view_id from view_keys k join views v using(view_id) where v.object_id=? and k.measure=? order by k.period_end desc',
+                                                         (c['object'], c['measure']))]
+            candidate_lists[c['id']] = list(dict.fromkeys(store.exact_key_views(conn, c) + family))[:top_n]
+            continue
         if same_key:                      # a keyed candidate is compared with the views that share its key, a narrow question
             exact = store.exact_key_views(conn, c)
             candidate_lists[c['id']] = list(dict.fromkeys(exact + same_key))[:top_n]
@@ -317,10 +322,11 @@ def check(conn, universe, decisions, candidates, evidence, lists, shown_views):
                 if conn.execute('select 1 from successions where succeeds=?', (target,)).fetchone():
                     refusals.append(f'candidate {c["id"]}: {target} already has a successor')
                     continue
-                if target in succession_targets:
-                    refusals.append(f'candidate {c["id"]}: {target} can have one successor; {succession_targets[target]} already succeeds it in this answer')
+                first = succession_targets.get(target)
+                if first is not None and (identity.automatic_key(c) is None or identity.automatic_key(c) != identity.automatic_key(first)):
+                    refusals.append(f'candidate {c["id"]}: {target} can have one successor; {first["id"]} already succeeds it in this answer')
                     continue
-                succession_targets[target] = c['id']
+                succession_targets.setdefault(target, c)             # a second wording with the same code-owned key is the same successor (coalesced by batch_plan)
                 # 06-views: a successor keeps the predecessor's direction; the writer stores a numeric ladder in that direction (the first
                 # real succession, 2027 hyperscaler capex after 2026, came low-to-high where its predecessor ran high-to-low), so no refusal here
         if outcome in ('new', 'succession'):

@@ -148,3 +148,32 @@ def test_resumed_round_recovers_what_an_earlier_commit_queued(tmp_path):
     order = []
     judging.round_of_judgements(model.Archive(str(tmp_path / 'archive2.sqlite')), V3, conn, [], 7, DAY, transport=scripted(order))
     assert order == ['v5']
+
+
+def test_theme_pushes_are_checked_against_the_block_the_request_carried(tmp_path):
+    conn = ledger(tmp_path)
+    judged(conn, 'v2', 2, 'not allowed', 2)
+    _, request_text = judging.build_prompt(conn, 'v1', 'judging-v4')
+    base = {'rung': 3, 'reasons': 'r', 'cites': [], 'cites_views': [], 'pushes': [], 'changed': True, 'why_changed': 'first'}
+    store.close_view(conn, 'v2', 'due', 'pull', 3)                                            # the theme closed while the request was out
+    conn.commit()
+    assert judging.check_answer(conn, 'v1', dict(base, theme_pushes=[{'view_id': 'v2', 'push': 'none'}]), 'judging-v4', request_text) == []
+    assert judging.check_answer(conn, 'v1', dict(base, theme_pushes=[{'view_id': 'v2', 'push': 'none'}]), 'judging-v4') == ['v2 is not a theme in force shown to v1']
+    store.create_view(conn, view_id='v9', object_id='ai-capex', object_kind='theme', kind='theme', looks_at='capex', question='capex?', due_day='2027-04-30', year='2026',
+                      rungs=THEME_RUNGS, seq=3, input_id='i', created_at='2026-07-29T22:00:00Z')
+    judged(conn, 'v9', 1, 'new theme judged after the request was built', 3)
+    assert judging.check_answer(conn, 'v1', dict(base, theme_pushes=[{'view_id': 'v9', 'push': 'none'}]), 'judging-v4', request_text) == ['v9 is not a theme in force shown to v1']
+
+
+def test_a_ledger_written_before_the_theme_block_gains_the_column_when_opened_for_writing(tmp_path):
+    legacy = store.open_db(str(tmp_path / 'legacy.sqlite'))
+    legacy.execute('drop table judgements')
+    legacy.execute('create table judgements (judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, '
+                   'cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text)')
+    legacy.commit(); legacy.close()
+    reopened = store.open_db(str(tmp_path / 'legacy.sqlite'))
+    assert 'theme_pushes_json' in [r[1] for r in reopened.execute('pragma table_info(judgements)')]
+    store.create_view(reopened, view_id='v1', object_id='NVDA', object_kind='company', kind='asset', looks_at='x', question='x?', due_day='2027-02-24', year='FY2027',
+                      rungs=ASSET_RUNGS, seq=1, input_id='i', created_at='2026-02-25T22:00:00Z')
+    judged(reopened, 'v1', 2, 'first', 2, theme_pushes=[])
+    assert reopened.execute("select theme_pushes_json from judgements where view_id='v1'").fetchone()[0] == '[]'
