@@ -1,16 +1,32 @@
-"""D155: exact identity and same-answer coalescing, shared by matching and writing."""
+"""D155: exact identity and same-answer coalescing, shared by matching and writing.
+
+D197: a shared quantity (a candidate admitted as industry_aggregate / shared_quantity, a key stored with scope_source
+'shared') is one thesis per theme, measure and period; its scope (the population or wording of the aggregate) is not
+part of its identity."""
 from ..universe import scope_key
 
 KEY_VERSION = 2
+SHARED_REASONS = ('industry_aggregate', 'shared_quantity')
+EVENT_MEASURES = ('event', 'policy_event')
+
+
+def is_shared(value):
+    """A shared quantity: by its admission reason on a candidate, by its stored scope source on a key."""
+    return value.get('measure') not in EVENT_MEASURES and (value.get('scope_source') == 'shared' or value.get('opens_as') in SHARED_REASONS)
 
 
 def automatic_key(value, object_id=None):
     """Return a complete, code-owned key, or None when identity still needs judgement."""
-    if value.get('key_version') != KEY_VERSION or value.get('scope_source') not in ('none', 'watch'):
+    if value.get('key_version') != KEY_VERSION:
         return None
     if value.get('measure') in (None, 'other'):
         return None
-    if value['measure'] in ('event', 'policy_event') and value.get('event_type') in (None, 'other', 'n/a'):
+    if is_shared(value):
+        return (object_id or value.get('object'), value['measure'], '', value.get('period_start'), value.get('period_end'),
+                value.get('basis'), value.get('unit'), value.get('event_type'))
+    if value.get('scope_source') not in ('none', 'watch'):
+        return None
+    if value['measure'] in EVENT_MEASURES and value.get('event_type') in (None, 'other', 'n/a'):
         return None
     return (object_id or value.get('object'), value['measure'], scope_key(value.get('scope', '')),
             value.get('period_start'), value.get('period_end'), value.get('basis'), value.get('unit'), value.get('event_type'))

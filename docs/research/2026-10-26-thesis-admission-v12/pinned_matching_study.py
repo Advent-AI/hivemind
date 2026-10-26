@@ -72,6 +72,8 @@ class Pinned:
             return {'choices': [{'message': {'content': json.dumps(answer)}}]}
         self.counts['judgement'] += 1
         data = {'rung': 1, 'reasons': 'pinned study: synthetic judgement', 'cites': [], 'cites_views': [], 'pushes': [], 'changed': True, 'why_changed': 'synthetic'}
+        if 'theme_pushes' in request['response_format']['json_schema']['schema']['properties']:     # judging-v4 (D195)
+            data['theme_pushes'] = []
         return {'choices': [{'message': {'content': json.dumps(data)}}]}
 
 

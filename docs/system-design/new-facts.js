@@ -325,7 +325,7 @@
   ];
 
   const MATCH_NOTES = [
-    "The D155 POC uses code for fully determined duplicate identity and model comparison when scope or legacy identity needs judgement. Reference lists guide research without vetoing candidates. Same group does not mean same thesis. See docs/poc/grouping-improvement-plan.md for the contract and measured scope.",
+    "The D155 POC uses code for fully determined duplicate identity and model comparison when scope or legacy identity needs judgement. A shared quantity (an aggregate opened under its admission reason) is one thesis per theme, measure and period: its population or wording is not identity, so code merges another wording into the open one and succeeds it for the next period (D197). Reference lists guide research without vetoing candidates. Same group does not mean same thesis. See docs/poc/grouping-improvement-plan.md for the contract and measured scope.",
     "Search finds plausible candidates; the model handles semantic comparison. H20 and Blackwell export licences can look similar but are separate questions. Bullish and bearish accounts of one question share its identity.",
     "Search includes closed theses, allowing an FY2027 candidate to find closed FY2026 and be classified as succession.",
   ];

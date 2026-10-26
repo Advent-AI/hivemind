@@ -99,9 +99,11 @@ def rungs_of(conn, view_id):
 def add_key(conn, view_id, key, seq):
     """The view's key (keyed-views-plan.md 2.1), written once with the view."""
     from .. import universe as _universe
+    from .identity import is_shared
+    scope_source = 'shared' if is_shared(key) else key.get('scope_source', 'model')      # D197: an aggregate's scope is wording
     insert(conn, 'view_keys', view_id=view_id, measure=key['measure'], scope=key.get('scope', ''), scope_key=_universe.scope_key(key.get('scope', '')),
            period_start=key.get('period_start', ''), period_end=key.get('period_end', ''), basis=key.get('basis', 'n/a'), unit=key.get('unit', 'n/a'),
-           event_type=key.get('event_type', 'n/a'), seq=seq, scope_source=key.get('scope_source', 'model'), key_version=key.get('key_version'))
+           event_type=key.get('event_type', 'n/a'), seq=seq, scope_source=scope_source, key_version=key.get('key_version'))
 
 
 def ensure_key_columns(conn):

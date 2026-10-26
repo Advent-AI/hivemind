@@ -101,6 +101,23 @@ def can_succeed(conn, view_id, key, c):
         and not conn.execute('select 1 from successions where succeeds=?', (view_id,)).fetchone()
 
 
+def shared_quantity_target(conn, c):
+    """D197: a shared quantity's destination is code's. An open thesis of the same theme, measure and period is the same
+    thesis (merge); the latest earlier period without a successor is its predecessor (succession); otherwise none."""
+    if not identity.is_shared(c) or not c.get('period_start'):
+        return None
+    exact = store.exact_key_views(conn, c)
+    if exact:
+        return 'merge', exact[0]
+    earlier = []
+    for row in conn.execute('select k.view_id, k.period_end from view_keys k join views v using(view_id) where v.object_id=? and k.measure=? order by k.period_end desc',
+                            (c['object'], c['measure'])):
+        key = store.view_key(conn, row['view_id'])
+        if key and identity.is_shared(key) and can_succeed(conn, row['view_id'], key, c):
+            earlier.append(row['view_id'])
+    return ('succession', earlier[0]) if earlier else None
+
+
 def succession_target(conn, c, listed):
     """The succession code decides alone: the same scope as well (a model-worded scope that differs goes to the judge)."""
     if not c.get('measure') or not c.get('period_start'):
@@ -243,6 +260,11 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
             if group_id not in (c.get('group_refs') or []) and group_id not in (c.get('jev_group_refs') or []):
                 c.setdefault('jev_group_refs', []).append(group_id)          # the writer records these with basis 'jev'
         reasons = '; '.join(f'{qid[5:]}: {_summary(a)}' for qid, a in answers.items() if qid.startswith('rel__'))
+        fixed = shared_quantity_target(conn, c)
+        if fixed:                                                # D197: one aggregate per theme, measure and period; the wording is not identity
+            data['candidates'].append({'id': c['id'], 'outcome': fixed[0], 'target_view_id': fixed[1], 'dependencies': [],
+                                       'reason': f'shared quantity: {fixed[0]} by key (D197); jev: {reasons or "no list"}; groups joined: {joined or "none"}'})
+            continue
         outcome, target = 'new', ''
         for _, v in same:
             # the key decides what 'the same' may mean: a different quantity is declined here; the same quantity for a later period is a
