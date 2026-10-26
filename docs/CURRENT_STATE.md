@@ -4,7 +4,7 @@ As of October 26, 2026; decisions through D183. Governing design: `docs/system-d
 
 ## Status
 
-Branch `feat/parallel-day` holds the parallel day (D172–D183) on top of the two earlier pushed branches: the sequential request-construction cleanup [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) (all 3,595 archived request identities preserved) and the NAVER prompt candidate [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) (inactive by default). None of the three is merged into `main`.
+Pushed branch `feat/parallel-day` holds the parallel day (D172–D183) on top of the two earlier pushed branches: the sequential request-construction cleanup [`07aaff0`](https://github.com/Advent-AI/hivemind/commit/07aaff0db561803fe19f0ccb5ba80e7e4a8fa205) (all 3,595 archived request identities preserved) and the NAVER prompt candidate [`8848660`](https://github.com/Advent-AI/hivemind/commit/884866055cc265455bb72d25cd22e71db10e6558) (inactive by default). None of the three is merged into `main`.
 
 The English pipeline runs end to end. Extraction v10 (`role-v10`, `categories-v10`, `gpt-6-luna`) reads each item whole and declares groups for ongoing matters (D163–D166); matching runs on TypeSafe's Jev `jev-1.14.0` by default (D169, `poc/config/poc-v23.json`), with the generative matcher kept as the configured alternative (`poc-v23-llm`); the writer owns the replacement and succession rules (D167, D168); judging runs once a day before pull mode (D63).
 
@@ -47,7 +47,7 @@ What remains of the time is not scheduling: items that depend on the item just b
 
 ## Next task
 
-Push `feat/parallel-day` after its code review. No paid run is open. Open for Alex, not started: whether to measure, on stored data at no cost, how much a day-start read followed by an ordered clean-up recovers of what day-start reading loses (D171: 73 of 797 evidence items), which would change D159's reading rule.
+Alex's choice whether to merge `feat/parallel-day` (pushed after its code review, D183) into `main`. No paid run is open. Open for Alex, not started: whether to measure, on stored data at no cost, how much a day-start read followed by an ordered clean-up recovers of what day-start reading loses (D171: 73 of 797 evidence items), which would change D159's reading rule.
 
 ## Previous experiments
 
