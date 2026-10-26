@@ -236,12 +236,12 @@ def test_replay_script_runs_the_parallel_day_by_default_and_serially_with_one_wo
 
 
 def test_replay_script_defaults_run_the_default_jev_configuration_with_sixteen_and_eight_workers(tmp_path, monkeypatch):
-    """D183/D190 entry point as the user calls it: no --config, --workers or --jev-workers; the default configuration (poc-v26,
-    extraction v12 on Jev with the collision judge) runs the parallel day with 16 extraction and 8 Jev workers and writes the serial ledger."""
+    """D183/D190/D195 entry point as the user calls it: no --config, --workers or --jev-workers; the default configuration (poc-v29,
+    extraction v12 on Jev with the collision judge, judging with the theme block) runs the parallel day with 16 extraction and 8 Jev workers and writes the serial ledger."""
     import runpy
     serial_dir = tmp_path / 'serial'; serial_dir.mkdir()
     serial = setup_run(serial_dir)
-    serial['cfg'] = config.load(ROOT / 'poc/config/poc-v26.json')
+    serial['cfg'] = config.load(ROOT / 'poc/config/poc-v29.json')
     replay.run(**serial, transport=english_jev_send(require_overlap=False))
     args = setup_run(tmp_path)
     send = english_jev_send(require_overlap=True)
@@ -356,6 +356,8 @@ def english_jev_send(*, require_overlap):
         result = {'rung': 1, 'reasons': 'Both original sources expect production.',
                   'cites': list(dict.fromkeys(re.findall(r'^- (e\d+) \[', text, re.M))), 'cites_views': [],
                   'pushes': [], 'changed': True, 'why_changed': 'First judgement.'}
+        if 'theme_pushes' in request['response_format']['json_schema']['schema']['properties']:     # judging-v4 (D195)
+            result['theme_pushes'] = []
         return {'choices': [{'message': {'content': json.dumps(result)}}]}
 
     return send
