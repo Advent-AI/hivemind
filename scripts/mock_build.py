@@ -18,10 +18,11 @@ from hivemind.views import store  # noqa: E402
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data', type=Path, help='explicit legacy JSON export; otherwise read the current ledger')
-    parser.add_argument('--ledger', type=Path, default=ROOT / 'poc/data/english-v23-jev-2026-10-25/views.sqlite')
-    parser.add_argument('--items', type=Path, default=ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite')
+    parser.add_argument('--ledger', type=Path, default=ROOT / 'poc/data/english-v29-nvda-3m-2026-10-27/snapshots/2026-10-27T0736/views.sqlite')
+    parser.add_argument('--items', type=Path, default=ROOT / 'poc/data/items-nvda-2026-07-01-10-27.sqlite')
     parser.add_argument('--out', type=Path, default=ROOT / 'poc/mock/index.html')
     parser.add_argument('--composite-trials', type=Path, help='explicit JSON trial baskets for the Idea score preview')
+    parser.add_argument('--market-data', type=Path, default=ROOT / 'poc/ui/data/nvda-2026-10-27.json', help='dated real stock-price snapshot for the Action preview')
     args = parser.parse_args()
     if args.data:
         data = json.loads(args.data.read_text())
@@ -50,9 +51,15 @@ def main():
         print(prepared.stderr, file=sys.stderr)
         prepared.check_returncode()
     print(prepared.stderr.strip())
+    market = subprocess.run(['node', str(ui / 'prepare-data.mjs'), '--market'], input=args.market_data.read_text(), capture_output=True, text=True)
+    if market.returncode:
+        print(market.stderr, file=sys.stderr)
+        market.check_returncode()
+    print(market.stderr.strip())
     template = (ROOT / 'poc/mock/index.template.html').read_text()
     page = template.replace('__STYLES__', built['style']).replace('__SCRIPT__', built['script'].replace('</script', '<\\/script'))
     page = page.replace('__DATA__', prepared.stdout.replace('<', '\\u003c'))
+    page = page.replace('__MARKET_DATA__', market.stdout.replace('<', '\\u003c'))
     trials = json.loads(args.composite_trials.read_text()) if args.composite_trials else []
     page = page.replace('__COMPOSITE_TRIALS__', json.dumps(trials, ensure_ascii=False).replace('<', '\\u003c'))
     output = args.out.resolve()

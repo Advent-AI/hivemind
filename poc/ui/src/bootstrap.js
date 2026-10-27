@@ -4,8 +4,16 @@ import { parseDataset } from './model/contract.js';
 import { readIdea, readBundles, idsOf, graphOf, ideaCard } from './idea/idea.js';
 import { score } from './model/thesis.js';
 import { createIdeaDetail } from './idea/analysis.js';
-import { prepareCompositeTrial, prepareIdeaComposite } from './idea/composite.js';
+import {
+  prepareCompositeTrial,
+  prepareIdeaComposite,
+  compositeAt,
+  confidenceFromScore,
+} from './idea/composite.js';
+import { DEFAULT_TRIGGER_CONDITION } from './model/trigger.js';
 import { advanceIdeaProgress } from './idea/progress.js';
+import { createIdeaComposer } from './components/idea-composer.js';
+import { DEFAULT_ACTION_SETTINGS } from './model/market.js';
 export * from './index.js';
 
 const API = document.body.dataset.api || 'http://127.0.0.1:8788';
@@ -24,12 +32,43 @@ if (input && root && libraryRoot) {
     let app = null;
     let inFlight = null;
     let requestNumber = 0;
+    let deferredPresentation = null;
+    let leadingDirty = false;
     const libraryRequest = new AbortController();
     const form = document.getElementById('idea-form');
     const send = document.getElementById('idea-send');
+    const composer = createIdeaComposer({
+      root,
+      form,
+      input,
+      launcher: document.getElementById('idea-launcher'),
+    });
     const libraryButton = document.getElementById('show-library');
     const ideaButton = document.getElementById('show-idea');
     const idea = { text: '', state: 'idle', card: null, error: null };
+    let market = null;
+    try {
+      market = JSON.parse(document.getElementById('market-data')?.textContent || 'null');
+    } catch {
+      /* The card renders unavailable prices. */
+    }
+    const action = {
+      market,
+      settings: { ...DEFAULT_ACTION_SETTINGS },
+      onChange: (settings) => {
+        action.settings = settings;
+      },
+    };
+    const trigger = {
+      condition: { ...DEFAULT_TRIGGER_CONDITION },
+      getConfidence: () =>
+        idea.composite
+          ? confidenceFromScore(compositeAt(idea.composite, idea.day)?.value ?? null)
+          : null,
+      onChange: (condition) => {
+        trigger.condition = condition;
+      },
+    };
     const ideaDetail = createIdeaDetail({ root: document.body });
     function updateSendState() {
       send.disabled = !input.value.trim() || Boolean(inFlight);
@@ -43,12 +82,9 @@ if (input && root && libraryRoot) {
     }
     function showLibrary() {
       ideaDetail.close();
-      cancelIdea();
-      app?.destroy();
-      app = null;
+      app?.pause();
       root.hidden = true;
       libraryRoot.hidden = false;
-      form.hidden = true;
       libraryButton.setAttribute('aria-pressed', 'true');
       ideaButton.setAttribute('aria-pressed', 'false');
     }
@@ -56,10 +92,10 @@ if (input && root && libraryRoot) {
       library.close();
       libraryRoot.hidden = true;
       root.hidden = false;
-      form.hidden = false;
       libraryButton.setAttribute('aria-pressed', 'false');
       ideaButton.setAttribute('aria-pressed', 'true');
-      if (!app) {
+      const firstVisit = !app;
+      if (firstVisit) {
         app = createThesisExplorer(root, {
           dataset: data,
           onDayChange: (day, range) => {
@@ -69,8 +105,25 @@ if (input && root && libraryRoot) {
         });
         app.showGraph({ day: library.getDay() });
       }
-      input.focus();
+      if (deferredPresentation) {
+        const { spec, dataset } = deferredPresentation;
+        present(spec, dataset);
+      } else if (leadingDirty) {
+        app.updateLeading();
+        leadingDirty = false;
+      }
+      if (firstVisit) composer.open();
       updateSendState();
+    }
+    function present(spec, dataset = null) {
+      if (root.hidden) {
+        deferredPresentation = { spec, dataset };
+        return;
+      }
+      if (dataset) app.setDataset(dataset);
+      app.showGraph({ ...spec, ...(idea.state === 'answered' ? { trigger, action } : {}) });
+      deferredPresentation = null;
+      leadingDirty = false;
     }
     const leadingCard = (layout = {}) =>
       ideaCard({
@@ -89,6 +142,12 @@ if (input && root && libraryRoot) {
       event.preventDefault();
       const text = input.value.trim();
       if (!text || inFlight) return;
+      deferredPresentation = null;
+      leadingDirty = false;
+      trigger.condition = { ...DEFAULT_TRIGGER_CONDITION };
+      action.settings = { ...DEFAULT_ACTION_SETTINGS };
+      composer.close();
+      input.value = '';
       ideaDetail.close();
       cancelIdea();
       const mine = ++requestNumber;
@@ -112,14 +171,20 @@ if (input && root && libraryRoot) {
         chartStart: undefined,
         progress: ['search'],
       });
-      app.showGraph({ day: library.getDay(), leadingCard });
+      app.showGraph({
+        day: library.getDay(),
+        leadingCard,
+        centerOn: 'tree',
+        center: true,
+      });
       try {
         const updateProgress = (stage) => {
           if (mine !== requestNumber || signal.aborted) return;
           const progress = advanceIdeaProgress(idea.progress, stage);
           if (progress === idea.progress) return;
           idea.progress = progress;
-          app.updateLeading();
+          if (root.hidden) leadingDirty = true;
+          else app.updateLeading();
         };
         const card = await readIdea(API, text, {
           signal,
@@ -140,7 +205,6 @@ if (input && root && libraryRoot) {
             prepareIdeaComposite(card, chartData) ||
             (next ? prepareCompositeTrial(compositeTrials, card, next) : null),
         });
-        if (next) app.setDataset(next);
         const weightPercents = ['idea-composite/3', 'idea-composite/4'].includes(
           idea.composite?.version,
         )
@@ -151,11 +215,22 @@ if (input && root && libraryRoot) {
               ]),
             )
           : undefined;
-        app.showGraph({ ...graphOf(card), day: card.idea.as_of, leadingCard, weightPercents });
+        present(
+          {
+            ...graphOf(card),
+            day: card.idea.as_of,
+            leadingCard,
+            weightPercents,
+            centerOn: 'tree',
+            center: true,
+            reveal: true,
+          },
+          next,
+        );
       } catch (error) {
         if (error.name === 'AbortError' || mine !== requestNumber) return;
         Object.assign(idea, { state: 'failed', error });
-        app.showGraph({ leadingCard });
+        present({ leadingCard, centerOn: 'tree', center: true });
       } finally {
         if (mine === requestNumber) {
           inFlight = null;
@@ -189,6 +264,7 @@ if (input && root && libraryRoot) {
         library.destroy();
         app?.destroy();
         ideaDetail.destroy();
+        composer.destroy();
       },
       { once: true },
     );

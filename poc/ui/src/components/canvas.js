@@ -6,6 +6,9 @@ import { assessmentAt } from '../model/thesis.js';
 import { addDays, dayDiff, calendarX } from '../model/dates.js';
 import { routeFanOut } from './connectors.js';
 import { resolveGraph, layoutGraph } from '../model/graph.js';
+import { createTreeReveal, revealSequence } from './tree-reveal.js';
+import { createTriggerCard } from './trigger-card.js';
+import { createActionCard } from './action-card.js';
 
 let instanceCount = 0;
 const ZOOM_ICONS = [
@@ -36,7 +39,9 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     pan = { x: 0, y: 0 },
     dragging = null,
     moved = false,
-    leading = null;
+    leading = null,
+    trigger = null,
+    action = null;
   let displayed = [];
   const start = () =>
     range === 'all'
@@ -45,18 +50,46 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
   const apply = () => {
     world.style.transform = `translate(${pan.x}px,${pan.y}px) scale(${zoom})`;
   };
+  const treeReveal = createTreeReveal({
+    stage,
+    readCamera: () => ({ ...pan, zoom }),
+    writeCamera(camera) {
+      pan = { x: camera.x, y: camera.y };
+      zoom = camera.zoom;
+      apply();
+    },
+  });
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  motionPreference.addEventListener(
+    'change',
+    (event) => {
+      if (event.matches) treeReveal.cancel();
+    },
+    { signal: events.signal },
+  );
   function stop() {
+    treeReveal.cancel();
+    trigger?.close();
+    action?.close();
     running = false;
     cancelAnimationFrame(frame);
     play.textContent = '▶ Replay';
   }
-  function fit() {
+  function cardBounds() {
     const nodes = [...cards.children];
-    if (!nodes.length) return;
-    const left = Math.min(...nodes.map((c) => c.offsetLeft)),
-      top = Math.min(...nodes.map((c) => c.offsetTop));
-    const right = Math.max(...nodes.map((c) => c.offsetLeft + c.offsetWidth)),
-      bottom = Math.max(...nodes.map((c) => c.offsetTop + c.offsetHeight));
+    if (!nodes.length) return null;
+    return {
+      left: Math.min(...nodes.map((c) => c.offsetLeft)),
+      top: Math.min(...nodes.map((c) => c.offsetTop)),
+      right: Math.max(...nodes.map((c) => c.offsetLeft + c.offsetWidth)),
+      bottom: Math.max(...nodes.map((c) => c.offsetTop + c.offsetHeight)),
+    };
+  }
+  function fit() {
+    treeReveal.cancel();
+    const bounds = cardBounds();
+    if (!bounds) return;
+    const { left, top, right, bottom } = bounds;
     const safeTop = replay.hidden ? 24 : replay.offsetTop + replay.offsetHeight + 24;
     const width = stage.clientWidth - 48,
       height = stage.clientHeight - safeTop - 24;
@@ -65,6 +98,24 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
       x: 24 + (width - (right - left) * zoom) / 2 - left * zoom,
       y: safeTop + (height - (bottom - top) * zoom) / 2 - top * zoom,
     };
+    apply();
+  }
+  function treeCamera() {
+    const bounds = cardBounds();
+    const scale = bounds ? Math.min(1, (stage.clientWidth - 48) / (bounds.right - bounds.left)) : 1;
+    return bounds
+      ? {
+          x: stage.clientWidth / 2 - ((bounds.left + bounds.right) / 2) * scale,
+          y: stage.clientHeight / 2 - ((bounds.top + bounds.bottom) / 2) * scale,
+          zoom: scale,
+        }
+      : null;
+  }
+  function centerTree() {
+    const camera = treeCamera();
+    if (!camera) return;
+    zoom = camera.zoom;
+    pan = { x: camera.x, y: camera.y };
     apply();
   }
   function place(node, rect) {
@@ -76,6 +127,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     });
   }
   function highlight(id) {
+    if (treeReveal.running) return;
     const selected = new Set(),
       pending = id ? [id] : [],
       visited = new Set();
@@ -100,15 +152,16 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
       .querySelectorAll('.card')
       .forEach((card) => card.classList.toggle('is-hot', card.dataset.id === id));
   }
-  function addCard(node, id, rect) {
+  function addCard(node, id, rect, show = true) {
     node.dataset.id = id;
     place(node, rect);
     cards.append(node);
     node.addEventListener('mouseenter', () => highlight(id));
     node.addEventListener('mouseleave', () => highlight(null));
-    requestAnimationFrame(() => {
-      if (!destroyed && node.isConnected) node.classList.add('is-on');
-    });
+    if (show)
+      requestAnimationFrame(() => {
+        if (!destroyed && node.isConnected) node.classList.add('is-on');
+      });
     return node;
   }
   function fitLeading(node, centerY) {
@@ -125,7 +178,10 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     });
     for (const route of routeFanOut(bounds(source), targets.map(bounds))) {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('class', 'edge');
+      path.setAttribute(
+        'class',
+        `edge${source.classList.contains('card--trigger') || targets[route.index].classList.contains('card--trigger') ? ' edge--trigger' : ''}`,
+      );
       path.dataset.source = source.dataset.id;
       path.dataset.target = targets[route.index].dataset.id;
       path.setAttribute('d', route.path);
@@ -133,22 +189,49 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
       edges.append(path);
     }
   }
-  function render(spec, { center = true } = {}) {
+  function render(spec, { center = true, reveal = false } = {}) {
     const resolved = resolveGraph(spec, spec.dataset);
-    const plan = layoutGraph(resolved, Boolean(spec.leadingCard));
+    const plan = layoutGraph(
+      resolved,
+      Boolean(spec.leadingCard),
+      Boolean(spec.trigger),
+      Boolean(spec.action),
+    );
+    const animate = reveal && plan.leading && !motionPreference.matches;
     stop();
     data = spec.dataset;
     graph = spec;
     day = spec.day || data.as_of;
+    trigger?.destroy();
+    trigger = null;
+    action?.destroy();
+    action = null;
     cards.replaceChildren();
     displayed = [];
     leading = null;
     const byId = new Map(data.theses.map((t) => [t.id, t]));
     const nodesById = new Map();
     if (plan.leading) {
-      leading = addCard(spec.leadingCard({ width: plan.leading.width }), 'idea', plan.leading);
+      leading = addCard(
+        spec.leadingCard({ width: plan.leading.width }),
+        'idea',
+        plan.leading,
+        !animate,
+      );
       fitLeading(leading, plan.leading.top + plan.leading.height / 2);
       nodesById.set('idea', leading);
+    }
+    if (plan.trigger) {
+      trigger = createTriggerCard({
+        condition: spec.trigger.condition,
+        confidence: spec.trigger.getConfidence(),
+        onChange: spec.trigger.onChange,
+      });
+      nodesById.set('trigger', addCard(trigger.element, 'trigger', plan.trigger, !animate));
+    }
+    if (plan.action) {
+      action = createActionCard(spec.action);
+      nodesById.set('action', addCard(action.element, 'action', plan.action, !animate));
     }
     function thesisNode(thesis, rect) {
       const node = createThesisCard(thesis, {
@@ -170,7 +253,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
           onOpen(thesis.id, day);
         }
       });
-      addCard(node, thesis.id, rect);
+      addCard(node, thesis.id, rect, !animate);
       displayed.push({ node, thesis });
       return node;
     }
@@ -192,7 +275,27 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     );
     replay.hidden = !resolved.rootIds.length;
     setupReplay();
-    if (center) fit();
+    if (animate) {
+      const paths = new Map(
+        [...edges.querySelectorAll('.edge')].map((path) => [path.dataset.target, path]),
+      );
+      void treeReveal.play({
+        root: leading,
+        steps: revealSequence(plan.edges).map((edge) => ({
+          source: nodesById.get(edge.sourceId),
+          target: nodesById.get(edge.targetId),
+          path: paths.get(edge.targetId),
+        })),
+        restingCamera: treeCamera(),
+        finalCards: [
+          ...(trigger ? [{ node: trigger.element, path: paths.get('idea') }] : []),
+          ...(action ? [{ node: action.element, path: paths.get('trigger') }] : []),
+        ],
+      });
+    } else if (center) {
+      if (spec.centerOn === 'tree') centerTree();
+      else fit();
+    }
   }
   function updateLeading() {
     if (!leading || !graph.leadingCard) return;
@@ -211,6 +314,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     fitLeading(leading, centerY);
     leading.addEventListener('mouseenter', () => highlight('idea'));
     leading.addEventListener('mouseleave', () => highlight(null));
+    trigger?.setConfidence(graph.trigger.getConfidence());
   }
   function setupReplay() {
     scrub.max = String(dayDiff(start(), data.as_of));
@@ -223,6 +327,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
       );
   }
   function setDay(nextDay, fraction = dayDiff(start(), nextDay)) {
+    treeReveal.cancel();
     day = nextDay;
     scrub.value = String(fraction);
     replay.querySelector('[data-day]').textContent = day;
@@ -298,6 +403,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     button.addEventListener(
       'click',
       () => {
+        treeReveal.cancel();
         if (button.dataset.zoom === '2') fit();
         else {
           zoom = Math.max(
@@ -313,7 +419,8 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
   stage.addEventListener(
     'pointerdown',
     (event) => {
-      if (event.button !== 0 || event.target.closest('button,input,a,select')) return;
+      treeReveal.cancel();
+      if (event.button !== 0 || event.target.closest('button,input,a,select,label')) return;
       dragging = {
         x: event.clientX - pan.x,
         y: event.clientY - pan.y,
@@ -359,6 +466,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
   stage.addEventListener(
     'wheel',
     (event) => {
+      treeReveal.cancel();
       event.preventDefault();
       if (!event.ctrlKey && !event.metaKey) {
         pan = { x: pan.x - event.deltaX, y: pan.y - event.deltaY };
@@ -375,6 +483,7 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     },
     { passive: false, signal: events.signal },
   );
+  window.addEventListener('resize', () => treeReveal.cancel(), { signal: events.signal });
   return {
     render,
     setDay,
@@ -387,6 +496,8 @@ export function createCanvas({ root, onOpen = () => {}, onDayChange = () => {} }
     destroy() {
       destroyed = true;
       stop();
+      trigger?.destroy();
+      action?.destroy();
       events.abort();
       stage.remove();
     },

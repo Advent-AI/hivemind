@@ -4,7 +4,7 @@
   inset: auto;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  overflow: clip;
   cursor: grab;
   background-color: var(--paper);
   background-image: radial-gradient(var(--rule-strong) 1px, transparent 1px);
@@ -45,6 +45,9 @@
   stroke-width: 1.5;
   stroke-linecap: round;
 }
+:where(.hm-ui) .edge--trigger {
+  marker-end: none;
+}
 :where(.hm-ui) .edge--on {
   stroke: var(--ink);
   stroke-dasharray: 6 5;
@@ -73,6 +76,14 @@
 }
 :where(.hm-ui) .card.is-on {
   opacity: 1;
+}
+:where(.hm-ui) .stage.is-revealing .card {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.hm-ui) .card {
+    transition: none;
+  }
 }
 :where(.hm-ui) .card:hover {
   border-color: var(--rule-strong);

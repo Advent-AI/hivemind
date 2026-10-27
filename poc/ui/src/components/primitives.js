@@ -2,7 +2,9 @@ import { esc, ICON } from './dom.js';
 import { score, rungLabel, stateTone } from '../model/thesis.js';
 
 export function cardHeaderHtml(kind, badge = '') {
-  const icon = { Idea: ICON.idea, Thesis: ICON.thesis }[kind];
+  const icon = { Idea: ICON.idea, Thesis: ICON.thesis, Trigger: ICON.trigger, Action: ICON.action }[
+    kind
+  ];
   if (!icon) throw new TypeError(`Unknown card kind: ${kind}`);
   return `<div class="card__head"><span class="card__kind">${icon}<span>${kind}</span></span><span class="card__spacer"></span>${badge}</div>`;
 }

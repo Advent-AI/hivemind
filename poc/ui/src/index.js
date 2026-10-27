@@ -3,6 +3,8 @@ import { createCanvas } from './components/canvas.js';
 import { createThesisDetail } from './components/thesis-detail.js';
 import { isCalendarDay } from './model/dates.js';
 import { resolveGraph } from './model/graph.js';
+import { readTriggerCondition, triggerMatches } from './model/trigger.js';
+import { readActionSettings } from './model/market.js';
 
 export { fromBundles, fromIdeaResponse } from './adapters/bundle.js';
 export { parseDataset, ContractError } from './model/contract.js';
@@ -12,6 +14,10 @@ export { ladderChart, bindHistoryChart, scoreHistoryChart } from './components/t
 export { createCanvas } from './components/canvas.js';
 export { createLibrary } from './components/library.js';
 export { createSelect } from './components/select.js';
+export { createTriggerCard } from './components/trigger-card.js';
+export { createActionCard } from './components/action-card.js';
+export { readMarketSnapshot, DEFAULT_ACTION_SETTINGS } from './model/market.js';
+export { DEFAULT_TRIGGER_CONDITION, triggerMatches } from './model/trigger.js';
 export { ideaCard, graphOf } from './idea/idea.js';
 export { createIdeaDetail, ideaAnalysisHtml } from './idea/analysis.js';
 export {
@@ -39,6 +45,16 @@ export function createThesisExplorer(root, { dataset, onDayChange = () => {} }) 
   }
   function showGraph(spec) {
     active();
+    if (spec.action) {
+      if (!spec.trigger) throw new TypeError('An Action needs a Trigger card');
+      readActionSettings(spec.action.settings);
+    }
+    if (spec.trigger) {
+      if (!spec.leadingCard || typeof spec.trigger.getConfidence !== 'function')
+        throw new TypeError('A Trigger needs an Idea and a confidence reader');
+      triggerMatches(readTriggerCondition(spec.trigger.condition), spec.trigger.getConfidence());
+    }
+    const { reveal = false, ...retained } = spec;
     if (
       spec.day &&
       (!isCalendarDay(spec.day) || spec.day < (data.days[0] || data.as_of) || spec.day > data.as_of)
@@ -48,10 +64,10 @@ export function createThesisExplorer(root, { dataset, onDayChange = () => {} }) 
     const same =
       JSON.stringify(graph?.rootIds) === JSON.stringify(resolved.rootIds) &&
       JSON.stringify(graph?.branches) === JSON.stringify(resolved.branches);
-    graph = { ...spec, ...resolved };
+    graph = { ...retained, ...resolved };
     delete graph.primaryId;
     delete graph.supportingIds;
-    canvas.render({ ...graph, dataset: data }, { center: spec.center ?? !same });
+    canvas.render({ ...graph, dataset: data }, { center: spec.center ?? !same, reveal });
   }
   return {
     showGraph,
@@ -90,6 +106,11 @@ export function createThesisExplorer(root, { dataset, onDayChange = () => {} }) 
     updateLeading() {
       active();
       canvas.updateLeading();
+    },
+    pause() {
+      active();
+      canvas.stop();
+      details.close();
     },
     fit() {
       active();

@@ -1,4 +1,6 @@
 import { fanOutGap } from '../components/connectors.js';
+import { TRIGGER_SIZE } from './trigger.js';
+import { ACTION_SIZE } from './market.js';
 
 export const CARD_WIDTH = 440;
 const CARD = { width: CARD_WIDTH, height: 380, gap: 24, top: 40 };
@@ -51,22 +53,42 @@ export function resolveGraph(spec, dataset) {
 }
 
 /** Reserve a separate vertical block for each root and its actual related children. */
-export function layoutGraph({ rootIds, branches }, hasLeading = false) {
+export function layoutGraph(
+  { rootIds, branches },
+  hasLeading = false,
+  hasTrigger = false,
+  hasAction = false,
+) {
+  if (hasTrigger && !hasLeading) throw new TypeError('A Trigger needs an Idea card');
+  if (hasAction && !hasTrigger) throw new TypeError('An Action needs a Trigger card');
   const children = new Map(
     rootIds.map((id) => [id, branches.filter((edge) => edge.sourceId === id)]),
   );
-  const slots = rootIds.reduce((sum, id) => sum + Math.max(1, children.get(id).length), 0);
-  const height = Math.max(CARD.height, slots * (CARD.height + CARD.gap) - CARD.gap);
-  const rootLeft = hasLeading ? 40 + CARD.width + fanOutGap(rootIds.length) : 480;
+  const rows = rootIds.map((id) => ({
+    id,
+    height: Math.max(1, children.get(id).length) * (CARD.height + CARD.gap) - CARD.gap,
+  }));
+  const contentHeight = rows.reduce((sum, row) => sum + row.height + CARD.gap, -CARD.gap);
+  const height = Math.max(CARD.height, contentHeight);
+  const triggerLeft = 40 + (hasAction ? ACTION_SIZE.width + fanOutGap(1) : 0);
+  const leadingLeft = triggerLeft + (hasTrigger ? TRIGGER_SIZE.width + fanOutGap(1) : 0);
+  const rootLeft = hasLeading ? leadingLeft + CARD.width + fanOutGap(rows.length) : 480;
   const childLeft =
     rootLeft +
     CARD.width +
     fanOutGap(Math.max(0, ...[...children.values()].map((list) => list.length)));
   const nodes = [];
-  let top = CARD.top;
-  for (const id of rootIds) {
+  const trigger = hasTrigger
+    ? {
+        id: 'trigger',
+        left: triggerLeft,
+        top: CARD.top + (height - TRIGGER_SIZE.height) / 2,
+        ...TRIGGER_SIZE,
+      }
+    : null;
+  let top = CARD.top + (height - Math.max(0, contentHeight)) / 2;
+  for (const { id, height: groupHeight } of rows) {
     const related = children.get(id);
-    const groupHeight = Math.max(1, related.length) * (CARD.height + CARD.gap) - CARD.gap;
     nodes.push({
       id,
       left: rootLeft,
@@ -87,17 +109,28 @@ export function layoutGraph({ rootIds, branches }, hasLeading = false) {
   }
   return {
     nodes,
+    trigger,
+    action: hasAction
+      ? {
+          id: 'action',
+          left: 40,
+          top: CARD.top + (height - ACTION_SIZE.height) / 2,
+          ...ACTION_SIZE,
+        }
+      : null,
     leading: hasLeading
       ? {
           id: 'idea',
-          left: 40,
+          left: leadingLeft,
           top: CARD.top + (height - CARD.height) / 2,
           width: CARD.width,
           height: CARD.height,
         }
       : null,
     edges: [
-      ...(hasLeading ? rootIds.map((targetId) => ({ sourceId: 'idea', targetId })) : []),
+      ...(hasAction ? [{ sourceId: 'action', targetId: 'trigger' }] : []),
+      ...(hasTrigger ? [{ sourceId: 'trigger', targetId: 'idea' }] : []),
+      ...(hasLeading ? rows.map(({ id: targetId }) => ({ sourceId: 'idea', targetId })) : []),
       ...branches.map((edge) => ({ ...edge })),
     ],
   };

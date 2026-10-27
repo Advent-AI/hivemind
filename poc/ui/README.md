@@ -72,7 +72,7 @@ python3 docs/check.py
 
 Use the repository's configured Python environment for Python checks. Run the final documentation check only after the reasoning refresh required by AGENTS.md.
 
-`poc/mock/index.template.html` is the page shell. The generated `poc/mock/index.html` embeds CSS, JavaScript and validated data for standalone opening. The default build reads `english-v23-jev-2026-10-25/views.sqlite` and `items-window-tags2-2026-10-24.sqlite` directly. `--ledger` and `--items` override them; `--data` selects an explicit legacy JSON export. Building does not modify source data or translation caches. esbuild, Ajv, ESLint and Prettier are build/development tools; the browser uses the generated standalone validator.
+`poc/mock/index.template.html` is the page shell. The generated `poc/mock/index.html` embeds CSS, JavaScript and validated data for standalone opening. The default build reads `english-v29-nvda-3m-2026-10-27/snapshots/2026-10-27T0736/views.sqlite` and `items-nvda-2026-07-01-10-27.sqlite` directly. `--ledger` and `--items` override them; `--data` selects an explicit legacy JSON export. Building does not modify source data or translation caches. esbuild, Ajv, ESLint and Prettier are build/development tools; the browser uses the generated standalone validator.
 
 `npm --prefix poc/ui run verify:page` generates `poc/ui/dist/verify.html` for real-browser checks of multiple instances, invalid updates, teardown and empty history. Do not hand-edit `dist` or the generated validator.
 

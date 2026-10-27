@@ -18,10 +18,10 @@ from hivemind import bundle, search as search_module, service  # noqa: E402
 from hivemind.views import store  # noqa: E402
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'english-v23-jev-2026-10-25', 'views.sqlite'))
+parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'english-v29-nvda-3m-2026-10-27', 'snapshots', '2026-10-27T0736', 'views.sqlite'))
 parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
 parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
-parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-window-tags2-2026-10-24.sqlite'))
+parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'))
 parser.add_argument('--lexical', action='store_true', help='no embedding at all (no network): search ranks by the trigram index and says mode lexical')
 parser.add_argument('--transport', choices=['stdio', 'streamable-http'], default='stdio', help='stdio for a local agent; streamable-http to serve /mcp over HTTP (Docker)')
 parser.add_argument('--host', default='127.0.0.1')

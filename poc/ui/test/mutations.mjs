@@ -123,6 +123,29 @@ try {
     console.log(`Rejected mutant: ${entry.name}`);
   }
   await fs.writeFile(ideaPath, ideaSource);
+  const revealPath = path.join(folder, 'src/components/tree-reveal.js');
+  const revealSource = await fs.readFile(revealPath, 'utf8');
+  await fs.copyFile(
+    new URL('./tree-reveal.test.js', import.meta.url),
+    path.join(folder, 'test/tree-reveal.test.js'),
+  );
+  const runReveal = () =>
+    execFileSync(process.execPath, ['--test', path.join(folder, 'test/tree-reveal.test.js')], {
+      stdio: 'pipe',
+    });
+  runReveal();
+  assert(revealSource.includes('return sequence;'));
+  await fs.writeFile(revealPath, revealSource.replace('return sequence;', 'return [...edges];'));
+  let revealCaught = false;
+  try {
+    runReveal();
+  } catch (error) {
+    assert(error.stdout.toString().includes('ERR_ASSERTION'), error.stdout.toString());
+    revealCaught = true;
+  }
+  assert(revealCaught, 'breadth-first reveal escaped the stored sequence check');
+  console.log('Rejected mutant: child reveal deferred until after all roots');
+  await fs.writeFile(revealPath, revealSource);
   await fs.copyFile(
     new URL('./idea-analysis.test.js', import.meta.url),
     path.join(folder, 'test/idea-analysis.test.js'),
@@ -238,6 +261,109 @@ try {
   }
   assert(caught, 'theme endpoint inversion escaped the default-composite check');
   console.log('Rejected mutant: ignores displayed theme orientation');
+  await fs.writeFile(compositePath, compositeSource);
+  await fs.copyFile(
+    new URL('./trigger.test.js', import.meta.url),
+    path.join(folder, 'test/trigger.test.js'),
+  );
+  const triggerPath = path.join(folder, 'src/model/trigger.js');
+  const triggerSource = await fs.readFile(triggerPath, 'utf8');
+  const graphPath = path.join(folder, 'src/model/graph.js');
+  const graphSource = await fs.readFile(graphPath, 'utf8');
+  const runTrigger = () =>
+    execFileSync(process.execPath, ['--test', path.join(folder, 'test/trigger.test.js')], {
+      stdio: 'pipe',
+    });
+  runTrigger();
+  for (const entry of [
+    {
+      name: 'Trigger treats equality as greater than',
+      path: triggerPath,
+      source: triggerSource,
+      old: 'return value > threshold;',
+      replacement: 'return value >= threshold;',
+    },
+    {
+      name: 'Trigger treats missing confidence as false',
+      path: triggerPath,
+      source: triggerSource,
+      old: 'if (confidence === null) return null;',
+      replacement: 'if (confidence === null) return false;',
+    },
+    {
+      name: 'Trigger has no reserved left column',
+      path: graphPath,
+      source: graphSource,
+      old: 'TRIGGER_SIZE.width + fanOutGap(1)',
+      replacement: '0',
+    },
+  ]) {
+    assert(entry.source.includes(entry.old));
+    await fs.writeFile(entry.path, entry.source.replace(entry.old, entry.replacement));
+    caught = false;
+    try {
+      runTrigger();
+    } catch (error) {
+      assert(error.stdout.toString().includes('ERR_ASSERTION'), error.stdout.toString());
+      caught = true;
+    }
+    assert(caught, `mutant escaped: ${entry.name}`);
+    console.log(`Rejected mutant: ${entry.name}`);
+    await fs.writeFile(entry.path, entry.source);
+  }
+  const marketPath = path.join(folder, 'src/model/market.js');
+  const marketSource = await fs.readFile(marketPath, 'utf8');
+  await fs.mkdir(path.join(folder, 'data'));
+  await fs.copyFile(
+    new URL('../data/nvda-2026-10-27.json', import.meta.url),
+    path.join(folder, 'data/nvda-2026-10-27.json'),
+  );
+  await fs.copyFile(
+    new URL('./market.test.js', import.meta.url),
+    path.join(folder, 'test/market.test.js'),
+  );
+  const runMarket = () =>
+    execFileSync(process.execPath, ['--test', path.join(folder, 'test/market.test.js')], {
+      stdio: 'pipe',
+    });
+  runMarket();
+  for (const entry of [
+    {
+      name: 'prices admit incomplete future bars',
+      path: marketPath,
+      source: marketSource,
+      old: 'point[0] > cutoff',
+      replacement: 'false',
+    },
+    {
+      name: 'all chart ranges reuse the full hourly history',
+      path: marketPath,
+      source: marketSource,
+      old: "const days = { '1W': 7, '1M': 30, '1Y': 365 }[range];",
+      replacement: 'const days = 365;',
+    },
+    {
+      name: 'Action overlaps the Trigger column',
+      path: graphPath,
+      source: graphSource,
+      old: 'ACTION_SIZE.width + fanOutGap(1)',
+      replacement: '0',
+    },
+  ]) {
+    assert(entry.source.includes(entry.old));
+    await fs.writeFile(entry.path, entry.source.replace(entry.old, entry.replacement));
+    let rejected = false;
+    try {
+      runMarket();
+    } catch (error) {
+      const output = error.stdout.toString();
+      assert(output.includes('ERR_ASSERTION'), output);
+      rejected = true;
+    }
+    assert(rejected, `mutant escaped: ${entry.name}`);
+    console.log(`Rejected mutant: ${entry.name}`);
+    await fs.writeFile(entry.path, entry.source);
+  }
 } finally {
   await fs.rm(folder, { recursive: true, force: true });
 }
