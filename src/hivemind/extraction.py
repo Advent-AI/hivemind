@@ -24,6 +24,13 @@ ADMISSION_FROM = 12               # the first version whose candidates state why
 ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'binding_obligation']
 ADMISSION_REASONS_V13 = ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation']    # D191: a quantity or price outside any one company
 SHARED_QUANTITY_FROM = 13
+EMPTY_LINE_FROM = 16              # D199: from role-v16 the request no longer says 'return empty arrays when there is nothing to extract'; the gate rule decides
+V12_REASON_VERSIONS = (12, 16, 17, 18)    # role-v16/17/18 are role-v12 with the gate rewritten and name v12's admission reasons
+ACCOUNT_VERSIONS = (17,)          # D199/D200: v17 alone answers with an account per mandatory paragraph (statements or a skip reason); v18 was measured with the flat shape and sends it
+ACCOUNT_LIMIT = 30                # at most this many mandatory paragraphs are required per answer: a 60-paragraph page spent the whole 8,000-token cap on reasoning and returned nothing (2026-10-27 19:16); later paragraphs may still yield extra statements
+SKIP_REASONS = ['boilerplate', 'navigation', 'repeat', 'no_claim']
+MONTH_NAME = re.compile(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\b')
+MANDATORY_CHARS = 120
 BINDING_HORIZON_DAYS = 548        # D185: a binding obligation is due within 18 months of the item, and is exempt from the next-year rule on quantities
 
 
@@ -33,6 +40,10 @@ def version_number(version):
 
 def is_english(version):
     return version_number(version) >= ENGLISH_FROM
+
+
+def accounts(version):
+    return version_number(version) in ACCOUNT_VERSIONS
 
 
 def has_groups(version):
@@ -146,11 +157,53 @@ def admission_schema(shown_view_ids, shown_group_ids, measures=MEASURES_V10, rea
     return schema
 
 
-def schema_for(version, shown_group_ids=(), shown_view_ids=()):
+def paragraphs_of(text):
+    """The page as numbered paragraphs: one non-blank line each, ids p0001 … in page order."""
+    lines = [line.strip() for line in text[:MAX_TEXT_CHARS].split('\n') if line.strip()]
+    return [(f'p{index:04}', line) for index, line in enumerate(lines, 1)]
+
+
+def mandatory_paragraph(line):
+    """A paragraph the answer must account for: it carries a digit, a month name or MANDATORY_CHARS characters or more."""
+    return bool(re.search(r'\d', line) or MONTH_NAME.search(line) or len(line) >= MANDATORY_CHARS)
+
+
+def mandatory_ids(text):
+    ids = [pid for pid, line in paragraphs_of(text) if mandatory_paragraph(line)]
+    return ids[:ACCOUNT_LIMIT]
+
+
+def accounted_schema(base, mandatory):
+    """v17: the base answer with its evidence array replaced by an account per mandatory paragraph (statements or a skip
+    reason, an anyOf the provider enforces) and an extra array for statements from other paragraphs; the piece shape is
+    shared under $defs so the schema does not grow with the page."""
+    piece = base['properties']['evidence']['items']
+    entry = {'anyOf': [
+        {'type': 'object', 'properties': {'statements': {'type': 'array', 'minItems': 1, 'items': {'$ref': '#/$defs/piece'}}}, 'required': ['statements'], 'additionalProperties': False},
+        {'type': 'object', 'properties': {'skip': {'type': 'string', 'enum': SKIP_REASONS}}, 'required': ['skip'], 'additionalProperties': False}]}
+    paragraphs = {'type': 'object', 'properties': {pid: entry for pid in mandatory}, 'required': list(mandatory), 'additionalProperties': False}
+    properties = {'paragraphs': paragraphs, 'extra': {'type': 'array', 'items': {'$ref': '#/$defs/piece'}}}
+    properties.update({k: v for k, v in base['properties'].items() if k != 'evidence'})
+    return {'type': 'object', '$defs': {'piece': piece}, 'properties': properties, 'required': list(properties), 'additionalProperties': False}
+
+
+def flatten_account(data):
+    """A v17 answer read as the evidence list every check expects: the statements of every paragraph entry, in page
+    order, then the extra statements. Any other answer is returned as it is."""
+    if 'paragraphs' not in data:
+        return data
+    pieces = [p for entry in (data.get('paragraphs') or {}).values() for p in (entry.get('statements') or [])]
+    flat = {k: v for k, v in data.items() if k not in ('paragraphs', 'extra')}
+    flat['evidence'] = pieces + list(data.get('extra') or [])
+    return flat
+
+
+def schema_for(version, shown_group_ids=(), shown_view_ids=(), mandatory=()):
     number = version_number(version)
     measures = MEASURES_V10 if number >= MEASURES_V10_FROM else MEASURES
     if number >= ADMISSION_FROM:
-        return admission_schema(shown_view_ids, shown_group_ids, measures=measures, reasons=ADMISSION_REASONS_V13 if number >= SHARED_QUANTITY_FROM else ADMISSION_REASONS)
+        base = admission_schema(shown_view_ids, shown_group_ids, measures=measures, reasons=ADMISSION_REASONS_V13 if number >= SHARED_QUANTITY_FROM and number not in V12_REASON_VERSIONS else ADMISSION_REASONS)
+        return accounted_schema(base, mandatory) if accounts(version) else base
     if number >= GROUPS_FROM:
         return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
     if number >= ENGLISH_FROM:
@@ -283,10 +336,16 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
         parts.append('[Existing theses of these objects] None yet. Write every thesis that should open as a candidate.')
     if has_groups(version):
         parts.append(groups_block(shown_groups))
-    parts.append(f'[Item] id {item["input_id"]}, category {category}, author {item.get("publisher")} ({item.get("publisher_type")}), published {item.get("publication_day")}, title: {item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
+    if accounts(version):
+        page = '\n'.join(f'{pid} {line}' for pid, line in paragraphs_of(text))
+        parts.append(f'[Item] id {item["input_id"]}, category {category}, author {item.get("publisher")} ({item.get("publisher_type")}), published {item.get("publication_day")}, title: {item.get("title") or ""}\n\n' + page)
+        parts.append('[Paragraphs to account for] Every paragraph listed here gets an entry: its evidence statements, or a skip reason (boilerplate, navigation, repeat, no_claim). '
+                     'Statements from other paragraphs go in extra. ' + ', '.join(mandatory_ids(text)))
+    else:
+        parts.append(f'[Item] id {item["input_id"]}, category {category}, author {item.get("publisher")} ({item.get("publisher_type")}), published {item.get("publication_day")}, title: {item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
     parts.append('Return evidence and candidates per the JSON schema. A candidate\'s evidence_ids are its own evidence ids; an evidence item\'s links are existing thesis ids '
                  'or this answer\'s candidate ids (such as c1). year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). '
-                 'Return empty arrays when there is nothing to extract.')
+                 + ('Return empty arrays only for a page with no business content.' if version_number(version) >= EMPTY_LINE_FROM else 'Return empty arrays when there is nothing to extract.'))
     return '\n\n'.join(parts)
 
 
@@ -341,7 +400,10 @@ def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
     version = setting.prompt_version.rpartition('-')[2]
     system, user = build_prompt(item, text, shown_views, universe, version, shown_groups)
     group_ids = [g['group_id'] for g in shown_groups]
-    return setting, system, user, schema_for(version, group_ids, [v['view_id'] for v in shown_views])
+    shown_ids = [v['view_id'] for v in shown_views]
+    if accounts(version):
+        return setting, system, user, schema_for(version, group_ids, shown_ids, mandatory_ids(text))
+    return setting, system, user, schema_for(version, group_ids, shown_ids)
 
 
 def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
@@ -349,7 +411,7 @@ def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(),
     version = setting.prompt_version.rpartition('-')[2]
     group_ids = [g['group_id'] for g in shown_groups]
     answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
-    evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version), shown_group_ids=group_ids)
+    evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version), shown_group_ids=group_ids, version=version)
     return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd, new_groups)
 
 
@@ -404,9 +466,10 @@ def check_admission(c, shown_ids, publication_day):
     return None
 
 
-def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, shown_group_ids=()):
+def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, shown_group_ids=(), version=None):
     """sift, plus the research-group declarations (D149): candidates with bad references are dropped; a declared group is
     kept only when a kept candidate cites it (an unused declaration is ignored, D147). Returns (evidence, candidates, dropped, new_groups)."""
+    data = flatten_account(data)
     declared = {}
     for g in data.get('new_groups', []) or []:
         if g['id'] in declared or not g['name'].strip() or not g['scope'].strip():
@@ -428,13 +491,23 @@ def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, 
     return evidence, candidates, dropped_refs + dropped, [declared[g] for g in declared if g in used]
 
 
+ISO_DAY = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+
+def statement_day(value):
+    """D203: original_day is the day the statement was made, as an ISO day, or '' when the text does not state a day. A month, a
+    range or text is not a day and becomes unknown; the quote and event_time keep the period as written."""
+    value = (value or '').strip()
+    return value if ISO_DAY.match(value) else ''
+
+
 def sift(data, item, text, shown_ids, universe=None, english=False):
     """05-extraction step 3, the code checks on one answer: ladders, the quarter and year rules, due days, quotes in
     the text, links to shown views or kept candidates, one piece per sentence. Returns (evidence, candidates,
     dropped); the preflight runs it over every stored answer. The answer is read in the canonical vocabulary,
     whichever prompt version wrote it; english says which version's year contract applies (a bare year is a calendar
     year under the English versions, the company's fiscal year under the Chinese ones)."""
-    data = vocabulary.extraction_answer(data)
+    data = vocabulary.extraction_answer(flatten_account(data))
     body = normalise(text)
     dropped = []
     candidates = []
@@ -506,7 +579,7 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
             alias[e['id']] = first['id']
             dropped.append((e['id'], f'same quote as {first["id"]}; merged'))
             continue
-        e = dict(e, links=links)
+        e = dict(e, links=links, original_day=statement_day(e.get('original_day')))
         by_quote[quote] = e
         evidence.append(e)
         kept_ids.add(e['id'])

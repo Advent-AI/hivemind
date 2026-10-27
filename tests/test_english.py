@@ -304,7 +304,8 @@ def test_poc_v17_names_english_prompts_that_carry_every_schema_value():
 
 
 def test_a_repeat_may_name_the_piece_shown_for_the_same_evidence_under_another_thesis(tmp_path):
-    """06-views step 6: a repeat adds a source and any new thesis link. The 2026-08-08 item (gnews:0214359f…) restated NVIDIA's
+    """06-views step 6 as read since D204: a repeat is stored as its own record, linked to its own theses and related to the old
+    piece; the old piece gains no link. The 2026-08-08 item (gnews:0214359f…) restated NVIDIA's
     $91bn Q2 guidance, linked to total revenue and Data Center revenue; the guidance piece sat only under total revenue, and
     the check refused the model's repeat under Data Center twice, failing the item (9 of 17 such refusals over four ledgers).
     A replacement naming a piece of another thesis is still refused (test above)."""
@@ -325,8 +326,11 @@ def test_a_repeat_may_name_the_piece_shown_for_the_same_evidence_under_another_t
     checked = matching.check(conn, UNIVERSE, decisions, [], [restated], lists, [])
     assert checked.refusals == [] and checked.evidence[('e3', v_dc)] == ('repeat', guidance, '')
     handover = extraction.Handover([restated], [], [], 0, '', False, 0.0)
-    writing.write(conn, UNIVERSE, 3, dict(ITEM, input_id='later'), handover, checked, {})
-    assert guidance in store.evidence_ids_under(conn, v_dc)                  # the writer adds the new thesis link
+    written = writing.write(conn, UNIVERSE, 3, dict(ITEM, input_id='later'), handover, checked, {})
+    new_id = written.evidence_ids['e3']
+    assert new_id in store.evidence_ids_under(conn, v_dc) and new_id in store.evidence_ids_under(conn, v_total)   # the new record carries the links
+    assert guidance not in store.evidence_ids_under(conn, v_dc)              # D204: no link is written on the matcher's label
+    assert [tuple(r) for r in conn.execute('select old_evidence_id, new_evidence_id from same_claims')] == [(guidance, new_id)]
     # a target shown to no list of this piece is still refused
     stray = dict(decisions, evidence=[decisions['evidence'][0], dict(decisions['evidence'][1], target_evidence_id='e999')])
     assert any("not among" in r for r in matching.check(conn, UNIVERSE, stray, [], [restated], lists, []).refusals)

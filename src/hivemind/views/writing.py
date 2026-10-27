@@ -1,6 +1,6 @@
 """06-views.md step 6: write one item's round into the views database. Themes before objects; a repeat adds a source;
-a replacement is ordered by the day it was said (a later-arriving older statement is logged, not linked); a
-replaced piece still linked elsewhere links the new piece there too; new views come with rungs, dependencies and
+a `replace` decision is recorded as a revision (D202: the new piece revises the old, both stay in force) and is ordered by the day it
+was said (a later-arriving older statement is logged, not linked); a revised piece still linked elsewhere links the new piece there too; new views come with rungs, dependencies and
 successions; a waiting dependency is resolved when the chain's year is created; the set of views whose reading
 changed is returned for the re-judging round."""
 import dataclasses
@@ -28,7 +28,7 @@ def _next_id(conn, table, column, prefix):
 def _store_piece(conn, e, seq, item):
     evidence_id = _next_id(conn, 'evidence', 'evidence_id', 'e')
     store.add_evidence(conn, evidence_id=evidence_id, quote=e['quote'], one_line=e['one_line'], speaker=e['speaker'],
-                       original_who=e['original_who'], original_day=e['original_day'] or item['publication_day'], tier=e['tier'],
+                       original_who=e['original_who'], original_day=e['original_day'] or '', tier=e['tier'],   # D203: unknown stays unknown
                        event_time=e['event_time'], seq=seq, input_id=item['input_id'])
     store.add_source(conn, evidence_id, item['input_id'], item['category'], item['publication_day'], e.get('location', ''), seq)
     return evidence_id
@@ -85,11 +85,12 @@ TIER_RANK = {'fact': 3, 'party_statement': 3, 'third_party_view': 2, 'rumour': 1
 ISO_DAY = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 
 
-def replacement_refused(incoming, old, new_day):
-    """06-views, the Replace row: a later account of the same matter by a party entitled to give one (a speaker revises its own
-    guidance or forecast, an official confirms or denies a report, the original source revises). Returns the reason a replacement is
-    refused, or '' when it may stand: the incoming piece needs a stated day, a tier at least the stored piece's (a view never
-    retires a fact or a party's statement), and, when it is a third-party view or a rumour, the same party as the stored piece."""
+def revision_refused(incoming, old, new_day):
+    """06-views, the Replace row, read since D202 as a revision: a later account of the same matter by a party entitled to give one (a
+    speaker revises its own guidance or forecast, an official confirms or denies a report, the original source revises). Returns the
+    reason the revision is refused, or '' when it may be recorded: the incoming piece needs a stated day, a tier at least the stored
+    piece's (a view never revises a fact or a party's statement), and, when it is a third-party view or a rumour, the same party as the
+    stored piece. Nothing is retired either way; a refused revision is stored as one more piece."""
     from .. import vocabulary
     if not old:
         return ''
@@ -97,7 +98,7 @@ def replacement_refused(incoming, old, new_day):
         return 'no stated day'
     new_tier, old_tier = vocabulary.canonical('tier', incoming.get('tier')), vocabulary.canonical('tier', old.get('tier'))
     if TIER_RANK.get(new_tier, 0) < TIER_RANK.get(old_tier, 0):
-        return f'{new_tier} cannot replace {old_tier}'
+        return f'{new_tier} cannot revise {old_tier}'
     if new_tier in ('third_party_view', 'rumour') \
             and (incoming.get('original_who') or '').strip().casefold() != (old.get('original_who') or '').strip().casefold():
         return f'another party\'s {old_tier.replace("_", " ")}'       # an official confirms or denies; the original source revises
@@ -222,35 +223,37 @@ def _write(conn, universe, seq, item, handover, checked, second_pass):
             notes.append(f'evidence {e["id"]} linked to nothing kept; not stored')
             continue
         # one piece is stored once however many views it goes to (06-views: 一条证据连几条观点，也只存一条); a repeat
-        # under any destination means the piece already exists and is linked on, a replacement under any
-        # destination replaces there and links everywhere, a late older statement is logged and linked nowhere
+        # under any destination stores the piece and relates it to the old one (D204), a replacement under any
+        # destination records a revision there and links everywhere, a late older statement is logged and stored as new (D202)
         repeat_of = next((target for _, (outcome, target, _) in targets if outcome == 'repeat' and target), None)
         replacing = [(target, said_day) for _, (outcome, target, said_day) in targets if outcome == 'replace' and target]
         if repeat_of:
-            store.add_source(conn, repeat_of, item['input_id'], item['category'], item['publication_day'], e.get('location', ''), seq)
+            # D204: the piece is stored as its own record with its own links; the matcher's "same claim" is a relation, not a merge
+            stored_id = _store_piece(conn, e, seq, item)
+            store.relate_same(conn, repeat_of, stored_id, seq)
             for view_id, _ in targets:
-                if store.link(conn, repeat_of, view_id, seq):
-                    changed.add(view_id)       # newly linked existing evidence counts as a change for that view
-            evidence_ids[e['id']] = repeat_of
+                store.link(conn, stored_id, view_id, seq)
+                changed.add(view_id)
+            evidence_ids[e['id']] = stored_id
             continue
         if replacing:
             target_id, said_day = replacing[0]
             old = store.evidence(conn, target_id)
             new_day = said_day or e['original_day'] or item['publication_day']
             if old and old['original_day'] and new_day < old['original_day']:
+                # D202: an older statement arriving late is one more piece in force (before, it was logged and linked nowhere)
                 store.insert(conn, 'late_statements', input_id=item['input_id'], evidence_quote=e['quote'][:500], reason=f'older than {target_id} ({old["original_day"]})', seq=seq)
-                notes.append(f'evidence {e["id"]}: late older statement, not linked')
-                continue
-            refusal = replacement_refused(e, old, new_day)
+                notes.append(f'evidence {e["id"]}: older than {target_id} ({old["original_day"]}); stored as new, no revision')
+                replacing = []
+            refusal = revision_refused(e, old, new_day) if replacing else ''
             if refusal:
-                # 06-views: a replacement is a later account of the same matter by a party entitled to give one; anything else is one more piece
-                notes.append(f'evidence {e["id"]}: replacement of {target_id} refused ({refusal}); stored as new')
+                # 06-views: a revision is a later account of the same matter by a party entitled to give one; anything else is one more piece
+                notes.append(f'evidence {e["id"]}: revision of {target_id} refused ({refusal}); stored as new')
                 replacing = []
         if replacing:
-            stored_id = _store_piece(conn, dict(e, original_day=new_day), seq, item)
+            stored_id = _store_piece(conn, e, seq, item)                     # D203: the stated day is stored; new_day orders the revision only
             for target_id, _ in replacing:
-                if not store.is_replaced(conn, target_id):
-                    store.replace(conn, target_id, stored_id, new_day, seq)
+                store.revise(conn, target_id, stored_id, new_day, seq)          # D202: both pieces stay in force
                 for linked in store.views_linked_to(conn, target_id):
                     if store.link(conn, stored_id, linked, seq) and store.is_open(conn, linked):
                         changed.add(linked)

@@ -145,14 +145,18 @@ def openai_transport(provider, request, timeout=600):
     raise TransportError(last or 'no answer')
 
 
-def check_schema(value, schema, path='$'):
+def check_schema(value, schema, path='$', root=None):
     """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
-    array/items, string/enum/pattern, integer, number, boolean, null in anyOf."""
+    array/items/minItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
+    root = root if root is not None else schema
+    if '$ref' in schema:
+        name = schema['$ref'].rsplit('/', 1)[1]
+        schema = root['$defs'][name]
     kind = schema.get('type')
     if 'anyOf' in schema:
         errors = []
         for option in schema['anyOf']:
-            errors = check_schema(value, option, path)
+            errors = check_schema(value, option, path, root)
             if not errors:
                 return []
         return errors or [f'{path}: matches no option']
@@ -166,7 +170,7 @@ def check_schema(value, schema, path='$'):
         properties = schema.get('properties', {})
         for name, item in value.items():
             if name in properties:
-                errors.extend(check_schema(item, properties[name], f'{path}.{name}'))
+                errors.extend(check_schema(item, properties[name], f'{path}.{name}', root))
             elif schema.get('additionalProperties') is False:
                 errors.append(f'{path}.{name}: not allowed')
         return errors
@@ -174,8 +178,10 @@ def check_schema(value, schema, path='$'):
         if not isinstance(value, list):
             return [f'{path}: expected array']
         errors = []
+        if len(value) < schema.get('minItems', 0):
+            errors.append(f'{path}: fewer than {schema["minItems"]} items')
         for index, item in enumerate(value):
-            errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]'))
+            errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]', root))
         return errors
     if kind == 'string':
         if not isinstance(value, str):

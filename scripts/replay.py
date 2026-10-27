@@ -6,7 +6,7 @@
 
 The ledger and the archive are named on every run (a new run gets a new dated folder; an existing ledger resumes after
 its last completed day). Defaults: the item window poc/data/items-window-tags2-2026-10-24.sqlite, config
-poc/config/poc-v29.json (D195: extraction v12 with the admission fields, Jev matching with the collision judge, judging with the theme block), universe poc/universe.json. The log goes to stdout and
+poc/config/poc-v34.json (D200: extraction v18, Jev matching with the collision judge, judging with the evidence in view), universe poc/universe.json. The log goes to stdout and
 replay.log beside the ledger. Each day runs with hivemind.parallel_day by default (D183): up to `--workers` (16)
 extraction requests prepared early and validated against the committed ledger at each item's turn, `--jev-workers`
 Jev matching questions at a time (8; one at a time for another matching engine); the ledger equals the serial one for
@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--testdb', default=os.path.join(ROOT, 'poc', 'data', 'items-window-tags2-2026-10-24.sqlite'))
     parser.add_argument('--views', required=True, help='the ledger this run writes (a new run: a new dated folder)')
     parser.add_argument('--archive', required=True, help='the model-call archive of this run')
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v29.json'))     # D195
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v34.json'))     # D200
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--only', default=None, help='comma-separated object ids to restrict the stream to')
     parser.add_argument('--cap', type=float, default=None, help='USD spend cap for this run')

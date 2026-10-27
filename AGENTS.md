@@ -63,6 +63,11 @@ Then converge or stop:
   rerun; a passing rerun proves nothing.
 - A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it, and
   cite what you read, not the summary.
+- Before any design: ten raw answers read beside their inputs, the whole request read as the model reads it, and, for a
+  choice the model made, the model's own account (continue the stored conversation with "which instruction led you
+  here, and which two statements did you reject", a cent a case). 2026-10-27: a two-call extraction design with two
+  review rounds was written on a count variance whose cause, two contradicting prompt rules, three such probes found in
+  minutes once Alex insisted on looking at the model's side.
 
 ## 2. Before writing code: design
 
@@ -142,6 +147,10 @@ Verify at the point the change touches, at the sharpest level that shows it work
 4. The gate once, at merge. The acceptance once, on the final configuration. Never a full rerun per fix.
 
 - A further check the change does not need is offered in one line, not run.
+- A re-sent request is the bytes production sends, not the archive's canonical JSON: `model.request_identity` sorts
+  keys for the archive, `model.call` sends the dict as built, and the answer's key order shows which one went out.
+  2026-10-27: every five-send benchmark before `wire_order.restore` sent an alphabetised schema (links before quote)
+  and reported empty answers production never produced; a design was built on them.
 - Before any paid run, `python3 scripts/preflight.py` replays every stored model answer and matching record through
   the current code checks and prompts ($0) and prints, per check, the cases judged and the refusals with reasons;
   a changed share or a refusal on a case a person would accept is diagnosed before the run, and a paid run is never
@@ -164,6 +173,13 @@ Verify at the point the change touches, at the sharpest level that shows it work
   request shows what the answer needs and the schema can express it before changing any wording. A request never asks
   for what a check refuses; a retry that repairs a refusal is a symptom, not handling.
 - **An example is an instruction.** It must agree with the schema and the code that reads the answer, or it goes.
+- **A classification the model must make is written as a closed set with examples.** Two or three examples per class,
+  the procedure (walk the whole page, first paragraph to last) and the stopping point ("a page with eight such
+  statements yields eight evidence items"). An abstract clause ("a material statement") is a coin flip per send: it
+  kept half of the material statements, a different half each time, until the examples replaced it (2026-10-27,
+  arms B1–B3). The examples are not growth to avoid; the abstract clause they replace is cut.
+- **One change per arm**, aimed at one named failure and tested on the pages that showed it. An arm that adds three
+  sentences cannot say which one worked and which one hurt (B5: one fixed a flip, one readmitted restatements).
 - **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Every arm runs beside a
   fresh control, on at least three samples; a bar the control fails against itself judges nothing. A cached replay
   proves the code, never the model.
@@ -182,6 +198,13 @@ Verify at the point the change touches, at the sharpest level that shows it work
 - Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was
   not tuned on.
 - Weigh a case by what it carries in the product, not by count; spend arms only where its stake survives.
+- The unit is fixed before the first send, and the reference before the first answer: a piece is the sentence its
+  quote covers, and each page's list of material statements is written down before any send. Counts and quote-text
+  overlap read two cuts of one sentence as instability and noise as completeness (2026-10-27). A held-out page no arm
+  has seen is in the set from the first arm, not added at the end.
+- A claim about a population ("the data is clean") rests on a code sweep of the whole population and an independent
+  read of a fresh random sample, never on the pages the author looked at (2026-10-27: eight pages said clean; a sweep
+  and a 30-page read found 24% junk and a second pass with the HTML extractor).
 
 ## 8. Product thinking
 
@@ -202,6 +225,13 @@ Verify at the point the change touches, at the sharpest level that shows it work
   agents that edit shared modules.
 - A long paid run is launched detached in a new session with a log and pid file, after checking machine and network
   health; nothing heavy runs beside paid calls. A gate runs on a snapshot no one is editing.
+- No edit to package code or prompt files while any run is live: the parallel day's manifest hashes every `.py` and
+  prompt file and fails the day (2026-10-27, twice). Edit in another worktree or wait.
+- When Alex names a step, the test is that step alone through its own harness (extraction: stored requests re-sent,
+  answers sifted, scored against reference lists). A full-pipeline run starts only on his explicit instruction
+  (2026-10-27: a three-month restart launched unasked, stopped at $0.215, "我不是要你看下step 1抽取到底行不行？").
+- Experiment harnesses send concurrently (a thread pool of 8; the archive is thread-safe); serial sends waste the
+  wall clock Alex is waiting on. When the direction is agreed, the cheapest next arm runs without asking.
 - Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
 - Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; tests never load
   them. Never raise a spending cap, and never switch a provider or model silently.

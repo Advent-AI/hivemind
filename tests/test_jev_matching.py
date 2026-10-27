@@ -61,7 +61,7 @@ def ledger_with_view(tmp_path):
     return conn, c
 
 
-def test_a_repeated_statement_is_linked_as_a_repeat_and_stored_once(tmp_path):
+def test_a_repeated_statement_is_stored_as_its_own_record_related_to_the_old_one(tmp_path):
     conn, _ = ledger_with_view(tmp_path)
     archive = model.Archive(str(tmp_path / 'archive.sqlite'))
     incoming = piece('x1', 'Data Center revenue reached $51 billion in the quarter, the company said.', ['v1'], day='2026-05-21')
@@ -74,9 +74,13 @@ def test_a_repeated_statement_is_linked_as_a_repeat_and_stored_once(tmp_path):
     assert checked.refusals == [] and checked.evidence[('x1', 'v1')] == ('repeat', 'e1', '2026-05-21')
     written = writing.write(conn, UNIVERSE, 2, dict(ITEM, input_id='later'), handover, checked, {})
     conn.commit()
-    assert written.evidence_ids == {'x1': 'e1'}
-    assert conn.execute('select count(*) from evidence').fetchone()[0] == 1
-    assert [r[0] for r in conn.execute("select input_id from evidence_sources where evidence_id='e1' order by id")] == ['seed', 'later']
+    assert written.evidence_ids == {'x1': 'e2'}                                                     # D204: its own record
+    assert conn.execute('select count(*) from evidence').fetchone()[0] == 2
+    assert [r[0] for r in conn.execute("select input_id from evidence_sources where evidence_id='e1' order by id")] == ['seed']
+    assert [r[0] for r in conn.execute("select input_id from evidence_sources where evidence_id='e2' order by id")] == ['later']
+    assert [tuple(r) for r in conn.execute('select old_evidence_id, new_evidence_id from same_claims')] == [('e1', 'e2')]
+    in_force = {p['evidence_id']: p for p in store.evidence_in_force(conn, 'v1')}
+    assert set(in_force) == {'e1', 'e2'} and in_force['e2']['same_as'] == ['e1'] and in_force['e1']['same_as'] == ['e2']
     import sqlite3
     calls = sqlite3.connect(str(tmp_path / 'archive.sqlite')).execute("select model, purpose, input_tokens, cost_usd from model_calls").fetchall()
     assert calls == [('jev-1.14.0', 'match', 1000, 0.000042)]

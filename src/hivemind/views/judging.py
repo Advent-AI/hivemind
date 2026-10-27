@@ -135,6 +135,8 @@ def _lines_chinese(conn, view_id, v, rungs, pieces, deps, last):
         lines.append(f'- {p["evidence_id"]}［{p["tier"]}；{p["speaker"]}；原始来源 {p["original_who"]} {p["original_day"]}；出处 {src.get("input_id")} {src.get("publication_day")}］{p["one_line"]}\n    原句：{p["quote"][:400]}')
         if p.get('replaced'):
             lines.append(f'    它替掉的前一条 {p["replaced"]["evidence_id"]}（{p["replaced"]["original_day"]}）：{p["replaced"]["one_line"]}')
+        if p.get('revises'):
+            lines.append(f'    匹配器的意见，未经核实：它可能是 {p["revises"]["evidence_id"]}（{p["revises"]["original_day"]}）的后续版本；两条都在：{p["revises"]["one_line"]}')
     if deps:
         lines.append('\n【它依赖的观点现在的结论】')
         for d in deps:
@@ -167,6 +169,10 @@ def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidde
         lines.append(f'- {p["evidence_id"]} [{p["tier"]}; {p["speaker"]}; original source {p["original_who"]} {p["original_day"]}; from {src.get("input_id")} {src.get("publication_day")}] {p["one_line"]}\n    Quote: {p["quote"][:400]}')
         if p.get('replaced'):
             lines.append(f'    It replaces {p["replaced"]["evidence_id"]} ({p["replaced"]["original_day"]}): {p["replaced"]["one_line"]}')
+        if p.get('same_as'):
+            lines.append(f'    Opinion, not verified: the matcher read this as the same claim as {", ".join(p["same_as"])}; the argument counts one claim, one more outlet.')
+        if p.get('revises'):
+            lines.append(f'    Opinion, not verified: the matcher read it as a later version of {p["revises"]["evidence_id"]} ({p["revises"]["original_day"]}); both are in force: {p["revises"]["one_line"]}')
     if deps:
         lines.append('\n[Current conclusions of the theses it depends on]')
         for d in deps:

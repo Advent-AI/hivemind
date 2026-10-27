@@ -19,7 +19,9 @@ TABLES = {
     'evidence': 'evidence_id text primary key, quote text, one_line text, speaker text, original_who text, original_day text, tier text, event_time text, created_seq integer, created_from_input text',
     'evidence_sources': 'id integer primary key autoincrement, evidence_id text, input_id text, category text, publication_day text, location text, seq integer',
     'evidence_links': 'id integer primary key autoincrement, evidence_id text, view_id text, seq integer',
-    'replacements': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',
+    'replacements': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',   # history: written before D202, read as before
+    'revisions': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',      # D202: the new piece revises the old; both stay in force
+    'same_claims': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, seq integer',                    # D204: the matcher read the new piece as the same claim as the old; both stored, both in force
     'dependencies': 'dependency_id integer primary key autoincrement, view_id text, depends_on text, wait_chain_view_id text, wait_year text, direction text, seq integer',
     'dependency_resolutions': 'id integer primary key autoincrement, dependency_id integer, resolved_to text, reason text, seq integer',
     'successions': 'id integer primary key autoincrement, view_id text, succeeds text, seq integer',
@@ -310,7 +312,34 @@ def link(conn, evidence_id, view_id, seq):
 
 
 def replace(conn, old_id, new_id, said_day, seq):
+    """Retires old_id (history before D202; kept for the readers and tests of stored ledgers, no longer called by the writer)."""
     insert(conn, 'replacements', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
+
+
+def revise(conn, old_id, new_id, said_day, seq):
+    """D202: new_id is the matcher's later version of old_id; both stay in force, the judge sees the path."""
+    insert(conn, 'revisions', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
+
+
+def relate_same(conn, old_id, new_id, seq):
+    """D204: the matcher's opinion that new_id restates old_id; a labelled relation, never a merge."""
+    insert(conn, 'same_claims', old_evidence_id=old_id, new_evidence_id=new_id, seq=seq)
+
+
+def same_claim_group(conn, evidence_id):
+    """The other pieces related to this one as the same claim, in either direction (empty on a ledger without the table)."""
+    if not conn.execute("select 1 from sqlite_master where type='table' and name='same_claims'").fetchone():
+        return []
+    rows = conn.execute('select old_evidence_id, new_evidence_id from same_claims where old_evidence_id=? or new_evidence_id=?', (evidence_id, evidence_id)).fetchall()
+    return sorted(({r['old_evidence_id'] for r in rows} | {r['new_evidence_id'] for r in rows}) - {evidence_id}, key=lambda x: int(x[1:]) if x[1:].isdigit() else x)
+
+
+def revision_of(conn, evidence_id):
+    """None on a ledger written before D202 (no revisions table), which read-only openers cannot extend."""
+    if not conn.execute("select 1 from sqlite_master where type='table' and name='revisions'").fetchone():
+        return None
+    row = conn.execute('select old_evidence_id from revisions where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
+    return row['old_evidence_id'] if row else None
 
 
 def recent_judgements(conn, view_id, n):
@@ -338,7 +367,8 @@ def evidence(conn, evidence_id):
 
 
 def evidence_in_force(conn, view_id):
-    """Evidence linked to the view and not replaced, each with its replaced predecessor when there is one."""
+    """Evidence linked to the view and not replaced (history), each with its replaced predecessor when there is one and, since D202,
+    the piece it revises (both in force)."""
     out = []
     for row in conn.execute('select evidence_id from evidence_links where view_id=? order by id', (view_id,)):
         evidence_id = row['evidence_id']
@@ -347,6 +377,9 @@ def evidence_in_force(conn, view_id):
         record = evidence(conn, evidence_id)
         previous = predecessor_of(conn, evidence_id)
         record['replaced'] = evidence(conn, previous) if previous else None
+        revised = revision_of(conn, evidence_id)
+        record['revises'] = evidence(conn, revised) if revised else None
+        record['same_as'] = [x for x in same_claim_group(conn, evidence_id) if not is_replaced(conn, x)]
         out.append(record)
     return out
 

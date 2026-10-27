@@ -114,3 +114,107 @@ def test_v13_names_shared_quantity_and_v12_keeps_industry_aggregate():
     assert v13 == ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation'] and v12 == extraction.ADMISSION_REASONS
     cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v27.json'))
     assert all(s.prompt_version.endswith('-v13') for s in cfg.extraction.values()) and cfg.collision is not None
+
+
+def test_v16_states_the_decidable_gate_rule_keeps_v12s_admission_reasons_and_asks_for_empty_arrays_only_without_business_content():
+    """D199: one call still reads and extracts; the two rules that contradicted each other (every statement is evidence by
+    default / link only what a thesis directly concerns, omit the rest) become one decidable rule, and the closing line no
+    longer invites an empty answer. v12 is unchanged, so the paused run's requests still replay from the archive."""
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v32.json'))
+    assert all(s.prompt_version.endswith('-v16') for s in cfg.extraction.values())
+    shown = [{'view_id': 'v3', 'object_id': 'NVDA', 'looks_at': 'FY2027 data center revenue', 'question': 'q', 'due_day': '2027-02-24', 'dependencies': []}]
+    setting, system, user, schema = extraction.request_for(cfg, dict(ITEM, text=TEXT), TEXT, shown, UNIVERSE)
+    assert "makes that thesis's answer more or less likely" in system and 'by default, evidence' not in system and 'directly concerns' not in system
+    assert user.endswith('Return empty arrays only for a page with no business content.')
+    assert schema['properties']['candidates']['items']['properties']['opens_as']['enum'] == extraction.ADMISSION_REASONS   # v12's set, as the text names it
+    old = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v30.json'))
+    _, old_system, old_user, old_schema = extraction.request_for(old, dict(ITEM, text=TEXT), TEXT, shown, UNIVERSE)
+    assert 'by default, evidence' in old_system and old_user.endswith('Return empty arrays when there is nothing to extract.')
+
+
+MANDATORY_TEXT = ('CoreWeave proves old GPUs pay\n'
+                  'Skip to main content\n'
+                  'CoreWeave signed contracts for its A100 GPUs that run into 2029, chief executive Michael Intrator said on the call, and power constraints keep that capacity rented.\n'
+                  'The company reported quarterly revenue of $2.58 billion, up 112% from a year earlier.\n'
+                  'Analysts were unmoved by the news on the day.')
+
+
+def test_v17_numbers_the_page_and_requires_an_account_per_mandatory_paragraph():
+    """D199: one call, but the answer accounts for every paragraph that carries a digit, a month name or 120+ characters
+    (statements or a skip reason); statements from other paragraphs go in extra; pieces keep their nine fields."""
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v33.json'))
+    shown = [{'view_id': 'v3', 'object_id': 'NVDA', 'looks_at': 'FY2027 data center revenue', 'question': 'q', 'due_day': '2027-02-24', 'dependencies': []}]
+    setting, system, user, schema = extraction.request_for(cfg, dict(ITEM, text=MANDATORY_TEXT), MANDATORY_TEXT, shown, UNIVERSE)
+    assert setting.prompt_version == 'T1-v17' and "makes that thesis's answer more or less likely" in system
+    assert '\np0001 CoreWeave proves old GPUs pay\np0002 Skip to main content\np0003 CoreWeave signed' in user
+    assert '[Paragraphs to account for]' in user and user.split('[Paragraphs to account for]')[1].split('\n\n')[0].endswith('p0003, p0004')   # the two paragraphs with a digit or 120+ characters
+    assert list(schema['properties']) == ['paragraphs', 'extra', 'candidates', 'new_groups'] and schema['properties']['paragraphs']['required'] == ['p0003', 'p0004']
+    entry = schema['properties']['paragraphs']['properties']['p0003']
+    assert [list(option['properties']) for option in entry['anyOf']] == [['statements'], ['skip']] and entry['anyOf'][1]['properties']['skip']['enum'] == extraction.SKIP_REASONS
+    assert list(schema['$defs']['piece']['properties']) == ['id', 'quote', 'one_line', 'speaker', 'original_who', 'original_day', 'tier', 'event_time', 'links']
+
+
+def test_v17_answers_are_flattened_before_the_checks_and_a_ref_schema_is_checked_locally():
+    piece = dict(EVIDENCE[0], quote='CoreWeave signed contracts for its A100 GPUs that run into 2029, chief executive Michael Intrator said on the call, and power constraints keep that capacity rented.', links=['v3'])
+    answer = {'paragraphs': {'p0003': {'statements': [piece]}, 'p0004': {'skip': 'no_claim'}}, 'extra': [dict(piece, id='e2', quote='Analysts were unmoved by the news on the day.', links=['v3'])], 'candidates': [], 'new_groups': []}
+    evidence, candidates, dropped, groups = extraction.sift_with_groups(answer, dict(ITEM, text=MANDATORY_TEXT), MANDATORY_TEXT, {'v3'}, UNIVERSE, english=True, shown_group_ids=[], version='v17')
+    assert [e['id'] for e in evidence] == ['e1', 'e2'] and dropped == []
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v33.json'))
+    schema = extraction.request_for(cfg, dict(ITEM, text=MANDATORY_TEXT), MANDATORY_TEXT, [{'view_id': 'v3', 'object_id': 'NVDA', 'looks_at': 'x', 'question': 'q', 'due_day': '2027-02-24', 'dependencies': []}], UNIVERSE)[3]
+    assert model.check_schema(answer, schema) == []
+    bad = {'paragraphs': {'p0003': {'statements': [dict(piece, tier='gossip')]}, 'p0004': {'skip': 'no_claim'}}, 'extra': [], 'candidates': [], 'new_groups': []}
+    assert model.check_schema(bad, schema) != []                        # the $ref'd piece is checked, not waved through
+    missing = {'paragraphs': {'p0003': {'skip': 'no_claim'}}, 'extra': [], 'candidates': [], 'new_groups': []}
+    assert any('p0004' in e for e in model.check_schema(missing, schema))
+
+
+def test_the_account_is_capped_at_the_limit_so_a_long_page_cannot_spend_the_output_cap_on_reasoning_alone():
+    long_page = '\n'.join(f'Line {i} reports a figure of {i} million dollars for the quarter.' for i in range(1, 101))
+    ids = extraction.mandatory_ids(long_page)
+    assert len(ids) == extraction.ACCOUNT_LIMIT == 30 and ids[0] == 'p0001' and ids[-1] == 'p0030'
+
+
+def test_v18_puts_evidence_first_with_the_four_kinds_and_examples_and_narrows_the_opinion_reading_block():
+    """D199, arms B3–B6: the role the model reads opens with the evidence job, defines the four kinds of material statement with
+    examples, walks the whole page, rejects by example and decides links statement by statement; T8's reading block asks for
+    forecasts, ratings, targets and cited figures."""
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v34.json'))
+    shown = [{'view_id': 'v3', 'object_id': 'NVDA', 'looks_at': 'FY2027 data center revenue', 'question': 'q', 'due_day': '2027-02-24', 'dependencies': []}]
+    item = dict(ITEM, text=TEXT, category='T8')
+    setting, system, user, schema = extraction.request_for(cfg, item, TEXT, shown, UNIVERSE)
+    assert setting.prompt_version == 'T8-v18' and system.startswith('You are a senior hedge-fund analyst reading one item. Your first job is evidence')
+    assert system.index('Evidence: what to keep') < system.index('Which questions to propose')
+    assert 'A material statement is one of four kinds' in system and 'a page with eight such statements yields eight evidence items' in system
+    assert 'Decide links statement by statement' in system and 'A rumour or an unconfirmed report bears on a thesis exactly as a confirmed statement does' in system
+    assert "[What to read out] The author's forecasts, ratings and price targets with their figures" in user and user.endswith('Return empty arrays only for a page with no business content.')
+    assert schema['properties']['candidates']['items']['properties']['opens_as']['enum'] == extraction.ADMISSION_REASONS
+
+
+def test_v18_sends_the_flat_answer_shape_the_arms_were_measured_with_not_v17s_account_per_paragraph():
+    """D200: arms B3–B6 and the scale tests sent v18 with the flat shape (evidence, candidates, new_groups) and the page as
+    text; the per-paragraph account is v17's shape alone (refuted, D199). Production sends what was measured."""
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v34.json'))
+    shown = [{'view_id': 'v3', 'object_id': 'NVDA', 'looks_at': 'FY2027 data center revenue', 'question': 'q', 'due_day': '2027-02-24', 'dependencies': []}]
+    setting, system, user, schema = extraction.request_for(cfg, dict(ITEM, text=MANDATORY_TEXT), MANDATORY_TEXT, shown, UNIVERSE)
+    assert setting.prompt_version == 'T1-v18'
+    assert list(schema['properties']) == ['evidence', 'candidates', 'new_groups']
+    assert '[Paragraphs to account for]' not in user and '\np0001 ' not in user
+    assert user.split('[Item] id ')[1].split('\n\n', 1)[1].startswith(MANDATORY_TEXT[:40])
+    flat = {'evidence': [dict(EVIDENCE[0], quote='CoreWeave signed contracts for its A100 GPUs that run into 2029, chief executive Michael Intrator said on the call, and power constraints keep that capacity rented.', links=['v3'])], 'candidates': [], 'new_groups': []}
+    assert model.check_schema(flat, schema) == []
+    v17 = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v33.json'))
+    assert list(extraction.request_for(v17, dict(ITEM, text=MANDATORY_TEXT), MANDATORY_TEXT, shown, UNIVERSE)[3]['properties']) == ['paragraphs', 'extra', 'candidates', 'new_groups']
+
+
+def test_a_statement_day_is_an_iso_day_or_unknown_never_a_month_a_range_or_the_publication_day():
+    """D203: the writer and every reader take original_day as the day the statement was made. The model wrote 54 of 2,369 raw
+    pieces of the three-month run with a month ("2026-03"), a range ("2026-07-05 to 2026-07-06") or text, and the writer filled 1,445
+    unknown days with the publication day (D245: unknown stays unknown). The sift keeps the piece and blanks a non-day; the writer
+    stores the blank."""
+    piece = dict(EVIDENCE[0], quote=TEXT.split('。')[0] + '。', links=['v1'])
+    for bad in ('2026-07-05 to 2026-07-06', '2026-03', '2025 (fall; exact day not stated)', 'Not stated'):
+        kept, _, dropped = extraction.sift({'evidence': [dict(piece, original_day=bad)], 'candidates': []}, ITEM, TEXT, {'v1'}, UNIVERSE, english=True)
+        assert len(kept) == 1 and kept[0]['original_day'] == '' and dropped == []
+    kept, _, _ = extraction.sift({'evidence': [dict(piece, original_day='2026-05-20')], 'candidates': []}, ITEM, TEXT, {'v1'}, UNIVERSE, english=True)
+    assert kept[0]['original_day'] == '2026-05-20'
+
