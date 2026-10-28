@@ -30,6 +30,7 @@ TABLES = {
     'processing_steps': 'id integer primary key autoincrement, input_id text, sequence_no integer, step text, result text, reason text, publication_day text, at text',
     'review_pool_entries': 'id integer primary key autoincrement, kind text, key text, example_json text, seq integer',
     'late_statements': 'id integer primary key autoincrement, input_id text, evidence_quote text, reason text, seq integer',
+    'unplaced_statements': 'id integer primary key autoincrement, input_id text, seq integer, publication_day text, statement_json text',   # v20: a material statement the placer filed under no thesis; kept for a later placement
     'days_completed': 'id integer primary key autoincrement, day text, seq integer, at text',
     # D149 research groups: an ongoing business subject several distinct theses belong to; membership is decided by extraction and written with the thesis
     'thesis_groups': 'group_id text primary key, name text, scope text, aliases text, created_seq integer, created_from_input text',
@@ -256,15 +257,22 @@ def would_cycle(conn, view_id, depends_on):
     return False
 
 
-def views_for_prompt(conn, object_ids):
+def views_for_prompt(conn, object_ids, themes=False):
     """05-extraction block 5: the objects' open views plus every view they depend on, open or closed, with who
-    depends on whom; question, looks_at and due day only."""
+    depends on whom; question, looks_at and due day only. With themes, every open theme thesis follows the objects' own
+    (A, extraction v19): a company item's statement about a theme matter links to the theme thesis instead of being dropped."""
     shown, order = {}, []
     for object_id in object_ids:
         for view_id in views_of_object(conn, object_id):
             if view_id not in shown:
                 shown[view_id] = dict(view(conn, view_id), open=True, depends_on=[], dependencies=[])
                 order.append(view_id)
+    if themes:
+        for row in conn.execute("select view_id from views where kind='theme' order by created_seq"):
+            if row['view_id'] not in shown and is_open(conn, row['view_id']):
+                shown[row['view_id']] = dict(view(conn, row['view_id']), open=True, depends_on=[], dependencies=[])
+                order.append(row['view_id'])
+        order.sort(key=lambda view_id: shown[view_id]['created_seq'])      # one list in creation order
     for view_id in list(order):
         for dep in dependencies_of(conn, view_id):
             target = dep['resolved_to']
@@ -293,6 +301,10 @@ def search_views(conn, text, top_n):
 
 
 # ---------- evidence ----------
+
+def add_unplaced(conn, input_id, seq, publication_day, statement):
+    insert(conn, 'unplaced_statements', input_id=input_id, seq=seq, publication_day=publication_day, statement_json=json.dumps(statement, ensure_ascii=False))
+
 
 def add_evidence(conn, *, evidence_id, quote, one_line, speaker, original_who, original_day, tier, event_time, seq, input_id):
     insert(conn, 'evidence', evidence_id=evidence_id, quote=quote, one_line=one_line, speaker=speaker, original_who=original_who,

@@ -1,12 +1,20 @@
 # POC pipeline: a minimal implementation of the design
 
-Updated October 25, 2026 (D169). This is the working implementation overview. The original plan and detailed run history are preserved in the [historical snapshot](pipeline-plan-history-2026-10-25.zh.md). The original fifteen-task plan is `docs/superpowers/plans/2026-10-23-nvda-poc.md`; this shorter plan takes precedence where updated by recorded decisions.
+Updated October 28, 2026 (D207). This is the working implementation overview. The original plan and detailed run history are preserved in the [historical snapshot](pipeline-plan-history-2026-10-25.zh.md). The original fifteen-task plan is `docs/superpowers/plans/2026-10-23-nvda-poc.md`; this shorter plan takes precedence where updated by recorded decisions.
 
 ## Current result
 
 The English library (D163–D166) runs end to end on extraction v10 (`role-v10`, `categories-v10`). D169 makes Jev the default matching engine: `poc/config/poc-v23.json` (extraction v10, `matching.engine: "jev"`, `jev-1.14.0`) is the default configuration of the replay (the service's idea route keeps its adopted `poc-v9`); the generative matcher remains the configured alternative (`poc-v23-llm`). The measurement behind it (build log rows 41–49, `poc/reports/2026-10-25-benchmark-v23/`): two arms on the same extraction over the seed, the week of July 24–31 and August 1–15, scored per state against golds read from the texts. Jev matching equals the generative call on evidence and candidates, groups far better (required members 35/38 against 18/28), and costs 45% less at 4.8 times the speed; its two weak states, replacement and succession, were root-caused and corrected in D168 (probes on the stored requests: wrong replacements 17 to 1, successions 0/3 to 3/3). Open, shared by both engines: the same figure in another document judged new; one matter held by several groups; decisions naming a candidate of the same answer (part of the queued day-batch shape). The ledgers, archives and traces of the phase are listed in the [data manifest](../research/2026-10-25-english/data-manifest.md).
 
 Earlier in the phase, D162's [two-step extraction comparison](../../poc/reports/2026-10-25-source-first-01/results.md) failed end-to-end acceptance and no experimental role or grouping path was promoted from it.
+
+## Placement and the thesis tree (D206–D208, October 28)
+
+The default configuration is `poc/config/poc-v36.json`. Extraction v20 shows every open theme thesis to every item (D206) and no longer drops a statement for lacking a link: the sift keeps it, and a separate placement call (`hivemind/placement.py`) files each statement under the open questions, reading the item's title line, the statements and each question's code-written 'takes' line (key, event type, research-group names). The rule is the placement prompt the configuration names, `placement-narrow-v1`: one home, the narrowest question that names the matter; company-wide figure questions take only their own figures and guidance. A statement filed nowhere is stored in `unplaced_statements` with the handover and is not lost. The extraction's own links are its first opinion; links to its candidates survive, the placer decides the rest. Matching, the writer and judging are unchanged.
+
+Measured on a frozen gold of 26 statements over three draws and on the first week's 255 in-call pieces ([routing-analysis](../research/2026-10-28-extraction-quality/routing-analysis.md)): core statements filed right 55% → 82%, wrong links 9 → 3, links to the two revenue sinks 63/60/44 → 6/1/5, junk placed down a third, every decisive matter statement placed; one week through the whole path costs the same ($0.22).
+
+Designed, not built (D208): the thesis tree — root quantities, a per-company driver layer seeded from the analyst's framework at coverage start with dependencies to the roots, shared macro themes with declared channels; root judgements read driver and theme conclusions. Then re-placement of unplaced statements when a thesis opens later.
 
 ## Group during extraction
 

@@ -25,7 +25,9 @@ ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'bindi
 ADMISSION_REASONS_V13 = ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation']    # D191: a quantity or price outside any one company
 SHARED_QUANTITY_FROM = 13
 EMPTY_LINE_FROM = 16              # D199: from role-v16 the request no longer says 'return empty arrays when there is nothing to extract'; the gate rule decides
-V12_REASON_VERSIONS = (12, 16, 17, 18)    # role-v16/17/18 are role-v12 with the gate rewritten and name v12's admission reasons
+V12_REASON_VERSIONS = (12, 16, 17, 18, 19, 20)    # role-v16/17/18/19/20 are role-v12 with the gate rewritten and name v12's admission reasons
+THEMES_SHOWN_FROM = 19            # A (2026-10-28): from v19 the request shows every open theme thesis to every item and the groups block prints only linkable member ids
+PLACEMENT_FROM = 20               # 2026-10-28 (routing-analysis.md §6): from v20 a statement without a link is kept, and a separate placement call decides the links to existing theses
 ACCOUNT_VERSIONS = (17,)          # D199/D200: v17 alone answers with an account per mandatory paragraph (statements or a skip reason); v18 was measured with the flat shape and sends it
 ACCOUNT_LIMIT = 30                # at most this many mandatory paragraphs are required per answer: a 60-paragraph page spent the whole 8,000-token cap on reasoning and returned nothing (2026-10-27 19:16); later paragraphs may still yield extra statements
 SKIP_REASONS = ['boilerplate', 'navigation', 'repeat', 'no_claim']
@@ -44,6 +46,24 @@ def is_english(version):
 
 def accounts(version):
     return version_number(version) in ACCOUNT_VERSIONS
+
+
+def shows_themes(version):
+    return version_number(version) >= THEMES_SHOWN_FROM
+
+
+def places(version):
+    return version_number(version) >= PLACEMENT_FROM
+
+
+def shown_views(conn, cfg, item, objects):
+    """The theses an item's extraction request shows (05-extraction block 5): the objects' open theses and their dependencies;
+    from v19 also every open theme thesis. The one place the stream and the parallel runner take the list from."""
+    version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
+    from .views import store
+    views = store.views_for_prompt(conn, objects, themes=shows_themes(version))
+    return [dict(v, key=store.view_key(conn, v['view_id']) or {}, groups=[{'name': g['name'], 'scope': g['scope'], 'aliases': g.get('aliases') or []} for g in store.groups_of_view(conn, v['view_id'])])
+            for v in views]       # the key and the groups feed the placer's 'takes' line
 
 
 def has_groups(version):
@@ -221,6 +241,7 @@ class Handover:
     cached: bool
     cost_usd: float
     new_groups: list = dataclasses.field(default_factory=list)      # the declared groups a kept candidate cites: {id, name, scope}
+    unplaced: list = dataclasses.field(default_factory=list)      # v20: statements the placer filed nowhere, stored, not dropped
 
 
 SELF_PUBLISHER_TYPE = 'self'      # the owner's own memo (02-classification T8, D59): its judgements are candidates without evidence
@@ -235,8 +256,17 @@ def _categories(version):
     return json.loads(_read(f'categories-{version}.json'))
 
 
+GLYPHS = str.maketrans({'’': "'", '‘': "'", '“': '"', '”': '"', '—': '-', '–': '-'})
+
+
 def normalise(text):
-    return re.sub(r'\s+', ' ', text).strip().lower()
+    """The form in which a quote is compared with the item's text: one space between words, no space before closing
+    punctuation or after an opening bracket, plain quote and dash glyphs, lower case. The cleaned page text keeps a space
+    where an inline tag stood (" , "); the model writes the sentence with ordinary punctuation, and both are the same text."""
+    text = re.sub(r'\s+', ' ', text.translate(GLYPHS))
+    text = re.sub(r"\s+([,.;:!?')\]])", r'\1', text)
+    text = re.sub(r'([(\[])\s+', r'\1', text)
+    return text.strip().lower()
 
 
 def _watched_lines(objects, universe):
@@ -335,6 +365,9 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
     else:
         parts.append('[Existing theses of these objects] None yet. Write every thesis that should open as a candidate.')
     if has_groups(version):
+        if shows_themes(version):          # a member id the answer may not link to is not printed (the link check would refuse it)
+            linkable = {v['view_id'] for v in shown_views}
+            shown_groups = [dict(g, members=[m for m in g.get('members', []) if m['view_id'] in linkable]) for g in shown_groups]
         parts.append(groups_block(shown_groups))
     if accounts(version):
         page = '\n'.join(f'{pid} {line}' for pid, line in paragraphs_of(text))
@@ -411,8 +444,19 @@ def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(),
     version = setting.prompt_version.rpartition('-')[2]
     group_ids = [g['group_id'] for g in shown_groups]
     answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
-    evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version), shown_group_ids=group_ids, version=version)
-    return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd, new_groups)
+    placing = places(version)
+    if placing and cfg.placement is None:
+        raise ValueError(f'extraction {setting.prompt_version} files statements by a placement call, but the configuration has no placement setting')
+    evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version),
+                                                                  shown_group_ids=group_ids, version=version, keep_unlinked=placing)
+    unplaced, cost, cached = [], answer.cost_usd, answer.cached
+    if placing:
+        from . import placement
+        evidence, unplaced, placed_answer = placement.place(archive, cfg, evidence, shown_views, transport=transport, item=item)
+        if placed_answer is not None:
+            cost += placed_answer.cost_usd
+            cached = cached and placed_answer.cached
+    return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, cached, cost, new_groups, unplaced)
 
 
 def check_bounds(rungs):
@@ -466,7 +510,7 @@ def check_admission(c, shown_ids, publication_day):
     return None
 
 
-def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, shown_group_ids=(), version=None):
+def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, shown_group_ids=(), version=None, keep_unlinked=False):
     """sift, plus the research-group declarations (D149): candidates with bad references are dropped; a declared group is
     kept only when a kept candidate cites it (an unused declaration is ignored, D147). Returns (evidence, candidates, dropped, new_groups)."""
     data = flatten_account(data)
@@ -486,7 +530,7 @@ def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, 
             dropped_refs.append((c['id'], f'candidate group: {problem}'))
             continue
         checked['candidates'].append(c)
-    evidence, candidates, dropped = sift(checked, item, text, shown_ids, universe, english=english)
+    evidence, candidates, dropped = sift(checked, item, text, shown_ids, universe, english=english, keep_unlinked=keep_unlinked)
     used = {r for c in candidates for r in c.get('group_refs', [])}
     return evidence, candidates, dropped_refs + dropped, [declared[g] for g in declared if g in used]
 
@@ -501,7 +545,7 @@ def statement_day(value):
     return value if ISO_DAY.match(value) else ''
 
 
-def sift(data, item, text, shown_ids, universe=None, english=False):
+def sift(data, item, text, shown_ids, universe=None, english=False, keep_unlinked=False):
     """05-extraction step 3, the code checks on one answer: ladders, the quarter and year rules, due days, quotes in
     the text, links to shown views or kept candidates, one piece per sentence. Returns (evidence, candidates,
     dropped); the preflight runs it over every stored answer. The answer is read in the canonical vocabulary,
@@ -570,7 +614,7 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
             dropped.append((e['id'], 'quote not in item'))
             continue
         links = [l for l in e['links'] if l in shown_ids or l in candidate_ids]
-        if not links:
+        if not links and not keep_unlinked:
             dropped.append((e['id'], f'links to nothing shown: {e["links"]}'))
             continue
         if quote in by_quote:            # the same sentence read out twice is one piece with both links
@@ -592,5 +636,6 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
         final_candidates.append(dict(c, evidence_ids=ids))
     for e in evidence:
         e['links'] = [l for l in e['links'] if l in shown_ids or any(c['id'] == l for c in final_candidates)]
-    evidence = [e for e in evidence if e['links']]
+    if not keep_unlinked:
+        evidence = [e for e in evidence if e['links']]
     return evidence, final_candidates, dropped

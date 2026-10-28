@@ -100,14 +100,14 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
         conn.commit()
         return result
     objects = [o['value'] for o in item.get('object_identifiers') or [] if universe.has(o['value'])]
-    shown = store.views_for_prompt(conn, objects)
+    shown = extraction.shown_views(conn, cfg, item, objects)
     # extraction (or its stored handover on resume)
     handover = None
     if resume_from and resume_from != 'extracted':
         row = conn.execute('select handover_json from handovers where input_id=? order by id desc limit 1', (item['input_id'],)).fetchone()
         if row:
             saved = vocabulary.extraction_answer(json.loads(row['handover_json']))          # a handover saved by a Chinese version reads in the canonical vocabulary
-            handover = extraction.Handover(saved['evidence'], saved['candidates'], saved['dropped'], 0, '', True, 0.0, saved.get('new_groups') or [])
+            handover = extraction.Handover(saved['evidence'], saved['candidates'], saved['dropped'], 0, '', True, 0.0, saved.get('new_groups') or [], saved.get('unplaced') or [])
     if handover is None:
         try:
             shown_groups = store.groups_for_prompt(conn, objects, item.get('title') or '')
@@ -117,8 +117,11 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
         result.cost += handover.cost_usd
         result.cached_calls += int(handover.cached)
         store.insert(conn, 'handovers', input_id=item['input_id'], seq=seq,
-                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped, 'new_groups': handover.new_groups}, ensure_ascii=False))
-        dispatch.mark(conn, item, seq, 'extracted', 'ok', f'{len(handover.evidence)} evidence, {len(handover.candidates)} candidates, {len(handover.dropped)} dropped')
+                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped, 'new_groups': handover.new_groups,
+                                               'unplaced': handover.unplaced}, ensure_ascii=False))
+        for statement in handover.unplaced:              # v20: filed nowhere today, kept for a later placement; written with the handover, one commit
+            store.add_unplaced(conn, item['input_id'], seq, item['publication_day'], statement)
+        dispatch.mark(conn, item, seq, 'extracted', 'ok', f'{len(handover.evidence)} evidence, {len(handover.candidates)} candidates, {len(handover.dropped)} dropped, {len(handover.unplaced)} unplaced')
         conn.commit()
     result.evidence, result.candidates, result.dropped = len(handover.evidence), len(handover.candidates), len(handover.dropped)
     if not handover.evidence and not handover.candidates:

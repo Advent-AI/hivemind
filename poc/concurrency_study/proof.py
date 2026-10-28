@@ -72,7 +72,11 @@ def handover_errors(conn, items, cfg, uni, first, answer_for, accepted=None):
             json.loads(answer), item, item['text'], {v['view_id'] for v in shown}, uni,
             english=extraction.is_english(version), shown_group_ids=[g['group_id'] for g in groups])
         expected = {'evidence': evidence, 'candidates': candidates, 'dropped': dropped, 'new_groups': new_groups}
-        if json.loads(json.dumps(expected)) != json.loads(hand['handover_json']):
+        if extraction.places(version):           # v20: the handover's evidence is the placement call's, which this proof does not rebuild
+            errors.append('proof does not rebuild a v20 handover (placement call): ' + item['input_id'])
+            continue
+        stored = json.loads(hand['handover_json'])
+        if json.loads(json.dumps(expected)) != {k: stored.get(k) for k in expected}:
             errors.append('accepted handover differs from its bound answer: ' + item['input_id'])
     if len(keys) != len(items):
         errors.append(f'{len(keys)} handovers for {len(items)} items')

@@ -74,7 +74,7 @@ Then open <http://localhost:8000/docs/system-design.html>. Serving the repositor
 
 ## Run the pipeline
 
-Replay the item window into a new ledger with the default configuration (`poc/config/poc-v34.json`: extraction v18 on `gpt-6-luna` (D199, D200), matching on Jev with the collision judge of D190, judging with the theme block of D195 and the evidence in view of D198); credentials are read from `~/.config/hivemind/credentials.json`, never from the repository:
+Replay the item window into a new ledger with the default configuration (`poc/config/poc-v36.json`: extraction v20 on `gpt-6-luna` showing every open theme thesis (D206) and filing statements by a separate placement call under the one-home rule, unplaced statements kept (D207); matching on Jev with the collision judge of D190; judging with the theme block of D195 and the evidence in view of D198); credentials are read from `~/.config/hivemind/credentials.json`, never from the repository:
 
 ```sh
 python3 scripts/preflight.py --archive <an archive> --views <ledgers> --items poc/data/items-window-tags2-2026-10-24.sqlite   # $0, before any paid run

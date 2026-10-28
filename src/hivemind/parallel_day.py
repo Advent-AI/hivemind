@@ -99,7 +99,7 @@ class ParallelDay:
 
         def current_request(item):
             objects = [o['value'] for o in item.get('object_identifiers') or [] if frozen_universe.has(o['value'])]
-            shown = copy.deepcopy(store.views_for_prompt(conn, objects))
+            shown = copy.deepcopy(extraction.shown_views(conn, frozen_cfg, item, objects))
             groups = copy.deepcopy(store.groups_for_prompt(conn, objects, item.get('title') or ''))
             owned_item = copy.deepcopy(item)
             return owned_item, shown, groups, extraction_key(frozen_cfg, owned_item, owned_item['text'], shown, frozen_universe, groups)
