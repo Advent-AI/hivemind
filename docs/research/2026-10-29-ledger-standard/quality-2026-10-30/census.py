@@ -1,6 +1,6 @@
 """Field census over what production keeps from role-v51's answers (run P, three draws, 148 articles), at no cost:
 dates, numbers in the summary line absent from the quote, tiers, duplicates within one answer, statement and question counts
-per article, draw-to-draw agreement, and code drops by reason.
+per article and code drops by reason (draw-to-draw stability by gold class is stability.py).
 
     python3 census.py
 """
@@ -85,8 +85,6 @@ def main():
         'articles with statements in some draws and 0 in others': sum(1 for v in per_article.values() if max(v) > 0 and min(v) == 0),
         'articles with a question in some draw': sum(1 for v in q_per_article.values() if max(v) > 0),
         'articles whose question count differs across draws': sum(1 for v in q_per_article.values() if len(set(v)) > 1),
-        'same quotes in all three draws / quotes in any draw (median over articles with any)': statistics.median(agree),
-        'mean of that share': statistics.mean(agree),
         'drop reasons': drop_reasons.most_common(12),
     }
     (HERE / 'census.json').write_text(json.dumps({'summary': out, 'examples': {k: v[:40] for k, v in examples.items()}}, ensure_ascii=False, indent=1) + '\n')

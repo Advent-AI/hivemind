@@ -70,8 +70,10 @@ Then converge or stop:
 - When one mechanism draws findings round after round, stop answering findings: propose one structural rule.
 - A failure called a flake is a defect until traced. Read a failing check to its first differing line before any
   rerun; a passing rerun proves nothing.
-- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it, and
-  cite what you read, not the summary.
+- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it or
+  recording it, and cite what you read, not the summary (2026-10-30: model readers' 36 "wrong date" flags held 12 material
+  errors once each was read against the article, and a counting aid credited a question that was never asked; Alex:
+  "那你找到的这些问题验证是真的问题吗？").
 - Before any design: ten raw answers read beside their inputs, the whole request read as the model reads it, and, for a
   choice the model made, the model's own account (continue the stored conversation with "which instruction led you
   here, and which two statements did you reject", a cent a case). 2026-10-27: a two-call extraction design with two
@@ -265,8 +267,8 @@ Verify at the point the change touches, at the sharpest level that shows it work
   (D244): "我觉得这是最容易出错的问题；你非常容易写死，我们在改的过程中如果drift你会一直用久的标准来衡量，这边需要有打分，但是“一定”要你自己下去看trace这是必须，记起来".
 - **The ruler counts only what it was built to count.** A gold score counts kept sentences and opened questions; before a
   quality claim, a reader who did not write the change also reads the fields the product stores (original day, original
-  speaker, tier, the summary's hedges) and what the next step does with the record (2026-10-30: half the records kept by
-  the accepted prompt carried a wrong day, speaker or tier that no score showed; Alex: "现在到底质量怎么样你深度的解析不要只是看尺子").
+  speaker, tier, the summary's hedges) and what the next step does with the record (2026-10-30: 30 of 102 records kept by
+  the accepted prompt carried a wrong day, speaker, tier or summary that no score showed; Alex: "现在到底质量怎么样你深度的解析不要只是看尺子").
 - Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind
   a metric's largest values before reading it, and write down what a derived number reduces to.
 - **Report every number, regressions first.** Core and supporting apart, no composite. A comparison of totals uses
