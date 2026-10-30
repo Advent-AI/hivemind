@@ -209,7 +209,7 @@ def main():
     parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'), help='the items database, for source titles in the idea card')
     parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
     parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'idea-archive.sqlite'), help='where idea model calls are archived for replay')
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v32-idea.json'), help='the config whose idea settings name the mapping and final assessment models and prompts')
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v33-idea.json'), help='the config whose idea settings name the mapping and final assessment models and prompts')
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=8788)

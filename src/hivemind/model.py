@@ -141,12 +141,16 @@ def check_schema(value, schema, path='$'):
     array/items, string/enum/pattern, integer, number, boolean, null in anyOf."""
     kind = schema.get('type')
     if 'anyOf' in schema:
-        errors = []
+        # a value matching no option reports the closest options' errors (fewest), not merely the last option's
+        failures = []
         for option in schema['anyOf']:
             errors = check_schema(value, option, path)
             if not errors:
                 return []
-        return errors or [f'{path}: matches no option']
+            failures.append(errors)
+        fewest = min((len(errors) for errors in failures), default=0)
+        closest = list(dict.fromkeys(error for errors in failures if len(errors) == fewest for error in errors))
+        return closest or [f'{path}: matches no option']
     if kind == 'object':
         if not isinstance(value, dict):
             return [f'{path}: expected object']

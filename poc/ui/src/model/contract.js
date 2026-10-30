@@ -85,7 +85,7 @@ export function parseDataset(input) {
     );
     requireThat(
       scores.length === 2
-        ? scores.join('|') === 'Yes|No'
+        ? ['Yes|No', 'No|Yes'].includes(scores.join('|'))
         : scores.length === 5 && SCORES.every((s) => scores.includes(s)),
       `${path}/rungs`,
       'expected Yes/No or five unique ordinal scores',

@@ -199,8 +199,63 @@ def positive_prose(answer):
              for key in ('label', 'reason', 'weight_reason'))]
 
 
+def adoption_schema(theses):
+    """The positive-selection answer with one item shape per candidate: each pins its thesis_id and offers only that
+    thesis's own endpoint positions, so the request cannot ask for an endpoint the binder refuses."""
+    def item(thesis_id=None, positions=('1', '2', '3', '4', '5')):
+        return {'type': 'object', 'additionalProperties': False,
+                'required': ['thesis_id', 'label', 'raises_outcome_position', 'reason', 'weight_percent', 'weight_reason'],
+                'properties': {'thesis_id': {'type': 'string', **({'enum': [thesis_id]} if thesis_id else {})},
+                               'label': {'type': 'string'},
+                               'raises_outcome_position': {'type': 'string', 'enum': list(positions)},
+                               'reason': {'type': 'string'},
+                               'weight_percent': {'type': 'integer', 'minimum': 1, 'maximum': 100},
+                               'weight_reason': {'type': 'string'}}}
+    choices = [item(t['view_id'], [str(rung['position']) for rung in t['ladder']]) for t in theses]
+    return {'type': 'object', 'additionalProperties': False,
+            'required': ['summary', 'outcome', 'claim_direction', 'composite'],
+            'properties': {'summary': {'type': 'string'}, 'outcome': {'type': 'string'},
+                           'claim_direction': {'type': 'string', 'enum': ['higher', 'lower', 'unclear']},
+                           'composite': {'type': 'array', 'items': {'anyOf': choices} if choices else item()}}}
+
+
+def bind_adoption(answer, selected, records, as_of, theses, schema):
+    """Bind an answer checked against the exact schema that was sent; code checks only what a schema cannot say."""
+    errors = model.check_schema(answer, schema)
+    if errors:
+        raise model.SchemaError('; '.join(errors))
+    if not answer['outcome'].strip():
+        raise model.SchemaError('composite: the assessed outcome must be named')
+    if answer['composite'] and answer['claim_direction'] == 'unclear':
+        raise model.SchemaError('composite: an unclear claim cannot have scored drivers')
+    first = {t['view_id']: str(t['ladder'][0]['position']) for t in theses}
+    allowed = {s['view_id'] for s in selected} & set(first)
+    drivers, seen, total = [], set(), 0
+    for entry in answer['composite']:
+        ident = entry['thesis_id']
+        if ident not in allowed or ident in seen:
+            raise model.SchemaError(f'composite {ident}: must be a unique supplied candidate')
+        if not all(entry[key].strip() for key in ('label', 'reason', 'weight_reason')):
+            raise model.SchemaError(f'composite {ident}: label, reason and weight reason must be nonempty')
+        seen.add(ident)
+        total += entry['weight_percent']
+        raises = 'first' if entry['raises_outcome_position'] == first[ident] else 'last'
+        supporting = raises if answer['claim_direction'] == 'higher' else ('last' if raises == 'first' else 'first')
+        drivers.append({'thesis_id': ident, 'label': entry['label'], 'reason': entry['reason'], 'supporting_end': supporting,
+                        'question': records[ident]['question'], 'weight_percent': entry['weight_percent'],
+                        'weight_reason': entry['weight_reason']})
+    if total != (100 if drivers else 0):
+        raise model.SchemaError(f'composite: impact weights must sum to 100, got {total}')
+    return {'version': 'idea-composite/4', 'method': 'weighted', 'as_of': as_of, 'drivers': drivers,
+            'target': {'outcome': answer['outcome'], 'direction': answer['claim_direction']}}
+
+
 def contract(prompt_version, selected, ledger=None):
     """The schema, prose fields and binder belonging to each versioned composite prompt."""
+    if prompt_version == 'idea-summary-v8':
+        theses = add_ladders(ledger, [{'view_id': entry['view_id']} for entry in selected], endpoints_only=True)
+        schema = adoption_schema(theses)
+        return schema, positive_prose, lambda answer, *args: bind_adoption(answer, *args, theses, schema)
     if prompt_version == 'idea-summary-v7':
         theses = add_ladders(ledger, [{'view_id': entry['view_id']} for entry in selected], endpoints_only=True)
         return positive_schema(theses), positive_prose, lambda answer, *args: bind_positive(answer, *args, theses)

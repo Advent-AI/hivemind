@@ -355,6 +355,93 @@ def test_d196_positive_selection_refuses_zero_duplicates_and_unknown_candidates(
     assert bind(empty)['drivers'] == []
 
 
+def test_d258_request_offers_each_thesis_only_its_own_endpoints(ledger, items, index, tmp_path):
+    """D258: the default service sends one item shape per candidate, pinned to its own endpoints; the same request
+    schema refuses a current-state position (the 2026-10-30 v10 → '2' answer), and discovery and payload are v32's."""
+    def transport_for(requests, refusals):
+        def transport(provider, request):
+            requests.append(request)
+            schema = request['response_format']['json_schema']['schema']
+            if schema == idea.DECOMPOSE:
+                answer = DECOMPOSED
+            elif schema == idea.MAP:
+                ids = offered(request)[0][:3]
+                answer = {'summary': 'Mapped candidates.', 'parts': [{'index': 0, 'why': 'Candidate relevance.',
+                    'views': [{'view_id': ident, 'fit': 'direct' if n == 0 else 'driver'} for n, ident in enumerate(ids)]}]}
+            else:
+                theses = json.loads(request['messages'][1]['content'])['candidate_theses']
+                thesis = next(t for t in theses if [r['position'] for r in t['ladder']] == [1, 5])
+                entry = {'thesis_id': thesis['view_id'], 'label': 'Revenue driver', 'raises_outcome_position': '2',
+                         'reason': 'Raises revenue.', 'weight_percent': 100, 'weight_reason': 'The selected driver.'}
+                answer = {'summary': 'The selected driver provides directional support.', 'outcome': 'Revenue',
+                          'claim_direction': 'higher', 'composite': [entry]}
+                refusals.append(model.check_schema(answer, schema))
+                entry['raises_outcome_position'] = '1'
+            return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1, 'completion_tokens': 1}}
+        return transport
+
+    aliases = search.object_aliases(UNIVERSE)
+    old_requests, new_requests, refusals = [], [], []
+    idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'v32.sqlite')),
+                   config.load(os.path.join(ROOT, 'poc/config/poc-v32-idea.json')), IDEA, aliases=aliases,
+                   transport=transport_for(old_requests, []))
+    card = idea.read_idea(ledger, index, items, model.Archive(str(tmp_path / 'v33.sqlite')),
+                          config.load(os.path.join(ROOT, 'poc/config/poc-v33-idea.json')), IDEA, aliases=aliases,
+                          transport=transport_for(new_requests, refusals))
+    assert new_requests[:2] == old_requests[:2] and new_requests[2]['messages'] == old_requests[2]['messages']
+    sent = new_requests[2]['response_format']['json_schema']['schema']
+    theses = json.loads(new_requests[2]['messages'][1]['content'])['candidate_theses']
+    assert sent == idea_composite.adoption_schema(theses)
+    assert any("raises_outcome_position: '2' not in ['1', '5']" in error for error in refusals[0])
+    plan = card['reading']['composite']
+    assert plan['version'] == 'idea-composite/4' and plan['drivers'][0]['supporting_end'] == 'first'
+    assert [c['view_id'] for c in card['reading']['chosen']] == [plan['drivers'][0]['thesis_id']]
+
+
+def test_d258_adoption_binder_matches_v7_on_valid_answers_and_keeps_its_refusals(ledger):
+    """D258: for any answer v7 accepted, the v8 binder returns the same plan; duplicates, bad totals, empty text and
+    an unclear claim with drivers are still refused, and an off-endpoint position fails the sent schema."""
+    import copy
+    selected = [{'view_id': ident} for ident in ('v3', 'v1', 'v9')]
+    theses = idea_composite.add_ladders(ledger, selected, endpoints_only=True)
+    records = {r['view_id']: r for r in service.summaries(ledger, '2026-08-15')}
+    schema = idea_composite.adoption_schema(theses)
+    bind = lambda value: idea_composite.bind_adoption(value, selected, records, '2026-08-15', theses, schema)
+    entry = lambda ident, position, weight: {'thesis_id': ident, 'label': f'{ident} driver', 'raises_outcome_position': position,
+                                              'reason': 'Moves the outcome.', 'weight_percent': weight, 'weight_reason': 'Relative importance.'}
+    for direction in ('higher', 'lower'):
+        answer = {'summary': 'Revenue supports the idea.', 'outcome': 'Revenue', 'claim_direction': direction,
+                  'composite': [entry('v3', '1', 60), entry('v1', '5', 40)]}
+        assert bind(answer) == idea_composite.bind_positive(answer, selected, records, '2026-08-15', theses)
+    answer = {'summary': 'Revenue supports the idea.', 'outcome': 'Revenue', 'claim_direction': 'higher',
+              'composite': [entry('v3', '1', 100)]}
+    for mutate in (
+        lambda a: a['composite'][0].update(weight_percent=99),
+        lambda a: a['composite'].append(copy.deepcopy(a['composite'][0])),
+        lambda a: a['composite'][0].update(reason=' '),
+        lambda a: a.update(claim_direction='unclear'),
+        lambda a: a.update(outcome=' '),
+        lambda a: a['composite'][0].update(raises_outcome_position='2'),
+        lambda a: a['composite'][0].update(thesis_id='v999'),
+    ):
+        bad = copy.deepcopy(answer); mutate(bad)
+        with pytest.raises(model.SchemaError): bind(bad)
+    empty = copy.deepcopy(answer); empty['composite'] = []
+    assert bind(empty)['drivers'] == []
+
+
+def test_d258_a_refused_anyof_value_names_the_closest_option():
+    """D258: the 2026-10-30 refusal named the exclusion branch ('driver' not in ['excluded']) instead of the endpoint;
+    a value matching no option now reports the option it came closest to."""
+    driver = {'type': 'object', 'additionalProperties': False, 'required': ['kind', 'end'],
+              'properties': {'kind': {'type': 'string', 'enum': ['driver']}, 'end': {'type': 'string', 'enum': ['1', '5']}}}
+    excluded = {'type': 'object', 'additionalProperties': False, 'required': ['kind'],
+                'properties': {'kind': {'type': 'string', 'enum': ['excluded']}}}
+    errors = model.check_schema({'kind': 'driver', 'end': '2'}, {'anyOf': [driver, excluded]})
+    assert errors == ["$.end: '2' not in ['1', '5']"]
+    assert model.check_schema({'kind': 'driver', 'end': '5'}, {'anyOf': [driver, excluded]}) == []
+
+
 def test_d194_weighted_call_preserves_mapping_and_caches_percentages(ledger, items, index, tmp_path):
     """D194: three calls, the same first two requests, explicit saved weights and unchanged chosen IDs."""
     requests = []

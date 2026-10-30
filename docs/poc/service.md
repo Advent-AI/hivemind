@@ -2,7 +2,7 @@
 
 D76, October 24, 2026; English edition and current-document refresh, October 25 (D163). Alex defined Hivemind as a database with a search engine on top. Its read service lets an agent or page find theses, choose what to use and inspect the state, history and evidence. Hivemind stores shared **theses**, not user ideas, positions or commitments. This distinction replaces the ambiguous use of “thesis” for both in the earlier document. The [historical source](../research/2026-10-25-english/service.original.md) retains prior wording and verification details.
 
-The core read service does not choose or arrange results for a caller. The separate [`POST /ideas` application flow](idea-card.md) discovers candidate theses, then adopts and weights them in a final assessment. The default `poc-v32-idea` configuration uses two discovery calls and one final assessment; older configurations retain their own contracts. The Idea specification owns those steps and their response. The route returns a UI-ready response.
+The core read service does not choose or arrange results for a caller. The separate [`POST /ideas` application flow](idea-card.md) discovers candidate theses, then adopts and weights them in a final assessment. The default `poc-v33-idea` configuration uses two discovery calls and one final assessment; older configurations retain their own contracts. The Idea specification owns those steps and their response. The route returns a UI-ready response.
 
 ## Historical visibility
 

@@ -303,7 +303,7 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
                 dropped.append({'view_id': view_id, 'why': f'not among the candidates of part {i} ({part["looks_for"][:60]})'})
             elif all(view_id not in tiers[k] for k in tiers):
                 if fit == 'driver' and len(tiers['driver']) >= DRIVERS_PER_PART and not (
-                        cfg.idea_summary and cfg.idea_summary.prompt_version in ('idea-summary-v6', 'idea-summary-v7')):
+                        cfg.idea_summary and cfg.idea_summary.prompt_version in ('idea-summary-v6', 'idea-summary-v7', 'idea-summary-v8')):
                     tiers['context'].append(view_id)          # beyond the cap a driver is kept on the card, not the canvas
                 else:
                     tiers[fit].append(view_id)
@@ -346,10 +346,10 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
                    'theses': brief(ledger, [records[c['view_id']] for c in chosen], as_of, detailed=True)}
         composite_contract = idea_composite.contract(summary_setting.prompt_version, chosen, ledger)
         if composite_contract:
-            context['theses'] = idea_composite.add_ladders(ledger, context['theses'], endpoints_only=summary_setting.prompt_version in ('idea-summary-v5', 'idea-summary-v6', 'idea-summary-v7'))
+            context['theses'] = idea_composite.add_ladders(ledger, context['theses'], endpoints_only=summary_setting.prompt_version in ('idea-summary-v5', 'idea-summary-v6', 'idea-summary-v7', 'idea-summary-v8'))
             for part in context['parts']:
                 del part['why']
-            if summary_setting.prompt_version == 'idea-summary-v7':
+            if summary_setting.prompt_version in ('idea-summary-v7', 'idea-summary-v8'):
                 context['candidate_theses'] = context.pop('theses')
         schema, prose, bind_composite = composite_contract or (SUMMARY, lambda d: [d['summary']], None)
         made, more = call_english(archive, cfg, summary_setting, summary_prompt, json.dumps(context, ensure_ascii=False),
