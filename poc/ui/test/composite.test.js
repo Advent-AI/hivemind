@@ -13,6 +13,7 @@ import {
 } from '../src/idea/composite.js';
 import { scoreHistoryChart } from '../src/components/thesis-chart.js';
 import { laneOf, stateText } from '../src/model/thesis.js';
+import { badgeHtml } from '../src/components/primitives.js';
 import { ideaAnalysisHtml, ideaDetailMetaHtml } from '../src/idea/analysis.js';
 import { graphOf } from '../src/idea/idea.js';
 
@@ -290,6 +291,28 @@ test('D258: a No-first yes/no thesis shows its own outcome and keeps the same co
     return compositeAt(prepareIdeaComposite(binary, both), both.as_of).value;
   };
   assert.equal(valueOf(reversed, 'last'), valueOf(original, 'first'));
+});
+
+test('D259: a yes/no ladder with named outcomes shows its own outcome once', () => {
+  const source = current.views.find(
+    (view) => view.rungs.length === 2 && view.rungs[0].label === 'Yes' && view.judgements.length,
+  );
+  const named = structuredClone(source);
+  named.view_id = `${source.view_id}-named`;
+  named.rungs[0].label = 'Restriction adopted';
+  named.rungs[1].label = 'No restriction adopted';
+  const both = fromBundles({ ...current, views: [...current.views, named] });
+  const thesis = both.theses.find((entry) => entry.id === named.view_id);
+  const plain = both.theses.find((entry) => entry.id === source.view_id);
+  const judgement = { ...thesis.judgements.at(-1), rung: 2 };
+  assert.equal(stateText(thesis, 2), 'No restriction adopted');
+  assert.equal(
+    badgeHtml(thesis, judgement),
+    '<span class="chip chip--state state--negative"><b>No restriction adopted</b></span>',
+  );
+  assert.equal(stateText(plain, 1), 'Yes');
+  const ordinal = both.theses.find((entry) => entry.rungs.length === 5 && entry.rungs[1].label);
+  assert.equal(stateText(ordinal, 2), `${ordinal.rungs[1].score} ${ordinal.rungs[1].label}`);
 });
 
 test('D185: the real reviewed basket calculates 0, +0.5, then 0 using historical states', () => {
