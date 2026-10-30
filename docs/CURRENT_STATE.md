@@ -76,6 +76,8 @@ The [pipeline overview](poc/pipeline-plan.md) separates the implementation from 
 
 ## One next task
 
+The handoff plan with every open task, the principles and the quantitative criteria is [`handoff-plan-2026-10-30.md`](research/2026-10-29-ledger-standard/handoff-plan-2026-10-30.md).
+
 **Fix the record-field class (open defect 1) through the class loop, on the development set with the test set scored once; then, on Alex's go, run the whole pipeline once with the result over the three-month NVIDIA window and read what placement, matching and judging do with it.**
 
 ## Parallel day (D172–D183)
