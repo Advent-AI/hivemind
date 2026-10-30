@@ -1,0 +1,268 @@
+{
+ "input_id": "gnews:72473aca758fbc8b61ef56e2",
+ "title": "How to Read Data into GPU Memory in Python with NVIDIA GPUDirect Storage | NVIDIA Technical Blog",
+ "publication_day": "2026-10-22",
+ "publisher": "developer.nvidia.com",
+ "category": "T6",
+ "text": "By Andrew Hoyle\nNVIDIA KvikIO provides high-level Python and C++ interfaces that sit above the cuFile C API to enable accelerated file I/O into GPU memory.\nThe library and cuFile make independent path-selection decisions: KvikIO chooses whether to invoke cuFile, while cuFile determines whether the transfer uses the accelerated nvidia-fs kernel module or a CPU-staged compatibility path.\nRuntime settings such as KVIKIO_COMPAT_MODE and KVIKIO_GDS_THRESHOLD control KvikIO's behavior, and cufile.json settings such as execution.parallel_io and execution.min_io_threshold_size_kb shape how cuFile decomposes and schedules requests.\nPer-process cuFile statistics collected with CUFILE_STATS_LEVEL=3 and inspected via gds_stats reveal whether operations traveled the nvidia-fs accelerated path (nvfs counters) or the compatibility path (posix counters).\nKvikIO is part of the NVIDIA CUDA-X libraries for data science and has been used to accelerate I/O in cuDF, cuCIM digital pathology workflows, cuPhoton scientific-image analysis, and GPU-accelerated Presto analytics workloads.\nGPU applications are processing ever-growing datasets with increasingly powerful accelerators. According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months. As computation and data scale together, moving data efficiently from storage becomes a necessity for keeping accelerators supplied.\nNVIDIA Magnum IO GPUDirect Storage (GDS) addresses this challenge by enabling a direct data path between supported storage and GPU memory. This avoids unnecessary staging through CPU memory and reduces overall CPU utilization in the system. GDS is supported by a growing ecosystem that includes many major storage vendors .\nAt the application layer, Python plays a central role in modern AI development. As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python while the main application interface to GDS is the cuFile C API.\nNVIDIA KvikIO , a Python and C++ library for high-performance file I/O, bridges this gap. It provides high-level, idiomatic Python and C++ interfaces, along with additional controls over how I/O requests are performed.\nThe tutorial in this post demonstrates how to use the NVIDIA KvikIO Python API to configure storage I/O, read data into GPU memory, and confirm that the accelerated path within GDS was activated. It also shows how to inspect the KvikIO and cuFile settings that influence the path each operation takes.\nHow does NVIDIA KvikIO leverage GDS?\nGDS is the broader technology that enables accelerated data movement between supported storage and GPU memory. For file system-based storage, cuFile provides the C library and API through which applications and frameworks access GDS. KvikIO sits above cuFile, providing higher-level Python and C++ interfaces along with its own controls over how I/O requests are executed. Figure 1 shows these layers and their two separate path-selection points. Initialization failures, unsupported configurations, and error-handling paths are omitted for clarity.\nThe application supplies a file system path and GPU buffer, and KvikIO determines whether to send the request through cuFile or use its POSIX compatibility path, which stages the data through host memory. When cuFile is selected, KvikIO registers the file and issues the I/O using the target GPU buffer.\ncuFile then determines the actual transfer path based on system support, the file system, and its configuration. It may use the accelerated GDS path or its CPU-staged compatibility path. Therefore, reaching the cuFile API confirms that KvikIO selected cuFile, but does not by itself confirm that the accelerated GDS path was activated.\nThe following sections walk through how to configure the system, perform a KvikIO read, and verify the resulting path.\nBefore beginning this tutorial, you will need:\nA Linux system with an NVIDIA GPU and GPUDirect Storage installed.\nA GDS-supported storage and file system configuration.\nPermission to create, read, and write files at the storage endpoint, along with access to GDS tools such as gdscheck and gds_stats .\nFor complete installation and platform requirements, refer to the NVIDIA GPUDirect Storage documentation .\nThis tutorial was tested with the following configuration:\nAn x86_64 system with an NVIDIA H100 GPU, CUDA 13.3, and cuFile 1.18.\nA local NVMe device formatted with ext4 .\nA PIX connection between the selected GPU and NVMe device, meaning the path traverses at most one PCIe bridge.\nIOMMU and ACS disabled to preserve PCIe peer-to-peer transfers.\nThe nvidia-fs kernel module is loaded to provide the accelerated path.\nYou can inspect the GPU-to-storage topology with the following command:\nStep 1: Set up NVIDIA KvikIO\nFirst, create a Python environment and install the CUDA 13 build of KvikIO. CuPy will be installed as a dependency.\n$ python3 -m venv kvikio-env\n$ python -m pip install kvikio-cu13\nYou can verify the installation with the following:\n$ python -m pip show kvikio-cu13 cupy-cuda13x\nStep 2: Inspect the configuration\nBefore performing any I/O, inspect the active KvikIO settings and confirm that the system recognizes the GDS components. In the KvikIO defaults API, the compatibility-mode setting is named compat_mode , and its name attribute reports the active mode as AUTO , ON , or OFF . The following commands report the loaded KvikIO and cuFile versions, the active compatibility mode, and the minimum request size KvikIO sends to cuFile:\nimport kvikio.cufile_driver as cufile_driver\ncufile_driver.libcufile_version()\ndefaults.get(\"gds_threshold\")\nOn the tutorial system, KvikIO reports compatibility mode as AUTO and a GDS threshold of 16 KiB. AUTO instructs KvikIO to try cuFile and fall back to its POSIX backend if cuFile is unavailable. Reads smaller than the threshold use the KvikIO POSIX path directly. These settings can also be controlled through KVIKIO_COMPAT_MODE and KVIKIO_GDS_THRESHOLD . For the complete list, refer to the KvikIO runtime settings .\nNext, inspect the GDS platform and cuFile configuration:\n$ /usr/local/cuda-13.3/gds/tools/gdscheck.py -p 2>&1 | less -R\nThe output lists the installed GDS components, supported file systems, detected GPUs, and active cuFile configuration. Figure 2 shows how to inspect the KvikIO and GDS configuration used in this tutorial.\nKvikIO settings can also be changed in Python. For example, defaults.set accepts a dictionary to change several settings at once, or a name and value to change one setting:\ndefaults.set({\"task_size\": 1024**3, \"num_threads\": 8})\ndefaults.set(\"compat_mode\", kvikio.CompatMode.OFF)\nStep 3: Read a file into GPU memory\nNext, create the input file once before running the Python example. The following command writes a 1 GiB file with random data using direct I/O and flushes it to storage:\nof=/mnt/nvme1/kvikio-tutorial/kvikio-example.bin \\\nbs=1M count=1024 \\\nThe following program allocates a 1 GiB CuPy array in GPU memory and supplies it to KvikIO as the destination buffer:\n\"/mnt/nvme1/kvikio-tutorial/kvikio-example.bin\"\n# Allocate a GPU buffer large enough to hold the file.\ndtype=cp.uint8,\n# Read the file into the GPU buffer.\nwith kvikio.CuFile(file_path, \"r\") as file:\nbytes_read = file.read(gpu_buffer)\n# Validate that 1 GiB was read.\nThe context manager opens the file and completes the read into GPU memory. Although the return value confirms that the complete file was read, it does not identify the underlying data path.\nStep 4: Determine the data path\nOne way to validate the data path used by any cuFile-based application is to observe the cuFile runtime per-process statistics. These statistics can be enabled by setting CUFILE_STATS_LEVEL=3 and then inspected with gds_stats while the process remains active.\nFor this KvikIO example, the environment variable keeps the setting scoped to a single run, although it can also be configured in cufile.json .\n$ CUFILE_STATS_LEVEL=3 python3 -i read_with_kvikio.py\nRunning Python interactively keeps the process alive after the read, allowing gds_stats to inspect its accumulated counters.\nFigure 3 demonstrates this workflow. In the per-GPU output, nvfs counts operations representing the path taken through the nvidia-fs kernel module, while posix counts operations handled by the cuFile compatibility path.\nThe KvikIO default 4 MiB task size divides the 1 GiB request into 256 read operations. The per-GPU statistics report n=256 , nvfs=256 , and posix=0 , showing that all 256 operations used the nvidia-fs path.\nStep 5: Compare the available paths\nThe same read can be repeated with different settings to demonstrate the two control layers. First, require KvikIO to use cuFile:\n$ CUFILE_STATS_LEVEL=3 \\\npython3 -i read_with_kvikio.py\nOn the tutorial system, gds_stats reports nvfs operations, confirming that cuFile selected the accelerated path. Next, force cuFile to use its compatibility path:\nKvikIO still calls cuFile, but the operations now appear under posix rather than nvfs . Finally, the KvikIO compatibility mode bypasses cuFile entirely:\npython3 read_with_kvikio.py\nIn this case, KvikIO performs the read through its CPU-staged POSIX backend, so cuFile does not record the operation. The next section examines the cuFile settings that control request execution.\nStep 6: cuFile configuration for a KvikIO read\nAfter KvikIO selects its cuFile path, cuFile applies another set of controls that determine how the request is executed. These controls are defined in cufile.json and operate independently of KvikIO runtime settings.\nRequest decomposition and parallel execution\nKvikIO and cuFile can both divide a large operation into smaller pieces. KvikIO applies KVIKIO_TASK_SIZE first, with KVIKIO_NTHREADS controlling how those tasks are scheduled. Each task on the cuFile path becomes a separate cuFile request. Once cuFile receives one of those requests, its execution settings determine whether it can be divided again and processed using the cuFile internal thread pool. The following cuFile settings control this behavior:\nEnables cuFile internal parallel processing.\nLimits the number of cuFile worker threads available per GPU queue.\nSets a target minimum size for internally scheduled pieces; a final remainder may be smaller.\nLimits how much parallelism cuFile prepares for one request.\nLimits the number of pending work items in the internal queue.\nA 1 GiB read, step by step\nThe configuration used here has four cuFile worker threads, max_request_parallelism set to four, and min_io_threshold_size_kb set to 8192 (8 MiB). With the KvikIO default 4 MiB task size, a 1 GiB read becomes 256 cuFile requests. Each 4 MiB request is handled as one piece by cuFile. This is the run that produced nvfs=256 in the earlier statistics.\nIf KVIKIO_TASK_SIZE is set to 1 GiB, KvikIO instead sends one large read request to cuFile. The CuPy destination has not been explicitly registered with cuFile, so cuFile uses its unregistered buffer scheduling path. It limits the request to min (4 worker threads, 4 maximum request parallelism) = 4 pieces.\nDividing 1 GiB four ways gives 256 MiB per piece, already larger than min_io_threshold_size_kb which is 8 MiB. With room in its queue, cuFile assigns three pieces to workers, processes the fourth on the calling thread, and waits for them to finish.\nThose 256 MiB pieces are units of scheduled work, not individual storage transfers. Because the destination buffer is not registered for storage DMA, cuFile reads into a registered GPU bounce buffer and copies the data into the destination. Since GDS 1.17, these bounce buffers can be configured as slabs. The nvidia-fs path in this configuration uses slabs no larger than 16 MiB, so each 256 MiB piece is processed through smaller transfers. The 8 MiB scheduling target does not set their transfer size.\nWhen the 8 MiB split target matters\nIn this configuration, execution.min_io_threshold_size_kb is set to 8192 (8 MiB). That target does not change the 1 GiB split, but it would affect a 16 MiB cuFile request. Four equal pieces would be 4 MiB each, so cuFile schedules two 8 MiB pieces instead. KvikIO must use a task size of at least 16 MiB for cuFile to receive that request intact.\nKvikIO in NVIDIA CUDA-X for data science\nKvikIO is part of the NVIDIA CUDA-X libraries for data science (formerly RAPIDS). Its development is closely connected to the GDS integration originally built for NVIDIA cuDF GPU DataFrame library, where parallel cuFile reads accelerated Parquet and ORC ingestion. This design was later incorporated into KvikIO, building on the cuDF original GDS data-ingest work .\nKvikIO has since been used with GDS in cuCIM digital pathology workflows and in the cuPhoton xDataReader for scientific-image analysis , while related GPU-accelerated Presto work shows benefits of GDS in data analytics workloads. Together, these examples show the broader role of KvikIO as an application-facing I/O layer over the storage acceleration GDS provides.\nThis tutorial has demonstrated how to read data into GPU memory and use level-three GDS cuFile statistics to distinguish the accelerated nvidia-fs path from CPU-staged compatibility paths. These path decisions matter significantly for popular libraries such as cuDF that use KvikIO for many I/O operations .\nThe key takeaway is that KvikIO and cuFile make separate decisions. KvikIO selects whether to call cuFile, while cuFile determines the final transfer path and execution strategy. Understanding these layers enables applications to understand the path the I/O is taking and tune the settings that matter for their workload.\nReady to get started? Run the KvikIO Python example featured in this post on your GDS-enabled system. For more examples, explore the C++ and Python KvikIO code in the MagnumIO GDS samples directory . Use gds_stats to check whether reads appear under nvfs or posix , then apply the same verification to your own KvikIO workloads.\nAndrew Hoyle is a systems software engineer at NVIDIA, where he measures and improves data movement performance between storage systems and GPUs. On the GPUDirect Storage team, he develops features and works on integrations with software libraries. He holds a master’s degree in Computer Science from the University of Minnesota Twin Cities.",
+ "gold": {
+  "items": [],
+  "not_kept": [
+   {
+    "span": "compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months",
+    "weight": "not_kept",
+    "reason": "5.3 记者的背景和框架：一份 2025 年报告里的长期趋势，用作教程开头；分析员已经知道（D243 第 5 条）"
+   },
+   {
+    "span": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python",
+    "weight": "not_kept",
+    "reason": "5.3 记者的背景和框架"
+   },
+   {
+    "span": "GDS is supported by a growing ecosystem that includes many major storage vendors",
+    "weight": "not_kept",
+    "reason": "5.1 典型的主张（D243 第 5 条）：没有名字、没有数字"
+   },
+   {
+    "span": "KvikIO is part of the NVIDIA CUDA-X libraries for data science and has been used to accelerate I/O in cuDF, cuCIM digital pathology workflows, cuPhoton scientific-image analysis, and GPU-accelerated Presto analytics workloads.",
+    "weight": "not_kept",
+    "reason": "5.3 没有业务规模的产品细节"
+   },
+   {
+    "span": "An x86_64 system with an NVIDIA H100 GPU, CUDA 13.3, and cuFile 1.18.",
+    "weight": "not_kept",
+    "reason": "5.3 没有业务规模的产品细节"
+   },
+   {
+    "span": "Andrew Hoyle is a systems software engineer at NVIDIA",
+    "weight": "not_kept",
+    "reason": "5.3 模板（作者简介）"
+   }
+  ],
+  "questions": {
+   "must_open": [],
+   "may_open": [],
+   "must_not": [
+    {
+     "gist": "Will compute for notable AI models keep doubling every five months through 2027",
+     "row": "D201：新问题要有独立的投资判断，一句旧背景不够；第 4 节测试 2 独立意义：最多是 AI 资本开支问题的证据"
+    }
+   ]
+  }
+ },
+ "answers": {
+  "A": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimated that compute for notable AI models doubled approximately every five months and training-dataset size for LLMs doubled approximately every eight months.",
+     "speaker": "NVIDIA, citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python",
+     "one_line": "NVIDIA stated that, as of August 2025, nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA, citing GitHub data",
+     "original_day": "",
+     "tier": "third_party_view"
+    }
+   ],
+   "questions": []
+  },
+  "B": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index reported that compute for notable AI models was doubling approximately every five months and LLM training-dataset size approximately every eight months.",
+     "speaker": "NVIDIA, citing the Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python while the main application interface to GDS is the cuFile C API.",
+     "one_line": "NVIDIA stated that, as of August 2025, nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "C": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimated that compute for notable AI models doubled approximately every five months and LLM training dataset size doubled approximately every eight months.",
+     "speaker": "NVIDIA blog citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python",
+     "one_line": "NVIDIA stated that, as of August 2025, nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "D": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimated that compute for notable AI models was doubling about every five months and LLM training dataset size about every eight months.",
+     "speaker": "NVIDIA, citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python",
+     "one_line": "NVIDIA reported that, as of August 2025, nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "KvikIO has since been used with GDS in cuCIM digital pathology workflows and in the cuPhoton xDataReader for scientific-image analysis , while related GPU-accelerated Presto work shows benefits of GDS in data analytics workloads.",
+     "one_line": "NVIDIA said KvikIO has been used with GDS in cuCIM digital pathology workflows and the cuPhoton xDataReader, and cited related GPU-accelerated Presto work in data analytics.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "E": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimated that compute for notable AI models doubled about every five months and LLM training-dataset size doubled about every eight months.",
+     "speaker": "NVIDIA blog author citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    }
+   ],
+   "questions": []
+  },
+  "F": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "KvikIO has since been used with GDS in cuCIM digital pathology workflows and in the cuPhoton xDataReader for scientific-image analysis , while related GPU-accelerated Presto work shows benefits of GDS in data analytics workloads.",
+     "one_line": "NVIDIA reported that KvikIO has been used with GDS in cuCIM digital pathology workflows and cuPhoton xDataReader, and that related GPU-accelerated Presto work demonstrated GDS benefits in analytics workloads; no date or scale was specified.",
+     "speaker": "NVIDIA, in a company technical blog published 2026-10-22",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e2",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimated that compute for notable AI models doubled approximately every five months and LLM training dataset size doubled approximately every eight months.",
+     "speaker": "NVIDIA, citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e3",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python",
+     "one_line": "NVIDIA reported that, as of August 2025, nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA, citing GitHub project data",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "G": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "KvikIO is part of the NVIDIA CUDA-X libraries for data science and has been used to accelerate I/O in cuDF, cuCIM digital pathology workflows, cuPhoton scientific-image analysis, and GPU-accelerated Presto analytics workloads.",
+     "one_line": "NVIDIA says KvikIO has been used to accelerate I/O in its cuDF, cuCIM, and cuPhoton workflows and in GPU-accelerated Presto analytics workloads; no period or scale was stated.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e2",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimates that compute for notable AI models doubled approximately every five months and LLM training dataset size doubled approximately every eight months.",
+     "speaker": "NVIDIA, citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e3",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python while the main application interface to GDS is the cuFile C API.",
+     "one_line": "NVIDIA reports that as of August 2025 nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "H": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months, while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimated that compute for notable AI models doubled about every five months and LLM training dataset size doubled about every eight months.",
+     "speaker": "NVIDIA, citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python while the main application interface to GDS is the cuFile C API.",
+     "one_line": "NVIDIA stated that as of August 2025, nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-22",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "I": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "According to the 2025 Stanford AI Index , compute for notable AI models has been doubling approximately every five months",
+     "one_line": "The 2025 Stanford AI Index estimated that compute for notable AI models was doubling approximately every five months.",
+     "speaker": "NVIDIA, citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "while the size of datasets used to train LLMs has been doubling approximately every eight months.",
+     "one_line": "The 2025 Stanford AI Index estimated that the size of datasets used to train LLMs was doubling approximately every eight months.",
+     "speaker": "NVIDIA, citing the 2025 Stanford AI Index",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e3",
+     "quote": "As of August 2025, nearly half of all new AI projects on GitHub were built primarily in Python",
+     "one_line": "NVIDIA stated that, as of August 2025, nearly half of new AI projects on GitHub were built primarily in Python.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  }
+ }
+}

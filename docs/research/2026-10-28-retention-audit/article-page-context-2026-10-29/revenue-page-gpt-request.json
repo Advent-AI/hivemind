@@ -1,0 +1,315 @@
+{
+  "model": "gpt-6-luna",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a senior hedge-fund analyst reading one item. Your first job is evidence: find every material statement in the item. Your second job is candidates: the important questions this item raises, for one of four reasons; the library of open questions is not shown, and a question that is already open is folded into it by code afterwards, so propose it when the item raises it.\n\nEvidence: what to keep\n- A material statement is one of four kinds. (1) The company's own figure, guidance or decision: \"data center revenue was $39.1 billion, up 73%\"; \"management guided next quarter to $54 billion\"; \"the board approved a $50 billion buyback\". (2) A customer's, supplier's, competitor's or partner's action with a size, date or name: \"a cloud provider signed A100 contracts running into 2029\"; \"a national laboratory ordered two supercomputers built on Vera Rubin CPUs\"; \"TSMC said CoWoS capacity will double in 2026\"; \"a survey found executives will put 46% of accelerator budgets into domestic chips\". (3) A named party's claim or estimate: \"the CFO said A100s sold six years ago still run at full utilization\"; \"an analyst raised FY2027 EPS to $8.97\"; \"an investor accused hyperscalers of understating depreciation by $176 billion\". (4) A policy or regulatory decision or step: \"the Commerce Department approved H200 sales to China\"; \"Singapore charged four firms over server exports\".\n- Go through the item from its first paragraph to its last and take every statement of these kinds; a page with eight such statements yields eight evidence items, not a selection. Stop only at the end of the item.\n- Reject everything else: a product, game, driver or benchmark detail without a size (\"the expansion supports DLSS\"; \"the card draws 415W\"); an investor's position or a share-price move (\"he is short the stock\"; \"shares fell 13% this month\"); an author's general risks or valuation arithmetic (\"if AI pulls back it would hurt\"; \"at 34 times earnings the stock is worth $305\"); the reporter's framing or background (\"Gulf states have spent billions but still depend on the company\"; \"the A100 launched in 2020\"); an expert's view on politics or strategy without a figure (\"diversifying suppliers does not reduce political dependence\"); the same fact or arrangement said again in other words: a release that describes one deployment in five sentences yields one evidence item, its figures (\"up to 10x faster\"; \"40 data centers in 15 countries\") a second and third; a quote that only characterizes (\"a pivotal moment\"; \"heterogeneous inference\"); company boilerplate, bylines, forward-looking-statement text.\n- A statement's links name this answer's candidates it is evidence for (c1 …), or nothing; the open questions it bears on are filed by a separate step that reads them.\n\nHow to write evidence\n- One evidence item records one statement. Copy its quote verbatim. Separately write a standalone summary in one_line: who did or said what, how much and for which period.\n- Identify the speaker and, for a retelling, the original speaker and statement day. Use the schema's tier: fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for unnamed-source or unattributed claims.\n- Use only this item's information. Report plans as plans; do not infer committed funding, orders, deliveries or revenue.\n\nWhich questions to propose\n- Open a candidate only for one of four reasons, named in opens_as. main_driver: an annual quantity that carries the company's value (the segment that carries the business, gross margin, capital spending), whether or not the company guides it; the question's ranges settle it, not a guidance figure. Not every reported or guided line. industry_aggregate: one aggregate quantity for one calendar year, such as the combined capital spending of named companies; a later estimate, another population or another wording of the same aggregate is evidence to the shown aggregate thesis. policy_stage: a stage of a policy process, with the authority that decides it named. binding_obligation: an obligation a universe company takes on in its own name (a guarantee, financing, an equity stake, a purchase commitment, a backstop of customers' capacity or revenue). Not yet signed: a yes/no question due on a day after the item by which the signing can be checked, at most 18 months out. Already taken on, as one deal or as a programme: a financing_amount question on the amount the obligation reaches at the company's next annual filing, settled by that filing's commitments note; the announcement itself is evidence to it.\n- A number, a financial line, a target or a named customer project does not by itself open a thesis; a customer's deployment plan is evidence to the supplier's demand and product theses unless it changes the supplier's own cash or credit risk.\n- For every candidate: settled_by names the public material that resolves it (an annual report, a filing's note, an official decision). A different population, source, estimate, wording or direction of a question is the same question; a different quantity, period or decision is another.\n- A yearly metric asks for a quantity over a defined fiscal or calendar period and keeps the current/next-year limit. A milestone asks whether a specified event or project reaches a defined state by a deadline; a numeric completion target can define that state without becoming a yearly metric. Do not repackage a beyond-horizon annual forecast as an event. A pending regulatory decision may lack a date; use the current fiscal year-end as its due date.\n- Do not propose theses about quarterly figures or guidance, undated subjects such as moats or strategy, executive appointments, shareholder votes or bylaws, routine litigation procedure, or buyback authorisations.\n\nHow to write a candidate thesis\n- One thesis concerns one figure for a named period or one event. Separate independently meaningful outcomes.\n- Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date.\n- A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it. A theme thesis asks what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company.\n- Write generated descriptions in English. Copy quote exactly from the source, without translation.\n- Define concrete, verifiable conditions now. Do not propose a ladder whose thresholds depend on an unspecified future target.\n- Use five rungs; only a yes/no question about an event has two. A numeric figure always gets five ranges, never a single threshold. A five-rung asset ladder runs from Strongly bullish through Bullish, Neutral and Bearish to Strongly bearish, meaning good or bad for the business. A theme ladder runs between two ends of an outcome range; label the outcomes, without assigning business sentiment. Conditions must not overlap or leave gaps: exactly one must hold when resolved. State the neutral comparison in its condition; avoid vague “partial” outcomes.\n- Set the due date when the question can be resolved. For a figure, use its publication date. Company figures use the company's fiscal year: “this year” contains the item's publication day, and “next year” follows it. Other figures use calendar years. For an event, name the date at which its outcome is assessed.\n\nResearch groups\n- A research group is one ongoing matter in the world that several questions track together: a product rollout and its customer deployments, a financing or acquisition deal, a policy process, an investment or demand cycle. It usually spans companies and themes. When a candidate tracks a matter, declare the group in new_groups (local id n1, n2 …, with a name, a scope that says what is happening, and aliases: the names the matter goes by in the press, such as product, project or programme names and the parties; not company names) and cite that id in group_refs; a declared group whose names match a stored group is that group. A company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and carry no group: leave their group_refs empty unless the line itself tracks such a matter. A company is not a group, and a thesis is not a group.\n\nIdentity fields and numeric bounds\n- Select the closest measure allowed by the schema. Scope is its actual segment, product, population or event subject. Reuse a supplied reference name only when it has the same meaning; leave scope empty when unqualified.\n- period_start and period_end describe the period the figure covers. Convert fiscal years using the supplied fiscal-year note. Calendar year 2026 is 2026-01-01 through 2026-12-31. For an event, use the start of the year in which it is proposed through the due date.\n- Identify the accounting basis and unit. For event or policy_event, select the event type; otherwise use n/a. The schema supplies the allowed values.\n- Each numeric rung has an inclusive lower bound lo and exclusive upper bound hi, in the stated unit. Dollars are full dollar amounts; percentages use 73, not 0.73. The lowest numeric range has lo null, the highest hi null. Both bounds are null for yes/no outcomes.\n"
+    },
+    {
+      "role": "user",
+      "content": "[Category and how to read it] T8. Opinion and analysis: sell-side or independent research, commentary and personal posts. The author's opinions and estimates are third-party views, not facts; quoted company statements are party statements.\n\n[Subjects] The objects this item concerns: NVDA. For a candidate thesis about a company, object is its ticker; about a theme, choose an id from this list, or state what the matter is when none fits:\n  - chip-export-controls: Chip export controls\n  - ai-capex: AI capital spending\n  - custom-silicon: Custom silicon at cloud providers\n  - semiconductor-cycle: Semiconductor cycle\n  - fed-policy-rate: Fed policy rate\n  - us-inflation: US inflation\n  - us-recession-risk: US recession risk\n  - us-china-tariffs: US–China tariffs\n  - taiwan-strait: Taiwan Strait\n  - middle-east-conflict: Middle East conflict and oil prices\n  - russia-ukraine-war: Russia–Ukraine war\n  - supply-chain-shift: Supply-chain shift and shipping\nFiscal-year note (a numeric thesis takes its year and due date from it):\nNVDA's fiscal year ends in month 1 and is named for the calendar year in which it ends: FY2027 runs from 2026-02 to 2027-01; the publication day 2026-07-06 falls in FY2027, so this year is FY2027 and next year is FY2028; FY2027's full-year figures are published in the annual report around 2027-02; use that day as the due date.\n\n[What to read out] The author's forecasts, ratings and price targets with their figures; the facts and figures the author cites, with their original attribution. Not the author's general arguments or risk lists.\n\n[Research reference] Existing quantities and scopes (measure[scope](event_type)). Reuse a name only when the meaning is the same; propose important questions outside the list as usual, with their actual scope:\n  - NVDA: total_revenue; segment_revenue; gross_margin; operating_margin; operating_expense_growth; tax_rate; capex; product_revenue[Blackwell+Rubin]; product_revenue[Vera]; shipments_or_capacity[Rubin]; event[Rubin](shipment); event[Rubin](launch); event[H20/H200 China](licence); event[SK Telecom AI factory](deployment)\n\n[Research groups] None yet. For a candidate that tracks an ongoing matter (a product rollout, a deal, a policy process, an investment or demand cycle), declare the group in new_groups (local ids n1, n2 …) and cite it in group_refs; leave group_refs empty for a company's own financial lines.\n\n[Item] id gnews:71df54965281684cc500960f, category T8, author fool.com (analyst), published 2026-07-06, title: Nvidia Stock Is Below $200 Per Share Again. Here's When It Could Hit $300.\n\nNvidia Stock Is Below $200 Per Share Again. Here's When It Could Hit $300. | The Motley Fool\nAccessibility Help\n▲ S&P 500 + ---% | ▲ Stock Advisor + ---% Join The Motley Fool\nSearch for a company\nSearch for a company\nMember Login\nTop 10 Stocks to Buy Now ›\nTop 10 Stocks to Buy Now ›\nOur Services\nStock Market News\nHow to Invest\nRetirement\nPersonal Finance\nAbout Us\nMore\nAccessibility Help\nOur Services\nAll Services\nStock Advisor\nEpic\nEpic Plus\nFool Portfolios\nFool One\nCompare\nAll Podcasts\nHidden Gems Investing Podcast\nRule Breaker Investing Podcast\nFool Community Foundation\nAbout Us\nInvesting Philosophy\nContact Us\nMotley Fool Money\nReviews\nNewsroom\nOur Authors\nStock Market News\nTrending News\nStock Market News\nMarket Movers\nTech Stock News\nMarket Trends\nCrypto News\nStock Market Indexes Today\nMost Active Stocks Today\nToday's Biggest Stock Gainers\nToday's Biggest Stock Losers\nStock Quotes by Exchange\nMarket Research\n📨 Breakfast News\nTop Stocks to Buy Now\nBest ETFs to Buy\nBest AI Stocks\nBest Growth Stocks\nDividend Kings\nBest Index Funds\nNext Cryptos to Explode\nTechnology\nEnergy\nReal Estate\nHealthcare\nConsumer Goods\nMaterials\nIndustrials\nHow to Invest\nHow to Invest Money\nWhat to Invest In\nHow to Invest in Stocks\nHow to Invest in ETFs\nHow to Invest in Index Funds\nHow to Invest in Bonds\nFinancial Dictionary\nStock Market 101\nTypes of Stocks\nStock Market Sectors\nStock Market Indexes\nWhat Are Stock Splits?\nWhat Is Compound Interest?\nAfter Hours Trading\nHow to Buy Stock\nBest Brokers for Beginners\nBest Brokerage Accounts\nGood Time to Buy Stocks\nHow Many Shares to Buy?\nPortfolio Diversification\nHow to Invest $100\nMagnificent Seven Companies\nWarren Buffett Investments\nInvesting in ChatGPT\nInvesting in SpaceX\nInvesting in OpenAI\nInvesting in Nvidia\nInvesting in Databricks\nRetirement\nRetirement News\nRetirement 101\nTypes of Retirement Accounts\nHow to Contribute to 401k/IRA?\nStrategies to Save for Retirement\nAsset Allocation for My Age\nBest IRA Brokerage Accounts\nSocial Security 101\nHow to Maximize Social Security?\nFull Retirement Age\nCOLAs\nCalculate Your SS Benefits\nCollecting Spousal Benefits\nMaximize Social Security Benefit\nHow Much Do I Need to Retire?\nWhen To Retire\n401(k) Plans\n403(b) Plans\nRoth IRA Plans\nIRA Plans\nHSA Plans\nComplete Retirement Guide\nBest & Worst States to Retire\nAverage Retirement Savings\nMoving for Retirement\nHealthcare in Retirement\nUnderstanding Taxes in Retirement\n401(k) Minimum Distributions\nPersonal Finance\nBest Credit Cards\nBest Balance Transfer Cards\nBest Business Credit Cards\nCredit Card Reviews\nMore Credit Card Resources\nBest High-Yield Savings Accounts\nBest CD Rates\nBest Checking Accounts\nBank Reviews\nMore Banking Resources\nBest Online Stock Brokers\nBest Brokerages for Beginners\nBest IRA Accounts\nMore Brokerage Resources\nBest Mortgage Lenders\nBest Refinance Lenders\nMore Mortgage Resources\nBest Personal Loans\nAbout Us\nYouTube\nLinkedIn\nX\nFacebook\nInstagram\nDiscussion Boards\nCAPS - Stock Picking Community\nAdvertise With Us\nBecome an Affiliate Partner\nPublishing Standards\nFor a long time, Nvidia ( NVDA +2.48% ) was priced above $200 per share. Now, it has fallen below that after a few days of heavy selling pressure. The stock is down around 16% from its highs and is up a mere 6% for the year. That's a pretty disappointing result for most investors since Nvidia has been such a strong stock pick over the past few years.\nHowever, I still think the stock still has a bright future. In fact, I think it could easily rise over 50% to reach $300. But when might that occur? Let's take a look.\nImage source: Getty Images.\nNvidia is still the dominant force in the industry\nThe most recent round of artificial intelligence (AI) sell-offs has come from a familiar source: fear of overspending. As the market becomes worried that AI hyperscalers are spending too much on their buildout, any stock associated with the industry is struggling.\nNvidia is not isolated from that, which is why it has sold off so much. However, time and time again, the hyperscalers have told investors that the risk of underspending far outweighs the risk of overspending. The market may be growing frustrated by lofty capital expenditures on data centers, but the hyperscalers aren't planning on slowing down anytime soon.\nDuring its last quarterly conference call, management forecast that it expects hyperscaler spending to top $1 trillion in 2027 after reaching a projected $650 billion in 2026 .\nNVDA - Nvidia\n$216.20 +$5.24 (+2.48%)\nNASDAQ · As of 2:06 PM ET 10/26/26\nPremium Feature\nMoneyball Superscore 97 /100\nKey data points\nMarket cap\nMarket cap calculated using publicly traded shares outstanding only. Does not include unlisted, private, or dual-class non-traded shares. Implied market cap may vary. $5.08T\nDay's range $212.61 - $217.75\n52wk range $164.27 - $243.37\nVolume 55.8M\nAvg volume 117.1M\nGross margin 74.67%\nDividend yield 0.25%\nThat sounds like further revenue growth ahead, and that's exactly what Wall Street analysts are projecting as well. For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%. Those are strong growth rates and will likely lead to major profits as well.\nFor fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share. I think that's a conservative estimate, because the analyst community has consistently underprojected Nvidia's growth.\nIf we use that figure and value the stock at a reasonable earnings multiple of 25, the projected share price at the end of fiscal 2028 is $319. As a result, I think the stock could easily reach $300 per share sometime in late 2027.\nThat's 50% upside in about a year and a half, which is a great return in a short time frame . Furthermore, most of this growth is already known because management likely has good information on customer orders over the next year. So I think Nvidia is an excellent buy on this most recent round of sell-offs.\nRead Next\nOct 26, 2026 • By Matt DiLallo\nCan You Invest in Anthropic Pre-IPO? Here's What You Need to Know\nOct 26, 2026 • By John Ballard\nGot $5,000? 3 Growth Stocks to Buy and Hold Through 2030.\nOct 26, 2026 • By Keithen Drury\nIf I Could Buy Only 1 Stock, This Would Be It\nOct 26, 2026 • By Geoffrey Seiler\nElon Musk and SpaceX Just Delivered Incredible News to Nvidia That Could Help the Stock Double in the Next Year\nOct 26, 2026 • By Patrick Sanders\nJensen Huang Says Nvidia's Next-Gen Vera Rubin Chips Will Generate $40 Billion in Revenue per Gigawatt, Up From $25 Billion for Grace Blackwell. What That Means for NVDA's Growth Runway.\nOct 25, 2026 • By Keithen Drury\nNvidia CEO Jensen Huang Reaffirms His $4 Trillion Projection for AI Spending. Here's Why That Makes Nvidia a Screaming Buy Now.\nAbout the Author\nKeithen Drury is a contributing Motley Fool technology analyst covering AI, semiconductors, cybersecurity, and SaaS stocks. In addition to The Motley Fool, Keithen is a mechanical engineer and has held roles at Honeywell and smaller industrial companies like Brand Hydraulics and Lincoln Industries. He holds a bachelor’s degree in mechanical engineering from Dordt University.\nTMFTripleOption\nKeithen Drury has positions in Nvidia. The Motley Fool has positions in and recommends Nvidia. The Motley Fool has a disclosure policy .\nStocks Mentioned\nNvidia\nNASDAQ : NVDA\n$216.28\n( +2.52% ) +$5.32\nMotley Fool Stock Advisor ’ s Latest Pick\nGet Access\n---% Avg Return\n*Average returns of all recommendations since inception. Cost basis and return based on previous market day close.\nPremium Investing Services\nInvest better with The Motley Fool. Get stock recommendations, portfolio guidance, and more from The Motley Fool's premium services.\nView Premium Services\nMaking the world smarter, happier, and richer.\nFacebook\nTwitter\nLinkedIn\nPinterest\nYouTube\nInstagram\nTikTok\n© 1995 - 2026 The Motley Fool . All rights reserved.\nMarket data powered by Xignite and Polygon.io .\nAbout The Motley Fool\nAbout Us\nCareers\nMarket Research\nNewsroom\nContact\nAdvertise\nOur Services\nAll Services\nStock Advisor\nEpic\nEpic Plus\nFool Portfolios\nFool One\nMotley Fool Money\nAround the Globe\nThe Motley Fool Australia\nThe Motley Fool Canada\nFree Tools\nCAPS Stock Ratings\nDiscussion Boards\nCalculators\nFinancial Dictionary\nAffiliates & Friends\nMotley Fool Asset Management\nMotley Fool Ventures\nFool Community Foundation\nBecome an Affiliate Partner\nBecome an Advertising Partner\nTerms of Use\nPrivacy Policy\nDisclosure Policy\nAccessibility Policy\nCopyright, Trademark and Patent Information\nTerms and Conditions\nYour Privacy Choices\nArrow up\nS&P 500\n7,683.47\n+0.8%\n+59.79\nArrow up\nDJI\n52,340.22\n+0.2%\n+125.06\nArrow up\nNASDAQ\n26,227.99\n+1.1%\n+272.64\nArrow down\nBitcoin\n$80,165.00\n-0.6%\n-$457.86\nArrow up\nSPCX\n$148.59\n+0.7%\n+$1.10\nArrow down\nAAPL\n$343.45\n-1.2%\n-$4.28\nArrow up\nAMZN\n$249.35\n+0.5%\n+$1.35\nArrow down\nGOOG\n$314.98\n-0.7%\n-$2.31\nArrow down\nMETA\n$637.27\n-0.8%\n-$5.36\nArrow up\nMSFT\n$530.92\n+1.2%\n+$6.41\nArrow up\nNVDA\n$216.27\n+2.5%\n+$5.31\nArrow up\nTSLA\n$395.53\n+6.3%\n+$23.31\nNvidia Stock Is Below $200 Per Share Again. Here's When It Could Hit $300.\nShares have sold off a fair bit in recent days, but they could hit new levels in a short time frame.\nBy Keithen Drury – Jul 6, 2026 at 8:53AM EST\n+ Fool.com on\nShare\nSummarize with AI\nKey Points\nNvidia is highly exposed to the AI infrastructure build-out.\nThe chipmaker expects major growth to occur again in 2027.\n\nReturn evidence and candidates per the JSON schema. A candidate's evidence_ids are its own evidence ids; an evidence item's links are this answer's candidate ids (such as c1), or empty. year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). Return empty arrays only for a page with no business content."
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "extraction",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence",
+          "candidates",
+          "new_groups"
+        ],
+        "properties": {
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "quote",
+                "one_line",
+                "speaker",
+                "original_who",
+                "original_day",
+                "tier",
+                "event_time",
+                "links"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "quote": {
+                  "type": "string"
+                },
+                "one_line": {
+                  "type": "string"
+                },
+                "speaker": {
+                  "type": "string"
+                },
+                "original_who": {
+                  "type": "string"
+                },
+                "original_day": {
+                  "type": "string"
+                },
+                "tier": {
+                  "type": "string",
+                  "enum": [
+                    "fact",
+                    "party_statement",
+                    "third_party_view",
+                    "rumour"
+                  ]
+                },
+                "event_time": {
+                  "type": "string"
+                },
+                "links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "object",
+                "kind",
+                "looks_at",
+                "question",
+                "rungs",
+                "due_day",
+                "year",
+                "evidence_ids",
+                "measure",
+                "scope",
+                "period_start",
+                "period_end",
+                "basis",
+                "unit",
+                "event_type",
+                "group_refs",
+                "opens_as",
+                "settled_by"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "asset",
+                    "theme"
+                  ]
+                },
+                "looks_at": {
+                  "type": "string"
+                },
+                "question": {
+                  "type": "string"
+                },
+                "rungs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "label",
+                      "condition",
+                      "lo",
+                      "hi"
+                    ],
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "condition": {
+                        "type": "string"
+                      },
+                      "lo": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "hi": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "due_day": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "year": {
+                  "type": "string"
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "measure": {
+                  "type": "string",
+                  "enum": [
+                    "total_revenue",
+                    "segment_revenue",
+                    "product_revenue",
+                    "gross_margin",
+                    "operating_margin",
+                    "operating_expense_growth",
+                    "total_expenses",
+                    "operating_loss",
+                    "tax_rate",
+                    "capex",
+                    "shipments_or_capacity",
+                    "run_rate",
+                    "design_wins",
+                    "event",
+                    "spend_total",
+                    "market_size",
+                    "project_cost",
+                    "financing_amount",
+                    "price",
+                    "capacity",
+                    "growth_rate",
+                    "policy_event",
+                    "other"
+                  ]
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "period_start": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "period_end": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "basis": {
+                  "type": "string",
+                  "enum": [
+                    "GAAP",
+                    "non_GAAP",
+                    "n/a"
+                  ]
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "percent",
+                    "count",
+                    "GW",
+                    "MW",
+                    "TWD",
+                    "multiple",
+                    "n/a"
+                  ]
+                },
+                "event_type": {
+                  "type": "string",
+                  "enum": [
+                    "launch",
+                    "shipment",
+                    "licence",
+                    "approval",
+                    "deal_close",
+                    "deployment",
+                    "other",
+                    "n/a"
+                  ]
+                },
+                "group_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(?:n[1-9][0-9]*)$"
+                  }
+                },
+                "opens_as": {
+                  "type": "string",
+                  "enum": [
+                    "main_driver",
+                    "industry_aggregate",
+                    "policy_stage",
+                    "binding_obligation"
+                  ]
+                },
+                "settled_by": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "new_groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "name",
+                "scope",
+                "aliases"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^n[1-9][0-9]*$"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "aliases": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "max_completion_tokens": 8000,
+  "reasoning_effort": "low"
+}

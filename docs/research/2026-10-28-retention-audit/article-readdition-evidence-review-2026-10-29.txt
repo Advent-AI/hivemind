@@ -1,0 +1,168 @@
+**The counts reproduce, and I found no wrong labels in the 16/40 page-location split. But important source, date and meaning problems remain.** For example, a recommendation dated June 10 became a July 7 announcement, while 16 quotes were compared against HTML for an entirely different article.
+
+I read all 56 passages across their 20 stored `text_page` records, checked the relevant extractor outputs, and reconciled the original v38 extraction, handovers and final evidence.
+
+**1. Numerical verification**
+
+| Check | Result |
+|---|---|
+| Archived extraction population | 98 answers, containing **841 evidence records** |
+| Passing extraction checks | **831** |
+| Difference | Five quote refusals and five duplicate-quote merges |
+| Exact fallback-only test | **56 quotes**, all passing extraction checks |
+| Page-location labels | **16 other-article quotes on four pages; 40 same-article/on-topic quotes** |
+| Original handovers, all 56 | **54 “no home”; two retained** |
+| Original handovers, other-article 16 | **All 16 “no home”** |
+| Same-input, normalized exact-quote final mapping | **Two matches: e105 and e110** |
+
+Both saved census scripts reproduced their stored results. The broader HTML census covers 96 extracted articles; one article lacks HTML and one input is not an article.
+
+Sources: [evidence census](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-readdition-evidence-2026-10-29.json), [source-read labels](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-readdition-evidence-read-2026-10-29.json).
+
+**2. Sixteen comparisons use the wrong article’s HTML**
+
+These passages belong to their stated articles in `text_page`:
+
+| Input ID | Local evidence IDs |
+|---|---|
+| `nvblog:nvidia-unlocks-ai-compute-at-scale-capital-partners-to-power-ai-infrastructure-buildout` | e1–e4 |
+| `nvblog:geforce-now-thursday-july-2026-games-list` | e1–e4 |
+| `nvblog:nations-deploy-ai-strategic-priorities` | e1–e8 |
+
+But all three mapped HTML files have this title:
+
+> 11 Essential Explainers to Keep You in the Know in 2023 | NVIDIA Blog
+
+All produce the same 2,418-character extractor output, beginning:
+
+> The NVIDIA corporate blog has long been a go-to source for information on the latest developments in AI and accelerated computing.
+
+Thus, **16/56 satisfy the script’s comparison mechanically, but do not demonstrate omission by the extractor from the correct article HTML**. Their same-article labels remain correct against `text_page`.
+
+One directly inspectable example is the [HTML mapped to the AI Compute article](/Users/lchingen/hivemind/poc/corpus/raw/pages/d2fb92908ddb038fea141a6c995a55a58886854fd2bd00b3e2e9a585195d10b5.html). I did not establish when or how this mismatch arose.
+
+**3. All 16 other-article quotes have materially different source context**
+
+All IDs below are local to the specified input. Every one was accepted by extraction, dropped as **“no home”**, and has no same-input exact-quote final match.
+
+**`gnews:8f5a03f1dde395491fc3814b` — e6, e7, e8**
+
+These are under **“Featured”**, after the scientific-workflows article.
+
+| ID | Exact source excerpt | Date evidence in saved HTML |
+|---|---|---|
+| e6 | “OpenAI has announced it is preparing to retire Custom GPTs” | Linked article path contains **`/2026/10/05/`** |
+| e7 | “Meta is returning to open-weight artificial intelligence with Muse Glimmer” | Linked article path contains **`/2026/08/26/`** |
+| e8 | “Microsoft has unveiled Frontier Company, making a $2.5 billion bet” | Linked article path contains **`/2026/07/08/`** |
+
+The extraction assigned **July 1, 2026** to both `original_day` and `event_time` for all three. The saved links point to later articles. Those URL dates establish a source-date conflict; they do not independently establish each event’s actual date.
+
+**`gnews:1eeceeb212a2c82c2e75e806` — e14, e15**
+
+Both are in **“Related”**.
+
+- **e14:**  
+  > The U.S. government is probing whether the Hangzhou-based AI firm has built its disruptive R1 AI model on restricted Nvidia chips.
+
+  Its heading identifies **DeepSeek**. The linked article path is **`/2025/02/is-chinas-deepseek-using-smuggled-ai-chips-from-singapore/`**. The standalone extraction leaves the company unnamed. The host article’s body separately describes this investigation as occurring in February of the previous year.
+
+- **e15:**  
+  > The number of such cases more than tripled from 589 in the first half of 2024 to 1,762 over the same period this year, according to the Singaporean police.
+
+  The heading is **“Singapore Orders Meta to Clamp Down on Facebook Impersonation Scams”**. Its link contains **`/2025/09/`**. These are **Facebook impersonation scams**, not chip-smuggling cases. The extraction incorrectly expands “this year” to **2026** and leaves “such cases” unresolved. This is a clear period error and a misleading subject omission.
+
+**`gnews:f66e1689ec2e27e7eab2a2dd` — e8–e14**
+
+These sit under **“More Software & Technology Insights”**. All three recommendation cards explicitly say **“Oct 23, 2026”**, although the host input is dated July 6.
+
+| IDs | Exact source text identifying the content |
+|---|---|
+| e8–e10 | “Uber cut 3,300 jobs in September. Now it is giving 30,000 employees ChatGPT”; “Uber expanded ChatGPT Work from a 1,000-person pilot to over 30,000 employees”; “80% of early adopters were non-engineers” |
+| e11–e12 | “Two critical unauthenticated remote code execution flaws in PHP”; “Exploitation attempts reached millions within hours of disclosure, though confirmed compromises remain unproven” |
+| e13–e14 | “Schneider Electric engineers cite estimates that single-phase holds about 55% of the 2026 liquid cooling market.” |
+
+Extraction gives **e8–e12 `original_day = 2026-07-06`**. For e11 it additionally says the October 23 year is unspecified, although the recommendation card supplies 2026.
+
+E13–e14 leave `original_day` empty, but still entered through the July input. Their cooling-market content may be relevant; placement in a recommendation card does not make it unimportant.
+
+**`gnews:022516991251df7f1af4d7cb` — e3–e6**
+
+These are under **“See also”**, with explicit dates:
+
+| IDs | Exact source excerpt | Card date |
+|---|---|---|
+| e3–e4 | “Today we’re introducing the Nebius Agents Blueprint”; “a compliance audit agent that achieved 72% lower cost and 20% higher precision over a GPT-based prototype” | **June 10, 2026** |
+| e5 | “Nebius and LangChain have partnered to integrate Nebius Token Factory with LangChain’s Deep Agents.” | **May 13, 2026** |
+| e6 | “Introducing Aether 3.6. Our latest quarterly platform release” | **June 24, 2026** |
+
+All four receive **July 7 `original_day`**. E3 explicitly becomes an introduction **“on 2026-07-07”**; e4 becomes results reported that day. Those are incorrect source-date assignments. E5–e6’s “by July 7” event wording is compatible with earlier announcements, but their original-source dates remain wrong.
+
+**4. Eight of the 40 same-article quotes are explicitly AI-generated summaries**
+
+The exact IDs are:
+
+- `gnews:1812ea244efbe4fb211eaa93` — **e3**
+- `gnews:b18e2cdb0acbbd624a794827` — **e1–e3**
+- `gnews:4249e0578b11cedf5a71ff08` — **e10**
+- `gnews:56085a9d3e88c464bcaed67b` — **e1–e3**
+
+The stored pages label these sections **“AI-Generated Summary”** and say:
+
+> Powered by NVIDIA Nemotron. AI-generated content may summarize information incompletely. Verify important information.
+
+**Both markers are absent from the cleaned text sent to extraction on all four pages.** The same-topic labels are defensible, but they conceal an important difference in source authorship.
+
+A concrete meaning problem appears in **`gnews:56085a9d3e88c464bcaed67b` e3**. The summary says:
+
+> The platform is being adopted by humanoid makers including 1X, Agility, ANYBotics, and Skild AI, research institutions such as Stanford and ETH Zurich, and XR device makers including HTC Vive and PICO.
+
+The body distinguishes three different situations:
+
+> Humanoid makers and AI providers … are integrating components of the GR00T platform
+
+> Research institutions including Stanford, CMU, UCSD, ETH Zurich, and AI2 will be experimenting with the unified GR00T end-to-end workflow
+
+> Leading wearable and XR device makers … offer devices with native support for NVIDIA Isaac Teleop
+
+The summary—and extraction—collapse **current component integration, future experimentation and compatible devices** into current platform adoption.
+
+By contrast, the Vera performance figures and Nokia collaboration have corresponding support in the article bodies. Generated origin alone is not evidence that their claims are false.
+
+**5. Additional meaning and date qualifications within the 40**
+
+- **`gnews:c6445931955f107b551cce85` e1:** its `one_line` says the article does not give the seizure date. Immediately after the quoted lead, the source says:
+
+  > The Singapore Police Force issued a prohibition of disposal order on July 1 freezing any sale or transfer of the Good Class Bungalow
+
+  The source provides **July 1 for the specified legal action**. Calling the date absent misses that context; calling the action simply a seizure also loses the source’s more precise description.
+
+- **`gnews:d1a7a7f18dce5c8ae5e4d0ae` e14–e17:** the input’s publication day is **July 5**, but `text_page` says **“6 July 2026”** and begins **“(July 6)”**. Extraction uses July 6, matching the page. The problem is the earlier input date, which can introduce later reporting into an earlier replay position.
+
+- **`gnews:bdcb0ed0921c2e9ae241083c` e2:** the source is a conditional investment judgment:
+
+  > those looking to get back into the Palantir waters might wish to tread cautiously, especially if it turns out that 85% revenue growth quarter is nothing more than an outlier.
+
+  Its `one_line` retains only that Palantir had an 85% revenue-growth quarter. The caution and uncertainty disappear. The quote itself remains intact.
+
+- **`gnews:ff7d99387d1dae92ede72145` e1–e3:** these really are the host article’s analyst targets and author recommendation. The page names **Chris MacDonald**, dated **July 5, 2026**, and says:
+
+  > To me, NVDA stock looks more like a hold right now than anything else.
+
+  I found no basis to relabel these as other-article recommendations. The Palantir article likewise names **Joey Frenette**, dated **July 3, 2026**.
+
+**6. Exact final evidence mapping**
+
+| Input/local ID | Final ID | Exact stored quote |
+|---|---|---|
+| `gnews:3df0bbc8aff2c1d008bc0a32` / e1 | **e105** | “Nvidia's $119B in supply commitments hinge on AI delivering measurable economic value beyond productivity tools, which is a question the market appears to already be pricing in.” |
+| `gnews:4d1b1ca014068fb532f116b3` / e1 | **e110** | “NVIDIA posted 85% revenue growth to $82 billion in Q1” |
+
+Both originate in **“Quick Read”** sections.
+
+For e110, the body explicitly supplies **“Q1 FY27”**, **$81.61 billion** and **85.2% year-over-year growth**, supporting the rounded summary and fiscal-period interpretation. E105’s source does not specify the commitments’ period; its final record correctly leaves `event_time` empty. Its `one_line`, however, retains the amount without the quoted economic argument.
+
+These matches were checked directly against the [original v38 ledger](/Users/lchingen/hivemind/poc/data/english-v38-nvda-1w-2026-10-28/views.sqlite), not inferred from the label file.
+
+The remaining limits matter: **56 is an exact-text comparison count, not a count of unique lost facts or unwanted content**. Equivalent information sometimes survives in the extractor output. Cross-line quotes fall outside this test. Exact-quote non-matches do not rule out paraphrases or records from another input. These pages were retrieved in October, so this audit does not establish what their July versions contained. No factual or economic accuracy rate follows from the 16/40 split.
+
+No files were modified and no provider APIs were called.

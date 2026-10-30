@@ -1,0 +1,126 @@
+**The census and fixed-seed sample reproduce. Two sample labels are wrong, one caption label can be resolved, and the four science-page Featured teasers entered through the long-line fallback.** For example, sample 28 looks like an article’s closing instruction, but its original location is inside an explicitly marked AI-generated summary.
+
+I read the complete stored `text_page` for all 17 sampled pages. No files were edited, and no models or provider APIs were called.
+
+**1. Reproduction**
+
+Using the stored databases and installed `trafilatura 2.3.1`, I independently rebuilt the census and matched every saved case, line list, cleaned-text hash, and count in the [census JSON](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-readdition-census-2026-10-29.json).
+
+| Measure | Reproduced |
+|---|---:|
+| Inputs / distinct input IDs | 98 / 98 |
+| Article inputs | 97 |
+| Non-article inputs | 1 |
+| Articles missing stored HTML | 1 |
+| Articles with nonempty extractor output | 96 |
+| Pages containing fallback lines | 49 |
+| Fallback lines | 214 |
+| Remaining unclassified cleaned lines | 0 |
+
+The [sample JSON](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-readdition-sample-2026-10-29.json) reproduces **in exact order** with:
+
+```python
+population = [
+    (case["input_id"], line)
+    for case in census["cases"]
+    for line in case["readded_lines"]
+]
+random.Random(20261029).shuffle(population)
+sample = population[:30]
+```
+
+Calling `random.sample(population, 30)` instead produces a different sample. The saved description names the seed but omits the shuffle-and-take procedure.
+
+The saved samples’ one-based positions in the original 214-line population are:
+
+```text
+87, 203, 116, 201, 204, 159, 207, 156, 111, 28,
+141, 13, 186, 205, 83, 191, 105, 173, 39, 171,
+131, 167, 10, 170, 15, 147, 89, 144, 149, 108
+```
+
+**2. Label findings and source meaning**
+
+- **Samples 11 and 28:** change in audit judgment from `article` to **same-topic summary**. In the Goodput page, raw line 25 says `AI-Generated Summary`; samples 11 and 28 occur at lines 28 and 33. Line 34 says `Powered by NVIDIA Nemotron. AI-generated content may summarize information incompletely. Verify important information. Learn more`. The article body begins at line 35.
+- **Sample 10:** resolve `caption_ambiguous` as **image caption**. The saved HTML places the exact text in `div.caption`, inside `div.image-ct.inline`, within the article body. It is associated with this article, not an unrelated recommendation.
+- The other saved labels agree with their original locations. “Unrelated page content” below means **outside this article’s authored content**. Comments and recommended stories may still discuss the same subject.
+
+For these **30 sampled lines only**, my classifications are:
+
+| Classification | Count | Sample numbers |
+|---|---:|---|
+| Original article content | 7 | 3, 9, 15, 17, 19, 23, 30 |
+| Same-topic summary | 11 | 2, 5, 8, 11, 12, 13, 14, 16, 25, 28, 29 |
+| Other page content | 11 | 1, 4, 6, 7, 18, 20, 21, 22, 24, 26, 27 |
+| Image caption | 1 | 10 |
+| Uncertain | 0 | — |
+
+These categories describe **where the text belongs**, not whether its claims are true or independently corroborated.
+
+A summary and its article are not two independent sources. An attributed quotation within an article is not, by itself, independent corroboration either. Sample 23 is a Firmus executive’s quotation published in NVIDIA’s own article. Its speaker is identifiable, but independence is not established by its location.
+
+Summary fidelity also needs a separate judgment. Sample 2 states “dropping NVDA 1.4%.” The same page’s body, raw line 76, says shares “actually rose more than 1% on Monday”; line 75 records NVIDIA disputing the reported delay. Thus **same-topic summary does not mean faithful replacement for the body**.
+
+**3. Exact sampled lines**
+
+All line numbers below are one-based within the corresponding row’s original `text_page` in the [source database](/Users/lchingen/hivemind/poc/data/items-nvda-2026-07-01-10-27.sqlite). Sample numbers identify the exact rows in the linked sample JSON.
+
+| Sample | Original location and judgment | Raw source line |
+|---|---|---|
+| 1 | SteamOS page, **L203 — comment**. Under user `Can8ian`, followed by timestamp and voting controls. | What I don't understand is why it takes so long for valve to implement nvidia drivers when bazzite and so many other linux distros have already done it. I know bazzite is fedora based and steamOS is arch based but it feels like valve is holding back. Heck it doesn't just feel like it, it is obvious. |
+| 2 | Circuit-board delay page, **L71 — same-topic summary**. Under `Quick Read`. | A 78-layer PCB midplane delays NVIDIA's Kyber NVL144 to 2028, dropping NVDA 1.4%, while AMD gains a clear competitive window with shares up 158% YTD. |
+| 3 | Nations page, **L31 — original article**. One of five national-AI-strategy ingredients. | AI Ecosystem: A local ecosystem of AI investors, developers, scientists, entrepreneurs, enterprise customers and government organizations. |
+| 4 | $10,000 investment page, **L197 — author biography**. Under `About the Author`, after `Read Next`. | Jack is a seasoned content strategist with over a decade of experience in financial publishing. He's directed technology, emerging opportunities, and alternative asset publications to deliver actionable insights to investors. |
+| 5 | Circuit-board delay page, **L72 — same-topic summary**. Under `Quick Read`. | Google Cloud revenue surged 63% with backlog nearly doubling to $460 billion, strengthening its in-house TPU case as NVIDIA's Kyber slip extends to 2028. |
+| 6 | Biggest Threat page, **L134 — another article’s teaser**. Under `Continue Reading`, beneath a separate headline. | Nvidia is letting a rival chipmaker plug directly into its own racks, and the move only looks like a concession until you follow the money through every layer of the data center. |
+| 7 | Circuit-board delay page, **L91 — author biography**. After the article’s contact line, under Danielle Liverance. | My day job is helping enterprise executives make smarter decisions about retention, compensation, and growth. These are the same operational levers that show up in every earnings report investors actually read. That perspective shapes my writing for 24/7 Wall St. |
+| 8 | Biggest Threat page, **L72 — same-topic summary**. Under `Quick Read`. | Amazon, Google, Microsoft, and Meta are all building proprietary silicon to cut costs and gain negotiating leverage over NVIDIA. |
+| 9 | Nations page, **L24 — original article**. Under `Factoring In AI Factories`. | Countries are building domestic computing capacity through various models. Some are procuring and operating AI clouds in collaboration with state-owned telecommunications providers or utilities. Others are sponsoring local cloud partners to provide shared AI computing platforms for public-private use. |
+| 10 | Corning page, **L285 — image caption**. Confirmed by saved HTML structure. | For decades, Corning has been at the forefront of fiber optic innovation, developing technologies that enable faster, more reliable communications. (Courtesy of Corning) |
+| 11 | Goodput page, **L28 — same-topic AI summary; saved label wrong**. | Efficient resharding overlapped with backward computation and parameter synchronization limits overhead to less than 1% for healthy replicas. |
+| 12 | Agent Reinforcement Learning page, **L26 — same-topic AI summary**. | Reinforcement learning with verifiable rewards (RLVR) using group relative policy optimization (GRPO) enables enterprises to specialize open models such as Nemotron for accurate, domain-specific agents. |
+| 13 | GR00T page, **L29 — same-topic AI summary**. The body separately discusses these benchmarks at L71. | Benchmarks show consistent improvements over N1.6, including DROID-F0 (+10%), DROID-F6 (+61%), SimplerEnv Bridge (+5%), and Fractal (+2%). |
+| 14 | Circuit-board delay page, **L73 — same-topic summary**. Under `Quick Read`. | The AI bottleneck has shifted from chip design to system assembly, yet NVIDIA still commands 81% market share and trades 45% below GuruFocus fair value. |
+| 15 | Palantir page, **L283 — original article**. Author’s concluding assessment, before the final paragraph and promotional footer. | While I do view the partnership as a potential turn in Palantir stock as investors warm up to AI plays beyond semis again, I wouldn't expect the development to kick off a sustained run to the Street-high price target, currently pinned at $230 per share or about 78% above current levels. |
+| 16 | Vera CPU page, **L25 — same-topic AI summary**. | NVIDIA Vera CPU maximizes sustained per-core performance under full socket load to accelerate the CPU-side work that sits on the critical path of agentic AI workflows. |
+| 17 | Nations page, **L15 — original article**. Opening body paragraph. | AI, the most important technology of our time, is turbocharging innovation across every facet of society. Countries are investing in AI capabilities so they can design, train and deploy models and applications, using domestic infrastructure, local datasets and homegrown expertise. This approach ensures AI solutions are tailored to local citizens, services and regulations. |
+| 18 | TIKR Kyber page, **L103 — another article’s teaser**. Under `Related Posts`, beneath the Figma headline. | Figma stock rose 9.49% to close at $21.34, its second straight leg higher off the June lows. But the fuel was a Russell index add and a re-upped analyst call, not new fundamentals. With an August lock-up and an activist overhang still ahead, the question is whether an index-flow bounce can hold. |
+| 19 | GeForce NOW July page, **L19 — original article**. Main game description under `Light Side, Dark Side, Cloud Side`. | Rule the board, you must. Choose a side in Monopoly: Star Wars Heroes vs. Villains , the classic property-trading board game reimagined with legendary characters, locations and rivalries from across the Star Wars universe. |
+| 20 | TIKR Kyber page, **L93 — another article’s teaser**. Under `Related Posts`, beneath the Dell headline. | Dell dropped 7.27% in a single session as the market circled back to one worry: AI servers are dragging down margins. The same week, Dell signed a storage deal that speaks directly to that fear. We checked whether the sell-off is a warning or a window. |
+| 21 | Vera Rubin rack-cost page, **L118 — another article’s takeaway**. Under `More Software & Technology Insights`, in the Uber story. | 01 Uber expanded ChatGPT Work from a 1,000-person pilot to over 30,000 employees across operations, finance, marketing, and product teams. |
+| 22 | Utah microreactor page, **L151 — site branding**. After the car-brand navigation, before footer links. | Autonotion is the English-language automotive editorial by Autonocion.com — car news, reviews, and industry analysis for American readers. |
+| 23 | AI infrastructure partners page, **L25 — original article**. Attributed Firmus quotation following the Batam-campus paragraph. | “AI-native companies need access to scalable, energy- and cost-efficient compute infrastructure to compete globally,” said Tim Rosenfield, co-CEO of Firmus Technologies. “Firmus AI cloud is building a NVIDIA DSX-aligned AI factory, which will enable our cloud to help more customers access the compute they need to build and scale AI.” |
+| 24 | TIKR Kyber page, **L88 — another article’s teaser**. Under `Related Posts`, beneath the Seagate headline. | Seagate dropped 10.38% in a single session on a memory-sector oversupply scare, one day after Bank of America lifted its target to $1,150. The trigger had little to do with what Seagate actually sells. With the order book locked for four to five quarters and fiscal Q4 earnings days away, the question is whether this was a crack or a discount. |
+| 25 | Agent Reinforcement Learning page, **L28 — same-topic AI summary**. | NVIDIA NeMo RL and NeMo Gym provide scalable post-training workflows and environment infrastructure that connect agents, tools, and verifiers for reproducible RL runs. |
+| 26 | Goodput page, **L80 — author biography**. Under `About Ankit More`. | Ankit More is a distinguished engineer and manager in the NVIDIA Compute Architecture group. He leads a team developing hardware and software technologies for resilient, efficient AI systems spanning training, inference, and LLM serving. Before NVIDIA, he focused on accelerated system design for HPC, graph analytics, and AI workloads. He received his Ph.D. in Electrical and Computer Engineering from Drexel University. |
+| 27 | SteamOS page, **L309 — comment**. Under user `Aza`, followed by timestamp and voting controls. | The only thing keeping me on windows right now is the lack of anti cheat support on Linux. If I could play battlefield 6 natively on steam OS I'd be sold. It does stream well to the deck from my PC for lazy sessions though. |
+| 28 | Goodput page, **L33 — same-topic AI summary; saved label wrong**. `Next Steps` remains inside the summary block. | Review the Nonuniform Tensor Parallelism Readme to learn about its recent addition to the NVIDIA Megatron Core developer branch. |
+| 29 | Black Sheep page, **L72 — same-topic summary**. Under `Quick Read`; corresponding body figures appear at L77. | AMD surged 171% and Micron 305% year to date, rewarding investors who bet on chips with room to reprice rather than perfection already baked in. |
+| 30 | Nations page, **L20 — original article**. Under `Why AI Capabilities Matter`. | Large language models are not only used to understand and generate human language; they can also write software code, aid in drug discovery, help protect consumers from financial fraud, teach robots physical skills and much more. |
+
+**4. Known science-page control**
+
+For `gnews:8f5a03f1dde395491fc3814b`, *Anthropic, NVIDIA Move AI Agents Deeper into Scientific Workflows*, the structural explanation holds for **all four Featured lines**.
+
+The raw page ends its displayed article body at L60, then shows pagination, email/print controls, and **`Featured` at L67**. Each following teaser has its own headline.
+
+| Raw line → cleaned line | Characters | Exact raw teaser |
+|---|---:|---|
+| L69 → L14 | 185 | OpenAI has announced it is preparing to retire Custom GPTs and move the specialized workflows built around them to a new plugin architecture spanning ChatGPT and its Codex coding agent. |
+| L71 → L15 | 272 | Meta is returning to open-weight artificial intelligence with Muse Glimmer, a new AI model designed to run on consumer hardware, as CEO Mark Zuckerberg argues that increasingly capable AI should be widely available rather than controlled by a small number of institutions. |
+| L73 → L16 | 163 | Marc Booker, vice provost of strategy at the University of Phoenix, examines how to recognize and promote human-centered workforce development in higher education. |
+| L75 → L17 | 213 | Microsoft has unveiled Frontier Company, making a $2.5 billion bet that the next competitive battleground in artificial intelligence will not be foundation models, but helping enterprises put those models to work. |
+
+For each of these four lines:
+
+- It survives the preliminary line rules.
+- It fails the extractor-membership check.
+- It is not a byline.
+- It passes the **at least 120 characters plus ending punctuation** fallback in [clean_article](/Users/lchingen/hivemind/poc/corpus/scripts/clean_pages.py:166).
+- It appears in the saved cleaned text.
+
+The `Featured` heading is removed by the preliminary rules. The four story headlines survive those rules but fail the final retention check. This leaves the teaser prose without its original boundaries.
+
+Replaying the current cleaner on this page, with publisher templates reconstructed from stored original pages, reproduced its saved cleaned lines exactly. This page has **seven** fallback lines in total: the four Featured teasers above and three same-topic `Key Takeaways` at raw L49–51. The seven must not all be labeled unrelated content.
+
+These findings apply to the inspected sample and named control; they do not establish population-wide content quality.

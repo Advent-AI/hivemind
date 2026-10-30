@@ -1,0 +1,15 @@
+**I found no remaining serious issue in the updated design, within the requested review scope.** For example, if a control answer lists all six articles but says it could not read one, the contract now marks the sample invalid instead of treating a missing fact as a correct exclusion.
+
+The updated [design](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/direct-judge-trial-design-2026-10-29.md:61) addresses the earlier serious findings:
+
+- It checks **every output field and the API status** for refusal or incomplete reading. A clear refusal invalidates the sample; an unclear case is held for review and does not pass.
+- It records whether the article supports the meaning and whether the quote covers it as **yes, no, or uncertain**. An uncertain result cannot count as an overall pass. The 9/9 threshold refers only to label agreement.
+- It keeps failed, incomplete, interrupted, and structurally invalid calls out of scoring, preserves their status, and does not replace them automatically. Partial or ambiguous control mappings remain unresolved.
+- It fixes the control’s previously missing `excluded` type and the other stated output fields, so an implementer does not have to invent that core structure.
+- It reserves **$0.24 for six outputs capped at 8,000 tokens each**, plus input charges for three generation calls and one counting reservation for each of the two request types. Generation is allowed only if the exact counts and stated rates put the whole reservation below $0.60.
+
+The saved reviews report that all nine labels match Alex’s recorded decisions, including the three parts of question 6 and the limited Singapore case. I relied on those saved checks; I did not independently reopen the underlying decisions or articles because they were outside the requested scope.
+
+The budget conclusion is conditional on the stated prices and the counting interface returning an accurate count for the frozen requests. I did not verify the provider’s current pricing or interface. The design itself requires stopping if those assumptions or the parameters cannot be confirmed.
+
+This remains a **small development calibration** on previously seen cases. It is not acceptance, evidence that the judge can find all facts independently, or authorization to change product behavior. No files were edited and no experiments were run.

@@ -1,0 +1,7 @@
+有两项应在发送前解决的问题。例如，模型照抄输入中的采访日期，可能被误判为自己编造时间。
+
+1. **输入已经混入原文不能确认的发言日期。** 六例中，NVIDIA 的 James Manning、Corning 的 Wendell Weeks 和 Emily Capek，共三条人物发言都填了 `original_day=2026-07-01`，但所附全文没有确认他们当天发言。它们会污染 `source_and_time` 的评分。应在本次研究副本中区分报道日和未知发言日；若保留历史输入，须预先规定如何判定这种输入冲突，不能直接归咎于模型。[NVIDIA](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-evidence-use/nvidia-reference.json:35)、[Corning](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-evidence-use/corning-reference.json:18)
+
+2. **“改善”的判定还没有写到可以复核。** 目前列了四个评分维度，但没有固定每个“主张×用途”的合格条件，也没有规定三次结果怎样合并。例如，控制错两次、处理错一次，是否就算改善？“公开摇摆”没有回答这个问题。应在发送前冻结这些规则，包括允许的语义等价答案和“不确定”结果。36 次可以支持六例的探索性比较；两个来源已知的检验例只能提供有限的退化检查，不能证明标准普适或候选机制已被证实。六例的已有问题和历史材料均为空，也不能据此判断更新已有论证的效果。[评分与采用条件](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-evidence-use/design.md:24)
+
+已核对完整提示词和十二份请求：两臂确实仅替换 Action 段。未修改文件或发起实验调用。

@@ -1,0 +1,135 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 6000,
+  "system": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the output. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Separate source facts, inference and unknowns; preserve conditions and periods. Comparison opinions are hints; texts decide. Answer in the JSON schema only.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"In late June 2026, NN, Inc. announced a major expansion of its liquid cooling production for NVIDIA AI data center racks, adding 47 new machine centers in its Wuxi, China plant\", \"one_line\": \"NN, Inc. announced in late June 2026 that it would add 47 machine centers for liquid cooling production at its Wuxi, China plant for NVIDIA AI data center racks.\", \"speaker\": \"finance.yahoo.com, reporting NN, Inc.'s announcement\", \"original_who\": \"NN, Inc.\", \"original_day\": \"\", \"tier\": \"fact\", \"event_time\": \"late June 2026\", \"publisher\": \"finance.yahoo.com\", \"publisher_type\": \"media\", \"publication_day\": \"2026-07-01\", \"category\": \"T7\", \"title\": \"Why NN (NNBR) Is Up 24.7% After Pre-Selling New NVIDIA Liquid Cooling Capacity Expansion\"}, \"source_article\": \"In late June 2026, NN, Inc. announced a major expansion of its liquid cooling production for NVIDIA AI data center racks, adding 47 new machine centers in its Wuxi, China plant with 100% of this new capacity already pre-sold and tied to multi-year, multi-product awards.\\nThis move effectively deepens NN's role in NVIDIA's Asia supply chain while repurposing legacy automotive capacity and targeting US$80–US$90 million of accretive new business in 2026.\\nWe'll now examine how NN's fully pre-sold expansion of NVIDIA-related liquid cooling capacity could reshape the company's existing investment narrative.\\nWe've uncovered the 10 dividend fortresses yielding 5%+ that don't just survive market storms, but thrive in them.\\nTo own NN, I think you have to believe its pivot from slower automotive and industrial markets toward higher value data center content can meaningfully change the story, even while the company is still unprofitable and carries meaningful debt. The fully pre sold NVIDIA liquid cooling expansion directly reinforces the near term growth catalyst of new program ramp ups, but it does not remove the execution and balance sheet risks that remain front and center.\\nAmong the recent developments, NN's removal from the Russell Microcap Value Index in late June 2026 stands out alongside this NVIDIA news. Index removal can affect trading liquidity and share price volatility at the same time management is leaning into capital intensive growth tied to AI racks, which could sharpen the contrast between improving commercial momentum and ongoing funding, refinancing, and execution risks as the data center opportunity scales.\\nRead the full narrative on NN (it's free!)\\nNN's narrative projects $485.5 million revenue and $47.9 million earnings by 2028.\\nUncover how NN's forecasts yield a $5.75 fair value , a 60% upside to its current price.\\nYet while some analysts were already assuming NN could lift revenue to about US$489.5 million and earnings to roughly US$48.3 million by 2028, others will focus on how concentrated customer exposure and trade frictions might look in light of a bigger NVIDIA centric footprint, reminding you that informed investors weigh several very different narratives before deciding what they believe.\\nExplore 2 other fair value estimates on NN - why the stock might be worth as much as 60% more than the current price!\\nA great starting point for your NN research is our analysis highlighting 2 key rewards and 4 important warning signs that could impact your investment decision.\\nOur free NN research report provides a comprehensive fundamental analysis summarized in a single visual - the Snowflake - making it easy to evaluate NN's overall financial health at a glance.\\nExplore 26 top quantum computing companies leading the revolution in next-gen technology and shaping the future with breakthroughs in quantum algorithms, superconducting qubits, and cutting-edge research.\", \"other_source_records\": [{\"id\": \"item:e2\", \"quote\": \"100% of this new capacity already pre-sold and tied to multi-year, multi-product awards.\", \"one_line\": \"NN said 100% of the new Wuxi capacity was already pre-sold under multi-year, multi-product awards as of late June 2026.\", \"speaker\": \"finance.yahoo.com, reporting NN, Inc.'s announcement\", \"original_who\": \"NN, Inc.\", \"original_day\": \"\", \"tier\": \"fact\", \"event_time\": \"late June 2026\"}, {\"id\": \"item:e3\", \"quote\": \"targeting US$80–US$90 million of accretive new business in 2026.\", \"one_line\": \"NN targeted US$80–US$90 million of accretive new business in 2026 from the expansion.\", \"speaker\": \"finance.yahoo.com, reporting NN, Inc.'s announcement\", \"original_who\": \"NN, Inc.\", \"original_day\": \"\", \"tier\": \"party_statement\", \"event_time\": \"2026 business target, reported 2026-07-01\"}, {\"id\": \"item:e4\", \"quote\": \"NN's removal from the Russell Microcap Value Index in late June 2026\", \"one_line\": \"NN was removed from the Russell Microcap Value Index in late June 2026.\", \"speaker\": \"finance.yahoo.com\", \"original_who\": \"finance.yahoo.com\", \"original_day\": \"2026-07-01\", \"tier\": \"fact\", \"event_time\": \"late June 2026\"}, {\"id\": \"item:e5\", \"quote\": \"NN's narrative projects $485.5 million revenue and $47.9 million earnings by 2028.\", \"one_line\": \"NN's narrative projected revenue of $485.5 million and earnings of $47.9 million by 2028.\", \"speaker\": \"finance.yahoo.com, summarizing NN's narrative\", \"original_who\": \"NN narrative\", \"original_day\": \"\", \"tier\": \"third_party_view\", \"event_time\": \"projection to 2028, reported 2026-07-01\"}, {\"id\": \"item:e6\", \"quote\": \"some analysts were already assuming NN could lift revenue to about US$489.5 million and earnings to roughly US$48.3 million by 2028\", \"one_line\": \"Some unnamed analysts estimated NN could reach about US$489.5 million in revenue and roughly US$48.3 million in earnings by 2028.\", \"speaker\": \"finance.yahoo.com\", \"original_who\": \"some analysts, not named\", \"original_day\": \"\", \"tier\": \"rumour\", \"event_time\": \"projection to 2028, reported 2026-07-01\"}], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}]}}"
+    }
+  ],
+  "output_config": {
+    "effort": "medium",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  }
+}

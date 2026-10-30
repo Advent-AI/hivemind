@@ -1,0 +1,236 @@
+{
+ "input_id": "nvblog:nvidia-vera-max-single-threaded-cpu-at-scale",
+ "title": "AI Innovators Adopt NVIDIA Vera — Why Max Single-Threaded CPU at Scale Matters | NVIDIA Blog",
+ "publication_day": "2026-07-07",
+ "publisher": "NVIDIA Corporation",
+ "category": "T6",
+ "text": "AI Innovators Adopt NVIDIA Vera — Why Max Single-Threaded CPU at Scale Matters | NVIDIA Blog\nAI Innovators Adopt NVIDIA Vera — Why Max Single-Threaded CPU at Scale Matters\nNVIDIA Vera exemplifies a new class of CPU, architected for the era of agents and being adopted by AI innovators including Perplexity; NVIDIA CPU roadmap continues with the NVIDIA Rosa CPU and its Rigel core.\nMax single-threaded CPUs at scale are a new category of CPUs built for the agentic AI era.\nA cross the creation and deployment of an agentic system, the CPU is on the critical path for reasoning, response time and learning. CPUs are the processor which executes the work the AI model commands: the tool calling, code execution, data processing, KV-cache and result analysis.\nFor agents in AI factories, speed matters.\nThe faster the CPU can run the tool, the faster the agent can perform the task at hand.\nFor the AI factory, the utilization of GPU is the most valuable resource in the data center so any time waiting for a task to complete constrains the revenue of an AI factory — or worse, impacts the GPU utilization waiting for the CPU to finish its task. AI factories need a CPU with max single-threaded performance to maximize AI factory revenue and agent performance.\nToday’s data center CPUs are not designed for speed at scale.\nWhile the world has fast CPUs for PCs and workstations, data center CPUs have been evolving in directions away from single-threaded performance. The advent of the cloud has pushed CPU makers to build higher core-count CPUs while minimizing cost at the expense of performance.\nBuilding CPUs that optimize costs per rentable core increased the number of cores per chip while taking away silicon area from what makes those cores run fast — like high-performance memory fabrics and faster instruction processing per core. The move to chiplet architectures further reduced cost but created a “chiplet tax” where each CPU’s cores can no longer can get access to the full memory performance of the chip.\nAI agents need a CPU designed for max single-threaded performance at scale.\nA max single-threaded CPU at scale keeps each agent step fast while the system is fully loaded. Every core completes the agent task at full performance without other cores slowing it down. Max single-threaded CPUs at scale are designed differently to deliver:\nEnough memory bandwidth per core to keep active cores supplied with data\nEvery core can finish its task without any other core slowing it down, delivering excellent throughput and, more importantly, the fastest possible single-core task performance possible.\nNVIDIA Vera exemplifies this new class of CPU design.\nHow Max Single-Threaded CPUs at Scale Are Built to Run the Agentic Loop\nA n AI agent doesn’t stop running after a single request. It acts in a loop. The model reasons about the next step. The CPU executes the work around the model. The result comes back. The model decides what to do next. Then the loop runs again.\nThat pattern creates a demand profile for which conventional CPUs were not optimized. Traditional CPU work is intermittent and user-driven, made up of short interactions triggered by people. Agentic work is persistent and parallel: swarms of agents running continuously, each advancing through a chain of steps where each step depends on the result of the one before it.\nMore cores in a CPU means more agent tasks per CPU, and data center CPUs need lots of cores to maximize throughput of tasks.\nHowever, adding more cores to a CPU cannot shorten the time for each step inside a single agent loop. More cores can’t make any one task run faster. In fact, CPUs designed to maximize core count can even slow down the performance of each core as they contend for resources.\nIndividual per-core performance matters to drive the speed of each step’s completion. The throughput of additional cores is useful but insufficient. And since each action is dependent on the previous result, per-core speed determines how fast the loop advances.\nIn the end, the best agentic CPU needs the best single-threaded performance per core, and every core needs to deliver that performance without compromise. The world counts in seconds. Agents count in nanoseconds. NVIDIA Vera is built for this new category — and speed — of work.\nNVIDIA Vera Is the Max Single-Threaded CPU at Scale for Agents\nNVIDIA Vera is a max single-threaded CPU at scale, designed from the ground up for the agent loop: the work that happens between model calls as agents use tools, process data, run code and check results.\nThe NVIDIA Vera CPU.\nAt the core of Vera is Olympus, NVIDIA’s custom CPU core, which delivers 50% higher instructions per cycle than NVIDIA Grace. That matters because many agent steps are sequential. A tool call, code execution, test run or data-processing step must finish before the next model call can use the result. Faster cores move each loop forward faster.\nVera pairs those faster cores with up to 1.2TB/s of LPDDR5X memory bandwidth at less than 40 watts of memory power, plus a monolithic compute die that helps active cores stay fed and keeps data movement predictable with 3.4TB/s of core-to-core bandwidth, 3x greater than any other data center CPU. This enables all 88 cores with the full memory performance of the CPU without creating bottlenecks that slows down every core.\nThe result is faster agent loops. In loaded CPU workloads that represent agentic execution, Vera delivers 1.8x the sustained per-core performance of x86.\nThose gains compound across tool calls, code executions, data-processing steps and verification passes, helping AI factories complete more agent work with the GPUs they already operate.\nPerplexity tested Vera on the agentic work it runs every day. Running a real coding workflow — cloning a repository and running its test suite in sandboxes — Vera completed the job about 1.5x faster than x86, and started concurrent sandboxes up to 1.9x faster. Perplexity is now looking to deploy Vera in its upcoming production system.\nAgents also depend on data. They query, retrieve, filter and move information constantly, and Vera runs those CPU-side data workloads faster. Partners have measured 3x faster large-scale SQL analytics with Starburst and up to 6x lower latency on real-time streaming with Redpanda, both against leading x86 server CPUs.\nAgent work isn’t one workload. An agent runs tools and sandboxes, processes data, serves requests and trains the next model with reinforcement learning — and all of it leans on the same strengths.\nOne Vera handles the whole range, rather than requiring a different CPU for each kind of work. And because Vera is the same CPU that hosts the GPUs in NVIDIA Vera Rubin and powers the NVIDIA BlueField-4 STX storage processor, the whole AI factory runs on one architecture and one toolchain.\nAnd NVIDIA’s not done. NVIDIA’s next-generation Rosa CPU with the Rigel core will continue the company’s CPU roadmap for the agentic AI era. Rigel is NVIDIA’s next-generation Arm v9.2 CPU core, delivering higher per-core performance than Olympus while keeping the same silicon footprint. Key improvements include better instruction delivery, a larger L2 cache and more efficient memory handling.\nIn the agentic AI era, there will be billions of agents, and every one of them will turn to a CPU to act, check, retrieve, execute and verify. In this new market, completed agent work is the product. Faster agent loops help every GPU spend more time generating revenue producing work and less time waiting.\nNVIDIA Vera is the CPU built for that future.",
+ "gold": {
+  "items": [
+   {
+    "k": 0,
+    "weight": "supporting",
+    "span": "Perplexity is now looking to deploy Vera in its upcoming production system",
+    "meaning": {
+     "who": "Perplexity (customer)",
+     "what": "plans to deploy the NVIDIA Vera CPU in its upcoming production system, after testing it on its daily agentic coding workload (about 1.5x faster than x86)",
+     "status": "plan"
+    },
+    "rule": "§5.1 第 2 类：客户有名字的动作，没金额也留（D240）；§6.1 辅助；§6.3 第 3 步：'looking to' 不是确定状态，没有量 → 辅助"
+   }
+  ],
+  "not_kept": [
+   {
+    "span": "which delivers 50% higher instructions per cycle than NVIDIA Grace",
+    "weight": "not_kept",
+    "reason": "§5.3 没有业务规模的产品、游戏、驱动、跑分细节"
+   },
+   {
+    "span": "Vera delivers 1.8x the sustained per-core performance of x86",
+    "weight": "not_kept",
+    "reason": "§5.3 没有业务规模的产品、游戏、驱动、跑分细节"
+   },
+   {
+    "span": "Partners have measured 3x faster large-scale SQL analytics with Starburst and up to 6x lower latency on real-time streaming with Redpanda",
+    "weight": "not_kept",
+    "reason": "§5.3 没有业务规模的产品、游戏、驱动、跑分细节：伙伴测的性能倍数，没有采用或部署的动作"
+   },
+   {
+    "span": "NVIDIA’s next-generation Rosa CPU with the Rigel core will continue the company’s CPU roadmap for the agentic AI era",
+    "weight": "not_kept",
+    "reason": "§5.3 没有业务规模的产品、游戏、驱动、跑分细节：路线图里的下一代 CPU 名字和核心改进，没日期、没规模，不是承载价值的那一代产品"
+   },
+   {
+    "span": "In the agentic AI era, there will be billions of agents",
+    "weight": "not_kept",
+    "reason": "§5.3 作者的一般性风险清单和没有推导的看法"
+   },
+   {
+    "span": "Today’s data center CPUs are not designed for speed at scale.",
+    "weight": "not_kept",
+    "reason": "§5.3 作者的一般性风险清单和没有推导的看法（营销框架）"
+   }
+  ],
+  "questions": {
+   "must_open": [],
+   "may_open": [],
+   "must_not": [
+    {
+     "gist": "A Rosa CPU / Rigel core launch-timing question",
+     "rule": "§3.1 B 只收承载公司价值的那一代产品；文章没日期 → §4.3 没日期的'战略'、§4.2 测试 3"
+    },
+    {
+     "gist": "A Perplexity Vera-deployment question",
+     "rule": "§4.3 客户的部署计划：它是供应商需求和产品问题的证据"
+    }
+   ]
+  }
+ },
+ "answers": {
+  "A": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "Perplexity is considering deploying NVIDIA Vera in an upcoming production system; no deployment date or scale was stated.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "",
+     "tier": "third_party_view"
+    }
+   ],
+   "questions": []
+  },
+  "B": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "Perplexity said it is looking to deploy NVIDIA Vera in an upcoming production system; no deployment date or scale was given.",
+     "speaker": "NVIDIA Corporation, reporting Perplexity's plans",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "And NVIDIA’s not done. NVIDIA’s next-generation Rosa CPU with the Rigel core will continue the company’s CPU roadmap for the agentic AI era.",
+     "one_line": "NVIDIA said its next-generation Rosa CPU, with the Rigel core, will continue its CPU roadmap; no launch or shipment date was stated.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "2026-07-07",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "C": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "Perplexity said it is looking to deploy NVIDIA Vera in its upcoming production system; no deployment date or scale was specified.",
+     "speaker": "NVIDIA Corporation, reporting Perplexity’s plans",
+     "original_day": "",
+     "tier": "third_party_view"
+    }
+   ],
+   "questions": []
+  },
+  "D": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "NVIDIA said Perplexity is looking to deploy Vera in its upcoming production system; no deployment date or scale was given.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "2026-07-07",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "E": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "For the AI factory, the utilization of GPU is the most valuable resource in the data center so any time waiting for a task to complete constrains the revenue of an AI factory — or worse, impacts the GPU utilization waiting for the CPU to finish its task.",
+     "one_line": "NVIDIA said CPU task delays constrain AI-factory revenue and can reduce GPU utilization.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e2",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "Perplexity said it is looking to deploy NVIDIA Vera in an upcoming production system; no deployment date or scale was given.",
+     "speaker": "NVIDIA Corporation, reporting Perplexity's plans",
+     "original_day": "2026-07-07",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e3",
+     "quote": "In the agentic AI era, there will be billions of agents, and every one of them will turn to a CPU to act, check, retrieve, execute and verify.",
+     "one_line": "NVIDIA projected that the agentic AI era will involve billions of agents.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "F": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "NVIDIA reported that Perplexity is looking to deploy Vera in an upcoming production system; no deployment date or scale was stated.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "G": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity tested Vera on the agentic work it runs every day. Running a real coding workflow — cloning a repository and running its test suite in sandboxes — Vera completed the job about 1.5x faster than x86, and started concurrent sandboxes up to 1.9x faster.",
+     "one_line": "Perplexity said Vera completed its tested coding workflow about 1.5x faster than x86 and started concurrent sandboxes up to 1.9x faster; the period was not specified.",
+     "speaker": "NVIDIA Corporation, reporting Perplexity's test results",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "Perplexity is looking to deploy NVIDIA Vera in an upcoming production system; the deployment date and scale were not specified.",
+     "speaker": "NVIDIA Corporation, reporting Perplexity's plans",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "Partners have measured 3x faster large-scale SQL analytics with Starburst and up to 6x lower latency on real-time streaming with Redpanda, both against leading x86 server CPUs.",
+     "one_line": "Starburst measured 3x faster large-scale SQL analytics using Vera versus leading x86 server CPUs; the period was not specified.",
+     "speaker": "NVIDIA Corporation, reporting a partner measurement",
+     "original_day": "",
+     "tier": "third_party_view"
+    }
+   ],
+   "questions": []
+  },
+  "H": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "Perplexity said it is looking to deploy NVIDIA Vera in an upcoming production system.",
+     "speaker": "NVIDIA Corporation, reporting Perplexity's statement",
+     "original_day": "2026-07-07",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e2",
+     "quote": "And NVIDIA’s not done. NVIDIA’s next-generation Rosa CPU with the Rigel core will continue the company’s CPU roadmap for the agentic AI era.",
+     "one_line": "NVIDIA said its next-generation Rosa CPU, with the Rigel core, will continue its CPU roadmap for the agentic AI era; no launch or shipment date was given.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "2026-07-07",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "I": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "Perplexity is now looking to deploy Vera in its upcoming production system.",
+     "one_line": "Perplexity is considering deploying NVIDIA Vera in an upcoming production system; no deployment date or scale was stated.",
+     "speaker": "NVIDIA Corporation",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  }
+ }
+}

@@ -1,0 +1,5 @@
+**One serious problem remains:** the offline verifier does not check the full frozen experiment plan.
+
+In an in-memory test, I changed the samples per model and case from 3 to 99, changed the spending cap from $0.60 to $999, and added an unexpected case. The verifier still passed. Its [freeze check](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v2-2026-10-29.py:186) needs to check those fields and the exact case set, with positive and altered or missing-input controls.
+
+The unmodified offline verifier passed with `PYTHONPATH=src`; its answer-identity controls also passed. No files were edited and no models were sent.

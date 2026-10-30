@@ -1,0 +1,18 @@
+**结论：方案还不能直接支持这次实验，有两项严重缺陷必须先修。** 例如，上一轮 GPT 的一份回答只有一条引句被筛掉；如果因此把整份回答排除，就会丢掉本来可以比较的两项核心事实。
+
+1. **筛选的单位写错了，会使比较不公平。** 新方案说只有“通过……v38 原生 sift 检查的回答”才能进入人工核对（[方案第 7 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-extraction-probe-design-2026-10-29.md:7)）。但生产筛选逐条保留或丢弃内容，并返回丢弃理由，不给整份回答一个通过／不通过结果（[生产代码](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:560)）。上一轮就出现过一条引句被剔除，而同一回答仍有可评的内容（[结果第 15 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/deepseek-extraction-probe-results-2026-10-29.md:15)）。
+
+   **必须修：**完整且结构合格的回答都进入筛选；两项事实按筛选后保留的内容分别判断“完整、部分、没写”，同时保留原答和逐条丢弃理由。不要因一条无关内容被丢弃而排除整份回答。截断、接口失败和结构不合格仍须单列，不能算对或错。
+
+2. **预检没有指定 v38 数据，照字面执行可能检查错对象。** 方案只说运行生产 preflight（[第 9 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-extraction-probe-design-2026-10-29.md:9)）。但脚本默认读取的是 `poc/data/archive.sqlite` 和 `items-window.sqlite`，不是这次 v38 的存档与文章库（[脚本参数](/Users/lchingen/hivemind-extraction-quality-2026-10-28/scripts/preflight.py:310)）。D213 正是因为旧预检把 841 条 v38 证据只算出 77 条，而生产筛选保留 831 条，要求先修复预检（[D213](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2710)）。
+
+   **必须修：**写明 v38 存档、文章库、研究范围和对应账本的实际参数；发送前核对已知的 98 条回答、841 条证据和 831 条筛选后证据，并检查拒绝原因。历史账本造成的已知误报须单列；不能把脚本退出成功当作全部检查通过。
+
+还有两处需要在发送前写清，避免执行时改变实验含义：
+
+- **并发与停止条件要有先后顺序。** 方案同时要求并发，以及 schema 被拒绝就停止（[第 5、9 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-extraction-probe-design-2026-10-29.md:5)）。如果六次一起发出，第一次拒绝返回时其余请求可能已经发出。应先明确哪些请求可以在确认接口接受该 schema 前启动，以及拒绝或费用异常后如何停止尚未发出的请求；不能把已在途的请求称为已停止。
+- **“相同请求”只能指明确发送的内容。** 两边发送相同的 system、user 和 schema 是可核对的；但 Anthropic 说明结构化输出会自动加入额外的系统提示，且计入输入费用。报告应把这列为接口差异，不能声称两边模型实际收到的全部指令逐字相同。方案已有 16,384 token 余量，但它仍是估算，不是服务商保证的费用硬上限。[Anthropic 结构化输出文档](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)
+
+其余重点中，我没有发现已证实的严重问题：两项事实及 EPS 的处理与 [D215–D216](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2727)一致；新鲜对照、8,000 输出上限和只测单篇抽取也与上一轮边界一致。Haiku 是否接受**这份** schema 仍未知；方案规定拒绝时不改 schema、不重试，这是可报告的接口结果，不应解释成抽取质量结果。未发现方案要求暴露密钥，但实现尚未写出，因此也无法证明日志和请求记录实际不会泄露密钥。
+
+本次只读审阅了相关文件和官方接口文档；没有修改文件、发送模型调用或运行完整流水线。

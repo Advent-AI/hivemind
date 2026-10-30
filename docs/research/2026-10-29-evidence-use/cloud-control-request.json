@@ -1,0 +1,135 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 1800,
+  "system": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the deliverable. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Keep conditions and periods exactly as the texts state them. Comparison opinions are hints with scores; the texts decide. Answer in the JSON schema only.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"Alphabet is getting an enormous boost from AI demand as well, but it’s not as evident amid its advertising sales. In Q2, the company’s Google Cloud business enjoyed 82% year-over-year revenue growth to $24.8 billion, and its backlog of customer orders rose to over half a trillion dollars, up from $462 billion in Q1. Google Cloud is the division where customers can pay to access Alphabet’s proprietary AI models, and its rapid sales expansion demonstrates the company is successfully capturing its share of clients in the burgeoning AI market.\", \"one_line\": \"Google Cloud Q2 收入 248 亿美元、同比增长 82%，订单积压超过 5000 亿美元。\", \"speaker\": \"Robert Izquierdo, The Motley Fool\", \"original_who\": \"The Motley Fool report\", \"original_day\": \"\", \"tier\": \"third_party_view\", \"event_time\": \"\", \"publisher\": \"https://www.fool.com/coverage/charts/2026/08/01/nvidia-vs-alphabet-what-do-revenue-trends-tell-investors-about-these-artificial-intelligence-companies/\", \"publisher_type\": \"media\", \"publication_day\": \"2026-08-01\", \"category\": \"T7\", \"title\": \"Nvidia vs. Alphabet: What Do Revenue Trends Tell Investors About These Artificial Intelligence Companies?\"}, \"source_article\": \"Nvidia: Consistent Sequential Revenue Increases\\nNvidia ( NVDA -4.40% ) primarily generates revenue by selling advanced graphics, computational, and networking solutions for gaming and high-performance computing.\\nIt introduced new computational processors in June of 2026, and it reported a net income margin of 72% for the quarter ended April 26, 2026.\\nAlphabet ( GOOGL -3.15% ) earns most of its revenue by providing digital advertising services, cloud computing infrastructure, and consumer hardware.\\nWhile multiple law firms announced securities fraud investigations into the company in July, 2026, it reported a net income margin of 94% for the quarter ended June 30, 2026.\\nWhy Revenue Matters for Retail Investors\\nRevenue represents the total amount of money a company brings in before expenses are deducted. This metric helps investors measure a company’s overall size, market footprint, and long-term trajectory.\\nQuarterly Revenue for Nvidia and Alphabet\\n$30.0 billion (period ended July 2024)\\n$88.3 billion (period ended Sept. 2024)\\n$35.1 billion (period ended Oct. 2024)\\n$96.5 billion (period ended Dec. 2024)\\n$39.3 billion (period ended Jan. 2025)\\n$90.2 billion (period ended March 2025)\\n$44.1 billion (period ended April 2025)\\n$96.4 billion (period ended June 2025)\\n$46.7 billion (period ended July 2025)\\n$102.3 billion (period ended Sept. 2025)\\n$57.0 billion (period ended Oct. 2025)\\n$113.9 billion (period ended Dec. 2025)\\n$68.1 billion (period ended Jan. 2026)\\n$109.9 billion (period ended March 2026)\\n$81.6 billion (period ended April 2026)\\n$119.8 billion (period ended June 2026)\\nData source: Company filings. Data as of July 31, 2026.\\nIn comparing revenue trends between Nvidia and Alphabet, the latter’s digital advertising-fueled business causes spikes in the fourth quarter due to the seasonal nature of the ad industry. Otherwise, both are seeing strong year-over-year sales growth.\\nIn fact, Nvidia is experiencing steadily rising quarter-over-quarter revenue increases in a sign of the massive demand for its artificial intelligence offerings. Alphabet is among the semiconductor giant’s customers. Nvidia’s new Vera Rubin AI platform is expected to contribute to ongoing sales growth. The company forecasted revenue to continue accelerating from $81.6 billion in its most recent quarter to $91 billion in the next.\\nAlphabet is getting an enormous boost from AI demand as well, but it’s not as evident amid its advertising sales. In Q2, the company’s Google Cloud business enjoyed 82% year-over-year revenue growth to $24.8 billion, and its backlog of customer orders rose to over half a trillion dollars, up from $462 billion in Q1. Google Cloud is the division where customers can pay to access Alphabet’s proprietary AI models, and its rapid sales expansion demonstrates the company is successfully capturing its share of clients in the burgeoning AI market.\\nNvidia's revenue has nearly tripled in two years while Alphabet's has grown steadily; the gap between them is narrowing faster than many expect.\\nBy Robert Izquierdo – Aug 1, 2026 at 9:05PM EST\\nNvidia currently shows stronger revenue momentum than Alphabet, displaying a steeper and more consistent upward trajectory.\\nWhile Alphabet maintains a higher overall baseline, both companies have generally reported positive quarter-over-quarter revenue growth over the past eight quarters.\", \"other_source_records\": [], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}]}}"
+    }
+  ],
+  "output_config": {
+    "effort": "medium",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  }
+}

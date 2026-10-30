@@ -1,0 +1,18 @@
+**One serious defect remains; I would hold paid sends.** A control answer containing `"same_claim_as": null` is rejected correctly, but then crashes the stop rule instead of producing the run summary.
+
+The [exception classifier](</Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-empty-history-arm-v2-2026-10-29.py:115>) assumes rejected relation fields are iterable lists of strings. Nulls, numbers, or lists containing objects break that assumption. The exception escapes the [worker](</Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-send-v5-2026-10-29.py:272>).
+
+- **Worker reproduction:** eight simulated sends saved all eight raw and parsed records, but no run summary or unsent-job list.
+- **Scope:** 72/72 malformed-field mutations crashed across both providers, all three relation fields, and all three empty-history controls. No such malformed fields occurred in the 182 stored answers.
+- **Required rule:** the expected-error exception must first require relation fields to be lists of strings; other shapes return “stop.” An in-memory guard handled all 72 cases.
+
+The requested follow-up checks otherwise held:
+
+1. **Expected control failures:** all seven stored relation failures continue while remaining unusable. Three older answers required the previously disclosed judgement-field normalization. A real-thread-pool simulation completed all 48 jobs, retaining three expected control failures as unusable. Unknown IDs, additional errors, treatment/history cases, missing or invalid usage, and transport failures stopped normally.
+2. **Non-object answers:** arrays, strings, numbers, nulls, and booleans preserved their parsed failure and original envelope—including usage—for both providers.
+3. **Frozen order:** reordered manifests were rejected. All 48 simulated submissions followed Valar → Sharon → science → NN, control before treatment.
+4. **Original contract:** all 16 requests and 127 dependency hashes verified. Only the three relation fields disappear from empty-history treatment schemas. Sharon’s history requests remain byte-identical. Reservation remains **$0.3166821 against $0.60**, using frozen rates. Duplicate workers and attempts added zero sends.
+
+The v2-check script passes, but misses the malformed-relation crash above. No other serious defect surfaced in this narrow review.
+
+No files changed, credentials accessed, or providers called. Simulations used memory-only storage and fake transport.

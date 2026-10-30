@@ -1,0 +1,4 @@
+#!/bin/zsh
+cd /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-analyst-standard
+for d in 1 2 3; do PYTHONPATH=/Users/lchingen/hivemind-extraction-quality-2026-10-28/src:/Users/lchingen/hivemind-extraction-quality-2026-10-28/poc:/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-analyst-standard python3 loop.py send a6-v40-cases-d$d /Users/lchingen/hivemind-extraction-quality-2026-10-28/poc/config/poc-v56.json gnews:085b1e1a1543437edb9756d6 gnews:1e7a9c953f3ad70093b67ae4 gnews:417f6244f0aaa27123023deb gnews:784c556d2e58ed09dd8aa7fc gnews:82efe7d37ce9286b38e5aac5 gnews:a96a4cbf6aae35d01d0d285b gnews:c8c39f971721fd820aab5c1c gnews:d0f3f83296df884fae64921e gnews:d5c48abb470f394f86549b6b gnews:dde08c03c8dd6f66031632d5 gnews:ff7d99387d1dae92ede72145 nvblog:nvidia-unlocks-ai-compute-at-scale-capital-partners-to-power-ai-infrastructure-buildout || exit 1; done
+echo CASES-DONE

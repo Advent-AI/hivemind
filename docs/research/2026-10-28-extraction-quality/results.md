@@ -69,3 +69,126 @@ A 可以上：翻转在决定性案例上成立，三次一致，没有副作用
 - 留下的证据总数 612 → 571、没留证据的文章 115 → 120：一次抽样对一次抽样，差在采样器的噪音带里（同一字节三次发送"留下"在 46–78 之间晃），不能据此说 A 让证据变少，也不能说没有。金标实验（三次）量到的是留对上升、多留不变。
 - 两边都开了小事件论点（对照：Firmus、法国反垄断；A：RTX 60、2026 年游戏架构、"内存占数据中心支出的份额"）——这是 C 的类，A 不碰。
 - 费用相同。
+
+## One-week acceptance of the pushed design (2026-10-28 evening)
+
+Run `english-v36b-nvda-1w-2026-10-28` (poc-v36: themes shown, placement-narrow-v1 with the title line, unplaced kept), 07-01..07-07,
+8 workers, archive cost $0.22 (extract 0.145, place 0.039, judge 0.024, match 0.011). One malformed extraction answer halted day 7;
+the day was resumed from the archive and finished. Scorer: `accept_week.py` (table in `results/accept-week-table.md`); the ledgers
+laid out for reading by `read_week.py` (`results/read-v34-week1.md`, `results/read-v36b-week1.md`).
+
+Read by hand, not by the script:
+- Placement is right by inspection. Total revenue holds 11 pieces, all NVIDIA's own figures and guidance (v34: 106, mixing DeepSeek
+  chips, Greenpeace emissions, IREN contracts). Data Center revenue 4 (v34: 72). Kyber holds the whole delay story (46 pieces,
+  including the Rubin Ultra rack claims, NVL576, "roadmap intact"), because the group's aliases carry "Rubin Ultra". The judge cites
+  every piece it holds on the two revenue theses (11/11, 5/5; v34 33/106, 34/72) and reads a third of the tokens (median 1646 vs 4616).
+- Admission is the open defect, unchanged by this round. This draw did not open the week's most important question (the AI Compute
+  Partnership guarantees) nor H200 permission; it opened a Valar Atomics nuclear data-center deployment (23 pieces). The same
+  moomoo article was sent four times across the three runs: two answers propose the ACP candidate, two propose none. Admission is a
+  coin flip per send; E3 (fold duplicates, refuse small-event theses) must also make admission of the decisive question stable.
+- 630 of 752 kept statements have no home, by design until the driver layer exists; 72 of 98 articles contribute to no thesis today.
+- The week's one gold article (a11): v36b places the hyperscaler-spend statement right and leaves the 82%/41% growth line unplaced;
+  v34 drops the spend statement and places the growth line; v35 places the spend statement and drops the growth line. Even.
+
+## Admission arm: the binding-obligation sentence (2026-10-28 night, `admission_arm.py`, 78 sends, ~$0.09)
+
+Mechanism (two stored accounts, `results/ask_admission.json`): D184/D185's reason "binding_obligation … due when its signing can be
+checked, at most 18 months out" is written for a deal not yet signed (Ohio). For a programme already announced and signed (the AI
+Compute Partnership) the model either proposes nothing ("describes the arrangements without establishing a signed, named obligation
+due within 18 months") or dates the question on the item day ("the relevant check was whether it had been signed by the item date"),
+which the code refuses. Arm = one sentence replaced (`results/role-v21-draft.txt`, +345 characters, reason: the old sentence is the one
+both accounts quote and no other sentence covers an obligation already in force): not yet signed → yes/no due after the item within 18
+months; already taken on, one deal or a programme → a financing_amount question on the amount at the next annual filing, settled by
+its commitments note. Control = the production bytes stored in the archives. Reference frozen before the send
+(`results/gold-admission-acp.json`, sha `6647b3bb9dc6…`). Three draws, eight threads.
+
+Read by eye first (Alex: "本来数据就没什么信息量来抽取?"): of the ten ACP articles sent, five carry the obligation in their text (moomoo:
+guarantees, repurchase of unsold capacity at a pre-agreed price; datacenterdynamics: "rent back unused GPUs at a fixed rate";
+mlq.ai: minimum utilisation guarantee; SemiAnalysis: the take-or-pay backstop economics; economictimes: "credit support"), NVIDIA's
+own blog names "credit-support" once, and four (cnbc, qz, yahoo, mitrade) describe only the revenue share: there is no obligation to
+extract from them, and "none" is the right answer on those four. Two of the three Ohio articles were sent on 07-27 with the Ohio
+thesis already open (v31 in their shown list), so they are not admission cases; the Reuters article of 07-26 is.
+
+| article (what its text carries) | control d1/d2/d3 | arm d1/d2/d3 |
+|---|---|---|
+| moomoo (guarantee, repurchase, revenue share) | none ×3 | opened ×3 (+ the Ohio signing event the article also reports, ×2) |
+| datacenterdynamics (rent-back at a fixed rate) | none ×3 | opened ×3 |
+| mlq.ai (utilisation guarantee) | none ×3 | proposed ×3; kept 1, refused 2 by the ladder-label check (ranges, not the five asset rungs) |
+| SemiAnalysis (backstop economics) | none ×3 | opened ×3 |
+| economictimes (credit support) | none ×3 | opened ×2, none ×1 |
+| NVIDIA blog (credit-support model) | none ×3 | opened ×1, none ×1, plus one the scorer's pattern missed ("credit-support commitments", hyphen): opened ×2 by eye |
+| cnbc, qz, yahoo, mitrade (revenue share only) | none | none |
+| Reuters Ohio (talks to guarantee $250bn) | opened ×3 | opened ×2; refused ×1: due 2028-01-26, one day past the 548-day bound |
+
+Totals over three draws: on the six articles that carry the obligation, control opened 0/18, the arm proposed 17/18 and the code kept
+13/18 (refused: 2 ladder labels, 2 none). Extras fired by the arm: the Ohio signing event from the moomoo article (in its text; v35
+opened the same) and nothing else. The Reuters Ohio case keeps opening (2/3; the one refusal is the 18-month boundary). Not changed:
+the ladder-label rule (D186) refuses an obligation-amount question whose rungs are ranges; two of twelve proposals died there.
+
+## D210 acceptance week (`english-v37-nvda-1w-2026-10-28`, $0.21, `results/accept-week-table.md`; the drops read one by one in `results/thrown-away-read.md`)
+
+| | v36b | v37 |
+|---|---|---|
+| ACP question | not opened; 96 statements homeless | opened 07-01, 29 pieces, 5 judgements with an analyst's reasons; ~33 ACP statements still homeless (8 the opening article's own, ~25 size-less retellings) |
+| Kyber delay story | opened, 46 pieces | not opened: the one proposal was in the item's first send and the re-send answered without it; ~56 statements homeless |
+| theses that should not exist | Valar reactor (23 pieces) | Intel equity stake ($5bn, 2 pieces), Verkada equity stake (undisclosed, 1 piece): the amount form applied to "an equity stake" |
+| placed / no home / other drops | 108 / 630 / 14 | 55 / 705 / 13 |
+| junk among the drops, by reading | 393 (62%) | ~470 (67%) |
+| material drops by mechanism | no standing question 205, same-item 5, placer 10, marginal 16 | re-send re-rolled admission ~60, no standing question ~100, ACP retellings ~25, same-item ~8, placer ~10, Valar 41 |
+
+The sentence does what the arm measured: the programme opens and holds its evidence. The week's material loss did not fall, it moved: the
+parallel day's re-send (34 of 98 items) re-samples admission and discards the first answer's candidates (9 this week, Kyber among them).
+That mechanism was present in every earlier run too (v36b opened Kyber from an item that was not re-sent). Next, in order: keep the
+first send's candidates across a re-send (code, D172–D183's recompute); the placer sees the item's candidates; "an equity stake" out of
+the amount form.
+
+## Ledger-blind arm (D211, `blind_arm.py`, 117 sends ≈ $0.15, `results/blind-arm-answers.json`)
+
+The v22 request (poc-v38: no [Existing theses] block, no [Research groups] list, links only to the answer's own candidates, no
+folds_into/lost_if_folded) on the 34 items the v37 week sampled twice plus 5 more Kyber articles, three draws; control = the two
+stored v21 answers of each item. Read by item:
+- Kyber (7 articles, 21 sends): the launch question proposed in 6 sends across 5 articles, at least one article in every draw; under
+  v21 one proposal in ~10 sends, erased by the re-send. With one request per article and matching folding the duplicates, a story
+  carried by seven articles opens when any one of them proposes it.
+- ACP (moomoo): the obligation-amount question in 3/3 draws, but draw 3 split it four ways (capacity repurchase, CoreWeave
+  capacity purchase, lease guarantees, the Ohio signing); the collision judge (D190) must hold them as one matter: to measure in the
+  week run.
+- Already-open questions re-proposed, as expected (total revenue, Data Center revenue, gross margin, the two capex aggregates, the
+  memory share): about 10 of the 25 distinct questions; they fold at matching.
+- Junk that the amount form still admits: the Verkada investment 3/3 (the "equity stake" word, open defect); NVIDIA's $119bn supply
+  commitments as a financing_amount question (two articles; material, but it is a purchase obligation, not a guarantee).
+- Per-sample stability is unchanged: 25 distinct questions, 3 in all three draws, 6 in two, 15 in one. The gain is at the story level,
+  not the sample level. Statements per answer: median 8; no malformed answer; one ladder-label refusal.
+
+## D211 acceptance week (`english-v38-nvda-1w-2026-10-28`, $0.23, `results/accept-week-table.md`; drops read in `results/thrown-away-read.md`)
+
+| | v37 (D210) | v38 (D211) |
+|---|---|---|
+| extraction sends / items | 135 / 98 (34 re-sent) | **98 / 98** (none re-sent) |
+| theses opened | 9 | 17, of which 4 duplicates by wording (ACP ×2, Kyber shipment, revenue growth) and 1 succession |
+| match outcomes | new 10 | new 19, merge 12, succession 1 |
+| stories with a page | ACP; not Kyber, Rubin, H200 | ACP, Kyber, Rubin shipping, H200, capex ×2, CPU, DC revenue, total revenue, supply commitments |
+| placed / no home | 55 / 705 | 146 / 685 |
+| items with no placed evidence | 78 | 57 |
+| judge: ACP page | 5 judgements, cites 9 | v1 6 judgements, cites 32, reasons sum the $6.3bn + $3.5bn + $4.88bn and say what is not established |
+| judge: Kyber page | none | v11 3 judgements, cites 19, "repeated coverage treated as one claim" |
+
+Verdict: admission is no longer the loss. Every story of the week has a page, the request is one sample per article, the parallel day
+re-sent nothing, cost unchanged. The loss moved to matching: the collision judge's `distinct_question_same_matter` opens a page per
+wording (4 of 17), and the placer loses more statements when near-identical pages compete (~60 with the home shown, against ~10
+before). Next mechanism, in D190's contract: a candidate on the same matter and the same quantity or event as an open page folds into
+it whatever its wording; a new page needs a different quantity, period or decision (the same test D184 already states for lost_if_folded).
+
+## D212 correction: count final retained content, not pages or handovers
+
+The [retention audit](../2026-10-28-retention-audit/results.md) supersedes the paragraph above's claim that the remaining loss has moved
+entirely to matching. Same 98 inputs, all 2,363 final extraction records across v36b/v37/v38 accounted for, $0 new calls. Actual written
+records are 106/54/144, useful ones 67/47/127. Useful-output retention is 23.0%/17.4%/44.9%; v38 removes 254/255 clear junk records.
+However, on the fixed 20-article source reference the complete final claims are only 12/33, 5/33 and 13/33; core claims are 12/25,
+4/25 and 11/25. Cleaner output and more pages do not establish more complete core coverage. The semantic labels are Codex-authored.
+
+V38's 156 useful losses have an exact trace classification: 94 lack a corresponding question throughout the week, 49 had a home
+shown, 7 could use the item's own unshown candidate, 4 precede a later question, 1 fails the quote check and 1 is lost at matching.
+The earlier approximate 60-home-shown count mixed these cases. The four duplicate-page examples also cross different boundaries:
+ACP is in D190, revenue/growth bypasses its gate, and launch/shipment conflicts in code. No causal claim about duplicate pages causing
+placement losses has been verified. The new audit and its fixed source reference govern the next bounded comparison; no default changed.

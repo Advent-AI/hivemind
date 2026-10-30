@@ -1,0 +1,31 @@
+........................................................................ [ 31%]
+........................................................................ [ 63%]
+......................................................................F. [ 95%]
+..........                                                               [100%]
+=================================== FAILURES ===================================
+_ test_v4_round_judges_themes_first_and_a_changed_theme_queues_every_open_asset_thesis_once _
+
+tmp_path = PosixPath('/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/pytest-of-lchingen/pytest-746/test_v4_round_judges_themes_fi0')
+
+    def test_v4_round_judges_themes_first_and_a_changed_theme_queues_every_open_asset_thesis_once(tmp_path):
+        conn = ledger(tmp_path)
+        store.create_view(conn, view_id='v3', object_id='AMD', object_kind='company', kind='asset', looks_at='FY2027 data center revenue', question='AMD?',
+                          due_day='2028-02-01', year='2027', rungs=ASSET_RUNGS, seq=1, input_id='truenorth:transcript:AMD:2026-08-04', created_at='2026-08-04T22:00:00Z')
+        store.link(conn, 'e1', 'v3', 1)
+        store.create_view(conn, view_id='v4', object_id='MSFT', object_kind='company', kind='asset', looks_at='no evidence', question='MSFT?',
+                          due_day='2027-07-30', year='FY2027', rungs=ASSET_RUNGS, seq=1, input_id='i', created_at='2026-07-29T22:00:00Z')
+        conn.commit()
+        order = []
+        archive = model.Archive(str(tmp_path / 'archive.sqlite'))
+        results = judging.round_of_judgements(archive, V4, conn, ['v1', 'v2'], 5, DAY, transport=scripted(order, {'v1': [{'view_id': 'v2', 'push': 'toward_last'}]}))
+>       assert order == ['v2', 'v1', 'v3']                                    # the theme first; v3 was not in the day's changes but the theme changed; v4 has no evidence (D59)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['v2', 'v3', 'v1'] == ['v2', 'v1', 'v3']
+E         
+E         At index 1 diff: 'v3' != 'v1'
+E         Use -v to get more diff
+
+tests/test_theme_block.py:127: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_theme_block.py::test_v4_round_judges_themes_first_and_a_changed_theme_queues_every_open_asset_thesis_once
+1 failed, 225 passed in 23.09s

@@ -1,0 +1,5 @@
+发现两处需要在写 harness 前解决的严重问题。
+
+1. **新问题的准入条件没有保全。** [处理提示第18行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-prompt-restructure/treatment-system.txt:18)允许凭“独立判断＋业务影响”提出新问题，却没有保留 [D201要求的完整准入条件](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2587)。例如，NVIDIA宣布收入分成模式，不等于已经承担融资义务；[D210](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2670)明确区分尚未签署与已经承担的义务。应在现有输出字段中要求说明适用的准入理由和可验证条件，保留D184经后续决策修订后的边界；不能把“值得研究”当作完整准入。
+
+2. **来源独立性的两条指令互相冲突。** [第3行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-prompt-restructure/treatment-system.txt:3)一概禁止同篇上下文作为独立确认，[第14行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-prompt-restructure/treatment-system.txt:14)又要求按原始来源判断。一篇文章可以分别引用公司和客户；同篇不自动代表同源。[PRD06](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/06-views.md:104)要求数原始来源。应改为“同篇记录不自动构成独立确认”，逐项判断来源与亲历依据，并明确无历史、来源未知时必填布尔值的含义。目前的[布尔字段](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-evidence-use-6000/schema.json:38)不能自行表达这些区别。

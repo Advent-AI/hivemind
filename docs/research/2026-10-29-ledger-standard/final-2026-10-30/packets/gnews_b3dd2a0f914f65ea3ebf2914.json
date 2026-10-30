@@ -1,0 +1,1120 @@
+{
+ "input_id": "gnews:b3dd2a0f914f65ea3ebf2914",
+ "title": "NVIDIA Run:ai Is Now Open Source as Part of NVIDIA DSX AI Factory Platform | NVIDIA Technical Blog",
+ "publication_day": "2026-10-13",
+ "publisher": "developer.nvidia.com",
+ "category": "T6",
+ "text": "Accelerate innovation across the DSX ecosystem and bring AI factory solutions to market faster with the open foundation for AI workload and GPU orchestration.\nBy Ekin Karabulut and Sam Heywood\nNVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.\nThe release includes four modular components that can be adopted independently: KAI Scheduler for GPU-aware Kubernetes scheduling, GPU Fractioning Operator for CUDA-native GPU sharing, KAI Resource Management for organizational quota and hierarchy, and Workload Map for a consistent workload-management contract.\nEight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.\nNVIDIA is making the full NVIDIA Run:ai platform available as open source software, giving customers, developers, and ecosystem partners access to production-grade AI workload and GPU orchestration capabilities. This release expands the NVIDIA DSX AI Factory Platform by establishing NVIDIA Run:ai as an open foundation that enables the broader ecosystem to bring differentiated solutions to market faster in response to evolving customer needs.\nOver the past several years, NVIDIA Run:ai has helped organizations run AI workloads on Kubernetes at scale by dynamically allocating GPU resources and managing workloads across the full lifecycle, from data processing and training to inference.\nBy open sourcing NVIDIA Run:ai platform capabilities as part of NVIDIA DSX AI Factory, it is now possible for every NVIDIA DSX ecosystem partner and AI cloud to increase workload throughput, improve GPU utilization, and operate shared AI infrastructure more efficiently and effectively.\nThis post details the open source release, which includes the complete NVIDIA Run:ai platform and four components that can also be adopted independently: KAI Scheduler, GPU Fractioning Operator , KAI Resource Management , Workload Map . Together with additional platform code, these components form the integrated NVIDIA Run:ai platform. Platform teams and ecosystem partners can adopt NVIDIA Run:ai as an integrated whole, build on it for their own products and services, or integrate individual components based on their requirements.\nNVIDIA Run:ai can be adopted directly as open source software or through NVIDIA DSX ecosystem partner offerings.\nDeploy the open source platform directly\nThe complete source code for NVIDIA Run:ai is available in the NVIDIA Run:ai repository within the NVIDIA DSX AI Factory GitHub organization . Teams can inspect the code, contribute to its development, build on top of the platform or adopt its modular components independently.\nThe complete open source NVIDIA Run:ai platform is also available on NVIDIA NGC as a Community Product, with a Helm chart for installing the integrated stack.\nNote: The NVIDIA Run:ai source code is governed by its applicable open source licenses. Downloading the Community Product from NGC requires acceptance of the applicable NVIDIA Software License Agreement and Product-Specific Terms for NVIDIA AI Products. No paid NVIDIA Run:ai subscription or NVIDIA support entitlement is required for the Community Product, and NVIDIA enterprise support is not included.\nAdopt open source NVIDIA Run:ai through NVIDIA DSX ecosystem partners\nOpen source NVIDIA Run:ai gives NVIDIA DSX ecosystem partners direct access to AI workload and GPU orchestration innovations they can use in their own NVIDIA DSX AI factory solutions. By adopting the complete platform or integrating individual components, partners can bring those innovations to market faster and respond more quickly to evolving customer and operational requirements.\nCrusoe integrates NVIDIA Run:ai with Crusoe Managed Kubernetes, combining GPU workload orchestration with managed Kubernetes and GPU infrastructure.\nMirantis extends k0rdent AI with NVIDIA Run:ai to deliver a lifecycle-managed, Metal-to-Model AI factory stack that automates infrastructure provisioning and maximizes GPU utilization.\nNebius offers NVIDIA Run:ai as a one-click application deployment in Nebius AI Cloud, giving customers a streamlined way to deploy and operate the complete platform on Nebius Managed Service for Kubernetes.\nOpenNebula Systems integrates NVIDIA Run:ai with the OpenNebula AI Cloud Platform through OneKS, combining GPU workload orchestration with infrastructure provisioning and lifecycle management for open and sovereign AI clouds.\nRafay is expanding its NVIDIA Run:ai integration to deliver it as a fully managed service. Rafay automates the entire stack, from GPU infrastructure and clusters to the NVIDIA Run:ai control plane and tenants, so AI cloud providers and enterprises can offer it through their own self-service catalogs.\nSaturn Cloud integrates NVIDIA Run:ai to help AI cloud operators launch white-label AI inference services through its Token Factory platform, combining GPU orchestration with dedicated and multi-tenant model serving, per-token metering, and automated billing.\nSpectro Cloud integrates NVIDIA Run:ai into PaletteAI, enabling customers to deploy it through PaletteAI Studio and manage it with the same lifecycle automation used across their AI infrastructure.\nvCluster provides NVIDIA Run:ai through pre-validated deployment templates that stand up a complete environment per tenant, allowing operators to strengthen tenant boundaries while NVIDIA Run:ai continues to schedule across one GPU fleet.\nFor NVIDIA Enterprise AI Factory deployments, NVIDIA Run:ai continues to be available through NVIDIA-supported commercial offerings including as a standalone product, through NVIDIA Mission Control and NVIDIA AI Enterprise, and select cloud marketplaces. Availability, licensing, and support terms vary by offering.\nFor teams that already have a platform and need to fill a specific capability gap, the following sections describe when and how to use each modular component independently.\nModular open source components of the NVIDIA Run:ai platform\nThis section details the four components included in the open source release: KAI Scheduler, GPU Fractioning Operator, KAI Resource Management, and Workload Map. With additional platform code, these components form the integrated NVIDIA Run:ai platform. You can adopt NVIDIA Run:ai as an integrated whole or integrate individual components based on your unique requirements.\nKAI Scheduler: The scheduling engine behind NVIDIA Run:ai\nKAI Scheduler is the Kubernetes-native scheduler that powers the NVIDIA Run:ai platform. NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project. KAI remains the upstream engine behind NVIDIA Run:ai, and all scheduler development happens in the community repository, so every improvement flows through the same codebase. NVIDIA continues to support the project’s maintainers and work with the broader ecosystem to advance AI workload scheduling at scale.\nKAI Scheduler is purpose-built for GPU workloads at scale, coordinating:\nGang scheduling with prescheduling in-memory simulation, so multipod jobs are placed all-or-nothing and aren’t evicted needlessly\nFair-share (including time-based fair-share) and quota allocation that keeps resource shares balanced across teams\nTopology awareness and bin-packing at the scheduling-decision level\nGPU sharing, which allows multiple workloads to share single or multiple GPUs (MIG, MPS, time sharing, HAMi, CUDA 13.4 MPS fractioning)\nDynamic Resource Allocation (DRA) support\nTo learn more about key features, visit the kai-scheduler/KAI-Scheduler GitHub repo.\nUse KAI Scheduler for diverse AI workloads that require fair access to cluster resources and topology-aware placement. It can be deployed in an existing cluster alongside the current software stack without requiring the complete NVIDIA Run:ai platform.\nFollow the project, ask questions in the #kai-scheduler channel on CNCF Slack, and contribute on the kai-scheduler/KAI-Scheduler GitHub repo.\nGPU Fractioning: An operator for GPU fractions on Kubernetes\nThe NVIDIA Run:ai platform has long supported fractional GPU allocation, enabling multiple workloads to share a GPU with hard memory isolation. Fractions can be requested on demand and set up on the fly, with no per-node setup from an administrator in advance. It is one of the most widely used capabilities among ML teams running workloads that do not require the full memory of a GPU, including interactive notebooks and inference for smaller models. NVIDIA Run:ai pioneered that experience with a proprietary implementation.\nGPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 . The CUDA driver enforces a hard limit on GPU memory for each workload, and each workload sees only the GPU memory allocated to its fraction. What is still needed is a clean way to consume it on Kubernetes. This is what GPU Fractioning Operator provides: an operator that enables CUDA GPU fractions on a cluster, along with a metrics exporter for per-pod visibility into fractions in use. It is a Kubernetes integration layer that allows workloads to use CUDA-native fractioning, and it is scheduler-agnostic.\nUse the GPU Fractioning Operator for workloads that can share underutilized GPU capacity, including notebooks, development sessions, and smaller models. GPU Fractioning Operator integrates with KAI Scheduler to translate available GPU capacity into an actual placement decision, while remaining compatible with other schedulers.\nGPU Fractioning Operator brings CUDA 13.4-native GPU fractioning to Kubernetes and integrates with KAI Scheduler. To get started, refer to the GPU Fractioning Operator documentation .\nKAI Resource Management: The organizational layer\nWhile the scheduler decides how work is placed, KAI Resource Management governs who gets what:\nProjects and departments: The organizational structure, or “org layer,” that maps resources to the teams and initiatives that consume them.\nResource management with an organizational hierarchy: The ability to allocate, guarantee, and share GPU capacity across that org structure, with fair-share and quota semantics.\nNode pools: Grouping and targeting of heterogeneous hardware so workloads land on the right resources.\nTogether, these let platform teams move beyond raw Kubernetes scheduling and manage GPUs the way organizations actually operate: by team, by department, by initiative, and by resource guarantee.\nUse KAI Resource Management for heterogeneous clusters shared by multiple teams that require defined shares of capacity. For example, a platform team could guarantee 50% of the cluster to research while preventing any one team from monopolizing the remaining capacity. If you are already tracking quota entitlements in a spreadsheet or hand-maintaining namespaces per team, this is the layer that replaces it. It can be combined with KAI Scheduler in your clusters.\nRead more about how these concepts map to real deployments in the KAI Resource Management documentation .\nWorkload Map: A workload-management contract for Kubernetes\nWorkload Map is the contract NVIDIA Run:ai uses to support any workload type. KAI Scheduler uses it for scheduling and gang semantics; the rest of the platform uses it for workload discovery, monitoring and lifecycle management.\nIn Kubernetes, an AI workload is almost never a bare Deployment or Job. It is a PyTorchJob, a RayCluster, a JobSet, a KServe InferenceService, a Dynamo graph deployment, or a company’s own custom resource. Each type has its own internal structure, components with different roles (driver and workers, head and workers, prefill and decode), its own scaling and gang semantics, and its own way of reporting status.\nWorkload Map provides a consistent way to treat these workloads as first-class objects throughout their lifecycle:\nScheduling with gang and topology awareness\nObserving status and health consistently\nThis workload-management layer sits between Kubernetes primitives and the schedulers, dashboards, SRE and troubleshooting tools, cost tools, backup tools, and ML platforms that serve users. Instead of each tool building a private, partial integration for every CRD, Workload Map defines each workload type once so any platform or tool can schedule, observe, act on, and govern it consistently without hardcoding each CRD.\nUse Workload Map for platforms and tools that must understand and manage multiple Kubernetes workload types without hardcoding each CRD. It ships as a Go library that works offline on unstructured objects, so you can adopt it without adding anything to your cluster. It is deliberately narrow: Workload Map describes workload structure and does not schedule, queue, autoscale, or propagate across clusters.\nLearn more in the dsx-ai-factory/workload-map GitHub repo and check out the adopter projects .\nThe following open source projects address complementary AI infrastructure challenges. They can be adopted independently or incorporated into broader solutions that include the complete NVIDIA Run:ai platform or selected components.\nModel Streamer: Reducing cold-start latency\nCold-starting an inference workload on Kubernetes can take several minutes, during which time GPUs are allocated but idle for a single step: loading model weights from storage onto the GPU. Model Streamer reads weights concurrently and streams them directly into GPU memory, cutting load time for large models.\nSince its release, Model Streamer has been adopted across the inference stack, including by inference engines, cloud providers and storage platform vendors.\nModel Streamer is integrated upstream in vLLM and SGLang , where it can be enabled with the --load-format runai_streamer flag, as well as in ModelExpress . Support covers local filesystems, S3-compatible stores, and network file shares alongside several cloud backends detailed below.\nMajor cloud providers now document Model Streamer in their own guidance.\nAWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .\nGoogle Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.\nMicrosoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers. Published benchmarks on eight NVIDIA H100 VMs shows 3x-6x faster loading than the default loader and a steady 80 Gbps, compared with approximately 40 Gbps for the default path.\nSeveral AI data infrastructure partners have independently benchmarked Model Streamer and published their results:\nWEKA loaded into GPU memory in just 3.5 seconds, roughly 40% faster than loading from local NVMe—enabling organizations to build petabyte-scale shared model repositories that accelerate model readiness without the time, effort, and capacity required to maintain duplicate model copies across the inference environment.\nVAST Data measured 1.7 seconds, a 60% improvement over loading from local NVMe\nDDN streamed the 65.5 GB Qwen3-32B across 8 GPUs in under four seconds, and translated it into cost: saving up to 10% of daily GPU runtime compared to using local storage.\nUse Model Streamer when starting new replicas and loading model weights is the primary bottleneck.\nGrove: One API, any inference architecture\nEmerging workload patterns—including agentic pipelines, disaggregated serving and mixture-of-experts training—consist of multiple connected components that must scale together. Grove provides a Kubernetes API for orchestrating these workloads, from a single pod to deployments spanning tens of thousands of GPUs.\nGrove provides topology-aware autoscaling and hierarchical gang scheduling, allowing components such as prefill and decode to start as all-or-nothing units. On NVIDIA GB200 NVL72 , it also manages ComputeDomain resources automatically, enabling multinode NVLink performance through a single annotation instead of hand-authored YAML.\nGrove is a modular part of NVIDIA Dynamo that can be used independently, and it already powers training and inference pipelines at scale across a range of companies. Recent work includes support for llm-d and Volcano as a scheduler backend, with Kueue support in progress.\nUse Grove for graph-based workloads with distinct roles and coupled scaling requirements.\nGet started with open source NVIDIA Run:ai\nNVIDIA Run:ai is available now as open source software in the NVIDIA DSX AI Factory GitHub organization. To learn more and get started, check out these resources:\nWe’re excited to bring this work to the community and to build the next generation of AI workload and GPU orchestration in the open. We welcome your contributions, issues, and feedback.\nEkin Karabulut is a data scientist and developer advocate previously at Run:ai, now at NVIDIA, exploring the efficient usage of large models in different production scenarios. Previously she worked on privacy implications of federated learning, focused on distributed training techniques and got fascinated by inefficiencies in GPU usage in research and industry settings. She established the AI Infrastructure Club and is based in Munich, Germany.\nSam Heywood is director of Product Marketing at NVIDIA, focused on AI infrastructure, GPU orchestration, and Kubernetes technologies that help organizations build and operate AI at scale. His technology interests include accelerated computing, cloud-native infrastructure, distributed AI workloads, and the systems that enable efficient training and inference. Sam brings extensive experience in enterprise technology and product marketing, translating complex technical capabilities into clear strategies for customers and the market. He holds a bachelor’s degree in Computer Science from The University of Texas at Austin and an MBA.",
+ "gold": {
+  "items": [
+   {
+    "k": 0,
+    "weight": "supporting",
+    "span": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software",
+    "meaning": {
+     "who": "NVIDIA",
+     "what": "releases the full Run:ai AI-workload and GPU-orchestration platform, plus four separately adoptable components, as open source within the DSX AI Factory Platform",
+     "condition": "the Community Product needs no paid Run:ai subscription or NVIDIA support entitlement and has no enterprise support; Run:ai stays available commercially as a standalone product, through Mission Control, NVIDIA AI Enterprise and cloud marketplaces",
+     "status": "happened"
+    },
+    "rule": "5.1 第 1 类（公司自己的决定）；6 辅助：同\"公司取消软件订阅费，生产使用免费\"（Alex 判 8，Omniverse 辅助）——碰到软件定价，但没有量"
+   },
+   {
+    "k": 1,
+    "weight": "supporting",
+    "span": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings",
+    "meaning": {
+     "who": "Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, vCluster",
+     "what": "integrating open-source Run:ai into their own offerings (for example Nebius as a one-click deployment in Nebius AI Cloud, Rafay as a fully managed service)",
+     "status": "happened"
+    },
+    "rule": "5.1 第 2 类：伙伴有名字的集成动作；5.3 第 1 行边界\"伙伴、客户采用或集成的动作不是产品细节\"；D240 有名有姓、没金额照留；6 辅助：同\"伙伴把公司模型集成进政府系统（没写金额）\""
+   },
+   {
+    "k": 2,
+    "weight": "supporting",
+    "span": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation",
+    "meaning": {},
+    "rule": "盲读补：有名有姓的采用（D240），和开发集金标里平台上架英伟达模型的判法一致"
+   },
+   {
+    "k": 3,
+    "weight": "supporting",
+    "span": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA",
+    "meaning": {},
+    "rule": "盲读补：有名有姓的采用（D240），同上"
+   },
+   {
+    "k": 4,
+    "weight": "supporting",
+    "span": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai",
+    "meaning": {},
+    "rule": "盲读补：起草稿列为产品细节；它是有名有姓的合作开发（D240），和 AWS、Google Cloud 两条同判"
+   }
+  ],
+  "not_kept": [
+   {
+    "span": "Major cloud providers now document Model Streamer in their own guidance.",
+    "weight": "not_kept",
+    "reason": "5.1：描述一个已有开源工具累积起来的采用状况，原文没有写成本周的新动作；D243\"重复常识、描述长期状况、泛泛的看法，是杂音\""
+   },
+   {
+    "span": "Published benchmarks on eight NVIDIA H100 VMs shows 3x-6x faster loading than the default loader",
+    "weight": "not_kept",
+    "reason": "5.3 没有业务规模的产品、跑分细节"
+   },
+   {
+    "span": "WEKA loaded into GPU memory in just 3.5 seconds, roughly 40% faster than loading from local NVMe",
+    "weight": "not_kept",
+    "reason": "5.3 没有业务规模的产品、跑分细节"
+   },
+   {
+    "span": "DDN streamed the 65.5 GB Qwen3-32B across 8 GPUs in under four seconds",
+    "weight": "not_kept",
+    "reason": "5.3 没有业务规模的产品、跑分细节"
+   },
+   {
+    "span": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+    "weight": "not_kept",
+    "reason": "5.3 没有业务规模的产品细节：一个调度组件的许可证和托管"
+   },
+   {
+    "span": "the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4",
+    "weight": "not_kept",
+    "reason": "5.3 没有业务规模的产品细节"
+   },
+   {
+    "span": "it already powers training and inference pipelines at scale across a range of companies",
+    "weight": "not_kept",
+    "reason": "5.1 典型的主张（D243 第 5 条）：没有名字、没有数字"
+   },
+   {
+    "span": "it is now possible for every NVIDIA DSX ecosystem partner and AI cloud to increase workload throughput, improve GPU utilization, and operate shared AI infrastructure more efficiently and effectively",
+    "weight": "not_kept",
+    "reason": "5.3 只有形容的引语：公司自己的宣传框架"
+   },
+   {
+    "span": "Sam Heywood is director of Product Marketing at NVIDIA",
+    "weight": "not_kept",
+    "reason": "5.3 模板（作者简介）"
+   }
+  ],
+  "questions": {
+   "must_open": [],
+   "may_open": [],
+   "must_not": [
+    {
+     "gist": "NVIDIA software / AI Enterprise revenue in FY2027",
+     "row": "第 4 节写法检查\"原文支持\"：原文没有任何软件收入数；第 3 节 A 类只问承载公司价值的量"
+    },
+    {
+     "gist": "How many partners will adopt open-source Run:ai by 2027",
+     "row": "第 4 节测试 1 值得追：写不出改变哪项收入或利润；生态数字在第 6 节只是可选；开题理由封闭（D184），不属于五类"
+    },
+    {
+     "gist": "Will open-sourcing Run:ai strengthen NVIDIA's software moat",
+     "row": "第 4 节不开清单：没日期的\"护城河\"\"战略\""
+    }
+   ]
+  }
+ },
+ "answers": {
+  "A": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA announced the release of the full Run:ai platform as open-source software on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named NVIDIA DSX ecosystem partners announced they are integrating open-source Run:ai into their offerings.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "No paid NVIDIA Run:ai subscription or NVIDIA support entitlement is required for the Community Product, and NVIDIA enterprise support is not included.",
+     "one_line": "NVIDIA said the Run:ai Community Product requires no paid subscription or support entitlement, and does not include NVIDIA enterprise support.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e4",
+     "quote": "Crusoe integrates NVIDIA Run:ai with Crusoe Managed Kubernetes, combining GPU workload orchestration with managed Kubernetes and GPU infrastructure.",
+     "one_line": "Crusoe announced it integrates Run:ai with Crusoe Managed Kubernetes.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "Mirantis extends k0rdent AI with NVIDIA Run:ai to deliver a lifecycle-managed, Metal-to-Model AI factory stack that automates infrastructure provisioning and maximizes GPU utilization.",
+     "one_line": "Mirantis announced that it is extending k0rdent AI with Run:ai.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e6",
+     "quote": "Nebius offers NVIDIA Run:ai as a one-click application deployment in Nebius AI Cloud, giving customers a streamlined way to deploy and operate the complete platform on Nebius Managed Service for Kubernetes.",
+     "one_line": "Nebius announced it offers Run:ai as a one-click application deployment in Nebius AI Cloud on Nebius Managed Service for Kubernetes.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e7",
+     "quote": "OpenNebula Systems integrates NVIDIA Run:ai with the OpenNebula AI Cloud Platform through OneKS, combining GPU workload orchestration with infrastructure provisioning and lifecycle management for open and sovereign AI clouds.",
+     "one_line": "OpenNebula Systems announced it integrates Run:ai with its AI Cloud Platform through OneKS.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e8",
+     "quote": "Rafay is expanding its NVIDIA Run:ai integration to deliver it as a fully managed service.",
+     "one_line": "Rafay announced it is expanding its Run:ai integration to offer the platform as a fully managed service.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e9",
+     "quote": "Saturn Cloud integrates NVIDIA Run:ai to help AI cloud operators launch white-label AI inference services through its Token Factory platform, combining GPU orchestration with dedicated and multi-tenant model serving, per-token metering, and automated billing.",
+     "one_line": "Saturn Cloud announced it integrates Run:ai with its Token Factory platform for white-label AI inference services.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e10",
+     "quote": "Spectro Cloud integrates NVIDIA Run:ai into PaletteAI, enabling customers to deploy it through PaletteAI Studio and manage it with the same lifecycle automation used across their AI infrastructure.",
+     "one_line": "Spectro Cloud announced it integrates Run:ai into PaletteAI, where customers can deploy it through PaletteAI Studio.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e11",
+     "quote": "vCluster provides NVIDIA Run:ai through pre-validated deployment templates that stand up a complete environment per tenant, allowing operators to strengthen tenant boundaries while NVIDIA Run:ai continues to schedule across one GPU fleet.",
+     "one_line": "vCluster announced it provides Run:ai through pre-validated deployment templates for tenant environments.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e12",
+     "quote": "NVIDIA Run:ai is available now as open source software in the NVIDIA DSX AI Factory GitHub organization.",
+     "one_line": "NVIDIA said Run:ai was available as open-source software in its DSX AI Factory GitHub organization on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e13",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA said it released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e14",
+     "quote": "The CUDA driver enforces a hard limit on GPU memory for each workload, and each workload sees only the GPU memory allocated to its fraction. What is still needed is a clean way to consume it on Kubernetes. This is what GPU Fractioning Operator provides: an operator that enables CUDA GPU fractions on a cluster, along with a metrics exporter for per-pod visibility into fractions in use. It is a Kubernetes integration layer that allows workloads to use CUDA-native fractioning, and it is scheduler-agnostic.",
+     "one_line": "NVIDIA described GPU Fractioning Operator as its Kubernetes integration for CUDA-native GPU fractioning.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e15",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4.",
+     "one_line": "NVIDIA said it retired Run:ai's proprietary GPU-fractioning implementation in favor of CUDA 13.4's native capability.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e16",
+     "quote": "Model Streamer is integrated upstream in vLLM and SGLang, where it can be enabled with the --load-format runai_streamer flag, as well as in ModelExpress.",
+     "one_line": "NVIDIA said Model Streamer is integrated upstream in vLLM and SGLang and is also integrated in ModelExpress.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e17",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "NVIDIA said Model Streamer ships in AWS's vLLM Deep Learning Container and is recommended in official EKS inference documentation.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e18",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "NVIDIA said Google Cloud's native Cloud Storage support for Model Streamer was built in collaboration with NVIDIA and is documented for GKE.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e19",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers.",
+     "one_line": "NVIDIA said Microsoft and NVIDIA Run:ai jointly developed an Azure Blob Storage integration for Model Streamer.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "B": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA released the full Run:ai platform as open source software on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named NVIDIA DSX ecosystem partners were integrating the open-source Run:ai platform into their offerings as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "No paid NVIDIA Run:ai subscription or NVIDIA support entitlement is required for the Community Product, and NVIDIA enterprise support is not included.",
+     "one_line": "NVIDIA made the Run:ai Community Product available without a paid subscription or support entitlement, but excluded NVIDIA enterprise support, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e4",
+     "quote": "Crusoe integrates NVIDIA Run:ai with Crusoe Managed Kubernetes, combining GPU workload orchestration with managed Kubernetes and GPU infrastructure.",
+     "one_line": "Crusoe integrated NVIDIA Run:ai with Crusoe Managed Kubernetes, combining orchestration with its managed Kubernetes and GPU infrastructure, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "Mirantis extends k0rdent AI with NVIDIA Run:ai to deliver a lifecycle-managed, Metal-to-Model AI factory stack that automates infrastructure provisioning and maximizes GPU utilization.",
+     "one_line": "Mirantis extended k0rdent AI with NVIDIA Run:ai for a lifecycle-managed AI factory stack, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e6",
+     "quote": "Nebius offers NVIDIA Run:ai as a one-click application deployment in Nebius AI Cloud, giving customers a streamlined way to deploy and operate the complete platform on Nebius Managed Service for Kubernetes.",
+     "one_line": "Nebius offered the complete NVIDIA Run:ai platform as a one-click deployment in Nebius AI Cloud on its Managed Service for Kubernetes, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e7",
+     "quote": "OpenNebula Systems integrates NVIDIA Run:ai with the OpenNebula AI Cloud Platform through OneKS, combining GPU workload orchestration with infrastructure provisioning and lifecycle management for open and sovereign AI clouds.",
+     "one_line": "OpenNebula Systems integrated NVIDIA Run:ai with its AI Cloud Platform through OneKS, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e8",
+     "quote": "Rafay is expanding its NVIDIA Run:ai integration to deliver it as a fully managed service.",
+     "one_line": "Rafay was expanding its NVIDIA Run:ai integration to offer it as a fully managed service, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e9",
+     "quote": "Saturn Cloud integrates NVIDIA Run:ai to help AI cloud operators launch white-label AI inference services through its Token Factory platform, combining GPU orchestration with dedicated and multi-tenant model serving, per-token metering, and automated billing.",
+     "one_line": "Saturn Cloud integrated NVIDIA Run:ai with its Token Factory platform for white-label AI inference services, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e10",
+     "quote": "Spectro Cloud integrates NVIDIA Run:ai into PaletteAI, enabling customers to deploy it through PaletteAI Studio and manage it with the same lifecycle automation used across their AI infrastructure.",
+     "one_line": "Spectro Cloud integrated NVIDIA Run:ai into PaletteAI for deployment through PaletteAI Studio, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e11",
+     "quote": "vCluster provides NVIDIA Run:ai through pre-validated deployment templates that stand up a complete environment per tenant, allowing operators to strengthen tenant boundaries while NVIDIA Run:ai continues to schedule across one GPU fleet.",
+     "one_line": "vCluster offered NVIDIA Run:ai through pre-validated, per-tenant deployment templates, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e12",
+     "quote": "KAI Scheduler is the Kubernetes-native scheduler that powers the NVIDIA Run:ai platform. NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project by 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e13",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4.",
+     "one_line": "NVIDIA retired Run:ai's proprietary GPU-fractioning implementation in favor of CUDA 13.4's native capability, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e14",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "AWS included Model Streamer in its vLLM Deep Learning Container and recommended it in official EKS inference documentation, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e15",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "Google Cloud and NVIDIA built native Cloud Storage support for Model Streamer, with GKE documentation, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e16",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers.",
+     "one_line": "Microsoft and NVIDIA Run:ai jointly developed Azure Blob Storage integration for Model Streamer, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "C": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA released the full Run:ai platform as open source software on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named NVIDIA DSX ecosystem partners—Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster—are integrating open source Run:ai into their offerings as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project; the post reports this as completed by 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e4",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 .",
+     "one_line": "NVIDIA retired Run:ai's proprietary GPU-fractioning implementation in favor of CUDA 13.4-native GPU fractioning, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "Crusoe integrates NVIDIA Run:ai with Crusoe Managed Kubernetes, combining GPU workload orchestration with managed Kubernetes and GPU infrastructure.",
+     "one_line": "Crusoe integrates NVIDIA Run:ai with Crusoe Managed Kubernetes, combining orchestration with managed Kubernetes and GPU infrastructure, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e6",
+     "quote": "Mirantis extends k0rdent AI with NVIDIA Run:ai to deliver a lifecycle-managed, Metal-to-Model AI factory stack that automates infrastructure provisioning and maximizes GPU utilization.",
+     "one_line": "Mirantis extends k0rdent AI with NVIDIA Run:ai for a lifecycle-managed AI factory stack, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e7",
+     "quote": "Nebius offers NVIDIA Run:ai as a one-click application deployment in Nebius AI Cloud, giving customers a streamlined way to deploy and operate the complete platform on Nebius Managed Service for Kubernetes.",
+     "one_line": "Nebius offers Run:ai as a one-click application deployment on Nebius AI Cloud and Nebius Managed Service for Kubernetes, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e8",
+     "quote": "OpenNebula Systems integrates NVIDIA Run:ai with the OpenNebula AI Cloud Platform through OneKS, combining GPU workload orchestration with infrastructure provisioning and lifecycle management for open and sovereign AI clouds.",
+     "one_line": "OpenNebula Systems integrates Run:ai with its AI Cloud Platform through OneKS, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e9",
+     "quote": "Rafay is expanding its NVIDIA Run:ai integration to deliver it as a fully managed service.",
+     "one_line": "Rafay is expanding its Run:ai integration to offer the platform as a fully managed service, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e10",
+     "quote": "Saturn Cloud integrates NVIDIA Run:ai to help AI cloud operators launch white-label AI inference services through its Token Factory platform, combining GPU orchestration with dedicated and multi-tenant model serving, per-token metering, and automated billing.",
+     "one_line": "Saturn Cloud integrates Run:ai into its Token Factory platform for AI cloud operators, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e11",
+     "quote": "Spectro Cloud integrates NVIDIA Run:ai into PaletteAI, enabling customers to deploy it through PaletteAI Studio and manage it with the same lifecycle automation used across their AI infrastructure.",
+     "one_line": "Spectro Cloud integrates Run:ai into PaletteAI for deployment through PaletteAI Studio, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e12",
+     "quote": "vCluster provides NVIDIA Run:ai through pre-validated deployment templates that stand up a complete environment per tenant, allowing operators to strengthen tenant boundaries while NVIDIA Run:ai continues to schedule across one GPU fleet.",
+     "one_line": "vCluster provides Run:ai through pre-validated deployment templates for tenant environments, as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e13",
+     "quote": "Model Streamer is integrated upstream in vLLM and SGLang , where it can be enabled with the --load-format runai_streamer flag, as well as in ModelExpress .",
+     "one_line": "Model Streamer is integrated upstream in vLLM and SGLang and in ModelExpress, as reported by NVIDIA on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e14",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "AWS includes Model Streamer in its vLLM Deep Learning Container and recommends it in official EKS inference documentation, as reported on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e15",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "Google Cloud added native Cloud Storage support for Model Streamer, developed in collaboration with NVIDIA, and published related GKE documentation, as reported on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e16",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers.",
+     "one_line": "Microsoft and NVIDIA Run:ai jointly developed an Azure Blob Storage integration for Model Streamer, as reported on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "D": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA released the full Run:ai platform as open source software on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named NVIDIA DSX ecosystem partners—Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster—are integrating open-source Run:ai into their offerings; the post did not specify a completion date.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project; no date for these actions was specified in the post.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e4",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 .",
+     "one_line": "NVIDIA retired Run:ai’s proprietary GPU-fractioning implementation in favor of the CUDA 13.4-native capability; the post did not specify a date for the retirement.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e5",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "AWS included Model Streamer in the vLLM Deep Learning Container and recommended it in official EKS inference documentation; the post gave no date or scale for the inclusion.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e6",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "Google Cloud built native Cloud Storage support for Model Streamer in collaboration with NVIDIA and included it in GKE documentation; the post gave no date or scale.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e7",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers.",
+     "one_line": "Microsoft and NVIDIA Run:ai jointly developed an Azure Blob Storage integration for Model Streamer; the post gave no date or scale.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "E": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA announced that it is releasing the full Run:ai platform as open-source software as part of its DSX AI Factory Platform.",
+     "speaker": "NVIDIA (company blog; by Ekin Karabulut and Sam Heywood)",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named DSX ecosystem partners—Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster—are integrating the open-source Run:ai platform into their offerings.",
+     "speaker": "NVIDIA (company blog; by Ekin Karabulut and Sam Heywood)",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "The complete open source NVIDIA Run:ai platform is also available on NVIDIA NGC as a Community Product, with a Helm chart for installing the integrated stack.",
+     "one_line": "NVIDIA made the complete open-source Run:ai platform available on NGC as a Community Product, with a Helm chart for installing the integrated stack.",
+     "speaker": "NVIDIA (company blog; by Ekin Karabulut and Sam Heywood)",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e4",
+     "quote": "No paid NVIDIA Run:ai subscription or NVIDIA support entitlement is required for the Community Product, and NVIDIA enterprise support is not included.",
+     "one_line": "NVIDIA stated that the NGC Community Product requires no paid Run:ai subscription or support entitlement, and does not include NVIDIA enterprise support.",
+     "speaker": "NVIDIA (company blog; by Ekin Karabulut and Sam Heywood)",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "speaker": "NVIDIA (company blog; by Ekin Karabulut and Sam Heywood)",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e6",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 .",
+     "one_line": "NVIDIA said it retired Run:ai's proprietary GPU-fractioning implementation in favor of CUDA 13.4's native GPU-fractioning capability, with GPU Fractioning Operator bringing that capability to Kubernetes.",
+     "speaker": "NVIDIA (company blog; by Ekin Karabulut and Sam Heywood)",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e7",
+     "quote": "For NVIDIA Enterprise AI Factory deployments, NVIDIA Run:ai continues to be available through NVIDIA-supported commercial offerings including as a standalone product, through NVIDIA Mission Control and NVIDIA AI Enterprise, and select cloud marketplaces.",
+     "one_line": "NVIDIA said Run:ai remains available for Enterprise AI Factory deployments as a standalone commercial product, through Mission Control and NVIDIA AI Enterprise, and on select cloud marketplaces.",
+     "speaker": "NVIDIA (company blog; by Ekin Karabulut and Sam Heywood)",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "F": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA released the full Run:ai platform as open-source software on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named DSX ecosystem partners—Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster—are integrating open-source Run:ai into their offerings; no completion date is stated.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "The complete open source NVIDIA Run:ai platform is also available on NVIDIA NGC as a Community Product, with a Helm chart for installing the integrated stack.",
+     "one_line": "NVIDIA made the complete open-source Run:ai platform available on NGC as a Community Product.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e4",
+     "quote": "No paid NVIDIA Run:ai subscription or NVIDIA support entitlement is required for the Community Product, and NVIDIA enterprise support is not included.",
+     "one_line": "NVIDIA stated that the Run:ai Community Product requires no paid subscription or support entitlement, and does not include NVIDIA enterprise support.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e6",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 .",
+     "one_line": "NVIDIA retired Run:ai’s proprietary GPU-fractioning implementation in favor of CUDA 13.4’s native capability.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e7",
+     "quote": "Crusoe integrates NVIDIA Run:ai with Crusoe Managed Kubernetes, combining GPU workload orchestration with managed Kubernetes and GPU infrastructure.",
+     "one_line": "Crusoe integrated NVIDIA Run:ai with Crusoe Managed Kubernetes.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e8",
+     "quote": "Mirantis extends k0rdent AI with NVIDIA Run:ai to deliver a lifecycle-managed, Metal-to-Model AI factory stack that automates infrastructure provisioning and maximizes GPU utilization.",
+     "one_line": "Mirantis integrated NVIDIA Run:ai into k0rdent AI for its Metal-to-Model AI factory stack.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e9",
+     "quote": "Nebius offers NVIDIA Run:ai as a one-click application deployment in Nebius AI Cloud, giving customers a streamlined way to deploy and operate the complete platform on Nebius Managed Service for Kubernetes.",
+     "one_line": "Nebius offers Run:ai as a one-click application deployment on Nebius AI Cloud and its Managed Service for Kubernetes.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e10",
+     "quote": "OpenNebula Systems integrates NVIDIA Run:ai with the OpenNebula AI Cloud Platform through OneKS, combining GPU workload orchestration with infrastructure provisioning and lifecycle management for open and sovereign AI clouds.",
+     "one_line": "OpenNebula Systems integrated Run:ai with its AI Cloud Platform through OneKS.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e11",
+     "quote": "Rafay is expanding its NVIDIA Run:ai integration to deliver it as a fully managed service.",
+     "one_line": "Rafay is expanding its Run:ai integration to offer Run:ai as a fully managed service; the item does not state a completion date.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e12",
+     "quote": "Saturn Cloud integrates NVIDIA Run:ai to help AI cloud operators launch white-label AI inference services through its Token Factory platform, combining GPU orchestration with dedicated and multi-tenant model serving, per-token metering, and automated billing.",
+     "one_line": "Saturn Cloud integrated Run:ai into its Token Factory platform for white-label AI inference services.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e13",
+     "quote": "Spectro Cloud integrates NVIDIA Run:ai into PaletteAI, enabling customers to deploy it through PaletteAI Studio and manage it with the same lifecycle automation used across their AI infrastructure.",
+     "one_line": "Spectro Cloud integrated Run:ai into PaletteAI, making it deployable through PaletteAI Studio.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e14",
+     "quote": "vCluster provides NVIDIA Run:ai through pre-validated deployment templates that stand up a complete environment per tenant, allowing operators to strengthen tenant boundaries while NVIDIA Run:ai continues to schedule across one GPU fleet.",
+     "one_line": "vCluster provides Run:ai through pre-validated deployment templates for tenant environments.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e15",
+     "quote": "For NVIDIA Enterprise AI Factory deployments, NVIDIA Run:ai continues to be available through NVIDIA-supported commercial offerings including as a standalone product, through NVIDIA Mission Control and NVIDIA AI Enterprise, and select cloud marketplaces.",
+     "one_line": "NVIDIA said Run:ai remains available in commercial offerings, including standalone, NVIDIA Mission Control, NVIDIA AI Enterprise, and select cloud marketplaces.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e16",
+     "quote": "Model Streamer is integrated upstream in vLLM and SGLang , where it can be enabled with the --load-format runai_streamer flag, as well as in ModelExpress .",
+     "one_line": "NVIDIA reported that Model Streamer is integrated upstream in vLLM and SGLang and in ModelExpress.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e17",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "AWS ships Model Streamer in its vLLM Deep Learning Container and recommends it in official EKS inference documentation.",
+     "speaker": "NVIDIA describing AWS documentation and product",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e18",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "Google Cloud developed native Cloud Storage support for Model Streamer with NVIDIA and documents its use with GKE.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e19",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers. Published benchmarks on eight NVIDIA H100 VMs shows 3x-6x faster loading than the default loader and a steady 80 Gbps, compared with approximately 40 Gbps for the default path.",
+     "one_line": "Microsoft and NVIDIA jointly developed Azure Blob Storage integration for Model Streamer; published benchmarks on eight NVIDIA H100 VMs reported 3–6 times faster loading and 80 Gbps, versus about 40 Gbps for the default path.",
+     "speaker": "NVIDIA reporting published benchmarks",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e20",
+     "quote": "WEKA loaded into GPU memory in just 3.5 seconds, roughly 40% faster than loading from local NVMe—enabling organizations to build petabyte-scale shared model repositories that accelerate model readiness without the time, effort, and capacity required to maintain duplicate model copies across the inference environment.",
+     "one_line": "WEKA reported that Model Streamer loaded a model into GPU memory in 3.5 seconds, about 40% faster than local NVMe.",
+     "speaker": "NVIDIA reporting WEKA’s benchmark",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e21",
+     "quote": "VAST Data measured 1.7 seconds, a 60% improvement over loading from local NVMe",
+     "one_line": "VAST Data reported a Model Streamer load time of 1.7 seconds, 60% faster than loading from local NVMe.",
+     "speaker": "NVIDIA reporting VAST Data’s benchmark",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e22",
+     "quote": "DDN streamed the 65.5 GB Qwen3-32B across 8 GPUs in under four seconds, and translated it into cost: saving up to 10% of daily GPU runtime compared to using local storage.",
+     "one_line": "DDN reported streaming the 65.5 GB Qwen3-32B across eight GPUs in under four seconds and saving up to 10% of daily GPU runtime versus local storage.",
+     "speaker": "NVIDIA reporting DDN’s benchmark",
+     "original_day": "",
+     "tier": "third_party_view"
+    }
+   ],
+   "questions": []
+  },
+  "G": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA announced the release of the full Run:ai platform as open-source software on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named NVIDIA DSX ecosystem partners were integrating the open-source Run:ai platform into their offerings as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project; the post reported this as completed by 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e4",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 .",
+     "one_line": "NVIDIA said it had retired Run:ai's proprietary GPU-fractioning implementation in favor of CUDA 13.4-native GPU fractioning.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "Model Streamer is integrated upstream in vLLM and SGLang , where it can be enabled with the --load-format runai_streamer flag, as well as in ModelExpress .",
+     "one_line": "NVIDIA reported that Model Streamer was integrated upstream in vLLM and SGLang and in ModelExpress as of 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e6",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "AWS included Model Streamer in its vLLM Deep Learning Container and recommended it in official EKS inference documentation as of 2026-10-13.",
+     "speaker": "NVIDIA, reporting AWS product and documentation details",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e7",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "Google Cloud and NVIDIA built native Cloud Storage support for Model Streamer, and Google Cloud documented its use with GKE; the post reported this by 2026-10-13.",
+     "speaker": "NVIDIA, reporting a joint development and Google Cloud documentation",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e8",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers.",
+     "one_line": "Microsoft and NVIDIA Run:ai jointly developed Azure Blob Storage integration for Model Streamer, reported as available by 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    }
+   ],
+   "questions": []
+  },
+  "H": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA announced the release of the full Run:ai platform as open-source software as part of its DSX AI Factory Platform.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named DSX ecosystem partners are integrating the open-source Run:ai platform into their offerings.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e4",
+     "quote": "The NVIDIA Run:ai platform has long supported fractional GPU allocation, enabling multiple workloads to share a GPU with hard memory isolation.",
+     "one_line": "NVIDIA says Run:ai has supported fractional GPU allocation that lets multiple workloads share a GPU with hard memory isolation; no period or scale was reported.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 .",
+     "one_line": "NVIDIA retired Run:ai's proprietary GPU-fractioning implementation in favor of CUDA 13.4's native capability and released GPU Fractioning Operator for Kubernetes.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e6",
+     "quote": "Rafay is expanding its NVIDIA Run:ai integration to deliver it as a fully managed service.",
+     "one_line": "Rafay is expanding its Run:ai integration to offer the platform as a fully managed service.",
+     "speaker": "NVIDIA, reporting Rafay's action",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e7",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "AWS includes Model Streamer in its vLLM Deep Learning Container and recommends it in official EKS inference documentation.",
+     "speaker": "NVIDIA, reporting AWS materials",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e8",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "Google Cloud and NVIDIA built native Cloud Storage support for Model Streamer, with GKE documentation for streaming from a bucket into accelerator memory.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e9",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers.",
+     "one_line": "Microsoft and NVIDIA Run:ai jointly developed Azure Blob Storage integration for Model Streamer.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "fact"
+    },
+    {
+     "id": "e10",
+     "quote": "Published benchmarks on eight NVIDIA H100 VMs shows 3x-6x faster loading than the default loader and a steady 80 Gbps, compared with approximately 40 Gbps for the default path.",
+     "one_line": "Published benchmarks on eight NVIDIA H100 VMs reported Model Streamer loading 3–6 times faster than the default loader, sustaining 80 Gbps versus approximately 40 Gbps.",
+     "speaker": "NVIDIA, reporting published benchmarks",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e11",
+     "quote": "WEKA loaded into GPU memory in just 3.5 seconds, roughly 40% faster than loading from local NVMe—enabling organizations to build petabyte-scale shared model repositories that accelerate model readiness without the time, effort, and capacity required to maintain duplicate model copies across the inference environment.",
+     "one_line": "WEKA reported loading a model into GPU memory in 3.5 seconds, about 40% faster than local NVMe, using Model Streamer.",
+     "speaker": "NVIDIA, reporting WEKA's benchmark",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e12",
+     "quote": "VAST Data measured 1.7 seconds, a 60% improvement over loading from local NVMe",
+     "one_line": "VAST Data reported a 1.7-second Model Streamer load time, 60% faster than local NVMe.",
+     "speaker": "NVIDIA, reporting VAST Data's benchmark",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e13",
+     "quote": "DDN streamed the 65.5 GB Qwen3-32B across 8 GPUs in under four seconds, and translated it into cost: saving up to 10% of daily GPU runtime compared to using local storage.",
+     "one_line": "DDN reported streaming the 65.5 GB Qwen3-32B model across eight GPUs in under four seconds and saving up to 10% of daily GPU runtime versus local storage.",
+     "speaker": "NVIDIA, reporting DDN's benchmark",
+     "original_day": "",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e14",
+     "quote": "Grove is a modular part of NVIDIA Dynamo that can be used independently, and it already powers training and inference pipelines at scale across a range of companies.",
+     "one_line": "NVIDIA says Grove, a modular part of Dynamo, is already used in training and inference pipelines at scale across multiple companies.",
+     "speaker": "NVIDIA",
+     "original_day": "",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "I": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "NVIDIA is releasing the full NVIDIA Run:ai platform as open source software, expanding the NVIDIA DSX AI Factory Platform with a foundation for AI workload and GPU orchestration.",
+     "one_line": "NVIDIA announced the release of the full Run:ai platform as open-source software on 2026-10-13.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "Eight NVIDIA DSX ecosystem partners including Crusoe, Mirantis, Nebius, OpenNebula Systems, Rafay, Saturn Cloud, Spectro Cloud, and vCluster are integrating the open source platform into their offerings.",
+     "one_line": "Eight named NVIDIA DSX ecosystem partners said they are integrating the open-source Run:ai platform into their offerings; the post did not give a timetable.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e3",
+     "quote": "The complete open source NVIDIA Run:ai platform is also available on NVIDIA NGC as a Community Product, with a Helm chart for installing the integrated stack.\nNote: The NVIDIA Run:ai source code is governed by its applicable open source licenses. Downloading the Community Product from NGC requires acceptance of the applicable NVIDIA Software License Agreement and Product-Specific Terms for NVIDIA AI Products. No paid NVIDIA Run:ai subscription or NVIDIA support entitlement is required for the Community Product, and NVIDIA enterprise support is not included.",
+     "one_line": "NVIDIA made the open-source Run:ai platform available on NGC as a Community Product without requiring a paid subscription or support entitlement; enterprise support is not included.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e4",
+     "quote": "For NVIDIA Enterprise AI Factory deployments, NVIDIA Run:ai continues to be available through NVIDIA-supported commercial offerings including as a standalone product, through NVIDIA Mission Control and NVIDIA AI Enterprise, and select cloud marketplaces. Availability, licensing, and support terms vary by offering.",
+     "one_line": "NVIDIA said Run:ai remains available to enterprise deployments through standalone, Mission Control, AI Enterprise and selected cloud-marketplace offerings, with terms varying by offering.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e5",
+     "quote": "NVIDIA released KAI Scheduler as open source software under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "one_line": "NVIDIA released KAI Scheduler under the Apache 2.0 license and contributed it to CNCF as a Sandbox project.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e6",
+     "quote": "The NVIDIA Run:ai platform has long supported fractional GPU allocation, enabling multiple workloads to share a GPU with hard memory isolation. Fractions can be requested on demand and set up on the fly, with no per-node setup from an administrator in advance. It is one of the most widely used capabilities among ML teams running workloads that do not require the full memory of a GPU, including interactive notebooks and inference for smaller models. NVIDIA Run:ai pioneered that experience with a proprietary implementation.",
+     "one_line": "NVIDIA said fractional GPU allocation is one of Run:ai's most widely used capabilities among ML teams running workloads that do not need a full GPU's memory; it gave no adoption figure.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e7",
+     "quote": "GPU Fractioning Operator brings CUDA-native GPU fractioning to Kubernetes and the proprietary implementation has been retired in favor of the native capability available in CUDA 13.4 .",
+     "one_line": "NVIDIA retired Run:ai's proprietary GPU-fractioning implementation in favor of CUDA 13.4-native GPU fractioning and introduced GPU Fractioning Operator for Kubernetes.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e8",
+     "quote": "AWS : Model Streamer ships in the vLLM Deep Learning Container and is the recommended fast path in the official EKS documentation for running AI/ML inference , with tuned concurrency and chunk sizing for S3 .",
+     "one_line": "AWS's vLLM Deep Learning Container includes Model Streamer, and AWS recommends it in its EKS inference documentation.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "third_party_view"
+    },
+    {
+     "id": "e9",
+     "quote": "Google Cloud : Native Cloud Storage support built in collaboration with NVIDIA , including GKE documentation for streaming straight from a bucket into accelerator memory.",
+     "one_line": "Google Cloud and NVIDIA developed native Cloud Storage support for Model Streamer, which Google Cloud documented for GKE.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    },
+    {
+     "id": "e10",
+     "quote": "Microsoft Azure : Azure Blob Storage integration, jointly developed by Microsoft and NVIDIA Run:ai to provide first-class model streaming for Azure customers.",
+     "one_line": "Microsoft and NVIDIA Run:ai jointly developed an Azure Blob Storage integration for Model Streamer.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-10-13",
+     "tier": "fact"
+    }
+   ],
+   "questions": []
+  }
+ }
+}

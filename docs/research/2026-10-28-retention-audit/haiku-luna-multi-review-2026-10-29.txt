@@ -1,0 +1,19 @@
+**结论：这份设计还有三处严重缺陷，暂时不能可靠地完成四篇文章的 Haiku/Luna 比较。**
+
+例如，联名信的“25 家企业”和“NVIDIA 参与”在原文中靠不同句子支持。如果模型只引用前一句，却写出两项内容，设计尚未规定这条该如何判分。
+
+1. **六项的判分边界还没有固定。** [设计第 18 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-luna-multi-design-2026-10-29.md:18)要求五项正例判为“完整、部分、未写”，但没有逐项列出哪些信息必需、什么算“部分”，也没有规定错误或自相矛盾时能否同时算“完整”。它允许合并多条记录的引文，却没有明确每条记录自己的摘要和来源必须得到支持。上一轮确实出现过摘要写对、引文缺少关键上下文，以及把文章发表日当成原始发言日的情况。见[上一轮结果](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-extraction-probe-results-2026-10-29.md:14)。
+
+   **最小修改：**发送前为六项逐一固定原文片段、必需内容、来源和不确定性；写明完整、部分、未写、错误各自的判定，以及拆成多条时如何核对每条摘要和引文。用已存的上一轮正确、缺指标、缺引用和错日期案例做离线正反验证。
+
+2. **输出和“不该留的内容”的计数单位不清楚。** [设计第 16–18 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-luna-multi-design-2026-10-29.md:16)只说新加坡案件“有无抽出明确的案件概况”，没有规定只抽出公司指控、只抽出服务器、或把案件拆成多条时如何计数。生产筛选会按引文合并重复记录，因此原始条数和筛后条数也不是同一个单位。见[筛选代码](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:654)。此外，用户只明确判了案件概况不留；其他输出不能自动归为垃圾。相关边界见[原问题](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/gold-for-alex-2026-10-29.md:46)。
+
+   **最小修改：**明确每次回答以一个指定事项为评分单位；另列原始记录数、筛后记录数和合并或删除原因。为案件概况规定完整、部分、未出现及错误的边界；其他内容逐条展示，但没有用户确认的标准就标为“未裁定”，不算总体垃圾率。每项报告计划的 3 次、可评分次数和失败次数，避免失败被排除后只看到偏高的比例。
+
+3. **预算异常的停止规则漏了输入用量。** [设计第 22–24 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-luna-multi-design-2026-10-29.md:22)按输入和输出共同预留费用，却只要求“输出用量异常”停止后续发送。若输入超过预留，或进入更高计价档，后续请求仍可能继续，削弱 $0.60 预算约束；最多 8 个并发也意味着已经发出的请求不能撤回。
+
+   **最小修改：**把输入、输出、计价档及实际费用超出预留都列为停止条件；规定发现异常后不再启动排队请求，已在途请求按实际用量或未知用量的全额预留记账。保留现有说明：预留是估计，并非服务商硬上限。
+
+我核对了[四篇文章库](/Users/lchingen/hivemind/poc/data/items-nvda-2026-07-01-10-27.sqlite)、[用户判断](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/gold-user-decisions-2026-10-29.md)、v38 配置、请求和筛选代码，以及前一轮记录。设计对政策三项合并回答的暂定解释与记录一致；四篇均为 T7，使用新鲜对照、逐条筛选和不推广到全周的边界也合理。现有候选参考本身仍注明未准备好整体评分，不能把它直接当作整篇文章的完整标准。见[D215](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2727)。
+
+本次没有修改文件、调用模型或运行完整流水线。设计和脚本尚不能证明实际发送、日志或密钥处理符合约定；这些仍需在获准执行的准备阶段验证。

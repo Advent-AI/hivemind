@@ -1,0 +1,16 @@
+复核结果：**5 条判断建议改为 `uncertain`，另有 1 条的原始输出日期需要补正说明；共涉及 6 条记录。**
+
+例如，文章说联名信周五发布，也说两位 CEO 转发了它，但没有写他们各自在什么时候转发。7 月 24 日有可能是转发日，因此直接判 `unsupported` 过于确定；同时也不能确定它就是转发日。
+
+| 样本、ID | 建议修改 | 理由 |
+|---|---|---|
+| `memory-2 / ev3` | `supported` → `uncertain` | 这条说 3GB 芯片价格是 2GB 的两至三倍。原文同段先写“据该媒体报道”列出显卡规格，随后写到芯片价格；不能确定价格也是 VideoCardz 的报告，还是文章作者自己的陈述。因此不能确定 7 月 18 日的作者发表日就是原始发言日。 |
+| `policy-1 / e3` | `unsupported` → `uncertain` | 两位 CEO 转发联名信的具体日期未写明。信在 7 月 24 日发布，转发可能发生在同一天，但正文没有明确交代转发时间。 |
+| `policy-2 / e3` | `unsupported` → `uncertain` | 同上，针对 Jensen Huang 的转发。 |
+| `policy-3 / e4` | `unsupported` → `uncertain` | 同上，针对两位 CEO 的转发。 |
+| `singapore-3 / e5` | `unsupported` → `uncertain` | 原文说“当局称”服务器从新加坡运往马来西亚；文章别处说当局在 7 月 1 日发表了关于扣押和指控的声明。但不能确定这条运输说法属于同一份声明，也不能确定这里的“当局”就是该声明的发言方。 |
+| `growth-2 / e1` | 补正原始输出记录；筛选后仍为 `empty` | Haiku 原始输出写的是 `2026-05 (last quarterly conference call, approximate)`，并非空值。原文只说“上一次季度电话会议”，没有给出五月或具体日期。按 [D203](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2601)，这不是完整 ISO 日期，筛选后置空；复核文件里的空值与筛选后记录一致，但“模型没有返回日期”的说明不准确。 |
+
+其余边界中，`singapore-3 / e1–e4` 的 `supported` 有正文支持：文章发表日为 7 月 2 日，正文的“昨天”及同一份警方声明指向 7 月 1 日。`singapore-3 / e6` 的 `unsupported` 应保留：马来西亚当局只被说成“上周”发言，不能从中确定 6 月 26 日。
+
+覆盖检查：15 份输出共 **89 条不同的样本与 ID**，与[复核文件](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/2026-10-29-haiku-date-review.json)一一对应，**无遗漏、无重复、无额外记录**。按筛选后的日期计，建议修改后的分布是 `unsupported` 36、`supported` 27、`uncertain` 12、`empty` 14；其中 `empty` 不代表日期判断正确，只表示筛选后没有可存的日期。

@@ -1,0 +1,13 @@
+有 **5 个严重问题**：这份设计的数量算对了，但还不能保证只记录你作出的判断，也不能防止错误通过检查。例如，把两条未授权的记录互换权重，27 条、11 条核心、16 条次要的总数仍然不变。
+
+1. **第 6 题的解释需要标为推断。**题目要求分别判断 6a、6b、6c，你回答“6.B”。三项都判次要是合理理解，但[设计第 3 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/gold-revision-design-2026-10-29.md:3)直接当作已明确逐项裁定。应保留原话和这一推断，不能声称三项分别得到明确回答。
+
+2. **第 5、9、10 题有超出回答的地方。**第 5 题的 C 明确回答了案件概况；豪宅和个人资产是另一个问题，设计却把两者都记成你的裁定，应保留原来的排除状态并标明未单独回答。第 9 题的“辅助”说明归属，不等于把原来核心的 a18-3 改成次要；第 10 题只说“属于产品进度问题”，没有说“辅助”，也没有裁定具体页面或权重。[设计第 13–18 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/gold-revision-design-2026-10-29.md:13)
+
+3. **第 10 题的转述和来源证据没有锁住。**设计说处理 a70-3“及相同事件的转述”，却没有列出具体记录，也没有要求每条只使用该来源实际写出的内容。比如 [a71-3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/source-reference.json:333) 的摘录说替代方案取消，却没有写客户反对的原因，不能从 a70-3 搬过去。类似地，[a33-1 的摘录](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/source-reference.json:168)没有证明付费支持仍在；设计只要求**新增**条目核对原句，未覆盖已有条目的完整意思。各来源的时期也应分别保存：a64-2 是 2026 年剩余时间和 2027 年的增长率，不能套到 a22-3 的本财年和下财年收入预测上。
+
+4. **第 11 题仍缺可执行的“一条”定义。**保持 a15-3 为一项符合你的回答；但[设计第 19 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/gold-revision-design-2026-10-29.md:19)只说“两个数字”和“完整意思”，没有明确这一项包含 **248 亿美元收入、82% 增长和超过 5000 亿美元订单积压**，也没有定义两段证据分别出现时如何判断完整。旧评分器确实会把任一 `span` 或 `also` 命中当作命中，不能沿用。[原记录](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-extraction-quality/gold-extraction.json:812)；[旧评分器](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-extraction-quality/ab_gold.py:93)
+
+5. **验收检查不足以默认拒绝错误。**[设计第 25–35 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/gold-revision-design-2026-10-29.md:25)没有要求逐字段核对所有未授权记录保持不变、验证具体文章和事实编号、检查完整来源与时期，也没有测试待审记录和未确定页面不能进入评分。只隐藏旧评分器的 `articles` 字段，不能防止其他读取方式误评分。反向检查也只列了错误哈希、缺答案和错误权重，未覆盖这些情况；语义阅读由谁做、读什么、发现不确定时如何阻止通过也未规定。这不足以落实 D214 的人工语义判断和 D212 的固定参考约束。
+
+数量方面，原两份金标确为 **26 条：11 核心、15 次要**。若按设计将 a11-2 升为核心、t03-1 降为次要，再新增一条次要，则 **27 条：11 核心、16 次要**。D214 允许保留历史并对齐新尺；设计也写明不重算旧分数，但上述边界须先收紧。本次仅做只读审查，没有修改文件或调用其他模型。

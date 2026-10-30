@@ -40,6 +40,17 @@ Input: `poc/data/items-nvda-2026-07-01-10-27.sqlite` (249 MB) is the cleaned dat
 
 Ledgers, each a folder with `views.sqlite`, `archive.sqlite`, `manifests/`, logs, scripts and a pid file: `english-v29-nvda-3m-2026-10-27` (poc-v29/v30, paused after 2026-08-24, 352 MB), `english-v32-nvda-3m-2026-10-27` (poc-v32, 119 items, paused), the week tests `english-v32-`, `-v33-`, `-v34-`, `-v34b-`, `-v34c-nvda-week-2026-10-27` (2026-07-01..07, D199–D204), and `english-v34-nvda-3m-2026-10-28` (the resume with poc-v34 and the D202–D204 writer). Scratch archives of the extraction arms: `poc/data/evidence-gate-2026-10-27/archive.sqlite` (every A/B send of rows 61–62); of the evidence-in-view A/B: `docs/research/2026-10-27-evidence-in-view/ab-archive.sqlite` (git-ignored). Step 3/4 measurements (rows 63–65): `poc/reports/2026-10-27-stage34-gold/` on the main checkout (arm1, arm2, fresh1, fresh2, jev-contradicts, the 47-replacement writer replay), 135 MB on disk. Costs: `poc/reports/2026-10-27-nvda-3m/cost-ledger.md`.
 
+## Extraction research, 2026-10-28 to 2026-10-30 (D209–D246)
+
+The model answer stores of the extraction arms stay on disk and out of Git (`.gitignore`, the 2026-10-28..30 block), about 240 MB in all:
+every `answers.sqlite` and `probes.sqlite` under `docs/research/2026-10-29-analyst-standard/` (the direct-read rounds, the luna and
+haiku arms, and `loop-2026-10-29/<run>-<version>-d<draw>/`, one folder per version and draw of the simultaneous full runs A–P that
+`final-2026-10-30/final_scores.py` and `quality-2026-10-30/` read) and under `docs/research/2026-10-28-retention-audit/`, the derived
+`sifted.json` and `structure*.json` files (rebuilt from the stores by the bench scripts), `retention-audit/ledger.json`, the run pid
+and lock files, and the Codex blind readers' transcripts (`final-2026-10-30/verdicts/*.log`; their verdict JSON is in Git). The
+scripts, gold files (`golden-v3/golden-v3-signed.json`, `test-set/golden-test-signed.json`, sha256 in D243), reading packets, verdicts,
+scores, logs and results are in Git. Not backed up elsewhere.
+
 ## Traces and reports
 
 Per-item trace pages are generated from a ledger and its archive by `scripts/trace_items.py`; the ones built this phase stay on disk under `poc/reports/*/trace*/` and are git-ignored. The benchmark reports, probes and recall oracles of rows 41–49 are in `poc/reports/2026-10-25-*` (in Git, except the three recall-oracle call archives `poc/reports/2026-10-25-recall-oracle*/archive.sqlite`, 6–10 MB each, which stay on disk and in the backup); the golds they score against are in `poc/eval/gold/` with `SHA256SUMS`.

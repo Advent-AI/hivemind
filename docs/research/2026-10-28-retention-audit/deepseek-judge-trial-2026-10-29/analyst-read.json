@@ -1,0 +1,577 @@
+{
+  "scope": "Manual Codex review; eight user-scored development cases, EPS unscored, nine citation cases; not unseen or whole-pipeline acceptance.",
+  "samples": [
+    {
+      "provider": "gpt",
+      "sample": 1,
+      "status": "incomplete_or_invalid",
+      "reason": {
+        "reason": "max_output_tokens"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "status": "manually_reviewed",
+      "correct": 6,
+      "incorrect": 2,
+      "unresolved": 0,
+      "denominator": 8,
+      "complete_supporting_quotes": 5,
+      "quote_denominator": 9
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "status": "manually_reviewed",
+      "correct": 4,
+      "incorrect": 4,
+      "unresolved": 0,
+      "denominator": 8,
+      "complete_supporting_quotes": 7,
+      "quote_denominator": 9
+    },
+    {
+      "provider": "deepseek",
+      "sample": 1,
+      "status": "incomplete_or_invalid",
+      "reason": {
+        "reason": "max_output_tokens"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 2,
+      "status": "incomplete_or_invalid",
+      "reason": {
+        "reason": "max_output_tokens"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "status": "manually_reviewed",
+      "correct": 5,
+      "incorrect": 2,
+      "unresolved": 1,
+      "denominator": 8,
+      "complete_supporting_quotes": 1,
+      "quote_denominator": 9
+    }
+  ],
+  "rows": [
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "a",
+      "expected_label": "core",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the revenue metric.",
+      "answer": {
+        "id": "a",
+        "label": "colour",
+        "meaning": "7月6日文章称，华尔街分析师预计今年剩余时间英伟达收入增长82%，2027年增长41%；均为预测。",
+        "quote": "For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.",
+        "why": "可作为收入增长预期的参考，但文章未交代分析师样本或财年口径；原文还将82%至41%称为上升，不能直接用作FY2027收入预测。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "b",
+      "expected_label": null,
+      "label_result": "unscored_user_weight_unspecified",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "b",
+        "label": "colour",
+        "meaning": "7月6日文章称，分析师平均预计英伟达截至2028年1月的FY2028每股收益为12.76美元。",
+        "quote": "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share.",
+        "why": "是中期估值的辅助参考，但属于下一财年的预测，不是FY2027已报告利润，文章也未说明共识样本。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "c",
+      "expected_label": "core",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "c",
+        "label": "core",
+        "meaning": "7月18日报道称，SK海力士预计2027年将是内存短缺最严重的一年，短缺将持续至2030年。",
+        "quote": "SK hynix, one of the big three memory chip manufacturers, even says that 2027 is set to be the “worst year” for the memory shortage and said that the crunch will last until 2030.",
+        "why": "持续的内存供需压力可能影响英伟达产品供应和成本；文章同时报道RTX 50 Super因GDDR7价格而暂缓。不过这是供应商对整体短缺的预测，不能据此断定具体发布时间或毛利。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "d",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "d",
+        "label": "colour",
+        "meaning": "7月22日，BofA转述AMD的模型估计：在100kW部署中，EPYC 9965机架吞吐量约为Vera基准的2.4倍；下一代EPYC 6预计约为3.3倍。",
+        "quote": "AMD estimates its EPYC 9965 (Turin) chip delivers approximately 2.4x the rack-level throughput of NVIDIA's Vera baseline in a modeled 100kW deployment, with the next-generation EPYC 6 (Venice) projected to extend that advantage to roughly 3.3x total throughput, according to BofA's characterization of AMD's own estimates.",
+        "why": "有助于评估Vera面临的CPU竞争，但数字来自AMD模型，下一代结果还是预测；吞吐量也不能涵盖文章所述的延迟和系统整合优势。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "e",
+      "expected_label": "exclude",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": false,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Separated source passages are joined into a fabricated verbatim quote.",
+      "answer": {
+        "id": "e",
+        "label": "exclude",
+        "meaning": "7月2日报道称，四家公司将面临合计八项虚假陈述欺诈指控，拟于7月6日公布；涉案服务器可能含英伟达先进AI芯片，最终目的地未明。",
+        "quote": "The four companies will also face a total of eight charges of fraud by false representation which are due to be announced on July 6. ... Authorities say that the servers in question, which may have contained advanced Nvidia AI chips, were shipped from Singapore to Malaysia.",
+        "why": "这是针对第三方的欺诈指控，芯片类型和最终目的地均未确定；没有显示英伟达涉案，也不能回答中国是否允许H200销售。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "f",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote does not cover Huang sharing the letter.",
+      "answer": {
+        "id": "f",
+        "label": "colour",
+        "meaning": "7月24日，英伟达与微软、Meta等科技公司联名呼吁政策制定者避免过早限制开放权重AI模型；黄仁勋也转发了信件。",
+        "quote": "Nvidia , Microsoft , Meta , Palantir and more than 20 other companies released a letter Friday urging policymakers to avoid \"premature restrictions\" on open-weight artificial intelligence models that would \"stifle competition or drive innovation overseas.\"",
+        "why": "值得记录英伟达在可能影响AI生态的政策辩论中的立场，但联名信不是政府政策决定。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "g",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "g",
+        "label": "colour",
+        "meaning": "文章称，7月21日美国财长贝森特表示，特朗普政府将研究中国公司是否窃取美国知识产权，并称政府有能力因此实施制裁。",
+        "quote": "U.S. Treasury Secretary Scott Bessent told CNBC on Tuesday that the Trump administration would look into whether Chinese companies were stealing American intellectual property, and stated that the government has \"the ability to sanction them because of this theft.\"",
+        "why": "显示对华AI政策风险，但只是研究和制裁能力表态，并非已有窃取结论、制裁或芯片出口新规。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "h",
+      "expected_label": "colour",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "h",
+        "label": "exclude",
+        "meaning": "文章称，7月22日白宫顾问Michael Kratsios表示，中国Moonshot AI通过蒸馏Anthropic技术开发Kimi K3。",
+        "quote": "White House advisor Michael Kratsios on Wednesday said that China's Moonshot AI developed its Kimi K3 model by distilling Anthropic's technology.",
+        "why": "这是关于第三方模型开发方式的表态，本身未证明违法或宣布政策措施，也未直接涉及英伟达芯片或财务表现。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 2,
+      "id": "i",
+      "expected_label": "core",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": false,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote changes whitespace before punctuation; it is not an exact source substring.",
+      "answer": {
+        "id": "i",
+        "label": "core",
+        "meaning": "7月6日文章称，管理层在最近一次季度电话会上预计，超大规模云厂商支出2026年将达6500亿美元，2027年将超过1万亿美元；两者均为预测。",
+        "quote": "During its last quarterly conference call, management forecast that it expects hyperscaler spending to top $1 trillion in 2027 after reaching a projected $650 billion in 2026.",
+        "why": "这一预测对AI基础设施需求和英伟达增长假设有重大参考价值，且与两期支出问题相关；但文章未明确限定为四大厂或仅限数据中心资本开支。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "a",
+      "expected_label": "core",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "a",
+        "label": "colour",
+        "meaning": "2026年7月6日文章转述，华尔街分析师预计英伟达今年剩余时间营收增长82%，2027年增长41%；文章未明确年度及统计口径。",
+        "quote": "That sounds like further revenue growth ahead, and that's exactly what Wall Street analysts are projecting as well. For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.",
+        "why": "可作为营收增长预期的背景，但匿名且期间口径不清，不能直接当作FY2027营收预测。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "b",
+      "expected_label": null,
+      "label_result": "unscored_user_weight_unspecified",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "b",
+        "label": "colour",
+        "meaning": "2026年7月6日文章称，分析师平均预测英伟达截至2028年1月的FY2028每股收益为12.76美元。",
+        "quote": "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share.",
+        "why": "下一财年的盈利预期有估值参考价值，但不是实际业绩，也不能直接回答FY2027利润问题。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "c",
+      "expected_label": "core",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "c",
+        "label": "colour",
+        "meaning": "据2026年7月18日报道，SK海力士预计2027年将是内存短缺最严重的一年，短缺将持续至2030年。",
+        "quote": "SK hynix, one of the big three memory chip manufacturers, even says that 2027 is set to be the “worst year” for the memory shortage and said that the crunch will last until 2030.",
+        "why": "主要供应商的行业预测为英伟达面临的内存成本和供应风险提供背景，但不是针对RTX 50 SUPER发布时间或GDDR7供应的直接预测。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "d",
+      "expected_label": "colour",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "d",
+        "label": "core",
+        "meaning": "2026年7月22日，美银转述AMD的估计：在模拟100千瓦部署中，EPYC 9965的机架吞吐量约为Vera基准的2.4倍，下一代EPYC 6预计约为3.3倍。",
+        "quote": "BofA notes that AMD estimates its EPYC 9965 (Turin) chip delivers approximately 2.4x the rack-level throughput of NVIDIA's Vera baseline in a modeled 100kW deployment, with the next-generation EPYC 6 (Venice) projected to extend that advantage to roughly 3.3x total throughput, according to BofA's characterization of AMD's own estimates.",
+        "why": "潜在吞吐量差距对英伟达进入服务器CPU市场及数据中心平台竞争有重要意义；但这是AMD的模拟和预测，并非独立实测，也不涵盖所有竞争指标。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "e",
+      "expected_label": "exclude",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": false,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Separated source passages are joined into a fabricated verbatim quote.",
+      "answer": {
+        "id": "e",
+        "label": "exclude",
+        "meaning": "2026年7月2日报道称，四家公司预计于7月6日面临共八项虚假陈述欺诈指控；涉案服务器可能含英伟达先进AI芯片，最终目的地尚不明确。",
+        "quote": "The four companies will also face a total of eight charges of fraud by false representation which are due to be announced on July 6; Authorities say that the servers in question, which may have contained advanced Nvidia AI chips, were shipped from Singapore to Malaysia.",
+        "why": "这是针对第三方的个案，芯片内容和最终目的地均未确认，也未显示英伟达业务或相关出口政策发生实质变化。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "f",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "f",
+        "label": "colour",
+        "meaning": "2026年7月24日，英伟达、微软、Meta等公司发表联名信，呼吁决策者避免过早限制开放权重AI模型。",
+        "quote": "Nvidia , Microsoft , Meta , Palantir and more than 20 other companies released a letter Friday urging policymakers to avoid \"premature restrictions\" on open-weight artificial intelligence models that would \"stifle competition or drive innovation overseas.\"",
+        "why": "英伟达的政策立场值得保留，但联名信本身不是政府决定，也没有专门宣布针对中国模型的措施。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "g",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "g",
+        "label": "colour",
+        "meaning": "据2026年7月24日报道，美国财长贝森特此前表示，特朗普政府将审视中国公司是否窃取美国知识产权，并称政府有能力就此实施制裁。",
+        "quote": "U.S. Treasury Secretary Scott Bessent told CNBC on Tuesday that the Trump administration would look into whether Chinese companies were stealing American intellectual property, and stated that the government has \"the ability to sanction them because of this theft.\"",
+        "why": "这是高层释放的潜在政策风险信号，但文章未称制裁已经实施，也未宣布针对英伟达芯片的新限制。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "h",
+      "expected_label": "colour",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "h",
+        "label": "exclude",
+        "meaning": "据2026年7月24日报道，白宫顾问Michael Kratsios称，中国Moonshot AI通过蒸馏Anthropic的技术开发了Kimi K3模型。",
+        "quote": "White House advisor Michael Kratsios on Wednesday said that China's Moonshot AI developed its Kimi K3 model by distilling Anthropic's technology.",
+        "why": "该指称涉及第三方模型技术，未直接涉及英伟达产品、财务或已采取的政策措施，单独记录的投资价值有限。"
+      }
+    },
+    {
+      "provider": "gpt",
+      "sample": 3,
+      "id": "i",
+      "expected_label": "core",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": false,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote changes whitespace before punctuation; it is not an exact source substring.",
+      "answer": {
+        "id": "i",
+        "label": "core",
+        "meaning": "2026年7月6日文章称，英伟达管理层在最近一次季度电话会上预计，超大规模云服务商2026年支出将达6500亿美元，2027年将超过1万亿美元；文中未明确公司范围或是否全部为数据中心资本开支。",
+        "quote": "During its last quarterly conference call, management forecast that it expects hyperscaler spending to top $1 trillion in 2027 after reaching a projected $650 billion in 2026.",
+        "why": "这是管理层对英伟达关键客户支出的重大前瞻判断，可能影响数据中心需求预期；但不能直接视为四大云商的数据中心资本开支或已实现支出。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "a",
+      "expected_label": "core",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the revenue metric.",
+      "answer": {
+        "id": "a",
+        "label": "colour",
+        "meaning": "2026-07-06 文章援引华尔街分析师预期：NVIDIA 年内剩余时间营收增长约82%，2027年增速约41%。这是分析师预测，非公司指引，且未给出绝对营收金额。",
+        "quote": "For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.",
+        "why": "可用于辅助判断FY2027营收方向，但仅为分析师增速预测且无绝对值，不足以单独改变投资看法。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "b",
+      "expected_label": null,
+      "label_result": "unscored_user_weight_unspecified",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the $319 valuation and 25x multiple added to the meaning.",
+      "answer": {
+        "id": "b",
+        "label": "colour",
+        "meaning": "2026-07-06 文章称分析师平均预计NVIDIA FY2028（截至2028年1月）EPS为12.76美元；作者据此用25倍PE推导约319美元目标价。这是远期共识预测和估值假设。",
+        "quote": "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share.",
+        "why": "与FY2027利润/营收问题并非直接对应，属估值辅助信息；保留可跟踪盈利预期，但不构成核心驱动。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "c",
+      "expected_label": "core",
+      "label_result": "correct",
+      "meaning_review": "not_fully_source_supported",
+      "meaning_issue": "HBM is not mentioned in the article; the extension is not explicitly supported by the source.",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits SK hynix and does not support the HBM inference.",
+      "answer": {
+        "id": "c",
+        "label": "core",
+        "meaning": "2026-07-18 文章引述SK hynix判断：2027年将是内存短缺“最糟糕的一年”，短缺将持续到2030年。这强化GDDR7/HBM等内存成本与供应约束，可能推高GPU和AI系统BOM并影响RTX 50 Super上市与毛利率。",
+        "quote": "2027 is set to be the “worst year” for the memory shortage and said that the crunch will last until 2030.",
+        "why": "关键供应链和成本风险，直接关系到产品发布节奏、定价和利润率，具备改变投资看法的潜力。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "d",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": true,
+      "quote_issue": "",
+      "answer": {
+        "id": "d",
+        "label": "colour",
+        "meaning": "2026-07-22 BofA报告转述AMD自身估算：在100kW部署模型中，EPYC 9965 Turin的机架级吞吐约为NVIDIA Vera基线的2.4倍，下一代EPYC 6 Venice预计将优势扩大至约3.3倍。这是竞争对手的基准主张，而非独立基准。",
+        "quote": "AMD estimates its EPYC 9965 (Turin) chip delivers approximately 2.4x the rack-level throughput of NVIDIA's Vera baseline in a modeled 100kW deployment, with the next-generation EPYC 6 (Venice) projected to extend that advantage to roughly 3.3x total throughput, according to BofA's characterization of AMD's own estimates.",
+        "why": "提供NVIDIA服务器CPU竞争基准，但属AMD自估且依赖模型假设，适合作为辅助竞争背景而非核心事实。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "e",
+      "expected_label": "exclude",
+      "label_result": "unresolved_changed_the_candidate_fact",
+      "meaning_review": "not_fully_source_supported",
+      "meaning_issue": "The source says the servers were shipped to Malaysia; the answer says they were planned to be shipped.",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the mansion, charges and destination added to the meaning.",
+      "answer": {
+        "id": "e",
+        "label": "colour",
+        "meaning": "2026-07-02 新加坡警方调查涉嫌违反美国出口管制的NVIDIA芯片转运案，查封约S$5500万豪宅并追加欺诈/洗钱指控；涉案服务器可能含先进NVIDIA AI芯片，拟由新加坡运往马来西亚，有报道猜测最终目的地为中国，但尚未确认。",
+        "quote": "servers in question, which may have contained advanced Nvidia AI chips",
+        "why": "这是出口管制执法风险信号，但未直接指向NVIDIA责任或财务影响，属辅助信息。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "f",
+      "expected_label": "colour",
+      "label_result": "incorrect",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the named companies and the count.",
+      "answer": {
+        "id": "f",
+        "label": "core",
+        "meaning": "2026-07-24 包括NVIDIA、Microsoft、Meta、Palantir在内的25家科技公司联署公开信，呼吁政策制定者避免对开放权重AI模型实施“过早限制”，称可能扼杀竞争或把创新推向海外。这是涉及潜在美国对华开放模型限制的行业政策立场事件。",
+        "quote": "released a letter Friday urging policymakers to avoid \"premature restrictions\" on open-weight artificial intelligence models",
+        "why": "与多项中国开放权重模型限制问题直接相关，且NVIDIA是联署方，可能影响监管风险判断，值得核心记录。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "g",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the official and the claimed sanction power.",
+      "answer": {
+        "id": "g",
+        "label": "colour",
+        "meaning": "2026-07-24 文章称美国财政部长Scott Bessent周二对CNBC表示，特朗普政府将调查中国公司是否窃取美国知识产权，并称政府“有能力因此制裁它们”。这是官员表态，尚未形成具体规则。",
+        "quote": "the Trump administration would look into whether Chinese companies were stealing American intellectual property",
+        "why": "反映对华AI和知识产权制裁风险，但为调查意向而非落地政策，作为政策背景保留。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "h",
+      "expected_label": "colour",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the adviser and the additional distinction about distillation.",
+      "answer": {
+        "id": "h",
+        "label": "colour",
+        "meaning": "2026-07-24 白宫顾问Michael Kratsios称，中国月之暗面（Moonshot AI）通过蒸馏Anthropic技术开发了Kimi K3；文章同时提到合法蒸馏有价值，但大规模隐蔽工业蒸馏不可接受。这属官员指控。",
+        "quote": "China's Moonshot AI developed its Kimi K3 model by distilling Anthropic's technology",
+        "why": "为开放权重模型限制辩论提供政策理由，但仅为指控和背景，不直接改变NVIDIA财务判断。"
+      }
+    },
+    {
+      "provider": "deepseek",
+      "sample": 3,
+      "id": "i",
+      "expected_label": "core",
+      "label_result": "correct",
+      "meaning_review": "source_supported",
+      "meaning_issue": "",
+      "quote_verbatim": true,
+      "quote_supports_complete_meaning": false,
+      "quote_issue": "Quote omits the management attribution.",
+      "answer": {
+        "id": "i",
+        "label": "core",
+        "meaning": "2026-07-06 文章称NVIDIA管理层在最近季度电话会预测：超大规模云厂商支出2026年约6500亿美元，2027年将超过1万亿美元。这是需求端关键预测，支撑其营收增长逻辑。",
+        "quote": "it expects hyperscaler spending to top $1 trillion in 2027 after reaching a projected $650 billion in 2026",
+        "why": "直接关联AI资本开支问题及NVIDIA数据中心需求，是核心需求前瞻信号。"
+      }
+    }
+  ]
+}
