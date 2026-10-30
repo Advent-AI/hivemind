@@ -26,6 +26,7 @@ const TIERS = {
   传闻: 'Rumour',
 };
 const ORDINAL = ['+2', '+1', '0', '−1', '−2'];
+const YES_NO = { Yes: 'Yes', 是: 'Yes', No: 'No', 否: 'No' };
 function magnitude(condition) {
   return [...condition.matchAll(/(\d[\d,.]*)\s*(万亿|千亿|亿)/g)].map(
     (m) =>
@@ -44,7 +45,11 @@ function representative(rung) {
 }
 function legacyScores(view) {
   if (view.rungs.every((r) => r.score)) return view.rungs.map((r) => r.score);
-  if (view.rungs.length === 2) return ['Yes', 'No'];
+  if (view.rungs.length === 2) {
+    // a yes/no ladder may list No first: each rung shows its own outcome; other two-rung labels keep their order
+    const own = view.rungs.map((r) => YES_NO[(r.label || '').trim()]);
+    return own.includes('Yes') && own.includes('No') ? own : ['Yes', 'No'];
+  }
   if (KINDS[view.kind] === 'Theme thesis') {
     const first = representative(view.rungs[0]);
     const last = representative(view.rungs.at(-1));

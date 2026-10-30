@@ -12,6 +12,7 @@ import {
   formatConfidence,
 } from '../src/idea/composite.js';
 import { scoreHistoryChart } from '../src/components/thesis-chart.js';
+import { laneOf, stateText } from '../src/model/thesis.js';
 import { ideaAnalysisHtml, ideaDetailMetaHtml } from '../src/idea/analysis.js';
 import { graphOf } from '../src/idea/idea.js';
 
@@ -241,6 +242,54 @@ test('D188: binary representatives preserve the same two endpoint scores', () =>
   assert.equal(Math.abs(first), 2);
   binary.reading.composite.drivers[0].supporting_end = 'last';
   assert.equal(compositeAt(prepareIdeaComposite(binary, data), data.as_of).value, -first);
+});
+
+test('D258: a No-first yes/no thesis shows its own outcome and keeps the same composite value', () => {
+  const source = current.views.find(
+    (view) => view.rungs.length === 2 && view.rungs[0].label === 'Yes' && view.judgements.length,
+  );
+  assert(source);
+  const flipped = structuredClone(source);
+  flipped.view_id = `${source.view_id}-no-first`;
+  flipped.rungs = source.rungs
+    .slice()
+    .reverse()
+    .map((rung, index) => ({ ...rung, position: index + 1 }));
+  for (const judgement of flipped.judgements) judgement.rung = 3 - judgement.rung;
+  const both = fromBundles({ ...current, views: [...current.views, flipped] });
+  const original = both.theses.find((thesis) => thesis.id === source.view_id);
+  const reversed = both.theses.find((thesis) => thesis.id === flipped.view_id);
+  assert.deepEqual(
+    reversed.rungs.map((rung) => [rung.label, rung.score]),
+    [
+      ['No', 'No'],
+      ['Yes', 'Yes'],
+    ],
+  );
+  const latest = reversed.judgements.at(-1).rung;
+  assert.equal(stateText(reversed, latest), stateText(original, 3 - latest));
+  assert.equal(laneOf(reversed, 2), 0);
+  const valueOf = (thesis, supportingEnd) => {
+    const binary = structuredClone(defaultCard);
+    binary.reading.chosen = [{ view_id: thesis.id }];
+    binary.reading.composite = {
+      version: 'idea-composite/2',
+      method: 'equal_weight',
+      as_of: both.as_of,
+      drivers: [
+        {
+          thesis_id: thesis.id,
+          question: thesis.question,
+          label: 'Event outcome',
+          supporting_end: supportingEnd,
+          reason: 'The Yes outcome supports the idea.',
+        },
+      ],
+      excluded: [],
+    };
+    return compositeAt(prepareIdeaComposite(binary, both), both.as_of).value;
+  };
+  assert.equal(valueOf(reversed, 'last'), valueOf(original, 'first'));
 });
 
 test('D185: the real reviewed basket calculates 0, +0.5, then 0 using historical states', () => {

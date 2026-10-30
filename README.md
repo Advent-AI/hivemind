@@ -92,7 +92,7 @@ The default backend reads these local files:
 | Collected thesis ledger | `poc/data/english-v23-jev-2026-10-25/views.sqlite` |
 | Source items | `poc/data/items-window-tags2-2026-10-24.sqlite` |
 | Replay configuration | `poc/config/poc-v23.json`: extraction v10 and Jev matching |
-| Idea configuration | `poc/config/poc-v32-idea.json`: two discovery calls and a final adoption/weighting call |
+| Idea configuration | `poc/config/poc-v33-idea.json`: two discovery calls and a final adoption/weighting call |
 | Derived service index and Idea archive | `poc/data/service-english/` by default; overridable per run |
 
 `poc/data/` is excluded from Git. A fresh clone includes the standalone demo, not these databases. Use the [data manifest](docs/research/2026-10-25-english/data-manifest.md) to locate preserved runs, or supply your own files with the documented CLI options. Keep provider credentials in the owner-only local file `~/.config/hivemind/credentials.json`, outside the repository.

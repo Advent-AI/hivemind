@@ -14,7 +14,7 @@ export const stateTone = (value) =>
       ? 'state--negative'
       : 'state--neutral';
 export const laneOf = (thesis, position) =>
-  thesis.rungs.length === 2 ? position - 1 : SCORES.indexOf(score(thesis, position));
+  (thesis.rungs.length === 2 ? ['Yes', 'No'] : SCORES).indexOf(score(thesis, position));
 export const lastOf = (array) => array.at(-1);
 export const judgementsUpTo = (thesis, day) => thesis.judgements.filter((j) => j.day <= day);
 export function assessmentAt(thesis, day) {

@@ -2,7 +2,7 @@
 
 D112–D145; English edition and current-document refresh, October 25, 2026 (D163). A user supplies an **idea**; the library contains **theses**. The service reads the idea against those records and returns the information the frontend needs. User text does not become a stored thesis merely by opening an Idea card.
 
-The default is `poc/config/poc-v32-idea.json`: two candidate-discovery calls (`idea-v7`) followed by one final adoption and weighting call (`idea-summary-v7`, D196). The model/provider and reasoning settings are unchanged. Older configurations, including v31, retain their original response contracts.
+The default is `poc/config/poc-v33-idea.json`: two candidate-discovery calls (`idea-v7`) followed by one final adoption and weighting call (`idea-summary-v8`, D196, D258). The model/provider and reasoning settings are unchanged. Older configurations, including v31 and v32, retain their original response contracts.
 
 ## Request path
 
@@ -31,7 +31,7 @@ Code searches each part using the model's query and a canonical query composed f
 
 Call 2 maps each part to supplied candidates as `direct`, `driver` or `context`, writes a per-part reason and a short summary. The adopted driver definition includes causes or consequences. The service does not use the unadopted `idea-v10` causal-clause requirement. It preserves only allowed candidate IDs; it reports dropped choices.
 
-The final assessment receives candidate theses, their dated states and endpoint conditions. It returns a variable-length list of adopted IDs, each with a positive impact percentage, endpoint and explanation. Omitted candidates are not Idea associations; the JSON has no zero-weight or excluded branch. Code checks IDs, uniqueness and a 100% total, reverses lower-claim direction once and projects all associations onto the adopted set. A provisional claim/evaluation whose direct thesis is omitted is cleared. The model cannot invent IDs or the calculated composite score.
+The final assessment receives candidate theses, their dated states and endpoint conditions. It returns a variable-length list of adopted IDs, each with a positive impact percentage, endpoint and explanation. Each candidate's entry may name only that thesis's own two endpoint positions, enforced in the request schema (D258), and the answer is checked against the schema that was sent. Omitted candidates are not Idea associations; the JSON has no zero-weight or excluded branch. Code checks uniqueness, non-empty explanations and a 100% total, reverses lower-claim direction once and projects all associations onto the adopted set. A provisional claim/evaluation whose direct thesis is omitted is cleared. The model cannot invent IDs or the calculated composite score.
 
 Code selects the first part's direct thesis only from records the model called direct, using that part's search order and the existing year compatibility rule. It does not choose a different financial measure based only on subject/year. The current rule accepts a following fiscal-year label for a calendar-year query; that heuristic is not proof of exact period equivalence.
 
