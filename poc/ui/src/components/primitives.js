@@ -1,5 +1,5 @@
 import { esc, ICON } from './dom.js';
-import { score, rungLabel, stateTone } from '../model/thesis.js';
+import { score, stateTone, stateWords } from '../model/thesis.js';
 
 export function cardHeaderHtml(kind, badge = '') {
   const icon = { Idea: ICON.idea, Thesis: ICON.thesis, Trigger: ICON.trigger, Action: ICON.action }[
@@ -18,7 +18,8 @@ export function weightBadgeHtml(weightPercent) {
 
 export function badgeHtml(thesis, judgement) {
   if (!judgement) return '<span class="chip">Not assessed yet</span>';
-  return `<span class="chip chip--state ${stateTone(score(thesis, judgement.rung))}"><b>${esc(score(thesis, judgement.rung))}</b>${rungLabel(thesis, judgement.rung) ? `<span class="state-label">${esc(rungLabel(thesis, judgement.rung))}</span>` : ''}</span>`;
+  const { main, label } = stateWords(thesis, judgement.rung);
+  return `<span class="chip chip--state ${stateTone(score(thesis, judgement.rung))}"><b>${esc(main)}</b>${label ? `<span class="state-label">${esc(label)}</span>` : ''}</span>`;
 }
 export function axisScore(thesis, position, x, y, current) {
   return `<g class="axis-score ${stateTone(score(thesis, position))}${position === current ? ' is-current' : ''}" data-pos="${position}" transform="translate(${x} ${y})"><rect x="-13" y="-9" width="26" height="18" rx="5"/><text>${esc(score(thesis, position))}</text></g>`;

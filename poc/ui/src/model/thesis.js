@@ -5,8 +5,17 @@ export const rungLabel = (thesis, position) => {
   const state = thesis.rungs.find((r) => r.position === position);
   return state && state.label !== state.score ? state.label : '';
 };
-export const stateText = (thesis, position) =>
-  `${score(thesis, position)} ${rungLabel(thesis, position)}`.trim();
+/** What a state shows: a yes/no ladder names its own outcome once; a five-rung ladder shows its score and label. */
+export function stateWords(thesis, position) {
+  const state = thesis.rungs.find((r) => r.position === position);
+  return thesis.rungs.length === 2 && state
+    ? { main: state.label, label: '' }
+    : { main: score(thesis, position), label: rungLabel(thesis, position) };
+}
+export const stateText = (thesis, position) => {
+  const { main, label } = stateWords(thesis, position);
+  return `${main} ${label}`.trim();
+};
 export const stateTone = (value) =>
   ['+2', '+1', 'Yes'].includes(value)
     ? 'state--positive'
