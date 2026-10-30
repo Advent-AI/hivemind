@@ -23,16 +23,16 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
 from hivemind import config, extraction, model, testdb, universe, vocabulary  # noqa: E402
-from hivemind.views import judging, matching, store  # noqa: E402
+from hivemind.views import judging, matching  # noqa: E402
 
 SCHEMAS = {'extract': extraction.SCHEMA, 'match': matching.SCHEMA, 'judge': judging.SCHEMA}
 # the stored requests of both prompt languages (D163): Chinese headers up to extraction v5 / matching-v1, English from v6 / matching-v2
 ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 |\[Item\] id (\S+?), category ')
-BLOCK5_VIEW = re.compile(r'^\s+- (v\d+)\s?[（(]', re.M)
 MATCH_SHOWN = re.compile(r'^· (v\d+)\s?[（(]', re.M)
 JEV_ASKED = re.compile(r'\b(v\d+): ')          # a Jev candidate reason names every thesis it was asked about: 'jev: v1: different 0.55; …'
 
@@ -70,35 +70,125 @@ def part_a(archive_conn):
     return judged
 
 
+class Unverifiable(Exception):
+    """A stored request whose source this preflight cannot rebuild (a Chinese version, or v17's paragraph accounts): counted and
+    named in the output, not replayed, and not a failure of the archive."""
+
+
+def _preflight_extract_inputs(request, item, cfg):
+    """Validate the stored source and recover exactly the IDs production showed."""
+    setting = cfg.extraction_setting(item['category'])
+    version = setting.prompt_version.rpartition('-')[2]
+    if not extraction.is_english(version) or extraction.accounts(version):
+        raise Unverifiable(f'extraction {version}')
+    text = (item['text'] or '')[:extraction.MAX_TEXT_CHARS]          # production sends the first MAX_TEXT_CHARS characters
+    user = next(m['content'] for m in request['messages'] if m['role'] == 'user')
+    header = extraction.item_header(item, item['category'])
+    if user.count(header) != 1:
+        raise ValueError('source metadata does not match archived request')
+    before, after = user.split(header, 1)
+    if not after.startswith(text + '\n\nReturn evidence and candidates per the JSON schema.'):
+        raise ValueError('source text does not match archived request')
+    blocks = before.split('\n\n')
+    views = [b for b in blocks if b.startswith('[Existing theses of these objects]')]
+    groups = [b for b in blocks if b.startswith('[Research groups]')]
+    if extraction.ledger_blind(version):
+        if views or groups != [extraction.groups_block(())]:
+            raise ValueError('archived blind request contains shown views or groups')
+        view_ids, group_ids = [], []
+    else:
+        if len(views) != 1:
+            raise ValueError('unidentifiable existing-theses block')
+        view_lines = views[0].splitlines()[1:]
+        view_ids = []
+        for line in view_lines:
+            match = re.match(r'^  - (v\d+) \(', line)
+            if not match:
+                raise ValueError('malformed existing-theses block')
+            view_ids.append(match.group(1))
+        if not view_ids and not views[0].startswith('[Existing theses of these objects] None yet.'):
+            raise ValueError('empty existing-theses block lacks the empty marker')
+        group_ids = []
+        if extraction.has_groups(version):
+            if len(groups) != 1:
+                raise ValueError('unidentifiable research-groups block')
+            for line in groups[0].splitlines()[1:]:
+                match = re.match(r'^  - (g\d+) "', line)
+                if not match:
+                    raise ValueError('malformed research-groups block')
+                group_ids.append(match.group(1))
+            if not group_ids and groups[0] != extraction.groups_block(()):
+                raise ValueError('empty research-groups block lacks the empty marker')
+        elif groups:
+            raise ValueError('unexpected research-groups block')
+    schema = request['response_format']['json_schema']['schema']
+    if schema != extraction.schema_for(version, group_ids, view_ids):
+        raise ValueError('archived schema does not match configuration and shown IDs')
+    return version, view_ids, group_ids
+
+
 def part_b(archive_conn, items_conn, uni):
     reasons, examples = collections.Counter(), collections.defaultdict(list)
     judged = produced_e = kept_e = produced_c = kept_c = 0
-    items_by_id = {}
-    for purpose, request_json, answer_json in (tuple(r) for r in archive_conn.execute("select purpose, request_json, answer_json from model_calls where purpose='extract' and request_sha256 not like '%:%'")):
-        request = json.loads(request_json)
-        user = request['messages'][1]['content']
-        found = ITEM_ID.search(user)
-        if not found:
-            raise ValueError('unidentifiable stored extraction request')
-        input_id = found.group(1) or found.group(2)
-        if input_id not in items_by_id:
+    failures, configs, unverifiable = [], {}, collections.Counter()
+    rows = list(archive_conn.execute("select config_version, config_checksum, request_sha256, request_json, answer_json from model_calls where purpose='extract'"))
+    other = 0
+    for config_version, checksum, sha, request_json, answer_json in rows:
+        if any(marker in sha for marker in (':schema:', ':malformed:', ':refused:')):
+            other += 1
+            continue
+        if ':' in sha:
+            failures.append(f'unrecognized archive marker: {sha}')
+            continue
+        input_id = '(unidentified)'
+        try:
+            request = json.loads(request_json)
+            user = next(m['content'] for m in request['messages'] if m['role'] == 'user')
+            found = ITEM_ID.search(user)
+            if not found:
+                raise ValueError('unidentifiable stored extraction request')
+            input_id = found.group(1) or found.group(2)
             row = items_conn.execute('select * from items where input_id=?', (input_id,)).fetchone()
-            items_by_id[input_id] = dict(row) if row else None
-        item = items_by_id[input_id]
-        if not item:
-            raise ValueError(f'missing source item: {input_id}')
-        data = json.loads(answer_json)
-        shown_ids = set(BLOCK5_VIEW.findall(user))
-        evidence, candidates, dropped = extraction.sift(data, item, item['text'] or '', shown_ids, uni, english=user.lstrip().startswith('[') or '[Item] id ' in user)
-        judged += 1
-        produced_e += len(data.get('evidence', [])); kept_e += len(evidence)
-        produced_c += len(data.get('candidates', [])); kept_c += len(candidates)
-        for ident, why in dropped:
-            key = normalise_reason(why)
-            reasons[key] += 1
-            examples[key].append(f'{input_id[:48]} {ident}: {why[:80]}')
-    print(f'\n   extraction answers {judged}: evidence produced {produced_e} kept {kept_e}; candidates produced {produced_c} kept {kept_c}')
-    tally('B. extraction code checks over stored answers', produced_e + produced_c, (produced_e - kept_e) + (produced_c - kept_c), reasons, examples)
+            if row is None:
+                raise ValueError(f'missing source item: {input_id}')
+            item = dict(row)
+            if not re.fullmatch(r'[A-Za-z0-9_-]+', config_version or ''):
+                raise ValueError('unidentifiable archived configuration')
+            key = (config_version, checksum)
+            if key not in configs:
+                path = Path(ROOT) / 'poc' / 'config' / (config_version + '.json')
+                cfg = config.load(str(path))
+                if cfg.version != config_version or cfg.checksum != checksum:
+                    raise ValueError(f'archived configuration mismatch: {config_version}')
+                configs[key] = cfg
+            cfg = configs[key]
+            version, shown_ids, group_ids = _preflight_extract_inputs(request, item, cfg)
+            data = json.loads(answer_json)
+            flat = extraction.flatten_account(data)
+            evidence, candidates, dropped, _ = extraction.sift_with_groups(
+                data, item, item['text'] or '', set(shown_ids), uni, english=extraction.is_english(version),
+                shown_group_ids=group_ids, version=version, keep_unlinked=extraction.places(version))
+            judged += 1
+            produced_e += len(flat.get('evidence', [])); kept_e += len(evidence)
+            produced_c += len(flat.get('candidates', [])); kept_c += len(candidates)
+            for ident, why in dropped:
+                reason = normalise_reason(why)
+                reasons[reason] += 1
+                examples[reason].append(f'{input_id[:48]} {ident}: {why[:80]}')
+        except Unverifiable as error:
+            unverifiable[str(error)] += 1
+        except (ValueError, KeyError, TypeError, OSError, StopIteration) as error:
+            failures.append(f'{input_id}: {error}')
+    print(f'\n   extraction archive rows {len(rows)}: replayed {judged}, earlier refused {other}, source not rebuildable {sum(unverifiable.values())}, '
+          f'unidentifiable {len(failures)}')
+    for version, count in sorted(unverifiable.items()):
+        print(f'   not replayed, source not rebuildable for {version}: {count}')
+    for error in failures:
+        print(f'   cannot replay: {error}')
+    print(f'   extraction answers {judged}: evidence produced {produced_e} kept {kept_e}; candidates produced {produced_c} kept {kept_c}')
+    tally('B. current extraction checks before placement, using the supplied universe', produced_e + produced_c, (produced_e - kept_e) + (produced_c - kept_c), reasons, examples)
+    if failures:
+        raise ValueError('source or archived configuration cannot be verified for all extraction calls')
     return judged
 
 

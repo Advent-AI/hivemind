@@ -2,6 +2,7 @@
 
 > Status: foundation frozen, October 18, 2026; category prompt wording needs validation. D149 requires extraction-time grouping; D165 integrates it into the default pipeline (poc-v20), with a company's own financial lines carrying no group. English edition: October 25, 2026 (D163).
 > Design page: `docs/system-design.html` → New → Extraction → Details. Recorded decisions take precedence over this PRD.
+> The step's standard (what is kept, how much it weighs, which questions open, the golden set and how a prompt change is measured) is the signed page `05-extraction-standard.html` (D243), which replaces `docs/research/2026-10-29-analyst-standard/standard.md` (D229). Where this PRD differs from it, the page governs.
 
 ## Purpose
 

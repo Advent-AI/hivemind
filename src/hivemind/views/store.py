@@ -30,7 +30,6 @@ TABLES = {
     'processing_steps': 'id integer primary key autoincrement, input_id text, sequence_no integer, step text, result text, reason text, publication_day text, at text',
     'review_pool_entries': 'id integer primary key autoincrement, kind text, key text, example_json text, seq integer',
     'late_statements': 'id integer primary key autoincrement, input_id text, evidence_quote text, reason text, seq integer',
-    'unplaced_statements': 'id integer primary key autoincrement, input_id text, seq integer, publication_day text, statement_json text',   # v20: a material statement the placer filed under no thesis; kept for a later placement
     'days_completed': 'id integer primary key autoincrement, day text, seq integer, at text',
     # D149 research groups: an ongoing business subject several distinct theses belong to; membership is decided by extraction and written with the thesis
     'thesis_groups': 'group_id text primary key, name text, scope text, aliases text, created_seq integer, created_from_input text',
@@ -301,10 +300,6 @@ def search_views(conn, text, top_n):
 
 
 # ---------- evidence ----------
-
-def add_unplaced(conn, input_id, seq, publication_day, statement):
-    insert(conn, 'unplaced_statements', input_id=input_id, seq=seq, publication_day=publication_day, statement_json=json.dumps(statement, ensure_ascii=False))
-
 
 def add_evidence(conn, *, evidence_id, quote, one_line, speaker, original_who, original_day, tier, event_time, seq, input_id):
     insert(conn, 'evidence', evidence_id=evidence_id, quote=quote, one_line=one_line, speaker=speaker, original_who=original_who,

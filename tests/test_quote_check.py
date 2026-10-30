@@ -39,3 +39,42 @@ def test_typographic_quotes_and_dashes_read_as_their_plain_forms():
 def test_a_quote_with_other_words_is_still_refused():
     evidence, _, dropped = extraction.sift(answer(QUOTE.replace('in June', 'in May')), ITEM, PAGE, {'v7'}, english=True)
     assert evidence == [] and dropped == [('e1', 'quote not in item')]
+
+
+# D236: a quote that differs from the source only by punctuation, quotation marks, footnote markers or case, or that leaves out
+# one run of words inside one sentence, is the item's text; the stored quote becomes the exact source passage. Cases from the
+# 2026-10-29 census of 38 refusals (docs/research/2026-10-29-analyst-standard/quote-check-2026-10-29/census.json).
+DENIAL_PAGE = ('An Nvidia representative responded with a short statement to Tom\'s Hardware : "Our roadmap is intact." '
+               'It is not clear which roadmap the company meant.')
+
+
+def test_a_quote_with_one_run_left_out_inside_a_sentence_is_kept_as_the_source_text():
+    quote = 'An Nvidia representative responded to Tom\'s Hardware : "Our roadmap is intact."'
+    evidence, _, dropped = extraction.sift(answer(quote), ITEM, DENIAL_PAGE, {'v7'}, english=True)
+    assert [e['quote'] for e in evidence] == ['An Nvidia representative responded with a short statement to Tom\'s Hardware : "Our roadmap is intact."'], dropped
+
+
+def test_a_quote_without_its_quotation_marks_or_footnote_is_kept_as_the_source_text():
+    page = 'Kress said losing that market, which NVIDIA sizes at “close to about $50 billion in the future,” would be material [3] .'
+    quote = 'losing that market, which NVIDIA sizes at close to about $50 billion in the future, would be material'
+    evidence, _, dropped = extraction.sift(answer(quote), ITEM, page, {'v7'}, english=True)
+    assert [e['quote'] for e in evidence] == ['losing that market, which NVIDIA sizes at “close to about $50 billion in the future,” would be material'], dropped
+
+
+def test_a_left_out_run_that_crosses_a_sentence_end_is_refused():
+    quote = 'An Nvidia representative responded with a short statement to Tom\'s Hardware : the company meant.'
+    evidence, _, dropped = extraction.sift(answer(quote), ITEM, DENIAL_PAGE, {'v7'}, english=True)
+    assert evidence == [] and dropped == [('e1', 'quote not in item')]
+
+
+def test_a_quote_naming_another_party_is_refused():
+    page = 'Unlike Hesai, Huawei challenged both rulings in court and lost both cases.'
+    evidence, _, dropped = extraction.sift(answer('Unlike Huawei, Hesai challenged both rulings in court and lost both cases.'), ITEM, page, {'v7'}, english=True)
+    assert evidence == [] and dropped == [('e1', 'quote not in item')]
+
+
+def test_a_left_out_run_longer_than_the_quote_is_refused():
+    page = 'Nvidia said on a long call with many analysts and reporters present in the room that demand is strong.'
+    evidence, _, dropped = extraction.sift(answer('Nvidia said demand is strong.'), ITEM, page, {'v7'}, english=True)
+    assert evidence == [] and dropped == [('e1', 'quote not in item')]
+

@@ -2,9 +2,9 @@
 item yields are filed by a separate call that reads only the item's title line, the statements and the open questions, each question
 with a 'takes' line written by code from its key and its research group. The rule is the placement prompt the configuration names:
 `placement-narrow-v1` (one home, the narrowest question that names the matter; a company-wide figure question takes only its own
-figures and guidance) or `placement-v1` (the old link rule, kept for comparison). A statement the placer files nowhere is kept as
-unplaced (store `unplaced_statements`), not dropped; a link the extraction gave to one of its own candidates (c1 …) is kept as it is,
-the placer decides only the links to existing theses. Measured on the frozen gold over three draws: core statements filed right
+figures and guidance) or `placement-v1` (the old link rule, kept for comparison). A statement the placer files nowhere is dropped with the reason 'no home'
+(D209: evidence is what bears on an open question; the handover's dropped record is where evaluation reads what was thrown away);
+a link the extraction gave to one of its own candidates (c1 …) is kept as it is, the placer decides only the links to existing theses. Measured on the frozen gold over three draws: core statements filed right
 55% → 82%, wrong links 9 → 3, links to the two revenue sinks 63/60/44 → 6/1/5."""
 import re
 
@@ -51,7 +51,8 @@ def build_request(statements, shown, item=None):
 
 
 def place(archive, cfg, statements, shown, *, item=None, transport=None, prompt=None):
-    """Returns (placed, unplaced, answer): every statement with its links decided; the extraction's candidate links kept.
+    """Returns (placed, unfiled, answer): every statement with its links decided; the extraction's candidate links kept; the
+    caller drops the unfiled.
     prompt names the placement prompt file; the configuration's is the default."""
     if not statements:
         return [], [], None
@@ -63,8 +64,8 @@ def place(archive, cfg, statements, shown, *, item=None, transport=None, prompt=
     decided = {}
     for p in answer.data['placements']:
         decided.setdefault(p['id'], [l for l in p['links'] if l in allowed])
-    placed, unplaced = [], []
+    placed, unfiled = [], []
     for e in statements:
         links = list(dict.fromkeys([l for l in e.get('links', []) if CANDIDATE_ID.match(l)] + decided.get(e['id'], [])))
-        (placed if links else unplaced).append(dict(e, links=links))
-    return placed, unplaced, answer
+        (placed if links else unfiled).append(dict(e, links=links))
+    return placed, unfiled, answer

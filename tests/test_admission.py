@@ -218,3 +218,27 @@ def test_a_statement_day_is_an_iso_day_or_unknown_never_a_month_a_range_or_the_p
     kept, _, _ = extraction.sift({'evidence': [dict(piece, original_day='2026-05-20')], 'candidates': []}, ITEM, TEXT, {'v1'}, UNIVERSE, english=True)
     assert kept[0]['original_day'] == '2026-05-20'
 
+
+
+# D236: the date by which the product that carries the value ships is a main driver; an event question that names its quarter
+# ("by the end of Q3 2026") is an event, not a quarterly number (06-views ladder rule 6 is about figures). Case: the Morgan Stanley
+# rack-cost page of 2026-07-06 (gnews:f66e1689ec2e27e7eab2a2dd), whose shipping question three of three v23 sends lost to the quarter rule.
+def test_an_event_question_naming_a_quarter_is_not_a_quarterly_number():
+    yes_no = [{'label': 'Yes', 'condition': 'First shipments by 2026-09-30', 'lo': None, 'hi': None},
+              {'label': 'No', 'condition': 'No shipment by 2026-09-30', 'lo': None, 'hi': None}]
+    ship = admitted('c1', measure='event', scope='Vera Rubin', event_type='shipment', looks_at='Whether first Vera Rubin shipments occur by the end of Q3 2026',
+                    question='Will Nvidia begin shipping Vera Rubin by 2026-09-30?', rungs=yes_no, due_day='2026-09-30', year='2026')
+    quarterly = admitted('c2', looks_at='Q3 FY2027 data center revenue', question='What will data center revenue be in Q3 FY2027?')
+    data = {'new_groups': [], 'evidence': [dict(EVIDENCE[0], links=['c1', 'c2'])], 'candidates': [ship, quarterly]}
+    _, kept, dropped, _ = extraction.sift_with_groups(data, ITEM, TEXT, set(), UNIVERSE, english=True)
+    assert [c['id'] for c in kept] == ['c1'], dropped
+    assert 'quarterly number' in dict(dropped)['c2']
+
+
+# D191/D246: the schemas of role-v13..v15 alone name shared_quantity; every later version names the four reasons of
+# ADMISSION_REASONS, so a new prompt version (role-v52) needs no code change to keep industry_aggregate open.
+def test_a_new_prompt_version_names_the_current_four_reasons_without_a_code_change():
+    def reasons(version):
+        return extraction.schema_for(version)['properties']['candidates']['items']['properties']['opens_as']['enum']
+    assert reasons('v51') == reasons('v52') == extraction.ADMISSION_REASONS
+    assert reasons('v14') == extraction.ADMISSION_REASONS_V13

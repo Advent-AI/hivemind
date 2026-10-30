@@ -105,8 +105,8 @@ class ParallelDay:
             return owned_item, shown, groups, extraction_key(frozen_cfg, owned_item, owned_item['text'], shown, frozen_universe, groups)
 
         def submit(item, owned_item, shown, groups, key):
-            future = pool.submit(extraction.extract, archive, frozen_cfg, owned_item, owned_item['text'], shown,
-                                 frozen_universe, shown_groups=groups, transport=transport)
+            future = pool.submit(extraction.read_item, archive, frozen_cfg, owned_item, owned_item['text'], shown,
+                                 frozen_universe, shown_groups=groups, transport=transport)      # the read; filing waits for the turn
             pending[item['input_id']] = (key, item_key(owned_item), future, item)
             prepared_futures.append((item['input_id'], future))
             self._event(item['input_id'], 'prepared', request=key)
@@ -140,19 +140,19 @@ class ParallelDay:
             validate_inputs()
             current_key = extraction_key(current_cfg, item, text, shown, current_universe, shown_groups)
             if current_key == prior_key:
-                answer = future.result()
+                reading = future.result()
                 validate_inputs()
-                if answer.request_sha256 != current_key:
+                if reading.answer.request_sha256 != current_key:
                     raise ValueError('prepared extraction does not match its validated request')
                 self._event(item['input_id'], 'reused', request=current_key)
-                return answer
+                return extraction.file_reading(reading, current_archive, current_cfg, item, shown, transport=transport)   # filed under the theses open now
             future.cancel()
             self._event(item['input_id'], 'stale', before=prior_key, request=current_key)
-            answer = extraction.extract(current_archive, current_cfg, item, text, shown, current_universe,
-                                        shown_groups=shown_groups, transport=transport)
+            reading = extraction.read_item(current_archive, current_cfg, item, text, shown, current_universe,
+                                      shown_groups=shown_groups, transport=transport)
             validate_inputs()
             self._event(item['input_id'], 'reextracted', request=current_key)
-            return answer
+            return extraction.file_reading(reading, current_archive, current_cfg, item, shown, transport=transport)
 
         try:
             fill()

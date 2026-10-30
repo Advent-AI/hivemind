@@ -9,8 +9,9 @@ Each module has one Markdown specification. Select a module on `docs/system-desi
 | 02-classification.md | Upstream classification | First version frozen |
 | 03-config.md | Config | First version frozen |
 | 04-dispatch.md | Dispatch | First version frozen |
-| 05-extraction.md | Extraction (read-only) | Foundation frozen; D149 grouping requirement added, default integration pending; category prompts still need validation |
-| 06-views.md | Thesis library and matching records | Foundation frozen; D149 group handoff and storage requirements added, default integration pending; other open items are in the PRD |
+| 05-extraction.md | Extraction (read-only) | Foundation frozen; groups declared during extraction in the default pipeline (D165); category prompts still need validation |
+| 05-extraction-standard.html | Extraction standard: ledger records, question types and opening, evidence and weight, golden set, prompt measurement | Signed (D243), open it in a browser; the one measuring standard for extraction, replacing `docs/research/2026-10-29-analyst-standard/standard.md` (D229) |
+| 06-views.md | Thesis library and matching records | Foundation frozen; group handoff and storage in the default pipeline (D165); other open items are in the PRD |
 | 07-final-verdict.md | Final verdict | Earlier draft, to be reconsidered with pull mode; due-date freezing is decided |
 | 08-pull-mode.md | Pull mode | Earlier draft; day-end/scheduled work and due-date freezing are decided |
 | 09-review-pool.md | Human review pool | First version frozen; intake defined, output deferred |

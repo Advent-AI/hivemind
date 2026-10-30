@@ -105,6 +105,13 @@ class Universe:
             return f'FY{y}'
         return str(y)
 
+    def fiscal_year_of(self, object_id, publication_day):
+        """The fiscal year a day falls in, named for the calendar year in which it ends (NVDA, ending in January: 2026-07-02 is
+        in FY2027); the calendar year for a theme, a December year-end or an unknown object."""
+        month = self.fiscal_year_end_month(object_id)
+        year = int(publication_day[:4])
+        return year + 1 if int(publication_day[5:7]) > month else year
+
     def fiscal_note(self, object_id, publication_day, english=False):
         """One line telling the model how this company's fiscal years map onto the calendar, so a number's year and
         due day are written right (NVDA's FY2027 ends in January 2027, not 2028)."""
@@ -112,14 +119,14 @@ class Universe:
         if not company:
             return ''
         month = int(company.get('fiscal_year_end_month') or 12)
-        year, pub_month = int(publication_day[:4]), int(publication_day[5:7])
+        year = int(publication_day[:4])
         if month == 12:
             if english:
                 return (f"{object_id}'s fiscal year is the calendar year and ends in December: this year is FY{year}, next year is FY{year + 1}; "
                         f'full-year figures are published in the annual report in January to March of the following year.')
             return f'{object_id} 的财年和自然年一样，12 月结束：今年是 FY{year}，明年是 FY{year + 1}；全年数在次年 1 到 3 月的年报里公布。'
         # the fiscal year is named by the calendar year in which it ends
-        current = year if pub_month <= month else year + 1
+        current = self.fiscal_year_of(object_id, publication_day)
         start_month = month % 12 + 1
         start_year = current - 1 if start_month > month else current
         report_month = month + 1 if month < 12 else 1

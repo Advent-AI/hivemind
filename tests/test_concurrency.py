@@ -236,12 +236,12 @@ def test_replay_script_runs_the_parallel_day_by_default_and_serially_with_one_wo
 
 
 def test_replay_script_defaults_run_the_default_jev_configuration_with_sixteen_and_eight_workers(tmp_path, monkeypatch):
-    """D183/D190/D195/D207 entry point as the user calls it: no --config, --workers or --jev-workers; the default configuration (poc-v36,
-    extraction v20 with the placement call on Jev with the collision judge, judging with the theme block) runs the parallel day with 16 extraction and 8 Jev workers and writes the serial ledger."""
+    """D183/D190/D195/D207/D246 entry point as the user calls it: no --config, --workers or --jev-workers; the default configuration (poc-v67,
+    extraction role-v51 with the placement call on Jev with the collision judge, judging with the theme block) runs the parallel day with 16 extraction and 8 Jev workers and writes the serial ledger."""
     import runpy
     serial_dir = tmp_path / 'serial'; serial_dir.mkdir()
     serial = setup_run(serial_dir)
-    serial['cfg'] = config.load(ROOT / 'poc/config/poc-v36.json')
+    serial['cfg'] = config.load(ROOT / 'poc/config/poc-v67.json')
     replay.run(**serial, transport=english_jev_send(require_overlap=False))
     args = setup_run(tmp_path)
     send = english_jev_send(require_overlap=True)
@@ -341,8 +341,11 @@ def english_jev_send(*, require_overlap):
             case = CASES[int(second)]
             raw = vocabulary.extraction_answer({'candidates': [case['candidate']], 'evidence': [case['evidence']]})
             raw['new_groups'] = []
-            if 'opens_as' in request['response_format']['json_schema']['schema']['properties']['candidates']['items']['properties']:     # a version-12 request (D184)
-                raw['candidates'][0].update(opens_as='main_driver', folds_into='', lost_if_folded='', settled_by='the FY2027 annual report')
+            candidate_fields = request['response_format']['json_schema']['schema']['properties']['candidates']['items']['properties']
+            if 'opens_as' in candidate_fields:     # a version-12 request (D184)
+                raw['candidates'][0].update(opens_as='main_driver', settled_by='the FY2027 annual report')
+            if 'folds_into' in candidate_fields:   # a request that shows the open theses (before D211)
+                raw['candidates'][0].update(folds_into='', lost_if_folded='')
             if second and '  - v1 (' in text:
                 raw['candidates'] = []
                 raw['evidence'][0]['links'] = ['v1']

@@ -281,7 +281,6 @@ def test_preflight_parsers_read_both_request_languages():
     zh = preflight.ITEM_ID.search('【信息】编号 gnews:abc，类别 T7，作者 Reuters')
     en = preflight.ITEM_ID.search('[Item] id gnews:abc, category T7, author Reuters')
     assert (zh.group(1) or zh.group(2)) == (en.group(1) or en.group(2)) == 'gnews:abc'
-    assert preflight.BLOCK5_VIEW.findall('  - v1（NVDA，看的是「x」）：q\n  - v2 (NVDA, focus "x", due 2027-02-25): q') == ['v1', 'v2']
     assert preflight.MATCH_SHOWN.findall('· v3（开着，NVDA）：q\n· v4 (open, NVDA): q') == ['v3', 'v4']
 
 
