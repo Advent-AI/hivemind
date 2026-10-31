@@ -1,0 +1,17 @@
+仍有严重问题：新计划能查出多数匹配误并，但开题和证据去重的验收仍可能放过回归。
+
+1. **严重｜开题臂允许有价值的问题从三次出现降到一次。** [计划第 191 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:191) 对抽取金标之外的问题，只在新臂**三次都没提出**时停止。例如，对照三次都提出一件值得追的事，新臂只有一次提出，仍可通过这条停止条件。第 13 轮发现的缺口因此只被部分关闭。签字标准要求金标中该开的问题每次都提出，并逐次报告三次结果；工作规则也要求读每次回归的原始答案。[标准第 513、520 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:513)、[AGENTS 第 294–301 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/AGENTS.md:294)。
+
+2. **严重｜证据去重的金标与实际会被合并的范围没有对齐。** [计划第 136–137 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:136) 的 G3 是旧样本加随机 100 对，但说要判断代码合成的“每一组”是否藏掉不同内容；它没有说明如何覆盖新规则实际合并的全部组。旧样本来自旧匹配判断，新规则可能合并旧样本未选中的证据。[D204](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2609) 的已知风险正是不同或更丰富的内容被藏掉；[AGENTS 第 282 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/AGENTS.md:282) 要求数据规则跑完整输入范围并配语义检查。另外，[最终组合验收](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:193)只写了按 E 臂方法检查候选，没有写留出集上如何检查 F 臂隐藏的证据内容。
+
+3. **严重｜H1 对“未签交易是否并入金额题”写出了互相冲突的执行规则。** [计划第 94 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:94) 同时说未签交易“并不并进”金额题、又说按是否分别下注逐案判断；同一行还说计划中的单笔交易并进去。[D248 第 1 项](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2959) 也同时写了“计划中的单笔交易并入”和未签交易按是否分别下注逐案判断。v38 的俄亥俄租约签约题 `v2` 与云客户担保金额题 `v1` 正是受影响的实际例子。现有文字不足以明确这类题该一律并、逐案判，还是一律分开。第 11b 节只引了 Alex 的“A”，我没有找到他看到的完整问题原文，不能独立判断哪一种忠实于他的回答。
+
+4. **严重｜H7 的相同字段未定义“未知值”怎么处理。** [计划第 192、239 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:192) 与 [D248 第 7 项](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2965) 都说原始说话人、日期和数字相同就合并，但没有说明空值是否算相同。只读查询封存账本发现 4,298 条证据中有 **297 条**说话人和日期都为空；v38 的 `e43`、`e44` 同挂 `v6`，两字段都为空，却描述不同的政策事实。若空值被当成相同，未知不等于同一来源，可能隐藏不同内容。这里需要明确如何执行已选的 H7，不能从“A”自行推定。
+
+5. **事实｜D248 把尚未核实的裁决类别写成了已证实的重复机制。** [D248 第 2956 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2956) 说剩余重复来自三类情况；但[计划第 59、80–82 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:59)明确说裁决类别尚不是核实过的错误，M2 的第三例也没有追完。[统计脚本第 18–37 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/census/admission_census.py:18)数的是理由文字里的标签，不能证明每个案例都是重复。
+
+第 4 轮的结构规则**覆盖了它列出的匹配类问题**：G1 分开记录身份、是否值得开、目标问题和逐条证据落点；逐候选比较能发现目标错误的合并或已提出的必开题丢失，到期续期另有测试。[计划第 110–127、159–170 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:110) 不过，它本身不能检查 E 臂改变抽取后消失的候选，也不覆盖上面的 F 臂内容隐藏。
+
+我核对了账本中的 `v1/v3` 共有 20 条证据、`v40/v44` 跨对象案例，以及同一篇文章的续期难例。未发现需要在 H1–H7 之外新增机制的案例。担保与融资的句子确实在[签字标准第 318 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:318)；计划现在把它是否导致 ACP 拆分留作待证，表述正确。第 11b 节与 D248 的七项摘要大体一致，但仅凭保存的“A”回复无法独立核实完整提问或每项解释。我没有逐条验证所有存档裁决、报价和费用估算；没有修改文件。
+
+**严重问题是否仍存在：是。**

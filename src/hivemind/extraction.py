@@ -25,6 +25,8 @@ ADMISSION_FROM = 12               # the first version whose candidates state why
 ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'binding_obligation']
 ADMISSION_REASONS_V13 = ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation']    # D191: a quantity or price outside any one company
 EMPTY_LINE_FROM = 16              # D199: from role-v16 the request no longer says 'return empty arrays when there is nothing to extract'; the gate rule decides
+EMPTY_LINE_DROPPED_VERSIONS = (58,)   # noise arm (2026-10-30, prompt-standard audit N9): the closing names no condition for an empty answer; the keep rule decides
+REVIEW_FROM = 59     # AGENTS §6 (2026-10-30): from role-v59 the request ends with a check that reads the evidence list back by standard 5.1 (prompts/review-v<N>.txt) and names no empty-answer condition
 SHARED_QUANTITY_VERSIONS = (13, 14, 15)    # D191: the schemas of role-v13..v15 name shared_quantity in place of industry_aggregate (role-v15's text already
                                            # says industry_aggregate; its schema stays so stored requests stay byte-identical); every later version names the four reasons above
 THEMES_SHOWN_FROM = 19            # A (2026-10-28): from v19 the request shows every open theme thesis to every item and the groups block prints only linkable member ids
@@ -37,6 +39,40 @@ SKIP_REASONS = ['boilerplate', 'navigation', 'repeat', 'no_claim']
 MONTH_NAME = re.compile(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\b')
 MANDATORY_CHARS = 120
 BINDING_HORIZON_DAYS = 548        # D185: a binding obligation is due within 18 months of the item, and is exempt from the next-year rule on quantities
+# role-v53 (2026-10-30, record-field class): the three attribution fields carry their definitions in the schema, beside the
+# field they govern, so the role text that decides which statements to keep stays as it was (standard 5.4: the original
+# claimant; an unknown statement day is unknown, never the report day; D220, D203; 5.5: relays of one report are one source)
+FIELD_NOTES_FROM = 53
+FIELD_NOTES = {
+    'speaker': 'Who says it in this item: the outlet, the author or the person quoted.',
+    'original_who': ('The party whose statement, figure or action it is, even when the item reports it without attribution ("the insurer agreed '
+                     'to buy the broker": the insurer; "the regulator fined the bank, a newspaper reported": the regulator); the outlet or author '
+                     'only for its own estimate, analysis or unnamed-source report.'),
+    'original_day': ('The day that party made it, as an ISO day when the item gives one ("signed on 3 March 2026": 2026-03-03); empty when the '
+                     "item gives none or only a month; the publication day only when the item is that party's own release, filing, call or analysis."),
+}
+# role-v54: the role text no longer states the attribution rule, so the schema is its one owner; the wording follows the signed gold's
+# who column (the party that announced or did it, a relaying outlet named only as the relay, an unnamed source with the outlet that
+# carried it) and 5.4's statement day (never the publication day in place of an unknown day); v54–v56 alone, later versions carry v53's notes (D247)
+FIELD_NOTES_V54_VERSIONS = (54, 55, 56)
+FIELD_NOTES_V54 = {
+    'speaker': 'Who says it in this item: the outlet, the author or the person quoted.',
+    'original_who': ('The party that made the statement, took the action or produced the figure, even when the item reports it without '
+                     'attribution ("the insurer agreed to buy the broker": the insurer); an outlet that only relays it is not the original party; '
+                     'for a claim from unnamed sources, the unnamed source and the outlet that carried it; the outlet or author for its own '
+                     'estimate or analysis.'),
+    'original_day': ('The day that party made the statement or took the action, as an ISO day when the item gives one ("announced on 3 March '
+                     '2026": 2026-03-03); empty when the item gives no day or only a month, never the publication day in place of an unknown '
+                     "day. A party's own release, filing, call or analysis is dated its publication day."),
+}
+# role-v55 alone (refuted on its small sample, loop log row 32): the source tier's rule moved from the role text to the tier field
+# as standard 5.5's table, the first row that applies; later versions keep the tier rule in the role text
+TIER_NOTE_VERSIONS = (55,)
+TIER_NOTE = ('Take the first row that applies. (1) The item credits the claim to someone unnamed or calls it unconfirmed, even an '
+             'announcement or a figure: rumour. (2) An official action, a published actual figure, a completed transaction, or an '
+             'announcement the item reports, even when the reporter names no source: fact. (3) Company guidance, a management statement or '
+             "an official's remark: party_statement. (4) An analyst's, outlet's or expert's view or estimate: third_party_view. (5) Anything "
+             'else with no source: rumour. A record that mixes a fact with a plan or a rumour takes the tier of its main claim.')
 
 
 def version_number(version):
@@ -229,12 +265,33 @@ def flatten_account(data):
     return flat
 
 
+def field_notes(number):
+    """The evidence fields' descriptions a prompt version's schema carries: none before v53, FIELD_NOTES_V54 in v54–v56, FIELD_NOTES
+    in v53 and from v57, and the tier's in v55 alone."""
+    if number < FIELD_NOTES_FROM:
+        return {}
+    notes = dict(FIELD_NOTES_V54 if number in FIELD_NOTES_V54_VERSIONS else FIELD_NOTES)
+    if number in TIER_NOTE_VERSIONS:
+        notes['tier'] = TIER_NOTE
+    return notes
+
+
+def with_field_notes(schema, notes):
+    """The schema with the notes as the descriptions of the evidence fields they name."""
+    fields = schema['properties']['evidence']['items']['properties']
+    for name, note in notes.items():
+        fields[name] = dict(fields[name], description=note)
+    return schema
+
+
 def schema_for(version, shown_group_ids=(), shown_view_ids=(), mandatory=()):
     number = version_number(version)
     measures = MEASURES_V10 if number >= MEASURES_V10_FROM else MEASURES
     if number >= ADMISSION_FROM:
         base = admission_schema(shown_view_ids, shown_group_ids, measures=measures, reasons=ADMISSION_REASONS_V13 if number in SHARED_QUANTITY_VERSIONS else ADMISSION_REASONS,
                                 blind=number >= LEDGER_BLIND_FROM)
+        if number >= FIELD_NOTES_FROM:
+            base = with_field_notes(base, field_notes(number))
         return accounted_schema(base, mandatory) if accounts(version) else base
     if number >= GROUPS_FROM:
         return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
@@ -456,10 +513,14 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
                      'Statements from other paragraphs go in extra. ' + ', '.join(mandatory_ids(text)))
     else:
         parts.append(item_header(item, category) + text[:MAX_TEXT_CHARS])
-    parts.append('Return evidence and candidates per the JSON schema. A candidate\'s evidence_ids are its own evidence ids; an evidence item\'s links are '
-                 + ('this answer\'s candidate ids (such as c1), or empty. ' if blind else 'existing thesis ids or this answer\'s candidate ids (such as c1). ')
-                 + 'year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). '
-                 + ('Return empty arrays only for a page with no business content.' if version_number(version) >= EMPTY_LINE_FROM else 'Return empty arrays when there is nothing to extract.'))
+    parts.append(('Return evidence and candidates per the JSON schema. A candidate\'s evidence_ids are its own evidence ids; an evidence item\'s links are '
+                  + ('this answer\'s candidate ids (such as c1), or empty. ' if blind else 'existing thesis ids or this answer\'s candidate ids (such as c1). ')
+                  + 'year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). '
+                  + ('' if version_number(version) in EMPTY_LINE_DROPPED_VERSIONS or version_number(version) >= REVIEW_FROM
+                     else 'Return empty arrays only for a page with no business content.' if version_number(version) >= EMPTY_LINE_FROM
+                     else 'Return empty arrays when there is nothing to extract.')).rstrip())
+    if version_number(version) >= REVIEW_FROM:
+        parts.append(_read(f'review-{version}.txt').strip())
     return '\n\n'.join(parts)
 
 

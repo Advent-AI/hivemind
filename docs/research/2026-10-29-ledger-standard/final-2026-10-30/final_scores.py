@@ -2,13 +2,13 @@
 read against the signed pass line (page §9.2). Code counts structure only; meaning is the blind reader's (build_packets.py).
 Per version: core matters kept in every draw, supporting matters kept in at least two draws, not-kept entries kept
 (of those judged), statements the gold does not hold (per article, median), questions, statements the code dropped,
-unusable answers and tokens. Differences against v29 carry a paired bootstrap interval over articles (seed fixed).
+unusable answers and tokens. Differences against the first version named carry a paired bootstrap interval over articles (seed fixed).
 
 Questions: a gold must-open or may-open question counts as raised when a question of the same opens_as shares at least
 QUESTION_SHARE of the gold gist's words (checked on the blind reader's 63 must-open verdicts: 60 agree, 3 counted by code
 only); questions that match no listed one are counted and listed for reading.
 
-    python3 final_scores.py PREFIX v29 v42 ...      (PREFIX is the run's tag prefix, e.g. G or H)
+    python3 final_scores.py PREFIX v29 v42 ...      (PREFIX is the run's tag prefix, e.g. G or H; the first version is the control)
 """
 import collections
 import json
@@ -125,6 +125,8 @@ def tokens(version, ids):
 def main():
     global PREFIX
     PREFIX, versions = sys.argv[1], sys.argv[2:]
+    control = versions[0]          # the first version named is the control every other one is compared with
+    print('questions are scored on the version-3 gold, not yet re-derived for standard version 4 (gold-v4-evidence-check.md): a lead, not a v4 measurement')
     report = {}
     for name, path in GOLDS.items():
         articles = json.load(open(path))['articles']
@@ -134,9 +136,9 @@ def main():
         for v in versions:
             tin, tout = tokens(v, ids)
             report[name][v]['tokens in/out (3 draws)'] = [tin, tout]
-            if v != 'v29' and 'v29' in versions:
-                report[name][v]['minus v29 (sum over articles, 95% paired bootstrap)'] = {
-                    m: paired(rows[v], rows['v29'], m) for m in ('core every draw', 'supporting >=2 draws', 'not-kept kept (mean of draws)', 'extra (mean of draws)')}
+            if v != control:
+                report[name][v][f'minus {control} (sum over articles, 95% paired bootstrap)'] = {
+                    m: paired(rows[v], rows[control], m) for m in ('core every draw', 'supporting >=2 draws', 'not-kept kept (mean of draws)', 'extra (mean of draws)')}
         (HERE / f'per-article-{PREFIX}-{name}.json').write_text(json.dumps(rows, indent=0) + '\n')
     (HERE / f'final-scores-{PREFIX}.json').write_text(json.dumps(report, indent=1) + '\n')
     for name in GOLDS:
@@ -146,8 +148,8 @@ def main():
             print(f"{v}: core every {t['core every draw']}/{t['core total']} never {t['core never']} per-draw {t['core per draw']} | supp>=2 {t['supporting >=2 draws']}/{t['supporting total']} never {t['supporting never']} | "
                   f"not-kept {t['not-kept kept per draw']}/{t['not-kept judged']} | extra {t['extra per draw']} med/art {t['extra per article median']:.2f} | stmts {t['statements per draw']} | "
                   f"q {t['questions per draw']} must-open every {t['must-open raised every draw']}/{t['must-open total']} per-draw {t['must-open raised per draw']} unlisted {t['unlisted questions per draw']} | dropped {t['dropped by code per draw']} | unusable {t['unusable answers']} | tok {t['tokens in/out (3 draws)']}")
-            if v != 'v29' and 'v29' in versions:
-                print('      vs v29:', t['minus v29 (sum over articles, 95% paired bootstrap)'])
+            if v != control:
+                print(f'      vs {control}:', t[f'minus {control} (sum over articles, 95% paired bootstrap)'])
 
 
 if __name__ == '__main__':

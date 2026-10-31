@@ -44,10 +44,10 @@ Ledgers, each a folder with `views.sqlite`, `archive.sqlite`, `manifests/`, logs
 
 The model answer stores of the extraction arms stay on disk and out of Git (`.gitignore`, the 2026-10-28..30 block), about 240 MB in all:
 every `answers.sqlite` and `probes.sqlite` under `docs/research/2026-10-29-analyst-standard/` (the direct-read rounds, the luna and
-haiku arms, and `loop-2026-10-29/<run>-<version>-d<draw>/`, one folder per version and draw of the simultaneous full runs A–P that
-`final-2026-10-30/final_scores.py` and `quality-2026-10-30/` read) and under `docs/research/2026-10-28-retention-audit/`, the derived
+haiku arms, and `loop-2026-10-29/<run>-<version>-d<draw>/`, one folder per version and draw of the simultaneous full runs A–P, S and U and the small samples F1 and F2 that
+`final-2026-10-30/final_scores.py`, `quality-2026-10-30/` and `2026-10-29-ledger-standard/fields-2026-10-30/` read) and under `docs/research/2026-10-28-retention-audit/`, the derived
 `sifted.json` and `structure*.json` files (rebuilt from the stores by the bench scripts), `retention-audit/ledger.json`, the run pid
-and lock files, and the Codex blind readers' transcripts (`final-2026-10-30/verdicts/*.log`; their verdict JSON is in Git). The
+and lock files, and the Codex blind readers' transcripts (`final-2026-10-30/verdicts/*.log`, `fields-2026-10-30/reader*/verdicts/*.log`; their verdict JSON is in Git). The
 scripts, gold files (`golden-v3/golden-v3-signed.json`, `test-set/golden-test-signed.json`, sha256 in D243), reading packets, verdicts,
 scores, logs and results are in Git. Not backed up elsewhere.
 

@@ -1,0 +1,971 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18b61-2932-7e01-871e-1b802b8d3ffe
+--------
+user
+You are an independent reader. You are a hedge-fund analyst who covers NVIDIA and the AI-infrastructure themes around it. You did not write the extraction prompt and you have not seen any score. You may read files; do not open any file whose name contains "key", and do not open other packets.
+
+The product: every article goes through an extraction step that writes evidence records (a verbatim quote plus fields) into the analyst's ledger. Downstream, a model judges open research questions using only these records, and a matcher compares new records with old ones. The matcher and the judge read `original_who` (who originally said or did it) and `original_day` (the day it was originally said or done) to tell old news from new and to tell one source repeated by many outlets from several independent sources. So a wrong original speaker or day misleads them; a noise record wastes the judge's attention.
+
+Reference: /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html, the signed standard the product follows. Read sections 5.3, 5.4 and 5.5 before the packet. Use it for definitions:
+- who (5.4): the original claimant; whether it is their own estimate or someone else's measurement.
+- original statement day (5.4): when unknown, written as unknown, never the report day.
+- tier (5.5): the table of five rows (an upper row wins when two apply).
+
+The packet: docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-U/packets/gnews_4d1677af37befd53ca3e7b45.json. It holds the article text as the model saw it, its publication_day, publisher and category, and two answers, A and B, from two different versions of the extraction (the order is random). Each answer is the list of records production keeps.
+
+Read the whole article first. Then judge every record of A and then every record of B on its own, against the article. Write your verdict as JSON only (no prose before or after), in this shape:
+
+{
+ "input_id": "...",
+ "A": [
+  {"id": "e1",
+   "worth": "keep" | "marginal" | "noise",
+   "one_line_ok": true | false,
+   "one_line_problem": null | "number/unit, lost condition or hedge, forecast written as done, wrong period, lost who said it, says more than the quote",
+   "who_ok": true | false,
+   "who_note": null | "the right original speaker, as the article gives it, and why",
+   "day_ok": true | false,
+   "day_note": null | "the day the statement was first made or the action taken, as the article gives it; unknown when the article does not say",
+   "tier_ok": true | false,
+   "tier_note": null | "the right tier: fact / party_statement / third_party_view / rumour, and the row of 5.5",
+   "duplicate_of": null | "e#"}
+ ],
+ "B": [ same shape ],
+ "fields_better": "A" | "B" | "same",
+ "fields_better_reason": "one sentence"
+}
+
+Rules for you:
+- Be literal; quote the article in your notes. Judge each field against what the article says, not against the other answer.
+- speaker is who says it in this item; judge it only when it is plainly wrong. original_who and original_day are the fields that matter most.
+- A day is wrong when the record gives the report day for something said or done earlier, a day the article does not support, or leaves empty a day the article states. A month alone is not a day: an empty day is right when the article gives only a month.
+- Check every number in one_line against the quote.
+- An answer that is null was unusable; write [] for it.
+
+2026-10-30T05:56:07.993714Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'from pathlib import Path; p=Path(\"docs/prd/05-extraction-standard.html\"); s=p.read_text(); import re; matches=list(re.finditer(r\"5\\.3|5\\.4|5\\.5|5\\.6\",s)); print(\"\\n\".join(f\"{m.start()}: {s[m.start()-140:m.start()+180]}\" for m in matches))'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+1895:  (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.75;margin:0;padding-inline:16px;padding-block:0 64px}
+.page{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px}
+@med
+11738: ction>
+
+<h3>一张图：同一篇文章里每句话的去向</h3>
+<div class="tree" role="img" aria-label="每句话的去向">
+<ul><li><span class="node">一句话</span>
+  <ul>
+    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+    <li>分析员会记 <span class="goes">→ 留为证据</span><span class="tag">第 5 节<
+11997: 析员会记 <span class="goes">→ 留为证据</span><span class="tag">第 5 节</span>
+      <ul>
+        <li>记来源层：事实、当事人陈述、第三方观点、传闻 <span class="tag">进账本 · 第 5.5 节</span></li>
+        <li>分量：核心、辅助、可选 <span class="tag">只在评估时判，不进账本 · 第 6 节</span></li>
+        <li>归档：挂到最窄的那个已开问题 <span class="src">D207</span>；没有问题接，记 no home 扔掉，评估时逐条读 <span
+13510: 、获奖、下载量、开发者人数、大会人数）可选</td><td class="nowrap">第 6 节</td></tr>
+<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划
+13622: 辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+<tr><td>7</td><td>收购算约束性义务（写明规模、尚未完成）</td><td 
+13738: td class="nowrap">第 5.1、5.3 节</td></tr>
+<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+<tr><td>7</td><td>收购算约束性义务（写明规模、尚未完成）</td><td class="nowrap">第 3 节 C 类</td></tr>
+<tr><td>8</td><td>改提示词时的回归判法：全部文章各发一次和上一版比，"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；它是诊断，验收仍
+14050: 它是诊断，验收仍是三次发送</td><td class="nowrap">第 9.3 节</td></tr>
+<tr><td>9</td><td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+<tr><td>11</td><td>金标冻结后发现错：另记一份带理由的更正，写明改前改后，不覆盖原文件；测量用更正后的版本并注明</td><td class="nowrap">第 8 节
+14120: td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+<tr><td>11</td><td>金标冻结后发现错：另记一份带理由的更正，写明改前改后，不覆盖原文件；测量用更正后的版本并注明</td><td class="nowrap">第 8 节</td></tr>
+<tr><td>12</td><td>达标线里"垃圾"一项（每篇留下的无关陈述）用定稿金标重算，Luna 基线也重算<
+14656:  class="src">第 1 版 §2 同一事实的复述</span>。</li>
+<li>分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。</li>
+<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+</ul>
+
+<h2 id="words"><span class="num">1</span>这一页用的词：一词一义</h2>
+<div class="table-wrap mid"><table>
+<thead><tr><th>词</th><th>意思</th><th>不要和它混</th></tr></thead>
+
+28190:  class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+
+<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+<div class="table-wrap wide"><table>
+<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行
+30174:  touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+
+<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>格</th><th>要保住</th><th>
+31309: </span>。</p>
+<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+
+<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固
+34236: 司的估值倍数、市值、孤零零的目标价；生态数字；重提的过去实际数；新加坡案件<span class="src">D231、D243 第 3、4、6 条</span></td></tr>
+<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+</tbody></table></div>
+
+<h3>判法</h3>
+<ol class="steps">
+<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"
+34394: ><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+</tbody></table></div>
+
+<h3>判法</h3>
+<ol class="steps">
+<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+<li><b>是可选的那几样吗？</b>在研公司的估值倍数、市值、孤零零的目标价，财报后股价反应，生态数字，重提的过去实际数，新加坡案件，归可选。带推导的
+37630: 开、可以开的问题；240 个不该开</div></div>
+</div>
+
+<h3>每一条记什么</h3>
+<ul>
+<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+<li><b>问题：</b>必须开的（类、开题理由、标的或主题、要点、<code>settled_b
+37697: 据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+<li><b>问题：</b>必须开的（类、开题理由、标的或主题、要点、<code>settled_by</code>）；可以开的（另一种合理写法）；不该开的（第 4 节哪一行或哪个测试）。</li>
+<li><b>没判清的地方：</b
+50635: B8</td><td>分量几级、"档位"一词两义</td><td>四级；"档位"在这一页叫分量，问题的叫结果档</td><td>第 1 版 §10.3；D243 第 1 条</td></tr>
+<tr><td>B9</td><td>几套"不要"的类</td><td>抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数</td><td>第 1 版 §2、§4；D221；D240；D243 第 12 条</td></tr>
+<tr><td>B10</td><td>股价、目标价、重述、新加坡各处判得不同</td><td>财报后股价反应可选（第 1 版 §10.2）；在研公司的估值倍数、
+51187: 性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+<tr><td>B13</td><td>PRD 06 的重复和替代说法早于 D202、D204</td><td>这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新</td><td>D202、D204</td></tr>
+<tr><td>B14</td><td>组成部分算不算同一题</td><td>同一总量的另一种人群或口径是同一题；有自己驱动、答案能分开走的是另一题，要过独立意义测试</td><td>D190；第 1 版 §6</td></tr>
+<tr><td>B15</td><t
+51913: st_fiscal_year_horizon.py</span></td><td>PRD 06 梯子第 5 条；D243</td></tr>
+<tr><td>B18</td><td>"线索""背景"一词多义</td><td>"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行</td><td>D221</td></tr>
+<tr><td>B19</td><td>谁把候选并进已开问题</td><td>匹配和碰撞裁决；共同量由代码</td><td>D190、D197、D211</td></tr>
+<tr><td>B20</td><td>AGENTS §8 指向两套标准，D229 又说第 1 版是唯一尺子</td><td
+55350: ass="val" x="237" y="136" text-anchor="middle">8</text><text x="237" y="186" text-anchor="middle">2.7</text>
+<rect class="bar" x="266" y="145.5" width="34" height="24.5"/><text class="val" x="283" y="139" text-anchor="middle">7</text><text x="283" y="186" text-anchor="middle">2.8</text>
+<rect class="bar" x="312" y="145
+55529: ass="val" x="283" y="139" text-anchor="middle">7</text><text x="283" y="186" text-anchor="middle">2.8</text>
+<rect class="bar" x="312" y="145.5" width="34" height="24.5"/><text class="val" x="329" y="139" text-anchor="middle">7</text><text x="329" y="186" text-anchor="middle">2.9</text>
+<rect class="bar" x="358" y="149
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'from pathlib import Path; import re,html; s=Path(\"docs/prd/05-extraction-standard.html\").read_text(); s=s[s.index(\"<h3>5.3 \"):s.index(\"<h2\",s.index(\"<h3>5.5 \"))]; s=re.sub(r\"</(?:tr|p|li|h3|table)>\",\"\\n\",s); s=re.sub(r\"</t[dh]>\",\" | \",s); print(html.unescape(re.sub(r\"<["'^>]+>","",s)))'"'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 1259ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-cEAHfyZk' (errno=Operation not permitted)
+2026-10-30 13:56:16.809 xcodebuild[41390:17227087]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:56:16.930 xcodebuild[41390:17227086] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-AOF96Te8' (errno=Operation not permitted)
+2026-10-30 13:56:17.264 xcodebuild[41392:17227096]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:56:17.383 xcodebuild[41392:17227095] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+5.3 不留的第 1 版 §2 的清单，加 D238、D243 的行
+
+"按同一行补的例子"一列是我按同一行举的例子。
+
+
+不留 | 第 1 版的例子 | 按同一行补的例子 | 边界 | 
+
+
+没有业务规模的产品、游戏、驱动、跑分细节 | "这张卡 415W"；"Geekbench 跑分" | 接口、功率、旧型号的支持周期 | 对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类） | 
+
+股价涨跌、投资人仓位、技术面 | "本月跌 13%"；"Burry 做空" | 期权成交、基金买卖 | 股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选第 1 版 §10.2；在研公司的估值倍数、市值、孤零零的目标价可选D243 第 4 条；别的股价涨跌照旧不留 | 
+
+作者的一般性风险清单和没有推导的看法 | "如果 AI 退潮会受伤" | "这只股票该持有"；"芯片指数是纯粹的高估" | 有假设、有推导、有时点的条件估值要留第 1 版 §10.1 | 
+
+记者的背景和框架 | "A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它" | "公司成立于 1998 年"；通用的技术讲解 | 没有数字和具体叙事的主张和背景不收；怎么分见 5.1D243 第 5 条 | 
+
+没有数字也没有决定的政治、战略表态 | "分散供应商不能减少政治依赖" | 大使馆说"立场一贯" | 官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类） | 
+
+同一事实的复述 | 一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个 | 标题和正文说同一件事 |  | 
+
+已知事实的重述 | 两个月后再说一遍 Q1 收入、指引、已公布的回购 |  | 抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提D243 第 6 条 | 
+
+模板 | 署名、作者简介、经纪商页脚、前瞻性声明、广告 | 页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题） |  | 
+
+只有形容的引语 |  | "a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子） | D243 第 10 条 | 
+
+新加坡转运案件的概况和被告个人资产 |  |  | 可选，收不收都不扣分D231 | 
+
+
+
+另外一条来自后来的决定：和公司所有市场都无关的别家公司的估值、股价、交易不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。
+
+不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。
+
+
+5.4 一条记录必须保住的意思第 1 版 §3，原样
+
+六格里只填这一条用得上的D220。
+
+
+格 | 要保住 | 丢了就错的例子 | 
+
+
+谁 | 原始判断者；是本人估计还是别人实测 | AMD 自己的模拟说成独立实测 | 
+
+什么 | 业务、指标或动作 | "收入增长 82%"丢了"收入" | 
+
+多少 | 金额、比例、数量 | 四家 7450 亿写成五家 | 
+
+哪个期间 | 预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对D233，余下时间不改成全年 | "今年余下时间"改成 FY2027 全年 | 
+
+什么条件 | 推导的假设；计划、上限、"最多" | "最多 4 万颗"写成已部署 4 万颗 | 
+
+预测还是已发生 | 指引、预计、商谈、传闻不等于已实现、已签约 | "商谈 6000 亿"写成"已承诺" | 
+
+
+
+原始发言日不知道就写不知道，不能填报道日D220。一条记录单独读要能懂，条件不能只放在旁边另一条里第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，编造了仍算记录错误第 1 版 §3。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实D218。
+
+边界第 1 版 §2：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度Alex 判 10。
+
+
+5.5 来源层PRD 06 的四层；D238 采纳的 role-v29 原文
+
+PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。
+
+role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."
+
+这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行D243 第 9 条。
+
+
+说的是什么 | 层 | 
+
+
+1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数） | 传闻 | 
+
+2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处） | 事实 | 
+
+3. 公司的指引、管理层的表态、官员的讲话 | 当事人陈述 | 
+
+4. 分析师、媒体、专家的看法和估计 | 第三方观点 | 
+
+5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"） | 传闻 | 
+
+
+
+一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事D243 第 9 条。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下D202、D204；判断时只有事实能确定到期落在哪一档PRD 06。
+
+
+
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-U/packets/gnews_4d1677af37befd53ca3e7b45.json' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+{
+ "input_id": "gnews:4d1677af37befd53ca3e7b45",
+ "title": "NVIDIA is about to start taking a share of cloud providers' revenue.",
+ "publication_day": "2026-07-01",
+ "publisher": "moomoo.com",
+ "publisher_type": "media",
+ "category": "T7",
+ "text": "It has been reported that, in an effort to break the monopoly of tech giants, NVIDIA is providing financial guarantees for emerging cloud providers by offering GPU computing capacity lease-back arrangements to address their financing challenges. In exchange, NVIDIA will take a revenue share from these cloud providers, directly participating in profit distribution in the downstream computing market and extending its control further down the industrial chain.\nNVIDIA is leveraging its strong balance sheet to gain market leverage, quietly evolving from a chip vendor into the 'central bank' of the AI computing ecosystem by offering financial backing to emerging cloud service providers in exchange for a share of their revenue.\nOn July 1, according to the technology news outlet The Information, NVIDIA is providing financial guarantees to young cloud service providers that lease or rent its GPUs—if these companies fail to secure enough AI developers to rent their computing capacity, NVIDIA will repurchase their unsold GPU capacity at a pre-agreed price.\nIn return, NVIDIA will receive a percentage of these cloud providers’ revenue, with the revenue-sharing rate gradually declining over the term of the contract. GPU cloud providers Firmus and Sharon AI have already joined the program, and three executives with existing business ties to NVIDIA confirmed the arrangement.\nOn July 1, NVIDIA published a statement on its official website announcing a new business model that combines revenue sharing with credit support, enabling AI cloud providers to procure NVIDIA infrastructure without bearing the full upfront capital expenditure, and allowing them to offer computing services to downstream AI-native enterprises, model developers, and corporate clients.\nAccording to the report, the initiative is internally referred to by some NVIDIA personnel as the 'AI Compute Partnership.' A NVIDIA spokesperson also confirmed the existence of the program. This move marks a significant strategic shift for NVIDIA:\nOn one hand, it lowers financing barriers for emerging cloud service providers to expand its customer base; on the other, it directly participates in profit distribution within the downstream computing market through revenue sharing, thereby extending its control further down the AI value chain.\nBusiness Model Shift: From Selling Chips to Sharing Cloud Revenue\nAccording to NVIDIA’s official press release, the company will earn not only standard product revenue but also an additional share of cloud service revenue, creating a usage-based, recurring revenue stream. The core objective of this model is to overcome the long-standing financing barrier that has constrained startups from accessing large-scale computing power.\nNVIDIA positions this framework as the 'DSX AI Factory' model, targeting AI service scenarios requiring continuous cross-regional operations, high utilization rates, and multi-tenant accelerated computing.\nSharon AI and Firmus are the first cloud providers participating in this model. Sharon AI plans to deploy up to 40,000 NVIDIA Grace Blackwell GB300 GPUs, while Firmus is constructing a DSX AI Factory campus in Batam, Indonesia, expected to scale up to 360 megawatts and accommodate up to 170,000 NVIDIA GPUs. These deployments directly reflect NVIDIA’s latest progress in transforming computing demand into deployable, financeable infrastructure.\nNVIDIA noted that emerging AI companies have historically faced significant constraints in accessing capital-intensive infrastructure—even long-term contractual commitments have often been insufficient to secure financing for compute capacity procurement. This means that numerous AI-native firms, model developers, and inference service providers face lengthy delays when scaling their computing capabilities: site selection, power procurement, construction, and hardware commissioning—each step can take several months or even longer.\nThe promise of this new model is to realign economic structures so these groups can rapidly access full-stack accelerated computing capabilities without waiting for the traditional infrastructure build-out cycle to complete.\nUnderlying Rationale: Addressing the Core Challenge of GPU Financing\nReportedly, GPUs typically represent the most expensive component in AI data centers. For chip buyers with lower credit ratings, securing sufficient loans is itself a major hurdle.\nA data center executive commented on such NVIDIA deals as “killing two birds with one stone.” He explained that if NVIDIA merely provided a guarantee for a data center facility lease, “you’d still face the question of ‘how to finance the GPUs’”; but if NVIDIA commits to purchasing any unsold compute capacity within the facility, “the GPU financing issue is resolved—and so is the data center’s financing problem.”\nIn other words, NVIDIA’s backstop commitment effectively serves as a credit enhancement tool, enabling emerging cloud service providers—who would otherwise struggle to obtain bank loans—to mobilize significantly larger amounts of capital and accelerate data center construction.\nStrategic Intent: Breaking the Dominance of Large Customers\nNVIDIA’s launch of these initiatives is grounded in a clear strategic context. Currently, a small number of large cloud service providers—including Amazon, Microsoft, SpaceX, Oracle, Meta, and Google—purchase the majority of NVIDIA’s chip output. However, several of these companies are developing their own competitive AI chips, posing a potential threat to NVIDIA.\nTo reduce its reliance on these giant clients, NVIDIA has spent the past few years actively supporting a cohort of emerging GPU cloud service providers, such as CoreWeave. The newly announced 'AI Compute Partnership Program' represents a continuation and deepening of this strategy.\nAccording to prior reporting by The Information, NVIDIA has also recently been negotiating to provide financial guarantees for OpenAI’s lease of a large data center in Ohio—an asset that, if fully built out at current prices for chips, labor, power, and other materials, could cost as much as $500 billion.\nCapital Commitments: From Equity Investments to Capacity Guarantees\nNVIDIA’s capital commitments in this direction have already become substantial.\nTo date, NVIDIA has invested several billion dollars in equity stakes in multiple emerging cloud service providers and, in certain cases, agreed to lease back chips from these companies—including CoreWeave and Lambda—in transactions totaling several billion dollars. According to prior reporting by The Information, NVIDIA’s own researchers have also used GPU servers leased back from Lambda.\nOn the capacity guarantee front, NVIDIA began advancing related deals in the autumn of last year. In September 2024, NVIDIA committed to purchasing all of CoreWeave’s unsold capacity through 2032 if CoreWeave failed to secure tenants, under a contract then valued at $6.3 billion. This move effectively alleviated investor concerns about CoreWeave’s highly leveraged business model and drove its stock price up nearly 30% within the following week.\nAccording to a regulatory filing submitted by NVIDIA in May of this year (covering the quarter ended in April), NVIDIA subsequently added another $3.5 billion to guarantee customer data center leases in exchange for rights to purchase their shares.\nTaken together, NVIDIA is constructing a multi-layered mechanism to align interests: equity investments, capacity leasebacks, lease guarantees, and now revenue-sharing arrangements. Each layer deepens the financial ties between NVIDIA and downstream cloud service providers, enabling NVIDIA to directly share in the incremental returns from the commercialization of AI computing power beyond chip sales alone.",
+ "answers": {
+  "A": [
+   {
+    "id": "e1",
+    "quote": "On July 1, NVIDIA published a statement on its official website announcing a new business model that combines revenue sharing with credit support, enabling AI cloud providers to procure NVIDIA infrastructure without bearing the full upfront capital expenditure, and allowing them to offer computing services to downstream AI-native enterprises, model developers, and corporate clients.",
+    "one_line": "NVIDIA announced on July 1, 2026, a business model combining revenue sharing with credit support for AI cloud providers purchasing NVIDIA infrastructure.",
+    "speaker": "moomoo.com",
+    "original_who": "NVIDIA",
+    "original_day": "2026-07-01",
+    "tier": "fact"
+   },
+   {
+    "id": "e2",
+    "quote": "On July 1, according to the technology news outlet The Information, NVIDIA is providing financial guarantees to young cloud service providers that lease or rent its GPUs—if these companies fail to secure enough AI developers to rent their computing capacity, NVIDIA will repurchase their unsold GPU capacity at a pre-agreed price.",
+    "one_line": "The Information reported on July 1, 2026, that NVIDIA would repurchase participating GPU cloud providers’ unsold capacity at a pre-agreed price if they could not find enough customers.",
+    "speaker": "moomoo.com",
+    "original_who": "The Information",
+    "original_day": "2026-07-01",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e3",
+    "quote": "In return, NVIDIA will receive a percentage of these cloud providers’ revenue, with the revenue-sharing rate gradually declining over the term of the contract.",
+    "one_line": "NVIDIA will receive a percentage of participating cloud providers’ revenue, with the revenue-sharing rate declining over each contract’s term.",
+    "speaker": "moomoo.com",
+    "original_who": "The Information",
+    "original_day": "2026-07-01",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e4",
+    "quote": "GPU cloud providers Firmus and Sharon AI have already joined the program, and three executives with existing business ties to NVIDIA confirmed the arrangement.",
+    "one_line": "Firmus and Sharon AI had joined NVIDIA’s program, an arrangement confirmed by three executives with existing business ties to NVIDIA.",
+    "speaker": "moomoo.com",
+    "original_who": "Three executives with existing business ties to NVIDIA",
+    "original_day": "",
+    "tier": "party_statement"
+   },
+   {
+    "id": "e5",
+    "quote": "Sharon AI plans to deploy up to 40,000 NVIDIA Grace Blackwell GB300 GPUs, while Firmus is constructing a DSX AI Factory campus in Batam, Indonesia, expected to scale up to 360 megawatts and accommodate up to 170,000 NVIDIA GPUs.",
+    "one_line": "Sharon AI plans to deploy up to 40,000 NVIDIA Grace Blackwell GB300 GPUs; Firmus is constructing a Batam campus planned to reach up to 360 MW and accommodate up to 170,000 NVIDIA GPUs.",
+    "speaker": "moomoo.com",
+    "original_who": "Sharon AI and Firmus",
+    "original_day": "",
+    "tier": "party_statement"
+   },
+   {
+    "id": "e6",
+    "quote": "According to prior reporting by The Information, NVIDIA has also recently been negotiating to provide financial guarantees for OpenAI’s lease of a large data center in Ohio—an asset that, if fully built out at current prices for chips, labor, power, and other materials, could cost as much as $500 billion.",
+    "one_line": "The Information reported that NVIDIA had been negotiating to guarantee OpenAI’s lease of an Ohio data center, whose fully built-out cost could reach $500 billion.",
+    "speaker": "moomoo.com",
+    "original_who": "The Information",
+    "original_day": "",
+    "tier": "rumour"
+   },
+   {
+    "id": "e7",
+    "quote": "To date, NVIDIA has invested several billion dollars in equity stakes in multiple emerging cloud service providers and, in certain cases, agreed to lease back chips from these companies—including CoreWeave and Lambda—in transactions totaling several billion dollars.",
+    "one_line": "NVIDIA has invested several billion dollars in equity stakes in multiple emerging cloud providers and agreed in some cases to lease back chips, including from CoreWeave and Lambda, in transactions totaling several billion dollars.",
+    "speaker": "moomoo.com",
+    "original_who": "The Information",
+    "original_day": "",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e8",
+    "quote": "In September 2024, NVIDIA committed to purchasing all of CoreWeave’s unsold capacity through 2032 if CoreWeave failed to secure tenants, under a contract then valued at $6.3 billion.",
+    "one_line": "In September 2024, NVIDIA committed to purchase CoreWeave’s unsold capacity through 2032 if CoreWeave failed to secure tenants; the contract was then valued at $6.3 billion.",
+    "speaker": "moomoo.com",
+    "original_who": "NVIDIA",
+    "original_day": "",
+    "tier": "fact"
+   },
+   {
+    "id": "e9",
+    "quote": "According to a regulatory filing submitted by NVIDIA in May of this year (covering the quarter ended in April), NVIDIA subsequently added another $3.5 billion to guarantee customer data center leases in exchange for rights to purchase their shares.",
+    "one_line": "NVIDIA’s May 2026 filing, for the quarter ended in April, reported that it had added $3.5 billion of guarantees for customer data-center leases in exchange for rights to purchase the customers’ shares.",
+    "speaker": "moomoo.com",
+    "original_who": "NVIDIA",
+    "original_day": "",
+    "tier": "fact"
+   }
+  ],
+  "B": [
+   {
+    "id": "e1",
+    "quote": "On July 1, according to the technology news outlet The Information, NVIDIA is providing financial guarantees to young cloud service providers that lease or rent its GPUs—if these companies fail to secure enough AI developers to rent their computing capacity, NVIDIA will repurchase their unsold GPU capacity at a pre-agreed price.",
+    "one_line": "The Information reported on 2026-07-01 that NVIDIA was providing financial guarantees to young GPU cloud providers and would repurchase their unsold GPU capacity at a pre-agreed price if they could not secure enough customers.",
+    "speaker": "The Information, as reported by moomoo.com",
+    "original_who": "The Information",
+    "original_day": "2026-07-01",
+    "tier": "rumour"
+   },
+   {
+    "id": "e2",
+    "quote": "In return, NVIDIA will receive a percentage of these cloud providers’ revenue, with the revenue-sharing rate gradually declining over the term of the contract. GPU cloud providers Firmus and Sharon AI have already joined the program, and three executives with existing business ties to NVIDIA confirmed the arrangement.",
+    "one_line": "NVIDIA will receive a share of participating cloud providers’ revenue, with the rate declining over each contract’s term; Firmus and Sharon AI had joined the program, according to three executives with business ties to NVIDIA.",
+    "speaker": "Three executives with existing business ties to NVIDIA, as reported by moomoo.com",
+    "original_who": "Three executives with existing business ties to NVIDIA",
+    "original_day": "2026-07-01",
+    "tier": "rumour"
+   },
+   {
+    "id": "e3",
+    "quote": "On July 1, NVIDIA published a statement on its official website announcing a new business model that combines revenue sharing with credit support, enabling AI cloud providers to procure NVIDIA infrastructure without bearing the full upfront capital expenditure, and allowing them to offer computing services to downstream AI-native enterprises, model developers, and corporate clients.",
+    "one_line": "On 2026-07-01, NVIDIA announced a business model combining revenue sharing with credit support for AI cloud providers procuring NVIDIA infrastructure.",
+    "speaker": "NVIDIA",
+    "original_who": "NVIDIA",
+    "original_day": "2026-07-01",
+    "tier": "fact"
+   },
+   {
+    "id": "e4",
+    "quote": "A NVIDIA spokesperson also confirmed the existence of the program.",
+    "one_line": "A NVIDIA spokesperson confirmed the existence of the AI Compute Partnership program on 2026-07-01.",
+    "speaker": "NVIDIA spokesperson",
+    "original_who": "NVIDIA spokesperson",
+    "original_day": "2026-07-01",
+    "tier": "party_statement"
+   },
+   {
+    "id": "e5",
+    "quote": "Sharon AI plans to deploy up to 40,000 NVIDIA Grace Blackwell GB300 GPUs, while Firmus is constructing a DSX AI Factory campus in Batam, Indonesia, expected to scale up to 360 megawatts and accommodate up to 170,000 NVIDIA GPUs.",
+    "one_line": "Sharon AI plans to deploy up to 40,000 NVIDIA Grace Blackwell GB300 GPUs; Firmus was constructing a DSX AI Factory campus in Batam expected to reach up to 360 MW and accommodate up to 170,000 NVIDIA GPUs.",
+    "speaker": "moomoo.com",
+    "original_who": "",
+    "original_day": "",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e6",
+    "quote": "A data center executive commented on such NVIDIA deals as “killing two birds with one stone.” He explained that if NVIDIA merely provided a guarantee for a data center facility lease, “you’d still face the question of ‘how to finance the GPUs’”; but if NVIDIA commits to purchasing any unsold compute capacity within the facility, “the GPU financing issue is resolved—and so is the data center’s financing problem.”",
+    "one_line": "A data center executive said NVIDIA’s commitment to buy unsold compute capacity could address both GPU financing and data-center financing problems.",
+    "speaker": "A data center executive, as reported by moomoo.com",
+    "original_who": "A data center executive",
+    "original_day": "2026-07-01",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e7",
+    "quote": "According to prior reporting by The Information, NVIDIA has also recently been negotiating to provide financial guarantees for OpenAI’s lease of a large data center in Ohio—an asset that, if fully built out at current prices for chips, labor, power, and other materials, could cost as much as $500 billion.",
+    "one_line": "The Information had reported that NVIDIA was negotiating to guarantee OpenAI’s lease of a large Ohio data center, which could cost up to $500 billion to build out at current prices.",
+    "speaker": "The Information, as reported by moomoo.com",
+    "original_who": "The Information",
+    "original_day": "",
+    "tier": "rumour"
+   },
+   {
+    "id": "e8",
+    "quote": "To date, NVIDIA has invested several billion dollars in equity stakes in multiple emerging cloud service providers and, in certain cases, agreed to lease back chips from these companies—including CoreWeave and Lambda—in transactions totaling several billion dollars.",
+    "one_line": "NVIDIA had invested several billion dollars in equity stakes in multiple emerging cloud providers and agreed in some cases to lease back chips, including from CoreWeave and Lambda, in transactions totaling several billion dollars.",
+    "speaker": "moomoo.com",
+    "original_who": "",
+    "original_day": "",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e9",
+    "quote": "In September 2024, NVIDIA committed to purchasing all of CoreWeave’s unsold capacity through 2032 if CoreWeave failed to secure tenants, under a contract then valued at $6.3 billion.",
+    "one_line": "In September 2024, NVIDIA committed to purchase CoreWeave’s unsold capacity through 2032 if CoreWeave failed to secure tenants; the contract was then valued at $6.3 billion.",
+    "speaker": "moomoo.com",
+    "original_who": "",
+    "original_day": "",
+    "tier": "fact"
+   },
+   {
+    "id": "e10",
+    "quote": "According to a regulatory filing submitted by NVIDIA in May of this year (covering the quarter ended in April), NVIDIA subsequently added another $3.5 billion to guarantee customer data center leases in exchange for rights to purchase their shares.",
+    "one_line": "NVIDIA’s May 2026 regulatory filing, covering the quarter ended in April 2026, reported that NVIDIA added $3.5 billion of guarantees for customer data-center leases in exchange for rights to purchase their shares.",
+    "speaker": "NVIDIA regulatory filing",
+    "original_who": "NVIDIA",
+    "original_day": "",
+    "tier": "fact"
+   }
+  ]
+ }
+}
+
+codex
+{
+  "input_id": "gnews:4d1677af37befd53ca3e7b45",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “On July 1, according to” The Information, but does not state when The Information first reported the arrangement.",
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the article says “three executives with existing business ties to NVIDIA confirmed the arrangement” without naming them.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article gives no day when the revenue-sharing terms were first reported or agreed.",
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the article attributes confirmation of the arrangement to unnamed “three executives with existing business ties to NVIDIA.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the “three executives with existing business ties to NVIDIA” are unnamed.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e5",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The article does not say Sharon AI and Firmus made these statements. It reports that “Sharon AI plans to deploy” and “Firmus is constructing” the campus; the original claimant is not specified for each detail.",
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e6",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "lost condition or hedge",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e7",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The article does not attribute this statement to The Information. It says “NVIDIA has invested” and “agreed to lease back chips”; “According to prior reporting by The Information” appears in the following sentence about researchers using Lambda servers.",
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact — row 2: the article reports completed investments and agreements: “NVIDIA has invested” and “agreed to lease back chips.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e8",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e9",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “On July 1, according to” The Information, but does not state when The Information first reported the arrangement.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “three executives with existing business ties to NVIDIA confirmed the arrangement,” but does not say when they confirmed it.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "noise",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “A NVIDIA spokesperson also confirmed the existence of the program,” but does not say when.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": "e3"
+    },
+    {
+      "id": "e5",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "party_statement — row 3: the company plans and expected capacity are reported in the context of “NVIDIA’s official press release,” rather than as an analyst or expert opinion.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e6",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “A data center executive commented” but does not give the day of the comment.",
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the article identifies the speaker only as “A data center executive.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e7",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "lost condition or hedge",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e8",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact — row 2: the article reports completed investments and agreements: “NVIDIA has invested” and “agreed to lease back chips.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e9",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "NVIDIA is the actor: “NVIDIA committed to purchasing all of CoreWeave’s unsold capacity.”",
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e10",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "A",
+  "fields_better_reason": "A has fewer unsupported original days and avoids the extra duplicate confirmation, although both answers have attribution and tier errors."
+}
+tokens used
+46,367
+{
+  "input_id": "gnews:4d1677af37befd53ca3e7b45",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “On July 1, according to” The Information, but does not state when The Information first reported the arrangement.",
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the article says “three executives with existing business ties to NVIDIA confirmed the arrangement” without naming them.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article gives no day when the revenue-sharing terms were first reported or agreed.",
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the article attributes confirmation of the arrangement to unnamed “three executives with existing business ties to NVIDIA.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the “three executives with existing business ties to NVIDIA” are unnamed.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e5",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The article does not say Sharon AI and Firmus made these statements. It reports that “Sharon AI plans to deploy” and “Firmus is constructing” the campus; the original claimant is not specified for each detail.",
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e6",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "lost condition or hedge",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e7",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The article does not attribute this statement to The Information. It says “NVIDIA has invested” and “agreed to lease back chips”; “According to prior reporting by The Information” appears in the following sentence about researchers using Lambda servers.",
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact — row 2: the article reports completed investments and agreements: “NVIDIA has invested” and “agreed to lease back chips.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e8",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e9",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “On July 1, according to” The Information, but does not state when The Information first reported the arrangement.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “three executives with existing business ties to NVIDIA confirmed the arrangement,” but does not say when they confirmed it.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "noise",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “A NVIDIA spokesperson also confirmed the existence of the program,” but does not say when.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": "e3"
+    },
+    {
+      "id": "e5",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "party_statement — row 3: the company plans and expected capacity are reported in the context of “NVIDIA’s official press release,” rather than as an analyst or expert opinion.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e6",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says “A data center executive commented” but does not give the day of the comment.",
+      "tier_ok": false,
+      "tier_note": "rumour — row 1: the article identifies the speaker only as “A data center executive.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e7",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "lost condition or hedge",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e8",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact — row 2: the article reports completed investments and agreements: “NVIDIA has invested” and “agreed to lease back chips.”",
+      "duplicate_of": null
+    },
+    {
+      "id": "e9",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "NVIDIA is the actor: “NVIDIA committed to purchasing all of CoreWeave’s unsold capacity.”",
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e10",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "A",
+  "fields_better_reason": "A has fewer unsupported original days and avoids the extra duplicate confirmation, although both answers have attribution and tier errors."
+}

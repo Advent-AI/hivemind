@@ -197,6 +197,20 @@ Verify at the point the change touches, at the sharpest level that shows it work
   Before writing a reject sentence, check it cannot remove anything the standard keeps: a missing amount, date or scale
   is never on its own a reason to drop a statement an analyst would note; its weight is judged apart and may be lower
   (D240, Alex: "我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点").
+  Before any prompt change, audit the whole request (system, every category block, the fixed user sentences, every schema
+  description and example) against the standard clause by clause, in both directions, with a blind read-only second
+  reader: each clause is consistent, contradicts, keeps wider, keeps narrower or has no source. Audit the procedure, not
+  only each sentence's source: a rule that decides by another test than the standard's (2026-10-30: "属于四类、清单没拦住就留"
+  against the standard's "分析员会不会记") contradicts it even when every sentence quotes the page. Alex, 2026-10-30:
+  "你需要同时仔细检查prompt和判法准则矛盾的问题，出现很多次了，你应该要做很细的检查".
+- **A test the model must apply to each statement is a check at the very end of the same prompt.** In one pass the model
+  keeps what looks like evidence and cites a rule afterwards; rewording the rule, a reason field before each item and a
+  verdict field after it did not change what it kept (2026-10-30: it marked 95% of its own items "keep"). Asked afterwards
+  it judged correctly, so the test goes after the item, as a check that reads the list back and returns only what passes,
+  in the same call. The check is the standard's own test, then the classes that usually fail it and the boundaries that are
+  no reason to drop, with the standard's own examples, audited clause by clause like any prompt text; a lost entry is
+  judged by a blind reader, since a review that merges repeats keeps a different sentence than the gold's (loop log rows 35–48).
+  Alex, 2026-10-30: "这个完全就是再prompt 的最后面要求做完一遍基于'你刚才说的复核条件'再跑一次；写在同一个提示词里面".
 - **A prompt serves every company, never the bench.** The extraction prompt (and every analyst prompt) is a general
   hedge-fund brain: each rule and example must read the same for a bank, a drug maker, a retailer or a chip maker.
   Examples teach from varied domains; none names the covered company, its products or its numbers, and none is taken
@@ -311,6 +325,12 @@ Verify at the point the change touches, at the sharpest level that shows it work
   replicate or control that only re-measures noise or a settled comparison is not sent, and a fix is not sent before the
   model's own account and the request locate where the decision is made (2026-10-30, after two fixes guessed at the
   evidence rule took four full runs and a one-sentence fix was given two more: "你跑这么多次真的有意义吗"; "我感觉你在为了跑而跑").
+- **A failed arm is diagnosed before the next one.** When an arm fixes its class and regresses another, write the root cause
+  first: the process error (what grew, what the small sample did not guard) and the mechanism, traced to the raw answers and
+  the model's account, never a guess stated as the cause. A small sample guards every class the change can move, not only
+  its own. When a fix keeps moving another class, the call is doing several jobs: move the rule to its owner (a field's
+  definition sits in the schema beside the field) rather than add a sentence (Alex, 2026-10-30: "那你这些修改都是失败的呀，为什么，
+  根因，你要检讨然后再接着尝试。我觉得你已经陷入deep loop 了").
 - **Correct, then cheap.** Make the pipeline right and stable before any cost, speed or throughput work; report cost
   as a baseline only (Alex, 2026-10-25).
 
@@ -324,6 +344,12 @@ Verify at the point the change touches, at the sharpest level that shows it work
   before the item) and is not kept without a number and a specific narrative; new information that changes an answer
   is never missed. Alex, 2026-10-29 (D243):
   "不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过".
+- **A senior analyst's granularity.** A question is a bet an analyst would hold a card for: a big matter, never trivia (a
+  deal, product or project opens one only when its scale can change revenue, profit, cash or credit risk). Small matters
+  open no question, and whether their statements are kept follows the evidence rule; wordings, deadlines, milestones and
+  periods of one bet are one question, and a statement carried by several outlets is one statement. Two questions stay
+  apart only when their answers can move apart and an analyst would bet on each separately (D248). Alex, 2026-10-30:
+  "我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则".
 - **The extraction ruler** is the extraction step's PRD, the page `docs/prd/05-extraction-standard.html` (branch
   `fix/extraction-quality-2026-10-28`), signed by Alex on 2026-10-29 (D243: "其他几条的意见我都ok，sign off"); it
   replaces the first version (D229: "按照这套标准来开始做测量，这条标准不要漂移"). It holds the ledger's three records, the

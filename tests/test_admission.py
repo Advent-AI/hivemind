@@ -132,6 +132,32 @@ def test_v16_states_the_decidable_gate_rule_keeps_v12s_admission_reasons_and_ask
     assert 'by default, evidence' in old_system and old_user.endswith('Return empty arrays when there is nothing to extract.')
 
 
+def test_v58_names_no_condition_for_an_empty_answer_and_v57_keeps_v16s_closing_line():
+    """Noise arm (prompt-standard audit N9, docs/research/2026-10-30-noise/): role-v58's closing line no longer says when to return
+    empty arrays, so the keep rule alone decides; role-v57 (same role text) and every earlier version send the closing line they
+    were sent with."""
+    item = dict(ITEM, text=TEXT, category='T7')
+    _, _, v57_user, _ = extraction.request_for(config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v73.json')), item, TEXT, [], UNIVERSE)
+    _, _, v58_user, _ = extraction.request_for(config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v74.json')), item, TEXT, [], UNIVERSE)
+    assert v57_user.endswith('Return empty arrays only for a page with no business content.')
+    assert 'empty arrays' not in v58_user and v58_user.endswith('(FY2027, or 2026 for a calendar year).')
+    assert v58_user[:v58_user.rindex('year names')] == v57_user[:v57_user.rindex('year names')]
+
+
+def test_from_v59_the_request_ends_with_the_review_check_and_names_no_empty_answer_condition():
+    """AGENTS §6 (2026-10-30, loop log rows 35–39): a test the model must apply to each statement is a check at the very end of the
+    same prompt; from role-v59 the user message ends with prompts/review-v59.txt after the closing line, which no longer says when
+    to return empty arrays. The role text is role-v53's; v53 sends what it was sent with."""
+    item = dict(ITEM, text=TEXT, category='T7')
+    _, v59_system, v59_user, v59_schema = extraction.request_for(config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v75.json')), item, TEXT, [], UNIVERSE)
+    _, v53_system, v53_user, v53_schema = extraction.request_for(config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v69.json')), item, TEXT, [], UNIVERSE)
+    review = open(os.path.join(ROOT, 'src', 'hivemind', 'prompts', 'review-v59.txt'), encoding='utf-8').read().strip()
+    assert v59_user.endswith('(FY2027, or 2026 for a calendar year).\n\n' + review)
+    assert 'empty arrays' not in v59_user and v53_user.endswith('Return empty arrays only for a page with no business content.')
+    assert v59_system == v53_system and v59_schema == v53_schema
+    assert v59_user[:v59_user.rindex('year names')] == v53_user[:v53_user.rindex('year names')]
+
+
 MANDATORY_TEXT = ('CoreWeave proves old GPUs pay\n'
                   'Skip to main content\n'
                   'CoreWeave signed contracts for its A100 GPUs that run into 2029, chief executive Michael Intrator said on the call, and power constraints keep that capacity rented.\n'

@@ -1,0 +1,15 @@
+**仍有严重问题：逐候选核对已经能发现不少误合并和漏题，但“应拒绝”的候选仍缺少明确的验收处理。** 例如，金标要求拒绝一个覆盖名单外的候选，而新版把它开成问题时，计划没有规定这类不一致是否使验收失败。
+
+1. **严重：拒绝结果加入了金标，却没有加入停止条件。** [计划第 113 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:113)增加了“应被规则拒”，但[第 151–159 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:151)没有列出“应拒绝却新开或合并”及其停止条件。v38 的 [match record 29](/Users/lchingen/hivemind/poc/data/english-v38-nvda-1w-2026-10-28/views.sqlite) 中，候选 `n1` 因对象不在覆盖名单被拒；[PRD 06 第 178 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/06-views.md:178)允许这种拒绝。需要让**所有实际结局与金标不一致的情况都有明确处理**，才能说闭集的验收规则完整。
+
+2. **严重：留出集会在连续改动中被反复用于决定下一步。** [计划第 166–167 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:166)将留出集打分放在各次改动的流程里；[第 165、182 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:165)又要求追查每个不一致、回归后再继续。这样后续改动可能已经利用了同一留出集的结果；“每个配置只打一次”不能防止这个问题。[AGENTS 第 256–258 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/AGENTS.md:256)要求在调试集调，测试集用于评分。应在调试集完成迭代后，再对最终配置使用留出集。
+
+3. **重要难例：同一篇文章同时提出两个年度，现有续期路径接不上。** v38 的 [match record 14](/Users/lchingen/hivemind/poc/data/english-v38-nvda-1w-2026-10-28/views.sqlite) 中，`c1` 和 `c2` 分别问同一组云厂商的 2026、2027 年资本开支，两者都判为新开，成为 `v8`、`v9`。[标准第 317 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:317)把同一量的下一期间列为续期；但[代码第 289–293 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/views/matching.py:289)不允许候选续期到同一答案中的另一个候选。H2 讨论的是事件截止日，H1–H7 没有覆盖这个同篇年度接续的情形。G1 应明确标出这对的预期关系，并核对实际是否记录了该关系。
+
+4. **事实错误：M4 把续期归因于碰撞裁决，证据不足。** [计划第 82 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:82)说裁决判“下一期”，代码因此续期。但 v38 的 [match record 24](/Users/lchingen/hivemind/poc/data/english-v38-nvda-1w-2026-10-28/views.sqlite)显示 Jev 自己也判了 `same_quantity_other_period`；[代码第 284–297 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/views/jev_matching.py:284)在碰撞裁决前就可据此选续期，后面的裁决只保留了该结果。这个案例证明发生了续期，不能单独证明碰撞裁决造成了续期。
+
+第 4 轮的结构规则**已补上**所指出的续期题、续期证据和到期后测试缺口；它也能在候选进入 G1 时发现错误合并和必需题丢失。上面的拒绝结局说明它还不能声称覆盖所有结局。两臂共同存在的绝对归档损失按要求留给 D212 审计。
+
+核对过的主要事实包括：两本账的候选、合并和续期总数与[普查输出](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/census/admission-census.txt:1)一致；“担保和融资”确在[签字标准第 318 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:318)和碰撞提示词中，计划也已正确说明其是否导致 ACP 拆题尚未证明。H1–H7 的主要边界现已标为选择，H7 的倾向与 [D204](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2612)一致。裁决类别数仍依赖解析理由文字；我没有逐条验证全部归档裁决、费用估算和计划中的每一项事实。没有编辑文件。
+
+**有严重问题仍需修正。**

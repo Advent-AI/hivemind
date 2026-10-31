@@ -1,0 +1,22 @@
+Read-only review of a plan. Repository: the current directory (branch fix/extraction-quality-2026-10-28).
+
+The plan: docs/research/2026-10-30-question-identity/plan.md (Chinese). It proposes how to stop duplicate and trivial questions ("theses") from being opened, how to decide when two questions are the same, how to dedupe evidence, the gold sets and the measurement.
+
+Governing documents:
+- docs/prd/05-extraction-standard.html (the signed standard; section 3 question types, section 4 opening tests and "同一题、续期，还是另一题")
+- docs/DECISIONS.md, especially D184-D190, D197, D201-D204, D207-D211, D236, D238, D243
+- AGENTS.md (working rules: diagnose, design tables, gold, measurement)
+- src/hivemind/views/jev_matching.py, src/hivemind/views/matching.py, src/hivemind/views/identity.py, src/hivemind/prompts/collision-v1.txt
+- The census scripts and outputs in docs/research/2026-10-30-question-identity/census/
+- The earlier quality review at /Users/lchingen/hivemind-admission-v12-2026-10-26/docs/research/2026-10-28-quality-review/report.md and gold-admission.md (read them; they are outside this repo)
+
+Check, and report each finding with the plan line and the source line you read:
+1. Every factual claim in the plan (numbers, quotes, which decision says what, what the code does) against its source. Say which you verified and which are wrong.
+2. Every "lean" (我的倾向) in section 4: does it contradict a recorded decision or the signed standard without naming it? Does the plan state anything as already in the standard that the standard does not hold?
+3. Section 2/3 mechanisms: is any mechanism mis-traced (e.g., the claim that the collision prompt's "a guarantee beside a financing" sentence is what split the ACP questions; the claim that the signed standard section 4 contains that sentence and conflicts with D210)?
+4. Hard cases visible in the stored ledgers (/Users/lchingen/hivemind/poc/data/sealed-2026-10-28-v34-nvda-3m-through-0828/views.sqlite and english-v38-nvda-1w-2026-10-28/views.sqlite, open read-only with sqlite3 "file:...?mode=ro") that H1-H7 do not cover.
+5. Measurement (sections 5-8): can it detect a false merge and a lost required question? Anything that would let a regression pass?
+
+Out of scope: extraction record fields (speaker, original day, tier), the UI, cost optimisation, anything not about question identity, question opening granularity or evidence dedup. Do not propose new mechanisms beyond what is needed to answer the five checks. Do not edit files. Be concise: findings ranked by severity, each with evidence.
+
+This is round 3. Round 1: review-1.txt. Round 2: review-2.txt (on the revised plan) and review-2-interrupted.txt (an earlier run on the older draft). Plan section 12 says how each finding was handled. Check that each fix holds against the sources, and report only what is still wrong or newly wrong, serious first. A finding that only asks for different wording is labelled wording-level. End with one line: whether any serious finding remains.

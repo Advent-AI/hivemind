@@ -1,0 +1,429 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18b48-6cff-7ee1-be1c-cb4c2dec5919
+--------
+user
+You are an independent reader. You are a hedge-fund analyst who covers NVIDIA and the AI-infrastructure themes around it. You did not write the extraction prompt and you have not seen any score. You may read files; do not open any file whose name contains "key", and do not open other packets.
+
+The product: every article goes through an extraction step that writes evidence records (a verbatim quote plus fields) into the analyst's ledger. Downstream, a model judges open research questions using only these records, and a matcher compares new records with old ones. The matcher and the judge read `original_who` (who originally said or did it) and `original_day` (the day it was originally said or done) to tell old news from new and to tell one source repeated by many outlets from several independent sources. So a wrong original speaker or day misleads them; a noise record wastes the judge's attention.
+
+Reference: /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html, the signed standard the product follows. Read sections 5.3, 5.4 and 5.5 before the packet. Use it for definitions:
+- who (5.4): the original claimant; whether it is their own estimate or someone else's measurement.
+- original statement day (5.4): when unknown, written as unknown, never the report day.
+- tier (5.5): the table of five rows (an upper row wins when two apply).
+
+The packet: docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_d1364ee37c17c361ae74f563.json. It holds the article text as the model saw it, its publication_day, publisher and category, and two answers, A and B, from two different versions of the extraction (the order is random). Each answer is the list of records production keeps.
+
+Read the whole article first. Then judge every record of A and then every record of B on its own, against the article. Write your verdict as JSON only (no prose before or after), in this shape:
+
+{
+ "input_id": "...",
+ "A": [
+  {"id": "e1",
+   "worth": "keep" | "marginal" | "noise",
+   "one_line_ok": true | false,
+   "one_line_problem": null | "number/unit, lost condition or hedge, forecast written as done, wrong period, lost who said it, says more than the quote",
+   "who_ok": true | false,
+   "who_note": null | "the right original speaker, as the article gives it, and why",
+   "day_ok": true | false,
+   "day_note": null | "the day the statement was first made or the action taken, as the article gives it; unknown when the article does not say",
+   "tier_ok": true | false,
+   "tier_note": null | "the right tier: fact / party_statement / third_party_view / rumour, and the row of 5.5",
+   "duplicate_of": null | "e#"}
+ ],
+ "B": [ same shape ],
+ "fields_better": "A" | "B" | "same",
+ "fields_better_reason": "one sentence"
+}
+
+Rules for you:
+- Be literal; quote the article in your notes. Judge each field against what the article says, not against the other answer.
+- speaker is who says it in this item; judge it only when it is plainly wrong. original_who and original_day are the fields that matter most.
+- A day is wrong when the record gives the report day for something said or done earlier, a day the article does not support, or leaves empty a day the article states. A month alone is not a day: an empty day is right when the article gives only a month.
+- Check every number in one_line against the quote.
+- An answer that is null was unusable; write [] for it.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'from pathlib import Path
+from bs4 import BeautifulSoup
+p=Path(\"/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html\")
+s=BeautifulSoup(p.read_text(), \"html.parser\")
+for h in s.find_all([\"h1\",\"h2\",\"h3\",\"h4\",\"h5\"]):
+ t=h.get_text(\" \",strip=True)
+ if any(x in t for x in (\"5.3\", \"5.4\", \"5.5\")):
+  print(\"\\n###\",t)
+  for e in h.next_siblings:
+   if getattr(e,\"name\",None) in [\"h1\",\"h2\",\"h3\",\"h4\",\"h5\"]: break
+   if getattr(e,\"get_text\",None): print(e.get_text(\" \",strip=True))'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 1374ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-drrvyZpn' (errno=Operation not permitted)
+2026-10-30 13:29:09.870 xcodebuild[31423:17157778]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:29:09.988 xcodebuild[31423:17157759] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-LJBe0x6E' (errno=Operation not permitted)
+2026-10-30 13:29:10.319 xcodebuild[31442:17157823]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:29:10.434 xcodebuild[31442:17157822] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+
+### 5.3 不留的 第 1 版 §2 的清单，加 D238、D243 的行
+
+"按同一行补的例子"一列是我按同一行举的例子。
+
+不留 第 1 版的例子 按同一行补的例子 边界 没有业务规模的产品、游戏、驱动、跑分细节 "这张卡 415W"；"Geekbench 跑分" 接口、功率、旧型号的支持周期 对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类） 股价涨跌、投资人仓位、技术面 "本月跌 13%"；"Burry 做空" 期权成交、基金买卖 股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选 第 1 版 §10.2 ；在研公司的估值倍数、市值、孤零零的目标价可选 D243 第 4 条 ；别的股价涨跌照旧不留 作者的一般性风险清单和没有推导的看法 "如果 AI 退潮会受伤" "这只股票该持有"；"芯片指数是纯粹的高估" 有假设、有推导、有时点的条件估值要留 第 1 版 §10.1 记者的背景和框架 "A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它" "公司成立于 1998 年"；通用的技术讲解 没有数字和具体叙事的主张和背景不收；怎么分见 5.1 D243 第 5 条 没有数字也没有决定的政治、战略表态 "分散供应商不能减少政治依赖" 大使馆说"立场一贯" 官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类） 同一事实的复述 一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个 标题和正文说同一件事 已知事实的重述 两个月后再说一遍 Q1 收入、指引、已公布的回购 抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提 D243 第 6 条 模板 署名、作者简介、经纪商页脚、前瞻性声明、广告 页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题） 只有形容的引语 "a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子） D243 第 10 条 新加坡转运案件的概况和被告个人资产 可选，收不收都不扣分 D231
+
+另外一条来自后来的决定： 和公司所有市场都无关的别家公司的估值、股价、交易 不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。
+
+不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。
+
+
+### 5.4 一条记录必须保住的意思 第 1 版 §3，原样
+
+六格里只填这一条用得上的 D220 。
+
+格 要保住 丢了就错的例子 谁 原始判断者；是本人估计还是别人实测 AMD 自己的模拟说成独立实测 什么 业务、指标或动作 "收入增长 82%"丢了"收入" 多少 金额、比例、数量 四家 7450 亿写成五家 哪个期间 预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对 D233 ，余下时间不改成全年 "今年余下时间"改成 FY2027 全年 什么条件 推导的假设；计划、上限、"最多" "最多 4 万颗"写成已部署 4 万颗 预测还是已发生 指引、预计、商谈、传闻不等于已实现、已签约 "商谈 6000 亿"写成"已承诺"
+
+原始发言日不知道就写不知道，不能填报道日 D220 。一条记录单独读要能懂，条件不能只放在旁边另一条里 第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227 。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分， 编造了仍算记录错误 第 1 版 §3 。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实 D218 。
+
+边界 第 1 版 §2 ：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度 Alex 判 10 。
+
+
+### 5.5 来源层 PRD 06 的四层；D238 采纳的 role-v29 原文
+
+PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。
+
+role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."
+
+这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行 D243 第 9 条 。
+
+说的是什么 层 1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数） 传闻 2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处） 事实 3. 公司的指引、管理层的表态、官员的讲话 当事人陈述 4. 分析师、媒体、专家的看法和估计 第三方观点 5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"） 传闻
+
+一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事 D243 第 9 条 。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下 D202、D204 ；判断时只有事实能确定到期落在哪一档 PRD 06 。
+
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_d1364ee37c17c361ae74f563.json' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+{
+ "input_id": "gnews:d1364ee37c17c361ae74f563",
+ "title": "Nvidia taps AI cloud providers to expand compute access for startups",
+ "publication_day": "2026-07-02",
+ "publisher": "cnbc.com",
+ "publisher_type": "media",
+ "category": "T7",
+ "text": "Two initial partners are offering potential access to more than 200,000 GPUs, including via an upcoming data center in Batam, Indonesia.\nChipmaker Nvidia is expanding its support for fast-growing AI startups by introducing a partnership program that leverages its network of AI cloud service providers to offer these firms access to critical computing infrastructure, the company said Thursday.\nCloud-based AI firms, model builders and other enterprises will share both product and cloud revenue with Nvidia, which is positioning itself as an intermediary helping startups gain direct access to full-stack computing powered by Nvidia chips.\nIn its announcement, Nvidia named two initial Australian firms that will provide the compute power for the scheme.\nSharon AI will deploy up to 40,000 Nvidia GPUs, while AI infrastructure company Firmus Technologies says it is building a data center in Batam, Indonesia, which is expected to scale to 360 megawatts and house up to 170,000 Nvidia GPUs.\nNvidia's move illustrates the critical importance of access to scarce compute power for AI-oriented startups, with GPUs likened to oil and even reportedly tied to futures contracts as users grapple with fluctuations in cost and issues around availability.\nMeanwhile, AI firms have increasingly entered into revenue and equity-sharing agreements with chipmakers in order to circumvent liquidity issues afflicting the sector.\nOpenAI has inked a number of deals that have seen it buy shares or entertain investments from partners including Amazon and AMD , CNBC reported in January.\nNvidia earlier this month said it was aiming to raise debt, which sources said could amount to at least $20 billion. The firm intends to use the proceeds from the offering for general corporate purposes, including repayment and refinancing of existing debt.\nCorrection: The story has been updated to clarify the services Nvidia is providing and to which customers. A previous version was corrected to show Firmus Technologies is based in Australia.",
+ "answers": {
+  "A": [
+   {
+    "id": "e1",
+    "quote": "Chipmaker Nvidia is expanding its support for fast-growing AI startups by introducing a partnership program that leverages its network of AI cloud service providers to offer these firms access to critical computing infrastructure, the company said Thursday.",
+    "one_line": "Nvidia said on July 2, 2026, that it was introducing a partnership program using AI cloud service providers to give AI startups access to computing infrastructure.",
+    "speaker": "Nvidia",
+    "original_who": "Nvidia",
+    "original_day": "2026-07-02",
+    "tier": "party_statement"
+   },
+   {
+    "id": "e2",
+    "quote": "Cloud-based AI firms, model builders and other enterprises will share both product and cloud revenue with Nvidia, which is positioning itself as an intermediary helping startups gain direct access to full-stack computing powered by Nvidia chips.",
+    "one_line": "Under the program, cloud-based AI firms, model builders and other enterprises will share product and cloud revenue with Nvidia; no amount or period was specified.",
+    "speaker": "CNBC",
+    "original_who": "",
+    "original_day": "",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e3",
+    "quote": "Sharon AI will deploy up to 40,000 Nvidia GPUs, while AI infrastructure company Firmus Technologies says it is building a data center in Batam, Indonesia, which is expected to scale to 360 megawatts and house up to 170,000 Nvidia GPUs.",
+    "one_line": "Nvidia named Sharon AI as a partner that will deploy up to 40,000 Nvidia GPUs; Firmus Technologies said it is building a Batam data center expected to reach 360 MW and house up to 170,000 Nvidia GPUs.",
+    "speaker": "Nvidia and Firmus Technologies, as reported by CNBC",
+    "original_who": "Nvidia and Firmus Technologies",
+    "original_day": "2026-07-02",
+    "tier": "party_statement"
+   },
+   {
+    "id": "e4",
+    "quote": "Nvidia earlier this month said it was aiming to raise debt, which sources said could amount to at least $20 billion.",
+    "one_line": "Nvidia said earlier in June 2026 that it aimed to raise debt; unnamed sources said the amount could be at least $20 billion.",
+    "speaker": "Nvidia; unnamed sources for the estimated amount, as reported by CNBC",
+    "original_who": "Nvidia and unnamed sources",
+    "original_day": "",
+    "tier": "rumour"
+   }
+  ],
+  "B": [
+   {
+    "id": "e1",
+    "quote": "Chipmaker Nvidia is expanding its support for fast-growing AI startups by introducing a partnership program that leverages its network of AI cloud service providers to offer these firms access to critical computing infrastructure, the company said Thursday.",
+    "one_line": "Nvidia said it was introducing a partnership program using its AI cloud service provider network to give AI startups access to computing infrastructure.",
+    "speaker": "CNBC",
+    "original_who": "Nvidia",
+    "original_day": "2026-07-02",
+    "tier": "party_statement"
+   },
+   {
+    "id": "e2",
+    "quote": "Cloud-based AI firms, model builders and other enterprises will share both product and cloud revenue with Nvidia, which is positioning itself as an intermediary helping startups gain direct access to full-stack computing powered by Nvidia chips.",
+    "one_line": "Under the program, participating cloud-based AI firms, model builders and other enterprises will share product and cloud revenue with Nvidia.",
+    "speaker": "CNBC",
+    "original_who": "Nvidia",
+    "original_day": "2026-07-02",
+    "tier": "party_statement"
+   },
+   {
+    "id": "e3",
+    "quote": "In its announcement, Nvidia named two initial Australian firms that will provide the compute power for the scheme.\nSharon AI will deploy up to 40,000 Nvidia GPUs, while AI infrastructure company Firmus Technologies says it is building a data center in Batam, Indonesia, which is expected to scale to 360 megawatts and house up to 170,000 Nvidia GPUs.",
+    "one_line": "Sharon AI will deploy up to 40,000 Nvidia GPUs for the program.",
+    "speaker": "CNBC",
+    "original_who": "Sharon AI",
+    "original_day": "2026-07-02",
+    "tier": "fact"
+   },
+   {
+    "id": "e5",
+    "quote": "Nvidia earlier this month said it was aiming to raise debt, which sources said could amount to at least $20 billion. The firm intends to use the proceeds from the offering for general corporate purposes, including repayment and refinancing of existing debt.",
+    "one_line": "Nvidia said earlier in July that it aimed to raise debt; unnamed sources said the offering could amount to at least $20 billion, with proceeds intended for general corporate purposes including debt repayment and refinancing.",
+    "speaker": "CNBC",
+    "original_who": "Nvidia and unnamed sources",
+    "original_day": "",
+    "tier": "rumour"
+   }
+  ]
+ }
+}
+
+codex
+{
+  "input_id": "gnews:d1364ee37c17c361ae74f563",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact: row 2. The article reports Nvidia introducing the program: 'the company said Thursday.'",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "rumour: row 5. The article says firms 'will share both product and cloud revenue with Nvidia' but does not attribute that claim.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "Firmus Technologies is the stated claimant for its data center: 'Firmus Technologies says it is building.' The article says Nvidia named the two firms, but does not say who made the 40,000-GPU claim.",
+      "day_ok": false,
+      "day_note": "Unknown for the Firmus statement and the 40,000-GPU claim. The article gives no original day for either; the report day does not establish it.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "wrong period",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact: row 2. The article reports Nvidia introducing the program: 'the company said Thursday.'",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "Unknown. The article says firms 'will share both product and cloud revenue with Nvidia' but does not say Nvidia made that claim.",
+      "day_ok": false,
+      "day_note": "Unknown. The article does not say when the revenue-sharing claim was first made.",
+      "tier_ok": false,
+      "tier_note": "rumour: row 5. The revenue-sharing claim is unattributed in the article.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "Unknown. The article says 'Sharon AI will deploy up to 40,000 Nvidia GPUs' but does not say Sharon AI made that statement.",
+      "day_ok": false,
+      "day_note": "Unknown. The article does not give the original day of the 40,000-GPU claim.",
+      "tier_ok": false,
+      "tier_note": "rumour: row 5. The article does not attribute the 40,000-GPU deployment claim.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e5",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "A",
+  "fields_better_reason": "A has an incorrect original speaker and day on its combined GPU record, while B also assigns unsupported speakers and report days to the revenue-sharing and Sharon AI claims."
+}
+tokens used
+22,736
+{
+  "input_id": "gnews:d1364ee37c17c361ae74f563",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact: row 2. The article reports Nvidia introducing the program: 'the company said Thursday.'",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "rumour: row 5. The article says firms 'will share both product and cloud revenue with Nvidia' but does not attribute that claim.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "Firmus Technologies is the stated claimant for its data center: 'Firmus Technologies says it is building.' The article says Nvidia named the two firms, but does not say who made the 40,000-GPU claim.",
+      "day_ok": false,
+      "day_note": "Unknown for the Firmus statement and the 40,000-GPU claim. The article gives no original day for either; the report day does not establish it.",
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "wrong period",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact: row 2. The article reports Nvidia introducing the program: 'the company said Thursday.'",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "Unknown. The article says firms 'will share both product and cloud revenue with Nvidia' but does not say Nvidia made that claim.",
+      "day_ok": false,
+      "day_note": "Unknown. The article does not say when the revenue-sharing claim was first made.",
+      "tier_ok": false,
+      "tier_note": "rumour: row 5. The revenue-sharing claim is unattributed in the article.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "Unknown. The article says 'Sharon AI will deploy up to 40,000 Nvidia GPUs' but does not say Sharon AI made that statement.",
+      "day_ok": false,
+      "day_note": "Unknown. The article does not give the original day of the 40,000-GPU claim.",
+      "tier_ok": false,
+      "tier_note": "rumour: row 5. The article does not attribute the 40,000-GPU deployment claim.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e5",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "A",
+  "fields_better_reason": "A has an incorrect original speaker and day on its combined GPU record, while B also assigns unsupported speakers and report days to the revenue-sharing and Sharon AI claims."
+}

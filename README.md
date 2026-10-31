@@ -4,7 +4,7 @@ Hivemind reads a stream of information as a hedge-fund analyst would: it identif
 
 This repository rebuilds the earlier system in `../tn-hivemind`. This branch, `fix/extraction-quality-2026-10-28`, holds the extraction work: the step's standard, its golden set and the extraction prompts. The service, the UI and the served data are documented on `main`. [Current state](docs/CURRENT_STATE.md) records this branch's measured results, open defects and next task. The pipeline runs end to end; it has not passed product acceptance.
 
-**Which code is the latest (2026-10-30).** The newest pipeline code is this branch, `fix/extraction-quality-2026-10-28`, stacked on `feat/thesis-admission-v12` and `feat/parallel-day` (25 commits `main` does not have; all three pushed, none merged). Its replay default is `poc/config/poc-v67.json` (extraction role-v51, D246). `main` holds the newest service, UI and Idea code (3 commits this branch does not have) and still replays `poc-v23` (extraction v10). Merging the two is open work, listed in the [current state](docs/CURRENT_STATE.md); the next steps, principles and criteria are in the [handoff plan](docs/research/2026-10-29-ledger-standard/handoff-plan-2026-10-30.md).
+**Which code is the latest (2026-10-30).** The newest pipeline code is this branch, `fix/extraction-quality-2026-10-28`, stacked on `feat/thesis-admission-v12` and `feat/parallel-day` (25 commits `main` does not have; all three pushed, none merged). Its replay default is `poc/config/poc-v69.json` (extraction role-v53, D247). `main` holds the newest service, UI and Idea code (3 commits this branch does not have) and still replays `poc-v23` (extraction v10). Merging the two is open work, listed in the [current state](docs/CURRENT_STATE.md); the next steps, principles and criteria are in the [handoff plan](docs/research/2026-10-29-ledger-standard/handoff-plan-2026-10-30.md).
 
 ## The extraction standard
 
@@ -74,7 +74,7 @@ Then open <http://localhost:8000/docs/system-design.html>. Serving the repositor
 
 ## Run the pipeline
 
-Replay the item window into a new ledger with the default configuration (`poc/config/poc-v67.json`: extraction role-v51 on `gpt-6-luna` (D246), placement under the one-home rule, a statement no question takes dropped as `no home` (D207, D209); matching on Jev with the collision judge (D190); judging with the theme block (D195) and the evidence in view (D198)). Credentials are read from `~/.config/hivemind/credentials.json`, never from the repository. Before any paid run, replay the stored answers through the current checks at no cost:
+Replay the item window into a new ledger with the default configuration (`poc/config/poc-v69.json`: extraction role-v53 on `gpt-6-luna` (D247), the attribution fields defined in the schema, placement under the one-home rule, a statement no question takes dropped as `no home` (D207, D209); matching on Jev with the collision judge (D190); judging with the theme block (D195) and the evidence in view (D198)). Credentials are read from `~/.config/hivemind/credentials.json`, never from the repository. Before any paid run, replay the stored answers through the current checks at no cost:
 
 ```sh
 python3 scripts/preflight.py --archive <an archive> --views <ledgers> --items <items database>   # $0, before any paid run

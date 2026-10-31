@@ -1,0 +1,1191 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18d45-01f6-7493-aae3-c4266cda6271
+--------
+user
+Read-only drift review of a standard page. Repository: the current directory (branch fix/extraction-quality-2026-10-28).
+
+The page docs/prd/05-extraction-standard.html was revised from version 3 to version 4; this is drift review round 2 (round 1: drift-1.txt, six findings, each fixed on the page). Check the fixes hold and report only what is still wrong or newly wrong. The version-3 copy before the edit is at /private/tmp/claude-501/-Users-lchingen-hivemind/2791813d-baf1-4169-80c4-f9757a10afa7/scratchpad/05-extraction-standard.v3.html; diff the two first.
+
+The only authority for the revision is decision D248 in docs/DECISIONS.md (Alex's seven answers and his granularity principle, quoted there) and the plan section 11b in docs/research/2026-10-30-question-identity/plan.md that records each question as put to him. AGENTS.md section 8 says the page changes only through a recorded decision in Alex's words, and section 7.1 asks for a review that finds unsourced rules, contradictions and misquotes.
+
+Check, with the page line and the source line for each finding:
+1. Every added or changed sentence: does D248 (or a decision it cites) say it? Flag any rule, example or weight the page now holds that D248 does not.
+2. Does any changed sentence contradict another sentence still on the page (for example the question types table, the opening tests, the evidence rules, the conflicts table, the gold section)? List each contradiction.
+3. Are Alex's quotes exact?
+4. Anything D248 decided that the page does not carry.
+
+Out of scope: the plan's measurement design, code, prompts, and anything D248 did not touch. Do not edit files. Findings ranked by severity; end with one line saying whether any serious finding remains.
+
+codex
+I’ll compare version 4 with version 3 first, then check the changes and the six earlier findings against D248 and the questions Alex answered.
+exec
+/opt/homebrew/bin/zsh -lc 'diff -u /private/tmp/claude-501/-Users-lchingen-hivemind/2791813d-baf1-4169-80c4-f9757a10afa7/scratchpad/05-extraction-standard.v3.html docs/prd/05-extraction-standard.html' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ exited 1 in 0ms:
+--- /private/tmp/claude-501/-Users-lchingen-hivemind/2791813d-baf1-4169-80c4-f9757a10afa7/scratchpad/05-extraction-standard.v3.html	2026-10-30 22:42:07
++++ docs/prd/05-extraction-standard.html	2026-10-30 22:43:53
+@@ -1,5 +1,5 @@
+ <meta charset="utf-8">
+-<meta name="standard-version" content="3">
++<meta name="standard-version" content="4">
+ <title>Hivemind 抽取与开题标准</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+@@ -141,9 +141,9 @@
+ 
+ <main>
+ <header class="top">
+-  <div class="eyebrow">Hivemind · 抽取这一步的 PRD · 第 3 版（已签）</div>
++  <div class="eyebrow">Hivemind · 抽取这一步的 PRD · 第 4 版（第 3 版已签；D248 按 Alex 逐个选的七条修订）</div>
+   <h1>抽取与开题标准</h1>
+-  <div class="status ok"><span class="pill ok">已签</span><div><b>生效。</b>2026-10-29 Alex 拍了 12 条（D243）。这一页取代第 1 版（<span class="path">docs/research/2026-10-29-analyst-standard/standard.md</span>，D229），是抽取这一步唯一的尺子：提示词、金标、回归测量都从它推出。改它要先在 <span class="path">docs/DECISIONS.md</span> 记下 Alex 的原话，再改这一页，再做一次只读的漂移检查。</div></div>
++  <div class="status ok"><span class="pill ok">已签</span><div><b>生效。</b>2026-10-29 Alex 拍了 12 条（D243）；2026-10-30 他逐个选了颗粒度的七条（D248，见"已拍"一节），改了第 2、3、4 节，升为第 4 版。这一页取代第 1 版（<span class="path">docs/research/2026-10-29-analyst-standard/standard.md</span>，D229），是抽取这一步唯一的尺子：提示词、金标、回归测量都从它推出。改它要先在 <span class="path">docs/DECISIONS.md</span> 记下 Alex 的原话，再改这一页，再做一次只读的漂移检查。</div></div>
+   <div class="meta"><span>2026-10-29 · D241、D242、D243</span><span>分支 fix/extraction-quality-2026-10-28</span><span>起草过程和校验：<span class="path">docs/research/2026-10-29-ledger-standard/</span></span></div>
+   <p style="margin:0">读法：每条规则后面的灰色小字是它的出处。标了出处的例子是判例或原文里的例子；没标的是按那条规则举的，帮助理解，不是判例。没有出处的只有"我定的记录约定"。</p>
+ </header>
+@@ -204,6 +204,21 @@
+ <tr><td>12</td><td>达标线里"垃圾"一项（每篇留下的无关陈述）用定稿金标重算，Luna 基线也重算</td><td class="nowrap">第 9.2 节</td></tr>
+ </tbody></table></div>
+ 
++<h3 id="d248">D248：颗粒度的七条（2026-10-30）</h3>
++<p>Alex 逐个听了例子、逐个选的，七个都选 A；改了第 2、3、4 节，标准升为第 4 版，金标的开题部分要按第 4 版重推（D244）。</p>
++<blockquote><p>原则，Alex 原话："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</p></blockquote>
++<div class="table-wrap mid"><table>
++<thead><tr><th>#</th><th>定下的</th><th>在哪一节</th></tr></thead>
++<tbody>
++<tr><td>1</td><td>同一个计划的几种说法，最后核对同一个数的，是一题；各自会变、会分别盯的数才分开；属于已按金额开题的计划的一笔交易并进去</td><td class="nowrap">第 4 节</td></tr>
++<tr><td>2</td><td>同一件事的不同截止日：早的那题开着时，晚的截止日是它的证据；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上证据，不等新文章</td><td class="nowrap">第 4 节</td></tr>
++<tr><td>3</td><td>同一代产品的几个里程碑：一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题</td><td class="nowrap">第 4 节</td></tr>
++<tr><td>4</td><td>公司自己的量只按财年开题；按日历年的估计是财年那题的证据</td><td class="nowrap">第 4 节</td></tr>
++<tr><td>5</td><td>事件和政策题里模型写的期间起点，不拿来挡合并</td><td class="nowrap">第 4 节</td></tr>
++<tr><td>6</td><td>规模要大到能改变公司的收入、利润、现金或信用风险才开题；够不上的不开题，它的陈述留不留照第 5 节判，留下的是证据</td><td class="nowrap">第 3 节 C 类、第 4 节</td></tr>
++<tr><td>7</td><td>原始说话人、原始日期、数字都相同的几条证据，代码认作一条，判断时只给看一次、写明几家报道，每条照存；不知道的说话人或日期不算相同</td><td class="nowrap">第 2 节</td></tr>
++</tbody></table></div>
++
+ <h3 id="conventions">我定的记录约定</h3>
+ <p>只定怎么记，不改变留不留、开不开。</p>
+ <ul>
+@@ -234,7 +249,7 @@
+ 
+ <h2 id="ledger"><span class="num">2</span>账本里记三种东西</h2>
+ <ol class="steps">
+-<li><b>证据</b>一条记录一个陈述，一件事用几句话说仍是一条<span class="src">第 1 版 §2；Alex 判 11</span>。记逐字引文、能单独读懂的一句话摘要、说话人、原始说话人和原始日期（不知道就写不知道，不填报道日<span class="src">D220</span>）、来源层。同一条证据可以挂到几个问题上，推力写在挂接上<span class="src">PRD 06</span>。每一条进来的证据都单独存下；和已有证据的关系（同一说法、修订）由匹配标出，作为意见，两条都留着<span class="src">D202、D204</span>。</li>
++<li><b>证据</b>一条记录一个陈述，一件事用几句话说仍是一条<span class="src">第 1 版 §2；Alex 判 11</span>。记逐字引文、能单独读懂的一句话摘要、说话人、原始说话人和原始日期（不知道就写不知道，不填报道日<span class="src">D220</span>）、来源层。同一条证据可以挂到几个问题上，推力写在挂接上<span class="src">PRD 06</span>。每一条进来的证据都单独存下；和已有证据的关系（同一说法、修订）由匹配标出，作为意见，两条都留着<span class="src">D202、D204</span>。原始说话人、原始日期、数字都相同的几条（说话人或日期不知道的不算相同），由代码认作同一条：判断时只给看一次，写明几家报道，每条仍照存<span class="src">D248 第 7 条；改 D204 的"两条都给判断看"</span>。这条在打开之前要先量两件事：它会不会藏掉不同或更丰富的说法（比如多一句限定），它依赖的原始说话人、原始日期两个字段准不准；量完之前，照 D204 两条都给判断看。</li>
+ <li><b>问题</b>问题句、结果档、到期日写下不改；当前判断随证据更新，到期定格<span class="src">PRD 06</span>。问题分标的和主题，按开题理由分五类（第 3 节）。问题从三处来：文章里的候选问题；用户的备忘录<span class="src">PRD 06 State</span>："A thesis from the user's memo is not yet judged until evidence first links to it"；分析员开始覆盖一家公司时种下的驱动问题<span class="src">D208，设计未建</span>。</li>
+ <li><b>研究组</b>一件正在进行的事（一个产品换代及其部署、一笔融资或收购、一个政策过程、一轮投资或需求周期），把几个问题组织在一起，常常跨公司。它不是问题，也不代替开题判断。公司自己的报表行（收入、毛利率、费用、税率、资本开支）不带研究组，除非这一行本身就在追这样一件事；它也可以加入别的问题建的组<span class="src">D165</span>。</li>
+ </ol>
+@@ -246,8 +261,8 @@
+ <thead><tr><th>类</th><th>开题理由</th><th>标的或主题</th><th>问什么</th><th>量还是事件</th><th>期间和到期</th><th>核对材料 <code>settled_by</code></th><th>出处</th></tr></thead>
+ <tbody>
+ <tr><td class="nowrap"><b>A</b> 主驱动量</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那个年度量，不管公司指不指引：撑起业务的分部收入、毛利率、资本开支；跨行业如银行的净利息收入、零售商的同店销售、公用事业的费率基数、航空公司的燃油成本（当它是争论焦点时）。不是每一行报表数</td><td>量，五档</td><td>公司财年的今年或明年；到期日是这个数的发布日</td><td>公布这个数的公开材料，通常是年报</td><td>D184：<code>settled_by</code> 是 "the public material that resolves it"；PRD 06 梯子第 5 条</td></tr>
+-<tr><td class="nowrap"><b>B</b> 主产品节点</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那一代产品哪天发布或开始出货</td><td>事件，五档，或是非两档<span class="src">PRD 06 梯子第 1 条</span></td><td>能判出结果的那天</td><td>公司公告、发货确认</td><td>D236</td></tr>
+-<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
++<tr><td class="nowrap"><b>B</b> 主产品节点</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那一代产品哪天走到能带来收入的那一步（通常是开始出货）；发布、送样是它的证据，只有会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span></td><td>事件，五档，或是非两档<span class="src">PRD 06 梯子第 1 条</span></td><td>能判出结果的那天</td><td>公司公告、发货确认</td><td>D236</td></tr>
++<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。规模要大到能改变公司的收入、利润、现金或信用风险才开；够不上的单笔入股、收购、租约、授信不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+ <tr><td class="nowrap"><b>D</b> 共同量</td><td><code>shared_quantity</code><span class="src">D191、D243 第 2 条</span>；现行提示词和代码还叫 <code>industry_aggregate</code>，按这一页改</td><td>主题</td><td>任何一家公司之外、好几家都会受它影响的量或价格：几家公司的合计（云厂商资本开支）、价格（内存合约价、油价）、利率。同一总量的另一种人群、另一种说法是这个量的证据</td><td>量，五档</td><td>自然年的今年或明年。同一个量、同一年只有一个问题，由代码按"主题＋量＋期间"判<span class="src">D197</span>；量的类别是 <code>other</code> 的不算</td><td>几家公司年报、统计发布、官方决定</td><td>D184、D191、D197、D243；PRD 06</td></tr>
+ <tr><td class="nowrap"><b>E</b> 政策阶段</td><td><code>policy_stage</code></td><td>问的是一家公司的收入、利润、份额或产品进度，算标的，即使由政策驱动；问的是世界上的事（许可制度、利率、合计支出），算主题。D184 采纳的 role-v12 原文："A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it"</td><td>一个政策或监管过程到了哪一步，写明谁说了算</td><td>事件，五档或两档</td><td>能判出那一步的那天。文章没写日期的待决监管事项，用本财年末（role-v12 原文："A pending regulatory decision may lack a date; use the current fiscal year-end as its due date"）；这个日期是研究员定的检查日，要标明<span class="src">评审 §1 第 1 条</span></td><td>官方决定、公报</td><td>D184</td></tr>
+ </tbody></table></div>
+@@ -279,11 +294,12 @@
+ 
+ <h2 id="opening"><span class="num">4</span>开题标准</h2>
+ <blockquote><p><b>一个问题值得单独追，要同时满足三件事：它的答案可能改变仓位；能在一个日期用公开材料判出落在哪一档；库里没有问题在问同一件事。</b>开多少个是判断的结果，不是目标<span class="src">第 1 版 §6；评审 §1</span>。</p>
++<p>颗粒度按一个高端对冲基金分析员：只有会单独下注的大事开题，鸡毛蒜皮不开题（它的陈述留不留照第 5 节判）；同一个赌注的几种说法是一题，截止日、里程碑、财年和日历年各按本节"同一题、续期，还是另一题"里的那一条判<span class="src">D248</span>。</p>
+ <p>另有一条前提：新问题要有独立的投资判断；一个新产品、一个新数字、一个更窄的范围，单凭这些不开<span class="src">D201</span>。</p></blockquote>
+ 
+ <h3>四个测试<span class="src">第 1 版 §6</span></h3>
+ <ol class="steps">
+-<li><b>值得追</b>写得出"这个结果会改变哪项收入、利润、现金或信用风险、竞争位置"吗？写不出就留作证据，不开题。"数字很大"不算理由。</li>
++<li><b>值得追</b>写得出"这个结果会改变哪项收入、利润、现金或信用风险、竞争位置"吗？写不出就留作证据，不开题。"数字很大"不算理由。规模够不上改变公司的收入、利润、现金或信用风险的交易、产品、项目，不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。</li>
+ <li><b>独立意义</b>能写出两个情景吗：其他问题的答案不变，只有这一题相反，而对业务的判断确实不同？写不出就优先作为证据<span class="src">评审 §1 第 3、8 条</span>。评审里的一个判例：NVIDIA FY2027 总收入题判为数据中心收入题的证据，理由是"该段明确说主要增长来自数据中心，未提出独立的其他业务争论"。这是对那一段材料的判断，别的材料要逐个判。</li>
+ <li><b>能核对</b>有一个日期和一份公开材料能把答案放进事先固定的档吗？没有就重写问题。到期没有材料记"未能判定"，不算错。</li>
+ <li><b>不是重复</b>和已有问题比，只是预测值、措辞、来源、方向或同一总量的另一种口径不同，最终核对的是同一个结果吗？是就是同一题。抽取看不到库<span class="src">D211</span>，这一条在抽取时只对同一篇文章里提出的几个问题判；和库里的比由匹配做。</li>
+@@ -313,10 +329,16 @@
+ 
+ <h3>同一题、续期，还是另一题：匹配这一步的事，抽取不判库里的</h3>
+ <ul>
++<li><b>总规则：</b>同一个结果能判掉两题，就是同一题；答案能分开走、而且分析员会分别下注的，才是另一题<span class="src">D248</span>。</li>
+ <li><b>同一题：</b>同一个结果能同时判两个问题。另一个估计、来源、措辞、方向<span class="src">第 1 版 §6 测试 4</span>；同一总量的另一种人群或代用口径（D190 碰撞裁决提示 collision-v1："another population or proxy of one aggregate"；D197 引的 role-v12 原文："another population or another wording of the same aggregate is evidence to the shown aggregate thesis"）。候选并进已开问题，用它的结果档和到期日<span class="src">PRD 06</span>。只有以共同量理由开题、带量的候选由代码自动判，其余是匹配和碰撞裁决的判断。</li>
++<li><b>同一个计划的几种说法</b>（担保、融资承诺、信用支持……），最后核对的是同一个数，是一题<span class="src">D248 第 1 条</span>。</li>
++<li><b>同一件事的不同截止日：</b>早的那题开着时，晚的截止日是它的证据，不另开；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上并进来的证据，不等新文章<span class="src">D248 第 2 条</span>。</li>
++<li><b>同一代产品的几个里程碑：</b>一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span>。</li>
++<li><b>公司自己的量：</b>只按财年开题；按日历年的估计是财年那题的证据，两种年份差得多时分量低一点<span class="src">D248 第 4 条；PRD 06 梯子第 5 条</span>。</li>
++<li><b>身份：</b>事件和政策题里模型写的期间起点，不拿来挡合并；对象、事件、截止日照旧核对<span class="src">D248 第 5 条</span>。</li>
+ <li><b>续期：</b>同一个量或同一串事件的下一个期间<span class="src">PRD 06 Succession、D190</span>。</li>
+-<li><b>另一题：</b>同一件事里答案能分开走的：有自己驱动的组成部分、同一笔交易里的另一个量（担保和融资）、另一件事<span class="src">D190 碰撞裁决的四种</span>。</li>
+-<li><b>约束性义务：</b>"一笔或一个计划"一题<span class="src">D210</span>；一笔交易是不是某个已按金额开题的计划的一部分，由匹配判，是就并入。</li>
++<li><b>另一题：</b>同一件事里答案能分开走、分析员会分别下注的：有自己驱动的组成部分；同一笔交易或同一份附注里两个各自会变、分别盯着的数；另一件事<span class="src">D190 碰撞裁决的四种；D248 第 1 条收窄了"担保和融资"</span>。</li>
++<li><b>约束性义务：</b>"一笔或一个计划"一题<span class="src">D210</span>；一笔交易是不是某个已按金额开题的计划的一部分，由匹配判，是就并入<span class="src">D248 第 1 条</span>。还没签的单笔交易是"签不签"的是非题，照旧可以开，不并进计划的金额题<span class="src">D210；PRD 06；D248 未改</span>。</li>
+ <li><b>共同量：</b>以共同量理由开题、带量的候选（量的类别是 <code>other</code> 的不算），由代码按"主题＋量＋期间"判同一题；政策阶段和别的事件保留按事件判的身份；不带这个开题理由的主题量由模型判<span class="src">D197</span>。</li>
+ </ul>
+ 
+@@ -398,7 +420,7 @@
+ <tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+ <tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+ </tbody></table></div>
+-<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
++<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；同一说法在判断时怎么显示，见第 2 节<span class="src">D248 第 7 条</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+ 
+ <h2 id="weight"><span class="num">6</span>分量</h2>
+ <p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+@@ -434,6 +456,7 @@
+ </ul>
+ 
+ <h2 id="golden"><span class="num">8</span>金标：改提示词的测试标准</h2>
++<p class="note">第 4 版（D248）改了开题的规则：下面这份第 3 版金标是历史记录，它的开题部分要按第 4 版逐条重推、另记带理由的更正、冻结成第 4 版之后才能再打分；打分程序遇到版本对不上会拒绝（D244）。证据部分 D248 没改。</p>
+ <p>按这一页从原文逐篇写的参照，用来量提示词改动。Alex 的要求是"以上有你自己trace 过的golden set 来做为改prompt测试标准"<span class="src">D241</span>。定稿文件：<span class="path">docs/research/2026-10-29-ledger-standard/golden-v3/golden-v3-signed.json</span>，sha256 <code>78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3</code><span class="src">D243</span>。</p>
+ <div class="tiles">
+ <div class="tile"><div class="v">118</div><div class="l">篇测试文章：那一周 98 篇，留出 20 篇</div></div>
+@@ -567,6 +590,7 @@
+ <tr><td class="nowrap">10-29 D241</td><td class="nowrap">这份标准</td><td>"几个大类型的账本 - 开题标准和档次 这两个要完整的定义好写好"；"档位根据信息量作定标 -以上有你自己trace 过的golden set 来做为改prompt测试标准"</td></tr>
+ <tr><td class="nowrap">10-29 D243</td><td class="nowrap">签字</td><td>第 5 条："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"；方向："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"；"其他几条的意见我都ok，sign off"</td></tr>
+ <tr><td class="nowrap">10-29 D242</td><td class="nowrap">这一页</td><td>"你给我一个网页，这个同时也是你这个环节重要的PRD"</td></tr>
++<tr><td class="nowrap">10-30 D248</td><td class="nowrap">颗粒度</td><td>七条各选 A（第 6 条"A， A"）；原则："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</td></tr>
+ </tbody></table></div>
+ 
+ <h2 id="conflicts"><span class="num">11</span>在用的标准之间的冲突，怎么摆平</h2>
+@@ -576,7 +600,7 @@
+ <tbody>
+ <tr><td>B1</td><td>共同量的名字和定义：D191 改名并扩到价格；v16 起提示词和代码用 <code>industry_aggregate</code>、几家公司合计、一个日历年</td><td>按 D191 落实为 <code>shared_quantity</code>，期间仍用自然年；提示词和代码要跟着改</td><td>D191、D243；PRD 06</td></tr>
+ <tr><td>B2</td><td>主驱动量含不含产品节点</td><td>含，写成 A、B 两类</td><td>D236（在 D184 之后）</td></tr>
+-<tr><td>B3</td><td>约束性义务：一笔或一个计划一题（D210），还是一组入股是一个判断（D201 规则 G）</td><td>按 D210 "一笔或一个计划"；一笔交易属不属于已开的计划，由匹配判</td><td>D210、D236、D238</td></tr>
++<tr><td>B3</td><td>约束性义务：一笔或一个计划一题（D210），还是一组入股是一个判断（D201 规则 G）</td><td>按 D210 "一笔或一个计划"；一笔交易属不属于已开的计划，由匹配判；同一计划的几种说法是一题；够不上公司规模的单笔交易只作证据</td><td>D210、D236、D238、D248</td></tr>
+ <tr><td>B4</td><td>开题测试三套，提示词和代码都没用</td><td>第 1 版 §6 四个测试加评审三条写法检查（第 4 节）；测试 4 和库比的部分归匹配</td><td>第 1 版 §6；评审 §1；D211</td></tr>
+ <tr><td>B5</td><td>PRD 05 还写着 <code>folds_into</code>、第 5 块</td><td>抽取不看库；PRD 05 过时段落签字后改指这一页</td><td>D211</td></tr>
+ <tr><td>B6</td><td>没家的证据扔不扔</td><td>产品里扔，评估读被扔的、分四种归因；两者不冲突</td><td>D209；第 1 版 §7</td></tr>
+@@ -587,7 +611,7 @@
+ <tr><td>B11</td><td>主题怎么连到公司</td><td>一对全部的主题块；文章明写的依赖照记；D208 的通道未建</td><td>D191、D195</td></tr>
+ <tr><td>B12</td><td>研究组、驱动层</td><td>研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+ <tr><td>B13</td><td>PRD 06 的重复和替代说法早于 D202、D204</td><td>这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新</td><td>D202、D204</td></tr>
+-<tr><td>B14</td><td>组成部分算不算同一题</td><td>同一总量的另一种人群或口径是同一题；有自己驱动、答案能分开走的是另一题，要过独立意义测试</td><td>D190；第 1 版 §6</td></tr>
++<tr><td>B14</td><td>组成部分算不算同一题</td><td>同一总量的另一种人群或口径是同一题；有自己驱动、答案能分开走、分析员会分别下注的是另一题，要过独立意义测试</td><td>D190；第 1 版 §6；D248</td></tr>
+ <tr><td>B15</td><td>标的五档必须叫"非常看多……"（代码），还是写业务结果（D186）</td><td>这一页按 D186 写；代码是另一模块，D186 未实现照旧记</td><td>D186</td></tr>
+ <tr><td>B16</td><td>转述的公告算事实还是当事人陈述</td><td>事实（role-v29 原文："an announcement or completed deal the item reports is a fact even when the reporter names no source"）；混合的一条按主要说法定层</td><td>PRD 06；D238、D239；D243 第 9 条</td></tr>
+ <tr><td>B17</td><td>代码按自然年拒公司明年的财年量</td><td>已修：年限按公司财年数，测试 <span class="path">tests/test_fiscal_year_horizon.py</span></td><td>PRD 06 梯子第 5 条；D243</td></tr>
+@@ -645,6 +669,6 @@
+ <li>第 1 版：<span class="path">docs/research/2026-10-29-analyst-standard/standard.md</span>（D229），已由这一页取代，留作出处。</li>
+ </ul>
+ 
+-<footer>Hivemind · 抽取与开题标准 · 第 3 版 · 2026-10-29 Alex 签字（D243）。页首的 standard-version 是规则的版本号：改任何一条规则都要升它，金标随之重定，打分程序遇到版本对不上就拒绝打分（D244）。</footer>
++<footer>Hivemind · 抽取与开题标准 · 第 4 版 · 2026-10-29 Alex 签字（D243），2026-10-30 按 Alex 逐个选的七条修订（D248）。页首的 standard-version 是规则的版本号：改任何一条规则都要升它，金标随之重定，打分程序遇到版本对不上就拒绝打分（D244）。</footer>
+ </main>
+ </div>
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '11b|11B|第 7|第7|七|granularity' docs/research/2026-10-30-question-identity/plan.md" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D248|D244|D204|D210' docs/DECISIONS.md" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/prd/05-extraction-standard.html | sed -n '135,350p;350,485p;580,625p'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+20:   是不是这句导致的，第 7 节第 2 步问模型自己确认。尺的边界不清，按规矩先和你定尺，再动手（AGENTS §7.1）。
+62:  第 7 节第 1 步改成从存档里的结构化答案数，不靠文字。
+102:已拍（第 11b 节，D248）。接着：签字标准第 3 节 C 类（H6 收窄约束性义务的开题）和第 4 节（H1–H5、H7 的同一题、续期、另一题和同一说法）照 D248 改，再做一次 Codex 只读漂移检查（AGENTS §7.1、§8）。
+156:第 7 节第 1 步先把它改成能用的：缺答案就报错停下；对照臂必须逐条复现存下账本的结局（合并、续期、新开、每条证据的落点），复现不了就不量。
+229:3. 收尾那次整条线三个月的运行，等第 7 节 A–D 做完、护栏都过了，再找你要。
+231:## 11b. Alex 的回答（逐个过，2026-10-30）
+243:七个都过完了，已一并写进 `docs/DECISIONS.md`（D248）；接着改签字标准第 3 节 C 类和第 4 节，再做 Codex 漂移检查。
+249:- 部分成立：它说存下的记录只有裁决、没有理由；存档里的结构化答案带理由，我读了，写在第 0、3 节；但"是哪句指令导致的"确实没证明，第 7 节第 2 步去问。
+280:第 7 轮（`review-7.txt`，2 条严重、1 个难例、1 条事实），核过都成立并已改："应被规则拒"进了金标却没进停止条件（改：任何一项对不上都列出，除漏并和不值得开之外全是停止条件，加"拒错"一类）；
+
+ succeeded in 0ms:
+2609:## D204 · 2026-10-28 · A repeat is stored as its own source record; the merge becomes a labelled relation
+2615:- Accepted ([results](research/2026-10-27-stage34-gold/results.md)): 40 of 40 sampled repeat decisions replayed through the new writer keep the piece, the relation and both pieces in force (the 8 lost contents are present); the week through the whole path ran with none failed at $0.23, wrote 45 same-claim relations and no merge, and the judge's reasons where a pair was in view treat the relays as one source ("ultimately trace to SemiAnalysis", "not independent confirmation"). The three-month run may resume on `poc-v34` with D202–D204 in the writer; that is Alex's call.
+2663:## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+2682:- Alex chose option 1 after the D210 week ("1"): the admission judgement sat in the extraction call, whose request carried the open
+2786:Alex explicitly rejected stopping at D222's failed result and asked to trace causes and improve. The [single-note experiment](research/2026-10-29-single-note/design.md) tests a bounded contract change in the fourth-step research harness: write the investment note once, separate unknowns by their actual role, and let routing reference it rather than regenerate it as independent judgement and action reason. Known empty history/catalog fields are omitted from generation and restored as empty lists; nonempty references use the actual ID domain. Original-source relation can explicitly be unknown per historical comparison. Existing-question arguments and D201/D184/D185/D210 admission requirements remain. This changes an experimental output shape, not product storage, production prompts, gold or deployment. Frozen D220/D221 semantics judge all output fields. Start with the two decisive sources, three fresh samples per arm, and expand to the fixed eight regressions only if that proof improves without a new definite error; the old failed data remain. No full-pipeline run is authorized or implied.
+2797:Alex clarifies that the primary task is Haiku versus Luna and their response to prompt changes, and challenges the scoring. Stop redesigning prompts. Independent reading of all57 D224 returns confirms that its pilot improperly labelled two conditional Haiku analyses as definite source-fact errors; retain the original reading and supersede that claim with uncertain inference boundary, per unchanged D218. The signed-positive must-open expectation is stronger than the complete D201/D210 rule and must not be scored as factual comprehension. D224 still has a clear Cloud completeness difference (Haiku3/3, Luna1/3), one Luna period error, relation errors in both models, and one Haiku truncation; no overall winner or adoption is established.
+2801:D225 final measurement: [the paired experiment](research/2026-10-29-paired-prompt-model/results.md) completed all60 responses. Final source readings, including independent blind review and the root’s adjudication, give complete core meaning 12/12→11/12 for Haiku and 10/12→9/12 for Luna; all12 explicit exclusion observations comply. Haiku mean latency10.02s versus Luna14.25s. Do not infer whole-system accuracy or general model superiority from five known development sources. The counterexample paragraph is not adopted: no stable semantic gain was shown. Six Haiku NVIDIA role-boundary concerns remain uncertain, not established fabrication. All six emitted signed-obligation proposals miss D210’s required obligation-amount measure; six nulls are not comprehension failures. The rewritten experimental prompt omitted D210’s amount/commitments-note language, retaining only next-annual-filing timing; this mismatch is identified, not causally isolated in this experiment. Preserve the initial and intermediate readings; final-readings.json/final-measurements.json are authoritative. No production change, default switch, further paid arm or full-pipeline run.
+2931:## D244 · 2026-10-29 · Claude sets the dev/test split; scores are leads and Claude reads the traces every time; first the role-v29 baseline
+2953:## D248 · 2026-10-30 · What counts as one question and one piece of evidence: seven boundaries, chosen one by one
+2959:  1. **One plan, several wordings** (H1, "A"): wordings of one plan whose final check is the same number are one question; two numbers that move on their own and are watched separately stay apart; a single deal under a plan already opened by amount merges into it. Not put to Alex: a not-yet-signed deal's yes/no signing question (D210; PRD 06 keeps number and event questions apart) stays as it is and does not merge into a plan's amount question (the Ohio lease guarantee and the cloud-customer total in v38 both stay). Narrows the standard §4 "another quantity in the same deal (a guarantee beside a financing)" sentence taken from D190; consistent with D210.
+2965:  7. **The same statement carried by several outlets** (H7, "A"): code treats pieces with the same known original speaker, original day and figures as one (an unknown speaker or day never matches: 297 of the sealed run's 4,298 pieces have both unknown); the judge sees it once with the outlet count; every piece is still stored. Changes D204's "both shown to the judge" for this case, and is a chosen exception to AGENTS §3 "equal values alone never establish identity"; the risk put to him with the question (a qualification such as "excluding China sales" hidden; D204's 8 of 40 wrong merges) is measured on the G3 gold before it is switched on, as is the accuracy of the original-speaker and original-day fields it relies on.
+
+ succeeded in 0ms:
+   135	    <li><a href="#method"><span class="num">9</span>改提示词、测量、迭代</a></li>
+   136	    <li><a href="#rulings"><span class="num">10</span>Alex 拍过的</a></li>
+   137	    <li><a href="#conflicts"><span class="num">11</span>冲突怎么摆平</a></li>
+   138	    <li><a href="#checks"><span class="num">12</span>校验和出处</a></li>
+   139	  </ol>
+   140	</nav>
+   141	
+   142	<main>
+   143	<header class="top">
+   144	  <div class="eyebrow">Hivemind · 抽取这一步的 PRD · 第 4 版（第 3 版已签；D248 按 Alex 逐个选的七条修订）</div>
+   145	  <h1>抽取与开题标准</h1>
+   146	  <div class="status ok"><span class="pill ok">已签</span><div><b>生效。</b>2026-10-29 Alex 拍了 12 条（D243）；2026-10-30 他逐个选了颗粒度的七条（D248，见"已拍"一节），改了第 2、3、4 节，升为第 4 版。这一页取代第 1 版（<span class="path">docs/research/2026-10-29-analyst-standard/standard.md</span>，D229），是抽取这一步唯一的尺子：提示词、金标、回归测量都从它推出。改它要先在 <span class="path">docs/DECISIONS.md</span> 记下 Alex 的原话，再改这一页，再做一次只读的漂移检查。</div></div>
+   147	  <div class="meta"><span>2026-10-29 · D241、D242、D243</span><span>分支 fix/extraction-quality-2026-10-28</span><span>起草过程和校验：<span class="path">docs/research/2026-10-29-ledger-standard/</span></span></div>
+   148	  <p style="margin:0">读法：每条规则后面的灰色小字是它的出处。标了出处的例子是判例或原文里的例子；没标的是按那条规则举的，帮助理解，不是判例。没有出处的只有"我定的记录约定"。</p>
+   149	</header>
+   150	
+   151	<section class="answer" aria-label="一句话">
+   152	<dl>
+   153	  <dt>证据</dt>
+   154	  <dd>一个在追这家公司的分析员读到会记进本周笔记的陈述，就留；留下以后另判分量<span class="src">第 1 版 §2、§4</span>。整体倾向谨慎：杂音很大，不是什么都要抽，不是什么都算线索；但新信息带来的增量要敏感，不能漏<span class="src">D243</span>。预测、传闻、反证、远期、条件情景都可以是证据，不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也照留，分量可以低一点<span class="src">D240</span>。泛泛的主张和背景是常识，没有数字和具体的叙事就不收<span class="src">D243</span>。</dd>
+   155	  <dt>开题</dt>
+   156	  <dd>一个问题值得单独追，当它的答案可能改变仓位、能在一个日期用公开材料核对、而且库里没有问题在问同一件事<span class="src">第 1 版 §6</span>。</dd>
+   157	  <dt>研究观点</dt>
+   158	  <dd>一个观点是关于业务和世界的、有论证的看法，它的立场来自论证和市场已经定价的东西相比<span class="src">AGENTS §8</span>。问题当前落在哪一档，由判断这一步按 PRD 06 和 D198 读证据推出。</dd>
+   159	</dl>
+   160	</section>
+   161	
+   162	<h3>一张图：同一篇文章里每句话的去向</h3>
+   163	<div class="tree" role="img" aria-label="每句话的去向">
+   164	<ul><li><span class="node">一句话</span>
+   165	  <ul>
+   166	    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+   167	    <li>分析员会记 <span class="goes">→ 留为证据</span><span class="tag">第 5 节</span>
+   168	      <ul>
+   169	        <li>记来源层：事实、当事人陈述、第三方观点、传闻 <span class="tag">进账本 · 第 5.5 节</span></li>
+   170	        <li>分量：核心、辅助、可选 <span class="tag">只在评估时判，不进账本 · 第 6 节</span></li>
+   171	        <li>归档：挂到最窄的那个已开问题 <span class="src">D207</span>；没有问题接，记 no home 扔掉，评估时逐条读 <span class="src">D209</span></li>
+   172	        <li>这篇文章还提出了值得追的新问题吗？ <span class="tag">第 4 节</span>
+   173	          <ul>
+   174	            <li>过了测试，属于五类之一 <span class="goes">→ 候选问题；和库里已有问题是不是重复，由匹配判</span> <span class="src">D211、D190</span></li>
+   175	            <li>没过 <span class="goes">→ 不开，它只是证据</span></li>
+   176	          </ul>
+   177	        </li>
+   178	      </ul>
+   179	    </li>
+   180	  </ul>
+   181	</li></ul>
+   182	</div>
+   183	
+   184	<h2 id="decisions"><span class="num">已拍</span>Alex 拍板的 12 条</h2>
+   185	<p>2026-10-29 Alex 签字（D243）。第 5 条他定得比我的倾向更严；其余 11 条按倾向："其他几条的意见我都ok，sign off"。下表每条写定下的是什么、落在哪一节。</p>
+   186	<blockquote>
+   187	<p>第 5 条，Alex 原话："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"</p>
+   188	<p>整体方向，Alex 原话："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"</p>
+   189	</blockquote>
+   190	<div class="table-wrap mid"><table>
+   191	<thead><tr><th>#</th><th>定下的</th><th>在哪一节</th></tr></thead>
+   192	<tbody>
+   193	<tr><td>1</td><td>分量按信息量定档：核心要碰到关键判断，并带一个量、一个确定状态或一个带期间的预测；别家公司自己的经营数字、对公司是小事的，算辅助；预测离现在越远，越可能只是辅助，由判断定。缺金额、缺日期只影响分到哪一档，不是不留的理由</td><td class="nowrap">第 6 节</td></tr>
+   194	<tr><td>2</td><td>"共同量"按 D191 落实：任何一家公司之外、好几家都会受它影响的量或价格（合计支出、合约价、利率）都可以开题，开题理由叫 <code>shared_quantity</code>；期间按自然年。提示词和代码要跟着改</td><td class="nowrap">第 3 节 D 类</td></tr>
+   195	<tr><td>3</td><td>生态数字（论文数、获奖、下载量、开发者人数、大会人数）可选</td><td class="nowrap">第 6 节</td></tr>
+   196	<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+   197	<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+   198	<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+   199	<tr><td>7</td><td>收购算约束性义务（写明规模、尚未完成）</td><td class="nowrap">第 3 节 C 类</td></tr>
+   200	<tr><td>8</td><td>改提示词时的回归判法：全部文章各发一次和上一版比，"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；它是诊断，验收仍是三次发送</td><td class="nowrap">第 9.3 节</td></tr>
+   201	<tr><td>9</td><td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+   202	<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+   203	<tr><td>11</td><td>金标冻结后发现错：另记一份带理由的更正，写明改前改后，不覆盖原文件；测量用更正后的版本并注明</td><td class="nowrap">第 8 节</td></tr>
+   204	<tr><td>12</td><td>达标线里"垃圾"一项（每篇留下的无关陈述）用定稿金标重算，Luna 基线也重算</td><td class="nowrap">第 9.2 节</td></tr>
+   205	</tbody></table></div>
+   206	
+   207	<h3 id="d248">D248：颗粒度的七条（2026-10-30）</h3>
+   208	<p>Alex 逐个听了例子、逐个选的，七个都选 A；改了第 2、3、4 节，标准升为第 4 版，金标的开题部分要按第 4 版重推（D244）。</p>
+   209	<blockquote><p>原则，Alex 原话："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</p></blockquote>
+   210	<div class="table-wrap mid"><table>
+   211	<thead><tr><th>#</th><th>定下的</th><th>在哪一节</th></tr></thead>
+   212	<tbody>
+   213	<tr><td>1</td><td>同一个计划的几种说法，最后核对同一个数的，是一题；各自会变、会分别盯的数才分开；属于已按金额开题的计划的一笔交易并进去</td><td class="nowrap">第 4 节</td></tr>
+   214	<tr><td>2</td><td>同一件事的不同截止日：早的那题开着时，晚的截止日是它的证据；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上证据，不等新文章</td><td class="nowrap">第 4 节</td></tr>
+   215	<tr><td>3</td><td>同一代产品的几个里程碑：一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题</td><td class="nowrap">第 4 节</td></tr>
+   216	<tr><td>4</td><td>公司自己的量只按财年开题；按日历年的估计是财年那题的证据</td><td class="nowrap">第 4 节</td></tr>
+   217	<tr><td>5</td><td>事件和政策题里模型写的期间起点，不拿来挡合并</td><td class="nowrap">第 4 节</td></tr>
+   218	<tr><td>6</td><td>规模要大到能改变公司的收入、利润、现金或信用风险才开题；够不上的不开题，它的陈述留不留照第 5 节判，留下的是证据</td><td class="nowrap">第 3 节 C 类、第 4 节</td></tr>
+   219	<tr><td>7</td><td>原始说话人、原始日期、数字都相同的几条证据，代码认作一条，判断时只给看一次、写明几家报道，每条照存；不知道的说话人或日期不算相同</td><td class="nowrap">第 2 节</td></tr>
+   220	</tbody></table></div>
+   221	
+   222	<h3 id="conventions">我定的记录约定</h3>
+   223	<p>只定怎么记，不改变留不留、开不开。</p>
+   224	<ul>
+   225	<li>页面杂项（广告、相关文章预告、推荐列表、别的新闻标题）一律归第 1 版的"模板"一行，不另起名字。</li>
+   226	<li>标题里的说法和正文是同一条证据，不单记<span class="src">第 1 版 §2 同一事实的复述</span>。</li>
+   227	<li>分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。</li>
+   228	<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+   229	</ul>
+   230	
+   231	<h2 id="words"><span class="num">1</span>这一页用的词：一词一义</h2>
+   232	<div class="table-wrap mid"><table>
+   233	<thead><tr><th>词</th><th>意思</th><th>不要和它混</th></tr></thead>
+   234	<tbody>
+   235	<tr><td class="nowrap">陈述</td><td>原文里某一方说的一句话或一件事</td><td></td></tr>
+   236	<tr><td class="nowrap">证据</td><td>被留下的陈述，带引文、摘要、说话人、原始出处、来源层</td><td>作者的观点（它本身可以是一条证据）</td></tr>
+   237	<tr><td class="nowrap">问题（观点）</td><td>账本里追踪的一件事：一个问题句、一组结果档、一个到期日，写下后不改<span class="src">PRD 06</span></td><td></td></tr>
+   238	<tr><td class="nowrap">候选问题</td><td>抽取这一步提议新开的问题</td><td></td></tr>
+   239	<tr><td class="nowrap">标的问题、主题问题</td><td>标的：答案是一家可交易公司（或币、商品）自己的经营结果。主题：答案是世界上的一件事，影响很多公司<span class="src">PRD 06</span></td><td></td></tr>
+   240	<tr><td class="nowrap">开题理由</td><td>候选问题值得开的几类理由之一，答案里写在 <code>opens_as</code><span class="src">D184；英文 admission reason</span></td><td></td></tr>
+   241	<tr><td class="nowrap">结果档</td><td>一个问题事先固定、互不重叠、覆盖全部结果的结局，五档或是非两档<span class="src">PRD 06；英文 rung</span></td><td>分量</td></tr>
+   242	<tr><td class="nowrap">来源层</td><td>事实、当事人陈述、第三方观点、传闻<span class="src">PRD 06；英文 evidence tier</span></td><td>分量</td></tr>
+   243	<tr><td class="nowrap">分量</td><td>一条证据对判断有多重要：核心、辅助、可选、不收<span class="src">第 6 节；D243</span>。Alex 说的"档位低一点"指它</td><td>结果档、来源层</td></tr>
+   244	<tr><td class="nowrap">研究用途</td><td>判断这一步引用一条证据去支持一个具体结论时，它撑得住多强：直接可用、有条件可用、线索、不可用<span class="src">D221，第 7 节</span></td><td>分量</td></tr>
+   245	<tr><td class="nowrap">七类驱动</td><td>一条陈述为什么对公司业务重要的七条路径<span class="src">D208</span>。需求：客户要买多少，如订单、客户支出、贷款需求、客流。供给与投入：能做出多少、成本多少，如产能、原料和零部件价格、燃料、矿石品位。竞争与份额：对手的产品、价格、开店、赢单。定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户。产品周期：发布、出货、试验、获批、延期。政策：法规、许可、关税、利率、监管决定。资本与义务：融资、担保、承诺、投资、收购</td><td>问题类型</td></tr>
+   246	<tr><td class="nowrap">市场预期与估值</td><td>市场已经定价了什么：估值倍数、市值、目标价、股价反应。观点的立场要和它比<span class="src">AGENTS §8</span>。对一个业务量的一致预期（收入、EPS）是那个业务量的证据，不归这里</td><td>七类驱动</td></tr>
+   247	<tr><td class="nowrap">研究组</td><td>几个问题共同在追的一件正在进行的事<span class="src">D165</span></td><td>问题</td></tr>
+   248	</tbody></table></div>
+   249	
+   250	<h2 id="ledger"><span class="num">2</span>账本里记三种东西</h2>
+   251	<ol class="steps">
+   252	<li><b>证据</b>一条记录一个陈述，一件事用几句话说仍是一条<span class="src">第 1 版 §2；Alex 判 11</span>。记逐字引文、能单独读懂的一句话摘要、说话人、原始说话人和原始日期（不知道就写不知道，不填报道日<span class="src">D220</span>）、来源层。同一条证据可以挂到几个问题上，推力写在挂接上<span class="src">PRD 06</span>。每一条进来的证据都单独存下；和已有证据的关系（同一说法、修订）由匹配标出，作为意见，两条都留着<span class="src">D202、D204</span>。原始说话人、原始日期、数字都相同的几条（说话人或日期不知道的不算相同），由代码认作同一条：判断时只给看一次，写明几家报道，每条仍照存<span class="src">D248 第 7 条；改 D204 的"两条都给判断看"</span>。这条在打开之前要先量两件事：它会不会藏掉不同或更丰富的说法（比如多一句限定），它依赖的原始说话人、原始日期两个字段准不准；量完之前，照 D204 两条都给判断看。</li>
+   253	<li><b>问题</b>问题句、结果档、到期日写下不改；当前判断随证据更新，到期定格<span class="src">PRD 06</span>。问题分标的和主题，按开题理由分五类（第 3 节）。问题从三处来：文章里的候选问题；用户的备忘录<span class="src">PRD 06 State</span>："A thesis from the user's memo is not yet judged until evidence first links to it"；分析员开始覆盖一家公司时种下的驱动问题<span class="src">D208，设计未建</span>。</li>
+   254	<li><b>研究组</b>一件正在进行的事（一个产品换代及其部署、一笔融资或收购、一个政策过程、一轮投资或需求周期），把几个问题组织在一起，常常跨公司。它不是问题，也不代替开题判断。公司自己的报表行（收入、毛利率、费用、税率、资本开支）不带研究组，除非这一行本身就在追这样一件事；它也可以加入别的问题建的组<span class="src">D165</span>。</li>
+   255	</ol>
+   256	<p><b>不进账本的：</b>归档找不到家的证据，记 <code>no home</code> 扔掉<span class="src">D209</span>。评估时逐条读被扔的，分四种：抽取的垃圾；库里缺这个问题（覆盖缺口）；问题在却没挂上（归档错）；该开没开（开题错）。各归各的环节<span class="src">第 1 版 §7</span>。存储的表结构归 PRD 06 管。</p>
+   257	
+   258	<h2 id="types"><span class="num">3</span>问题的五类：账本的几大类型</h2>
+   259	<p>开题理由是 D184 定的四类，D236 把主驱动量扩到产品节点，所以写成五类。判两件事，互不顶替：这是谁的问题（标的还是主题）；为什么值得开（开题理由）。</p>
+   260	<div class="table-wrap wide"><table>
+   261	<thead><tr><th>类</th><th>开题理由</th><th>标的或主题</th><th>问什么</th><th>量还是事件</th><th>期间和到期</th><th>核对材料 <code>settled_by</code></th><th>出处</th></tr></thead>
+   262	<tbody>
+   263	<tr><td class="nowrap"><b>A</b> 主驱动量</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那个年度量，不管公司指不指引：撑起业务的分部收入、毛利率、资本开支；跨行业如银行的净利息收入、零售商的同店销售、公用事业的费率基数、航空公司的燃油成本（当它是争论焦点时）。不是每一行报表数</td><td>量，五档</td><td>公司财年的今年或明年；到期日是这个数的发布日</td><td>公布这个数的公开材料，通常是年报</td><td>D184：<code>settled_by</code> 是 "the public material that resolves it"；PRD 06 梯子第 5 条</td></tr>
+   264	<tr><td class="nowrap"><b>B</b> 主产品节点</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那一代产品哪天走到能带来收入的那一步（通常是开始出货）；发布、送样是它的证据，只有会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span></td><td>事件，五档，或是非两档<span class="src">PRD 06 梯子第 1 条</span></td><td>能判出结果的那天</td><td>公司公告、发货确认</td><td>D236</td></tr>
+   265	<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。规模要大到能改变公司的收入、利润、现金或信用风险才开；够不上的单笔入股、收购、租约、授信不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+   266	<tr><td class="nowrap"><b>D</b> 共同量</td><td><code>shared_quantity</code><span class="src">D191、D243 第 2 条</span>；现行提示词和代码还叫 <code>industry_aggregate</code>，按这一页改</td><td>主题</td><td>任何一家公司之外、好几家都会受它影响的量或价格：几家公司的合计（云厂商资本开支）、价格（内存合约价、油价）、利率。同一总量的另一种人群、另一种说法是这个量的证据</td><td>量，五档</td><td>自然年的今年或明年。同一个量、同一年只有一个问题，由代码按"主题＋量＋期间"判<span class="src">D197</span>；量的类别是 <code>other</code> 的不算</td><td>几家公司年报、统计发布、官方决定</td><td>D184、D191、D197、D243；PRD 06</td></tr>
+   267	<tr><td class="nowrap"><b>E</b> 政策阶段</td><td><code>policy_stage</code></td><td>问的是一家公司的收入、利润、份额或产品进度，算标的，即使由政策驱动；问的是世界上的事（许可制度、利率、合计支出），算主题。D184 采纳的 role-v12 原文："A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it"</td><td>一个政策或监管过程到了哪一步，写明谁说了算</td><td>事件，五档或两档</td><td>能判出那一步的那天。文章没写日期的待决监管事项，用本财年末（role-v12 原文："A pending regulatory decision may lack a date; use the current fiscal year-end as its due date"）；这个日期是研究员定的检查日，要标明<span class="src">评审 §1 第 1 条</span></td><td>官方决定、公报</td><td>D184</td></tr>
+   268	</tbody></table></div>
+   269	
+   270	<p>例子（跨行业）：</p>
+   271	<ul>
+   272	<li><b>A：</b>NVIDIA FY2027 数据中心收入；一家地区银行 FY2026 净利息收入；一家公用事业公司 2027 年费率基数。</li>
+   273	<li><b>B：</b>下一代机架系统能否在 2027 年底前开始出货；一家车企的新平台能否在 2026 年内开始交付。</li>
+   274	<li><b>C：</b>NVIDIA 为云客户产能兜底的义务在 FY2027 年报达到多少；一家保险公司是否在 2027 年中前为合资公司 5 亿美元债务签署担保。</li>
+   275	<li><b>D：</b>五家最大云厂商 2026 年合计资本开支；2027 年 DRAM 合约价相对 2026 年的变化、美联储 2026 年最后一次会议后的利率上限。</li>
+   276	<li><b>E：</b>中国是否在 2027-01-31 前正式批准本国公司进口 H200；美国是否在某日前对某类芯片实行出口许可。这两题问的是许可这件世界上的事，所以是主题，role-v12 原文的例子就是 "licensing"。一个监管决定对一家公司收入或产品进度的影响，问成那家公司的量或产品节点时，是标的问题（同一句原文）。</li>
+   277	</ul>
+   278	
+   279	<h3>五类之外的东西去哪</h3>
+   280	<ul>
+   281	<li><b>七类驱动不是问题类型。</b>它们是一条陈述为什么重要的理由，用来判分量和归档。D208 设计的"每家公司种下的驱动问题"由分析员开始覆盖时写好，不从文章里开；还没建。</li>
+   282	<li><b>别家公司自己的量</b>（对手的份额、客户的资本开支）：D187 定了"任何公司自己的量是那家公司的问题，私营公司也算"，但还没实现，要先在覆盖名单里加私营公司这一类。D155 定了"公司清单可以作为初始参考，但清单外不能忽略"。现行代码在匹配时跳过名单外的对象<span class="src">PRD 06 Step 4</span>。所以抽取照常可以提这样的问题，它要过第 4 节的测试；名单外的现在会被匹配跳过，这不算抽取错。</li>
+   283	<li><b>宏观量</b>（利率、通胀）：按 D 类共同量开题<span class="src">D243 第 2 条</span>。只来自一篇纯宏观文章时，只有主题在名单上才开<span class="src">D191 第 3 条</span>。宏观对每家公司的正负，在判断那家公司时读主题块决定<span class="src">D191 第 1 条、D195</span>。</li>
+   284	<li><b>开题理由是封闭的</b><span class="src">D184</span>：一件事属不属于五类之一，按上表逐条看，比如一个监管决定看它是不是 E 类。哪一类都不属于的不开；它是不是证据、挂到哪，照第 5 节和归档规则。</li>
+   285	</ul>
+   286	
+   287	<h3>问题怎么写：PRD 06 的梯子规则，不重写</h3>
+   288	<ul>
+   289	<li>一个问题只问一个量的一个期间，或一件事；能各自朝相反方向走的部分要分开<span class="src">PRD 06 梯子第 3 条</span>，分开的每一题都要过第 4 节的测试。</li>
+   290	<li>写成问句，不写成断言<span class="src">PRD 06 Rationale</span>。</li>
+   291	<li>结果档可核对、不重叠、不留缝，到期恰好一档成立；中间一档写明和什么比；"小幅""部分"这种不能核对的说法不用，部分状态写成单独一档<span class="src">PRD 06 梯子第 2 条</span>。标的问题的档描述业务结果；主题问题的档只写结局，不写好坏<span class="src">PRD 06、D186</span>。</li>
+   292	<li>到期日：量是它的发布日；事件是能判出结果的那天。公司的量用公司财年，别的用自然年，只开今年和明年<span class="src">PRD 06 梯子第 5 条；约束性义务例外，D185</span>。</li>
+   293	</ul>
+   294	
+   295	<h2 id="opening"><span class="num">4</span>开题标准</h2>
+   296	<blockquote><p><b>一个问题值得单独追，要同时满足三件事：它的答案可能改变仓位；能在一个日期用公开材料判出落在哪一档；库里没有问题在问同一件事。</b>开多少个是判断的结果，不是目标<span class="src">第 1 版 §6；评审 §1</span>。</p>
+   297	<p>颗粒度按一个高端对冲基金分析员：只有会单独下注的大事开题，鸡毛蒜皮不开题（它的陈述留不留照第 5 节判）；同一个赌注的几种说法是一题，截止日、里程碑、财年和日历年各按本节"同一题、续期，还是另一题"里的那一条判<span class="src">D248</span>。</p>
+   298	<p>另有一条前提：新问题要有独立的投资判断；一个新产品、一个新数字、一个更窄的范围，单凭这些不开<span class="src">D201</span>。</p></blockquote>
+   299	
+   300	<h3>四个测试<span class="src">第 1 版 §6</span></h3>
+   301	<ol class="steps">
+   302	<li><b>值得追</b>写得出"这个结果会改变哪项收入、利润、现金或信用风险、竞争位置"吗？写不出就留作证据，不开题。"数字很大"不算理由。规模够不上改变公司的收入、利润、现金或信用风险的交易、产品、项目，不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。</li>
+   303	<li><b>独立意义</b>能写出两个情景吗：其他问题的答案不变，只有这一题相反，而对业务的判断确实不同？写不出就优先作为证据<span class="src">评审 §1 第 3、8 条</span>。评审里的一个判例：NVIDIA FY2027 总收入题判为数据中心收入题的证据，理由是"该段明确说主要增长来自数据中心，未提出独立的其他业务争论"。这是对那一段材料的判断，别的材料要逐个判。</li>
+   304	<li><b>能核对</b>有一个日期和一份公开材料能把答案放进事先固定的档吗？没有就重写问题。到期没有材料记"未能判定"，不算错。</li>
+   305	<li><b>不是重复</b>和已有问题比，只是预测值、措辞、来源、方向或同一总量的另一种口径不同，最终核对的是同一个结果吗？是就是同一题。抽取看不到库<span class="src">D211</span>，这一条在抽取时只对同一篇文章里提出的几个问题判；和库里的比由匹配做。</li>
+   306	</ol>
+   307	<p>另外三条写法检查<span class="src">评审 §1 第 1、5、6 条</span>。没过的问题不能照原样开，要重写；重写不了就不开，材料作证据。</p>
+   308	<ul>
+   309	<li><b>原文支持：</b>主体、量或事件、时间依据都能在原文找到。原文没给日期、而规则允许研究员定检查日的，用那个日期并标明：没写日期的待决监管事项用本财年末（第 3 节 E 类）；还没签的约束性义务用文章后 18 个月以内能核对签约的那天<span class="src">D185、D210</span>。不把"拟议""预计"写成"已签""已完成"。</li>
+   310	<li><b>口径完整：</b>算谁、不算谁、算什么写清楚；支出、融资、担保、订单、收入不混。</li>
+   311	<li><b>时间正确：</b>原文支持这个期间，不把几年的平均写成今年。</li>
+   312	</ul>
+   313	
+   314	<h3>不开的<span class="src">第 1 版 §6 的清单</span></h3>
+   315	<div class="table-wrap mid"><table>
+   316	<thead><tr><th>不开</th><th>出处</th><th>它变成什么</th></tr></thead>
+   317	<tbody>
+   318	<tr><td>季度数字和季度指引</td><td>第 1 版 §6；PRD 06 梯子第 6 条</td><td>证据</td></tr>
+   319	<tr><td>同一段指引里的每一行（"费用率、税率是模型输入，不是争论"）</td><td>第 1 版 §6</td><td>证据</td></tr>
+   320	<tr><td>没日期的"护城河""战略"</td><td>第 1 版 §6</td><td>证据</td></tr>
+   321	<tr><td>高管任免、股东投票、回购授权；章程</td><td>第 1 版 §6；章程出自 D239 选定的 role-v29 原文（"executive appointments, shareholder votes or bylaws"）</td><td>证据或不留</td></tr>
+   322	<tr><td>例行诉讼程序</td><td>第 1 版 §6</td><td>证据</td></tr>
+   323	<tr><td>客户的部署计划（"它是供应商需求和产品问题的证据，除非改变供应商自己的现金或信用风险"）</td><td>第 1 版 §6</td><td>证据；改变公司自己的现金或信用风险时按 C 类判</td></tr>
+   324	<tr><td>以约束性义务为理由开：公司自己借钱、自己的租约、已完成或没写规模的投资。它们不是约束性义务；对别的问题仍可以是证据，或按别的开题理由判</td><td>D236、D238</td><td>证据</td></tr>
+   325	<tr><td>把远期年度预测改装成事件</td><td>第 1 版 §6</td><td>证据</td></tr>
+   326	<tr><td>后年及以后的年度量（约束性义务除外）</td><td>PRD 06 梯子第 5 条；D185</td><td>证据</td></tr>
+   327	<tr><td>同一个量的另一个估计、另一种口径、另一个来源</td><td>第 1 版 §6 测试 4</td><td>那个已开问题的证据，由匹配并入</td></tr>
+   328	</tbody></table></div>
+   329	
+   330	<h3>同一题、续期，还是另一题：匹配这一步的事，抽取不判库里的</h3>
+   331	<ul>
+   332	<li><b>总规则：</b>同一个结果能判掉两题，就是同一题；答案能分开走、而且分析员会分别下注的，才是另一题<span class="src">D248</span>。</li>
+   333	<li><b>同一题：</b>同一个结果能同时判两个问题。另一个估计、来源、措辞、方向<span class="src">第 1 版 §6 测试 4</span>；同一总量的另一种人群或代用口径（D190 碰撞裁决提示 collision-v1："another population or proxy of one aggregate"；D197 引的 role-v12 原文："another population or another wording of the same aggregate is evidence to the shown aggregate thesis"）。候选并进已开问题，用它的结果档和到期日<span class="src">PRD 06</span>。只有以共同量理由开题、带量的候选由代码自动判，其余是匹配和碰撞裁决的判断。</li>
+   334	<li><b>同一个计划的几种说法</b>（担保、融资承诺、信用支持……），最后核对的是同一个数，是一题<span class="src">D248 第 1 条</span>。</li>
+   335	<li><b>同一件事的不同截止日：</b>早的那题开着时，晚的截止日是它的证据，不另开；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上并进来的证据，不等新文章<span class="src">D248 第 2 条</span>。</li>
+   336	<li><b>同一代产品的几个里程碑：</b>一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span>。</li>
+   337	<li><b>公司自己的量：</b>只按财年开题；按日历年的估计是财年那题的证据，两种年份差得多时分量低一点<span class="src">D248 第 4 条；PRD 06 梯子第 5 条</span>。</li>
+   338	<li><b>身份：</b>事件和政策题里模型写的期间起点，不拿来挡合并；对象、事件、截止日照旧核对<span class="src">D248 第 5 条</span>。</li>
+   339	<li><b>续期：</b>同一个量或同一串事件的下一个期间<span class="src">PRD 06 Succession、D190</span>。</li>
+   340	<li><b>另一题：</b>同一件事里答案能分开走、分析员会分别下注的：有自己驱动的组成部分；同一笔交易或同一份附注里两个各自会变、分别盯着的数；另一件事<span class="src">D190 碰撞裁决的四种；D248 第 1 条收窄了"担保和融资"</span>。</li>
+   341	<li><b>约束性义务：</b>"一笔或一个计划"一题<span class="src">D210</span>；一笔交易是不是某个已按金额开题的计划的一部分，由匹配判，是就并入<span class="src">D248 第 1 条</span>。还没签的单笔交易是"签不签"的是非题，照旧可以开，不并进计划的金额题<span class="src">D210；PRD 06；D248 未改</span>。</li>
+   342	<li><b>共同量：</b>以共同量理由开题、带量的候选（量的类别是 <code>other</code> 的不算），由代码按"主题＋量＋期间"判同一题；政策阶段和别的事件保留按事件判的身份；不带这个开题理由的主题量由模型判<span class="src">D197</span>。</li>
+   343	</ul>
+   344	
+   345	<h3>谁判，谁查</h3>
+   346	<div class="table-wrap mid"><table>
+   347	<thead><tr><th>内容</th><th>谁</th></tr></thead>
+   348	<tbody>
+   349	<tr><td>测试 1–3、同一篇文章里的测试 4、属于哪一类、问题怎么写</td><td>抽取的模型（判断）</td></tr>
+   350	<tr><td>结果档形状、期间是真日期、到期在文章之后、季度数、年限、约束性义务 18 个月、<code>settled_by</code> 不为空</td><td>代码：只查形状，不判重要性<span class="src">D154、D155、D184</span></td></tr>
+   350	<tr><td>结果档形状、期间是真日期、到期在文章之后、季度数、年限、约束性义务 18 个月、<code>settled_by</code> 不为空</td><td>代码：只查形状，不判重要性<span class="src">D154、D155、D184</span></td></tr>
+   351	<tr><td>和库里的同一题、续期、另一题</td><td>匹配（Jev）和碰撞裁决<span class="src">D190</span>；共同量由代码<span class="src">D197</span></td></tr>
+   352	</tbody></table></div>
+   353	<p class="note">年限按公司财年数：2026 年 7 月时 NVIDIA 在 FY2027（2027 年 1 月结束），所以 FY2028 是明年。代码原来按自然年算，把 FY2028 当成后年拒掉；在 v29 答案的 40 个带年份的候选里拒错了 2 个。已修，测试是 <span class="path">tests/test_fiscal_year_horizon.py</span><span class="src">D243</span>。</p>
+   354	
+   355	<h2 id="evidence"><span class="num">5</span>证据标准</h2>
+   356	<h3>5.1 留的规则和四类</h3>
+   357	<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+   358	<p><b>整体倾向谨慎，对增量敏感。</b>杂音很大，不是什么都要抽，不是什么都算线索。判一句话之前先问：这是新信息吗？它让哪个问题的答案变了？一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏；重复常识、描述长期状况、泛泛的看法，是杂音<span class="src">D243</span>。</p>
+   359	<p>从第一段读到最后一段，分析员会记的都留。一页有八条就是八条，不挑<span class="src">D199</span>。它们通常是下面四类之一；四类描述的是会记的陈述长什么样，不是"属于四类就一定留"，留不留由上面的规则判。</p>
+   360	<ol class="steps">
+   361	<li><b>公司自己的数字、指引或决定</b><span class="src">第 1 版 §2</span>"同店销售本季增长 4.2%"；"管理层把全年收入指引定在 120–130 亿美元"；"董事会批准 100 亿美元回购"；"公司取消软件订阅费，生产使用免费"<span class="src">Alex 判 8，Omniverse</span>。</li>
+   362	<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+   363	<li><b>具名一方的主张或估计</b><span class="src">第 1 版 §2</span>"CFO 说十年前建的工厂仍满负荷"；"分析师把明年 EPS 预期上调到 4.10 美元"；"做空机构指控公司虚增应收 20 亿美元"；"内存厂说 2027 年短缺最严重，持续到 2030"。</li>
+   364	<li><b>政策或监管的决定或步骤</b><span class="src">第 1 版 §2</span>"监管机构批准该药第二个适应症"；"政府要求该产品出口须申请许可"；"25 家公司联名反对过早限制开放权重模型"；"财长说将调查某国公司是否窃取知识产权"。</li>
+   365	</ol>
+   366	<p><b>典型的主张和背景</b><span class="src">D243 第 5 条</span>：Alex 的原话是"这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"。常识，就是跟这家公司的分析员读这篇之前就已经知道的：谁领先、谁在竞争、需求强、供给紧、融资难这类说法，和对已知状况的重述。这类陈述没有数字和具体的叙事就不收。不是常识的，是新信息，比如一份新报告的判断、一个新的市场数据、刚发生的事的细节，照上面的规则判，分析员会记就留。</p>
+   367	<ul>
+   368	<li><b>常识，不收：</b>"博通 CEO 说能从英伟达抢份额"；"Blackwell 和 Rubin 仍然供不应求"；"融资会是扩大算力最大的障碍"；"内存厂避开了以往的产能过剩"；"博通预计明年随着新客户推出定制芯片大幅增长"。</li>
+   369	<li><b>新信息，收：</b>一位科技公司高管对媒体说"中国国产 AI 芯片厂商已经全部卖光，客户在考虑性能更低的芯片"；"旧型号 GPU 的租金在涨"；研究机构说"这让 Rubin Ultra 暂时没有成熟的扩展方案，给对手留出了空间"；"华为现在占中国 AI 芯片市场约一半，这个市场约 500 亿美元"。</li>
+   370	<li><b>有数字也要过上面的规则：</b>作者说"英特尔多年领先，占 CPU 市场 59%"，和英伟达的问题关系不大，分析员不会记。</li>
+   371	</ul>
+   372	
+   373	<h3>5.2 不完整也是证据</h3>
+   374	<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+   375	
+   376	<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+   377	<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+   378	<div class="table-wrap wide"><table>
+   379	<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+   380	<tbody>
+   381	<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+   382	<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+   383	<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+   384	<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+   385	<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+   386	<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+   387	<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+   388	<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+   389	<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+   390	<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+   391	</tbody></table></div>
+   392	<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+   393	<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+   394	
+   395	<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+   396	<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+   397	<div class="table-wrap mid"><table>
+   398	<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+   399	<tbody>
+   400	<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+   401	<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+   402	<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+   403	<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+   404	<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+   405	<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+   406	</tbody></table></div>
+   407	<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+   408	<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+   409	
+   410	<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+   411	<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+   412	<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51、D247 换成的 role-v53 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+   413	<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+   414	<div class="table-wrap mid"><table>
+   415	<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+   416	<tbody>
+   417	<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+   418	<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+   419	<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+   420	<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+   421	<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+   422	</tbody></table></div>
+   423	<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；同一说法在判断时怎么显示，见第 2 节<span class="src">D248 第 7 条</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+   424	
+   425	<h2 id="weight"><span class="num">6</span>分量</h2>
+   426	<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+   427	<div class="table-wrap wide"><table>
+   428	<thead><tr><th>等级</th><th>什么样</th><th>例子</th></tr></thead>
+   429	<tbody>
+   430	<tr><td><span class="w core">核心</span></td><td>碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字</td><td>分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持</td></tr>
+   431	<tr><td><span class="w sup">辅助</span></td><td>支持或反驳上面的判断，或给出可检验的估值假设；碰到关键判断但没有能定位答案的信息；别家公司自己的经营数字（收入、利润率、积压订单）；对公司规模来说是小事的；离现在越远、判断下来只是辅助的预测</td><td>对手自己模拟的 2.4 倍性能比较；公司取消软件订阅费；三条开放模型政策表态；Sharon 六年 72 MW 合同；FY2028 EPS 一致预期；12.76 × 25 的条件估值；一家银行选用对手系统（没写金额）；伙伴把公司模型集成进政府系统（没写金额）；内存厂公布的季度收入和利润率；客户公布的订单积压；客户园区"规划最多 17 万颗 GPU"</td></tr>
+   432	<tr><td><span class="w opt">可选</span></td><td>帮助理解市场预期，省略不损害论证；留不留都不扣分</td><td>财报后股价反应；在研公司的估值倍数、市值、孤零零的目标价；生态数字；重提的过去实际数；新加坡案件<span class="src">D231、D243 第 3、4、6 条</span></td></tr>
+   433	<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+   434	</tbody></table></div>
+   435	
+   436	<h3>判法</h3>
+   437	<ol class="steps">
+   438	<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+   439	<li><b>是可选的那几样吗？</b>在研公司的估值倍数、市值、孤零零的目标价，财报后股价反应，生态数字，重提的过去实际数，新加坡案件，归可选。带推导的条件估值例外，是辅助<span class="src">第 1 版 §10.1</span>。</li>
+   440	<li><b>核心还是辅助</b>碰到关键判断、带着能定位答案的信息、对公司不是小事、不是别家公司自己的经营数字，四条都满足是核心；其余是辅助。别家公司直接说出关键投入或需求的状况（短缺到哪年、明年花多少），按关键判断算。预测离现在越远，越可能只是辅助，这由判断定：FY2028 EPS 一致预期是辅助，Alex 说"太久远了"；内存厂说短缺 2027 年最严重、持续到 2030 是核心，它覆盖今明两年。</li>
+   441	</ol>
+   442	<p><b>"确定状态"</b>：已经签了、宣布了、开始了、批准了、取消了、推迟到某个日期了、定下了裁决日；没有量的"在谈""在考虑""可能""在探索""打算"不算。确定状态以陈述当天为时间，不要求生效日。<b>"带期间的预测"</b>：分析师预计今年余下收入增长 82%；内存厂说短缺持续到 2030 年。确定不确定看说法本身的内容；靠不靠得住另记在来源层。</p>
+   443	<p><b>Alex 拍过的分量</b><span class="src">D215；gold-check.md，D229</span>：收入增速核心；内存短缺核心；AMD 跑分辅助；三条政策辅助；云厂商支出核心；Omniverse 辅助；Sharon "辅助属于供给需求"；商谈最多 6000 亿支持 OpenAI 核心（在谈的金额）；投资 SB Energy 15 亿核心；Broadcom AI 半导体收入 +143%、Google Cloud 三个数辅助（别家公司的经营数字）；FY2028 EPS 辅助（远期）；逐案审核、有拒绝辅助（没有量和确定结果）。</p>
+   444	<p><b>分量只在评估时判。</b>分量只在金标和测量里判，不进账本，不进抽取的输出<span class="src">D240</span>；账本只存来源层。抽取的模型决定留不留、怎么写，以及提哪些候选问题<span class="src">第 1 版 §1</span>。</p>
+   445	<p>仿真里剩下的分歧几乎都在核心和辅助这条线上："对公司规模来说是不是小事"从一句话里常常看不出来（第 12 节，第三轮）。所以核心和辅助分开报，评估时允许读者间合理的不同判<span class="src">D226、D228</span>。</p>
+   446	
+   447	<h2 id="views"><span class="num">7</span>研究观点标准</h2>
+   448	<p>判断这一步归 PRD 06、D198、D201 管；这里只列和抽取共用的。</p>
+   449	<ul>
+   450	<li><b>观点是什么：</b>一个关于业务和世界的、有论证的看法；立场来自论证和市场已经定价的东西相比；报表行是它的证据，不是它的定义<span class="src">AGENTS §8</span>。</li>
+   451	<li><b>判断读什么：</b>一个问题的判断看到的，是它仍然有效的证据里的两部分：新到的（在它倒数第五次判断之后挂上的；判断不满五次时全部显示）和依据（最近十次判断里被引用过的）。其余仍在账本里有效，请求里写明还有多少条没显示；答案只能引用和推动显示了的<span class="src">D198；从 judging-v5 起，v4 的配置照旧读全部有效证据</span>。依赖问题的结论和理由、标的问题的主题块也读<span class="src">PRD 06、D195</span>。主题结论变了，同一轮里排队重判符合条件的标的问题；主题的结论不作为证据引用<span class="src">D195</span>。</li>
+   452	<li><b>研究的交付物是论证：</b>保留不可改的来源记录，和一份有版本的研究论证，写明支持和反对的来源、是否独立、变化和局限<span class="src">D201</span>。</li>
+   453	<li><b>研究用途：</b>评估判断时，读者按四级看它引用的每条证据对那个具体结论撑得住多强：直接可用、有条件可用、线索、不可用；同一条证据对不同结论可以不同<span class="src">D221</span>。这是评估的读法，不是判断这一步要输出或存下的字段（D221："not a numerical confidence score or a new storage layer"）。用途和分量不同：分量问"这条多重要"，用途问"拿它证明这个结论够不够"。</li>
+   454	<li><b>事实和推断分开：</b>来源没说的结论可以作为分析员推断写出，但要标明<span class="src">D218</span>。只有事实能确定落在哪一档<span class="src">PRD 06</span>。</li>
+   455	<li><b>重复不是新证据，模型意见一致不是互相印证</b><span class="src">AGENTS §8</span>。</li>
+   456	</ul>
+   457	
+   458	<h2 id="golden"><span class="num">8</span>金标：改提示词的测试标准</h2>
+   459	<p class="note">第 4 版（D248）改了开题的规则：下面这份第 3 版金标是历史记录，它的开题部分要按第 4 版逐条重推、另记带理由的更正、冻结成第 4 版之后才能再打分；打分程序遇到版本对不上会拒绝（D244）。证据部分 D248 没改。</p>
+   460	<p>按这一页从原文逐篇写的参照，用来量提示词改动。Alex 的要求是"以上有你自己trace 过的golden set 来做为改prompt测试标准"<span class="src">D241</span>。定稿文件：<span class="path">docs/research/2026-10-29-ledger-standard/golden-v3/golden-v3-signed.json</span>，sha256 <code>78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3</code><span class="src">D243</span>。</p>
+   461	<div class="tiles">
+   462	<div class="tile"><div class="v">118</div><div class="l">篇测试文章：那一周 98 篇，留出 20 篇</div></div>
+   463	<div class="tile"><div class="v">348</div><div class="l">条要收或可以收的证据，一件事一条</div></div>
+   464	<div class="tile"><div class="v">738</div><div class="l">句不收，各写理由；另有 24 句可选</div></div>
+   465	<div class="tile"><div class="v">1110</div><div class="l">段原文片段，代码核过都在原文里</div></div>
+   466	<div class="tile"><div class="v">28 · 42</div><div class="l">个必须开、可以开的问题；240 个不该开</div></div>
+   467	</div>
+   468	
+   469	<h3>每一条记什么</h3>
+   470	<ul>
+   471	<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+   472	<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+   473	<li><b>问题：</b>必须开的（类、开题理由、标的或主题、要点、<code>settled_by</code>）；可以开的（另一种合理写法）；不该开的（第 4 节哪一行或哪个测试）。</li>
+   474	<li><b>没判清的地方：</b>两种读法都写出来。</li>
+   475	</ul>
+   476	
+   477	<h3>分量的分布（定稿）</h3>
+   478	<div class="table-wrap mid"><table>
+   479	<thead><tr><th>那一组</th><th class="num-cell">核心</th><th class="num-cell">辅助</th><th class="num-cell">可选</th><th class="num-cell">要收或可收</th><th class="num-cell">不收</th><th class="num-cell">原列不收、现为可选</th></tr></thead>
+   480	<tbody>
+   481	<tr><td>那一周 98 篇</td><td class="num-cell">80</td><td class="num-cell">152</td><td class="num-cell">63</td><td class="num-cell">295</td><td class="num-cell">621</td><td class="num-cell">22</td></tr>
+   482	<tr><td>留出 20 篇</td><td class="num-cell">6</td><td class="num-cell">29</td><td class="num-cell">18</td><td class="num-cell">53</td><td class="num-cell">117</td><td class="num-cell">2</td></tr>
+   483	</tbody></table></div>
+   484	<p>参考答案第 2 版那一周是核心 47、辅助 69、可选 48。辅助多出来的，主要是有名有姓、没写规模的动作（伙伴集成、客户采用、合作）：第 2 版标成"什么都不留"，现在按 D240 收为辅助。</p>
+   485	
+   580	<tr><td class="nowrap">10-29 D217</td><td class="nowrap">目标模型</td><td>"现在开始以haiku 为模型取代luna … 每一轮都根据尺子去迭代 … 小心 overfit … 尺子其实不对 … scope creep"（D234 起 Haiku 暂停）</td></tr>
+   581	<tr><td class="nowrap">10-29 D226、D228</td><td class="nowrap">评法</td><td>合理的模糊和不同措辞可以接受；金标例子教的是判断逻辑，不是唯一答案；两套既有标准（证据层次、90 题评审）都要用；来源、用途、准入分开判</td></tr>
+   582	<tr><td class="nowrap">10-29</td><td class="nowrap">今天</td><td>"之前没有对齐一个hedge fund analyst 应该要用什么标准来抽研究观点"</td></tr>
+   583	<tr><td class="nowrap">10-29 D229</td><td class="nowrap">标准不漂移</td><td>"1-5 都可以，按照这套标准来开始做测量，这条标准不要漂移"</td></tr>
+   584	<tr><td class="nowrap">10-29 D231</td><td class="nowrap">新加坡</td><td>"新加坡那条就随意吧"</td></tr>
+   585	<tr><td class="nowrap">10-29 D233</td><td class="nowrap">今年</td><td>按公司财年或自然年写都算对</td></tr>
+   586	<tr><td class="nowrap">10-29 D236</td><td class="nowrap">三条提议</td><td>"好都按照你的提议来。但是你的prompt 改动要确认不是hardcode for nvidia 你在建构的是hedge fund brain"</td></tr>
+   587	<tr><td class="nowrap">10-29 D237</td><td class="nowrap">通用</td><td>"It needs to be general purpose as a hedge fund brain"</td></tr>
+   588	<tr><td class="nowrap">10-29 D238</td><td class="nowrap">直接读</td><td>"你根本不要再给我跑什么三轮了。每一篇的问题明显地出错的你不要再用工具尺子了，你直接下去看"</td></tr>
+   589	<tr><td class="nowrap">10-29 D240</td><td class="nowrap">不完整的证据</td><td>"我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点"</td></tr>
+   590	<tr><td class="nowrap">10-29 D241</td><td class="nowrap">这份标准</td><td>"几个大类型的账本 - 开题标准和档次 这两个要完整的定义好写好"；"档位根据信息量作定标 -以上有你自己trace 过的golden set 来做为改prompt测试标准"</td></tr>
+   591	<tr><td class="nowrap">10-29 D243</td><td class="nowrap">签字</td><td>第 5 条："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"；方向："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"；"其他几条的意见我都ok，sign off"</td></tr>
+   592	<tr><td class="nowrap">10-29 D242</td><td class="nowrap">这一页</td><td>"你给我一个网页，这个同时也是你这个环节重要的PRD"</td></tr>
+   593	<tr><td class="nowrap">10-30 D248</td><td class="nowrap">颗粒度</td><td>七条各选 A（第 6 条"A， A"）；原则："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</td></tr>
+   594	</tbody></table></div>
+   595	
+   596	<h2 id="conflicts"><span class="num">11</span>在用的标准之间的冲突，怎么摆平</h2>
+   597	<p>编号对应盘点报告 <span class="path">inventory-2026-10-29.md</span> 的 B1–B20，B21 是后来加的。"按已拍的"是已有决定，只是没落实或没写全；文首 12 条的决定记在 D243；"我定"只限措辞和记录约定。</p>
+   598	<div class="table-wrap wide"><table>
+   599	<thead><tr><th>#</th><th>冲突</th><th>处理</th><th>依据</th></tr></thead>
+   600	<tbody>
+   601	<tr><td>B1</td><td>共同量的名字和定义：D191 改名并扩到价格；v16 起提示词和代码用 <code>industry_aggregate</code>、几家公司合计、一个日历年</td><td>按 D191 落实为 <code>shared_quantity</code>，期间仍用自然年；提示词和代码要跟着改</td><td>D191、D243；PRD 06</td></tr>
+   602	<tr><td>B2</td><td>主驱动量含不含产品节点</td><td>含，写成 A、B 两类</td><td>D236（在 D184 之后）</td></tr>
+   603	<tr><td>B3</td><td>约束性义务：一笔或一个计划一题（D210），还是一组入股是一个判断（D201 规则 G）</td><td>按 D210 "一笔或一个计划"；一笔交易属不属于已开的计划，由匹配判；同一计划的几种说法是一题；够不上公司规模的单笔交易只作证据</td><td>D210、D236、D238、D248</td></tr>
+   604	<tr><td>B4</td><td>开题测试三套，提示词和代码都没用</td><td>第 1 版 §6 四个测试加评审三条写法检查（第 4 节）；测试 4 和库比的部分归匹配</td><td>第 1 版 §6；评审 §1；D211</td></tr>
+   605	<tr><td>B5</td><td>PRD 05 还写着 <code>folds_into</code>、第 5 块</td><td>抽取不看库；PRD 05 过时段落签字后改指这一页</td><td>D211</td></tr>
+   606	<tr><td>B6</td><td>没家的证据扔不扔</td><td>产品里扔，评估读被扔的、分四种归因；两者不冲突</td><td>D209；第 1 版 §7</td></tr>
+   607	<tr><td>B7</td><td>归档规则三个版本</td><td>以 D207 为准；归档提示里点名 NVIDIA 的那句按 D237 改成通用（后续一步）</td><td>D207、D237</td></tr>
+   608	<tr><td>B8</td><td>分量几级、"档位"一词两义</td><td>四级；"档位"在这一页叫分量，问题的叫结果档</td><td>第 1 版 §10.3；D243 第 1 条</td></tr>
+   609	<tr><td>B9</td><td>几套"不要"的类</td><td>抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数</td><td>第 1 版 §2、§4；D221；D240；D243 第 12 条</td></tr>
+   610	<tr><td>B10</td><td>股价、目标价、重述、新加坡各处判得不同</td><td>财报后股价反应可选（第 1 版 §10.2）；在研公司的估值倍数、市值、孤零零的目标价可选；重提的过去实际数可选；新加坡可选</td><td>第 1 版 §10.2；D231；D243 第 4、6 条</td></tr>
+   611	<tr><td>B11</td><td>主题怎么连到公司</td><td>一对全部的主题块；文章明写的依赖照记；D208 的通道未建</td><td>D191、D195</td></tr>
+   612	<tr><td>B12</td><td>研究组、驱动层</td><td>研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+   613	<tr><td>B13</td><td>PRD 06 的重复和替代说法早于 D202、D204</td><td>这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新</td><td>D202、D204</td></tr>
+   614	<tr><td>B14</td><td>组成部分算不算同一题</td><td>同一总量的另一种人群或口径是同一题；有自己驱动、答案能分开走、分析员会分别下注的是另一题，要过独立意义测试</td><td>D190；第 1 版 §6；D248</td></tr>
+   615	<tr><td>B15</td><td>标的五档必须叫"非常看多……"（代码），还是写业务结果（D186）</td><td>这一页按 D186 写；代码是另一模块，D186 未实现照旧记</td><td>D186</td></tr>
+   616	<tr><td>B16</td><td>转述的公告算事实还是当事人陈述</td><td>事实（role-v29 原文："an announcement or completed deal the item reports is a fact even when the reporter names no source"）；混合的一条按主要说法定层</td><td>PRD 06；D238、D239；D243 第 9 条</td></tr>
+   617	<tr><td>B17</td><td>代码按自然年拒公司明年的财年量</td><td>已修：年限按公司财年数，测试 <span class="path">tests/test_fiscal_year_horizon.py</span></td><td>PRD 06 梯子第 5 条；D243</td></tr>
+   618	<tr><td>B18</td><td>"线索""背景"一词多义</td><td>"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行</td><td>D221</td></tr>
+   619	<tr><td>B19</td><td>谁把候选并进已开问题</td><td>匹配和碰撞裁决；共同量由代码</td><td>D190、D197、D211</td></tr>
+   620	<tr><td>B20</td><td>AGENTS §8 指向两套标准，D229 又说第 1 版是唯一尺子</td><td>这一页签字后取代第 1 版，AGENTS §8 指向这一页；对两套既有标准（PRD 06 证据层次、90 题评审）的指向保留，它们是这一页的出处</td><td>D228、D229、D243</td></tr>
+   621	<tr><td>B21</td><td>PRD 06 State 写判断要 "reconsider all evidence still in force"，D198 之后只显示新到的和依据</td><td>按 D198（在后）；PRD 06 签字后更新</td><td>D198</td></tr>
+   622	</tbody></table></div>
+   623	
+   624	<h2 id="checks"><span class="num">12</span>校验记录和出处</h2>
+   625	<h3>三轮独立读者仿真</h3>
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files -g 'drift-1.txt' -g 'AGENTS.md'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+AGENTS.md
+docs/research/2026-10-30-question-identity/drift-1.txt
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba docs/research/2026-10-30-question-identity/drift-1.txt' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-10-30-question-identity/plan.md | sed -n '1,105p;231,245p'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+     1	**Serious drift remains in version 4.** For example, the page says a product-generation question asks when shipping begins, while its question-types table still permits asking when the product launches.
+     2	
+     3	1. **High — The product milestone rule contradicts the question-types table and omits the reason for the chosen milestone.** The new rule says one question asks when shipping begins, with launch as evidence ([page, line 336](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:336)); the table still allows a question about either launch or shipping ([line 264](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:264)). D248 says to ask about **the step that brings revenue**, identifying shipping as that step in the examples ([D248, line 2961](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2961); [plan, line 237](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:237)). The new wording drops that reason and presents shipping as an unconditional rule.
+     4	
+     5	2. **High — The new “small matters” wording conflicts with the evidence-retention test.** The page says small matters “只作证据” ([line 297](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:297)); similar wording appears in [lines 218 and 265](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:218). Yet the existing evidence rule says a statement is retained only if an analyst would note it because it changes the likelihood of an answer, and that noise is not retained ([lines 357–359](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:357)). D248 says a matter below the opening threshold is evidence ([line 2964](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964)); it does not say that otherwise irrelevant or rejected material must be retained. The page needs to reconcile the opening decision with the separate retention decision.
+     6	
+     7	3. **High — The prerequisite for switching on evidence consolidation is incomplete.** The new rule says to measure whether consolidation hides qualifications before enabling it ([page, line 252](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:252)). D248 also requires measuring the accuracy of **both the original-speaker and original-day fields** on which the rule depends ([line 2965](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2965)). That second prerequisite is absent from the page. The page’s “生效” status at [line 146](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:146) also makes the conditional activation easy to miss.
+     8	
+     9	4. **High — The gold section presents the version-3 gold as the current reference for version 4.** The new summary says only the question-opening part must be re-derived ([page, line 208](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:208)), while the gold section still calls the signed version-3 file the definitive reference and presents its question counts without a version-4 caveat ([lines 458–465](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:458)). D244 requires the gold to be re-derived and frozen when the standard changes, and the scorer to refuse a gold for another standard ([D244, line 2934](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2934)). The existing file and counts can remain as historical records, but the page does not distinguish them from a version-4 reference.
+    10	
+    11	5. **Medium — “The model-written period start is not a fact” is an unsourced assertion.** The new sentence makes that categorical claim before saying it must not block a merge ([page, line 338](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:338)). D248 decides the latter behavior for event and policy questions; it does not declare every model-written start to be non-factual ([D248, line 2963](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2963); [plan, line 239](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:239)).
+    12	
+    13	6. **Medium — The new summary overstates the single-question rule for different periods and milestones.** It says different deadlines, milestones and period descriptions of one bet “是一题” ([page, line 297](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:297)). The detailed rules allow a later-deadline successor after the first question expires and separate milestones an analyst would bet on separately ([lines 335–336](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:335)). D248 also limits the period decision to a company’s fiscal-year question and a calendar-year estimate ([lines 2960–2962](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2960)). The summary should carry those boundaries rather than read as an unconditional merge rule.
+    14	
+    15	The new Alex principle quotation is exact in both occurrences ([page, lines 209 and 592](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:209); [D248, line 2957](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2957)). The recorded answer “A， A” also matches [D248, line 2964](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964). I found no misquote among the added quotations.
+    16	
+    17	**Serious findings remain.**
+ succeeded in 0ms:
+     1	# 问题合并与证据去重：标准、金标、测量（计划，2026-10-30）
+     2	
+     3	状态：计划，等 Alex 拍第 4 节的难点后开工。没有改任何代码、提示词或配置。
+     4	数字都有脚本：`census/`（$0，只读存下的账本）。标"我读的"是 Claude 的阅读，不是金标。Codex 审查记录见第 12 节。
+     5	
+     6	## 0. 结论先说
+     7	
+     8	1. **问题开多了，这是真的。** 封存的三个月长跑（只跑英伟达，59 天）开了 69 个问题。10-28 我按分析员的尺读了前 50 个
+     9	   （`2026-10-28-quality-review/gold-admission.md`，是我的判断，你还没过目）：我判 22 个不该存在（重复 12、小事开成问题 10），另 5 个边缘（那份文件末尾的汇总写"留 24、边缘 4"，逐行数是 23 和 5）。
+    10	2. **两个来源。** 重复的没并上（匹配的事，12 个）；小事开成了问题（开题的事，10 个）。
+    11	3. **匹配常常合并，漏的是特定几类。** 封存那次 122 个候选问题，合并 39 个、续期 2 个；最新一周（v38）32 个候选，合并 12 个。
+    12	   漏的集中在三处：裁决判"同一件事里的另一题"；裁决说"同一题"却被代码挡下；重复的那题根本没被拿来比（第 3 节）。
+    13	4. **尺有一处边界没写清（第 3 版时）。** 签字标准第 3 版第 4 节里有两句（第 4 版已按 D248 第 1 条收窄；碰撞裁决的提示词里还是旧句，A 臂改它）：
+    14	   - "约束性义务：一笔或一个计划一题"（D210）；
+    15	   - "另一题：同一件事里答案能分开走的：有自己驱动的组成部分、同一笔交易里的另一个量（担保和融资）"（抄自 D190 的碰撞裁决）。
+    16	   第一周"英伟达给云客户兜底"被拆成 3 题。裁决自己写的理由是"两个金额可能分开走""是更宽总额的一个组成部分"，正落在第二句那一档。
+    17	   它前后的判法也对不上：7 月 2 日它说 v3 比 v1 窄，判"另一题"；7 月 6 日一个新候选"英伟达披露的兜底义务有多少"，它说和 v1、v3 都是同一题。
+    18	   这不算逻辑矛盾（两次比的候选不同），但说明这几个量是"一个计划的几种说法"还是"能各自核对的几个量"，它自己也拿不准。
+    19	   两句标准算不算冲突，正取决于这一点：这就是要你拍的 H1。
+    20	   是不是这句导致的，第 7 节第 2 步问模型自己确认。尺的边界不清，按规矩先和你定尺，再动手（AGENTS §7.1）。
+    21	   **更正我上一条回复：** 我说"匹配用的是自己的规则、不是签字标准"，不对，这句就在签字标准里；我说"匹配几乎从不合并"，也不对，是我第一次数漏了记录。
+    22	5. **计划四步：** 你拍难点，把"同一题"的尺定死 → 写金标并冻结 → 一次只改一处，用存下的数据量，不回归才收 → 最后整条线跑一次三个月，你说跑才跑。
+    23	
+    24	## 1. 一张图：一个问题和一条证据从进来到入库
+    25	
+    26	```
+    27	文章 ─► 抽取：提候选问题（看不到库，D211）＋ 留证据
+    28	          │
+    29	          ▼
+    30	       代码查形状（结果档、日期、期限）
+    31	          │
+    32	          ▼
+    33	       归档（轮到这篇文章时）：抽取给的挂到本篇候选的链接保留，归档再给每条证据挂上最窄的那个已开问题（D207），一条证据可以两者都有；
+    34	         一条都没挂上的证据扔掉（D209）；候选的证据全被拿走、一条不剩时，候选也不进匹配
+    35	          │
+    36	          ▼
+    37	       匹配，候选问题：
+    38	         ① 名单：有身份键相容的已开问题（相同，或期间重叠、空项不算冲突）就只比它们；没有，就按用词搜最像的 10 个
+    39	            （共同量另走一条：同主题同量的问题，也最多 10 个）；再加上这篇文章展示过的问题（加在 10 个之外）
+    40	         ② Jev 给名单里每一对一个关系标签（同一个量 / 下一期 / 一部分 / 同一件事不同的量 / 无关）
+    41	         ③ 名单里"同对象、同一类量"的，再问一次碰撞裁决（生成模型，D190）：同一题 / 下一期 / 同一件事里的另一题 / 无关
+    42	         ④ 代码按结果：并进去 / 续期开新题 / 新开（写入时还会查对象、身份键，不过就改成新开）
+    43	          │
+    44	          ▼
+    45	       匹配，证据：和所挂问题下用词最像的 10 条比，标"同一说法 / 修订 / 新"
+    46	         标签只是意见，两条都留（D202、D204）；判断时看到"匹配认为它和 eX 是同一说法，论证只算一条"
+    47	```
+    48	
+    49	## 2. 现状：数过的（$0）
+    50	
+    51	候选问题的去向（`census/admission-census.txt`）：
+    52	
+    53	| 账本 | 问题数 | 候选 | 合并 | 续期 | 裁决说"同一件事里的另一题"→ 新开 | 裁决说"同一题"仍新开 | 只有 Jev、最强标签"一部分"或"同一件事不同的量"→ 新开 |
+    54	|---|---|---|---|---|---|---|---|
+    55	| 封存三个月（poc-v34，59 天） | 69 | 122 | 39 | 2 | 12 | 3 | 7 |
+    56	| v38 一周（归档＋看不到库） | 17 | 32 | 12 | 1 | 3 | 0 | 3（另 1 个 Jev 说同一个量仍新开，待查） |
+    57	
+    58	读这张表要知道三件事：
+    59	- 这些是裁决给的类别，不是核实过的错误；哪些真是重复，要等 G2（第 5 节）判。
+    60	- "新开"的决定比问题数多，因为有的新开决定被后面的代码检查拒了。
+    61	- 脚本现在从匹配记录的 reason 文字里解析类别；我对过一个已知案例（v3 开题时对 v1 的裁决，存档里的结构化答案也是"另一题"）。
+    62	  第 7 节第 1 步改成从存档里的结构化答案数，不靠文字。
+    63	- 更正：我第一次数时每篇文章只取了最后一条匹配记录，漏了带候选的那条，合并被少算成 1 个和 0 个。已修，脚本在一篇文章的候选落在两条记录时会报错停下。
+    64	
+    65	证据（`census/pieces-*.txt`）："按标签合并后"是把匹配标的"同一说法"连起来算一条后的数。这个标签 40 次错 8 次（D204），所以只是估计，不是核实过的不同说法数。
+    66	
+    67	| 账本 | 问题 | 挂着的证据 | 按标签合并后 |
+    68	|---|---|---|---|
+    69	| 封存 | v10 数据中心收入 | 1,888 | 1,168 |
+    70	| 封存 | v2 总收入 | 1,863 | 1,123 |
+    71	| v38 一周 | v1 给云客户的担保 | 52 | 27 |
+    72	| v38 一周 | v3 云客户兜底安排的融资承诺（我判是 v1 的重复，待金标核） | 46 | 29 |
+    73	
+    74	v1 和 v3 有 20 条证据两边都挂着：问题重复了，证据就跟着重复挂。
+    75	
+    76	## 3. 机制：追到了哪一步
+    77	
+    78	| # | 机制 | 数到的 | 追到哪 | 归谁 |
+    79	|---|---|---|---|---|
+    80	| M1 | 碰撞裁决判"同一件事里的另一题"，代码开新题 | 裁决类别：封存 12，v38 3 | 裁决写的理由："金额可能分开走""是更宽总额的组成部分"，落在 `collision-v1.txt` 和签字标准第 3 版第 4 节"另一题"那一档（第 4 版已收窄）；它和 D210"一个计划一题"的边界没写清；前后判法对不上（第 0 节）。是哪句指令导致的还没证明 | 匹配（尺） |
+    81	| M2 | 裁决说"同一题"，候选仍开成新题 | 封存 3（脚本按"有一个裁决是同一题"数，不说明为什么没并） | 2 个追到：身份键里事件的期间起点差一个月（模型写的，1 月 1 日对 2 月 1 日），`identity.conflicts` 判冲突，又不能续期（质量复盘 §2 B）；第 3 个没追 | 匹配（代码） |
+    82	| M3 | 重复的那题没被拿来比：没进名单，或进了名单但量的类别不同，碰撞裁决不问 | 质量复盘读的 11 个重复里 4 个不在名单；v38 的 v4"FY2027 总收入"和 v10"FY2027 总收入增长"类别不同，Jev 判"同一件事不同的量"（0.69），碰撞裁决不问 | `matching.build_lists`、`jev_matching.collision_peers`（要同时在名单里、同一类量） | 匹配（代码） |
+    83	| M4 | 同一件事换个截止日（"2027 年底前发布"→"2028 年底前发布"），被当成"下一期"，代码续期开新题 | v38 1（v13 接 v11） | Jev 先判"下一期"（0.83），代码在问裁决之前就可以据此选续期；裁决也说"下一期"，结果没变。所以是 Jev 的标签加续期分支，不能单算到裁决头上（`jev_matching.decide`） | 匹配（尺＋代码） |
+    84	| M5 | 小事开成问题：单笔小投资、一栋楼的租约、游戏卡型号、某客户的数据中心投产 | 我读的 50 个里 10 个，另 5 个边缘（未经你复核） | 没追完：标准 C 类把"写明规模、尚未完成的入股"算约束性义务；"值得追"测试有没有被模型执行，要读原始答案才知道 | 开题（抽取） |
+    85	| M6 | 同一说法的证据各算一条 | v1：52 条，按标签合并后 27 条 | D204：标签 40 次错 8 次，所以只标不并，判断时两条都给看 | 证据匹配 |
+    86	
+    87	## 4. 分析员怎么判同一题（尺的草案，难点等你拍）
+    88	
+    89	**总规则：一个决定一张卡。** 签字标准已经写了："同一个结果能同时判两个问题"就是同一题；"答案能分开走的"是另一题。
+    90	难的是两句之间的边界。我的提议（没有来源，要你拍）：**答案能分开走，而且你会为两边分别下注，才分开；只是理论上能分开、不会分别下注的，并。**
+    91	
+    92	| # | 难点 | 例子（跨行业＋这次数据里的） | 选项 | 我的倾向 | 碰到的标准和决定 |
+    93	|---|---|---|---|---|---|
+    94	| H1 | 同一个计划下的不同说法 | 一家保险公司"为合资公司债务担保的总额" vs "给合资公司的信用支持"；英伟达"给云客户的担保" vs "兜底安排的融资承诺" vs "算力框架下的信用支持义务" | A 一个计划一题（D210）；B 担保、融资、信用支持各一题（第 4 节"另一题"那句） | **A**（已拍。没问过 Alex 的一种：还没签的单笔交易是"签不签"的是非题，D210 让它可以开、PRD 06 让数字题和事件题分开，这次照旧，不并进计划的金额题，比如 v38 的俄亥俄租约担保 v2 和云客户担保总额 v1 各自留着）：同一个计划、最后核对的是同一个数（这个计划的义务总额），是一题；同一份附注里两个各自会变、你会分别下注的数（比如担保额和已经借出去的钱），分开。一笔交易如果是某个已按金额开题的计划的一部分，并进去（标准第 4 节、D210，比如 Firmus、Sharon AI 的兜底属于云客户兜底计划）；不属于任何已开计划的另一笔交易才分开。给 OpenAI 俄亥俄租约兜底算不算云客户兜底计划的一部分，按材料判，放进 G1 | 标准第 4 节两句；D190、D210 |
+    95	| H2 | 同一件事、不同截止日 | 药企"新药能否 2026 年底前获批" vs "2027 年 3 月前获批"；Kyber "2027 年底前发布" vs "2028 年底前发布"；中国批准 H200 的三种截止日 | A 早的那题开着时，晚的并进去；早的到期定格后事情还在追，再续期开晚的；B 现在就续期，两题同时开着 | **A**。"推迟到 2028"是早那题"没在 2027 年发生"一边的证据。问题句和结果档写下不改（PRD 06），所以并进时把晚的截止日和候选原文记下；早的那题到期定格那一刻（拉取模式到期时跑，D14、D54），记下的晚截止日还没到，就由这条记录开续期题，不等新文章，见第 9 节。这给拉取模式加了一件事，选 A 就是一并同意它 | 标准第 4 节"续期"；PRD 06 Succession |
+    96	| H3 | 同一代产品的不同里程碑 | 车企"新平台开始交付" vs "宣布新平台"；Vera Rubin "送样" vs "出货"；Kyber "发布" vs "出货" | A 一代产品一题，问能带来收入的那个里程碑（开始出货），其余里程碑作证据；B 每个里程碑一题 | **A**，但要你拍：PRD 06 梯子第 3 条说"能朝相反方向走的部分要分开"，D236 允许问发布或出货；发布了却出不了货确实会分开走。我倾向 A 是因为分析员下注的是收入什么时候来 | PRD 06 梯子第 3 条；D236 |
+    97	| H4 | 公司自己的量，财年和自然年各开一题 | "FY2027 独立 CPU 收入" vs "2026 日历年独立服务器 CPU 收入" | A 公司的量只用财年，自然年的候选作那个财年题的证据；B 两题都留 | **A**，但这是改"同一题"的边界，要你拍：PRD 06 梯子第 5 条"公司的量用公司财年"支持 A；可标准又说一个问题只问一个期间、下一个期间是续期，两题的期间差一个月、范围也不完全一样（CPU vs 服务器 CPU），严格说不是同一个结果 | PRD 06 梯子第 5 条；标准第 3 节"问题怎么写"、第 4 节 |
+    98	| H5 | 身份键里模型写的"期间起点" | 同一个审批写成 1 月 1 日起或 2 月 1 日起 | A 事件和政策题的期间起点不参与身份冲突判断；B 维持现状 | **A**，但只说了冲突检查这一处：期间起点还进了自动身份键、名单（身份键相同才比）和续期条件，每一处怎么办要在 B 臂的值×读者表里逐处定；它能治掉 M2 的多少，要等第 3 个案例追完再说。风险：两件真不同的事只差期间起点时会被并，G1 里专门放这种对 | `identity.conflicts`、`identity` 自动身份键、`matching.build_lists`、`jev_matching.can_succeed`；D190 |
+    99	| H6 | 开题门槛（M5）这次做不做 | 银行"是否为一家小基金提供 5000 万授信"；英伟达对 Mercor、Firmus、NAVER 的入股，圣何塞一栋楼的租约 | A 这次一起做；B 这次只做合并，开题下一轮 | **B**：先把合并做对、量清楚；开题改的是抽取提示词，要三次发送，混在一起分不清谁的功劳。M5 的机制我还没读原始答案，先诊断 | 标准第 3 节 C 类、第 4 节测试 1 |
+   100	| H7 | 证据的"同一说法"谁来认 | 三家媒体转同一份公告 | A 代码认：同一原始说话人、同一原始日期、同一组数字算一条，显示一次；B 维持 D204：每条都存、都给判断看，标签只是意见 | **B**。Codex 指出：同一个人同一天对同一个数可以加一句限定，字段一样意思不同；这正是 D204 查到的那类（40 次里 8 次并掉了不同或更丰富的说法）。重复造成的读取负担，交给之前说的第一层（只给引用的证据标推力）和第三层（每个问题一份论证记录，D201） | D201、D204 |
+   101	
+   102	已拍（第 11b 节，D248）。接着：签字标准第 3 节 C 类（H6 收窄约束性义务的开题）和第 4 节（H1–H5、H7 的同一题、续期、另一题和同一说法）照 D248 改，再做一次 Codex 只读漂移检查（AGENTS §7.1、§8）。
+   103	
+   104	## 5. 金标：每个候选写下"应有的结局"，冻结后不改
+   105	
+   231	## 11b. Alex 的回答（逐个过，2026-10-30）
+   232	
+   233	| 难点 | 他的回答 | 原话 |
+   234	|---|---|---|
+   235	| H1 同一个计划下的不同说法 | A：只是说法不同、最后核对同一个数的算一题；两个数各自会变、会分别盯的才分开；计划里的单笔交易并进计划那一题 | "A"（回答"你选 A 还是 B"） |
+   236	| H2 同一件事、不同截止日 | A：早的那题开着时，晚截止日的消息是它的证据，不另开；早的到期、事情没结束，系统自动开下一个截止日的题并带上证据，不等新文章（拉取模式要新做这件事） | "A"（回答"你选 A 还是 B"） |
+   237	| H3 同一代产品的几个里程碑 | A：一代产品一题，问带来收入的那一步（开始出货），送样、发布作证据；只有会分别下注的里程碑（如新药的三期数据和获批）各开一题；判法和 H1 一样看会不会分别下注 | "A"（回答"你选 A 还是 B"） |
+   238	| H4 公司自己的数，财年和日历年 | A：公司自己的数只按财年开题；按日历年说的估计作财年那题的证据（差得多的，如财年到 6 月底的公司，分量低一点） | "A"（回答"你选 A 还是 B"） |
+   239	| H5 模型填的期间起点挡合并 | A：事件和政策题的期间起点不再拿来挡合并；对象、事件、截止日照旧核对；金标里放只差起点的真不同的对来测误并 | "A"（回答"你选 A 还是 B"） |
+   240	| H6 小事开成问题 | 规则 A：规模要大到能影响公司的收入、利润、现金或信用风险才开题，否则只作证据；时间 A：和合并一起改（没按我的倾向 B）。做法我定：同一轮里做，开题那一臂仍单独量（抽取提示词，三次发送，抽取金标＋G1 的"值不值得开"），合并各臂在固定抽取上单独量，最后合起来在留出集上量一次，功劳和回归分得清 | "A， A"（回答"这两件你各选什么"） |
+   241	| H7 转载的同一条消息 | A：代码合并，原始说话人、原始日期、数字都相同的算同一条，判断时只给看一次、旁边写几家报道；存储不变，每条照存（没按我的倾向 B；改 D204 的"每条都给判断看"） | "A"（回答"你选 A 还是 B"，问题里讲了"不含对华销售"被藏掉的风险和 D204 的 40 次错 8 次） |
+   242	
+   243	七个都过完了，已一并写进 `docs/DECISIONS.md`（D248）；接着改签字标准第 3 节 C 类和第 4 节，再做 Codex 漂移检查。
+   244	
+   245	## 12. Codex 审查
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS.md | sed -n '2604,2620p;2660,2675p;2928,2942p;2950,2972p'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/prd/05-extraction-standard.html | sed -n '245,350p;350,425p;485,515p'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+  2604	- Decided, at the owners: `extraction.statement_day` keeps an ISO day and blanks anything else when the answer is sifted (the quote and `event_time` keep the period as written); `writing._store_piece` stores the stated day or '' and the revision path stores the stated day too (the ordering day `new_day` orders the revision only). Readers print the blank; matching's `said_day` still falls back to the publication day for ordering, never for storage. Tests: `test_a_statement_day_is_an_iso_day_or_unknown…` (red on the old sift), `test_an_unknown_statement_day_is_stored_unknown…` (red on the old writer); suite 211; preflight B/C/D unchanged.
+  2605	- The judge's revision note is labelled as what it is: "Opinion, not verified: the matcher read it as a later version of eX; both are in force" (D202's census: 19 of 37 recorded revisions carry a wrong label).
+  2606	- Census of the other silent loss in the same path, read pair by pair ([labels](research/2026-10-27-stage34-gold/repeats-40-labels.json)): of 40 sampled `repeat` decisions (1,034 in the run), 32 are pickups, 8 merged a different or richer statement into an old piece and lost its content (an estimated 200 of 1,034). The mechanism is D202's: a one-sample label triggers an irreversible write (a repeat adds a source and discards the incoming text). The fix is the argument record's reader side (store every source record, relate `same_as`, collapse same-claim groups for the judge); not built here.
+  2607	- D201 measured further ([results](research/2026-10-27-stage34-gold/results.md), 2026-10-28 00:00–01:20, $0.85): a fresh 16-case gold written from the complete expansions before any send (action 11/12 and 4/4 held out; nothing wrongly retired 16/16; same-claim 8/12 with one class: a second outlet's own reporting treated as independent, which the contract could not express); arm 2 split claim identity from source independence (the class is gone; two new judgement weaknesses appeared); three draws per disagreeing case under both prompts show the arm-to-arm differences are within one draw's noise, while in 144 draws no must-not-touch piece was ever marked same or revised. Decided: the contract keeps arm 2's split; prompt arms stop here; the variable fields are annotations under D202 and the next build is the argument record (steps 5 and 6), where a wrong relation in one draw is corrected by the next instead of being frozen into the ledger.
+  2608	
+  2609	## D204 · 2026-10-28 · A repeat is stored as its own source record; the merge becomes a labelled relation
+  2610	
+  2611	- Alex: "补那个洞，跑一周验收，仔细思考很重要". The hole (D203's census): on a `repeat` decision the writer adds the incoming item as an outlet of the old piece and discards the incoming text; 8 of 40 sampled repeats (20%, about 200 of 1,034 in the run) had merged a different or richer statement, and its content was gone. The mechanism is D202's: a one-draw label (same_statement ≥ 0.5) triggers an irreversible write.
+  2612	- Choice weighed. (A) Store the incoming piece, link it to its own destinations, record the pair in `same_claims`, show both to the judge with the relation labelled as the matcher's opinion. (B) Keep the merge and store the text as a variant of the old piece, hidden from the judge. Under (A) true pickups (about 80%) appear twice in view for their first readings, labelled; under (B) the 20% wrong merges stay hidden from the judge. The standard (rule A: an outlet, not a fact; rule C: support counts sources) is served by the label; losing content is the failure that is not recoverable at read time. Decided: (A).
+  2613	- Decided: `writing` stores every incoming piece once with all its destination links; a `repeat` decision records (target, new, seq) in `same_claims`; the old piece gains no source row and no new link (the new piece carries the outlet and the links; a link written on a one-draw label is a write like any other). `store.evidence_in_force` carries `same_as` (the in-force pieces of its group); the judge's request prints "Opinion, not verified: the matcher read this as the same claim as eX; the argument counts one claim". Readers of `evidence`, `evidence_links` and `evidence_sources` keep their shapes; the library UI's per-row outlet count now counts one row's sources (the claim's outlets are its `same_claims` group), an open UI item.
+  2614	- Acceptance: tests red on the old writer (`test_a_repeated_statement_is_stored_as_its_own_record…`, the two D167 tests whose assertions pinned the merge, changed with this decision), a mutant that merges again fails them; the 40 sampled repeat decisions replayed through the new writer at $0 (40/40 stored, relation recorded, the 8 lost contents present); then one week through the whole path (`english-v34c-nvda-week`), counting `same_claims` rows, pairs both in the judge's view, and judgements citing both members of a pair (the double-count exposure the label must hold).
+  2615	- Accepted ([results](research/2026-10-27-stage34-gold/results.md)): 40 of 40 sampled repeat decisions replayed through the new writer keep the piece, the relation and both pieces in force (the 8 lost contents are present); the week through the whole path ran with none failed at $0.23, wrote 45 same-claim relations and no merge, and the judge's reasons where a pair was in view treat the relays as one source ("ultimately trace to SemiAnalysis", "not independent confirmation"). The three-month run may resume on `poc-v34` with D202–D204 in the writer; that is Alex's call.
+  2616	
+  2617	## D205 · 2026-10-28 · The judging call's output budget is 16,000 tokens
+  2618	
+  2619	- Found in the three-month resume (`english-v34-nvda-3m-2026-10-28`, 01:32): the judgement of v10 (Data Center revenue, a 24,150-token request) came back empty with `finish_reason` length: all 8,000 completion tokens were reasoning tokens, so the code read a malformed answer and the day halted (resumable; the re-send passed). Census over every archive: 2 of 793 judge answers hit the cap this way (the other in `english-v29-nvda-3m`, a 56k-token request), 13 of 793 used 6,000 or more. The archive books such a call at $0 while it costs its tokens (about $0.006 each).
+  2620	- Alex: "嗯你加倍吧". Decided: `rejudging.max_output_tokens` 8,000 → 16,000 in `poc-v34.json`, nothing else changed; a normal judgement costs the same, only a long-reasoning one may spend more. Applied from day 2026-07-22 of the run (days 1–21 ran under 8,000; the archive records the configuration checksum per call).
+  2660	  seedable. The ACP loss is admission: 7–10% of sends propose any candidate, the 12 ACP articles produced one proposal per run, and in
+  2661	  this run that proposal was refused by the due-day check (`due_day 2026-07-03 not after the item`). Next mechanism: admission.
+  2662	
+  2663	## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+  2664	
+  2665	- Alex, after the arm ("go 但是你不要只是看什么acp好不？你需要解决的是抽取质量问题 … 有用的，你得一条一条看是不是真的值得抽才知道你这些改动的抽取效果").
+  2666	  Mechanism (two stored accounts, `docs/research/2026-10-28-extraction-quality/results/ask_admission.json`): D184/D185's sentence
+  2667	  "due when its signing can be checked, at most 18 months out" is written for a deal not yet signed; for a programme already announced
+  2668	  and signed (the AI Compute Partnership) the model proposes nothing or dates the question on the item day, which the code refuses.
+  2669	  Over the acceptance week the twelve ACP articles produced one proposal per run and none survived in `poc-v36`; 96 statements had no home.
+  2670	- Decided: role-v21 replaces that one sentence. Not yet signed: a yes/no question due after the item within 18 months (D185 unchanged).
+  2671	  Already taken on, one deal or a programme: a financing_amount question on the amount the obligation reaches at the company's next
+  2672	  annual filing, settled by its commitments note; the announcement is evidence to it. Entries and code checks as v20; `poc-v37` is the
+  2673	  replay default. Role 10,089 → 10,434 characters; the growth is the second form, which no other sentence covered.
+  2674	- Measured before the decision (`admission_arm.py`, production bytes as control, frozen reference, three draws): on the six ACP articles
+  2675	  whose text carries the obligation, control opened 0/18, the arm proposed 17/18 and the code kept 13/18 (two refused by the ladder-label
+  2928	- The page becomes version 3 and replaces the signed first version (D229) as the one ruler for extraction; AGENTS.md §8 points to it. The golden set is fixed under these decisions by `golden-v3/finalize.py` into `golden-v3-signed.json` (sha256 78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3): 348 entries to keep or optionally keep (week 80 core, 152 supporting, 63 optional; holdout 6, 29, 18), 738 sentences not kept and 24 more now optional, every span found verbatim in its article. 39 changes, each with its reason: 24 common-knowledge claims without a number and a specific narrative and one characterising quote left the kept list; 19 entries kept and rejected at once (the blind-check additions had not been compared with the drafters' rejected sentences) were settled. A read-only review of the first integration found the claim rule applied to every named claim rather than to typical ones, and a distant forecast written as always supporting; both were corrected to Alex's words and the leans, and nine specific new statements returned to the gold. The 20 holdout articles were seen in the earlier prompt loop, so a fresh held-out set is written before the first prompt arm.
+  2929	- The known code defect of the standard (B17) is fixed: the year limit counts a fiscal-year form in the company's own fiscal years (`extraction.beyond_next_year`); in the stored role-v29 answers it had refused 2 of 40 candidates with a year (NVIDIA FY2028 in July 2026). Test `tests/test_fiscal_year_horizon.py` on two stored candidates; the mutant that drops the fiscal shift fails it.
+  2930	
+  2931	## D244 · 2026-10-29 · Claude sets the dev/test split; scores are leads and Claude reads the traces every time; first the role-v29 baseline
+  2932	
+  2933	- Alex: "1. 好你来定 test validation split"; "2. 我觉得这是最容易出错的问题；你非常容易写死，我们在改的过程中如果drift你会一直用久的标准来衡量，这边需要有打分，但是“一定”要你自己下去看trace这是必须，记起来"; "3. v29 你先能跑出第一版的基线".
+  2934	- Decided: (1) the split is Claude's: the 118 bench articles, all seen, are the development set used for iterating and reading; a fresh test set from a later window no run has read is written from the text and frozen before its first send, and is scored once per configuration, never tuned on. (2) Every measurement has a score and Claude reads the traces: the raw answer beside the article, for every missed core or supporting entry and a sample of the extras and of the hits; a score is a lead, never the conclusion. The scorer hard-codes no rule of the standard: it reads the gold file it is given, prints the gold's and the page's sha256 and refuses a gold whose standard field names another page; a score is compared only with scores on the same gold; when the standard changes, the gold is re-derived and re-frozen before the next score. (3) The first task is the role-v29 baseline on the development set, three draws.
+  2935	
+  2936	## D245 · 2026-10-30 · role-v42 (`poc-v58`) is the extraction request; its must-not questions on small release dates are the next class
+  2937	
+  2938	- Alex, on the acceptance report (role-v42 against role-v29, five simultaneous full runs and a blind reader; option A "switch to v42 now and fix the question regression next", option B "keep v29 until it is fixed"): "A".
+  2939	- Decided: role-v42 replaces role-v29 as the extraction request; `scripts/replay.py` defaults to `poc/config/poc-v58.json`, which differs from `poc-v45` only in the ten extraction prompt versions (T*-v42). What it buys, pooled over the five runs on the development set: core kept 238.4 against 240.4 of 258 draw-hits (run differences −4, −10, −2, +4, +2), supporting kept in two draws 153.8 against 154.8 of 181, sentences the gold rejects kept 102.8 against 139.8 per draw, statements outside the gold 123.0 against 162.2 per draw; the test set shows the same pattern. What it costs: about 15 questions per full run that the gold says must not open, on release dates of small products, features and services (most from one article), against about 0 for role-v29 (`loop-log.md` rows 15–18).
+  2940	- The next class is that regression. Two fixes measured during the acceptance (role-v49, role-v50) each lost 3–5% of core and did not fully stop the questions; neither is adopted. The opening of questions is changed apart from the evidence rules.
+  2941	
+  2942	## D246 · 2026-10-30 · role-v51 (`poc-v67`) is the extraction request
+  2950	- Decided: `scripts/replay.py` defaults to `poc/config/poc-v69.json`, which differs from `poc-v67` only in the ten extraction prompt versions (T*-v53). role-v53's role text is role-v51's unchanged; from version 53 the schema carries descriptions of `speaker`, `original_who` and `original_day` (`extraction.FIELD_NOTES`; standard 5.4 and 5.5, D203, D220, the signed gold's who column), and every earlier version's schema is byte-identical (`tests/test_field_notes.py`).
+  2951	- Measured (`loop-log.md` rows 26–33, `research/2026-10-29-ledger-standard/fields-2026-10-30/`): writing the same definitions into the role text (role-v52) fixed the fields but kept about 7–15 more gold-rejected statements per draw; in the schema, against role-v51 sent together (run U, development + test, three draws): outlet-as-speaker and report-day signals 166 → 35 over 148 articles × 3 draws; verified field errors on a blind read of 24 fresh articles 18/96 → 11/94 records; gold-rejected statements kept −6.7 per draw; core per draw −1.3 and supporting at least two draws −4, both inside their paired intervals; must-open raised in every draw 17 → 22. Two follow-ups did not beat it and are not adopted: role-v54 (the role text's attribution clause removed) and role-v55 (the tier rule moved to the schema, refuted on its small sample). Left open: an author's restatement of another company's reported figures is still credited to the author (role-v56, which removes the T7 and T8 attribution phrases, is built and unsent).
+  2952	
+  2953	## D248 · 2026-10-30 · What counts as one question and one piece of evidence: seven boundaries, chosen one by one
+  2954	
+  2955	- Alex, on the census of duplicate and trivial questions: "我们的标准要收口"; then "你要不要深度的写好plan, 怎么测量，golden 是怎么，我们来解决这个问题；整体不能regress，你要秉持我们过往工程的原则，以及作为一个hedge fund analyst 到底怎么判断合并，去重，这个标准很重要，不能观点爆炸"; then, not following the plan's table, "我没理解每个难点，我需要一个一个和你过，你讲人话给我例子". Each boundary was put to him with an example and two options; his replies are quoted per row. Plan, census and review rounds: [question-identity plan](research/2026-10-30-question-identity/plan.md) §0–§4, §11b, §12.
+  2956	- The class ($0, `census/`): the sealed three-month run opened 69 questions in 59 days; Claude's reading of the first 50 (not reviewed by Alex) marks 12 duplicates and 10 that should not have opened, 5 borderline. Matching merged 39 of 122 candidates; the candidates opened new fall in three verdict classes (parsed from the decisions' reason text, not yet verified case by case): the collision judge's "distinct question in one matter", "same question" verdicts the code still opened (two traced to a model-written period start), and twins never compared.
+  2957	- The principle, Alex after the seven answers: "我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则" (written into AGENTS §8, "A senior analyst's granularity").
+  2958	- Decided (the general rule under all seven: two questions are one when the same outcome settles both; they are kept apart only when their answers can move apart and an analyst would bet on each separately):
+  2959	  1. **One plan, several wordings** (H1, "A"): wordings of one plan whose final check is the same number are one question; two numbers that move on their own and are watched separately stay apart; a single deal under a plan already opened by amount merges into it. Not put to Alex: a not-yet-signed deal's yes/no signing question (D210; PRD 06 keeps number and event questions apart) stays as it is and does not merge into a plan's amount question (the Ohio lease guarantee and the cloud-customer total in v38 both stay). Narrows the standard §4 "another quantity in the same deal (a guarantee beside a financing)" sentence taken from D190; consistent with D210.
+  2960	  2. **One event, several deadlines** (H2, "A"): while the earlier-deadline question is open, a later deadline is its evidence, not a new question; when the earlier one falls due unresolved and the matter is still live, the system opens the next-deadline successor with the merged evidence, without waiting for a new article (new work for pull mode, D14, D54).
+  2961	  3. **One product generation, several milestones** (H3, "A"): one question per generation, asked at the step that brings revenue (shipments begin); sampling and launch are its evidence; only milestones an analyst bets on separately (a drug's phase-3 data and its approval) are separate questions.
+  2962	  4. **A company's own quantity by fiscal and by calendar year** (H4, "A"): only the fiscal year opens (PRD 06 ladder rule 5); a calendar-year estimate is evidence to the fiscal question, weighed lower when the years differ much.
+  2963	  5. **A model-written period start** (H5, "A"): for event and policy questions it no longer blocks a merge; object, event and due day are still checked.
+  2964	  6. **Small matters opened as questions** (H6, "A， A"): a question opens only when its scale can change the company's revenue, profit, cash or credit risk; otherwise no question opens, and whether its statement is kept follows the evidence rule (standard §5). Done in this round together with the merge changes, each measured as its own arm, then together on the holdout. Narrows the standard §3 class C ("a sized, not yet completed stake or acquisition").
+  2965	  7. **The same statement carried by several outlets** (H7, "A"): code treats pieces with the same known original speaker, original day and figures as one (an unknown speaker or day never matches: 297 of the sealed run's 4,298 pieces have both unknown); the judge sees it once with the outlet count; every piece is still stored. Changes D204's "both shown to the judge" for this case, and is a chosen exception to AGENTS §3 "equal values alone never establish identity"; the risk put to him with the question (a qualification such as "excluding China sales" hidden; D204's 8 of 40 wrong merges) is measured on the G3 gold before it is switched on, as is the accuracy of the original-speaker and original-day fields it relies on.
+  2966	- Next, in this order: the signed standard page (§3 class C, §4 "same question, succession or another question") carries these rules, then a read-only Codex drift review; then the plan's step 1 (structured census, the fixed-extraction replay harness, gold G1–G3, the September holdout week on Alex's go).
+
+ succeeded in 0ms:
+   245	<tr><td class="nowrap">七类驱动</td><td>一条陈述为什么对公司业务重要的七条路径<span class="src">D208</span>。需求：客户要买多少，如订单、客户支出、贷款需求、客流。供给与投入：能做出多少、成本多少，如产能、原料和零部件价格、燃料、矿石品位。竞争与份额：对手的产品、价格、开店、赢单。定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户。产品周期：发布、出货、试验、获批、延期。政策：法规、许可、关税、利率、监管决定。资本与义务：融资、担保、承诺、投资、收购</td><td>问题类型</td></tr>
+   246	<tr><td class="nowrap">市场预期与估值</td><td>市场已经定价了什么：估值倍数、市值、目标价、股价反应。观点的立场要和它比<span class="src">AGENTS §8</span>。对一个业务量的一致预期（收入、EPS）是那个业务量的证据，不归这里</td><td>七类驱动</td></tr>
+   247	<tr><td class="nowrap">研究组</td><td>几个问题共同在追的一件正在进行的事<span class="src">D165</span></td><td>问题</td></tr>
+   248	</tbody></table></div>
+   249	
+   250	<h2 id="ledger"><span class="num">2</span>账本里记三种东西</h2>
+   251	<ol class="steps">
+   252	<li><b>证据</b>一条记录一个陈述，一件事用几句话说仍是一条<span class="src">第 1 版 §2；Alex 判 11</span>。记逐字引文、能单独读懂的一句话摘要、说话人、原始说话人和原始日期（不知道就写不知道，不填报道日<span class="src">D220</span>）、来源层。同一条证据可以挂到几个问题上，推力写在挂接上<span class="src">PRD 06</span>。每一条进来的证据都单独存下；和已有证据的关系（同一说法、修订）由匹配标出，作为意见，两条都留着<span class="src">D202、D204</span>。原始说话人、原始日期、数字都相同的几条（说话人或日期不知道的不算相同），由代码认作同一条：判断时只给看一次，写明几家报道，每条仍照存<span class="src">D248 第 7 条；改 D204 的"两条都给判断看"</span>。这条在打开之前要先量两件事：它会不会藏掉不同或更丰富的说法（比如多一句限定），它依赖的原始说话人、原始日期两个字段准不准；量完之前，照 D204 两条都给判断看。</li>
+   253	<li><b>问题</b>问题句、结果档、到期日写下不改；当前判断随证据更新，到期定格<span class="src">PRD 06</span>。问题分标的和主题，按开题理由分五类（第 3 节）。问题从三处来：文章里的候选问题；用户的备忘录<span class="src">PRD 06 State</span>："A thesis from the user's memo is not yet judged until evidence first links to it"；分析员开始覆盖一家公司时种下的驱动问题<span class="src">D208，设计未建</span>。</li>
+   254	<li><b>研究组</b>一件正在进行的事（一个产品换代及其部署、一笔融资或收购、一个政策过程、一轮投资或需求周期），把几个问题组织在一起，常常跨公司。它不是问题，也不代替开题判断。公司自己的报表行（收入、毛利率、费用、税率、资本开支）不带研究组，除非这一行本身就在追这样一件事；它也可以加入别的问题建的组<span class="src">D165</span>。</li>
+   255	</ol>
+   256	<p><b>不进账本的：</b>归档找不到家的证据，记 <code>no home</code> 扔掉<span class="src">D209</span>。评估时逐条读被扔的，分四种：抽取的垃圾；库里缺这个问题（覆盖缺口）；问题在却没挂上（归档错）；该开没开（开题错）。各归各的环节<span class="src">第 1 版 §7</span>。存储的表结构归 PRD 06 管。</p>
+   257	
+   258	<h2 id="types"><span class="num">3</span>问题的五类：账本的几大类型</h2>
+   259	<p>开题理由是 D184 定的四类，D236 把主驱动量扩到产品节点，所以写成五类。判两件事，互不顶替：这是谁的问题（标的还是主题）；为什么值得开（开题理由）。</p>
+   260	<div class="table-wrap wide"><table>
+   261	<thead><tr><th>类</th><th>开题理由</th><th>标的或主题</th><th>问什么</th><th>量还是事件</th><th>期间和到期</th><th>核对材料 <code>settled_by</code></th><th>出处</th></tr></thead>
+   262	<tbody>
+   263	<tr><td class="nowrap"><b>A</b> 主驱动量</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那个年度量，不管公司指不指引：撑起业务的分部收入、毛利率、资本开支；跨行业如银行的净利息收入、零售商的同店销售、公用事业的费率基数、航空公司的燃油成本（当它是争论焦点时）。不是每一行报表数</td><td>量，五档</td><td>公司财年的今年或明年；到期日是这个数的发布日</td><td>公布这个数的公开材料，通常是年报</td><td>D184：<code>settled_by</code> 是 "the public material that resolves it"；PRD 06 梯子第 5 条</td></tr>
+   264	<tr><td class="nowrap"><b>B</b> 主产品节点</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那一代产品哪天走到能带来收入的那一步（通常是开始出货）；发布、送样是它的证据，只有会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span></td><td>事件，五档，或是非两档<span class="src">PRD 06 梯子第 1 条</span></td><td>能判出结果的那天</td><td>公司公告、发货确认</td><td>D236</td></tr>
+   265	<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。规模要大到能改变公司的收入、利润、现金或信用风险才开；够不上的单笔入股、收购、租约、授信不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+   266	<tr><td class="nowrap"><b>D</b> 共同量</td><td><code>shared_quantity</code><span class="src">D191、D243 第 2 条</span>；现行提示词和代码还叫 <code>industry_aggregate</code>，按这一页改</td><td>主题</td><td>任何一家公司之外、好几家都会受它影响的量或价格：几家公司的合计（云厂商资本开支）、价格（内存合约价、油价）、利率。同一总量的另一种人群、另一种说法是这个量的证据</td><td>量，五档</td><td>自然年的今年或明年。同一个量、同一年只有一个问题，由代码按"主题＋量＋期间"判<span class="src">D197</span>；量的类别是 <code>other</code> 的不算</td><td>几家公司年报、统计发布、官方决定</td><td>D184、D191、D197、D243；PRD 06</td></tr>
+   267	<tr><td class="nowrap"><b>E</b> 政策阶段</td><td><code>policy_stage</code></td><td>问的是一家公司的收入、利润、份额或产品进度，算标的，即使由政策驱动；问的是世界上的事（许可制度、利率、合计支出），算主题。D184 采纳的 role-v12 原文："A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it"</td><td>一个政策或监管过程到了哪一步，写明谁说了算</td><td>事件，五档或两档</td><td>能判出那一步的那天。文章没写日期的待决监管事项，用本财年末（role-v12 原文："A pending regulatory decision may lack a date; use the current fiscal year-end as its due date"）；这个日期是研究员定的检查日，要标明<span class="src">评审 §1 第 1 条</span></td><td>官方决定、公报</td><td>D184</td></tr>
+   268	</tbody></table></div>
+   269	
+   270	<p>例子（跨行业）：</p>
+   271	<ul>
+   272	<li><b>A：</b>NVIDIA FY2027 数据中心收入；一家地区银行 FY2026 净利息收入；一家公用事业公司 2027 年费率基数。</li>
+   273	<li><b>B：</b>下一代机架系统能否在 2027 年底前开始出货；一家车企的新平台能否在 2026 年内开始交付。</li>
+   274	<li><b>C：</b>NVIDIA 为云客户产能兜底的义务在 FY2027 年报达到多少；一家保险公司是否在 2027 年中前为合资公司 5 亿美元债务签署担保。</li>
+   275	<li><b>D：</b>五家最大云厂商 2026 年合计资本开支；2027 年 DRAM 合约价相对 2026 年的变化、美联储 2026 年最后一次会议后的利率上限。</li>
+   276	<li><b>E：</b>中国是否在 2027-01-31 前正式批准本国公司进口 H200；美国是否在某日前对某类芯片实行出口许可。这两题问的是许可这件世界上的事，所以是主题，role-v12 原文的例子就是 "licensing"。一个监管决定对一家公司收入或产品进度的影响，问成那家公司的量或产品节点时，是标的问题（同一句原文）。</li>
+   277	</ul>
+   278	
+   279	<h3>五类之外的东西去哪</h3>
+   280	<ul>
+   281	<li><b>七类驱动不是问题类型。</b>它们是一条陈述为什么重要的理由，用来判分量和归档。D208 设计的"每家公司种下的驱动问题"由分析员开始覆盖时写好，不从文章里开；还没建。</li>
+   282	<li><b>别家公司自己的量</b>（对手的份额、客户的资本开支）：D187 定了"任何公司自己的量是那家公司的问题，私营公司也算"，但还没实现，要先在覆盖名单里加私营公司这一类。D155 定了"公司清单可以作为初始参考，但清单外不能忽略"。现行代码在匹配时跳过名单外的对象<span class="src">PRD 06 Step 4</span>。所以抽取照常可以提这样的问题，它要过第 4 节的测试；名单外的现在会被匹配跳过，这不算抽取错。</li>
+   283	<li><b>宏观量</b>（利率、通胀）：按 D 类共同量开题<span class="src">D243 第 2 条</span>。只来自一篇纯宏观文章时，只有主题在名单上才开<span class="src">D191 第 3 条</span>。宏观对每家公司的正负，在判断那家公司时读主题块决定<span class="src">D191 第 1 条、D195</span>。</li>
+   284	<li><b>开题理由是封闭的</b><span class="src">D184</span>：一件事属不属于五类之一，按上表逐条看，比如一个监管决定看它是不是 E 类。哪一类都不属于的不开；它是不是证据、挂到哪，照第 5 节和归档规则。</li>
+   285	</ul>
+   286	
+   287	<h3>问题怎么写：PRD 06 的梯子规则，不重写</h3>
+   288	<ul>
+   289	<li>一个问题只问一个量的一个期间，或一件事；能各自朝相反方向走的部分要分开<span class="src">PRD 06 梯子第 3 条</span>，分开的每一题都要过第 4 节的测试。</li>
+   290	<li>写成问句，不写成断言<span class="src">PRD 06 Rationale</span>。</li>
+   291	<li>结果档可核对、不重叠、不留缝，到期恰好一档成立；中间一档写明和什么比；"小幅""部分"这种不能核对的说法不用，部分状态写成单独一档<span class="src">PRD 06 梯子第 2 条</span>。标的问题的档描述业务结果；主题问题的档只写结局，不写好坏<span class="src">PRD 06、D186</span>。</li>
+   292	<li>到期日：量是它的发布日；事件是能判出结果的那天。公司的量用公司财年，别的用自然年，只开今年和明年<span class="src">PRD 06 梯子第 5 条；约束性义务例外，D185</span>。</li>
+   293	</ul>
+   294	
+   295	<h2 id="opening"><span class="num">4</span>开题标准</h2>
+   296	<blockquote><p><b>一个问题值得单独追，要同时满足三件事：它的答案可能改变仓位；能在一个日期用公开材料判出落在哪一档；库里没有问题在问同一件事。</b>开多少个是判断的结果，不是目标<span class="src">第 1 版 §6；评审 §1</span>。</p>
+   297	<p>颗粒度按一个高端对冲基金分析员：只有会单独下注的大事开题，鸡毛蒜皮不开题（它的陈述留不留照第 5 节判）；同一个赌注的几种说法是一题，截止日、里程碑、财年和日历年各按本节"同一题、续期，还是另一题"里的那一条判<span class="src">D248</span>。</p>
+   298	<p>另有一条前提：新问题要有独立的投资判断；一个新产品、一个新数字、一个更窄的范围，单凭这些不开<span class="src">D201</span>。</p></blockquote>
+   299	
+   300	<h3>四个测试<span class="src">第 1 版 §6</span></h3>
+   301	<ol class="steps">
+   302	<li><b>值得追</b>写得出"这个结果会改变哪项收入、利润、现金或信用风险、竞争位置"吗？写不出就留作证据，不开题。"数字很大"不算理由。规模够不上改变公司的收入、利润、现金或信用风险的交易、产品、项目，不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。</li>
+   303	<li><b>独立意义</b>能写出两个情景吗：其他问题的答案不变，只有这一题相反，而对业务的判断确实不同？写不出就优先作为证据<span class="src">评审 §1 第 3、8 条</span>。评审里的一个判例：NVIDIA FY2027 总收入题判为数据中心收入题的证据，理由是"该段明确说主要增长来自数据中心，未提出独立的其他业务争论"。这是对那一段材料的判断，别的材料要逐个判。</li>
+   304	<li><b>能核对</b>有一个日期和一份公开材料能把答案放进事先固定的档吗？没有就重写问题。到期没有材料记"未能判定"，不算错。</li>
+   305	<li><b>不是重复</b>和已有问题比，只是预测值、措辞、来源、方向或同一总量的另一种口径不同，最终核对的是同一个结果吗？是就是同一题。抽取看不到库<span class="src">D211</span>，这一条在抽取时只对同一篇文章里提出的几个问题判；和库里的比由匹配做。</li>
+   306	</ol>
+   307	<p>另外三条写法检查<span class="src">评审 §1 第 1、5、6 条</span>。没过的问题不能照原样开，要重写；重写不了就不开，材料作证据。</p>
+   308	<ul>
+   309	<li><b>原文支持：</b>主体、量或事件、时间依据都能在原文找到。原文没给日期、而规则允许研究员定检查日的，用那个日期并标明：没写日期的待决监管事项用本财年末（第 3 节 E 类）；还没签的约束性义务用文章后 18 个月以内能核对签约的那天<span class="src">D185、D210</span>。不把"拟议""预计"写成"已签""已完成"。</li>
+   310	<li><b>口径完整：</b>算谁、不算谁、算什么写清楚；支出、融资、担保、订单、收入不混。</li>
+   311	<li><b>时间正确：</b>原文支持这个期间，不把几年的平均写成今年。</li>
+   312	</ul>
+   313	
+   314	<h3>不开的<span class="src">第 1 版 §6 的清单</span></h3>
+   315	<div class="table-wrap mid"><table>
+   316	<thead><tr><th>不开</th><th>出处</th><th>它变成什么</th></tr></thead>
+   317	<tbody>
+   318	<tr><td>季度数字和季度指引</td><td>第 1 版 §6；PRD 06 梯子第 6 条</td><td>证据</td></tr>
+   319	<tr><td>同一段指引里的每一行（"费用率、税率是模型输入，不是争论"）</td><td>第 1 版 §6</td><td>证据</td></tr>
+   320	<tr><td>没日期的"护城河""战略"</td><td>第 1 版 §6</td><td>证据</td></tr>
+   321	<tr><td>高管任免、股东投票、回购授权；章程</td><td>第 1 版 §6；章程出自 D239 选定的 role-v29 原文（"executive appointments, shareholder votes or bylaws"）</td><td>证据或不留</td></tr>
+   322	<tr><td>例行诉讼程序</td><td>第 1 版 §6</td><td>证据</td></tr>
+   323	<tr><td>客户的部署计划（"它是供应商需求和产品问题的证据，除非改变供应商自己的现金或信用风险"）</td><td>第 1 版 §6</td><td>证据；改变公司自己的现金或信用风险时按 C 类判</td></tr>
+   324	<tr><td>以约束性义务为理由开：公司自己借钱、自己的租约、已完成或没写规模的投资。它们不是约束性义务；对别的问题仍可以是证据，或按别的开题理由判</td><td>D236、D238</td><td>证据</td></tr>
+   325	<tr><td>把远期年度预测改装成事件</td><td>第 1 版 §6</td><td>证据</td></tr>
+   326	<tr><td>后年及以后的年度量（约束性义务除外）</td><td>PRD 06 梯子第 5 条；D185</td><td>证据</td></tr>
+   327	<tr><td>同一个量的另一个估计、另一种口径、另一个来源</td><td>第 1 版 §6 测试 4</td><td>那个已开问题的证据，由匹配并入</td></tr>
+   328	</tbody></table></div>
+   329	
+   330	<h3>同一题、续期，还是另一题：匹配这一步的事，抽取不判库里的</h3>
+   331	<ul>
+   332	<li><b>总规则：</b>同一个结果能判掉两题，就是同一题；答案能分开走、而且分析员会分别下注的，才是另一题<span class="src">D248</span>。</li>
+   333	<li><b>同一题：</b>同一个结果能同时判两个问题。另一个估计、来源、措辞、方向<span class="src">第 1 版 §6 测试 4</span>；同一总量的另一种人群或代用口径（D190 碰撞裁决提示 collision-v1："another population or proxy of one aggregate"；D197 引的 role-v12 原文："another population or another wording of the same aggregate is evidence to the shown aggregate thesis"）。候选并进已开问题，用它的结果档和到期日<span class="src">PRD 06</span>。只有以共同量理由开题、带量的候选由代码自动判，其余是匹配和碰撞裁决的判断。</li>
+   334	<li><b>同一个计划的几种说法</b>（担保、融资承诺、信用支持……），最后核对的是同一个数，是一题<span class="src">D248 第 1 条</span>。</li>
+   335	<li><b>同一件事的不同截止日：</b>早的那题开着时，晚的截止日是它的证据，不另开；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上并进来的证据，不等新文章<span class="src">D248 第 2 条</span>。</li>
+   336	<li><b>同一代产品的几个里程碑：</b>一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span>。</li>
+   337	<li><b>公司自己的量：</b>只按财年开题；按日历年的估计是财年那题的证据，两种年份差得多时分量低一点<span class="src">D248 第 4 条；PRD 06 梯子第 5 条</span>。</li>
+   338	<li><b>身份：</b>事件和政策题里模型写的期间起点，不拿来挡合并；对象、事件、截止日照旧核对<span class="src">D248 第 5 条</span>。</li>
+   339	<li><b>续期：</b>同一个量或同一串事件的下一个期间<span class="src">PRD 06 Succession、D190</span>。</li>
+   340	<li><b>另一题：</b>同一件事里答案能分开走、分析员会分别下注的：有自己驱动的组成部分；同一笔交易或同一份附注里两个各自会变、分别盯着的数；另一件事<span class="src">D190 碰撞裁决的四种；D248 第 1 条收窄了"担保和融资"</span>。</li>
+   341	<li><b>约束性义务：</b>"一笔或一个计划"一题<span class="src">D210</span>；一笔交易是不是某个已按金额开题的计划的一部分，由匹配判，是就并入<span class="src">D248 第 1 条</span>。还没签的单笔交易是"签不签"的是非题，照旧可以开，不并进计划的金额题<span class="src">D210；PRD 06；D248 未改</span>。</li>
+   342	<li><b>共同量：</b>以共同量理由开题、带量的候选（量的类别是 <code>other</code> 的不算），由代码按"主题＋量＋期间"判同一题；政策阶段和别的事件保留按事件判的身份；不带这个开题理由的主题量由模型判<span class="src">D197</span>。</li>
+   343	</ul>
+   344	
+   345	<h3>谁判，谁查</h3>
+   346	<div class="table-wrap mid"><table>
+   347	<thead><tr><th>内容</th><th>谁</th></tr></thead>
+   348	<tbody>
+   349	<tr><td>测试 1–3、同一篇文章里的测试 4、属于哪一类、问题怎么写</td><td>抽取的模型（判断）</td></tr>
+   350	<tr><td>结果档形状、期间是真日期、到期在文章之后、季度数、年限、约束性义务 18 个月、<code>settled_by</code> 不为空</td><td>代码：只查形状，不判重要性<span class="src">D154、D155、D184</span></td></tr>
+   350	<tr><td>结果档形状、期间是真日期、到期在文章之后、季度数、年限、约束性义务 18 个月、<code>settled_by</code> 不为空</td><td>代码：只查形状，不判重要性<span class="src">D154、D155、D184</span></td></tr>
+   351	<tr><td>和库里的同一题、续期、另一题</td><td>匹配（Jev）和碰撞裁决<span class="src">D190</span>；共同量由代码<span class="src">D197</span></td></tr>
+   352	</tbody></table></div>
+   353	<p class="note">年限按公司财年数：2026 年 7 月时 NVIDIA 在 FY2027（2027 年 1 月结束），所以 FY2028 是明年。代码原来按自然年算，把 FY2028 当成后年拒掉；在 v29 答案的 40 个带年份的候选里拒错了 2 个。已修，测试是 <span class="path">tests/test_fiscal_year_horizon.py</span><span class="src">D243</span>。</p>
+   354	
+   355	<h2 id="evidence"><span class="num">5</span>证据标准</h2>
+   356	<h3>5.1 留的规则和四类</h3>
+   357	<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+   358	<p><b>整体倾向谨慎，对增量敏感。</b>杂音很大，不是什么都要抽，不是什么都算线索。判一句话之前先问：这是新信息吗？它让哪个问题的答案变了？一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏；重复常识、描述长期状况、泛泛的看法，是杂音<span class="src">D243</span>。</p>
+   359	<p>从第一段读到最后一段，分析员会记的都留。一页有八条就是八条，不挑<span class="src">D199</span>。它们通常是下面四类之一；四类描述的是会记的陈述长什么样，不是"属于四类就一定留"，留不留由上面的规则判。</p>
+   360	<ol class="steps">
+   361	<li><b>公司自己的数字、指引或决定</b><span class="src">第 1 版 §2</span>"同店销售本季增长 4.2%"；"管理层把全年收入指引定在 120–130 亿美元"；"董事会批准 100 亿美元回购"；"公司取消软件订阅费，生产使用免费"<span class="src">Alex 判 8，Omniverse</span>。</li>
+   362	<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+   363	<li><b>具名一方的主张或估计</b><span class="src">第 1 版 §2</span>"CFO 说十年前建的工厂仍满负荷"；"分析师把明年 EPS 预期上调到 4.10 美元"；"做空机构指控公司虚增应收 20 亿美元"；"内存厂说 2027 年短缺最严重，持续到 2030"。</li>
+   364	<li><b>政策或监管的决定或步骤</b><span class="src">第 1 版 §2</span>"监管机构批准该药第二个适应症"；"政府要求该产品出口须申请许可"；"25 家公司联名反对过早限制开放权重模型"；"财长说将调查某国公司是否窃取知识产权"。</li>
+   365	</ol>
+   366	<p><b>典型的主张和背景</b><span class="src">D243 第 5 条</span>：Alex 的原话是"这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"。常识，就是跟这家公司的分析员读这篇之前就已经知道的：谁领先、谁在竞争、需求强、供给紧、融资难这类说法，和对已知状况的重述。这类陈述没有数字和具体的叙事就不收。不是常识的，是新信息，比如一份新报告的判断、一个新的市场数据、刚发生的事的细节，照上面的规则判，分析员会记就留。</p>
+   367	<ul>
+   368	<li><b>常识，不收：</b>"博通 CEO 说能从英伟达抢份额"；"Blackwell 和 Rubin 仍然供不应求"；"融资会是扩大算力最大的障碍"；"内存厂避开了以往的产能过剩"；"博通预计明年随着新客户推出定制芯片大幅增长"。</li>
+   369	<li><b>新信息，收：</b>一位科技公司高管对媒体说"中国国产 AI 芯片厂商已经全部卖光，客户在考虑性能更低的芯片"；"旧型号 GPU 的租金在涨"；研究机构说"这让 Rubin Ultra 暂时没有成熟的扩展方案，给对手留出了空间"；"华为现在占中国 AI 芯片市场约一半，这个市场约 500 亿美元"。</li>
+   370	<li><b>有数字也要过上面的规则：</b>作者说"英特尔多年领先，占 CPU 市场 59%"，和英伟达的问题关系不大，分析员不会记。</li>
+   371	</ul>
+   372	
+   373	<h3>5.2 不完整也是证据</h3>
+   374	<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+   375	
+   376	<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+   377	<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+   378	<div class="table-wrap wide"><table>
+   379	<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+   380	<tbody>
+   381	<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+   382	<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+   383	<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+   384	<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+   385	<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+   386	<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+   387	<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+   388	<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+   389	<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+   390	<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+   391	</tbody></table></div>
+   392	<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+   393	<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+   394	
+   395	<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+   396	<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+   397	<div class="table-wrap mid"><table>
+   398	<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+   399	<tbody>
+   400	<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+   401	<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+   402	<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+   403	<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+   404	<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+   405	<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+   406	</tbody></table></div>
+   407	<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+   408	<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+   409	
+   410	<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+   411	<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+   412	<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51、D247 换成的 role-v53 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+   413	<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+   414	<div class="table-wrap mid"><table>
+   415	<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+   416	<tbody>
+   417	<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+   418	<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+   419	<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+   420	<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+   421	<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+   422	</tbody></table></div>
+   423	<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；同一说法在判断时怎么显示，见第 2 节<span class="src">D248 第 7 条</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+   424	
+   425	<h2 id="weight"><span class="num">6</span>分量</h2>
+   485	
+   486	<h3>怎么写成、怎么核的</h3>
+   487	<ol class="steps">
+   488	<li><b>六个起草者分批写</b>Claude opus 各写 20 篇左右，只读标准和原文；参考答案第 2 版只当起点，每条重判。</li>
+   489	<li><b>合并时统一写法</b><span class="path">merge.py</span> 统一各批的写法，每处写理由（<span class="path">merge-log.txt</span>）：旧事重提 49 条逐条判；估值倍数和别家公司股价按现行规则处理；中国是否批准 H200 进口改为主题问题。</li>
+   490	<li><b>逐条读改动</b>Claude 读了每批相对参考答案第 2 版新增、删掉、改档的条目：新增约 124 条，改档约 37 条；旧条目没对上的 10 条逐条查过，都在，只是引文片段不同或按旧事重提处理。</li>
+   491	<li><b>两轮独立盲读</b>Codex 读者只读这份标准和原文，不看金标。读者多留的逐条对原文判：金标漏了的补上，其余写明不补的理由。补进来的 49 条，"谁"和"意思"对着原文补齐（<span class="path">additions-fields.json</span>）。</li>
+   492	<li><b>按签字定稿</b><span class="path">finalize.py</span> 按 D243 给每一条定分量，39 处改动逐条写理由（<span class="path">finalize-log.txt</span>）：32 条移出要收的一栏，其中 24 条是常识性的主张和背景（第 5 条），1 条是只有形容的引语（第 10 条），7 条和起草者写了理由的不收句是同一句；另有 7 句不收句和要收的条目重复，删掉。这 19 处"同一句话既留又不留"，是盲读后补条目时没和不收的句子对照造成的。此外，不收的句子里 24 句按第 3、4、6 条改为可选。</li>
+   493	</ol>
+   494	<div class="table-wrap mid"><table>
+   495	<thead><tr><th>盲读</th><th class="num-cell">金标条目</th><th class="num-cell">读者也留了</th><th class="num-cell">分量相同</th><th class="num-cell">读者多留</th><th class="num-cell">补进金标</th></tr></thead>
+   496	<tbody>
+   497	<tr><td>第一轮：随机 15 篇，补之前</td><td class="num-cell">34</td><td class="num-cell">33</td><td class="num-cell">26</td><td class="num-cell">19</td><td class="num-cell">8</td></tr>
+   498	<tr><td>第一轮：补之后</td><td class="num-cell">42</td><td class="num-cell">41</td><td class="num-cell">32</td><td class="num-cell">11</td><td class="num-cell"></td></tr>
+   499	<tr><td>第二轮：其余 103 篇，补之前</td><td class="num-cell">229</td><td class="num-cell">194</td><td class="num-cell">162</td><td class="num-cell">144</td><td class="num-cell">40</td></tr>
+   500	<tr><td>第二轮：补之后</td><td class="num-cell">262</td><td class="num-cell">227</td><td class="num-cell">193</td><td class="num-cell"></td><td class="num-cell"></td></tr>
+   501	</tbody></table></div>
+   502	<p>结论：起草稿大约漏了两成，集中在有名有姓、没写规模的采用和合作，和一些带期间的判断。补完以后，独立读者能找到的金标条目约九成。读者多留的 163 条里，48 条是金标漏了、已补；其余 115 条按标准不补：同一件事金标已有、新加坡案件、产品细节、泛泛看法、旧事重提、合作方自己的事、和公司市场无关、只描述长期状况。剩下的不一致集中在核心和辅助的界线（第 1 条）和"背景还是主张"（第 5 条），两条都已由 Alex 拍定。记录在 <span class="path">golden-v3/spotcheck.md</span>、<span class="path">pass2-decisions.json</span>。</p>
+   503	
+   504	<h3>用它之前要知道的</h3>
+   505	<ul>
+   506	<li><b>它是模型写的。</b>Claude 起草和裁定、Codex 盲查；按 AGENTS §7 这样标明。Alex 抽查之前，它不是 Alex 的判断。</li>
+   507	<li><b>留出集要换。</b>之前的提示词循环发过这 20 篇，答案读过一部分。按第 1 版 §11，"看过模型答案的文章只做开发集"，所以第一次改提示词之前，要另取一批没人看过答案的文章，从原文写参照，同样盲查、定稿、记 sha256。</li>
+   508	<li><b>发现错了怎么办。</b>不改这个文件；另记一份更正，每条写理由和改前改后，测量用更正后的版本并注明<span class="src">D243 第 11 条</span>。</li>
+   509	<li><b>按金标打分的程序还没写。</b>代码只核结构和计数；意思由没写这次改动的读者判（第 9.2 节）。</li>
+   510	</ul>
+   511	
+   512	<h2 id="method"><span class="num">9</span>改提示词、测量、迭代</h2>
+   513	<p class="note">签字以后的第一件事：把现行提示词（role-v29）和这一页逐句对一遍，列出不一致的地方，再按 9.3 一类一类改。一般的规则全文在 <span class="path">AGENTS.md</span> §6（写提示词）和 §7（测量和迭代），这里只写到这一步怎么用，出处标在后面。</p>
+   514	
+   515	<h3>9.1 改提示词</h3>
+
+codex
+The revision carries the seven decisions in the main rules. I’m checking the remaining cross-references and edge cases, including whether the earlier fixes introduced any new conflict.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/prd/05-extraction-standard.html | sed -n '250,265p;295,343p;455,460p;600,604p'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+exec
+/opt/homebrew/bin/zsh -lc 'cat -n docs/research/2026-10-30-question-identity/drift-1.txt' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-10-30-question-identity/plan.md | sed -n '231,245p'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+     1	**Serious drift remains in version 4.** For example, the page says a product-generation question asks when shipping begins, while its question-types table still permits asking when the product launches.
+     2	
+     3	1. **High — The product milestone rule contradicts the question-types table and omits the reason for the chosen milestone.** The new rule says one question asks when shipping begins, with launch as evidence ([page, line 336](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:336)); the table still allows a question about either launch or shipping ([line 264](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:264)). D248 says to ask about **the step that brings revenue**, identifying shipping as that step in the examples ([D248, line 2961](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2961); [plan, line 237](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:237)). The new wording drops that reason and presents shipping as an unconditional rule.
+     4	
+     5	2. **High — The new “small matters” wording conflicts with the evidence-retention test.** The page says small matters “只作证据” ([line 297](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:297)); similar wording appears in [lines 218 and 265](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:218). Yet the existing evidence rule says a statement is retained only if an analyst would note it because it changes the likelihood of an answer, and that noise is not retained ([lines 357–359](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:357)). D248 says a matter below the opening threshold is evidence ([line 2964](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964)); it does not say that otherwise irrelevant or rejected material must be retained. The page needs to reconcile the opening decision with the separate retention decision.
+     6	
+     7	3. **High — The prerequisite for switching on evidence consolidation is incomplete.** The new rule says to measure whether consolidation hides qualifications before enabling it ([page, line 252](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:252)). D248 also requires measuring the accuracy of **both the original-speaker and original-day fields** on which the rule depends ([line 2965](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2965)). That second prerequisite is absent from the page. The page’s “生效” status at [line 146](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:146) also makes the conditional activation easy to miss.
+     8	
+     9	4. **High — The gold section presents the version-3 gold as the current reference for version 4.** The new summary says only the question-opening part must be re-derived ([page, line 208](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:208)), while the gold section still calls the signed version-3 file the definitive reference and presents its question counts without a version-4 caveat ([lines 458–465](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:458)). D244 requires the gold to be re-derived and frozen when the standard changes, and the scorer to refuse a gold for another standard ([D244, line 2934](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2934)). The existing file and counts can remain as historical records, but the page does not distinguish them from a version-4 reference.
+    10	
+    11	5. **Medium — “The model-written period start is not a fact” is an unsourced assertion.** The new sentence makes that categorical claim before saying it must not block a merge ([page, line 338](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:338)). D248 decides the latter behavior for event and policy questions; it does not declare every model-written start to be non-factual ([D248, line 2963](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2963); [plan, line 239](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:239)).
+    12	
+    13	6. **Medium — The new summary overstates the single-question rule for different periods and milestones.** It says different deadlines, milestones and period descriptions of one bet “是一题” ([page, line 297](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:297)). The detailed rules allow a later-deadline successor after the first question expires and separate milestones an analyst would bet on separately ([lines 335–336](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:335)). D248 also limits the period decision to a company’s fiscal-year question and a calendar-year estimate ([lines 2960–2962](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2960)). The summary should carry those boundaries rather than read as an unconditional merge rule.
+    14	
+    15	The new Alex principle quotation is exact in both occurrences ([page, lines 209 and 592](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:209); [D248, line 2957](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2957)). The recorded answer “A， A” also matches [D248, line 2964](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964). I found no misquote among the added quotations.
+    16	
+    17	**Serious findings remain.**
+ succeeded in 0ms:
+   231	## 11b. Alex 的回答（逐个过，2026-10-30）
+   232	
+   233	| 难点 | 他的回答 | 原话 |
+   234	|---|---|---|
+   235	| H1 同一个计划下的不同说法 | A：只是说法不同、最后核对同一个数的算一题；两个数各自会变、会分别盯的才分开；计划里的单笔交易并进计划那一题 | "A"（回答"你选 A 还是 B"） |
+   236	| H2 同一件事、不同截止日 | A：早的那题开着时，晚截止日的消息是它的证据，不另开；早的到期、事情没结束，系统自动开下一个截止日的题并带上证据，不等新文章（拉取模式要新做这件事） | "A"（回答"你选 A 还是 B"） |
+   237	| H3 同一代产品的几个里程碑 | A：一代产品一题，问带来收入的那一步（开始出货），送样、发布作证据；只有会分别下注的里程碑（如新药的三期数据和获批）各开一题；判法和 H1 一样看会不会分别下注 | "A"（回答"你选 A 还是 B"） |
+   238	| H4 公司自己的数，财年和日历年 | A：公司自己的数只按财年开题；按日历年说的估计作财年那题的证据（差得多的，如财年到 6 月底的公司，分量低一点） | "A"（回答"你选 A 还是 B"） |
+   239	| H5 模型填的期间起点挡合并 | A：事件和政策题的期间起点不再拿来挡合并；对象、事件、截止日照旧核对；金标里放只差起点的真不同的对来测误并 | "A"（回答"你选 A 还是 B"） |
+   240	| H6 小事开成问题 | 规则 A：规模要大到能影响公司的收入、利润、现金或信用风险才开题，否则只作证据；时间 A：和合并一起改（没按我的倾向 B）。做法我定：同一轮里做，开题那一臂仍单独量（抽取提示词，三次发送，抽取金标＋G1 的"值不值得开"），合并各臂在固定抽取上单独量，最后合起来在留出集上量一次，功劳和回归分得清 | "A， A"（回答"这两件你各选什么"） |
+   241	| H7 转载的同一条消息 | A：代码合并，原始说话人、原始日期、数字都相同的算同一条，判断时只给看一次、旁边写几家报道；存储不变，每条照存（没按我的倾向 B；改 D204 的"每条都给判断看"） | "A"（回答"你选 A 还是 B"，问题里讲了"不含对华销售"被藏掉的风险和 D204 的 40 次错 8 次） |
+   242	
+   243	七个都过完了，已一并写进 `docs/DECISIONS.md`（D248）；接着改签字标准第 3 节 C 类和第 4 节，再做 Codex 漂移检查。
+   244	
+   245	## 12. Codex 审查
+
+ succeeded in 0ms:
+   250	<h2 id="ledger"><span class="num">2</span>账本里记三种东西</h2>
+   251	<ol class="steps">
+   252	<li><b>证据</b>一条记录一个陈述，一件事用几句话说仍是一条<span class="src">第 1 版 §2；Alex 判 11</span>。记逐字引文、能单独读懂的一句话摘要、说话人、原始说话人和原始日期（不知道就写不知道，不填报道日<span class="src">D220</span>）、来源层。同一条证据可以挂到几个问题上，推力写在挂接上<span class="src">PRD 06</span>。每一条进来的证据都单独存下；和已有证据的关系（同一说法、修订）由匹配标出，作为意见，两条都留着<span class="src">D202、D204</span>。原始说话人、原始日期、数字都相同的几条（说话人或日期不知道的不算相同），由代码认作同一条：判断时只给看一次，写明几家报道，每条仍照存<span class="src">D248 第 7 条；改 D204 的"两条都给判断看"</span>。这条在打开之前要先量两件事：它会不会藏掉不同或更丰富的说法（比如多一句限定），它依赖的原始说话人、原始日期两个字段准不准；量完之前，照 D204 两条都给判断看。</li>
+   253	<li><b>问题</b>问题句、结果档、到期日写下不改；当前判断随证据更新，到期定格<span class="src">PRD 06</span>。问题分标的和主题，按开题理由分五类（第 3 节）。问题从三处来：文章里的候选问题；用户的备忘录<span class="src">PRD 06 State</span>："A thesis from the user's memo is not yet judged until evidence first links to it"；分析员开始覆盖一家公司时种下的驱动问题<span class="src">D208，设计未建</span>。</li>
+   254	<li><b>研究组</b>一件正在进行的事（一个产品换代及其部署、一笔融资或收购、一个政策过程、一轮投资或需求周期），把几个问题组织在一起，常常跨公司。它不是问题，也不代替开题判断。公司自己的报表行（收入、毛利率、费用、税率、资本开支）不带研究组，除非这一行本身就在追这样一件事；它也可以加入别的问题建的组<span class="src">D165</span>。</li>
+   255	</ol>
+   256	<p><b>不进账本的：</b>归档找不到家的证据，记 <code>no home</code> 扔掉<span class="src">D209</span>。评估时逐条读被扔的，分四种：抽取的垃圾；库里缺这个问题（覆盖缺口）；问题在却没挂上（归档错）；该开没开（开题错）。各归各的环节<span class="src">第 1 版 §7</span>。存储的表结构归 PRD 06 管。</p>
+   257	
+   258	<h2 id="types"><span class="num">3</span>问题的五类：账本的几大类型</h2>
+   259	<p>开题理由是 D184 定的四类，D236 把主驱动量扩到产品节点，所以写成五类。判两件事，互不顶替：这是谁的问题（标的还是主题）；为什么值得开（开题理由）。</p>
+   260	<div class="table-wrap wide"><table>
+   261	<thead><tr><th>类</th><th>开题理由</th><th>标的或主题</th><th>问什么</th><th>量还是事件</th><th>期间和到期</th><th>核对材料 <code>settled_by</code></th><th>出处</th></tr></thead>
+   262	<tbody>
+   263	<tr><td class="nowrap"><b>A</b> 主驱动量</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那个年度量，不管公司指不指引：撑起业务的分部收入、毛利率、资本开支；跨行业如银行的净利息收入、零售商的同店销售、公用事业的费率基数、航空公司的燃油成本（当它是争论焦点时）。不是每一行报表数</td><td>量，五档</td><td>公司财年的今年或明年；到期日是这个数的发布日</td><td>公布这个数的公开材料，通常是年报</td><td>D184：<code>settled_by</code> 是 "the public material that resolves it"；PRD 06 梯子第 5 条</td></tr>
+   264	<tr><td class="nowrap"><b>B</b> 主产品节点</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那一代产品哪天走到能带来收入的那一步（通常是开始出货）；发布、送样是它的证据，只有会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span></td><td>事件，五档，或是非两档<span class="src">PRD 06 梯子第 1 条</span></td><td>能判出结果的那天</td><td>公司公告、发货确认</td><td>D236</td></tr>
+   265	<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。规模要大到能改变公司的收入、利润、现金或信用风险才开；够不上的单笔入股、收购、租约、授信不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+   295	<h2 id="opening"><span class="num">4</span>开题标准</h2>
+   296	<blockquote><p><b>一个问题值得单独追，要同时满足三件事：它的答案可能改变仓位；能在一个日期用公开材料判出落在哪一档；库里没有问题在问同一件事。</b>开多少个是判断的结果，不是目标<span class="src">第 1 版 §6；评审 §1</span>。</p>
+   297	<p>颗粒度按一个高端对冲基金分析员：只有会单独下注的大事开题，鸡毛蒜皮不开题（它的陈述留不留照第 5 节判）；同一个赌注的几种说法是一题，截止日、里程碑、财年和日历年各按本节"同一题、续期，还是另一题"里的那一条判<span class="src">D248</span>。</p>
+   298	<p>另有一条前提：新问题要有独立的投资判断；一个新产品、一个新数字、一个更窄的范围，单凭这些不开<span class="src">D201</span>。</p></blockquote>
+   299	
+   300	<h3>四个测试<span class="src">第 1 版 §6</span></h3>
+   301	<ol class="steps">
+   302	<li><b>值得追</b>写得出"这个结果会改变哪项收入、利润、现金或信用风险、竞争位置"吗？写不出就留作证据，不开题。"数字很大"不算理由。规模够不上改变公司的收入、利润、现金或信用风险的交易、产品、项目，不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。</li>
+   303	<li><b>独立意义</b>能写出两个情景吗：其他问题的答案不变，只有这一题相反，而对业务的判断确实不同？写不出就优先作为证据<span class="src">评审 §1 第 3、8 条</span>。评审里的一个判例：NVIDIA FY2027 总收入题判为数据中心收入题的证据，理由是"该段明确说主要增长来自数据中心，未提出独立的其他业务争论"。这是对那一段材料的判断，别的材料要逐个判。</li>
+   304	<li><b>能核对</b>有一个日期和一份公开材料能把答案放进事先固定的档吗？没有就重写问题。到期没有材料记"未能判定"，不算错。</li>
+   305	<li><b>不是重复</b>和已有问题比，只是预测值、措辞、来源、方向或同一总量的另一种口径不同，最终核对的是同一个结果吗？是就是同一题。抽取看不到库<span class="src">D211</span>，这一条在抽取时只对同一篇文章里提出的几个问题判；和库里的比由匹配做。</li>
+   306	</ol>
+   307	<p>另外三条写法检查<span class="src">评审 §1 第 1、5、6 条</span>。没过的问题不能照原样开，要重写；重写不了就不开，材料作证据。</p>
+   308	<ul>
+   309	<li><b>原文支持：</b>主体、量或事件、时间依据都能在原文找到。原文没给日期、而规则允许研究员定检查日的，用那个日期并标明：没写日期的待决监管事项用本财年末（第 3 节 E 类）；还没签的约束性义务用文章后 18 个月以内能核对签约的那天<span class="src">D185、D210</span>。不把"拟议""预计"写成"已签""已完成"。</li>
+   310	<li><b>口径完整：</b>算谁、不算谁、算什么写清楚；支出、融资、担保、订单、收入不混。</li>
+   311	<li><b>时间正确：</b>原文支持这个期间，不把几年的平均写成今年。</li>
+   312	</ul>
+   313	
+   314	<h3>不开的<span class="src">第 1 版 §6 的清单</span></h3>
+   315	<div class="table-wrap mid"><table>
+   316	<thead><tr><th>不开</th><th>出处</th><th>它变成什么</th></tr></thead>
+   317	<tbody>
+   318	<tr><td>季度数字和季度指引</td><td>第 1 版 §6；PRD 06 梯子第 6 条</td><td>证据</td></tr>
+   319	<tr><td>同一段指引里的每一行（"费用率、税率是模型输入，不是争论"）</td><td>第 1 版 §6</td><td>证据</td></tr>
+   320	<tr><td>没日期的"护城河""战略"</td><td>第 1 版 §6</td><td>证据</td></tr>
+   321	<tr><td>高管任免、股东投票、回购授权；章程</td><td>第 1 版 §6；章程出自 D239 选定的 role-v29 原文（"executive appointments, shareholder votes or bylaws"）</td><td>证据或不留</td></tr>
+   322	<tr><td>例行诉讼程序</td><td>第 1 版 §6</td><td>证据</td></tr>
+   323	<tr><td>客户的部署计划（"它是供应商需求和产品问题的证据，除非改变供应商自己的现金或信用风险"）</td><td>第 1 版 §6</td><td>证据；改变公司自己的现金或信用风险时按 C 类判</td></tr>
+   324	<tr><td>以约束性义务为理由开：公司自己借钱、自己的租约、已完成或没写规模的投资。它们不是约束性义务；对别的问题仍可以是证据，或按别的开题理由判</td><td>D236、D238</td><td>证据</td></tr>
+   325	<tr><td>把远期年度预测改装成事件</td><td>第 1 版 §6</td><td>证据</td></tr>
+   326	<tr><td>后年及以后的年度量（约束性义务除外）</td><td>PRD 06 梯子第 5 条；D185</td><td>证据</td></tr>
+   327	<tr><td>同一个量的另一个估计、另一种口径、另一个来源</td><td>第 1 版 §6 测试 4</td><td>那个已开问题的证据，由匹配并入</td></tr>
+   328	</tbody></table></div>
+   329	
+   330	<h3>同一题、续期，还是另一题：匹配这一步的事，抽取不判库里的</h3>
+   331	<ul>
+   332	<li><b>总规则：</b>同一个结果能判掉两题，就是同一题；答案能分开走、而且分析员会分别下注的，才是另一题<span class="src">D248</span>。</li>
+   333	<li><b>同一题：</b>同一个结果能同时判两个问题。另一个估计、来源、措辞、方向<span class="src">第 1 版 §6 测试 4</span>；同一总量的另一种人群或代用口径（D190 碰撞裁决提示 collision-v1："another population or proxy of one aggregate"；D197 引的 role-v12 原文："another population or another wording of the same aggregate is evidence to the shown aggregate thesis"）。候选并进已开问题，用它的结果档和到期日<span class="src">PRD 06</span>。只有以共同量理由开题、带量的候选由代码自动判，其余是匹配和碰撞裁决的判断。</li>
+   334	<li><b>同一个计划的几种说法</b>（担保、融资承诺、信用支持……），最后核对的是同一个数，是一题<span class="src">D248 第 1 条</span>。</li>
+   335	<li><b>同一件事的不同截止日：</b>早的那题开着时，晚的截止日是它的证据，不另开；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上并进来的证据，不等新文章<span class="src">D248 第 2 条</span>。</li>
+   336	<li><b>同一代产品的几个里程碑：</b>一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span>。</li>
+   337	<li><b>公司自己的量：</b>只按财年开题；按日历年的估计是财年那题的证据，两种年份差得多时分量低一点<span class="src">D248 第 4 条；PRD 06 梯子第 5 条</span>。</li>
+   338	<li><b>身份：</b>事件和政策题里模型写的期间起点，不拿来挡合并；对象、事件、截止日照旧核对<span class="src">D248 第 5 条</span>。</li>
+   339	<li><b>续期：</b>同一个量或同一串事件的下一个期间<span class="src">PRD 06 Succession、D190</span>。</li>
+   340	<li><b>另一题：</b>同一件事里答案能分开走、分析员会分别下注的：有自己驱动的组成部分；同一笔交易或同一份附注里两个各自会变、分别盯着的数；另一件事<span class="src">D190 碰撞裁决的四种；D248 第 1 条收窄了"担保和融资"</span>。</li>
+   341	<li><b>约束性义务：</b>"一笔或一个计划"一题<span class="src">D210</span>；一笔交易是不是某个已按金额开题的计划的一部分，由匹配判，是就并入<span class="src">D248 第 1 条</span>。还没签的单笔交易是"签不签"的是非题，照旧可以开，不并进计划的金额题<span class="src">D210；PRD 06；D248 未改</span>。</li>
+   342	<li><b>共同量：</b>以共同量理由开题、带量的候选（量的类别是 <code>other</code> 的不算），由代码按"主题＋量＋期间"判同一题；政策阶段和别的事件保留按事件判的身份；不带这个开题理由的主题量由模型判<span class="src">D197</span>。</li>
+   343	</ul>
+   455	<li><b>重复不是新证据，模型意见一致不是互相印证</b><span class="src">AGENTS §8</span>。</li>
+   456	</ul>
+   457	
+   458	<h2 id="golden"><span class="num">8</span>金标：改提示词的测试标准</h2>
+   459	<p class="note">第 4 版（D248）改了开题的规则：下面这份第 3 版金标是历史记录，它的开题部分要按第 4 版逐条重推、另记带理由的更正、冻结成第 4 版之后才能再打分；打分程序遇到版本对不上会拒绝（D244）。证据部分 D248 没改。</p>
+   460	<p>按这一页从原文逐篇写的参照，用来量提示词改动。Alex 的要求是"以上有你自己trace 过的golden set 来做为改prompt测试标准"<span class="src">D241</span>。定稿文件：<span class="path">docs/research/2026-10-29-ledger-standard/golden-v3/golden-v3-signed.json</span>，sha256 <code>78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3</code><span class="src">D243</span>。</p>
+   600	<tbody>
+   601	<tr><td>B1</td><td>共同量的名字和定义：D191 改名并扩到价格；v16 起提示词和代码用 <code>industry_aggregate</code>、几家公司合计、一个日历年</td><td>按 D191 落实为 <code>shared_quantity</code>，期间仍用自然年；提示词和代码要跟着改</td><td>D191、D243；PRD 06</td></tr>
+   602	<tr><td>B2</td><td>主驱动量含不含产品节点</td><td>含，写成 A、B 两类</td><td>D236（在 D184 之后）</td></tr>
+   603	<tr><td>B3</td><td>约束性义务：一笔或一个计划一题（D210），还是一组入股是一个判断（D201 规则 G）</td><td>按 D210 "一笔或一个计划"；一笔交易属不属于已开的计划，由匹配判；同一计划的几种说法是一题；够不上公司规模的单笔交易只作证据</td><td>D210、D236、D238、D248</td></tr>
+   604	<tr><td>B4</td><td>开题测试三套，提示词和代码都没用</td><td>第 1 版 §6 四个测试加评审三条写法检查（第 4 节）；测试 4 和库比的部分归匹配</td><td>第 1 版 §6；评审 §1；D211</td></tr>
+
+codex
+**仍有严重的标准漂移。** 例如，页面正文说小交易的陈述要先判断是否值得保留，但冲突表又说它“只作证据”。
+
+1. **高：小事项的证据处理仍有矛盾。** [冲突表 B3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:603)说，规模不够的单笔交易“只作证据”；但[问题类型表](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:265)说，这类陈述是否保留要按证据规则判断。[D248 第 6 条](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964)规定的是后者：不开问题，并不自动意味着保留证据。第一轮的这一问题因此尚未完全修好。
+
+2. **高：开题门槛在正文中只明确覆盖了部分事项。** [开题测试](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:302)仍把“竞争位置”列为值得追的理由，而新加的收入、利润、现金或信用风险门槛只点名“交易、产品、项目”。这留下例如政策或共同量问题的歧义：它若只改变竞争位置，是否可以开题？[D248 第 6 条](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964)将该门槛写为开题的一般条件，没有限定在这三类事项。
+
+3. **高：金标重推范围比决定写得窄。** [金标说明](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:459)要求重推“开题部分”，并说证据部分 D248 没改；[页首摘要](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:208)也只要求重推开题部分。但 [D244](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2934)要求标准改变后重推并重新冻结金标，没有只限开题部分。D248 也改变了[重复证据在判断时的呈现](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2965)和[日历年估计的分量](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2962)。这不预设证据金标一定需要修改，但页面不能据此免除对它的重推核查。
+
+4. **中：重复证据规则遗漏了指定的测量材料。** [账本规则](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:252)现已补上启用前要测隐藏内容和两个字段的准确性，但没有写明用什么材料测。[D248 第 7 条](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2965)明确要求在 **G3 金标**上测这两件事。
+
+**结论：仍有严重发现。**
+tokens used
+60,407
+**仍有严重的标准漂移。** 例如，页面正文说小交易的陈述要先判断是否值得保留，但冲突表又说它“只作证据”。
+
+1. **高：小事项的证据处理仍有矛盾。** [冲突表 B3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:603)说，规模不够的单笔交易“只作证据”；但[问题类型表](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:265)说，这类陈述是否保留要按证据规则判断。[D248 第 6 条](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964)规定的是后者：不开问题，并不自动意味着保留证据。第一轮的这一问题因此尚未完全修好。
+
+2. **高：开题门槛在正文中只明确覆盖了部分事项。** [开题测试](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:302)仍把“竞争位置”列为值得追的理由，而新加的收入、利润、现金或信用风险门槛只点名“交易、产品、项目”。这留下例如政策或共同量问题的歧义：它若只改变竞争位置，是否可以开题？[D248 第 6 条](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2964)将该门槛写为开题的一般条件，没有限定在这三类事项。
+
+3. **高：金标重推范围比决定写得窄。** [金标说明](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:459)要求重推“开题部分”，并说证据部分 D248 没改；[页首摘要](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:208)也只要求重推开题部分。但 [D244](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2934)要求标准改变后重推并重新冻结金标，没有只限开题部分。D248 也改变了[重复证据在判断时的呈现](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2965)和[日历年估计的分量](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2962)。这不预设证据金标一定需要修改，但页面不能据此免除对它的重推核查。
+
+4. **中：重复证据规则遗漏了指定的测量材料。** [账本规则](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:252)现已补上启用前要测隐藏内容和两个字段的准确性，但没有写明用什么材料测。[D248 第 7 条](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2965)明确要求在 **G3 金标**上测这两件事。
+
+**结论：仍有严重发现。**

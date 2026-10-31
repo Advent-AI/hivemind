@@ -1,0 +1,659 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18ddb-399b-77e2-992a-b4ee3a67fa59
+--------
+user
+Read-only audit; do not edit any file. Repository: /Users/lchingen/hivemind-extraction-quality-2026-10-28.
+
+THE STANDARD (the only ruler): docs/prd/05-extraction-standard.html, version 4 (Chinese), especially §5.1 (the keep rule and four kinds),
+§5.2 (incomplete evidence is evidence), §5.3 (the not-kept table and its "boundary" column, plus the D238 row), §6 (what core and
+supporting cover), the glossary's 七类驱动, and the decided items (D240, D243 items 4, 5, 6, 10).
+
+THE TEXT UNDER AUDIT: docs/research/2026-10-30-noise/review-core-v62.txt. It is appended at the very end of the extraction request
+(after the article), telling the model to check its evidence list once and return only what it keeps. It must carry the standard and
+add no rule the standard does not hold.
+
+TASK: go clause by clause (every clause and every example). For each: quote it; quote the standard line(s) it traces to (section);
+classify as CONSISTENT, CONTRADICTS, WIDER-DROP (would drop something the standard keeps, including supporting or optional-to-keep items),
+NARROWER-DROP (keeps something the standard rejects), NO-SOURCE, or EXAMPLE-DISAGREES; one sentence of reason. Then list any standard
+rule about what to keep that the keep list omits and that the drop list could therefore remove (e.g. other companies' operating figures,
+which §6 counts as supporting). Then list internal contradictions. Round 5: this is review-core-v61.txt (review-core-t2.txt after rounds 1-4, then two traced line fixes and a dated-forecast boundary) plus one new sentence, "Never drop a statement that touches ...", meant to carry standard §6 core definition as a guard; judge especially whether that sentence matches §6 exactly and whether it lets noise back in. Earlier: review-core-t2.txt (audited in rounds 1-3, codex-review-t2-round1..3.md) with two lines changed after a full run traced wrong drops to them: the long-standing-situation clause left the drop list and gained D243 item 6 boundary, and the keep list header was reworded because the model read "not by themselves reasons to drop" as "not enough to keep"; optional items (§6) may be dropped without breaching the standard, so do not report their loss; judge the current file only. Also flag any example that is not from the standard page or is not general (it must read the same for a bank, a drug maker, a retailer or a chip maker). End with the three findings most likely to make the model drop real
+evidence. Quote exactly; if unsure say so. Out of scope: questions/opening, fields, matching.
+
+codex
+I’ll audit the current text against the Chinese version 4 standard, including every example and the boundaries around incomplete and supporting evidence. I’ll keep the review to evidence retention and leave all files unchanged.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-10-30-noise/review-core-v62.txt' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/CURRENT_STATE.md' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+Before you return the answer, check it once. Read each evidence item back as the analyst following the company and keep it when you would write it in this week's notes because it makes some question's answer more or less likely, about the company or its customers, suppliers, competitors, regulators or the economy. Ask first whether it is new: repeated common knowledge, a long-standing situation retold and an unargued view are noise; guidance, and a forecast or a plan still in force, keep their place even when retold.
+These usually fail that check:
+- background the analyst already knew: an arrangement already in place, described again; the company's history ("the company was founded in 1998"; "the product line launched in 2020"). A development the item reports without making clear that it is old is not a retelling, and a forecast is never one;
+- a typical claim that is common knowledge, without a figure and a specific account: that a firm leads or competes, that demand is strong or supply tight, a general risk ("if demand slows it would hurt"); a figure alone does not lift it ("the leading soft-drink brand has held 40% of its market for years", in an article about a bank), while a dated forecast of a shortage, a price or demand is not such a claim ("the steelmaker expects the shortage to peak next year and last until 2028");
+- a product, game, driver or benchmark detail with no business scale ("the card draws 415 watts"; "a benchmark score");
+- an unargued view or a quote that only characterises ("the stock is a hold"; "a pivotal moment");
+- a share-price move or an investor's position ("shares fell 13% this month"); another company's valuation, share price or deal that touches none of the company's markets;
+- a second item for the same fact (keep the fuller one).
+Never drop a statement that touches the company's revenue, profit, financing or credit risk, demand, the progress of the product that carries its value, or the supply and price of its key inputs, and carries a figure, a settled state (signed, announced, started, approved, cancelled, delayed to a date) or a forecast for a stated period.
+Keep these whenever they move such a question; none is dropped for the reasons above: a forecast, a rumour, a counter-example, a distant or conditional statement; a named party's action without an amount or a date; the company's own figure, guidance or decision; a customer's, supplier's, competitor's or partner's action or reported figure; a competitor's comparison against the company's product; a partner's or customer's adoption or integration; the launch, shipment, delay or cancellation of a product, and a change to the plan or configuration of the product that carries the company's value; a change to what a product costs; a policy or regulatory step; a valuation with its assumptions, derivation and date; the news behind a share-price move. Return only the items you keep.
+
+ succeeded in 0ms:
+# Current state
+
+As of October 30, 2026, the close-out of the extraction-quality phase; decisions through D246. Governing design: `docs/system-design.html` and `docs/prd/`; the extraction step's standard is [`prd/05-extraction-standard.html`](prd/05-extraction-standard.html) (D243). Every status paragraph of the phase, with its numbers, is in [the snapshot before this close-out](research/2026-10-29-ledger-standard/current-state.before-closeout-2026-10-30.md); earlier snapshots are linked there. They are records, not work orders.
+
+## What runs, and which code is the latest
+
+- **Latest pipeline code:** this branch, `fix/extraction-quality-2026-10-28`, stacked on `feat/thesis-admission-v12` and `feat/parallel-day`; all three pushed, none merged into `main`. `main` has the newer service, UI and Idea code (3 commits this branch lacks) and still replays `poc-v23` (extraction v10).
+- **Default configuration:** `poc/config/poc-v69.json` (D247): extraction role-v53 on `gpt-6-luna` (role-v51's text; `speaker`, `original_who` and `original_day` defined in the schema), the request showing no thesis and no group (D211); the placement call files each statement under the narrowest open question, and a statement no open question takes is dropped as `no home` (D207, D209); Jev matching with the collision judge (D190); judging with the theme block and the evidence in view (D195, D198). `scripts/replay.py`, the default-entry test and the README name it.
+- **No long run is live** in any worktree; the three-month run is sealed through 2026-08-28 (D206) and the service serves that sealed ledger.
+- Tests: full suite 241 passed; `docs/check.py` passes. The close-out code review (a blind reviewer, 13 findings) is answered below.
+
+## The phase, 2026-10-28 to 2026-10-30
+
+The three-month run was stopped on evidence bloat (D206). The extraction step was then rebuilt and measured alone, through its own harness:
+
+1. Placement and drops (D207–D209): a separate placement call files statements; a statement no question takes is dropped with its reason and evaluation reads the drops.
+2. The request no longer depends on the ledger (D211): the read is prepared early and filed at the item's turn.
+3. One ruler (D229, D241, D243): the extraction standard signed by Alex, a golden set of 118 development articles and a frozen test set of 30, the scorer reading only the frozen gold (D244).
+4. The prompt is a general hedge-fund brain (D237) and was iterated class by class on the direct read (D238): role-v29 (D239), role-v42 (D245, gold-rejected statements kept −26% at equal core), role-v51 (D246, must-not questions on small products 20 → 0 over 15 draws).
+5. A quality read beyond the ruler (2026-10-30, [results](research/2026-10-29-ledger-standard/quality-2026-10-30/results.md)): four independent model readers read 24 random articles as analysts. The logs are [the loop log](research/2026-10-29-ledger-standard/loop-log.md) (rows 1–23) and [the direct-read log](research/2026-10-29-analyst-standard/loop-2026-10-29/log.md).
+
+Where role-v51 stands (development set, three draws): core kept 77–81 of 86 per draw and the same in every draw (89% of core statements); supporting at least two draws 154 of 181; statements per draw 534 (role-v23: 833); numbers in the summary lines faithful (no invented figure in 2,065); about $0.0011 and 12.5 s per article.
+
+## Open defects, to fix next
+
+Each has its census; the extraction ones are classes for the loop of AGENTS §7.3 (one class at a time, the whole bench, read every regression).
+
+Extraction (step 1), role-v51:
+
+1. **Record fields when an article retells an earlier announcement**: role-v53 adopted (D247) ([loop log](research/2026-10-29-ledger-standard/loop-log.md) rows 26–30, [folder](research/2026-10-29-ledger-standard/fields-2026-10-30/)). Mechanism (five probes): the prompt's one clause "for a retelling, the original speaker and statement day" was read as "a statement the item explicitly attributes", so an action the item narrates got the outlet as speaker and the report day as its day, while the true day went to `event_time`, which no step reads. role-v52 (`poc-v68`) wrote the three fields' definitions into the role text: fields fixed, but about 7 to 15 more gold-rejected statements kept per draw (two runs). role-v53 (`poc-v69`) keeps role-v51's text and carries the same definitions as schema field descriptions (`extraction.FIELD_NOTES`, from version 53): in the simultaneous run U, outlet-as-speaker and report-day signals over 148 articles × 3 draws 166 → 35, verified field errors on a fresh blind read of 24 articles 18/96 → 11/94 records, gold-rejected kept −6.7 per draw, core and supporting within noise (the two largest core "losses" are the same matter quoted by another sentence). Left over: a column restating two companies' reported figures still credited to its author; unnamed executives tiered as third-party views (the tier table says rumour); days weaker than role-v52 (13 against 3 signals).
+2. **Summary lines** lose a condition or say more than the quote in 11 of 102 (the Groq "acquisition" in quotation marks written as an acquisition; a deal's "backstop" link left in a neighbouring record); one event is split into several records in 9 (one Reuters rumour as three records).
+3. **Noise:** readers call 42 of 102 records noise and Claude agrees with all 42 (a defendant's assets on the optional Singapore case, restated year-old annual figures, a partner's own energy deal, a game list); gold-rejected sentences kept about 100 per draw on the development set.
+4. **Questions**, read from the candidates themselves: DRAM contract prices (development) and the $12.9B Hugging Face acquisition (test) are opened in no draw, though the Hugging Face statement is kept in every draw; the OpenAI Ohio lease guarantee is never its own yes/no question, only covered by the wider lease-guarantee amount question; data-centre revenue for FY2028 is asked as total revenue growth (2 of 3 draws); per page the opening varies (the credit-support question on one page in 2 of 3 draws, carried by other pages in every draw). Must-not: the lidar-legislation policy question in 1 of 3 draws (role-v42: 11 of 15); one Nigeria production question in one draw.
+5. **Whole statements lost:** 28 quotes refused by the quote check in three draws, every one read: 14 stitch parts of different sentences (the Palantir–Nemotron statement, the China H200 permission), 9 change a word or two at an edge ("the company" written as "Nvidia", "As a result" as "So"; among them the core "Nvidia provides a take-or-pay commitment" and "Vera CPU expected to bring $20 billion"), 2 are titles not in the body, 1 skips words with an ellipsis, 1 writes "85 percent" as "85%", 1 is a real misquote rightly refused. One whole-page empty answer on a page with 3 core entries (Micron, draw 1).
+6. **The test set is small:** 9 core entries and 3 must-open questions; it shows no overfitting and little more.
+
+Readers' doubts about the standard itself (for Alex; nothing changed): unsized named actions keep every small press release (D240); the optional Singapore case lets eleven asset records through (D231); the tier table has no row for an official's allegation, a company forecasting its own industry, or a research firm reporting a non-public action; a repeated old figure is kept at full weight each time (D243 #6) while a repeat is not new evidence (AGENTS §8). A fourth doubt, that "unknown" loses the "said by the report day" bound, is answered: every record keeps its item's publication day.
+
+Downstream and product:
+
+7. **Nothing downstream has run with role-v42 or role-v51** (no archive in any worktree names `poc-v39` or later). The last whole-path run is one week with role-v22 (`english-v38-nvda-1w-2026-10-28`, D211, $0.23): every story of the week had a page, 4 of 17 pages were duplicates by wording, and the placer left about 60 statements out when near-identical pages competed. Judging was halted by evidence bloat in the three-month run (D206) and has not run at scale since.
+8. **Not built:** argument records (steps 5 and 6: a versioned current argument per question for the judge to read); pull mode and the final verdict (how a question is settled at its due day) are earlier drafts.
+9. **Not merged:** three stacked branches; the UI serves the sealed ledger through 2026-08-28.
+10. **One company:** the prompt is written as a general hedge-fund brain and measured on NVIDIA articles only.
+
+Earlier open defects, unchanged:
+
+- Shared by both matching engines (log row 49): the same figure stated in another document is often judged new (2–3 of 30 sampled new decisions); one matter can end up in several groups (the capex matter holds two groups in the Jev arm, three in the control); a decision naming a candidate of the same answer breaks a chain or duplicates a thesis (7 decisions over all ledgers, all generative); an empty `original_who` on both sides reads as the same party in the writer's rule; two names for the same population are sometimes kept apart (2 merge misses of 9 with Jev).
+- Aggregate theses multiply under the `ai-capex` theme: the Jev arm holds nine 2026 aggregate-spending theses, each a different population under the gold's rule. Whether such variants deserve separate theses is the analyst's judgement, not an identity defect; it is recorded for a product decision.
+- The classification simulation keeps the limits in [the preserved defect list](research/2026-10-25-english/classification-existing-defects.txt); a passing simulation is not classification acceptance.
+- Corpus: 97 official notices with 56 body and filename collisions need the recorded re-fetch before a rebuilt corpus is relied on.
+- The older intermittent search-test failure is untraced; the Docker external-connectivity restriction needs a current check before a container model run.
+- Parallel day: the spend cap is checked per committed item, so in-flight early requests can pass it by at most the worker count's calls; the cap counts archived calls, not a retried attempt whose reply was lost (as for the OpenAI client). Re-prepared requests cost about 24% more per day.
+- Not yet done: the service and UI switch to the English ledger (a new search index), `matching-v4` for dependencies in the generative matcher.
+
+Pull mode and the final verdict remain earlier drafts to redesign together. The decided rule freezes the current state and reasons at the due date and closes the thesis. Upstream supply and human-review handling remain deferred.
+
+## Adopted implementation
+
+- D155: reference lists no longer veto candidates; full-match period handling, exact scopes, event identity, same-answer coalescing, old-key trust and atomic write and resume.
+- D159: an item's accepted extraction answers the request built after every earlier item finished writing.
+- D172, D181, D183: the parallel day (`hivemind.parallel_day`), the replay's default (`scripts/replay.py --workers 1` runs serially): later items' extraction requests are prepared early and prepared again right after any commit that changes them; each item accepts only a byte-identical request at its turn; matching questions within an item run concurrently and apply in order; one writer.
+- D163–D166: the English runtime (`vocabulary.py`, canonical values with legacy conversion on read), the fresh English library, research groups declared during extraction with aliases and decided by names in code (`views/groups.py`).
+- D167–D169: no hard-coded identity; the measure vocabulary gains `market_size` and `project_cost`; the Jev engine (`views/jev_matching.py`, client `jev.py`) with the PRD's replacement definition, the shared succession rule and an answer for "the same quantity, another period"; a repeat may name the piece shown for the same evidence under another thesis.
+- Idea service: the adopted two-call contract `poc-v9` / `idea-v7`, reasoning `none` (D135/D145); limits in the [Idea specification](poc/idea-card.md). The service still reads the sealed Chinese ledger with its search index.
+- UI and service: shared thesis schema and adapter, cards, history chart, evidence, drawer and graph routing; historical reads, search, numeric claim evaluation and thesis bundles over HTTP and MCP ([service specification](poc/service.md)).
+- D207–D211: extraction reads, then files (`extraction.read_item`, `extraction.file_reading`); under a ledger-blind version the request depends on the item alone, so the parallel day prepares the read early and files it at the item's turn; the placement call files statements, and a statement filed nowhere is dropped as `no home` (the `unplaced_statements` table is retired). After placement the sift's candidate rule runs again (`extraction.candidates_with_evidence`): a candidate left with none of its evidence is dropped, so no thesis opens without evidence (close-out review; 0 of 222 candidates under poc-v67, 25 of 5,805 over all stored loop answers).
+- D236: a quote that differs from the source only by punctuation, quotation marks, footnote markers or case, or leaves out one run of words inside one sentence, is stored as the exact source passage (`extraction.repair_quote`); anything else is refused.
+- The year rule reads the universe's year forms (`universe.parse_year`, so FY29 is FY2029) and counts a fiscal year in the company's own fiscal years (`universe.fiscal_year_of`, shared with the fiscal note; NVIDIA's FY2028 in July 2026 is next year); an event question that names its quarter is not a quarterly number.
+- role-v13..v15 alone name `shared_quantity`; every later prompt version gets the current four opening reasons with no code change (`extraction.SHARED_QUANTITY_VERSIONS`).
+- Tests read no credential: `tests/conftest.py` makes the model and Jev key readers refuse, and the collision judge sends with the caller's transport.
+- Preflight (`scripts/preflight.py`) verifies each stored extraction request against its archived configuration and source (the first `MAX_TEXT_CHARS` characters, as production sends) before replaying its answer through the current checks; a request it cannot rebuild (a Chinese version, v17's paragraph accounts) is counted and named, not fatal; the item header is one function (`extraction.item_header`).
+- The placement setting is checked before the paid extraction call; the credential guard in tests raises `pytest.fail`, which the pipeline's `except Exception` cannot swallow.
+
+The [pipeline overview](poc/pipeline-plan.md) separates the implementation from the design requirements.
+
+## One next task
+
+The handoff plan with every open task, the principles and the quantitative criteria is [`handoff-plan-2026-10-30.md`](research/2026-10-29-ledger-standard/handoff-plan-2026-10-30.md).
+
+**Evidence bloat, before anything else downstream:** not solved, reduced at the source. The window rule (D198, judging-v5) hides old pieces by recency, not by count: in the sealed three-month ledger the largest judging request after it (Data Center revenue) still showed 647 pieces (1,185 hidden), 93,634 input tokens, because a broad thesis took 40–60 new links a day. Placement under the one-home rule (D207–D209) cut the first week's links per item 3.3 → 1.82 and the largest thesis's links 106 → 52, the largest judging request 15,229 → 8,649 tokens (`english-v38-nvda-1w-2026-10-28` against the sealed ledger's same week), measured over one week with role-v22 only. The decisive test is the whole-pipeline run over the three-month window with `poc-v69` (on Alex's go, with a cap), read for links per thesis, the largest judging request and any halt; the structural answer, a versioned argument record per question for the judge to read, is designed nowhere yet (handoff plan T6).
+
+## Parallel day (D172–D183)
+
+The replay runs the parallel day by default (D183: Alex chose it to converge faster); `scripts/replay.py --workers 1` runs the serial path, needed to resume a day a serial run left unfinished. Measured live on the complete July 27 day (53 items), three serial against three parallel trials interleaved ([result](../poc/reports/2026-10-26-e2e-parallel/results.md)): median 501.8 s → 112.5 s, **4.46× end to end**, 5.91× for item work; daily judging (~37–40 s) is the same code in both modes. Every trial's audit is clean; each parallel trial's runner accepted exactly the rebuilt exact-prefix request for all 53 items; each trial's answers replayed through the other mode give an identical ledger. Drift from the recorded sequential golden is inside the serial trials' own spread. The product entry point (`--workers 16`) ran the same day live in 135.5 s with the same checks clean. On recorded answers the parallel day equals the golden in all ten tables (D180, and again on the promoted module).
+
+Fifteen consecutive days (August 1–15, 221 items) with every call answered by one deterministic oracle of the request bytes, at no cost (D182, [result](../poc/reports/2026-10-26-multi-day-oracle/results.md)): the parallel ledger equals the serial one in all 20 product tables, its turns accepted exactly the serial run's 221 extraction requests, and a broken runner was caught. At recorded call durations the fifteen days take an estimated 2.79× less time (2,512 s → 900 s); a busy day gains 3.6–4.5×, a day of a few items 1.5–2×.
+
+What remains of the time is not scheduling: items that depend on the item just before them (~45–60 s), daily judging (D63), and each item's two matching phases in order (~17 s). Ten times end to end on this day would need those to shrink.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '5\\.1|5\\.2|5\\.3|D238|D240|D243|七类驱动|核心|支持|边界|可不|可选' docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+146:  <div class="status ok"><span class="pill ok">已签</span><div><b>生效。</b>2026-10-29 Alex 拍了 12 条（D243）；2026-10-30 他逐个选了颗粒度的七条（D248，见"已拍"一节），改了第 2、3、4 节，升为第 4 版。这一页取代第 1 版（<span class="path">docs/research/2026-10-29-analyst-standard/standard.md</span>，D229），是抽取这一步唯一的尺子：提示词、金标、回归测量都从它推出。改它要先在 <span class="path">docs/DECISIONS.md</span> 记下 Alex 的原话，再改这一页，再做一次只读的漂移检查。</div></div>
+147:  <div class="meta"><span>2026-10-29 · D241、D242、D243</span><span>分支 fix/extraction-quality-2026-10-28</span><span>起草过程和校验：<span class="path">docs/research/2026-10-29-ledger-standard/</span></span></div>
+154:  <dd>一个在追这家公司的分析员读到会记进本周笔记的陈述，就留；留下以后另判分量<span class="src">第 1 版 §2、§4</span>。整体倾向谨慎：杂音很大，不是什么都要抽，不是什么都算线索；但新信息带来的增量要敏感，不能漏<span class="src">D243</span>。预测、传闻、反证、远期、条件情景都可以是证据，不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也照留，分量可以低一点<span class="src">D240</span>。泛泛的主张和背景是常识，没有数字和具体的叙事就不收<span class="src">D243</span>。</dd>
+166:    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+170:        <li>分量：核心、辅助、可选 <span class="tag">只在评估时判，不进账本 · 第 6 节</span></li>
+185:<p>2026-10-29 Alex 签字（D243）。第 5 条他定得比我的倾向更严；其余 11 条按倾向："其他几条的意见我都ok，sign off"。下表每条写定下的是什么、落在哪一节。</p>
+193:<tr><td>1</td><td>分量按信息量定档：核心要碰到关键判断，并带一个量、一个确定状态或一个带期间的预测；别家公司自己的经营数字、对公司是小事的，算辅助；预测离现在越远，越可能只是辅助，由判断定。缺金额、缺日期只影响分到哪一档，不是不留的理由</td><td class="nowrap">第 6 节</td></tr>
+195:<tr><td>3</td><td>生态数字（论文数、获奖、下载量、开发者人数、大会人数）可选</td><td class="nowrap">第 6 节</td></tr>
+196:<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+197:<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+198:<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+200:<tr><td>8</td><td>改提示词时的回归判法：全部文章各发一次和上一版比，"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；它是诊断，验收仍是三次发送</td><td class="nowrap">第 9.3 节</td></tr>
+202:<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+209:<blockquote><p>原则，Alex 原话："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</p></blockquote>
+227:<li>分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。</li>
+228:<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+243:<tr><td class="nowrap">分量</td><td>一条证据对判断有多重要：核心、辅助、可选、不收<span class="src">第 6 节；D243</span>。Alex 说的"档位低一点"指它</td><td>结果档、来源层</td></tr>
+244:<tr><td class="nowrap">研究用途</td><td>判断这一步引用一条证据去支持一个具体结论时，它撑得住多强：直接可用、有条件可用、线索、不可用<span class="src">D221，第 7 节</span></td><td>分量</td></tr>
+245:<tr><td class="nowrap">七类驱动</td><td>一条陈述为什么对公司业务重要的七条路径<span class="src">D208</span>。需求：客户要买多少，如订单、客户支出、贷款需求、客流。供给与投入：能做出多少、成本多少，如产能、原料和零部件价格、燃料、矿石品位。竞争与份额：对手的产品、价格、开店、赢单。定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户。产品周期：发布、出货、试验、获批、延期。政策：法规、许可、关税、利率、监管决定。资本与义务：融资、担保、承诺、投资、收购</td><td>问题类型</td></tr>
+246:<tr><td class="nowrap">市场预期与估值</td><td>市场已经定价了什么：估值倍数、市值、目标价、股价反应。观点的立场要和它比<span class="src">AGENTS §8</span>。对一个业务量的一致预期（收入、EPS）是那个业务量的证据，不归这里</td><td>七类驱动</td></tr>
+265:<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。规模要大到能改变公司的收入、利润、现金或信用风险才开；够不上的单笔入股、收购、租约、授信不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+266:<tr><td class="nowrap"><b>D</b> 共同量</td><td><code>shared_quantity</code><span class="src">D191、D243 第 2 条</span>；现行提示词和代码还叫 <code>industry_aggregate</code>，按这一页改</td><td>主题</td><td>任何一家公司之外、好几家都会受它影响的量或价格：几家公司的合计（云厂商资本开支）、价格（内存合约价、油价）、利率。同一总量的另一种人群、另一种说法是这个量的证据</td><td>量，五档</td><td>自然年的今年或明年。同一个量、同一年只有一个问题，由代码按"主题＋量＋期间"判<span class="src">D197</span>；量的类别是 <code>other</code> 的不算</td><td>几家公司年报、统计发布、官方决定</td><td>D184、D191、D197、D243；PRD 06</td></tr>
+281:<li><b>七类驱动不是问题类型。</b>它们是一条陈述为什么重要的理由，用来判分量和归档。D208 设计的"每家公司种下的驱动问题"由分析员开始覆盖时写好，不从文章里开；还没建。</li>
+283:<li><b>宏观量</b>（利率、通胀）：按 D 类共同量开题<span class="src">D243 第 2 条</span>。只来自一篇纯宏观文章时，只有主题在名单上才开<span class="src">D191 第 3 条</span>。宏观对每家公司的正负，在判断那家公司时读主题块决定<span class="src">D191 第 1 条、D195</span>。</li>
+309:<li><b>原文支持：</b>主体、量或事件、时间依据都能在原文找到。原文没给日期、而规则允许研究员定检查日的，用那个日期并标明：没写日期的待决监管事项用本财年末（第 3 节 E 类）；还没签的约束性义务用文章后 18 个月以内能核对签约的那天<span class="src">D185、D210</span>。不把"拟议""预计"写成"已签""已完成"。</li>
+311:<li><b>时间正确：</b>原文支持这个期间，不把几年的平均写成今年。</li>
+324:<tr><td>以约束性义务为理由开：公司自己借钱、自己的租约、已完成或没写规模的投资。它们不是约束性义务；对别的问题仍可以是证据，或按别的开题理由判</td><td>D236、D238</td><td>证据</td></tr>
+334:<li><b>同一个计划的几种说法</b>（担保、融资承诺、信用支持……），最后核对的是同一个数，是一题<span class="src">D248 第 1 条</span>。</li>
+353:<p class="note">年限按公司财年数：2026 年 7 月时 NVIDIA 在 FY2027（2027 年 1 月结束），所以 FY2028 是明年。代码原来按自然年算，把 FY2028 当成后年拒掉；在 v29 答案的 40 个带年份的候选里拒错了 2 个。已修，测试是 <span class="path">tests/test_fiscal_year_horizon.py</span><span class="src">D243</span>。</p>
+356:<h3>5.1 留的规则和四类</h3>
+357:<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+358:<p><b>整体倾向谨慎，对增量敏感。</b>杂音很大，不是什么都要抽，不是什么都算线索。判一句话之前先问：这是新信息吗？它让哪个问题的答案变了？一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏；重复常识、描述长期状况、泛泛的看法，是杂音<span class="src">D243</span>。</p>
+362:<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+366:<p><b>典型的主张和背景</b><span class="src">D243 第 5 条</span>：Alex 的原话是"这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"。常识，就是跟这家公司的分析员读这篇之前就已经知道的：谁领先、谁在竞争、需求强、供给紧、融资难这类说法，和对已知状况的重述。这类陈述没有数字和具体的叙事就不收。不是常识的，是新信息，比如一份新报告的判断、一个新的市场数据、刚发生的事的细节，照上面的规则判，分析员会记就留。</p>
+373:<h3>5.2 不完整也是证据</h3>
+374:<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+376:<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+379:<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+381:<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+382:<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+384:<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+385:<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+387:<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+389:<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+390:<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+392:<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+393:<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+408:<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+410:<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+412:<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51、D247 换成的 role-v53 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+413:<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+423:<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；同一说法在判断时怎么显示，见第 2 节<span class="src">D248 第 7 条</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+426:<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+430:<tr><td><span class="w core">核心</span></td><td>碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字</td><td>分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持</td></tr>
+431:<tr><td><span class="w sup">辅助</span></td><td>支持或反驳上面的判断，或给出可检验的估值假设；碰到关键判断但没有能定位答案的信息；别家公司自己的经营数字（收入、利润率、积压订单）；对公司规模来说是小事的；离现在越远、判断下来只是辅助的预测</td><td>对手自己模拟的 2.4 倍性能比较；公司取消软件订阅费；三条开放模型政策表态；Sharon 六年 72 MW 合同；FY2028 EPS 一致预期；12.76 × 25 的条件估值；一家银行选用对手系统（没写金额）；伙伴把公司模型集成进政府系统（没写金额）；内存厂公布的季度收入和利润率；客户公布的订单积压；客户园区"规划最多 17 万颗 GPU"</td></tr>
+432:<tr><td><span class="w opt">可选</span></td><td>帮助理解市场预期，省略不损害论证；留不留都不扣分</td><td>财报后股价反应；在研公司的估值倍数、市值、孤零零的目标价；生态数字；重提的过去实际数；新加坡案件<span class="src">D231、D243 第 3、4、6 条</span></td></tr>
+433:<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+438:<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+439:<li><b>是可选的那几样吗？</b>在研公司的估值倍数、市值、孤零零的目标价，财报后股价反应，生态数字，重提的过去实际数，新加坡案件，归可选。带推导的条件估值例外，是辅助<span class="src">第 1 版 §10.1</span>。</li>
+440:<li><b>核心还是辅助</b>碰到关键判断、带着能定位答案的信息、对公司不是小事、不是别家公司自己的经营数字，四条都满足是核心；其余是辅助。别家公司直接说出关键投入或需求的状况（短缺到哪年、明年花多少），按关键判断算。预测离现在越远，越可能只是辅助，这由判断定：FY2028 EPS 一致预期是辅助，Alex 说"太久远了"；内存厂说短缺 2027 年最严重、持续到 2030 是核心，它覆盖今明两年。</li>
+443:<p><b>Alex 拍过的分量</b><span class="src">D215；gold-check.md，D229</span>：收入增速核心；内存短缺核心；AMD 跑分辅助；三条政策辅助；云厂商支出核心；Omniverse 辅助；Sharon "辅助属于供给需求"；商谈最多 6000 亿支持 OpenAI 核心（在谈的金额）；投资 SB Energy 15 亿核心；Broadcom AI 半导体收入 +143%、Google Cloud 三个数辅助（别家公司的经营数字）；FY2028 EPS 辅助（远期）；逐案审核、有拒绝辅助（没有量和确定结果）。</p>
+444:<p><b>分量只在评估时判。</b>分量只在金标和测量里判，不进账本，不进抽取的输出<span class="src">D240</span>；账本只存来源层。抽取的模型决定留不留、怎么写，以及提哪些候选问题<span class="src">第 1 版 §1</span>。</p>
+445:<p>仿真里剩下的分歧几乎都在核心和辅助这条线上："对公司规模来说是不是小事"从一句话里常常看不出来（第 12 节，第三轮）。所以核心和辅助分开报，评估时允许读者间合理的不同判<span class="src">D226、D228</span>。</p>
+452:<li><b>研究的交付物是论证：</b>保留不可改的来源记录，和一份有版本的研究论证，写明支持和反对的来源、是否独立、变化和局限<span class="src">D201</span>。</li>
+460:<p>按这一页从原文逐篇写的参照，用来量提示词改动。Alex 的要求是"以上有你自己trace 过的golden set 来做为改prompt测试标准"<span class="src">D241</span>。定稿文件：<span class="path">docs/research/2026-10-29-ledger-standard/golden-v3/golden-v3-signed.json</span>，sha256 <code>78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3</code><span class="src">D243</span>。</p>
+464:<div class="tile"><div class="v">738</div><div class="l">句不收，各写理由；另有 24 句可选</div></div>
+471:<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+472:<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+479:<thead><tr><th>那一组</th><th class="num-cell">核心</th><th class="num-cell">辅助</th><th class="num-cell">可选</th><th class="num-cell">要收或可收</th><th class="num-cell">不收</th><th class="num-cell">原列不收、现为可选</th></tr></thead>
+484:<p>参考答案第 2 版那一周是核心 47、辅助 69、可选 48。辅助多出来的，主要是有名有姓、没写规模的动作（伙伴集成、客户采用、合作）：第 2 版标成"什么都不留"，现在按 D240 收为辅助。</p>
+492:<li><b>按签字定稿</b><span class="path">finalize.py</span> 按 D243 给每一条定分量，39 处改动逐条写理由（<span class="path">finalize-log.txt</span>）：32 条移出要收的一栏，其中 24 条是常识性的主张和背景（第 5 条），1 条是只有形容的引语（第 10 条），7 条和起草者写了理由的不收句是同一句；另有 7 句不收句和要收的条目重复，删掉。这 19 处"同一句话既留又不留"，是盲读后补条目时没和不收的句子对照造成的。此外，不收的句子里 24 句按第 3、4、6 条改为可选。</li>
+502:<p>结论：起草稿大约漏了两成，集中在有名有姓、没写规模的采用和合作，和一些带期间的判断。补完以后，独立读者能找到的金标条目约九成。读者多留的 163 条里，48 条是金标漏了、已补；其余 115 条按标准不补：同一件事金标已有、新加坡案件、产品细节、泛泛看法、旧事重提、合作方自己的事、和公司市场无关、只描述长期状况。剩下的不一致集中在核心和辅助的界线（第 1 条）和"背景还是主张"（第 5 条），两条都已由 Alex 拍定。记录在 <span class="path">golden-v3/spotcheck.md</span>、<span class="path">pass2-decisions.json</span>。</p>
+508:<li><b>发现错了怎么办。</b>不改这个文件；另记一份更正，每条写理由和改前改后，测量用更正后的版本并注明<span class="src">D243 第 11 条</span>。</li>
+518:<li><b>写"不留"之前先核它删不掉要留的。</b>分析员会记的陈述，缺金额、缺日期本身不是不留的理由；分量另判，可能低一点<span class="src">D240</span>。Alex 的原话："我不是和你说过不要这么死板吗？……你应该把它记录下来，只是可能档位低一点"。</li>
+530:<li><b>总数只看三次发送。</b>一次发送只能说明机制；直接读（每篇发一次，每个答案和原文并排读，D238）用来找机制，它的数是一次发送的数，要这样标明。回归先报，每个数都报<span class="src">AGENTS §7</span>。</li>
+536:<p><b>分开报，不合成总分</b>：核心 N 项里 correct / partial / wrong / absent 各多少；辅助同样；误收率 = 留下的"不收"项 ÷ 评过的"不收"项；多留的垃圾按条数（我读，代码核结构）；每个 material 问题单列。分母为零报 not_exercised。三次独立发送逐次报，不投票。</p>
+539:<li>核心：每一次发送都 kept 且 correct，不带 material 记录问题（v18 验收用的就是"六篇五发每条都在"）。</li>
+541:<li>不收：模板 0/3 留下（新加坡案件按 D231 改为可选）。</li>
+549:<p>之后的决定对它的影响：参考答案第 2 版里"整篇什么都不留"的标注不再当目标<span class="src">D240</span>；"垃圾"一项用定稿金标重算，Luna 基线也重算<span class="src">D243 第 12 条</span>；第 1 版说的"§6 例子里该开的一个问题"是 AI Compute Partnership 的义务金额题；合理的不同判和不同措辞可以接受，可选细节和标签不同不变成硬性的过或不过<span class="src">D226、D228</span>。</p>
+557:<li><b>全部文章各发一次，和上一版比</b>改一句会改变每一次请求，所以要发的是全部文章。"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；单次发送本身每版有 0–4 条这样的意外丢失<span class="src">D243 第 8 条；surprise.py</span>。每个信号读原始答案、问模型自己的理由，追到是不是这次改的那一句造成的。这是诊断。出错的那几篇只用来找机制；接不接受，看全部文章三次发送、和新对照一起报的结果<span class="src">AGENTS §7</span>。</li>
+577:<tr><td class="nowrap">10-29 D215</td><td class="nowrap">十一题</td><td>1 A（收入增速 核心）；2 C→D216 "2028 EPS 预测可以留下来啊，我的意思是因为太久远了，现在才2026"；3 A（内存短缺 核心）；4 B（AMD 跑分 辅助）；5 C（新加坡案件 不留，D231 改为可选）；6 B（三条政策 辅助）；7 A（云厂商支出 核心）；8 B（Omniverse 辅助）；9 "辅助属于供给需求"（Sharon）；10 "属于产品进度问题"（NVL72x2）；11 "一条吧都属于财务"（Google Cloud 三个数一条）</td></tr>
+588:<tr><td class="nowrap">10-29 D238</td><td class="nowrap">直接读</td><td>"你根本不要再给我跑什么三轮了。每一篇的问题明显地出错的你不要再用工具尺子了，你直接下去看"</td></tr>
+589:<tr><td class="nowrap">10-29 D240</td><td class="nowrap">不完整的证据</td><td>"我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点"</td></tr>
+591:<tr><td class="nowrap">10-29 D243</td><td class="nowrap">签字</td><td>第 5 条："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"；方向："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"；"其他几条的意见我都ok，sign off"</td></tr>
+593:<tr><td class="nowrap">10-30 D248</td><td class="nowrap">颗粒度</td><td>七条各选 A（第 6 条"A， A"）；原则："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</td></tr>
+597:<p>编号对应盘点报告 <span class="path">inventory-2026-10-29.md</span> 的 B1–B20，B21 是后来加的。"按已拍的"是已有决定，只是没落实或没写全；文首 12 条的决定记在 D243；"我定"只限措辞和记录约定。</p>
+601:<tr><td>B1</td><td>共同量的名字和定义：D191 改名并扩到价格；v16 起提示词和代码用 <code>industry_aggregate</code>、几家公司合计、一个日历年</td><td>按 D191 落实为 <code>shared_quantity</code>，期间仍用自然年；提示词和代码要跟着改</td><td>D191、D243；PRD 06</td></tr>
+603:<tr><td>B3</td><td>约束性义务：一笔或一个计划一题（D210），还是一组入股是一个判断（D201 规则 G）</td><td>按 D210 "一笔或一个计划"；一笔交易属不属于已开的计划，由匹配判；同一计划的几种说法是一题；够不上公司规模的单笔交易不开题，陈述留不留照第 5 节判</td><td>D210、D236、D238、D248</td></tr>
+608:<tr><td>B8</td><td>分量几级、"档位"一词两义</td><td>四级；"档位"在这一页叫分量，问题的叫结果档</td><td>第 1 版 §10.3；D243 第 1 条</td></tr>
+609:<tr><td>B9</td><td>几套"不要"的类</td><td>抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数</td><td>第 1 版 §2、§4；D221；D240；D243 第 12 条</td></tr>
+610:<tr><td>B10</td><td>股价、目标价、重述、新加坡各处判得不同</td><td>财报后股价反应可选（第 1 版 §10.2）；在研公司的估值倍数、市值、孤零零的目标价可选；重提的过去实际数可选；新加坡可选</td><td>第 1 版 §10.2；D231；D243 第 4、6 条</td></tr>
+612:<tr><td>B12</td><td>研究组、驱动层</td><td>研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+616:<tr><td>B16</td><td>转述的公告算事实还是当事人陈述</td><td>事实（role-v29 原文："an announcement or completed deal the item reports is a fact even when the reporter names no source"）；混合的一条按主要说法定层</td><td>PRD 06；D238、D239；D243 第 9 条</td></tr>
+617:<tr><td>B17</td><td>代码按自然年拒公司明年的财年量</td><td>已修：年限按公司财年数，测试 <span class="path">tests/test_fiscal_year_horizon.py</span></td><td>PRD 06 梯子第 5 条；D243</td></tr>
+618:<tr><td>B18</td><td>"线索""背景"一词多义</td><td>"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行</td><td>D221</td></tr>
+620:<tr><td>B20</td><td>AGENTS §8 指向两套标准，D229 又说第 1 版是唯一尺子</td><td>这一页签字后取代第 1 版，AGENTS §8 指向这一页；对两套既有标准（PRD 06 证据层次、90 题评审）的指向保留，它们是这一页的出处</td><td>D228、D229、D243</td></tr>
+637:<p>新案例上留不留的一致率从第二轮的 80–94% 升到 93–98%，连分量从 72–87% 升到 81–89%。剩下的分歧几乎都在核心和辅助的界线，由 D243 第 1 条定下判法。三位读者判对、作者判错的，记作作者的错：最大客户带来的收入和中国销售占比不该开题（独立意义测试），还有两处陈述。记录在 <span class="path">simulation-log.md</span>。</p>
+640:<p>Codex 只读，逐条对照签过的第 1 版、全部决策、PRD 06，找"作者自己加的规则"、和决策矛盾的地方、引错的原话。每一轮的发现都改掉并记下处理。第一轮查出 18 处自己加的规则和 9 处和决策矛盾，比如"名单外公司的量不开题"违反 D155、D187，"抽取要和库里比重复"违反 D211，把达标线缩短，把"在谈的金额"排除出核心。最后三轮只剩措辞层面的问题；第十一轮的发现在 2.14 版改掉，没有再复查。</p>
+662:<p>PRD 06（Two thesis kinds、Ladder、Four evidence tiers、State、Succession）；PRD 05；第 1 版标准（D229）；<span class="path">research_notes/对冲基金论点粒度与金标/codex-challenger.md</span> §1 八条和 §6、<span class="path">industry-debate-standards.md</span>（主分支）；决定 D155、D165、D184、D185、D186、D187、D190、D191、D195、D197、D198、D199、D201、D202、D204、D207、D208、D209、D210、D211、D215、D216、D218、D220、D221、D226、D228、D229、D231、D233、D236、D237、D238、D240、D241、D242。</p>
+672:<footer>Hivemind · 抽取与开题标准 · 第 4 版 · 2026-10-29 Alex 签字（D243），2026-10-30 按 Alex 逐个选的七条修订（D248）。页首的 standard-version 是规则的版本号：改任何一条规则都要升它，金标随之重定，打分程序遇到版本对不上就拒绝打分（D244）。</footer>
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '165,235p;330,395p;424,445p;570,595p' docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+  <ul>
+    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+    <li>分析员会记 <span class="goes">→ 留为证据</span><span class="tag">第 5 节</span>
+      <ul>
+        <li>记来源层：事实、当事人陈述、第三方观点、传闻 <span class="tag">进账本 · 第 5.5 节</span></li>
+        <li>分量：核心、辅助、可选 <span class="tag">只在评估时判，不进账本 · 第 6 节</span></li>
+        <li>归档：挂到最窄的那个已开问题 <span class="src">D207</span>；没有问题接，记 no home 扔掉，评估时逐条读 <span class="src">D209</span></li>
+        <li>这篇文章还提出了值得追的新问题吗？ <span class="tag">第 4 节</span>
+          <ul>
+            <li>过了测试，属于五类之一 <span class="goes">→ 候选问题；和库里已有问题是不是重复，由匹配判</span> <span class="src">D211、D190</span></li>
+            <li>没过 <span class="goes">→ 不开，它只是证据</span></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</li></ul>
+</div>
+
+<h2 id="decisions"><span class="num">已拍</span>Alex 拍板的 12 条</h2>
+<p>2026-10-29 Alex 签字（D243）。第 5 条他定得比我的倾向更严；其余 11 条按倾向："其他几条的意见我都ok，sign off"。下表每条写定下的是什么、落在哪一节。</p>
+<blockquote>
+<p>第 5 条，Alex 原话："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"</p>
+<p>整体方向，Alex 原话："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"</p>
+</blockquote>
+<div class="table-wrap mid"><table>
+<thead><tr><th>#</th><th>定下的</th><th>在哪一节</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>分量按信息量定档：核心要碰到关键判断，并带一个量、一个确定状态或一个带期间的预测；别家公司自己的经营数字、对公司是小事的，算辅助；预测离现在越远，越可能只是辅助，由判断定。缺金额、缺日期只影响分到哪一档，不是不留的理由</td><td class="nowrap">第 6 节</td></tr>
+<tr><td>2</td><td>"共同量"按 D191 落实：任何一家公司之外、好几家都会受它影响的量或价格（合计支出、合约价、利率）都可以开题，开题理由叫 <code>shared_quantity</code>；期间按自然年。提示词和代码要跟着改</td><td class="nowrap">第 3 节 D 类</td></tr>
+<tr><td>3</td><td>生态数字（论文数、获奖、下载量、开发者人数、大会人数）可选</td><td class="nowrap">第 6 节</td></tr>
+<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+<tr><td>7</td><td>收购算约束性义务（写明规模、尚未完成）</td><td class="nowrap">第 3 节 C 类</td></tr>
+<tr><td>8</td><td>改提示词时的回归判法：全部文章各发一次和上一版比，"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；它是诊断，验收仍是三次发送</td><td class="nowrap">第 9.3 节</td></tr>
+<tr><td>9</td><td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+<tr><td>11</td><td>金标冻结后发现错：另记一份带理由的更正，写明改前改后，不覆盖原文件；测量用更正后的版本并注明</td><td class="nowrap">第 8 节</td></tr>
+<tr><td>12</td><td>达标线里"垃圾"一项（每篇留下的无关陈述）用定稿金标重算，Luna 基线也重算</td><td class="nowrap">第 9.2 节</td></tr>
+</tbody></table></div>
+
+<h3 id="d248">D248：颗粒度的七条（2026-10-30）</h3>
+<p>Alex 逐个听了例子、逐个选的，七个都选 A；改了第 2、3、4 节，标准升为第 4 版，金标要按第 4 版重推：开题部分逐条重判，证据部分逐条核对（D244）。</p>
+<blockquote><p>原则，Alex 原话："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</p></blockquote>
+<div class="table-wrap mid"><table>
+<thead><tr><th>#</th><th>定下的</th><th>在哪一节</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>同一个计划的几种说法，最后核对同一个数的，是一题；各自会变、会分别盯的数才分开；属于已按金额开题的计划的一笔交易并进去</td><td class="nowrap">第 4 节</td></tr>
+<tr><td>2</td><td>同一件事的不同截止日：早的那题开着时，晚的截止日是它的证据；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上证据，不等新文章</td><td class="nowrap">第 4 节</td></tr>
+<tr><td>3</td><td>同一代产品的几个里程碑：一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题</td><td class="nowrap">第 4 节</td></tr>
+<tr><td>4</td><td>公司自己的量只按财年开题；按日历年的估计是财年那题的证据</td><td class="nowrap">第 4 节</td></tr>
+<tr><td>5</td><td>事件和政策题里模型写的期间起点，不拿来挡合并</td><td class="nowrap">第 4 节</td></tr>
+<tr><td>6</td><td>单笔交易、产品、项目，规模要大到能改变公司的收入、利润、现金或信用风险才开题；够不上的不开题，它的陈述留不留照第 5 节判，留下的是证据</td><td class="nowrap">第 3 节 C 类、第 4 节</td></tr>
+<tr><td>7</td><td>原始说话人、原始日期、数字都相同的几条证据，代码认作一条，判断时只给看一次、写明几家报道，每条照存；不知道的说话人或日期不算相同</td><td class="nowrap">第 2 节</td></tr>
+</tbody></table></div>
+
+<h3 id="conventions">我定的记录约定</h3>
+<p>只定怎么记，不改变留不留、开不开。</p>
+<ul>
+<li>页面杂项（广告、相关文章预告、推荐列表、别的新闻标题）一律归第 1 版的"模板"一行，不另起名字。</li>
+<li>标题里的说法和正文是同一条证据，不单记<span class="src">第 1 版 §2 同一事实的复述</span>。</li>
+<li>分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。</li>
+<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+</ul>
+
+<h2 id="words"><span class="num">1</span>这一页用的词：一词一义</h2>
+<div class="table-wrap mid"><table>
+<thead><tr><th>词</th><th>意思</th><th>不要和它混</th></tr></thead>
+<tbody>
+<tr><td class="nowrap">陈述</td><td>原文里某一方说的一句话或一件事</td><td></td></tr>
+<h3>同一题、续期，还是另一题：匹配这一步的事，抽取不判库里的</h3>
+<ul>
+<li><b>总规则：</b>同一个结果能判掉两题，就是同一题；答案能分开走、而且分析员会分别下注的，才是另一题<span class="src">D248</span>。</li>
+<li><b>同一题：</b>同一个结果能同时判两个问题。另一个估计、来源、措辞、方向<span class="src">第 1 版 §6 测试 4</span>；同一总量的另一种人群或代用口径（D190 碰撞裁决提示 collision-v1："another population or proxy of one aggregate"；D197 引的 role-v12 原文："another population or another wording of the same aggregate is evidence to the shown aggregate thesis"）。候选并进已开问题，用它的结果档和到期日<span class="src">PRD 06</span>。只有以共同量理由开题、带量的候选由代码自动判，其余是匹配和碰撞裁决的判断。</li>
+<li><b>同一个计划的几种说法</b>（担保、融资承诺、信用支持……），最后核对的是同一个数，是一题<span class="src">D248 第 1 条</span>。</li>
+<li><b>同一件事的不同截止日：</b>早的那题开着时，晚的截止日是它的证据，不另开；早的到期没有结果、事情还在追，系统开下一个截止日的续期题，带上并进来的证据，不等新文章<span class="src">D248 第 2 条</span>。</li>
+<li><b>同一代产品的几个里程碑：</b>一题，问能带来收入的那一步（通常是开始出货）；送样、发布作证据；会分别下注的里程碑（新药的三期数据和获批）各一题<span class="src">D248 第 3 条</span>。</li>
+<li><b>公司自己的量：</b>只按财年开题；按日历年的估计是财年那题的证据，两种年份差得多时分量低一点<span class="src">D248 第 4 条；PRD 06 梯子第 5 条</span>。</li>
+<li><b>身份：</b>事件和政策题里模型写的期间起点，不拿来挡合并；对象、事件、截止日照旧核对<span class="src">D248 第 5 条</span>。</li>
+<li><b>续期：</b>同一个量或同一串事件的下一个期间<span class="src">PRD 06 Succession、D190</span>。</li>
+<li><b>另一题：</b>同一件事里答案能分开走、分析员会分别下注的：有自己驱动的组成部分；同一笔交易或同一份附注里两个各自会变、分别盯着的数；另一件事<span class="src">D190 碰撞裁决的四种；D248 第 1 条收窄了"担保和融资"</span>。</li>
+<li><b>约束性义务：</b>"一笔或一个计划"一题<span class="src">D210</span>；一笔交易是不是某个已按金额开题的计划的一部分，由匹配判，是就并入<span class="src">D248 第 1 条</span>。还没签的单笔交易是"签不签"的是非题，照旧可以开，不并进计划的金额题<span class="src">D210；PRD 06；D248 未改</span>。</li>
+<li><b>共同量：</b>以共同量理由开题、带量的候选（量的类别是 <code>other</code> 的不算），由代码按"主题＋量＋期间"判同一题；政策阶段和别的事件保留按事件判的身份；不带这个开题理由的主题量由模型判<span class="src">D197</span>。</li>
+</ul>
+
+<h3>谁判，谁查</h3>
+<div class="table-wrap mid"><table>
+<thead><tr><th>内容</th><th>谁</th></tr></thead>
+<tbody>
+<tr><td>测试 1–3、同一篇文章里的测试 4、属于哪一类、问题怎么写</td><td>抽取的模型（判断）</td></tr>
+<tr><td>结果档形状、期间是真日期、到期在文章之后、季度数、年限、约束性义务 18 个月、<code>settled_by</code> 不为空</td><td>代码：只查形状，不判重要性<span class="src">D154、D155、D184</span></td></tr>
+<tr><td>和库里的同一题、续期、另一题</td><td>匹配（Jev）和碰撞裁决<span class="src">D190</span>；共同量由代码<span class="src">D197</span></td></tr>
+</tbody></table></div>
+<p class="note">年限按公司财年数：2026 年 7 月时 NVIDIA 在 FY2027（2027 年 1 月结束），所以 FY2028 是明年。代码原来按自然年算，把 FY2028 当成后年拒掉；在 v29 答案的 40 个带年份的候选里拒错了 2 个。已修，测试是 <span class="path">tests/test_fiscal_year_horizon.py</span><span class="src">D243</span>。</p>
+
+<h2 id="evidence"><span class="num">5</span>证据标准</h2>
+<h3>5.1 留的规则和四类</h3>
+<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+<p><b>整体倾向谨慎，对增量敏感。</b>杂音很大，不是什么都要抽，不是什么都算线索。判一句话之前先问：这是新信息吗？它让哪个问题的答案变了？一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏；重复常识、描述长期状况、泛泛的看法，是杂音<span class="src">D243</span>。</p>
+<p>从第一段读到最后一段，分析员会记的都留。一页有八条就是八条，不挑<span class="src">D199</span>。它们通常是下面四类之一；四类描述的是会记的陈述长什么样，不是"属于四类就一定留"，留不留由上面的规则判。</p>
+<ol class="steps">
+<li><b>公司自己的数字、指引或决定</b><span class="src">第 1 版 §2</span>"同店销售本季增长 4.2%"；"管理层把全年收入指引定在 120–130 亿美元"；"董事会批准 100 亿美元回购"；"公司取消软件订阅费，生产使用免费"<span class="src">Alex 判 8，Omniverse</span>。</li>
+<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+<li><b>具名一方的主张或估计</b><span class="src">第 1 版 §2</span>"CFO 说十年前建的工厂仍满负荷"；"分析师把明年 EPS 预期上调到 4.10 美元"；"做空机构指控公司虚增应收 20 亿美元"；"内存厂说 2027 年短缺最严重，持续到 2030"。</li>
+<li><b>政策或监管的决定或步骤</b><span class="src">第 1 版 §2</span>"监管机构批准该药第二个适应症"；"政府要求该产品出口须申请许可"；"25 家公司联名反对过早限制开放权重模型"；"财长说将调查某国公司是否窃取知识产权"。</li>
+</ol>
+<p><b>典型的主张和背景</b><span class="src">D243 第 5 条</span>：Alex 的原话是"这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"。常识，就是跟这家公司的分析员读这篇之前就已经知道的：谁领先、谁在竞争、需求强、供给紧、融资难这类说法，和对已知状况的重述。这类陈述没有数字和具体的叙事就不收。不是常识的，是新信息，比如一份新报告的判断、一个新的市场数据、刚发生的事的细节，照上面的规则判，分析员会记就留。</p>
+<ul>
+<li><b>常识，不收：</b>"博通 CEO 说能从英伟达抢份额"；"Blackwell 和 Rubin 仍然供不应求"；"融资会是扩大算力最大的障碍"；"内存厂避开了以往的产能过剩"；"博通预计明年随着新客户推出定制芯片大幅增长"。</li>
+<li><b>新信息，收：</b>一位科技公司高管对媒体说"中国国产 AI 芯片厂商已经全部卖光，客户在考虑性能更低的芯片"；"旧型号 GPU 的租金在涨"；研究机构说"这让 Rubin Ultra 暂时没有成熟的扩展方案，给对手留出了空间"；"华为现在占中国 AI 芯片市场约一半，这个市场约 500 亿美元"。</li>
+<li><b>有数字也要过上面的规则：</b>作者说"英特尔多年领先，占 CPU 市场 59%"，和英伟达的问题关系不大，分析员不会记。</li>
+</ul>
+
+<h3>5.2 不完整也是证据</h3>
+<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+
+<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+<div class="table-wrap wide"><table>
+<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+<tbody>
+<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+</tbody></table></div>
+<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+
+<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+
+<h2 id="weight"><span class="num">6</span>分量</h2>
+<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+<div class="table-wrap wide"><table>
+<thead><tr><th>等级</th><th>什么样</th><th>例子</th></tr></thead>
+<tbody>
+<tr><td><span class="w core">核心</span></td><td>碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字</td><td>分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持</td></tr>
+<tr><td><span class="w sup">辅助</span></td><td>支持或反驳上面的判断，或给出可检验的估值假设；碰到关键判断但没有能定位答案的信息；别家公司自己的经营数字（收入、利润率、积压订单）；对公司规模来说是小事的；离现在越远、判断下来只是辅助的预测</td><td>对手自己模拟的 2.4 倍性能比较；公司取消软件订阅费；三条开放模型政策表态；Sharon 六年 72 MW 合同；FY2028 EPS 一致预期；12.76 × 25 的条件估值；一家银行选用对手系统（没写金额）；伙伴把公司模型集成进政府系统（没写金额）；内存厂公布的季度收入和利润率；客户公布的订单积压；客户园区"规划最多 17 万颗 GPU"</td></tr>
+<tr><td><span class="w opt">可选</span></td><td>帮助理解市场预期，省略不损害论证；留不留都不扣分</td><td>财报后股价反应；在研公司的估值倍数、市值、孤零零的目标价；生态数字；重提的过去实际数；新加坡案件<span class="src">D231、D243 第 3、4、6 条</span></td></tr>
+<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+</tbody></table></div>
+
+<h3>判法</h3>
+<ol class="steps">
+<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+<li><b>是可选的那几样吗？</b>在研公司的估值倍数、市值、孤零零的目标价，财报后股价反应，生态数字，重提的过去实际数，新加坡案件，归可选。带推导的条件估值例外，是辅助<span class="src">第 1 版 §10.1</span>。</li>
+<li><b>核心还是辅助</b>碰到关键判断、带着能定位答案的信息、对公司不是小事、不是别家公司自己的经营数字，四条都满足是核心；其余是辅助。别家公司直接说出关键投入或需求的状况（短缺到哪年、明年花多少），按关键判断算。预测离现在越远，越可能只是辅助，这由判断定：FY2028 EPS 一致预期是辅助，Alex 说"太久远了"；内存厂说短缺 2027 年最严重、持续到 2030 是核心，它覆盖今明两年。</li>
+</ol>
+<p><b>"确定状态"</b>：已经签了、宣布了、开始了、批准了、取消了、推迟到某个日期了、定下了裁决日；没有量的"在谈""在考虑""可能""在探索""打算"不算。确定状态以陈述当天为时间，不要求生效日。<b>"带期间的预测"</b>：分析师预计今年余下收入增长 82%；内存厂说短缺持续到 2030 年。确定不确定看说法本身的内容；靠不靠得住另记在来源层。</p>
+<p><b>Alex 拍过的分量</b><span class="src">D215；gold-check.md，D229</span>：收入增速核心；内存短缺核心；AMD 跑分辅助；三条政策辅助；云厂商支出核心；Omniverse 辅助；Sharon "辅助属于供给需求"；商谈最多 6000 亿支持 OpenAI 核心（在谈的金额）；投资 SB Energy 15 亿核心；Broadcom AI 半导体收入 +143%、Google Cloud 三个数辅助（别家公司的经营数字）；FY2028 EPS 辅助（远期）；逐案审核、有拒绝辅助（没有量和确定结果）。</p>
+<p><b>分量只在评估时判。</b>分量只在金标和测量里判，不进账本，不进抽取的输出<span class="src">D240</span>；账本只存来源层。抽取的模型决定留不留、怎么写，以及提哪些候选问题<span class="src">第 1 版 §1</span>。</p>
+<p>仿真里剩下的分歧几乎都在核心和辅助这条线上："对公司规模来说是不是小事"从一句话里常常看不出来（第 12 节，第三轮）。所以核心和辅助分开报，评估时允许读者间合理的不同判<span class="src">D226、D228</span>。</p>
+<tr><td class="nowrap">10-26 D191</td><td class="nowrap">共同量、主题</td><td>决定文字："<code>industry_aggregate</code> is renamed <code>shared_quantity</code>: a quantity or price outside any one company that several move on"，Alex："好"；纯宏观文章只在主题在名单上时开，Alex："是"；主题对公司一对全部，Alex："我觉得这个 1 to all mapping 比较 make sense"</td></tr>
+<tr><td class="nowrap">10-26 D187</td><td class="nowrap">别家公司的量</td><td>选 C（"可以"）：任何公司自己的量是那家公司的问题，私营公司也算；记录，未实现</td></tr>
+<tr><td class="nowrap">10-27</td><td class="nowrap">这一步的标准</td><td>"做一个 hedge fund analyst 的专业视角去看怎么做这一步的标准"；"什么叫重要陈述，你也没给例子"</td></tr>
+<tr><td class="nowrap">10-28 D208</td><td class="nowrap">驱动层</td><td>"可以，但是不能因为有了这层我们的抽取就是非常的模版化缺少了hedge fund analyst 的灵魂"；宏观"算是个global factor to all, 但影响正反面不一定"</td></tr>
+<tr><td class="nowrap">10-28 D209</td><td class="nowrap">没家的陈述</td><td>"if it doesn't matter, just fucking throw it away … if there are false positives that got thrown away … you got to pick it up. Again, that's the way to do proper evaluation."</td></tr>
+<tr><td class="nowrap">10-28</td><td class="nowrap">不许前视</td><td>"不是你这么粗暴的把这些都先写好那岂不是lookahead了"</td></tr>
+<tr><td class="nowrap">10-28</td><td class="nowrap">逐条读</td><td>"有用的，你得一条一条看是不是真的值得抽才知道你这些改动的抽取效果"</td></tr>
+<tr><td class="nowrap">10-29 D215</td><td class="nowrap">十一题</td><td>1 A（收入增速 核心）；2 C→D216 "2028 EPS 预测可以留下来啊，我的意思是因为太久远了，现在才2026"；3 A（内存短缺 核心）；4 B（AMD 跑分 辅助）；5 C（新加坡案件 不留，D231 改为可选）；6 B（三条政策 辅助）；7 A（云厂商支出 核心）；8 B（Omniverse 辅助）；9 "辅助属于供给需求"（Sharon）；10 "属于产品进度问题"（NVL72x2）；11 "一条吧都属于财务"（Google Cloud 三个数一条）</td></tr>
+<tr><td class="nowrap">10-29 D218</td><td class="nowrap">推断</td><td>"是推断，你不要再问我了，你要自己尝试 figure out 开始跑"</td></tr>
+<tr><td class="nowrap">10-29 D220</td><td class="nowrap">谁定标准</td><td>"你来修正对齐，你是 hedge fund analyst 你来做好标准"</td></tr>
+<tr><td class="nowrap">10-29 D217</td><td class="nowrap">目标模型</td><td>"现在开始以haiku 为模型取代luna … 每一轮都根据尺子去迭代 … 小心 overfit … 尺子其实不对 … scope creep"（D234 起 Haiku 暂停）</td></tr>
+<tr><td class="nowrap">10-29 D226、D228</td><td class="nowrap">评法</td><td>合理的模糊和不同措辞可以接受；金标例子教的是判断逻辑，不是唯一答案；两套既有标准（证据层次、90 题评审）都要用；来源、用途、准入分开判</td></tr>
+<tr><td class="nowrap">10-29</td><td class="nowrap">今天</td><td>"之前没有对齐一个hedge fund analyst 应该要用什么标准来抽研究观点"</td></tr>
+<tr><td class="nowrap">10-29 D229</td><td class="nowrap">标准不漂移</td><td>"1-5 都可以，按照这套标准来开始做测量，这条标准不要漂移"</td></tr>
+<tr><td class="nowrap">10-29 D231</td><td class="nowrap">新加坡</td><td>"新加坡那条就随意吧"</td></tr>
+<tr><td class="nowrap">10-29 D233</td><td class="nowrap">今年</td><td>按公司财年或自然年写都算对</td></tr>
+<tr><td class="nowrap">10-29 D236</td><td class="nowrap">三条提议</td><td>"好都按照你的提议来。但是你的prompt 改动要确认不是hardcode for nvidia 你在建构的是hedge fund brain"</td></tr>
+<tr><td class="nowrap">10-29 D237</td><td class="nowrap">通用</td><td>"It needs to be general purpose as a hedge fund brain"</td></tr>
+<tr><td class="nowrap">10-29 D238</td><td class="nowrap">直接读</td><td>"你根本不要再给我跑什么三轮了。每一篇的问题明显地出错的你不要再用工具尺子了，你直接下去看"</td></tr>
+<tr><td class="nowrap">10-29 D240</td><td class="nowrap">不完整的证据</td><td>"我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点"</td></tr>
+<tr><td class="nowrap">10-29 D241</td><td class="nowrap">这份标准</td><td>"几个大类型的账本 - 开题标准和档次 这两个要完整的定义好写好"；"档位根据信息量作定标 -以上有你自己trace 过的golden set 来做为改prompt测试标准"</td></tr>
+<tr><td class="nowrap">10-29 D243</td><td class="nowrap">签字</td><td>第 5 条："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"；方向："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"；"其他几条的意见我都ok，sign off"</td></tr>
+<tr><td class="nowrap">10-29 D242</td><td class="nowrap">这一页</td><td>"你给我一个网页，这个同时也是你这个环节重要的PRD"</td></tr>
+<tr><td class="nowrap">10-30 D248</td><td class="nowrap">颗粒度</td><td>七条各选 A（第 6 条"A， A"）；原则："我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则"</td></tr>
+</tbody></table></div>
+
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '七类驱动|驱动</|供应商|债务' docs/prd/05-extraction-standard.html | head -18" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+245:<tr><td class="nowrap">七类驱动</td><td>一条陈述为什么对公司业务重要的七条路径<span class="src">D208</span>。需求：客户要买多少，如订单、客户支出、贷款需求、客流。供给与投入：能做出多少、成本多少，如产能、原料和零部件价格、燃料、矿石品位。竞争与份额：对手的产品、价格、开店、赢单。定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户。产品周期：发布、出货、试验、获批、延期。政策：法规、许可、关税、利率、监管决定。资本与义务：融资、担保、承诺、投资、收购</td><td>问题类型</td></tr>
+246:<tr><td class="nowrap">市场预期与估值</td><td>市场已经定价了什么：估值倍数、市值、目标价、股价反应。观点的立场要和它比<span class="src">AGENTS §8</span>。对一个业务量的一致预期（收入、EPS）是那个业务量的证据，不归这里</td><td>七类驱动</td></tr>
+265:<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。规模要大到能改变公司的收入、利润、现金或信用风险才开；够不上的单笔入股、收购、租约、授信不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+274:<li><b>C：</b>NVIDIA 为云客户产能兜底的义务在 FY2027 年报达到多少；一家保险公司是否在 2027 年中前为合资公司 5 亿美元债务签署担保。</li>
+281:<li><b>七类驱动不是问题类型。</b>它们是一条陈述为什么重要的理由，用来判分量和归档。D208 设计的"每家公司种下的驱动问题"由分析员开始覆盖时写好，不从文章里开；还没建。</li>
+323:<tr><td>客户的部署计划（"它是供应商需求和产品问题的证据，除非改变供应商自己的现金或信用风险"）</td><td>第 1 版 §6</td><td>证据；改变公司自己的现金或信用风险时按 C 类判</td></tr>
+357:<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+362:<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+385:<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+430:<tr><td><span class="w core">核心</span></td><td>碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字</td><td>分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持</td></tr>
+612:<tr><td>B12</td><td>研究组、驱动层</td><td>研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+
+codex
+The new “Never drop” sentence is broader than the standard’s core definition: it can protect a numbered statement even when the standard calls it noise. I’m checking each remaining boundary and example separately, including cases where a repeated forecast is no longer in force.
+codex
+**The new “Never drop” sentence does not match §6: it can keep noise that the standard rejects.** For example, an old, familiar revenue figure could “touch” revenue and contain a figure, yet §5.1 still asks whether an analyst would record it and §5.3 can reject it as background. The sentence also leaves out two limits in §6: the matter must not be small for the company, and another company’s own operating figures are supporting rather than core.
+
+The audit below is against the current [review-core-v62.txt](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-noise/review-core-v62.txt) and the [Chinese version 4 standard](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html). I use **WIDER-DROP** only for a possible loss of required evidence, not for the loss of an optional item. Where the text can be read in more than one way, I flag the risk rather than claim a measured outcome.
+
+## Clause-by-clause audit
+
+The standard quotations are exact; the English audit text is quoted exactly. A classification describes the clause as written, including its interaction with the surrounding instructions.
+
+### Opening test
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “Before you return the answer, check it once.” | §5.1: “从第一段读到最后一段，分析员会记的都留。” | **NO-SOURCE** — The standard requires the outcome but does not itself prescribe this final review procedure. |
+| “Read each evidence item back as the analyst following the company and keep it when you would write it in this week's notes because it makes some question's answer more or less likely, about the company or its customers, suppliers, competitors, regulators or the economy.” | §5.1: “一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。” and “客户、供应商、竞争者、监管、宏观都算”。 | **CONSISTENT** — This carries the analyst test and its stated reach; the later keep list also names partners. |
+| “Ask first whether it is new: repeated common knowledge, a long-standing situation retold and an unargued view are noise;” | §5.1: “重复常识、描述长期状况、泛泛的看法，是杂音”；D243 item 6: “文字或日期看不出是旧事的不算重提”。 | **WIDER-DROP** — A situation that began long ago can still contain a new, useful assertion; the clause does not itself carry the oldness boundary, although a later clause partly restores it. |
+| “guidance, and a forecast or a plan still in force, keep their place even when retold.” | D243 item 6: “重提的季度指引和仍然有效的预测、计划按本来分量”。 | **CONSISTENT** — It protects the specified retold items, although “guidance” is broader than the standard’s “季度指引.” |
+
+### Drop list and its boundaries
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “These usually fail that check:” | §5.3: “先看那一行的‘边界’一列” (§6 procedure); §5.2: “下面的不留清单不能用来删掉分析员会记的陈述”。 | **CONSISTENT** — “Usually” leaves room for the boundaries, provided the specific rows do not override them. |
+| “background the analyst already knew: an arrangement already in place, described again;” | §5.3: “记者的背景和框架”；D243 item 6: “文字或日期看不出是旧事的不算重提”。 | **WIDER-DROP** — “Already in place” does not by itself establish that the description is a retelling or that its current condition is known. |
+| “the company's history ("the company was founded in 1998"; "the product line launched in 2020").” | §5.3: “公司成立于 1998 年”；“A100 2020 年上市”。 | **CONSISTENT** — These correspond to the standard’s background examples; the second is generalized from a named product. |
+| “A development the item reports without making clear that it is old is not a retelling,” | D243 item 6: “文字或日期看不出是旧事的不算重提”。 | **CONSISTENT** — It carries the stated boundary. |
+| “and a forecast is never one;” | D243 item 6: “仍然有效的预测、计划按本来分量”；§5.3: “重提的过去实际数可选”。 | **NARROWER-DROP** — The standard protects forecasts still in force; this exception also protects a retold forecast that has expired, although the opening test may still reject it. |
+| “a typical claim that is common knowledge, without a figure and a specific account: that a firm leads or competes, that demand is strong or supply tight,” | §5.1: “谁领先、谁在竞争、需求强、供给紧、融资难这类说法” and “这类陈述没有数字和具体的叙事就不收”。 | **CONSISTENT** — The clause preserves the standard’s common-knowledge condition. |
+| “a general risk ("if demand slows it would hurt");” | §5.3: “作者的一般性风险清单和没有推导的看法”；example “如果 AI 退潮会受伤”。 | **CONSISTENT** — The example is a generalized version of the standard’s risk example. |
+| “a figure alone does not lift it ("the leading soft-drink brand has held 40% of its market for years", in an article about a bank),” | §5.1: “有数字也要过上面的规则”；example “英特尔多年领先，占 CPU 市场 59%”。 | **CONSISTENT** — A number alone does not pass the analyst test; the soft-drink example is newly written, not on the page. |
+| “while a dated forecast of a shortage, a price or demand is not such a claim ("the steelmaker expects the shortage to peak next year and last until 2028");” | §5.1: “内存厂说 2027 年短缺最严重，持续到 2030”；§5.2: “预测、传闻、反证、远期、条件情景都是证据”。 | **NARROWER-DROP** — A date alone does not establish that every shortage, price or demand forecast passes §5.1; the example is adapted, not on the page. |
+| “a product, game, driver or benchmark detail with no business scale ("the card draws 415 watts"; "a benchmark score");” | §5.3: “没有业务规模的产品、游戏、驱动、跑分细节”；examples “这张卡 415W”；“Geekbench 跑分”。 | **CONSISTENT** — The drop class and examples trace to the page; its exceptions must still be read with the later keep list. |
+| “an unargued view or a quote that only characterises ("the stock is a hold"; "a pivotal moment");” | §5.3: “作者的一般性风险清单和没有推导的看法”；“只有形容的引语”；examples “这只股票该持有”；“a pivotal moment”。 | **CONSISTENT** — Both examples match the two standard rows. |
+| “a share-price move or an investor's position ("shares fell 13% this month");” | §5.3: “股价涨跌、投资人仓位、技术面”；example “本月跌 13%”；boundary “财报后股价反应”可选。 | **CONSISTENT** — The example follows the row; dropping an earnings reaction is allowed because it is optional. |
+| “another company's valuation, share price or deal that touches none of the company's markets;” | §5.3: “和公司所有市场都无关的别家公司的估值、股价、交易”不留；“别家公司的动作和经营数字不能用这一行删掉”。 | **CONSISTENT** — The D238 row is reproduced with its market boundary. |
+| “a second item for the same fact (keep the fuller one).” | §5.3: “同一事实的复述”；example “一篇稿子用五句话说一个部署是一条”。 | **NO-SOURCE** — Combining repeated expressions of one fact is sourced, but “keep the fuller one” is an additional selection rule not stated in this row. |
+
+### New core guard
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “Never drop a statement that touches the company's revenue, profit, financing or credit risk, demand, the progress of the product that carries its value, or the supply and price of its key inputs, and carries a figure, a settled state (signed, announced, started, approved, cancelled, delayed to a date) or a forecast for a stated period.” | §6: “碰到关键判断，并且带着能定位答案的信息”；“对公司不是小事，也不是别家公司自己的经营数字”；§6 procedure: “先判留不留按 5.1 判分析员会不会记”；§5.1: “有数字也要过上面的规则”。 | **NARROWER-DROP** — It makes contact with a subject plus a figure, state or period forecast an unconditional keep, bypassing the analyst test and the drop boundaries, and omits §6’s small-matter and other-company limits. |
+
+The guard also is **not an exact copy of the core definition**. The standard says “关键产品进度” and then includes “它承载价值的那一代产品及其配置、过渡方案”; the guard refers to “the product that carries its value” without explicitly covering configuration or transition arrangements. It also omits a settled decision date from the standard’s examples of a settled state. Those omissions do not by themselves prove a loss, because the opening test and later keep list can still retain the evidence.
+
+### Keep list and closing instruction
+
+Every item in this list inherits the exact introductory condition:
+
+> “Keep these whenever they move such a question; none is dropped for the reasons above:”
+
+Its trace is §5.1: “分析员会记的都留”, and §5.2: “下面的不留清单不能用来删掉分析员会记的陈述”。 **CONSISTENT** as a conditional instruction: the categories are not automatically sufficient by themselves.
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “a forecast, a rumour, a counter-example, a distant or conditional statement;” | §5.2: “预测、传闻、反证、远期、条件情景都是证据”。 | **CONSISTENT** — It lists all five protected forms subject to the introductory analyst test. |
+| “a named party's action without an amount or a date;” | §5.2: “有名有姓的动作缺金额、缺日期也是证据，分量可以低一点”。 | **CONSISTENT** — Missing an amount or date alone is not a reason to drop. |
+| “the company's own figure, guidance or decision;” | §5.1: “公司自己的数字、指引或决定”。 | **CONSISTENT** — It carries the first kind. |
+| “a customer's, supplier's, competitor's or partner's action or reported figure;” | §5.1: “客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字”。 | **CONSISTENT** — The list expressly includes other companies’ reported figures, conditional on the analyst test. |
+| “a competitor's comparison against the company's product;” | §5.3: “对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判”。 | **CONSISTENT** — It carries the product-detail boundary. |
+| “a partner's or customer's adoption or integration;” | §5.3: “伙伴、客户采用或集成的动作不是产品细节”。 | **CONSISTENT** — It carries the adoption and integration boundary. |
+| “the launch, shipment, delay or cancellation of a product, and a change to the plan or configuration of the product that carries the company's value;” | Glossary, 七类驱动: “产品周期：发布、出货、试验、获批、延期”；§6: “它承载价值的那一代产品及其配置、过渡方案”。 | **CONSISTENT** — The named events and configuration changes trace to the product-cycle and core descriptions; cancellation also appears in §6’s settled states. |
+| “a change to what a product costs;” | Glossary, 七类驱动: “定价与装机：公司能收多少价” and “供给与投入：能做出多少、成本多少”。 | **CONSISTENT** — It has a source, though “what a product costs” can mean either its selling price or its production cost. |
+| “a policy or regulatory step;” | §5.3: “官员宣布的政策步骤不能用这一行删掉，按 5.1 判”；§5.1: “政策或监管的决定或步骤”。 | **CONSISTENT** — It carries the policy boundary. |
+| “a valuation with its assumptions, derivation and date;” | §5.3: “有假设、有推导、有时点的条件估值要留”。 | **CONSISTENT** — It carries the three stated elements, subject to the list’s introductory relevance condition. |
+| “the news behind a share-price move.” | §5.3: “股价反应背后的那条新闻不能用这一行删掉，按 5.1 判”。 | **CONSISTENT** — It carries the boundary rather than protecting the price move itself. |
+| “Return only the items you keep.” | §5.1: “分析员会记的都留”；§5.3: “其余不留” in the §6 procedure. | **CONSISTENT** — It directs the output to contain the retained evidence. |
+
+## Standard protections missing or incomplete in the keep list
+
+- **A new specific qualitative judgment or detail.** §5.1 says “一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏” and gives “旧型号 GPU 的租金在涨” as an example. The keep list names reported figures and actions, but does not expressly name a new qualitative observation by a named party. The broad opening test can protect it; the “long-standing situation” or “unargued view” language could nevertheless pull the other way.
+- **An existing condition described with a new, useful assertion.** §5.1 expressly includes “CFO 说十年前建的工厂仍满负荷”. The keep list protects named actions but does not explicitly protect a current status or claim about a long-existing asset. The drop clause “an arrangement already in place, described again” can be read too broadly against it.
+- **Trial, approval and transition arrangements for a key product.** The glossary includes “试验、获批”, and §6 includes “过渡方案”. The list names launch, shipment, delay, cancellation, plan and configuration, and also has a general policy-step protection; it does not explicitly name a product trial or transition arrangement. This is a coverage risk, not proof those items must be dropped.
+- **The full D243 item 6 boundary.** The list’s general “forecast” protection is broad, but it does not explicitly distinguish a forecast or plan **still in force** from an expired one. The opening does carry “still in force”; the later “a forecast is never one” contradicts that distinction.
+- **Pricing and installed base as distinct drivers.** The glossary states “定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户”. “a change to what a product costs” covers price ambiguously but does not name installed base or existing customers. The general analyst test can keep them, so this is an omission of explicit coverage, not an automatic drop.
+
+**Other companies’ reported operating figures are not omitted:** “a customer's, supplier's, competitor's or partner's action or reported figure” covers them. §6 explicitly gives “别家公司自己的经营数字（收入、利润率、积压订单）” as supporting, and §5.3 says they cannot be dropped using the D238 unrelated-valuation row.
+
+## Internal contradictions
+
+1. **Unconditional guard versus the analyst and noise tests.** “Never drop a statement that touches … and carries a figure” conflicts with “a figure alone does not lift it” and the opening instruction to reject repeated common knowledge. A familiar numbered claim can meet both instructions.
+2. **All forecasts versus forecasts still in force.** “a forecast is never one” conflicts with “a forecast or a plan still in force” as the protected retelling. The first also covers expired forecasts.
+3. **Background already in place versus protected current information.** “an arrangement already in place, described again” can conflict with “A development … without making clear that it is old is not a retelling” and with “a named party's action without an amount or a date”. The text does not clearly separate an old arrangement’s origin from a new statement about its current state.
+4. **“None is dropped for the reasons above” versus the unconditional guard.** The keep-list introduction makes its items conditional on moving a question, whereas the immediately preceding guard says “Never drop” based on topic and information shape alone. The text gives no explicit priority when those tests disagree.
+
+## Example provenance and generality
+
+The examples “the company was founded in 1998”, “the card draws 415 watts”, “the stock is a hold”, “a pivotal moment”, and “shares fell 13% this month” correspond to examples on the standard page. “a benchmark score” generalizes its “Geekbench 跑分” example.
+
+These are **not literal examples on the standard page**:
+
+- “the product line launched in 2020” — generalized from “A100 2020 年上市”.
+- “if demand slows it would hurt” — generalized from “如果 AI 退潮会受伤”.
+- “the leading soft-drink brand has held 40% of its market for years”, in an article about a bank — adapted from the Intel/NVIDIA example, with a different company context and number.
+- “the steelmaker expects the shortage to peak next year and last until 2028” — adapted from the memory-shortage example, with a different industry and periods.
+
+The **card and benchmark examples are hardware-specific**; they illustrate a general rule but do not themselves read the same for a bank, drug maker, retailer and chip maker. The steelmaker and soft-drink examples are also industry-specific, though neither names the covered company. I cannot infer from the text alone whether these examples bias model behavior.
+
+## Three findings most likely to lose real evidence
+
+These are risks from the wording, not measured losses:
+
+1. **An established arrangement can be mistaken for old news.** “an arrangement already in place, described again” does not distinguish a genuinely repeated fact from a new report about the arrangement’s current condition. The standard’s “CFO 说十年前建的工厂仍满负荷” shows why that distinction matters.
+2. **The opening label for a long-standing situation is broader than the standard’s boundary.** “a long-standing situation retold” is followed later by the oldness boundary, but a reader can apply the noise label before deciding whether the current statement contains a new observation.
+3. **New qualitative information is not explicitly protected in the keep list.** The standard protects “一个新的具体判断” and gives “旧型号 GPU 的租金在涨”; the list’s emphasis on actions and reported figures leaves such a statement more exposed to “unargued view” or background language.
+tokens used
+59,399
+**The new “Never drop” sentence does not match §6: it can keep noise that the standard rejects.** For example, an old, familiar revenue figure could “touch” revenue and contain a figure, yet §5.1 still asks whether an analyst would record it and §5.3 can reject it as background. The sentence also leaves out two limits in §6: the matter must not be small for the company, and another company’s own operating figures are supporting rather than core.
+
+The audit below is against the current [review-core-v62.txt](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-noise/review-core-v62.txt) and the [Chinese version 4 standard](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html). I use **WIDER-DROP** only for a possible loss of required evidence, not for the loss of an optional item. Where the text can be read in more than one way, I flag the risk rather than claim a measured outcome.
+
+## Clause-by-clause audit
+
+The standard quotations are exact; the English audit text is quoted exactly. A classification describes the clause as written, including its interaction with the surrounding instructions.
+
+### Opening test
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “Before you return the answer, check it once.” | §5.1: “从第一段读到最后一段，分析员会记的都留。” | **NO-SOURCE** — The standard requires the outcome but does not itself prescribe this final review procedure. |
+| “Read each evidence item back as the analyst following the company and keep it when you would write it in this week's notes because it makes some question's answer more or less likely, about the company or its customers, suppliers, competitors, regulators or the economy.” | §5.1: “一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。” and “客户、供应商、竞争者、监管、宏观都算”。 | **CONSISTENT** — This carries the analyst test and its stated reach; the later keep list also names partners. |
+| “Ask first whether it is new: repeated common knowledge, a long-standing situation retold and an unargued view are noise;” | §5.1: “重复常识、描述长期状况、泛泛的看法，是杂音”；D243 item 6: “文字或日期看不出是旧事的不算重提”。 | **WIDER-DROP** — A situation that began long ago can still contain a new, useful assertion; the clause does not itself carry the oldness boundary, although a later clause partly restores it. |
+| “guidance, and a forecast or a plan still in force, keep their place even when retold.” | D243 item 6: “重提的季度指引和仍然有效的预测、计划按本来分量”。 | **CONSISTENT** — It protects the specified retold items, although “guidance” is broader than the standard’s “季度指引.” |
+
+### Drop list and its boundaries
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “These usually fail that check:” | §5.3: “先看那一行的‘边界’一列” (§6 procedure); §5.2: “下面的不留清单不能用来删掉分析员会记的陈述”。 | **CONSISTENT** — “Usually” leaves room for the boundaries, provided the specific rows do not override them. |
+| “background the analyst already knew: an arrangement already in place, described again;” | §5.3: “记者的背景和框架”；D243 item 6: “文字或日期看不出是旧事的不算重提”。 | **WIDER-DROP** — “Already in place” does not by itself establish that the description is a retelling or that its current condition is known. |
+| “the company's history ("the company was founded in 1998"; "the product line launched in 2020").” | §5.3: “公司成立于 1998 年”；“A100 2020 年上市”。 | **CONSISTENT** — These correspond to the standard’s background examples; the second is generalized from a named product. |
+| “A development the item reports without making clear that it is old is not a retelling,” | D243 item 6: “文字或日期看不出是旧事的不算重提”。 | **CONSISTENT** — It carries the stated boundary. |
+| “and a forecast is never one;” | D243 item 6: “仍然有效的预测、计划按本来分量”；§5.3: “重提的过去实际数可选”。 | **NARROWER-DROP** — The standard protects forecasts still in force; this exception also protects a retold forecast that has expired, although the opening test may still reject it. |
+| “a typical claim that is common knowledge, without a figure and a specific account: that a firm leads or competes, that demand is strong or supply tight,” | §5.1: “谁领先、谁在竞争、需求强、供给紧、融资难这类说法” and “这类陈述没有数字和具体的叙事就不收”。 | **CONSISTENT** — The clause preserves the standard’s common-knowledge condition. |
+| “a general risk ("if demand slows it would hurt");” | §5.3: “作者的一般性风险清单和没有推导的看法”；example “如果 AI 退潮会受伤”。 | **CONSISTENT** — The example is a generalized version of the standard’s risk example. |
+| “a figure alone does not lift it ("the leading soft-drink brand has held 40% of its market for years", in an article about a bank),” | §5.1: “有数字也要过上面的规则”；example “英特尔多年领先，占 CPU 市场 59%”。 | **CONSISTENT** — A number alone does not pass the analyst test; the soft-drink example is newly written, not on the page. |
+| “while a dated forecast of a shortage, a price or demand is not such a claim ("the steelmaker expects the shortage to peak next year and last until 2028");” | §5.1: “内存厂说 2027 年短缺最严重，持续到 2030”；§5.2: “预测、传闻、反证、远期、条件情景都是证据”。 | **NARROWER-DROP** — A date alone does not establish that every shortage, price or demand forecast passes §5.1; the example is adapted, not on the page. |
+| “a product, game, driver or benchmark detail with no business scale ("the card draws 415 watts"; "a benchmark score");” | §5.3: “没有业务规模的产品、游戏、驱动、跑分细节”；examples “这张卡 415W”；“Geekbench 跑分”。 | **CONSISTENT** — The drop class and examples trace to the page; its exceptions must still be read with the later keep list. |
+| “an unargued view or a quote that only characterises ("the stock is a hold"; "a pivotal moment");” | §5.3: “作者的一般性风险清单和没有推导的看法”；“只有形容的引语”；examples “这只股票该持有”；“a pivotal moment”。 | **CONSISTENT** — Both examples match the two standard rows. |
+| “a share-price move or an investor's position ("shares fell 13% this month");” | §5.3: “股价涨跌、投资人仓位、技术面”；example “本月跌 13%”；boundary “财报后股价反应”可选。 | **CONSISTENT** — The example follows the row; dropping an earnings reaction is allowed because it is optional. |
+| “another company's valuation, share price or deal that touches none of the company's markets;” | §5.3: “和公司所有市场都无关的别家公司的估值、股价、交易”不留；“别家公司的动作和经营数字不能用这一行删掉”。 | **CONSISTENT** — The D238 row is reproduced with its market boundary. |
+| “a second item for the same fact (keep the fuller one).” | §5.3: “同一事实的复述”；example “一篇稿子用五句话说一个部署是一条”。 | **NO-SOURCE** — Combining repeated expressions of one fact is sourced, but “keep the fuller one” is an additional selection rule not stated in this row. |
+
+### New core guard
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “Never drop a statement that touches the company's revenue, profit, financing or credit risk, demand, the progress of the product that carries its value, or the supply and price of its key inputs, and carries a figure, a settled state (signed, announced, started, approved, cancelled, delayed to a date) or a forecast for a stated period.” | §6: “碰到关键判断，并且带着能定位答案的信息”；“对公司不是小事，也不是别家公司自己的经营数字”；§6 procedure: “先判留不留按 5.1 判分析员会不会记”；§5.1: “有数字也要过上面的规则”。 | **NARROWER-DROP** — It makes contact with a subject plus a figure, state or period forecast an unconditional keep, bypassing the analyst test and the drop boundaries, and omits §6’s small-matter and other-company limits. |
+
+The guard also is **not an exact copy of the core definition**. The standard says “关键产品进度” and then includes “它承载价值的那一代产品及其配置、过渡方案”; the guard refers to “the product that carries its value” without explicitly covering configuration or transition arrangements. It also omits a settled decision date from the standard’s examples of a settled state. Those omissions do not by themselves prove a loss, because the opening test and later keep list can still retain the evidence.
+
+### Keep list and closing instruction
+
+Every item in this list inherits the exact introductory condition:
+
+> “Keep these whenever they move such a question; none is dropped for the reasons above:”
+
+Its trace is §5.1: “分析员会记的都留”, and §5.2: “下面的不留清单不能用来删掉分析员会记的陈述”。 **CONSISTENT** as a conditional instruction: the categories are not automatically sufficient by themselves.
+
+| Text under audit | Standard line and section | Classification and reason |
+|---|---|---|
+| “a forecast, a rumour, a counter-example, a distant or conditional statement;” | §5.2: “预测、传闻、反证、远期、条件情景都是证据”。 | **CONSISTENT** — It lists all five protected forms subject to the introductory analyst test. |
+| “a named party's action without an amount or a date;” | §5.2: “有名有姓的动作缺金额、缺日期也是证据，分量可以低一点”。 | **CONSISTENT** — Missing an amount or date alone is not a reason to drop. |
+| “the company's own figure, guidance or decision;” | §5.1: “公司自己的数字、指引或决定”。 | **CONSISTENT** — It carries the first kind. |
+| “a customer's, supplier's, competitor's or partner's action or reported figure;” | §5.1: “客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字”。 | **CONSISTENT** — The list expressly includes other companies’ reported figures, conditional on the analyst test. |
+| “a competitor's comparison against the company's product;” | §5.3: “对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判”。 | **CONSISTENT** — It carries the product-detail boundary. |
+| “a partner's or customer's adoption or integration;” | §5.3: “伙伴、客户采用或集成的动作不是产品细节”。 | **CONSISTENT** — It carries the adoption and integration boundary. |
+| “the launch, shipment, delay or cancellation of a product, and a change to the plan or configuration of the product that carries the company's value;” | Glossary, 七类驱动: “产品周期：发布、出货、试验、获批、延期”；§6: “它承载价值的那一代产品及其配置、过渡方案”。 | **CONSISTENT** — The named events and configuration changes trace to the product-cycle and core descriptions; cancellation also appears in §6’s settled states. |
+| “a change to what a product costs;” | Glossary, 七类驱动: “定价与装机：公司能收多少价” and “供给与投入：能做出多少、成本多少”。 | **CONSISTENT** — It has a source, though “what a product costs” can mean either its selling price or its production cost. |
+| “a policy or regulatory step;” | §5.3: “官员宣布的政策步骤不能用这一行删掉，按 5.1 判”；§5.1: “政策或监管的决定或步骤”。 | **CONSISTENT** — It carries the policy boundary. |
+| “a valuation with its assumptions, derivation and date;” | §5.3: “有假设、有推导、有时点的条件估值要留”。 | **CONSISTENT** — It carries the three stated elements, subject to the list’s introductory relevance condition. |
+| “the news behind a share-price move.” | §5.3: “股价反应背后的那条新闻不能用这一行删掉，按 5.1 判”。 | **CONSISTENT** — It carries the boundary rather than protecting the price move itself. |
+| “Return only the items you keep.” | §5.1: “分析员会记的都留”；§5.3: “其余不留” in the §6 procedure. | **CONSISTENT** — It directs the output to contain the retained evidence. |
+
+## Standard protections missing or incomplete in the keep list
+
+- **A new specific qualitative judgment or detail.** §5.1 says “一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏” and gives “旧型号 GPU 的租金在涨” as an example. The keep list names reported figures and actions, but does not expressly name a new qualitative observation by a named party. The broad opening test can protect it; the “long-standing situation” or “unargued view” language could nevertheless pull the other way.
+- **An existing condition described with a new, useful assertion.** §5.1 expressly includes “CFO 说十年前建的工厂仍满负荷”. The keep list protects named actions but does not explicitly protect a current status or claim about a long-existing asset. The drop clause “an arrangement already in place, described again” can be read too broadly against it.
+- **Trial, approval and transition arrangements for a key product.** The glossary includes “试验、获批”, and §6 includes “过渡方案”. The list names launch, shipment, delay, cancellation, plan and configuration, and also has a general policy-step protection; it does not explicitly name a product trial or transition arrangement. This is a coverage risk, not proof those items must be dropped.
+- **The full D243 item 6 boundary.** The list’s general “forecast” protection is broad, but it does not explicitly distinguish a forecast or plan **still in force** from an expired one. The opening does carry “still in force”; the later “a forecast is never one” contradicts that distinction.
+- **Pricing and installed base as distinct drivers.** The glossary states “定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户”. “a change to what a product costs” covers price ambiguously but does not name installed base or existing customers. The general analyst test can keep them, so this is an omission of explicit coverage, not an automatic drop.
+
+**Other companies’ reported operating figures are not omitted:** “a customer's, supplier's, competitor's or partner's action or reported figure” covers them. §6 explicitly gives “别家公司自己的经营数字（收入、利润率、积压订单）” as supporting, and §5.3 says they cannot be dropped using the D238 unrelated-valuation row.
+
+## Internal contradictions
+
+1. **Unconditional guard versus the analyst and noise tests.** “Never drop a statement that touches … and carries a figure” conflicts with “a figure alone does not lift it” and the opening instruction to reject repeated common knowledge. A familiar numbered claim can meet both instructions.
+2. **All forecasts versus forecasts still in force.** “a forecast is never one” conflicts with “a forecast or a plan still in force” as the protected retelling. The first also covers expired forecasts.
+3. **Background already in place versus protected current information.** “an arrangement already in place, described again” can conflict with “A development … without making clear that it is old is not a retelling” and with “a named party's action without an amount or a date”. The text does not clearly separate an old arrangement’s origin from a new statement about its current state.
+4. **“None is dropped for the reasons above” versus the unconditional guard.** The keep-list introduction makes its items conditional on moving a question, whereas the immediately preceding guard says “Never drop” based on topic and information shape alone. The text gives no explicit priority when those tests disagree.
+
+## Example provenance and generality
+
+The examples “the company was founded in 1998”, “the card draws 415 watts”, “the stock is a hold”, “a pivotal moment”, and “shares fell 13% this month” correspond to examples on the standard page. “a benchmark score” generalizes its “Geekbench 跑分” example.
+
+These are **not literal examples on the standard page**:
+
+- “the product line launched in 2020” — generalized from “A100 2020 年上市”.
+- “if demand slows it would hurt” — generalized from “如果 AI 退潮会受伤”.
+- “the leading soft-drink brand has held 40% of its market for years”, in an article about a bank — adapted from the Intel/NVIDIA example, with a different company context and number.
+- “the steelmaker expects the shortage to peak next year and last until 2028” — adapted from the memory-shortage example, with a different industry and periods.
+
+The **card and benchmark examples are hardware-specific**; they illustrate a general rule but do not themselves read the same for a bank, drug maker, retailer and chip maker. The steelmaker and soft-drink examples are also industry-specific, though neither names the covered company. I cannot infer from the text alone whether these examples bias model behavior.
+
+## Three findings most likely to lose real evidence
+
+These are risks from the wording, not measured losses:
+
+1. **An established arrangement can be mistaken for old news.** “an arrangement already in place, described again” does not distinguish a genuinely repeated fact from a new report about the arrangement’s current condition. The standard’s “CFO 说十年前建的工厂仍满负荷” shows why that distinction matters.
+2. **The opening label for a long-standing situation is broader than the standard’s boundary.** “a long-standing situation retold” is followed later by the oldness boundary, but a reader can apply the noise label before deciding whether the current statement contains a new observation.
+3. **New qualitative information is not explicitly protected in the keep list.** The standard protects “一个新的具体判断” and gives “旧型号 GPU 的租金在涨”; the list’s emphasis on actions and reported figures leaves such a statement more exposed to “unargued view” or background language.
