@@ -95,5 +95,7 @@ def test_v71_files_a_statement_linked_to_a_shown_question_without_the_placer_and
     assert all(set(e) >= {'new_in_it', 'moves'} for e in handover.evidence)                          # the two fields travel in the handover
 
 
-def test_the_review_check_closes_versions_59_to_65_only():
-    assert [extraction.reviews(f'v{n}') for n in (58, 59, 65, 66, 71)] == [False, True, True, False, False]
+def test_the_review_check_closes_versions_59_to_66_only():
+    """D251: the end-of-request check closes with the review versions and v71 carries its own in the role text; v66 (R3,
+    research/2026-10-31-reference-context/design-r3-review.md) is v65's check with one boundary added, so it ends the request too."""
+    assert [extraction.reviews(f'v{n}') for n in (58, 59, 65, 66, 67, 71)] == [False, True, True, True, False, False]

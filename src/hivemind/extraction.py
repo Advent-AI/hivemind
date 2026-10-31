@@ -26,7 +26,8 @@ ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'bindi
 ADMISSION_REASONS_V13 = ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation']    # D191: a quantity or price outside any one company
 EMPTY_LINE_FROM = 16              # D199: from role-v16 the request no longer says 'return empty arrays when there is nothing to extract'; the gate rule decides
 EMPTY_LINE_DROPPED_VERSIONS = (58,)   # noise arm (2026-10-30, prompt-standard audit N9): the closing names no condition for an empty answer; the keep rule decides
-REVIEW_UNTIL = 65    # D251/design-v71-production.md: the end-of-request check closes versions 59–65 only; from v71 the role text carries its own
+REVIEW_UNTIL = 66    # D251/design-v71-production.md: the end-of-request check closes versions 59–65, and 66 (R3, 2026-11-01: v65's check with the views row's
+                     # boundary, research/2026-10-31-reference-context/design-r3-review.md); from v71 the role text carries its own
 OPEN_QUESTIONS_FROM = 71          # D251 (2026-10-31): from v71 the request shows the questions open at the start of the item's day (a daily snapshot), one line each;
                                   # a statement may link to them, and a linked statement is filed without the placement call; the role is role-v68a's text
 REVIEW_FROM = 59     # AGENTS §6 (2026-10-30): from role-v59 the request ends with a check that reads the evidence list back by standard 5.1 (prompts/review-v<N>.txt) and names no empty-answer condition
