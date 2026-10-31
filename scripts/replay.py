@@ -35,6 +35,7 @@ def main():
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--only', default=None, help='comma-separated object ids to restrict the stream to')
     parser.add_argument('--cap', type=float, default=None, help='USD spend cap for this run')
+    parser.add_argument('--seed', default=None, help='D253: a seed file (poc/seeds/<company>-<day>.json) written into an empty ledger before the first day')
     parser.add_argument('--max-items-per-day', type=int, default=None)
     parser.add_argument('--workers', type=int, default=16, help='extraction requests prepared at a time (D183); 1 is the serial path')
     parser.add_argument('--jev-workers', type=int, default=None,
@@ -59,6 +60,13 @@ def main():
                                               extraction_workers=args.workers, jev_workers=jev_workers)
     log(f'--- replay {args.from_day}..{args.until_day} config {cfg.version}/{cfg.checksum} provider {cfg.provider} universe {uni.version}'
         f' workers {args.workers}')
+    if args.seed:                                           # D253: seeds before the first day; a view already present is left as it is
+        from hivemind import seeding
+        from hivemind.views import store as _store
+        ledger = _store.open_db(args.views)
+        written = seeding.seed_views(ledger, args.seed, created_at=f'{args.from_day}T00:00:00Z')
+        ledger.close()
+        log(f'--- seeded {len(written)} questions from {args.seed}: {", ".join(written) or "none new"}')
     totals = replay.run(testdb_path=args.testdb, views_path=args.views, archive=archive, cfg=cfg, universe=uni,
                         from_day=args.from_day, until_day=args.until_day, day0=args.day0, spend_cap_usd=args.cap, log=log,
                         only_objects=set(args.only.split(',')) if args.only else None, max_items_per_day=args.max_items_per_day,
