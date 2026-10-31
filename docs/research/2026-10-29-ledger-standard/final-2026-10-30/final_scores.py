@@ -4,6 +4,13 @@ Per version: core matters kept in every draw, supporting matters kept in at leas
 (of those judged), statements the gold does not hold (per article, median), questions, statements the code dropped,
 unusable answers and tokens. Differences against the first version named carry a paired bootstrap interval over articles (seed fixed).
 
+The gold must have been made for the page's version: its evidence part (standard_version) is checked against the page's
+<meta name="standard-version"> when this module is imported, and every script that imports it refuses a gold made for another
+version (D244, D250). Questions are scored only when the gold's opening part (questions_standard_version) was made for the page's
+version too. A not-kept entry counts as kept in a draw only when a statement matching its span is not itself a matter the gold keeps
+or allows (core, supporting or optional, by score_gold.same_matter, or an optional span): not-kept words riding inside the quote of a
+kept matter are one record of that matter (D250 item 5).
+
 Questions: a gold must-open or may-open question counts as raised when a question of the same opens_as shares at least
 QUESTION_SHARE of the gold gist's words (checked on the blind reader's 63 must-open verdicts: 60 agree, 3 counted by code
 only); questions that match no listed one are counted and listed for reading.
@@ -12,6 +19,7 @@ only); questions that match no listed one are counted and listed for reading.
 """
 import collections
 import json
+import re
 import random
 import statistics
 import sys
@@ -23,7 +31,27 @@ import score_gold as sg  # noqa: E402
 
 QUESTION_SHARE = 0.2
 PREFIX = 'G'
-GOLDS = {'dev': HERE.parent / 'golden-v3/golden-v3-signed.json', 'test': HERE.parent / 'test-set/golden-test-signed.json'}
+GOLDS = {'dev': HERE.parent / 'golden-v5/golden-v5-dev.json', 'test': HERE.parent / 'golden-v5/golden-v5-test.json'}   # D250; the v3 and v4 files stay as the record
+PAGE = HERE.parents[2] / 'prd/05-extraction-standard.html'
+
+
+def page_version():
+    return int(re.search(r'<meta name="standard-version" content="(\d+)">', PAGE.read_text()).group(1))
+
+
+def check_golds():
+    """Refuse a gold whose evidence part was made for another version of the page; return whether its opening part matches too."""
+    version, questions_match = page_version(), {}
+    for name, path in GOLDS.items():
+        gold = json.loads(Path(path).read_text())
+        if gold.get('standard_version') != version:
+            raise SystemExit(f'refused: {path} was made for standard version {gold.get("standard_version")}, the page is version {version}; '
+                             're-derive the gold first')
+        questions_match[name] = gold.get('questions_standard_version', gold.get('standard_version')) == version
+    return questions_match
+
+
+QUESTIONS_SCORED = check_golds()
 
 
 def matches(gold_question, question):
@@ -52,11 +80,16 @@ def per_article(version, articles):
                 row['supp'].append(hits)
         nks = [n for n in a['not_kept'] if n['weight'] == 'not_kept']
         row['nk_total'] = len(nks)
+        kept_gold = [it for it in a['items'] if it['weight'] in ('core', 'supporting', 'optional')]
+        optional_spans = [n['span'] for n in a['not_kept'] if n['weight'] == 'optional']
+
+        def carried(statement):
+            return any(sg.same_matter(it, statement) for it in kept_gold) or any(sg.same(span, statement['quote']) for span in optional_spans)
         for s in sifted:
             if not s:
                 row['nk_hits'].append(0); row['extra'].append(0); row['stmts'].append(0); row['questions'].append(0); row['dropped'].append(0)
                 continue
-            row['nk_hits'].append(sum(any(sg.same(n['span'], e['quote']) for e in s['evidence']) for n in nks))
+            row['nk_hits'].append(sum(any(sg.same(n['span'], e['quote']) and not carried(e) for e in s['evidence']) for n in nks))
             ex = 0
             for e in s['evidence']:
                 if any(sg.same_matter(it, e) for it in a['items']) or any(sg.same(n['span'], e['quote']) for n in a['not_kept']):
@@ -126,7 +159,7 @@ def main():
     global PREFIX
     PREFIX, versions = sys.argv[1], sys.argv[2:]
     control = versions[0]          # the first version named is the control every other one is compared with
-    print('questions are scored on the version-3 gold, not yet re-derived for standard version 4 (gold-v4-evidence-check.md): a lead, not a v4 measurement')
+    print(f'standard version {page_version()}; gold sha256 ' + ', '.join(f'{n} {sg.sha(p)[:8]}' for n, p in GOLDS.items()))
     report = {}
     for name, path in GOLDS.items():
         articles = json.load(open(path))['articles']
@@ -147,7 +180,9 @@ def main():
             t = report[name][v]
             print(f"{v}: core every {t['core every draw']}/{t['core total']} never {t['core never']} per-draw {t['core per draw']} | supp>=2 {t['supporting >=2 draws']}/{t['supporting total']} never {t['supporting never']} | "
                   f"not-kept {t['not-kept kept per draw']}/{t['not-kept judged']} | extra {t['extra per draw']} med/art {t['extra per article median']:.2f} | stmts {t['statements per draw']} | "
-                  f"q {t['questions per draw']} must-open every {t['must-open raised every draw']}/{t['must-open total']} per-draw {t['must-open raised per draw']} unlisted {t['unlisted questions per draw']} | dropped {t['dropped by code per draw']} | unusable {t['unusable answers']} | tok {t['tokens in/out (3 draws)']}")
+                  + (f"q {t['questions per draw']} must-open every {t['must-open raised every draw']}/{t['must-open total']} per-draw {t['must-open raised per draw']} unlisted {t['unlisted questions per draw']} | "
+                     if QUESTIONS_SCORED[name] else f"q {t['questions per draw']} (not scored: the gold's opening part is not made for this version) | ")
+                  + f"dropped {t['dropped by code per draw']} | unusable {t['unusable answers']} | tok {t['tokens in/out (3 draws)']}")
             if v != control:
                 print(f'      vs {control}:', t[f'minus {control} (sum over articles, 95% paired bootstrap)'])
 

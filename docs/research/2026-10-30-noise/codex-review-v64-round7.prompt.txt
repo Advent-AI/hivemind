@@ -1,0 +1,26 @@
+Read-only review. Scope: one prompt block, src/hivemind/prompts/review-v64.txt, the check that closes the extraction request. It
+replaces src/hivemind/prompts/review-v63.txt. Out of scope: question opening, record fields, matching, code, the role text's own
+wording (src/hivemind/prompts/role-v64.txt, identical to role-v53, is context: the check is read after it), and the gold.
+
+The ruler: the signed extraction standard docs/prd/05-extraction-standard.html (version 4), sections 5.1, 5.2, 5.3 (the not-kept
+table and its boundary column) and 6; decisions D240, D243, D238 in docs/DECISIONS.md; AGENTS.md §6 (a prompt carries the standard,
+not new rules; a missing amount, date or scale is never on its own a reason to drop).
+
+What changed and why: in review-v63 a closing list ("Keep these whenever they move such a question; none is dropped for the reasons
+above: ...") overrode every "usually fail" line; asked afterwards, the model named that list or one of its kinds as what kept 26 of 31
+statements both the gold and a blind reader reject (product details, an officer's pay, an office's rent, a shareholder vote, a game
+supporting a graphics feature). v64 attaches each exception to the line it limits, as the standard's boundary column does ("不能用这一
+行删掉，按 5.1 判"), cuts the closing list, and says once that fitting one of the four kinds does not keep an item (5.1) and that a
+missing amount, date or scale never drops one (D240).
+
+Check, sentence by sentence and line by line:
+1. Every sentence about what to keep or drop traces to a line of the standard or a decision: cite it. List any sentence with no source.
+2. Contradictions with the standard: a line that could drop something the standard keeps (especially core under section 6, guidance,
+   in-force forecasts and plans, a policy step, a competitor's comparison, a partner's adoption, another company's actions and
+   operating figures, a conditional valuation, the news behind a share-price move), or keep something the standard rejects.
+3. Exceptions that v63's closing list carried and v64 lost, or that v64 now scopes wrongly (to the wrong line, or globally).
+4. Whether "What a line names after "not" is not dropped by that line; the check judges it" can be misread (v62 used "These are not
+   by themselves reasons to drop; judge them by the check" and the model read it as a list of reasons to drop partner adoptions).
+5. Contradictions with the role text the check is read after.
+Rank findings most serious first, quote the words, say what the standard says, and propose the smallest wording fix. Say plainly when
+a line is fine. No new rules.

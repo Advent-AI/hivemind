@@ -201,15 +201,18 @@ Verify at the point the change touches, at the sharpest level that shows it work
   description and example) against the standard clause by clause, in both directions, with a blind read-only second
   reader: each clause is consistent, contradicts, keeps wider, keeps narrower or has no source. Audit the procedure, not
   only each sentence's source: a rule that decides by another test than the standard's (2026-10-30: "属于四类、清单没拦住就留"
-  against the standard's "分析员会不会记") contradicts it even when every sentence quotes the page. Alex, 2026-10-30:
+  against the standard's "分析员会不会记") contradicts it even when every sentence quotes the page; so does an exception
+  written wider than the standard scopes it (2026-10-31: the standard's boundaries each sit on one row, "不能用这一行删掉，
+  按 5.1 判"; review-v63 gathered them into a closing keep list over every row, and 25 of 32 statements both the gold and a
+  blind reader reject cited it). Alex, 2026-10-30:
   "你需要同时仔细检查prompt和判法准则矛盾的问题，出现很多次了，你应该要做很细的检查".
 - **A test the model must apply to each statement is a check at the very end of the same prompt.** In one pass the model
   keeps what looks like evidence and cites a rule afterwards; rewording the rule, a reason field before each item and a
   verdict field after it did not change what it kept (2026-10-30: it marked 95% of its own items "keep"). Asked afterwards
   it judged correctly, so the test goes after the item, as a check that reads the list back and returns only what passes,
-  in the same call. The check is the standard's own test, then the classes that usually fail it and the boundaries that are
-  no reason to drop, with the standard's own examples, audited clause by clause like any prompt text; a lost entry is
-  judged by a blind reader, since a review that merges repeats keeps a different sentence than the gold's (loop log rows 35–48).
+  in the same call. The check is the standard's own test, then its not-kept rows, each carrying its own boundary as the
+  standard writes it, with the standard's own examples, audited clause by clause like any prompt text; a lost entry is
+  judged by a blind reader, since a review that merges repeats keeps a different sentence than the gold's (loop log rows 35–49).
   Alex, 2026-10-30: "这个完全就是再prompt 的最后面要求做完一遍基于'你刚才说的复核条件'再跑一次；写在同一个提示词里面".
 - **A prompt serves every company, never the bench.** The extraction prompt (and every analyst prompt) is a general
   hedge-fund brain: each rule and example must read the same for a bank, a drug maker, a retailer or a chip maker.
@@ -293,6 +296,11 @@ Verify at the point the change touches, at the sharpest level that shows it work
   list; evaluation reads the dropped statements by hand, classifies them by the mechanism that would have kept them,
   and fixes the largest class upstream (D209: "if it doesn't matter, just fucking throw it away … if there are false
   positives that got thrown away … you got to pick it up").
+- **Read what was kept against the gold, blind, before the next noise arm.** The not-kept gold entries a version keeps are
+  judged by a reader who wrote neither the gold nor the prompt, mixed with controls it cannot tell apart; where it parts
+  from the gold, the standard is unclear or the gold misreads it, and that goes to Alex before any arm counts it as noise
+  (2026-10-31: the reader agreed with the gold on 93–95% of the controls and on 70% of the entries role-v63 kept). Alex,
+  2026-10-31: "你再次重新检查尺子，看看是不是这些留下的还有歧义；然后再思考怎么降低noise".
 - Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was not
   tuned on. Weigh a case by what it carries in the product, not by count.
 - A claim about a population ("the data is clean") rests on a code sweep of the whole population and an independent

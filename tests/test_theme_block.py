@@ -121,10 +121,17 @@ def test_v4_round_judges_themes_first_and_a_changed_theme_queues_every_open_asse
     store.create_view(conn, view_id='v4', object_id='MSFT', object_kind='company', kind='asset', looks_at='no evidence', question='MSFT?',
                       due_day='2027-07-30', year='FY2027', rungs=ASSET_RUNGS, seq=1, input_id='i', created_at='2026-07-29T22:00:00Z')
     conn.commit()
-    order = []
+    order, asked = [], {}
     archive = model.Archive(str(tmp_path / 'archive.sqlite'))
-    results = judging.round_of_judgements(archive, V4, conn, ['v1', 'v2'], 5, DAY, transport=scripted(order, {'v1': [{'view_id': 'v2', 'push': 'toward_last'}]}))
-    assert order == ['v2', 'v1', 'v3']                                    # the theme first; v3 was not in the day's changes but the theme changed; v4 has no evidence (D59)
+    inner = scripted(order, {'v1': [{'view_id': 'v2', 'push': 'toward_last'}]})
+
+    def transport(provider, request):
+        asked[request['messages'][1]['content'].split('Thesis ', 1)[1].split(' ', 1)[0]] = request['messages'][1]['content']
+        return inner(provider, request)
+    results = judging.round_of_judgements(archive, V4, conn, ['v1', 'v2'], 5, DAY, transport=transport)
+    assert order[0] == 'v2' and sorted(order[1:]) == ['v1', 'v3']         # the theme first; v3 was not in the day's changes but the theme changed; v4 has no evidence (D59);
+    assert 'reasons: scripted for v2' in asked['v1'] and 'reasons: scripted for v2' in asked['v3']   # each asset request carries the theme's judgement of this round;
+                                                                          # v1 and v3 are one level, sent concurrently, so their order is not fixed
     assert sorted(r['view_id'] for r in results) == ['v1', 'v2', 'v3'] and order.count('v3') == 1
     assert json.loads(conn.execute("select theme_pushes_json from judgements where view_id='v1' and seq=5").fetchone()[0]) == [{'view_id': 'v2', 'push': 'toward_last'}]
     order_v3 = []
