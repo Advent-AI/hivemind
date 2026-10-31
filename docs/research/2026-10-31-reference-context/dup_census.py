@@ -14,6 +14,18 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(ROOT / 'src'))
 from hivemind.views import identity, store  # noqa: E402
 
+
+def written_views(views, input_id):
+    """candidate id -> view id, from the writer's own record (processing_steps 'written', reason JSON 'new'); the writer numbers views in
+    its own order, so position in the decision list is not the mapping."""
+    out = {}
+    for r in views.execute("select reason from processing_steps where input_id=? and step='written' order by id", (input_id,)):
+        try:
+            out.update(json.loads(r[0]).get('new') or {})
+        except (ValueError, TypeError):
+            pass
+    return out
+
 folder = Path(sys.argv[1])
 verdicts = json.loads(re.search(r'\{.*\}', (folder / 'verdicts.json').read_text(), re.S).group(0))
 key = json.load(open(folder / 'opened.key.json'))
@@ -24,19 +36,17 @@ for arg in sys.argv[2:]:
 
 
 def opened_by(views, input_id, view_id):
-    """The matching record and the candidate (by order of the 'new' outcomes) that opened this view from this item."""
-    created = [r[0] for r in views.execute('select view_id from views where created_from_input=? order by created_seq, view_id', (input_id,))]
-    for rec in views.execute('select decisions_json, input_id from match_records where input_id=? order by id', (input_id,)):
-        decisions = json.loads(rec['decisions_json'])['candidates']
-        new = [c for c in decisions if c['outcome'] == 'new']
-        if new and view_id in created:
-            at = created.index(view_id)
-            if at < len(new):
+    """The matching decision and the handover candidate that opened this view from this item, by the writer's own candidate -> view record."""
+    cid = next((c for c, v in written_views(views, input_id).items() if v == view_id), None)
+    if cid is None:
+        return None, None
+    for rec in views.execute('select decisions_json from match_records where input_id=? order by id', (input_id,)):
+        for c in json.loads(rec['decisions_json'])['candidates']:
+            if c['id'] == cid and c['outcome'] in ('new', 'succession'):
                 h = views.execute('select handover_json from handovers where input_id=? order by id desc limit 1', (input_id,)).fetchone()
-                cands = {c['id']: c for c in json.loads(h['handover_json']).get('candidates', [])} if h else {}
-                return new[at], cands.get(new[at]['id'])
+                cands = {x['id']: x for x in json.loads(h['handover_json']).get('candidates', [])} if h else {}
+                return c, cands.get(cid)
     return None, None
-
 
 counts = collections.defaultdict(collections.Counter)
 examples = collections.defaultdict(list)
