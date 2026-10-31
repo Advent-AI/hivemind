@@ -143,6 +143,11 @@ def control_ledger():
 if __name__ == '__main__':
     if sys.argv[1] == 'run':
         run(int(sys.argv[2]))
+    elif sys.argv[1] == 'run-v70':                 # design-v70.md (D252): v68a plus the paired noise examples section
+        ROLE_FILE = str(HERE / 'role-v70-draft.txt')
+        EXTRA_FIELDS = {'new_in_it': 'What is new here, in a few words (a new event, step, figure, forecast, plan, policy step or specific judgement). Not a sentence.',
+                        'moves': 'The question this makes more or less likely (an open question id, your candidate id, or the question in a few words) and how, in a few words. Not a sentence.'}
+        run(int(sys.argv[2]), 'SEQ-v70')
     elif sys.argv[1] == 'run-v69b':                # design-v69.md: v68a with new_in_it and moves defined so they cannot be answered in generic words
         ROLE_FILE = str(HERE / 'role-v69b-draft.txt')
         EXTRA_FIELDS = {'new_in_it': 'What the item reports that the analyst did not have before, in a few words; a restatement of the sentence is not an answer.',
