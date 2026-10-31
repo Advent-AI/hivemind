@@ -65,3 +65,10 @@ M1 + M2 占 90%。M1 是键规则（`identity.conflicts` 把事件的期间当�
 | 误并 / 遍 | — | ≤ 2（每道读） |
 | 文章开出的题 / 遍 | 30.3 | ≈ 18 |
 | 单题挂接最多 | 32–49 | 上升（并入后集中；膨胀另记，D206） |
+
+## 5. 建了什么（2026-10-31 深夜，分支 `fix/question-identity-r2`，worktree `hivemind-identity-r2`；R1 续跑用的本分支代码不动）
+
+- `identity.conflicts`：事件类的期间是截止日，不构成冲突（已关的题仍由 `can_succeed` 比期间后接续）；同一代的 launch 和 shipment 不再按事件类型冲突（`same_generation_milestones`）；其他事件类型照旧。
+- `jev_matching.event_home`：Jev 答"同量另一期"和代码按 scope 的接续路径，遇到开着的事件题改为并入。
+- 测试两条新的（另一截止日并入、只在关了以后接续；launch 并入开着的 shipment 题，deployment 不并）；两条旧测试（D155 Step B"发布和出货是不同事件"）按已记的 D248 第 3 条改写，deployment 那一半保留旧意图。变异体：身份改动回退 → 2 条失败；并入函数关掉 → 1 条失败。全套 212 过、45 跳过（跳过的要本地数据）。
+- 没做：R2-c（判官不覆盖代码身份）等 Alex；R2-d（数字题的 D248 第 1 条和 basis）另问。验收：R1 续跑完后，同样三遍换这个分支的代码跑一次（一臂只改身份规则），盲判重复 18.3 → 预测 ≤ 11。
