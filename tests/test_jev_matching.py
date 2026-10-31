@@ -237,3 +237,52 @@ def test_transport_retries_only_replyless_failures_and_rate_limits(monkeypatch, 
     else:
         assert jev.transport({'model': 'jev-1.14.0', 'state': '', 'questions': {}}) == {'answers': {}}
     assert len(attempts) == sent
+
+
+def event_ledger(tmp_path, *, closed=False):
+    """A ledger holding one open (or closed) event question: Rubin shipments by the end of calendar 2026."""
+    conn = store.open_db(str(tmp_path / 'views.sqlite'))
+    store.ensure_writable_columns(conn)
+    yes_no = [{'label': 'Yes', 'condition': 'Shipping has begun.', 'lo': None, 'hi': None}, {'label': 'No', 'condition': 'It has not.', 'lo': None, 'hi': None}]
+    c = candidate('c0', measure='event', scope='Rubin', event_type='shipment', basis='n/a', unit='n/a', period_start='2026-01-01', period_end='2026-12-31',
+                  year='2026', due_day='2026-12-31', rungs=yes_no, looks_at='Rubin shipments', question='Will Nvidia begin shipping Rubin by December 31, 2026?')
+    store.create_view(conn, view_id='v1', object_id='NVDA', object_kind='asset', kind='asset', looks_at=c['looks_at'], question=c['question'],
+                      due_day='2026-12-31', year='2026', rungs=yes_no, seq=1, input_id='seed', created_at='2026-05-20T00:00:00')
+    store.add_key(conn, 'v1', c, 1)
+    if closed:
+        store.close_view(conn, 'v1', 'due day passed', 'test', 2)
+    conn.commit()
+    return conn, c
+
+
+def test_an_event_with_another_deadline_merges_into_the_open_question_and_succeeds_only_a_closed_one(tmp_path):
+    """D248 item 2 (design-r2-identity.md R2-a): while the earlier-deadline question is open, a later deadline is its evidence, not a new
+    question or a successor; a closed one is succeeded as before."""
+    conn, stored = event_ledger(tmp_path)
+    later = candidate('c1', **{k: stored[k] for k in ('measure', 'scope', 'event_type', 'basis', 'unit', 'rungs')}, period_start='2027-01-01', period_end='2027-12-31',
+                      year='2027', due_day='2027-09-30', looks_at='Rubin shipments', question='Will Nvidia begin shipping Rubin systems by September 30, 2027?')
+    for script in ({'rel__v1': ('same_quantity_or_event', 0.9)}, {'rel__v1': ('same_quantity_other_period', 0.8)}):
+        archive = model.Archive(str(tmp_path / f'a{len(script)}{list(script.values())[0][0]}.sqlite'))
+        answer = jev_matching.decide(archive, CFG, conn, ITEM, [later], [], matching.Lists({'c1': ['v1']}, {}), [], transport=scripted(script))
+        assert {d['id']: (d['outcome'], d['target_view_id']) for d in answer.data['candidates']} == {'c1': ('merge', 'v1')}, script
+        checked = matching.check(conn, UNIVERSE, answer.data, [later], [], matching.Lists({'c1': ['v1']}, {}), [])
+        assert checked.refusals == [] and checked.outcomes['c1'] == ('merge', 'v1', [])
+    closed_conn, _ = event_ledger(tmp_path / 'closed', closed=True) if (tmp_path / 'closed').mkdir() is None else (None, None)
+    answer = jev_matching.decide(model.Archive(str(tmp_path / 'closed' / 'a.sqlite')), CFG, closed_conn, ITEM, [later], [], matching.Lists({'c1': ['v1']}, {}), [],
+                                 transport=scripted({'rel__v1': ('same_quantity_or_event', 0.9)}))
+    assert {d['id']: (d['outcome'], d['target_view_id']) for d in answer.data['candidates']} == {'c1': ('succession', 'v1')}
+
+
+def test_a_launch_of_the_same_generation_merges_into_the_open_shipment_question(tmp_path):
+    """D248 item 3 (R2-b): one question per product generation; a launch candidate Jev calls the same event as the open shipment question
+    merges into it instead of opening beside it. A deployment stays its own event type."""
+    conn, stored = event_ledger(tmp_path)
+    launch = candidate('c1', **{k: stored[k] for k in ('measure', 'scope', 'basis', 'unit', 'rungs', 'period_start', 'period_end', 'year')}, event_type='launch',
+                       due_day='2026-12-31', looks_at='Vera Rubin platform launch', question='Will Nvidia launch the Vera Rubin platform by December 31, 2026?')
+    deployment = candidate('c2', **{k: stored[k] for k in ('measure', 'scope', 'basis', 'unit', 'rungs', 'period_start', 'period_end', 'year')}, event_type='deployment',
+                           due_day='2026-12-31', looks_at='A Rubin deployment', question='Will a named customer deploy Rubin by December 31, 2026?')
+    answer = jev_matching.decide(model.Archive(str(tmp_path / 'a.sqlite')), CFG, conn, ITEM, [launch, deployment], [], matching.Lists({'c1': ['v1'], 'c2': ['v1']}, {}), [],
+                                 transport=scripted({'rel__v1': ('same_quantity_or_event', 0.9)}))
+    assert {d['id']: (d['outcome'], d['target_view_id']) for d in answer.data['candidates']} == {'c1': ('merge', 'v1'), 'c2': ('new', '')}
+    checked = matching.check(conn, UNIVERSE, answer.data, [launch, deployment], [], matching.Lists({'c1': ['v1'], 'c2': ['v1']}, {}), [])
+    assert checked.refusals == [] and checked.outcomes['c1'] == ('merge', 'v1', [])
