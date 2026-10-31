@@ -26,6 +26,9 @@ ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'bindi
 ADMISSION_REASONS_V13 = ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation']    # D191: a quantity or price outside any one company
 EMPTY_LINE_FROM = 16              # D199: from role-v16 the request no longer says 'return empty arrays when there is nothing to extract'; the gate rule decides
 EMPTY_LINE_DROPPED_VERSIONS = (58,)   # noise arm (2026-10-30, prompt-standard audit N9): the closing names no condition for an empty answer; the keep rule decides
+REVIEW_UNTIL = 65    # D251/design-v71-production.md: the end-of-request check closes versions 59–65 only; from v71 the role text carries its own
+OPEN_QUESTIONS_FROM = 71          # D251 (2026-10-31): from v71 the request shows the questions open at the start of the item's day (a daily snapshot), one line each;
+                                  # a statement may link to them, and a linked statement is filed without the placement call; the role is role-v68a's text
 REVIEW_FROM = 59     # AGENTS §6 (2026-10-30): from role-v59 the request ends with a check that reads the evidence list back by standard 5.1 (prompts/review-v<N>.txt) and names no empty-answer condition
 SHARED_QUANTITY_VERSIONS = (13, 14, 15)    # D191: the schemas of role-v13..v15 name shared_quantity in place of industry_aggregate (role-v15's text already
                                            # says industry_aggregate; its schema stays so stored requests stay byte-identical); every later version names the four reasons above
@@ -95,6 +98,16 @@ def ledger_blind(version):
     return version_number(version) >= LEDGER_BLIND_FROM
 
 
+def open_questions(version):
+    """From v71 the request shows the day's open questions and a statement may link to them (D251)."""
+    return version_number(version) >= OPEN_QUESTIONS_FROM
+
+
+def reviews(version):
+    """Versions whose request ends with the separate review check (prompts/review-v<N>.txt)."""
+    return REVIEW_FROM <= version_number(version) <= REVIEW_UNTIL
+
+
 def places(version):
     return version_number(version) >= PLACEMENT_FROM
 
@@ -104,7 +117,10 @@ def shown_views(conn, cfg, item, objects):
     from v19 also every open theme thesis. The one place the stream and the parallel runner take the list from."""
     version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
     from .views import store
-    views = store.views_for_prompt(conn, objects, themes=shows_themes(version))
+    if open_questions(version):       # D251: the questions open at the start of the item's day, the same list for every item of that day
+        views = store.views_open_at_day_start(conn, objects, item['publication_day'])
+    else:
+        views = store.views_for_prompt(conn, objects, themes=shows_themes(version))
     return [dict(v, key=store.view_key(conn, v['view_id']) or {}, groups=[{'name': g['name'], 'scope': g['scope'], 'aliases': g.get('aliases') or []} for g in store.groups_of_view(conn, v['view_id'])])
             for v in views]       # the key and the groups feed the placer's 'takes' line
 
@@ -276,6 +292,21 @@ def field_notes(number):
     return notes
 
 
+# D251/D252 (2026-10-31), from v71: two fields the analyst writes before the quote (standard 5.1: is it new; which question does it move)
+FIELD_NOTES_V71 = {
+    'new_in_it': 'What is new here, in a few words (a new event, step, figure, forecast, plan, policy step or specific judgement). Not a sentence.',
+    'moves': 'The question this makes more or less likely (an open question id, your candidate id, or the question in a few words) and how, in a few words. Not a sentence.',
+}
+
+
+def with_extra_fields(schema, fields):
+    """The schema with the named string fields added first to each evidence item and required."""
+    item = schema['properties']['evidence']['items']
+    item['properties'] = {**{k: {'type': 'string', 'description': v} for k, v in fields.items()}, **item['properties']}
+    item['required'] = list(fields) + [r for r in item['required'] if r not in fields]
+    return schema
+
+
 def with_field_notes(schema, notes):
     """The schema with the notes as the descriptions of the evidence fields they name."""
     fields = schema['properties']['evidence']['items']['properties']
@@ -292,6 +323,8 @@ def schema_for(version, shown_group_ids=(), shown_view_ids=(), mandatory=()):
                                 blind=number >= LEDGER_BLIND_FROM)
         if number >= FIELD_NOTES_FROM:
             base = with_field_notes(base, field_notes(number))
+        if number >= OPEN_QUESTIONS_FROM:
+            base = with_extra_fields(base, FIELD_NOTES_V71)
         return accounted_schema(base, mandatory) if accounts(version) else base
     if number >= GROUPS_FROM:
         return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
@@ -488,7 +521,10 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
         parts.append('[Research reference] Existing quantities and scopes (measure[scope](event_type)). Reuse a name only when the meaning is the same; '
                      'propose important questions outside the list as usual, with their actual scope:\n' + '\n'.join(watched))
     blind = ledger_blind(version)
-    if blind:
+    if open_questions(version):     # D251: the day's snapshot, one line per question; the role text says how to link
+        lines = [f'  - {v["view_id"]} ({v["kind"]} {v["object_id"]}, due {v["due_day"]}): {v["question"]}' for v in shown_views]
+        parts.append(f'[Open questions at the start of {item["publication_day"]}]\n' + ('\n'.join(lines) if lines else '  None yet.'))
+    elif blind:
         pass                        # v22: the request shows no thesis; the placement call reads the open theses, matching folds a candidate into one
     elif shown_views:
         lines = []
@@ -514,12 +550,13 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
     else:
         parts.append(item_header(item, category) + text[:MAX_TEXT_CHARS])
     parts.append(('Return evidence and candidates per the JSON schema. A candidate\'s evidence_ids are its own evidence ids; an evidence item\'s links are '
-                  + ('this answer\'s candidate ids (such as c1), or empty. ' if blind else 'existing thesis ids or this answer\'s candidate ids (such as c1). ')
+                  + ('open question ids from [Open questions], this answer\'s candidate ids (such as c1), or empty. ' if open_questions(version)
+                     else 'this answer\'s candidate ids (such as c1), or empty. ' if blind else 'existing thesis ids or this answer\'s candidate ids (such as c1). ')
                   + 'year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). '
                   + ('' if version_number(version) in EMPTY_LINE_DROPPED_VERSIONS or version_number(version) >= REVIEW_FROM
                      else 'Return empty arrays only for a page with no business content.' if version_number(version) >= EMPTY_LINE_FROM
                      else 'Return empty arrays when there is nothing to extract.')).rstrip())
-    if version_number(version) >= REVIEW_FROM:
+    if reviews(version):
         parts.append(_read(f'review-{version}.txt').strip())
     return '\n\n'.join(parts)
 
@@ -573,8 +610,10 @@ def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
     """Build the setting, complete prompt and schema without making a call."""
     setting = cfg.extraction_setting(item['category'])
     version = setting.prompt_version.rpartition('-')[2]
-    if ledger_blind(version):                  # D211: the request's bytes depend on the item alone
+    if ledger_blind(version) and not open_questions(version):     # D211: the request's bytes depend on the item alone
         shown_views, shown_groups = [], []
+    elif open_questions(version):              # D251: the item and the day's snapshot; no groups block beyond the standing instruction
+        shown_groups = []
     system, user = build_prompt(item, text, shown_views, universe, version, shown_groups)
     group_ids = [g['group_id'] for g in shown_groups]
     shown_ids = [v['view_id'] for v in shown_views]
@@ -602,7 +641,7 @@ def read_item(archive, cfg, item, text, shown_views, universe, *, shown_groups=(
     version = setting.prompt_version.rpartition('-')[2]
     blind = ledger_blind(version)
     group_ids = [] if blind else [g['group_id'] for g in shown_groups]
-    shown_ids = set() if blind else {v['view_id'] for v in shown_views}
+    shown_ids = {v['view_id'] for v in shown_views} if open_questions(version) or not blind else set()     # D251: a statement may link to a shown question
     if places(version) and cfg.placement is None:            # refused before the paid call
         raise ValueError(f'extraction {setting.prompt_version} files statements by a placement call, but the configuration has no placement setting')
     answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
@@ -619,7 +658,12 @@ def file_reading(reading, archive, cfg, item, shown_views, *, transport=None):
     cost, cached = answer.cost_usd, answer.cached
     if places(reading.version):
         from . import placement
-        evidence, unfiled, placed_answer = placement.place(archive, cfg, evidence, shown_views, transport=transport, item=item)
+        shown_ids = {v['view_id'] for v in shown_views} if open_questions(reading.version) else set()
+        linked = [e for e in evidence if any(l in shown_ids for l in e['links'])]        # D251: a statement the extraction linked to an open question is filed there
+        to_place = [e for e in evidence if e not in linked]
+        placed, unfiled, placed_answer = placement.place(archive, cfg, to_place, shown_views, transport=transport, item=item)
+        evidence = [e for e in evidence if e in linked or any(p['id'] == e['id'] for p in placed)]
+        evidence = [next((p for p in placed if p['id'] == e['id']), e) for e in evidence]
         dropped.extend((e['id'], 'no home') for e in unfiled)
         if placed_answer is not None:
             cost += placed_answer.cost_usd

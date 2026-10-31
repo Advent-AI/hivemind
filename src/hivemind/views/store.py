@@ -256,6 +256,24 @@ def would_cycle(conn, view_id, depends_on):
     return False
 
 
+def views_open_at_day_start(conn, object_ids, day):
+    """D251: the questions open at the start of `day`, as every item of that day sees them: views created at or before the seq of the
+    last completed day before `day` whose last switch at that seq is open, the objects' own and every theme, in creation order; empty
+    before the first completed day. Question, looks_at, kind, object and due day only."""
+    row = conn.execute('select max(seq) from days_completed where day < ?', (day,)).fetchone()
+    if row is None or row[0] is None:
+        return []
+    seq = row[0]
+    out = []
+    for v in conn.execute('select view_id, object_id, object_kind, kind, looks_at, question, due_day, year, created_seq from views where created_seq <= ? order by created_seq', (seq,)):
+        if v['kind'] != 'theme' and v['object_id'] not in object_ids:
+            continue
+        switch = conn.execute('select open from view_switches where view_id=? and after_seq <= ? order by id desc limit 1', (v['view_id'], seq)).fetchone()
+        if switch and switch['open']:
+            out.append(dict(v))
+    return out
+
+
 def views_for_prompt(conn, object_ids, themes=False):
     """05-extraction block 5: the objects' open views plus every view they depend on, open or closed, with who
     depends on whom; question, looks_at and due day only. With themes, every open theme thesis follows the objects' own
