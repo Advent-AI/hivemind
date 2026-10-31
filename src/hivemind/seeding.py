@@ -2,10 +2,11 @@
 about them has a home from the first day. `seed_views` writes a seed file's questions into a ledger that holds none of them yet: the view,
 its ladder, its key (so an article-born candidate for the same quantity merges into it and the placer's 'takes' line reads as for any
 keyed question), an open switch, and the driver's dependency on the root it feeds. A view id already present is left as it is, so a
-resumed run seeds nothing twice. Seeds are created at seq 0, before any item, from the input 'seed:<file name>'.
+resumed run seeds nothing twice. Seeds are created at seq 0, before any item, from the input 'seed:<file name>'. Their ids follow the ledger's own
+numbering (v1, v2, …): the judging step parses the theme ids its request showed as v<N>, and the writer numbers later views after them.
 
-Seed file: {"company": "NVDA", "as_of": "2026-07-01", "questions": [{"view_id": "s1", "object_id": "NVDA", "object_kind": "company",
-"kind": "asset", "looks_at": ..., "question": ..., "due_day": ..., "year": ..., "rungs": [...], "key": {...}, "depends_on": "s1" | null,
+Seed file: {"company": "NVDA", "as_of": "2026-07-01", "questions": [{"view_id": "v1", "object_id": "NVDA", "object_kind": "company",
+"kind": "asset", "looks_at": ..., "question": ..., "due_day": ..., "year": ..., "rungs": [...], "key": {...}, "depends_on": "v1" | null,
 "ladder_status": "copied from run ... | draft, analyst to confirm"}]}"""
 import json
 from pathlib import Path
