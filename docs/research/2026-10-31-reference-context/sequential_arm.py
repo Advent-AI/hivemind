@@ -143,6 +143,11 @@ def control_ledger():
 if __name__ == '__main__':
     if sys.argv[1] == 'run':
         run(int(sys.argv[2]))
+    elif sys.argv[1] in ('run-v68a', 'run-v68b'):   # design-v68.md: v67 with short fields and one matter one item; a keeps the analyst's note gate, b drops it
+        ROLE_FILE = str(HERE / f'role-{sys.argv[1][4:]}-draft.txt')
+        EXTRA_FIELDS = {'new_in_it': 'What is new here, in a few words (a new event, step, figure, forecast, plan, policy step or specific judgement). Not a sentence.',
+                        'moves': 'The question this makes more or less likely (an open question id, your candidate id, or the question in a few words) and how, in a few words. Not a sentence.'}
+        run(int(sys.argv[2]), f'SEQ-{sys.argv[1][4:]}')
     elif sys.argv[1] == 'run-v67':                 # design-v67.md: the reshaped role, two evidence fields first, the same daily ledger
         ROLE_FILE = str(HERE / 'role-v67-draft.txt')
         EXTRA_FIELDS = FIELD_NOTES_V67
