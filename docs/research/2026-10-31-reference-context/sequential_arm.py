@@ -30,14 +30,28 @@ def question_line(q):
     return f'  - {q["id"]} ({q["kind"]} {q["object"]}, due {q["due_day"]}): {q["question"]}'
 
 
+ROLE_FILE = None          # a reshaped role text replacing the system message (design-v67.md); None keeps the configuration's role
+EXTRA_FIELDS = {}         # evidence fields added to the schema with their descriptions, written first in the item (design-v67.md)
+FIELD_NOTES_V67 = {
+    'new_in_it': 'What is new in this statement, as a fact: a new event or step, figure, forecast, plan, policy step or specific judgement. Written before the quote.',
+    'moves': 'The question whose answer this statement makes more or less likely, and through which path (demand, supply and inputs, competition, pricing, product progress, policy, capital and obligations).',
+}
+
+
 def arm_request(request, questions, before_day):
     body = copy.deepcopy(request)
+    if ROLE_FILE:
+        body['messages'][0] = dict(body['messages'][0], content=Path(ROLE_FILE).read_text().strip())
     user = body['messages'][-1]['content']
     at = user.index('[Item] id ')
     lines = '\n'.join(question_line(q) for q in questions) or '  None yet.'
-    body['messages'][-1] = dict(body['messages'][-1], content=user[:at] + f'[Open questions as of {before_day}] {ra.INSTRUCTION}\n{lines}\n\n' + user[at:])
-    fields = body['response_format']['json_schema']['schema']['properties']['evidence']['items']['properties']
-    fields['links'] = dict(fields['links'], description=ra.LINKS_NOTE)
+    instruction = '' if ROLE_FILE else ' ' + ra.INSTRUCTION          # the reshaped role carries its own linking rule
+    body['messages'][-1] = dict(body['messages'][-1], content=user[:at] + f'[Open questions as of {before_day}]{instruction}\n{lines}\n\n' + user[at:])
+    item = body['response_format']['json_schema']['schema']['properties']['evidence']['items']
+    item['properties']['links'] = dict(item['properties']['links'], description=ra.LINKS_NOTE)
+    if EXTRA_FIELDS:
+        item['properties'] = {**{k: {'type': 'string', 'description': v} for k, v in EXTRA_FIELDS.items()}, **item['properties']}
+        item['required'] = list(EXTRA_FIELDS) + [r for r in item['required'] if r not in EXTRA_FIELDS]
     return body
 
 
@@ -84,6 +98,12 @@ def send_one(tag, iid, questions, before_day):
     choice = response['choices'][0]
     completed = int(choice['finish_reason'] == 'stop')
     content = choice['message'].get('content') or ''
+    if EXTRA_FIELDS and completed and content:        # the production sift and the scorers read the answer without the research fields; the full response stays in response_json
+        data = json.loads(content)
+        for e in data.get('evidence', []):
+            for k in EXTRA_FIELDS:
+                e.pop(k, None)
+        content = json.dumps(data, ensure_ascii=False)
     usage = response.get('usage', {})
     with ra.LOCK:
         conn.execute('insert or replace into answers values (?,?,?,?,?,?,?,?,?,?)', (iid, ra.CONFIG, ra.model.request_identity(body)[1], json.dumps(response), content, completed,
@@ -93,8 +113,8 @@ def send_one(tag, iid, questions, before_day):
     return iid, (json.loads(content) if completed and content else {})
 
 
-def run(draw):
-    tag = f'SEQ-v53R-d{draw}'
+def run(draw, tag_prefix='SEQ-v53R'):
+    tag = f'{tag_prefix}-d{draw}'
     ledger, log, previous_day = [], [], None
     for day, ids in by_day().items():
         snapshot = list(ledger)                      # D251: frozen at the day's start
@@ -123,5 +143,9 @@ def control_ledger():
 if __name__ == '__main__':
     if sys.argv[1] == 'run':
         run(int(sys.argv[2]))
+    elif sys.argv[1] == 'run-v67':                 # design-v67.md: the reshaped role, two evidence fields first, the same daily ledger
+        ROLE_FILE = str(HERE / 'role-v67-draft.txt')
+        EXTRA_FIELDS = FIELD_NOTES_V67
+        run(int(sys.argv[2]), 'SEQ-v67')
     elif sys.argv[1] == 'control-ledger':
         control_ledger()

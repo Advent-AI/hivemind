@@ -17,6 +17,8 @@ import score_ref as sr  # noqa: E402
 
 fs, sg = sr.fs, sr.sg
 ARM, CONTROL = 'SEQ-v53R', 'REF-v53'
+if len(sys.argv) > 2 and sys.argv[2].startswith('SEQ-'):      # python3 score_seq.py counts SEQ-v67 [seed]: another arm tag (its ledger files and answers)
+    ARM = sys.argv.pop(2)
 articles = {a['input_id']: a for a in sr.articles}
 
 
@@ -33,7 +35,7 @@ def counts():
     fs.PREFIX = 'REF'
     control_rows = fs.per_article('v53', sr.articles)
     fs.PREFIX = 'SEQ'
-    arm_rows = fs.per_article('v53R', sr.articles)
+    arm_rows = fs.per_article(ARM.split('-', 1)[1], sr.articles)
     print('== S1 gold-rejected kept per draw (D250 unit), all 118')
     for name, rows in (('control', control_rows), ('arm', arm_rows)):
         print(f'   {name}:', [sum(r['nk_hits'][d] for r in rows.values()) for d in range(3)], '| statements', [sum(r['stmts'][d] for r in rows.values()) for d in range(3)])
@@ -82,7 +84,8 @@ def counts():
 
 def packets(seed):
     rng = random.Random(seed)
-    (HERE / 'blind-seq').mkdir(exist_ok=True)
+    folder = HERE / ('blind-seq' if ARM == 'SEQ-v53R' else f'blind-{ARM.lower()}')
+    folder.mkdir(exist_ok=True)
     opened, key = [], {}
     for name, tag in (('control', CONTROL), ('arm', ARM)):
         for d in (1, 2, 3):
@@ -96,8 +99,8 @@ def packets(seed):
                                'gold_must_not': [g['gist'] for g in a['questions'].get('must_not', [])],
                                'earlier_questions_in_this_run': [f'{x["id"]}: {x["question"]}' for x in ledger(tag, d)['questions'] if x['opened_day'] < q['opened_day']]})
     rng.shuffle(opened)
-    (HERE / 'blind-seq/opened.json').write_text(json.dumps(opened, ensure_ascii=False, indent=1))
-    (HERE / 'blind-seq/opened.key.json').write_text(json.dumps(key, ensure_ascii=False, indent=1))
+    (folder / 'opened.json').write_text(json.dumps(opened, ensure_ascii=False, indent=1))
+    (folder / 'opened.key.json').write_text(json.dumps(key, ensure_ascii=False, indent=1))
     links = []
     for d in (1, 2, 3):
         for iid, a in articles.items():
@@ -110,7 +113,7 @@ def packets(seed):
     sample = rng.sample(links, min(40, len(links)))
     for n, s in enumerate(sample, 1):
         s['id'] = f'L{n:02d}'
-    (HERE / 'blind-seq/links.json').write_text(json.dumps(sample, ensure_ascii=False, indent=1))
+    (folder / 'links.json').write_text(json.dumps(sample, ensure_ascii=False, indent=1))
     print(len(opened), 'opened questions (both arms, 3 draws);', len(links), 'arm links,', len(sample), 'sampled')
 
 
