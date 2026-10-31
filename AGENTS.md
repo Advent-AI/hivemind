@@ -296,6 +296,14 @@ Verify at the point the change touches, at the sharpest level that shows it work
   list; evaluation reads the dropped statements by hand, classifies them by the mechanism that would have kept them,
   and fixes the largest class upstream (D209: "if it doesn't matter, just fucking throw it away … if there are false
   positives that got thrown away … you got to pick it up").
+- **Measure end to end before a step's arm, and read the parked designs first.** A step's noise that the next step removes
+  is not the defect, and a step's recall that the next step throws away is: on 2026-10-31 three days of extraction-noise arms
+  (110 → 61 gold-rejected statements kept per draw) moved the noise reaching judgement by nothing, because the placement
+  call already dropped 93% of it together with a third of the core and 70% of the supporting matters, for want of homes that
+  D208 had designed two days earlier and marked "not built". Before any arm on one step: the production replay through the
+  whole path on the gold window, the count at the step the product reads, and the decisions on the topic read for a parked
+  fix (`research/2026-10-31-reference-context/reflection-2026-10-31.md`). Alex, 2026-10-31: "make sure we are not going
+  around in circles using wrong ruler and wrong prompts that don't work".
 - **Read what was kept against the gold, blind, before the next noise arm.** The not-kept gold entries a version keeps are
   judged by a reader who wrote neither the gold nor the prompt, mixed with controls it cannot tell apart; where it parts
   from the gold, the standard is unclear or the gold misreads it, and that goes to Alex before any arm counts it as noise
