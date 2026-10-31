@@ -1,0 +1,15 @@
+**Serious issues remain in question (1).** Question (2) follows the standard, but parts of question (1) can still exclude information the standard keeps.
+
+For example, an article may repeat a forecast that is still in force. The standard says to keep it at its original weight, but the draft asks what the analyst “did not have before.”
+
+1. **The definition of `new_in_it` conflicts with permitted retellings.** [The draft](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-31-reference-context/role-v69b-draft.txt:5) says it “names what the item reports that the analyst did not have before.” [§5.3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:400) says retold guidance and forecasts or plans still in force keep their original weight; a retold past actual figure is optional. The new field instruction contradicts the permission immediately before it. Let the field name the information **or the permitted retelling**.
+
+2. **The trend example is wider than the common-knowledge rule.** The draft excludes “an executive’s or author’s remark that a trend is strong or shifting, with no figure and no specific account.” [§5.1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:379) applies that boundary to *common knowledge*, and says new information, including a new report’s judgement, is judged under §5.1. The draft does not limit its example to common knowledge, so it can reject a new specific judgement without a figure. Add that limit.
+
+3. **The customer example omits the no-new-step boundary.** “A company named only as an example of who uses the product” does not itself say whether the article reports a new adoption. [D250 item 1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:227) excludes an existing arrangement **with no new step**. Add that boundary; a named customer’s new adoption goes to §5.1, even without a stated size.
+
+4. **The unsourced market-size example has no blanket source in the cited row.** The draft excludes “a reporter’s own market-size figure with no source.” The [background-and-framing row](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:397) contains no rule rejecting a figure merely because the reporter gives no source. Section 5.1 says a new market figure is judged by whether the analyst would note it. Remove this blanket example.
+
+The product-detail example’s **“with no business scale”** is sourced to its row. That row also protects a partner’s or customer’s new adoption or integration in the same sentence, so the example must not be read as rejecting that separate action. The unchanged row later in the draft states that boundary.
+
+For **question (2)**, naming the question, allowing it to be open, worth opening, or too small to open, and explaining how its answer moves follows [§5.1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:369). Saying “supports demand” alone does not explain the path is consistent with that test.

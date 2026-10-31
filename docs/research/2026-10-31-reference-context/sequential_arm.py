@@ -143,6 +143,16 @@ def control_ledger():
 if __name__ == '__main__':
     if sys.argv[1] == 'run':
         run(int(sys.argv[2]))
+    elif sys.argv[1] == 'run-v69b':                # design-v69.md: v68a with new_in_it and moves defined so they cannot be answered in generic words
+        ROLE_FILE = str(HERE / 'role-v69b-draft.txt')
+        EXTRA_FIELDS = {'new_in_it': 'What the item reports that the analyst did not have before, in a few words; a restatement of the sentence is not an answer.',
+                        'moves': 'The question whose answer this makes more or less likely (an open question id, your candidate id, or the question in a few words) and how, in a few words. "Demand" or "competitive position" alone is not a question.'}
+        run(int(sys.argv[2]), 'SEQ-v69b')
+    elif sys.argv[1] == 'run-v69a':                # design-v69.md: v68a with checkable newness and a question as a bet in moves
+        ROLE_FILE = str(HERE / 'role-v69a-draft.txt')
+        EXTRA_FIELDS = {'new_in_it': 'The date, step or figure the item is the first to report, in a few words; not a restatement of the sentence.',
+                        'moves': 'The question (an open question id, your candidate id, or a bet a figure or event will settle) and how this changes its answer, in a few words. "Demand" or "competitive position" alone is not a question.'}
+        run(int(sys.argv[2]), 'SEQ-v69a')
     elif sys.argv[1] in ('run-v68a', 'run-v68b'):   # design-v68.md: v67 with short fields and one matter one item; a keeps the analyst's note gate, b drops it
         ROLE_FILE = str(HERE / f'role-{sys.argv[1][4:]}-draft.txt')
         EXTRA_FIELDS = {'new_in_it': 'What is new here, in a few words (a new event, step, figure, forecast, plan, policy step or specific judgement). Not a sentence.',
