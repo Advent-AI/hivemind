@@ -44,12 +44,14 @@ Ledgers, each a folder with `views.sqlite`, `archive.sqlite`, `manifests/`, logs
 
 The model answer stores of the extraction arms stay on disk and out of Git (`.gitignore`, the 2026-10-28..30 block), about 240 MB in all:
 every `answers.sqlite` and `probes.sqlite` under `docs/research/2026-10-29-analyst-standard/` (the direct-read rounds, the luna and
-haiku arms, and `loop-2026-10-29/<run>-<version>-d<draw>/`, one folder per version and draw of the simultaneous full runs A–P, S and U and the small samples F1 and F2 that
+haiku arms, and `loop-2026-10-29/<run>-<version>-d<draw>/`, one folder per version and draw of the simultaneous full runs A–P, S, U and Y3–Y6 and the small samples F1 and F2 that
 `final-2026-10-30/final_scores.py`, `quality-2026-10-30/` and `2026-10-29-ledger-standard/fields-2026-10-30/` read) and under `docs/research/2026-10-28-retention-audit/`, the derived
 `sifted.json` and `structure*.json` files (rebuilt from the stores by the bench scripts), `retention-audit/ledger.json`, the run pid
 and lock files, and the Codex blind readers' transcripts (`final-2026-10-30/verdicts/*.log`, `fields-2026-10-30/reader*/verdicts/*.log`; their verdict JSON is in Git). The
 scripts, gold files (`golden-v3/golden-v3-signed.json`, `test-set/golden-test-signed.json`, sha256 in D243), reading packets, verdicts,
 scores, logs and results are in Git. Not backed up elsewhere.
+
+The end-to-end arms of 2026-10-31 (`docs/research/2026-10-31-reference-context/`, D253; `e2e_compare.py` reads them) are the sixteen folders `poc/data/e2e-*`, about 260 MB on disk and out of Git: `e2e-v69-dev14-2026-10-31`, `-d2`, `-d3` (poc-v69, no seeds, the control), `e2e-v82-dev14-2026-10-31` (extraction v71, one draw), `e2e-v69-seed-d1..3` and `e2e-v69-seed2-d1..3` (seeds v1 under poc-v69), `e2e-v83-seed-d1..3` (poc-v83 with seeds v1, the current control) and `e2e-v83-seedv2-d1..3` (poc-v83 with seeds v2, stopped on day 1 by Jev HTTP 402 on 2026-10-31; resumed by `run_seedv2.sh`), each with `views.sqlite`, `archive.sqlite`, `replay.log` and `run.out`. Backup for the move to another machine: `~/hivemind-backups/run-move-2026-11-01.tar.gz` (93 MB, 316 files, SHA-256 `c8ff99bab6ca01f82e1fe0bd7510c91966b9298d8e22d4ad74036c2ea06d966a`), repository-relative paths holding `poc/data/items-nvda-2026-07-01-10-27.sqlite` (236 MB uncompressed, SHA-256 `57bc25441fea325b…`), the sixteen `e2e-*` folders and the `loop-2026-10-29/Y5-v65-d1..3` and `Y6-v66-d1..3` answer stores; what to do with it is in `docs/research/2026-10-31-reference-context/handoff-move-2026-11-01.md`.
 
 ## Traces and reports
 
