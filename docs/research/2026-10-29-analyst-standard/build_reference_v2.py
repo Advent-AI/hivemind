@@ -52,6 +52,8 @@ def main():
     for s, data in sets.items():
         data['about'] = dict(data['about'], v2='2026-10-29: v1 plus reference-v2-changes.json (each change with its reason)')
         name = f'reference-{s}-v2.json'
+        if (HERE / name).exists():
+            raise SystemExit(f'refused: {name} exists and is a frozen record (reference-v2.sha256), superseded as the ruler by the signed page (D241, D243); never rewrite it')
         (HERE / name).write_text(json.dumps(data, ensure_ascii=False, indent=1) + '\n')
         digests[name] = hashlib.sha256((HERE / name).read_bytes()).hexdigest()
     (HERE / 'reference-v2.sha256').write_text(''.join(f'{d}  {n}\n' for n, d in digests.items()))

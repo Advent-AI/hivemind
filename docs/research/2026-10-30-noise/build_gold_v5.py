@@ -106,6 +106,8 @@ def main():
                          "plus the 35 entries a blind reader would keep (blind4/), read by two independent blind readers; changes only by a recorded decision "
                          "(corrections-v5.json). The opening part is the source's (questions_standard_version). Model-authored. Before: " + gold['about'])
         path = OUT / f'golden-v5-{set_name}.json'
+        if path.exists():
+            raise SystemExit(f'refused: {path.name} exists and is frozen (D250, golden-v5.sha256); a corrected gold is a new dated file, never a rewrite (AGENTS §7.1)')
         path.write_text(json.dumps(gold, ensure_ascii=False, indent=1) + '\n')
         digests[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
     (OUT / 'corrections-v5.json').write_text(json.dumps(corrections, ensure_ascii=False, indent=1) + '\n')

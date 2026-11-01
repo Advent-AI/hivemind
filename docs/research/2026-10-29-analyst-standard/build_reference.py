@@ -98,6 +98,9 @@ def main():
               'weights': 'core / supporting / optional per standard.md §4; exclude = Alex-excluded (retention counts as false admission)',
               'restated_rule': 'a filed figure, guidance or deal older than the window, restated: optional (kept or omitted without '
                                'penalty; a changed period, basis or certainty is a distortion)'}
+    for frozen in ('reference-week.json', 'reference-holdout.json'):
+        if (HERE / frozen).exists():
+            raise SystemExit(f'refused: {frozen} exists and is a frozen record (reference.sha256), superseded as the ruler by the signed page (D241, D243); never rewrite it')
     (HERE / 'reference-week.json').write_text(json.dumps({'about': header, 'articles': week}, ensure_ascii=False, indent=1) + '\n')
     (HERE / 'reference-holdout.json').write_text(json.dumps({'about': header, 'articles': holdout}, ensure_ascii=False, indent=1) + '\n')
     render(week, 'Reference: the v38 week (98 articles)', HERE / 'reference-week.md')

@@ -72,6 +72,8 @@ gold = {'standard_version': version, 'about': 'Test-set gold (D244): 30 articles
         'checked against a blind read, disagreements decided against the text (finalize_test.py). Model-authored. Scored once per configuration; never tuned on.',
         'standard': 'docs/prd/05-extraction-standard.html', 'articles': out}
 path = HERE / 'golden-test-signed.json'
+if path.exists():
+    raise SystemExit(f'refused: {path.name} exists and is frozen (D244, sha256 recorded); a corrected gold is a new dated file, never a rewrite (AGENTS §7.1)')
 path.write_text(json.dumps(gold, ensure_ascii=False, indent=1) + '\n')
 (HERE / 'finalize-test-log.txt').write_text('\n'.join(log) + '\n')
 from collections import Counter

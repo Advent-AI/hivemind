@@ -115,6 +115,8 @@ out = {'standard_version': int(version), 'about': 'Golden reference v3, signed (
                 'Model-authored (Claude drafters and adjudication, Codex blind readers); the 20 holdout articles were seen in the earlier prompt loop.',
        'standard': 'docs/prd/05-extraction-standard.html', 'articles': articles}
 path = HERE / 'golden-v3-signed.json'
+if path.exists():
+    raise SystemExit(f'refused: {path.name} exists and is frozen (D243, sha256 recorded); a corrected gold is a new dated file, never a rewrite (AGENTS §7.1)')
 path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + '\n')
 (HERE / 'finalize-log.txt').write_text('\n'.join(log) + '\n')
 from collections import Counter
