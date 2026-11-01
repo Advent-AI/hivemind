@@ -58,7 +58,7 @@ shasum -a 256 poc/data/items-nvda-2026-07-01-10-27.sqlite   # 要以 57bc25441fe
 # 3. 凭证：把 ~/.config/hivemind/credentials.json 拷到新机器同一路径，chmod 600
 
 # 4. 先过一遍 $0 的检查，再付费
-python3 -m pytest tests -q                        # 255 passed（2026-11-01）；要写 tests，不然会收进 poc/reports 里旧研究的测试文件
+python3 -m pytest -q                              # 255 passed（2026-11-01）；pytest.ini 把收集范围定在 tests/，见 §6
 python3 scripts/preflight.py --views poc/data/e2e-v83-seed-d1/views.sqlite
 
 # 5. 续跑三组（各自开一个终端或后台；第一分钟盯 run.out，上次就是第 1 篇文章的匹配就报 402）
@@ -94,4 +94,5 @@ cd /Users/lchingen/hivemind && git checkout -b wip/main-uncommitted-2026-11-01 &
 ## 6. 这台机器上没清、也不该清的
 
 - `poc/data/` 全部 4.0 GB 原样在；没有删任何东西（规则：删存档数据要你的要求、备份、逐项列出、记日志）。
+- 交接时发现并修掉的一件事：从仓库根目录裸跑 `pytest` 会把 `docs/research/2026-10-29-ledger-standard/test-set/finalize_test.py` 当测试收进来（文件名符合 `*_test.py`），导入时它的顶层代码把冻结的测试金标 `test-set/golden-test-signed.json` 重建了一遍，`standard_version` 从 4 写成了页面当前的 5（文章内容没变）。已用 Git 恢复，SHA-256 前 16 位 `7f10d080d5eab4fe` 和提交的一致；新加 `pytest.ini`（`testpaths = tests`）让裸跑只收 `tests/`。第 5 版尺子的金标在 `golden-v5/`，没受影响。
 - 我这次在 `loop-2026-10-29/` 里放的三个本地符号链接 `Y6-v65-d1..3`（为了让 `final_scores.py Y6 v65 v66` 有对照）已经删掉；重现那张分数表要先建回去：`ln -s Y5-v65-d1 Y6-v65-d1`（d2、d3 同），结果在 `r3-final-scores-Y6.txt`。
