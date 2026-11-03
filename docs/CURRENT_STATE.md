@@ -1,6 +1,6 @@
 # Current state
 
-As of November 3, 2026; decisions through D354. The POC build began October 23. The foundation remains frozen except pull mode and the final verdict; later recorded decisions authorize specific changes. [Decisions](DECISIONS.md) govern the [design page](system-design.html) and [module PRDs](prd/README.md).
+As of November 4, 2026; decisions through D357. The POC build began October 23. The foundation remains frozen; pull mode and closing at the due day are decided and built (D54, D356); later recorded decisions authorize specific changes. [Decisions](DECISIONS.md) govern the [design page](system-design.html) and [module PRDs](prd/README.md).
 
 ## Repository (2026-11-03)
 
@@ -44,12 +44,12 @@ The concurrency study remains within its recorded 144-attempt/$1.50 ceiling: 140
 
 Of the frozen steps (D354 holds each with its census):
 
-1. **Evidence goes to the total-revenue question instead of the narrower question it answers.** The frozen extraction's filing rule sends a statement with no clearer home to the company's root revenue question; that question holds 23–24% of all links in the three frozen draws against 9–12% before. The narrower questions lose their evidence: Broadcom's AI-chip revenue ($10.8bn in Q2, $16.0bn guided for Q3), the gold's basis for cloud providers' custom-chip spending, reached that question in two of three earlier draws and in none of the frozen ones, which then judged it below $40bn three times against the gold's $60–85bn; the operating-margin question received no evidence and was never judged. It is a step 2 defect; a fix is a new extraction version only Alex opens. On a longer window it is also where evidence bloat appears first.
+1. **Competitor and customer news is filed under the company's revenue questions** instead of the share, capital-spending or custom-chip question it informs (D355; filing is otherwise about 85% right). Share facts are often not written at all, an extraction recall miss (D355). The total-revenue question holds about a quarter of all links (D354).
 2. **One bet opened twice** about one encounter in five: the collision judge splits a seed question from an identical candidate on a fine detail.
 3. **A question the standard rules out** (the lidar legislation) was proposed by the extraction and opened in one draw of three.
 4. **`scripts/preflight.py` cannot judge the one-decider architecture** (D264): it does not rebuild the questions open at the time.
 5. **Measured on one company and one 14-day window**, with the judgement scored at the window end only; `poc-v108` has not run over a longer window.
-6. **Not built:** step 5, settling a question at its due day (pull mode and the final verdict, earlier drafts); argument records (a versioned current argument per question for the judge to read).
+6. **Not built:** argument records (a versioned current argument per question for the judge to read).
 
 The extraction phase's open-defect list before the end-to-end loop (role-v51, 2026-10-30) is preserved in the branch's state page at the merge, [current-state-extraction-branch-2026-11-03.md](research/2026-11-01-e2e-loop/current-state-extraction-branch-2026-11-03.md); the readers' doubts about the frozen standard listed there remain for Alex, nothing changed.
 
@@ -62,11 +62,11 @@ Earlier open defects, unchanged:
 - The corpus audit recorded 97 official notices with 56 body/filename collisions requiring re-fetch verification before relying on a rebuilt corpus. The older intermittent search-test failure remains untraced. The recorded Docker outbound-network restriction needs a fresh check before a container model run.
 - Fresh Idea allocations vary; saved weights do not. The confidence chart applies the current plan to past thesis states and is not a record of historical allocations or a calibrated outcome probability. Broad analyst-prose quality and fresh Idea stability remain unaccepted. Generative matching dependencies still await `matching-v4`.
 
-Pull mode and the final verdict remain earlier drafts to redesign together. Due-date state freezing and closure are decided. Upstream supply and human-review output remain deferred.
+Pull mode and closing at the due day are decided and built (D54, D356). Upstream supply and human-review output remain deferred.
 
 ## One next task
 
-Step 5: settling a question at its due day (pull mode and the final verdict). Steps 1–4 are frozen (D274, D354). The pull-mode and verdict texts are earlier drafts to redesign together; due-date state freezing and closure are decided. The design holds the tables of AGENTS §2 before any code, and Alex takes the step up. No paid run is authorized by this update.
+Steps 1–5 are decided: extraction, question opening and matching, and judging are frozen (D274, D354); closing at the due day is pull mode's and is built (D356). The next event is the first real due day, 2026-12-31 ("Will Nvidia begin shipping its Rubin generation by December 31, 2026?"), which gives the first closing to read against a published result. Until then, the open items are Alex's to take up: the known defects of D354 and D355, argument records, and the code paths of retired prompt versions (D357). No paid run is authorized by this update.
 
 ## Documentation maintenance
 

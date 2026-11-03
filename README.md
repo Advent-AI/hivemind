@@ -67,24 +67,23 @@ The thesis has one current state: a rung on its ladder. A dependency means one t
 Other modules:
 
 - **Config** selects model settings and the number of search results.
-- **Pull mode** owns time-based work: revisit theses at day-end or on a schedule, then freeze and close each thesis when due.
+- **Pull mode** owns time-based work: at the end of each day it closes every question whose due day has come, at the rung it stands on; it re-judges nothing (D356).
 - **Human review pool** holds unresolved identifiers, proposed themes outside the universe and repeated processing failures.
 
 For example, NVIDIA's April 15, 2025 8-K says H20 exports to China require a licence and may cause a charge of up to $5.5 billion. With an empty library, extraction proposes a theme thesis about licences for the affected chips and an NVDA thesis about FY2026 China revenue versus FY2025. Each carries quotations from the filing. Matching can open both and record the revenue thesis's dependency on the licence thesis. AMD's subsequent MI308 filing can contribute to the same licence thesis. A Reuters retelling of the NVIDIA filing adds another source for existing evidence, not new corroboration.
 
 ## Design and implementation status
 
-The foundational design was frozen on October 22, 2026, except for pull mode and the final verdict. Later decisions authorize specific changes and the POC build. A design freeze does not imply that the implementation has passed acceptance.
+The foundational design was frozen on October 22, 2026; pull mode and closing at the due day were decided and built later (D54, D356). Later decisions authorize specific changes and the POC build. A design freeze does not imply that the implementation has passed acceptance.
 
 | Module | Design status |
 |---|---|
 | Research universe | First version frozen; specific themes remain a draft |
 | Upstream classification, Config, dispatch | First versions frozen |
-| Extraction | Foundation frozen. On this branch the request is role-v51 (D246): no thesis or group shown (D211), a separate placement call under the one-home rule (D207, D209). The step's standard is the signed page above (D243); measured against it, and read beyond it, on 2026-10-30 (open defects in the current state) |
+| Extraction | Frozen at `poc-v108` (D274): extraction v74i, one decider (D264) that files each statement under the questions open at the start of its day; the step's standard is `docs/prd/05-extraction-standard.html` and its frozen ruler (AGENTS §7.1) |
 | Thesis library and matching records | Foundation frozen; matching on Jev (D169) with the collision judge (D190); listed open questions pending |
 | Human review pool | Intake frozen; output not yet designed |
-| Final verdict | Earlier draft; freezing the state on the due date is decided |
-| Pull mode | Earlier draft; day-end/scheduled work and due-date freezing are decided |
+| Pull mode and closing at the due day | Decided and built: at the end of each day a due question freezes at its rung and closes; no separate final verdict (D54, D356) |
 
 Changes to frozen modules require a recorded decision. [Decisions](docs/DECISIONS.md) contains the history; decision numbers are per branch until a merge (D227). Historical records and original source material retain their original language. Maintained documentation and new product text use English under D163; pages written for Alex's review are in plain Chinese.
 

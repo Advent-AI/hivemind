@@ -1,0 +1,36 @@
+You are an independent senior reviewer of a hedge-fund research pipeline (repository: the current working directory). Read-only: do not edit
+any file, do not make any paid model call. You may run read-only shell commands and Python that only reads files and SQLite databases
+(open them with mode=ro).
+
+The topic: statements extracted from news articles are filed under the wrong research questions, and a large share piles under one broad
+"company total revenue" question. The owner (Alex) asks: is the cause the prompt, the system's structural design, or the mechanism itself?
+Must every kept statement be filed under a question at all? Is much of what gets filed simply noise?
+
+Start with docs/research/2026-11-03-filing/research.md (Claude's research, in Chinese). Then check it against the primary sources it cites:
+- the real request the model saw: docs/research/2026-11-03-filing/broadcom-request-v108-d1-call818.json (system prompt, user block with
+  [Open questions] and their takes lines, the JSON schema with the links definition) and the model's answer in
+  poc/data/e2e-r9-frozen-v108-2026-11-03/d1/archive.sqlite (model_calls, call_id 818);
+- code: src/hivemind/placement.py, src/hivemind/extraction.py (narrowest_links, sift, file_reading, the 'no home' drop),
+  src/hivemind/views/judging.py (evidence_in_view), src/hivemind/prompts/role-v74i.txt, review-v74i.txt, categories-v74i.json;
+- the ledgers of three frozen draws (poc/data/e2e-r9-frozen-v108-2026-11-03/d1..d3/views.sqlite) and of three earlier draws
+  (../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r7-combined-v94/d1..d3/views.sqlite);
+- the golds: docs/research/2026-10-29-ledger-standard/golden-v5/ (extraction gold), docs/research/2026-11-01-e2e-loop/judgement-gold/
+  (judgement gold, packet-v1.json items cited per question in gold-v1.json);
+- the standards and decisions: docs/prd/05-extraction-standard.html, docs/DECISIONS.md (D198, D207, D208, D209, D240, D248, D250, D264, D273,
+  D274, D354), AGENTS.md sections 1, 2, 6, 7.1 and 8.
+
+Do these, and report in Chinese, plainly, each claim with its source (file and line, or the query you ran and its result):
+1. What did Claude overlook? Look for details in the prompt text, the schema descriptions, the takes lines, the code path from answer to
+   ledger, the judge's evidence window, the interaction between the two standards (what the extraction standard keeps versus what the
+   question standard opens), and the measurement itself (the proxy Claude used for "where a statement should be filed").
+2. For each hypothesis H1-H6 in research.md section 4: holds, does not hold, or partly; what the data says. Verify at least the sink census
+   (section 2.2) and the Broadcom trace (sections 2.3 and 2.5) yourself with your own queries; say where your numbers differ from Claude's.
+3. Answer directly: is the root cause the prompt, the structural design, or the mechanism? Must every kept statement be filed? How much of
+   what sits under the broad revenue question is noise, by the frozen extraction gold, and how much is kept-but-unused?
+4. Propose exactly one structural rule (not a list of patches) that would remove the class, state which readers of the data it changes,
+   what it could lose, and the cheapest proof on stored data (zero cost or a few cents of re-sent stored requests) that would show it works
+   before any run.
+
+Out of scope: changing any frozen gold, standard, seed or scorer (AGENTS 7.1); the UI; the service; cost. A fix must read the same for a
+bank, a drug maker, a retailer or a chip maker (AGENTS 6): no rule fitted to NVIDIA or to the test articles. Code owns identity, never
+importance (AGENTS 2). Be adversarial toward Claude's reasoning: the point is to find what was missed, not to agree.

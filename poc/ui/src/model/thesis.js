@@ -37,6 +37,10 @@ export function statusAt(thesis, day) {
   const last = lastOf(thesis.switches.filter((s) => s.day <= day));
   return last && !last.open ? 'Closed' : 'Open';
 }
+export function closingAt(thesis, day) {
+  const last = lastOf(thesis.switches.filter((s) => s.day <= day));
+  return last && !last.open ? last.reason : null;
+}
 export function snapshotThesis(thesis, day) {
   return {
     ...thesis,

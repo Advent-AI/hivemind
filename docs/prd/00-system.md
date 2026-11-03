@@ -1,6 +1,6 @@
 # System overview
 
-> Status: foundation frozen except final verdict and pull mode. Universe, classification, Config, dispatch, extraction and human-review intake froze on October 18, 2026; the library and matching labels on October 20; the full review completed October 22. D149 adds extraction-time grouping; D165 integrates it into the default pipeline. English edition: October 25, 2026 (D163).
+> Status: foundation frozen; pull mode and closing at the due day decided and built (D54, D356). Universe, classification, Config, dispatch, extraction and human-review intake froze on October 18, 2026; the library and matching labels on October 20; the full review completed October 22. D149 adds extraction-time grouping; D165 integrates it into the default pipeline. English edition: October 25, 2026 (D163).
 > Design page: `docs/system-design.html` → New → Open system PRD. Recorded decisions take precedence over this document.
 
 ## Purpose
@@ -16,22 +16,21 @@ The old system pulled dated batches. Category definitions existed in nine module
 ## System boundary
 
 - **Upstream, outside this system:** acquire material, classify it, identify related subjects and publication time, and deliver it. Acquisition details are deferred.
-- **This system:** dispatch through the library, final verdict and pull mode.
+- **This system:** dispatch through the library and pull mode, which closes due questions.
 - **Tests:** stream stored items in publication order through the product's path, with replay time supplied to pull mode.
 
 ```text
 Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
                          │               ↑
-                  read-only; groups   Pull mode: scheduled review,
-                                      freeze and close due theses
-Final verdict: earlier draft; decide its role with pull mode
+                  read-only; groups   Pull mode: at day end, freeze
+                                      and close due questions
 ```
 
 | From | To | Content |
 |---|---|---|
 | Research universe | Upstream | Subjects and tracked categories |
 | Research universe | Extraction | All themes for candidate selection in block 3 |
-| Config | Extraction, library, final verdict | Model settings version; library search result count |
+| Config | Extraction, library | Model settings version; library search result count |
 | Library | Extraction | Open subject theses and their dependencies: question, focus, due date and links; available groups under the library contract, in block 5 |
 | Library | Matching labels | Comparison records for human labels and future smaller-model training |
 | Dispatch, extraction, library | Human review | Unresolved items, proposed themes and repeated failures |
@@ -42,7 +41,7 @@ Final verdict: earlier draft; decide its role with pull mode
 |---|---|---|
 | Trigger | An item arrives | Day-end or scheduled interval |
 | Initiator | Upstream delivery | System scheduling |
-| Work | Read evidence/candidates and associations, preserve associations while matching identity, rejudge changed inputs under library rules | Overall review/update; freeze and close due theses; remaining design deferred |
+| Work | Read evidence/candidates and associations, preserve associations while matching identity, rejudge changed inputs under library rules | At the end of each day, close the questions that are due at their rung; re-judge nothing (D356) |
 | Calendar | Never reads it | Sole time-driven module; receives “now” explicitly |
 
 ## Principles
@@ -126,7 +125,7 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 
 ## Modules
 
-See the [PRD index](README.md) for files and status. The universe defines scope; classification labels; Config selects settings; dispatch routes; extraction reads; the library matches, stores and rejudges; matching labels collect supervision; pull mode owns time; human review receives unresolved matters. Final verdict remains an earlier draft.
+See the [PRD index](README.md) for files and status. The universe defines scope; classification labels; Config selects settings; dispatch routes; extraction reads; the library matches, stores and rejudges; matching labels collect supervision; pull mode owns time and closes questions at their due day, with no separate final verdict (D356); human review receives unresolved matters.
 
 ## Compared with the old system
 
@@ -143,14 +142,14 @@ See the [PRD index](README.md) for files and status. The universe defines scope;
 
 ## Not yet designed
 
-Human-review handling; upstream acquisition/classification and return notifications; category prompt wording; library open questions, particularly analyst-level thesis granularity; final verdict and pull mode beyond the decided freezing behaviour. A grouping requirement is not evidence that its implementation has passed acceptance.
+Human-review handling; upstream acquisition/classification and return notifications; category prompt wording; library open questions, particularly analyst-level thesis granularity; settlement figures for closed questions (prices, filings). A grouping requirement is not evidence that its implementation has passed acceptance.
 
 ## Related decisions
 
 - D10/D17: classified stream and dispatch as the sole entry. D12–D14: no internal clock; separate stream and pull mode.
 - D16/D18/D19: human review, universe-owned scope and first module freezes.
 - D25–D28: one extraction module, shared analyst role, central library, sourced whole-item reading and report ingestion.
-- D29/D30: historical final-verdict and disagreement design, revised by D38/D54.
+- D29/D30: historical final-verdict and disagreement design, revised by D38/D54 and retired by D356 (closing at the due day is pull mode's).
 - D31/D32: sequence order, one queue per thesis, whole table releases and no separate filing XBRL ingestion.
 - D33–D37: read-only extraction, SEC publication day, extraction review, glossary and first-version freezes.
 - D38–D42: rebuilt thesis structure, library intake/history, matching labels, aligned module boundaries and binary ladders.

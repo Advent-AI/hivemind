@@ -182,15 +182,15 @@ VIEWS_CONSTANTS = ["VIEW_TREE", "VIEW_KINDS", "KIND_NOTE", "LADDER_EXAMPLES", "L
 EXTRACTION_CONSTANTS = ["TEMPLATE", "PROMPT_EXAMPLE", "PROMPT_NOTES", "CATEGORY_READS", "CATEGORY_NOTE", "EXTRACT_STEPS",
                         "EXTRACT_TWO", "EXTRACT_SORT_TREE", "SOURCE_TREE", "SOURCE_NOTES", "EXTRACT_EXAMPLE_TREE", "EXAMPLE_NOTE",
                         "EXTRACT_OPEN", "EXTRACT_RELATIONS"]
-# The old final-verdict draft, still read for 07-final-verdict.md; it stays outside the wording check.
-VERDICT_CONSTANTS = ["VERDICT_TRIGGERS", "VERDICT_TREE", "VERDICT_RULES", "VERDICT_EXAMPLE_NOTE"]
+# Closing at the due day (D54, D356), drawn in 07-final-verdict.md and read by the wording check.
+CLOSING_CONSTANTS = ["CLOSING_TREE", "CLOSING_RULES"]
 # Every constant the page data defines, by the key the checks read it under; the one place these lists are written.
 PAGE_CONSTANTS = {
     "classification": ("new-classification.js", ["TAGS", "TREE", "ROUTING", "INPUT_SCHEMA", "OUTPUT_FIELDS", "OBJECT_RULES",
                                                  "TIME_RULES", "RULES", "LOOKUP_TABLES", "LOOKUP_RULES", "NOT_SOURCES"]),
     "config": ("new-config.js", ["CONFIG_SCHEMA", "DISPATCH_TREE", "TREE_NOTES", "RULES", "OPEN"]),
     "universe": ("new-universe.js", ["OBJECT_KINDS", "TRACKING_DEFAULTS", "THEME_LIBRARY", "TRACKING_EXAMPLES", "RULES"]),
-    "extraction": ("new-facts.js", EXTRACTION_CONSTANTS + VERDICT_CONSTANTS),
+    "extraction": ("new-facts.js", EXTRACTION_CONSTANTS + CLOSING_CONSTANTS),
     "views": ("new-facts.js", VIEWS_CONSTANTS),
 }
 
@@ -207,16 +207,16 @@ def wording_scope():
     """{place: text} of the in-scope wording: the modules' PRDs and page data, and the boundary sentences."""
     places = {f"prd/{name}": re.sub(r"## Glossary[\s\S]*?(?=\n## )", "", (PRD / name).read_text(encoding="utf-8")) for name in
               ["00-system.md", "01-universe.md", "02-classification.md", "03-config.md", "04-dispatch.md",
-               "05-extraction.md", "06-views.md", "09-review-pool.md"]}
+               "05-extraction.md", "06-views.md", "07-final-verdict.md", "08-pull-mode.md", "09-review-pool.md"]}
     for name in ["new-universe.js", "new-classification.js", "new-config.js"]:
         places[name] = (DESIGN / name).read_text(encoding="utf-8")
     design = (DESIGN / "new-design.js").read_text(encoding="utf-8")
     places["new-design.js summary"] = design[design.index("  summary:"):design.index("  repositoryRoot:")]
-    for node in ["classify", "dispatch", "extract", "views", "labels", "universe", "config", "review"]:
+    for node in ["classify", "dispatch", "extract", "views", "labels", "verdict", "pull", "universe", "config", "review"]:
         start = design.index(f"    {node}: {{")
         places[f"new-design.js {node}"] = design[start:design.index("\n    },\n", start)]
     facts = (DESIGN / "new-facts.js").read_text(encoding="utf-8")
-    for name in EXTRACTION_CONSTANTS + VIEWS_CONSTANTS:
+    for name in EXTRACTION_CONSTANTS + VIEWS_CONSTANTS + CLOSING_CONSTANTS:
         match = re.search(r"\n  const " + name + r" = [\s\S]*?;\n", facts)
         if not match:
             raise SystemExit(f"wording check: {name} not found in new-facts.js")
@@ -225,6 +225,8 @@ def wording_scope():
     places["new-facts.js extract page"] = facts[start:facts.index("  design.drilldowns.views = {")]
     start = facts.index("  design.drilldowns.views = {")
     places["new-facts.js views page"] = facts[start:facts.index("  design.drilldowns.verdict = {")]
+    start = facts.index("  design.drilldowns.verdict = {")
+    places["new-facts.js closing page"] = facts[start:]
     return places
 
 
@@ -383,9 +385,8 @@ def blocks(data):
         ("06-views.md", "order"): bullets(views["ORDER_RULES"]) + "\n\n" + views["STORE_NOTE"],
         ("06-views.md", "open"): bullets(views["VIEWS_OPEN"]),
         ("06-views.md", "proposed"): bullets(views["VIEWS_PROPOSED"], numbered=True),
-        ("07-final-verdict.md", "triggers"): table(["Trigger", "Detected by"], [[row["trigger"], row["who"]] for row in extraction["VERDICT_TRIGGERS"]]),
-        ("07-final-verdict.md", "verdict"): ascii_tree(extraction["VERDICT_TREE"]),
-        ("07-final-verdict.md", "rules"): bullets(extraction["VERDICT_RULES"], numbered=True),
+        ("07-final-verdict.md", "closing"): ascii_tree(extraction["CLOSING_TREE"]),
+        ("07-final-verdict.md", "rules"): bullets(extraction["CLOSING_RULES"], numbered=True),
     }
 
 

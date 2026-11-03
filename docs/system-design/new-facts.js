@@ -1,4 +1,4 @@
-// The New design's extraction module, the views database and the final verdict (decisions D26-D45). Extraction reads
+// The New design's extraction module, the views database and closing at the due day (decisions D26-D45, D54, D356). Extraction reads
 // every item whole, by its category, as a senior hedge fund analyst, with the open views of the item's objects and the
 // views they depend on (prompt part 5), and hands over two things with their sources: evidence attached to one of those
 // views or to a candidate view, and candidate views with extraction-owned subject memberships (D149). A view is a question with a
@@ -6,8 +6,8 @@
 // a new view) and each piece of evidence to the evidence its view already holds (repeat, replacement, or new evidence);
 // evidence pushes the view's state, which is frozen at the due date (D54), and views are linked by dependencies and
 // chained by succession. Only what Alex said or decided is written as decided (D45); Claude's proposals he has not
-// decided are kept apart in VIEWS_PROPOSED. The final verdict is still the old draft and is to be redone with pull mode
-// (D41, D54). Edit the data at the top; the three drill-downs render it. The texts are for a reader who did not follow
+// decided are kept apart in VIEWS_PROPOSED. Closing at the due day is pull mode's: a due question freezes at its rung
+// (D54, D356). Edit the data at the top; the three drill-downs render it. The texts are for a reader who did not follow
 // the discussion: plain words and an example, no field names.
 (function () {
   'use strict';
@@ -416,7 +416,7 @@
   };
 
   const LIFECYCLE_NOTES = [
-    "Pull mode closes it when due. The current rung and reasons become its frozen final conclusion. To keep tracking, create a successor. Pull mode runs at day-end or scheduled intervals; the incoming stream does not manage time. Remaining pull-mode design is deferred.",
+    "Pull mode closes it when due. The current rung and reasons become its frozen final conclusion. To keep tracking, create a successor. Pull mode runs at the end of each day; the incoming stream does not manage time (D356).",
     "People may manually close or reopen a thesis, for example after a delisting. Append a record naming the person and the sequence after which it applies. The matching rule of one open thesis per focus does not restrict manual reopening. People also maintain the research universe.",
   ];
 
@@ -463,46 +463,31 @@
   const VIEWS_OPEN = [
     "Search method and ranking remain open: semantic, keyword or both. Test on stored information during implementation. Start with top 10 and adjust during experiments.",
     "Labelling details remain open: who, how many, which interface, model evaluation and training, handover to a smaller model, and checks for omitted or mislinked extraction evidence.",
-    "Design pull mode later: day-end/scheduled execution, overall review, and whether final verdict remains a separate step.",
   ];
 
   // Claude's proposals that Alex has not decided (D45). None of them is built until he decides it.
   const VIEWS_PROPOSED = [
-    "Proposal for later pull-mode design: besides due-date freezing, distinguish an unavailable answer (quantity no longer disclosed or event ceases to exist; dependants lack that input) and pending publication (period ended but the number is not yet released).",
-    "Proposal for later pull-mode design: daily pairwise duplicate checks among open theses of a subject; merge the later thesis into the earlier, move links and dependencies, check cycles and rejudge. Add separate duplicate-check settings to Config.",
+    "Proposal, not decided (D356): daily pairwise duplicate checks among open theses of a subject; merge the later thesis into the earlier, move links and dependencies, check cycles and rejudge. Add separate duplicate-check settings to Config.",
   ];
 
-  // ------------------------------------------------------------------ final verdict (old draft, to be redone: D41)
+  // ------------------------------------------------------------------ closing at the due day (D54, D356)
 
-  const VERDICT_EXAMPLE_NOTE = "Earlier-draft example: July evidence points both ways, with NVIDIA's statement weakening the thesis and analyst A supporting it. They are different tiers and no factual weakening evidence has arrived, so no final verdict is triggered. In August, reported Commerce licence issuance meets the old falsification condition; the tightening-controls theme is judged falsified. Its dependent NVDA thesis is reviewed again and remains open because reported Chinese procurement restrictions prevent revenue recovery, with a new premise.";
-
-
-  const VERDICT_TRIGGERS = [
-    { trigger: "Confirmation or falsification condition met", who: "Code" },
-    { trigger: "Deadline reached", who: "Pull mode, after all items published no later than the deadline have been processed" },
-    { trigger: "Premise status changes: falsified, expired, confirmed, superseded or no longer tracked", who: "Code, immediately" },
-    { trigger: "Premise weakened", who: "At the subject's next item, or within seven days via pull mode" },
-    { trigger: "Weakening evidence arrives in the fact tier", who: "Code" },
-    { trigger: "Disagreement: independent sources within one tier support and weaken the thesis", who: "Code" },
-    { trigger: "A revised source item removes the thesis's basis", who: "Code" },
-  ];
-
-  const VERDICT_TREE = {
-    label: "Final verdict", question: "Does this thesis still hold?", note: "The model reads the thesis, all evidence, premise states and trigger",
+  const CLOSING_TREE = {
+    label: "Closing at the due day", question: "Has this open question's due day come?", note: "Pull mode, at the end of each day, with the day passed in",
     children: [
-      { answer: "Confirmation condition met with factual evidence", label: "Close: confirmed", note: "Identify the evidence used", act: true },
-      { answer: "Falsification condition met with factual evidence", label: "Close: falsified", note: "Identify the evidence used", act: true },
-      { answer: "Deadline reached without decisive evidence", label: "Close: expired", note: "Record “no data to verify”, neither success nor failure", act: true },
-      { answer: "Other cases", label: "Keep open", note: "May remove or replace premises and add verification conditions specifying decisive facts and when they can be known", act: true },
+      { answer: "No", label: "Stay open", note: "Evidence keeps moving its state", act: false },
+      { answer: "Yes, and it has been judged", label: "Freeze at its rung and close", note: "The closing record names the rung; dependent questions read the frozen state and reasons", act: true },
+      { answer: "Yes, and it was never judged", label: "Close with no data to verify", note: "Neither a pass nor a fail", act: true },
     ],
   };
 
-  const VERDICT_RULES = [
-    "The model reviews the thesis, all evidence, current premises and trigger in one judgement.",
-    "Only verification conditions plus factual evidence can establish confirmation or falsification. Third-party views and rumours alone cannot. Expiry is not a correctness judgement.",
-    "Write a new thesis version citing evidence and sources. Retain closed theses for historical lookup.",
-    "Closing a thesis sends each thesis that uses it as a premise to another final verdict.",
-    "Pass “now” into pull mode: real time in production, replay time in tests. The system owns no clock.",
+  const CLOSING_RULES = [
+    "A question has one state and no separate result: the rung it stands on at the end of its due day is its conclusion (D54).",
+    "There is no separate final review: each day's judgement already reads the evidence in force (D356).",
+    "Nothing waits. Decisive information arrives as evidence by the end of the due day; a question whose result is still unknown closes at its state (D54).",
+    "Due days are set when a question is opened, on or after the day its result is published (D356).",
+    "The closing record is shown, never a gate; a question never judged shows “no data to verify” (D356).",
+    "The day is passed in: real time in production, the replayed day in tests. The system owns no clock (D31).",
   ];
 
   // ------------------------------------------------------------------ rendering
@@ -715,30 +700,20 @@
   };
 
   design.drilldowns.verdict = {
-    button: "Explore final verdicts: triggers and outcomes",
-    kicker: "Final verdict · Details",
+    button: "Explore closing at the due day",
+    kicker: "Closing at the due day · Details",
     size: 'full',
     render(container, context) {
       const escapeHtml = context.escapeHtml;
       container.innerHTML = `
         <div class="drill">
-          <h2 class="drill__title">Final verdict (earlier draft): does the thesis still hold?</h2>
-          <p class="drill__intro">Current decision: pull mode freezes and closes the thesis at its current rung when due. Whether a separate final verdict remains is deferred. The earlier draft below instead asks a model to review the whole thesis and its evidence before deciding closure.</p>
-          ${status("Earlier draft · Requires redesign", "The library was rebuilt under D38–D40. Verification conditions, confirmation/falsification, premises, seven-day fallback review and same-tier-disagreement escalation no longer apply (D38, D41). Each thesis has one state, frozen and closed when due, with no separate outcome. Pull mode runs at day-end or on a schedule without an extra wait (D54). Other details will be redesigned with pull mode.", escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">Triggers</h3>
-          ${table(["Trigger", "Detected by"], VERDICT_TRIGGERS.map((trigger) => [trigger.trigger, trigger.who]), escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">Outcomes</h3>
-          ${tree(VERDICT_TREE, escapeHtml)}
-          <div class="drill__columns">
-            <section>
-              <h3 class="drill__heading drill__heading--spaced">Rules</h3>
-              <ol class="drill__rules">${listItems(VERDICT_RULES, escapeHtml)}</ol>
-            </section>
-            <section>
-              <h3 class="drill__heading drill__heading--spaced">Example</h3>
-              <p class="drill__footnote">${escapeHtml(VERDICT_EXAMPLE_NOTE)}</p>
-            </section>
-          </div>
+          <h2 class="drill__title">Closing at the due day: freeze the state and close</h2>
+          <p class="drill__intro">Part of pull mode. At the end of each day every open question whose due day has come closes at the rung it stands on. That rung is its conclusion; there is no separate final verdict and nothing waits for the day's items.</p>
+          ${status("Decided and built · D54, D356", "A question never judged closes with “no data to verify”. Telling a closing rung that reflects the published result from one that is still a forecast waits for the first real due day.", escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">What happens</h3>
+          ${tree(CLOSING_TREE, escapeHtml)}
+          <h3 class="drill__heading drill__heading--spaced">Rules</h3>
+          <ol class="drill__rules">${listItems(CLOSING_RULES, escapeHtml)}</ol>
         </div>`;
       keepFitted(container);
     },

@@ -4,6 +4,7 @@ import { fromBundles } from '../src/adapters/bundle.js';
 import {
   assessmentAt,
   statusAt,
+  closingAt,
   snapshotThesis,
   historyIndexAt,
   relatedTheses,
@@ -44,6 +45,9 @@ test('D130: snapshot uses evidence arrival day, status switch day and relationsh
   assert.equal(statusAt(closed, addDays(closing.day, -1)), 'Open');
   assert.equal(statusAt(closed, closing.day), 'Closed');
   assert.equal(statusAt(closed, addDays(closed.created_day, -1)), 'Not open yet');
+  assert(closing.reason, 'a real closing record is required');
+  assert.equal(closingAt(closed, addDays(closing.day, -1)), null); // D356: the closing record is shown from the closing day, never before
+  assert.equal(closingAt(closed, closing.day), closing.reason);
   const fullData = fromBundles(live);
   const relation = fullData.theses
     .flatMap((t) =>

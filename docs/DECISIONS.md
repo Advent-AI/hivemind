@@ -3706,3 +3706,75 @@ D348 completion: [27-response result](research/2026-10-27-source-reference-trial
   three times against the gold's $60–85bn; defect (3) is the same class. Over 14 days the judge requests stayed under 18,500 tokens, but a longer window is where evidence bloat
   appeared before (the three-month run stopped and sealed at 2026-08-28). (5) `scripts/preflight.py` cannot judge the one-decider
   architecture (D264): it does not rebuild the questions open at the time, so every stored link reads as "links to nothing shown".
+
+## D355 · 2026-11-04 · The filing topic closes without a change: filing is about 85% right; the remaining misses are recorded as known defects
+
+- Alex opened the topic on 2026-11-03 ("你这个单独开一个专题出来解决 … 是promot，是系统结构设计还是到底哪里有问题挂错一堆东西，机制是不是有问题（一定要挂吗？有没有可能是杂音"),
+  set the method on 2026-11-04 ("We need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we
+  dive into do the full analysis stability test"; "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估"), and closed it: "那就1吧"
+  (option 1: close the topic, record the pattern as a known defect, go to step 5).
+- What was found (`research/2026-11-03-filing/report.html`, `log.md` rows 1–17): three rounds of Claude–Codex review converged on "the question
+  definition is too narrow"; an independent challenge and the first stored-request test refuted it (the earlier version's definition was already
+  broad; the same request gives different filings from send to send). Two cheap tests of fixes did not fit their hypotheses and stopped: removing the
+  total-revenue fallback alone leaves good indirect evidence unlinked; teaching "one fact, two uses" made the model add a second company-revenue
+  question instead. A size measurement per class (six observations per fact) and a wider check before test 3 put filing at about 85% right:
+  the company's own quarterly figures 82%, forecasts 91%, other companies' figures 84% on fourteen facts.
+- Known defects, recorded and not fixed: (1) competitor and customer news (a cloud provider's backlog, a rival's customer forecasts, a chip
+  designer's revenue) is filed under the company's revenue questions instead of the share, capital-spending or custom-chip question it informs;
+  the model reads it as "what it means for the company" and the fallback sentence sends it there; the custom-chip question lost its main evidence
+  this way in the frozen draws. (2) Share facts are often not written at all (the gold's core "China share fallen to zero" in none of six
+  observations): an extraction recall miss, not filing. (3) The model files only relations an article states; one needing industry knowledge (a
+  chip designer's AI revenue as a measure of cloud providers' custom-chip spending) is not made unless the article says it.
+- No prompt or code changes; steps 1–4 stay frozen (D274, D354). The next task is step 5.
+
+## D356 · 2026-11-04 · Step 5: closing at the due day is pull mode's; no separate final verdict, no day-end re-judging, due days after publication, the frozen rung recorded and shown
+
+- Alex: "按照你的4个建议收尾一次，清晰的write the design, 文档，确保我们的一致性，然后你也需要清理repo不要让旧的东西影响我们整个sanity". The four leans he
+  accepts are Claude's of the same day, on D54's open questions:
+  1. **No separate final review before closing.** Each day's judgement already reads the evidence in force (D198's window), so a review at
+     the due day repeats it. The final verdict is no longer a step; D29's earlier draft (verification conditions, confirmed/falsified/expired,
+     premises, triggers) is retired. Config's `final_verdict` setting stays in the frozen configurations (D274) and is read by no step.
+  2. **No day-end re-judging without new evidence.** Pull mode closes the questions that are due and does nothing else at day end; it is
+     revisited when a case is named.
+  3. **A due day falls on or after the day the result is published,** set when the question is opened (the opening rule "set the due date
+     when the question can be resolved", 06-views). A question whose result is still unknown on its due day closes at its state like any other;
+     nothing waits (D54).
+  4. **The frozen rung is recorded and shown, never a gate** (AGENTS §8). The closing record names the rung the question froze at; a question
+     never judged closes with "no data to verify". Its judgement history, already stored and served, shows how the state moved up to the close.
+     Telling a closing rung that reflects the published result from one that is still a forecast is not built until the first real due day
+     (2026-12-31) gives a case.
+- Built: `src/hivemind/pull.py` writes the closing record (rung and label, or "no data to verify"); `tests/test_pull.py` proves it (mutants:
+  the first judgement instead of the last, the no-data branch removed). A $0 check on a copy of the frozen first draw with the day set to
+  2027-03-01 closed the thirteen questions due by then at their last rung, and a dependent question's judging request shows the closed question
+  with its last conclusion; two questions never judged closed with no state, which this change marks.
+- Pages: PRD 07 becomes the closing contract (the D29 draft is removed from it; Git keeps it), PRD 08 states what pull mode does, the design
+  page's two nodes and the closing drill-down say the same, and `docs/check.py` now reads both PRDs and both nodes in the wording check.
+- Not built, not decided: fetching settlement figures (prices, filings) from a source; Claude's earlier daily duplicate check.
+- After a read-only Codex review the same day, two gaps between this decision and the product were closed. (1) A closing on a day without
+  items took the day's last sequence number, which belonged to the day before, so the question page showed the question closed a day
+  early; pull mode now records the day under a sequence number of its own when it closes something on such a day (`pull.closing_sequence`).
+  Census: 0 of the 42 day ends of the three frozen draws were affected, and 1 of the 119 days of the stored news window has no items
+  (2026-10-27); in production a holiday is enough. (2) The closing record was served but never shown: the question page now shows it
+  under "About this thesis" from the closing day on, and a closed question never judged shows "No data to verify". Tests:
+  `tests/test_pull.py` (the empty-day closing, read through `service.is_open_as_of`) and `poc/ui/test/model.test.js` (`closingAt`); each
+  fails on its mutant (the old numbering; the record shown while the question is open).
+
+## D357 · 2026-11-04 · Clean the repository of configurations and prompts nothing current names; the code paths of retired versions are a slice of their own
+
+- Alex, with D356: "然后你也需要清理repo不要让旧的东西影响我们整个sanity".
+- Removed (Git keeps them): 53 configurations under `poc/config/` and 87 prompt files under `src/hivemind/prompts/` that no test, code,
+  script, Docker file, README, AGENTS, state page, PRD, POC plan, design page or skill names, and that no kept configuration uses. Kept:
+  every configuration those name (54, among them the replay default `poc-v108`, the service's `poc-v33-idea` and the stored controls
+  `poc-v94`, `poc-v95`, `poc-v103` of D274) and every prompt file a kept configuration or a test, code or script names (112). Two files the
+  first pass missed were put back because a test reads them by a computed name (`categories-v7.json`, `role-v7.txt`); the full suite then
+  passed (288), with the frozen-file tests, the UI tests and `docs/check.py`.
+- Stale text removed from the current documents: the final-verdict draft (D356), the README's pre-merge extraction status (role-v51 and a
+  placement call), and the pull-mode open items D356 settled.
+- Worktrees: the two that held no changes and no data (`fix/question-identity-r2`, `cleanup/stale-tests-20261026`) were removed; their
+  branches stay. Left for Alex because they hold uncommitted changes or local data: `feat/thesis-admission-v12` (7 changed files, 1
+  untracked), `feat/parallel-day` (2 changed files), `fix/thesis-admission-v11` (102 MB of local run data), `cleanup/sequential-requests`
+  (685 MB of local run data, 1 untracked file), `fix/extraction-quality-2026-10-28` (the stored runs of the end-to-end loop that later
+  scripts read).
+- Not done in this slice: the code paths that only retired prompt versions take (version gates in `extraction.py` and `views/judging.py`)
+  and the tests that load old configurations to reach them (22 test files). Removing them is a refactor of its own, proved against the
+  frozen request bytes (`tests/test_frozen_extraction_prompt.py`); it waits for Alex to take it up.
