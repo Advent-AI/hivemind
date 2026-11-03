@@ -96,20 +96,35 @@ The default backend reads these local files:
 
 | Purpose | Path |
 |---|---|
-| Collected thesis ledger | `poc/data/english-v23-jev-2026-10-25/views.sqlite` |
-| Source items | `poc/data/items-window-tags2-2026-10-24.sqlite` |
+| Collected thesis ledger | `poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite` |
+| Source items | `poc/data/items-nvda-2026-07-01-10-27.sqlite` (cleaned pages, D351; the whole pages as fetched are in `items-nvda-2026-07-01-10-27.page.sqlite`, column `text_page`) |
 | Replay configuration | `poc/config/poc-v108.json`: the frozen production extraction prompt (D274) and Jev matching |
 | Idea configuration | `poc/config/poc-v33-idea.json`: two discovery calls and a final adoption/weighting call |
 | Derived service index and Idea archive | `poc/data/service-english/` by default; overridable per run |
 
 `poc/data/` is excluded from Git. A fresh clone includes the standalone demo, not these databases. Use the [data manifest](docs/research/2026-10-25-english/data-manifest.md) to locate preserved runs, or supply your own files with the documented CLI options. Keep provider credentials in the owner-only local file `~/.config/hivemind/credentials.json`, outside the repository.
 
+### Switching the served data
+
+The page build, the two services and Compose each carry the same two defaults: the thesis ledger (`views.sqlite`) and the items database the ledger's input ids come from. Swap both together; a ledger whose items are missing shows evidence without titles or sources. Serve a copy of a ledger a run may still write (`snapshot.sh` in a run folder makes one with SQLite's backup API), never the file the run writes. The places that name the defaults, all changed in one edit:
+
+| Place | What to change |
+|---|---|
+| `scripts/mock_build.py` | `--ledger` and `--items` defaults, then `python3 scripts/mock_build.py` rebuilds `poc/mock/index.html` |
+| `scripts/hivemind_api.py` | `--views` and `--items` defaults |
+| `scripts/hivemind_mcp.py` | `--views` and `--items` defaults |
+| `docker-compose.yml` | the `/data/ledger` and `/data/items/items-window.sqlite` volumes of both services |
+| This README and `poc/ui/README.md` | the default paths named in the table above and in the build description |
+| `tests/test_ui_bundles.py` | `SERVED_VIEWS` and `SERVED_GROUPS`, the served library's thesis and group counts |
+
+Then restart the API in a new dated service folder (below) so the search index is built for the new ledger. The current default, `served-2026-10-28-v34-nvda-3m-through-0828`, is the three-month NVDA run (poc-v34, extraction v18) stopped and sealed at 2026-08-28 on evidence bloat; its folder README names the one empty thesis removed. Earlier defaults: `english-v23-jev-2026-10-25` until 2026-10-27, then a 2026-10-27 snapshot of the same three-month run until 2026-10-28.
+
 ## Run the service for testing
 
 Run test services on the host. Start with read-only browsing and lexical search, which need no model or embedding calls. In the same shell where `repo` names the checkout, create a fresh dated run directory for the log, PID and derived files:
 
 ```sh
-service_run=$(mktemp -d "$repo/poc/data/service-2026-10-27-XXXXXX")
+service_run=$(mktemp -d "$repo/poc/data/service-$(date +%F)-XXXXXX")
 nohup python3 "$repo/scripts/hivemind_api.py" --port 8788 \
   --lexical --config '' \
   --index "$service_run/search-index.sqlite" \
@@ -148,7 +163,7 @@ Replay writes a new thesis ledger and model-call archive. Before a paid run, rep
 python3 "$repo/scripts/preflight.py" \
   --archive /absolute/path/to/preserved/archive.sqlite \
   --views /absolute/path/to/preserved/views.sqlite \
-  --items "$repo/poc/data/items-window-tags2-2026-10-24.sqlite"
+  --items "$repo/poc/data/items-nvda-2026-07-01-10-27.sqlite"
 ```
 
 Inspect changed refusals before continuing. For an authorized replay, use a new dated destination and the agreed spending cap; `--help` lists the options:

@@ -1,8 +1,10 @@
 # Current state
 
-As of October 27, 2026; decisions through D334. The POC build began October 23. The foundation remains frozen except pull mode and the final verdict; later recorded decisions authorize specific changes. [Decisions](DECISIONS.md) govern the [design page](system-design.html) and [module PRDs](prd/README.md).
+As of November 3, 2026; decisions through D353. The POC build began October 23. The foundation remains frozen except pull mode and the final verdict; later recorded decisions authorize specific changes. [Decisions](DECISIONS.md) govern the [design page](system-design.html) and [module PRDs](prd/README.md).
 
-This page describes the working tree. The documentation-only publication leaves product code and raw research artifacts uncommitted; the latest local frontend features are not part of that publication.
+## Repository (2026-11-03)
+
+`main` holds the merged extraction work and the product code. The served data is the sealed three-month ledger with the cleaned items database (README, "Switching the served data"). The repository was cleaned at D353: experiment outputs and one-off scripts left Git (they stay in its history), documents and every file a reader names stayed. The `main` checkout's uncommitted experiment outputs are kept only in the backup D353 names. Its sixteen uncommitted decisions of 2026-10-27 are now D337–D352.
 
 ## Extraction pipeline (merged from `fix/extraction-quality-2026-10-28` on 2026-11-03)
 

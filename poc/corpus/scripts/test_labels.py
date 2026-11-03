@@ -6,6 +6,7 @@ and policy exhibits are 不算材料 (docs/poc/pipeline-plan.md, 语料标签收
 
 Run: python3 -m pytest poc/corpus/scripts/test_labels.py -q
 """
+import json
 import os
 import sqlite3
 import sys
@@ -115,3 +116,57 @@ def test_aggregator_page_author_is_the_byline_outlet():
     assert assemble.byline_outlet('Head Nvidia rises', text) == ''
     # a page that is not an aggregator keeps its own domain whatever its text says
     assert assemble.page_author('cnbc.com', 'Head', 'John Ballard, The Motley Fool July 1, 2026 · 3 min read') == ('cnbc.com', 'media', True)
+
+
+
+def test_identical_text_at_different_urls_of_one_site_is_a_shell_not_an_article():
+    """2026-10-27: a cut link served an outlet's archive page for 111 headlines; whole-page texts identical across URLs of one
+    domain are the site's shell. Two outlets with the same text, or one URL listed twice, are not shells."""
+    def row(input_id, url, sha, klass='新闻'):
+        return {'input_id': input_id, 'source_uri': url, 'content_sha256': sha, 'klass': klass, 'coverage': 'full', 'feed': 1}
+    rows = [row('a', 'https://247wallst.com/investing/2026/08/21/one', 'x'), row('b', 'https://247wallst.com/investing/2026/08/21/two', 'x'),
+            row('c', 'https://reuters.com/one', 'y'), row('d', 'https://cnbc.com/one', 'y'),
+            row('e', 'https://pymnts.com/one', 'z'), row('f', 'https://pymnts.com/one?utm_source=x', 'z')]
+    marked, shells = assemble.mark_shells(rows)
+    assert shells == 2 and [r['coverage'] for r in marked] == ['shell', 'shell', 'full', 'full', 'full', 'full']
+    assert [r['feed'] for r in marked] == [0, 0, 1, 1, 1, 1]
+
+
+def test_a_stored_resolved_link_is_cleaned_of_the_json_tail():
+    from common import clean_resolved_url
+    assert clean_resolved_url('https://finance.yahoo.com/a/b",1]') == 'https://finance.yahoo.com/a/b'
+    assert clean_resolved_url('https://www.cnbc.com/x",1,"https://www.cnbc.com/amp/x') == 'https://www.cnbc.com/x'
+    assert clean_resolved_url('https://www.ft.com/c?syn\\u003d1",1]') == 'https://www.ft.com/c?syn=1'
+    assert clean_resolved_url('https://news.skhynix.com/en/x/') == 'https://news.skhynix.com/en/x/'
+
+
+def test_a_binary_body_has_no_page_text():
+    """2026-10-27: 116 fed rows of the three-month window were JPEG/PNG/GIF files and 7 were gzip streams served as pages; their
+    bytes decoded as text passed the stub bar and were fed as full articles. A body that is not markup has no page text."""
+    from common import decode, page_text
+    jpeg = b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01' + bytes(range(256)) * 40
+    png = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR' + bytes(range(256)) * 40
+    gzip_stream = b'\x1f\x8b\x08\x00' + bytes(range(256)) * 40
+    assert page_text(decode(jpeg)) == '' and page_text(decode(png)) == '' and page_text(decode(gzip_stream)) == ''
+    assert page_text(decode(b'<html><body><p>NVIDIA reported record data center revenue.</p></body></html>')) == 'NVIDIA reported record data center revenue.'
+
+
+def test_truenorth_story_topics_label_tier_and_objects_like_a_listing():
+    """A TrueNorth story (harvest_truenorth.py --events) is labelled by identity only: the asset selector that found it or the
+    asset ids it carries, with that topic's tier and objects like a Google News listing; a text-query hit without a listed asset is
+    no item; a record without selectors (the first NVDA harvest) stays nvda/core."""
+    story = {'story_id': 'story_019fa144-e165-7c82-9e62-eda545606513', 'title': 'US Navy Transits Taiwan Strait as Beijing Tracks Flight',
+             'summary': 'A US destroyer transited the Taiwan Strait ahead of the Xi-Trump meeting.', 'source': 'benzinga', 'publisher': 'benzinga',
+             'source_url': 'https://www.benzinga.com/news/26/08/60700000/us-navy-transits-taiwan-strait', 'published_at': 1786795200000,
+             'event_type': 'geopolitical_event', 'final_rank_score': 45, 'event_count': 1}
+    by_query = {'story': story, 'retrieved_at': '2026-10-27T10:00:00+00:00', 'topics': ['geo-taiwan'], 'selectors': [{'topic': 'geo-taiwan', 'query': 'Taiwan Strait'}]}
+    assert assemble.truenorth_story_row(by_query, {}) is None                     # a text query alone establishes no identity
+    story_with_assets = dict(story, token_addresses=['stock_tsm', 'stock_fxi'])
+    row = assemble.truenorth_story_row(dict(by_query, story=story_with_assets), {})
+    assert row['topic'] == 'semis-tsmc' and row['tier'] == 'industry'
+    assert [o['value'] for o in json.loads(row['object_identifiers'])] == ['TSM', 'semiconductor-cycle']
+    assert row['coverage'] == 'provider_summary' and row['feed'] == 0 and row['publication_day'] == '2026-08-15'
+    by_asset = {'story': story, 'retrieved_at': '2026-10-27T10:00:00+00:00', 'topics': ['geo-middle-east-oil'], 'selectors': [{'topic': 'geo-middle-east-oil', 'token_address': 'comm_wti'}]}
+    assert assemble.truenorth_story_row(by_asset, {})['topic'] == 'geo-middle-east-oil'
+    plain = assemble.truenorth_story_row({'story': story, 'retrieved_at': '2026-10-23T09:40:00+00:00'}, {})
+    assert plain['topic'] == 'nvda' and plain['tier'] == 'core' and [o['value'] for o in json.loads(plain['object_identifiers'])] == ['NVDA']

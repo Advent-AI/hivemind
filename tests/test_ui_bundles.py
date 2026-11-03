@@ -20,6 +20,8 @@ from hivemind.views import store  # noqa: E402
 
 LEDGER = ROOT / 'poc/data/sealed-2026-10-24-run3-through-0815/views.sqlite'
 ITEMS = ROOT / 'poc/data/items-window.sqlite'
+# the served default (README, "Switching the served data"): served-2026-10-28-v34-nvda-3m-through-0828
+SERVED_VIEWS, SERVED_GROUPS = 68, 34
 
 
 def assert_payload(payload):
@@ -71,7 +73,7 @@ def test_http_bundle_endpoint_as_the_agent_calls_it(tmp_path):
         with urllib.request.urlopen(f'http://127.0.0.1:{port}/library', timeout=5) as response:
             library = json.load(response)
         assert library['coverage'] == 'library'
-        assert len(library['views']) == 90 and len(library['groups']) == 18
+        assert len(library['views']) == SERVED_VIEWS and len(library['groups']) == SERVED_GROUPS
         assert library['views'][0]['question'].isascii()
         assert not (tmp_path / 'index.sqlite').exists()
         assert not (tmp_path / 'archive.sqlite').exists()
@@ -98,5 +100,5 @@ def test_mcp_bundle_tool_as_the_agent_calls_it(tmp_path):
                 result = await session.call_tool('thesis_library', {})
                 assert not result.isError
                 payload = result.structuredContent or json.loads(result.content[0].text)
-                assert len(payload['views']) == 90 and len(payload['groups']) == 18
+                assert len(payload['views']) == SERVED_VIEWS and len(payload['groups']) == SERVED_GROUPS
     asyncio.run(run())

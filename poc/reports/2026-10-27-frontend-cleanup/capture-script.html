@@ -1,0 +1,17 @@
+<script>
+const captureCleanup=document.createElement('button');captureCleanup.textContent='Capture cleanup baseline';captureCleanup.id='capture-cleanup';document.querySelector('#navigation-checks').append(captureCleanup);
+const cleanupRecord=document.createElement('pre');cleanupRecord.id='cleanup-record';cleanupRecord.hidden=true;document.body.append(cleanupRecord);
+captureCleanup.onclick=()=>{
+ const action=document.querySelector('#explorer .card--action');const trigger=document.querySelector('#explorer .card--trigger');
+ const styles=node=>{const style=getComputedStyle(node);return Object.fromEntries(['width','height','display','gap','padding','border','borderRadius','backgroundColor','color','font','textAlign','appearance','cursor','fontVariantNumeric','justifyContent'].map(key=>[key,style[key]]));};
+ const rows=[];
+ for(const range of ['1D','1W','1M','1Y']){
+  action.querySelector('[data-market-range="'+range+'"]').click();
+  for(const key of [null,'Home','ArrowRight','End','Escape']){
+   if(key)action.querySelector('.action__plot svg').dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
+   rows.push({range,key,text:action.textContent.replace(/\s+/g,' ').trim(),plot:action.querySelector('.action__plot').innerHTML.replace(/>\s+</g,'><').trim(),allocation:action.querySelector('input').value,controls:[action.querySelector('.action__allocation'),action.querySelector('input'),trigger.querySelector('.trigger__threshold'),trigger.querySelector('input')].map(styles),positions:[action,trigger].map(node=>({x:node.offsetLeft,y:node.offsetTop,w:node.offsetWidth,h:node.offsetHeight}))});
+  }
+ }
+ cleanupRecord.textContent=JSON.stringify(rows);document.querySelector('#navigation-result').textContent='Captured '+rows.length+' chart states and matching controls';
+};
+</script>

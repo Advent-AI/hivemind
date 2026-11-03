@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一篇文章，怎样改变一个判断 | Hivemind</title>
+<style>
+:root{color-scheme:light;--paper:#f5f5f0;--surface:#fff;--ink:#202c29;--muted:#64716b;--line:#d7ded7;--green:#226c50;--green-light:#edf5ee;--blue:#3d6090;--blue-light:#eef3fa;--amber:#92631b;--amber-light:#fcf5e7;--red:#9a4e43;--red-light:#faf0ed;--radius:15px}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,input{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:4px}a{color:var(--green);text-underline-offset:4px}button{color:inherit}main{max-width:1380px;padding:44px 44px 30px;margin:auto}.eyebrow{font-size:12px;letter-spacing:2px;color:var(--green);font-weight:650}h1{font-size:clamp(28px,3.5vw,46px);line-height:1.3;letter-spacing:-1.5px;margin:12px 0 14px}h2{font-size:26px;line-height:1.4;margin:0 0 8px}h3{font-size:17px;margin:0 0 8px}p{margin:0}.intro{color:var(--muted);max-width:820px}.status{margin-top:22px;padding:13px 17px;border-left:3px solid var(--amber);background:var(--amber-light);font-size:14px;display:flex;gap:15px;align-items:baseline;flex-wrap:wrap}.status strong{white-space:nowrap}.top-flow{display:grid;grid-template-columns:1fr 34px 1fr 34px 1fr;align-items:center;gap:10px;margin:30px 0}.phase{border:1px solid var(--line);background:transparent;border-radius:var(--radius);padding:18px 20px;text-align:left;width:100%}.phase.active{border-color:var(--green);background:var(--green-light)}.phase small{color:var(--muted);display:block;font-size:12px}.phase strong{display:block;font-size:20px;margin:3px 0}.phase span{font-size:14px}.phase-arrow{text-align:center;font-size:25px;color:var(--muted)}.workspace{display:grid;grid-template-columns:238px minmax(0,1fr);gap:30px;align-items:start}aside{position:sticky;top:22px}.nav-title{font-size:12px;color:var(--muted);margin:0 0 10px 14px}.step-nav{display:grid;gap:4px}.step-button{display:flex;align-items:center;gap:12px;border:0;border-radius:10px;background:transparent;padding:12px 14px;text-align:left;width:100%}.step-button:hover{background:#e9ede6}.step-button[aria-current="step"]{background:var(--ink);color:#fff}.step-number{font-size:13px;opacity:.65;font-variant-numeric:tabular-nums}.step-button b{display:block;font-size:15px;font-weight:550}.step-button small{display:block;font-size:12px;opacity:.7}.legend{border-top:1px solid var(--line);margin-top:22px;padding:18px 14px;display:grid;gap:9px;font-size:12px;color:var(--muted)}.legend span{display:flex;gap:9px;align-items:center}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green)}.dot.code{background:var(--blue)}.dot.store{background:var(--amber)}.content{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 30px}.detail-head{display:flex;justify-content:space-between;gap:15px;align-items:start}.step-kicker{color:var(--green);font-size:12px;font-weight:650;letter-spacing:1px;margin-bottom:7px}.lead{color:var(--muted);font-size:15px;max-width:680px}.example-control{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px;padding-top:5px}.example-control input{accent-color:var(--green);width:16px;height:16px}.diagram{position:relative;margin-top:24px;padding:8px 0}.diagram svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}.diagram-rows{position:relative;display:grid;gap:48px}.diagram-row{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:18px;align-items:stretch;justify-content:center}.diagram-row.single{max-width:620px;width:100%;margin:auto}.node{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 16px;min-width:0}.node.model{border-top:3px solid var(--green);background:var(--green-light)}.node.code{border-top:3px solid var(--blue);background:var(--blue-light)}.node.store{border-top:3px solid var(--amber);background:var(--amber-light)}.node.drop{border-style:dashed;border-color:#d8ada4;background:var(--red-light)}.node-type{font-size:11px;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}.node.model .node-type{color:var(--green)}.node.code .node-type{color:var(--blue)}.node.store .node-type{color:var(--amber)}.node.drop .node-type{color:var(--red)}.node-title{font-size:16px;font-weight:600;line-height:1.5}.node-copy{font-size:13px;color:#58675e;margin-top:5px;line-height:1.65}.example{font-size:13px;border-top:1px solid #ccd8ce;margin-top:10px;padding-top:9px;line-height:1.7}.example-label{font-size:10px;color:var(--muted);display:block;letter-spacing:.8px}.hide-examples .example{display:none}.key-point{border-left:3px solid var(--green);background:#f7f9f5;padding:12px 16px;margin-top:25px;font-size:14px}.key-point strong{display:block;margin-bottom:3px}.detail-links{display:flex;gap:14px;flex-wrap:wrap;margin-top:15px;font-size:12px}.pager{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:20px;margin-top:22px}.pager button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 15px;font-size:14px}.pager button.next{background:var(--ink);color:#fff;border-color:var(--ink)}.pager button:disabled{opacity:.3;cursor:default}.counter{font-size:12px;color:var(--muted)}.notes{margin:28px 0 0 268px}.notes details{border-top:1px solid var(--line);padding:16px 0}.notes summary{cursor:pointer;font-size:14px;font-weight:550}.notes p,.notes li{font-size:14px;color:var(--muted)}.notes p{margin-top:10px}.notes table{border-collapse:collapse;width:100%;font-size:13px;margin-top:13px}.notes th,.notes td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}.notes th{font-weight:550}footer{border-top:1px solid var(--line);padding-top:20px;margin-top:30px;font-size:12px;color:var(--muted)}.nojs{padding:30px;background:var(--amber-light)}
+@media(max-width:900px){main{padding:28px 22px}.workspace{grid-template-columns:190px minmax(0,1fr);gap:18px}.content{padding:22px 20px}.notes{margin-left:208px}.detail-head{display:block}.example-control{margin-top:10px}.diagram-row{gap:10px}.node{padding:12px}.node-title{font-size:15px}.phase{padding:14px}}
+@media(max-width:650px){main{padding:24px 14px}.top-flow{gap:5px;grid-template-columns:1fr 16px 1fr 16px 1fr;margin:22px 0}.phase{padding:10px;border-radius:10px}.phase strong{font-size:16px}.phase span{font-size:11px}.phase small{font-size:10px}.phase-arrow{font-size:18px}.workspace{display:block}aside{position:static;margin-bottom:16px}.nav-title,.legend{display:none}.step-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.step-button{padding:9px 6px;display:block;text-align:center}.step-number{font-size:10px}.step-button b{font-size:12px}.step-button small{display:none}.content{padding:20px 14px;border-radius:14px}h2{font-size:23px}.diagram-row{grid-template-columns:1fr;gap:18px;padding-left:18px}.diagram-row.single{padding-left:18px}.diagram-rows{gap:40px}.node{padding:13px 14px}.node-title{font-size:16px}.notes{margin-left:0}.status{gap:5px;font-size:12px}.pager button{padding:9px 11px}.counter{font-size:11px}.notes table{font-size:11px}.notes th,.notes td{padding:7px 4px}}
+@media print{main{max-width:none;padding:0}aside,.top-flow,.pager,.example-control,.notes{display:none}.workspace{display:block}.content{border:0}.diagram svg{print-color-adjust:exact}.status{background:none}.node{break-inside:avoid}body{background:#fff}}
+
+.mode-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px}.mode-bar button{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:transparent;font-size:14px}.mode-bar button[aria-pressed="true"]{background:var(--ink);color:white;border-color:var(--ink)}.mode-bar>span{font-size:12px;color:var(--muted);margin-left:8px}.test-panel{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 0 28px;padding:14px 0}.test-panel>summary{cursor:pointer;font-size:15px;font-weight:600}.test-summary{font-size:12px;font-weight:400;color:var(--muted);margin-left:18px}.test-body{padding-top:14px}.snapshot-caption{font-size:12px;color:var(--muted);margin-bottom:15px}.run-grid{display:grid;grid-template-columns:150px repeat(14,minmax(0,1fr)) 130px;gap:7px;align-items:center;font-size:12px}.run-grid .date{text-align:center;color:var(--muted);font-size:10px}.run-name{font-weight:500}.day-cell{height:15px;border-radius:3px;background:#e4e8e0;text-align:center;font-size:10px;line-height:15px;color:#89968c}.day-cell.done{background:var(--green);color:white}.day-cell.control.done{background:#728296}.run-end{color:var(--muted);font-size:11px;white-space:nowrap}.run-legend{display:flex;flex-wrap:wrap;gap:15px;color:var(--muted);font-size:11px;margin-top:12px}.validation-flow{display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;gap:12px;margin-top:23px}.validation-flow>div{padding:12px 0}.validation-flow strong{display:block;font-size:14px}.validation-flow p{font-size:12px;color:var(--muted);margin-top:5px}.validation-check,.validation-running{font-size:11px;display:block;color:var(--green);margin-bottom:4px}.validation-running{color:var(--amber)}.validation-arrow{align-self:center;color:var(--muted)}.comparison-scope{display:flex;gap:14px;background:var(--amber-light);padding:11px 14px;font-size:12px}.comparison-scope strong{white-space:nowrap}.comparison-scope span{color:#715a35}.test-result-note{margin-top:13px;font-size:12px;color:var(--muted)}
+@media(max-width:900px){.run-grid{grid-template-columns:120px repeat(14,minmax(0,1fr)) 105px;gap:4px}.run-end{font-size:10px}.run-name{font-size:11px}}
+@media(max-width:650px){.mode-bar button{font-size:12px;padding:10px}.mode-bar>span{margin:0;width:100%}.test-summary{display:block;margin:5px 0 0 18px}.run-grid{grid-template-columns:70px repeat(14,minmax(0,1fr));gap:4px}.run-end{grid-column:1/-1;margin:-1px 0 8px 74px;font-size:10px}.day-cell{height:13px;line-height:13px;font-size:8px}.run-grid .date{font-size:8px}.run-name{font-size:10px}.validation-flow{display:block;margin-top:14px}.validation-arrow{display:block;font-size:18px;line-height:1;transform:rotate(90deg);width:16px}.validation-flow>div{padding:6px 0}.comparison-scope{display:block}.comparison-scope strong{display:block;margin-bottom:4px}.snapshot-caption{font-size:11px}}
+.release-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.release-flow>div{border-left:3px solid var(--line);padding:12px;background:#eef1eb}.release-flow .adopted{border-color:var(--green);background:var(--green-light)}.release-flow small,.release-flow span{display:block;font-size:12px}.release-flow strong{display:block;font-size:21px;margin:4px 0}.result-table{border-collapse:collapse;width:100%;font-size:14px;margin:12px 0}.result-table td,.result-table th{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line)}.result-table .regression{background:var(--red-light)}@media(max-width:650px){.release-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.result-table{font-size:11px}.result-table td,.result-table th{padding:8px 4px}}
+.page-jumps{display:flex;gap:22px;flex-wrap:wrap;font-size:13px;margin-top:16px}.review-status{margin-top:14px;border:1px solid #ddc594;background:var(--amber-light);padding:15px 18px;border-radius:10px;font-size:14px}.review-status p{margin-top:6px}.previous-results{margin-top:24px;border-top:1px solid var(--line);padding-top:15px}.previous-results summary{cursor:pointer;font-weight:600}.previous-results h3{margin-top:16px}.result-table caption{text-align:left;font-weight:600;font-size:14px;margin:20px 0 8px}.result-table th{font-weight:550}#flow-workspace{scroll-margin-top:20px}html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">Hivemind / 实现与实验状态</div>
+<h1>一篇文章，怎样改变一个判断？</h1>
+<p class="intro">从左边选一步，顺着箭头看。每张图都标出：读到什么 → 谁做决定 → 结果去哪里。</p>
+<div class="status"><strong id="version-title">当前默认 poc-v108 | 抽取 v74i | 低推理</strong><span id="version-status">生产提示词已冻结 | 当前没有测试任务运行</span></div>
+<div class="mode-bar" role="group" aria-label="切换新旧架构"><button type="button" data-mode="v108" aria-pressed="true">当前冻结：v108</button><button type="button" data-mode="v94" aria-pressed="false">历史基线：v94</button><button type="button" data-mode="v100" aria-pressed="false">已退役：字段实验 v100</button><button type="button" data-mode="v91" aria-pressed="false">历史对照：不读库 v91</button><span>当前采用 v108。历史版本可切换查看；v100 的字段分类代码已退役。</span></div>
+</header>
+<p class="page-jumps"><a href="#latest-status">看最新状态 ↓</a><a href="#flow-workspace">直接看逐步流程 ↓</a></p>
+<nav class="top-flow" aria-label="三个阶段">
+<button class="phase active" data-phase="0"><small>每篇文章 | 步骤 01—04</small><strong>带着题库读文章</strong><span>当天题库快照＋文章 → 抽取并归题</span></button>
+<span class="phase-arrow" aria-hidden="true">→</span>
+<button class="phase" data-phase="4"><small>每篇文章 | 步骤 05—06</small><strong>放进研究库</strong><span>问题与证据查重 → 保存</span></button>
+<span class="phase-arrow" aria-hidden="true">→</span>
+<button class="phase" data-phase="6"><small>每天收尾 | 步骤 07—08</small><strong>更新判断</strong><span>排顺序 → 预测结果</span></button>
+</nav>
+<section id="latest-status" class="test-panel" aria-label="最新结果与状态">
+<h3>生产提示词已冻结为 v108；当前没有测试任务运行</h3><p id="snapshot-caption" class="snapshot-caption"></p>
+<div class="release-flow">
+<div><small>历史基线 | 3 遍完整回放</small><strong>v94 / 抽取 v74</strong><span>题库上下文与直接关联的基线，保留供比较。</span></div>
+<div><small>上一默认 | 存档验证</small><strong>v103 / 抽取 v74d</strong><span>补动作定义、纠正例外读法，先判断证据再归题。</span></div>
+<div class="adopted"><small>当前默认 | 已冻结</small><strong>v108 / 抽取 v74i</strong><span>低推理；收窄三处例外，归题规则只写一次，保留收入题承接间接证据。</span></div>
+</div>
+<p id="proof-status" class="key-point"></p>
+<div class="review-status"><strong id="proof-label">复查已完成 | 先前结论已撤回</strong><p>“召回与杂音无法分开”已在深度复查中撤回。找到了具体的提示词与设计问题：例外被读成一律保留、已有安排被读成新动作、归题说明被当成收证标准。修法回到 v94 的路线，形成当前冻结的 v108；不再采用 v100 的字段分类路线。</p></div>
+<h3 style="margin-top:22px">现在怎么走：先决定值得记，再决定放哪里</h3>
+<div class="validation-flow"><div><strong>① 读文章＋当天题库</strong><p>题库仍然作为抽取上下文。数字题只描述自己的指标、范围和期间。</p></div><span class="validation-arrow">→</span><div><strong>② 同一次调用中先选证据</strong><p>统一的复核清单判断是否该记。已有题目能接收，不代表一句话就有价值。</p></div><span class="validation-arrow">→</span><div><strong>③ 再关联最具体的问题</strong><p>先找具体题；有业务影响但无具体题时，可关联对应期间的公司总收入题。无有效关联仍丢弃。</p></div></div>
+<p class="snapshot-caption">不是多发一次模型调用，也没有增加“填分类字段 → 代码筛证据”的步骤。<a href="#v108-step-3">展开当前抽取与归题流程 →</a></p>
+<h3>冻结采用时的存档结果：核心、辅助收回更多</h3>
+<p class="snapshot-caption">三组共 50 篇选定文章，每篇 3 次，对照既有存档。数字是经过抽取检查与有效关联后，目标事项出现的次数；不是独立事项数，也不是整个语料的召回率。辅助组有 1 篇目标文章不在输入中而跳过。未重跑完整匹配、入库和每日判断。</p>
+<table class="result-table"><thead><tr><th>看什么</th><th>v94<br>历史基线</th><th>v103<br>上一默认</th><th>v108<br>当前冻结</th></tr></thead><tbody>
+<tr><td>核心事项出现次数</td><td>60</td><td>59</td><td>70</td></tr>
+<tr><td>辅助事项出现次数</td><td>72</td><td>87</td><td>117</td></tr>
+<tr><td>金标不收却留下的次数</td><td>95</td><td>89</td><td>81</td></tr>
+<tr><td>扣除长引文重叠后的杂音近似数</td><td>71</td><td>56</td><td>54</td></tr>
+</tbody></table>
+<p class="snapshot-caption">取自设计记录 §13 的 v74i 采用表。杂音减少 8 次仍在记录所述的抽样波动内，不能据此宣称稳定降噪。长引文可能同时含该收与不该收的句子，“扣除后”混合了条目与记录的计数单位，只作近似参考。后续推理强度试验另表记录辅助 112；本表保留采用轮次的 117，不混用口径。</p>
+<div class="comparison-scope"><strong>仍有一个明确缺口</strong><span>长文章在低推理下仍会漏读部分段落。对一篇债务担保长文的 9 次验证，一条核心判断在低推理中出现 7 次、中推理中出现 9 次。提高推理强度也带来更多杂音；按长度切换推理强度尚未实现。</span></div>
+<div class="detail-links"><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/design-v78-fields.md">深度复查与采用结果 §11—13 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/proof-v108-a-mixed11.txt">v108 混合组 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/proof-v108-b-supporting29.txt">v108 辅助组 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/proof-v108-c-noise10.txt">v108 杂音组 ↗</a></div>
+<div class="release-flow">
+<div><small>已完成 | 冻结</small><strong>请求组成已钉住</strong><span>角色、复核、类别、配置、归题规则、题目说明和输出格式均有哈希检查。</span></div>
+<div><small>已完成 | 清理</small><strong>54 个文件退役</strong><span>先备份后删除；字段分类、切段回看等实验分支已移除。研究记录与结果保留。</span></div>
+<div><small>已完成 | 本地提交</small><strong>ceed237</strong><span>抽取质量分支已提交且工作区干净；未推送、未合并到 main。</span></div>
+</div>
+<details class="previous-results"><summary>留下的提案：尚未实现，也没有启动新测试</summary><p>① 只给至少 15,000 字符的长文章使用中推理。当前所有来源类别仍用低推理。</p><p>② 为间接证据建立更具体的研究问题。种子题属于冻结尺子，需要另行决定新版本。</p><p>当前没有新版本的完整回放、端到端判断评分或成本验收结果。</p></details>
+<details class="previous-results"><summary>已退役的 v98—v100 字段实验及其结果</summary><h3 style="margin-top:22px">已退役的字段实验：当时怎样尝试拆开决定</h3>
+<div class="validation-flow"><div><strong>① 仍然先读当天题库</strong><p>文章＋问题＋收证说明；没有增加历史证据全文。</p></div><span class="validation-arrow">→</span><div><strong>② 模型写分类和关联</strong><p>新 / 旧、信息类别、当事方关系、规模信息，再写引文和问题编号。</p></div><span class="validation-arrow">→</span><div><strong>③ 代码按分类筛选</strong><p>旧信息、泛泛看法等退出；其余经过原来的检查、匹配、保存。</p></div></div>
+<p class="snapshot-caption">这是已退役的 v100 实验路径；分类字段与筛选代码已删除，备份仍在。分类仍由模型判断；有标签不等于标签判断正确。<a href="#v100-step-3">展开实验步骤 03 →</a></p>
+<h3>字段实验的历史结果</h3>
+<p class="snapshot-caption">两组都是选定的存档文章，每篇三次；下面统计经过抽取筛选与有效关联检查后留下的结果，没有重跑后面的匹配、保存和每日判断。每组 41 件目标事项 × 3 次 = 最多 123 次出现；不是 123 件独立事项，也不是整批文章的召回率。</p>
+<table class="result-table"><caption>混合组：11 篇文章，41 件核心与辅助事项</caption><thead><tr><th>看什么</th><th>v94<br>存档对照</th><th>v98</th><th>v99</th><th>v100</th></tr></thead><tbody><tr><td>目标事项留下的次数 / 123</td><td>61</td><td>75</td><td>79</td><td>81</td></tr><tr class="regression"><td>金标不收却留下的次数</td><td>33</td><td>77</td><td>50</td><td>36</td></tr><tr><td>其中：同一引文也带有该收的事项</td><td>13</td><td>30</td><td>16</td><td>11</td></tr></tbody></table>
+<table class="result-table"><caption>困难组：29 篇文章，挑自 v94 的遗漏，41 件辅助事项</caption><thead><tr><th>看什么</th><th>v94<br>存档对照</th><th>v98</th><th>v99</th><th>v100</th></tr></thead><tbody><tr><td>目标事项留下的次数 / 123</td><td>11</td><td>75</td><td>58</td><td>49</td></tr><tr class="regression"><td>金标不收却留下的次数</td><td>21</td><td>154</td><td>138</td><td>74</td></tr><tr><td>其中：同一引文也带有该收的事项</td><td>8</td><td>25</td><td>12</td><td>14</td></tr><tr><td>三次都未留下的目标事项 / 41</td><td>30</td><td>9</td><td>12</td><td>15</td></tr></tbody></table>
+<p class="snapshot-caption">“杂音”在这里指冻结金标标为不收的内容。长引文可能同时带有该收与不该收的句子，所以表中单列重叠次数；不能把所有命中都当作一条独立的错误记录。以上不是整条管线的质量结论，也没有新的判断评分。v98 最初只数原始输出的结果已作废；这里用筛选后的重数。</p>
+<div class="comparison-scope"><strong>这些历史结果说明什么</strong><span>v100 在困难组写出 738 条，分类规则拦下 249 条；仍有漏收与误收。六条后处理规则的存档试算都有连带损失。这说明这些已试方案尚未解决问题，不能推出其他提示词或设计也无法解决。</span></div>
+<div class="detail-links"><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/design-v78-fields.md">实验设计与结果表 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/proof-v80-view-supporting.txt">v100 困难组原始计数 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/proof-v80-view-noise.txt">v100 混合组原始计数 ↗</a></div>
+</details>
+<details class="previous-results"><summary>上一次完整回放：v95 对照 v94</summary>
+<h3 style="margin-top:22px">v95 有改善，也有回归</h3>
+<p class="snapshot-caption">同一 14 天、243 篇文章；其中运行到的金标文章 115 篇。v94 是三遍平均，v95 只有一遍，数值用于看方向，不能据此宣称稳定改善。</p>
+<table class="result-table"><thead><tr><th>看什么</th><th>v94 | 当时默认<br>三遍均值</th><th>v95 | 实验<br>单遍</th><th>这次观察</th></tr></thead><tbody>
+<tr class="regression"><td>辅助事项没抽到（越少越好）</td><td>43.7</td><td>54</td><td>变差</td></tr>
+<tr class="regression"><td>每遍费用 | 美元</td><td>0.80</td><td>0.85</td><td>增加</td></tr>
+<tr><td>核心事项到达判断 / 86</td><td>74.3</td><td>78</td><td>更多</td></tr>
+<tr><td>辅助事项到达判断 / 148</td><td>89.7</td><td>88</td><td>略少</td></tr>
+<tr><td>无有效关联而丢弃的说法</td><td>138</td><td>69</td><td>更少</td></tr>
+<tr><td>到达判断的杂音 | 估计</td><td>45.0</td><td>34.8</td><td>更少</td></tr>
+<tr><td>判断与冻结金标一致</td><td>16/18、16/19、16/18</td><td>17/19</td><td>逐遍列出</td></tr>
+</tbody></table>
+<p class="snapshot-caption">杂音估计 = 金标不收的说法 + 未列入金标的说法 × 27%。费用沿用报告按模型 token 单价计算的数值。到达不等于归对题；分母是各遍实际被评分的问题数。</p>
+<div class="comparison-scope"><strong>回归原因已记录</strong><span>v95 将“有规模、日期或名字任一”写成了“有名字且有规模或日期”，漏掉有名字但无规模的合作。v96 已修正；14 篇存档文章的三次重发仍有遗漏，杂音也回升。v97 的后续试验证实证据与杂音一起增加，未采用。</span></div>
+<div class="detail-links"><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/e2e-funnel-r8-v95.txt">v94 / v95 原始计数 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/design-v72.md">运行结果与原因记录 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/proof-v76-adoption.txt">v96 存档证明 ↗</a><a href="../../hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/proof-v77-precedence-rows.txt">v97 已完成验证输出 ↗</a></div>
+</details>
+<details style="margin-top:20px"><summary>已完成的 10 遍整条流程回放</summary><p class="snapshot-caption" id="test-summary"></p><div class="run-grid" id="run-grid"></div><p class="run-legend">✓ 当天已完成。日期为回放里的 7 月。v94 第三遍曾中断后恢复，最终完成 14 天。</p></details>
+</section>
+<div id="flow-workspace" class="workspace">
+<aside aria-label="步骤导航"><p class="nav-title">沿着一篇文章，往下走</p><nav class="step-nav" id="step-nav"></nav><div class="legend"><span><i class="dot"></i>模型：读含义，做判断</span><span><i class="dot code"></i>代码：查规则，排顺序</span><span><i class="dot store"></i>研究库：保存与读取</span><span>虚线框：退出当前路径</span></div></aside>
+<article class="content" id="content" aria-labelledby="step-title">
+<div class="detail-head"><div><div class="step-kicker" id="step-kicker"></div><h2 id="step-title"></h2><p class="lead" id="lead"></p></div><label class="example-control"><input type="checkbox" id="examples" checked>带着例子看</label></div>
+<div class="diagram" id="diagram" role="group" aria-label="当前步骤流程图"><svg id="edges" aria-hidden="true"></svg><div class="diagram-rows" id="rows"></div></div>
+<div class="key-point" id="key-point"></div><div class="detail-links" id="detail-links"></div>
+<div class="pager"><button id="prev" type="button">← 上一步</button><span class="counter" id="counter" aria-live="polite"></span><button id="next" type="button" class="next">下一步 →</button></div>
+</article>
+</div>
+<section class="notes" aria-label="版本、边界与代码来源">
+<details><summary>当前冻结版本、提交与验证范围</summary><p><b>抽取质量分支默认 poc-v108 / 抽取 v74i / 低推理。</b>判断仍为 v7。代码与研究记录已提交为 ceed237，未推送、未合并到 main。v108 只完成存档定向验证，尚无其完整端到端回放结果。</p><p>当天题库快照 → 同一次模型调用选证据并关联 → 代码检查 → 匹配保存 → 每日判断。v100 的字段分类路线已退役。</p><p><a href="../../hivemind-extraction-quality-2026-10-28/scripts/replay.py">当前默认入口</a> | <a href="../../hivemind-extraction-quality-2026-10-28/tests/test_frozen_extraction_prompt.py">生产提示词冻结检查</a> | <a href="../../hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md">D271—D274 决定记录</a></p></details>
+<details><summary>预设问题从哪里来？可以在第一篇文章之前放进去</summary><p>运行时显式传入 <code>--seed</code>，把文件里预先写好的研究问题、结果区间和依赖关系放进研究库。这些整条流程回放全部传入同一份种子 v2，共 22 道题。v92 第一日的快照已经包含这些种子；运行中当天新开的题，次日进入快照。</p><p>例子：先准备好“产品何时交付”，第一篇关于交付延迟的报道就有地方归入。没有预设问题时，系统也可以依靠文章提出候选问题。</p></details>
+<details><summary>失败了会怎样？哪些信息会被丢掉？</summary><p>一条证据的引用检查不过，或者检查后既没有关联已有问题也没有有效候选，会被丢弃并记录原因。v92 不再调用另一个模型补归题。候选问题失去全部支持证据后也会被丢弃。记录原因用于检查丢掉了什么，不是等待以后使用的证据池。</p><p>模型调用或保存发生错误，会记录失败步骤并停止当天流程。判断输出被代码拒绝时会修正重试一次；仍不通过就停止。恢复运行会依据已经保存的处理记录继续。</p></details>
+<details><summary>已经写好的部分，与还没有实现的部分</summary><p>已经有：v92 抽取读题库并直接归题、旧版单独归题路径、预设问题导入、问题与证据查重、保存关系、每日判断、到期冻结和关闭。</p><p>还没有：每个问题一份持续更新的完整论证；到期后核对真实结果的最终裁决。当前判断直接读证据列表、关联结论和上一次判断。</p><p>v91、v92、v94 各完成三遍，v95 完成一遍，已有计数和判断评分。当前冻结默认 v108；v103 与 v108 没有完整回放结果。后续主要问题仍是辅助证据漏抽、部分错接，以及已有题库抑制新问题的提出。</p></details>
+<details><summary>后面会把杂音自动删掉吗？</summary><p>没有专门的杂音清理步骤。匹配保存记录证据关系；判断只缩小本次阅读范围，不按“是不是杂音”删除记录。用户证据列表按日期、替换关系和可选来源类型筛选，不使用判断模型的阅读窗口。</p><p>所以“一条证据不再出现在判断请求里”和“它从研究库或用户页面消失”是两回事。</p><p><a href="../../hivemind-extraction-quality-2026-10-28/src/hivemind/views/judging.py">判断读取规则</a> | <a href="../src/hivemind/service.py">用户证据列表</a></p></details>
+<details><summary>看实现依据</summary><p>实现分支：<code>fix/extraction-quality-2026-10-28</code>。本页是代码导读，不替代标准、PRD 或已记录决定。例子使用虚构公司与数字，不是实测结果。</p><p><a href="../../hivemind-extraction-quality-2026-10-28/docs/CURRENT_STATE.md">分支状态</a> | <a href="../../hivemind-extraction-quality-2026-10-28/poc/config/poc-v108.json">当前默认配置</a> | <a href="../docs/prd/05-extraction.md">抽取 PRD</a> | <a href="../docs/prd/06-views.md">研究库与判断 PRD</a></p></details>
+</section>
+<footer>读图方法：实线箭头表示数据或处理流向；分叉表示不同去向，分支标题写明条件。例子只帮助理解流程。打开文件即可使用，无需联网。测试进度为本次核对时的静态快照，不会自动追踪后台进程。</footer>
+<noscript><p class="nojs">此页面需要启用 JavaScript 才能切换流程图。</p></noscript>
+</main>
+<script id="run-snapshot" type="application/json">{"checkedAt": "2026-11-02T23:13:21-08:00", "runs": [{"version": "v91", "draw": 1, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r6-control-v91/d1/run.out"}, {"version": "v91", "draw": 2, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r6-control-v91/d2/run.out"}, {"version": "v91", "draw": 3, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r6-control-v91/d3/run.out"}, {"version": "v92", "draw": 1, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r6-one-decider-v92/d1/run.out"}, {"version": "v92", "draw": 2, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r6-one-decider-v92/d2/run.out"}, {"version": "v92", "draw": 3, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r6-one-decider-v92/d3/run.out"}, {"version": "v94", "draw": 1, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r7-combined-v94/d1/run.out"}, {"version": "v94", "draw": 2, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r7-combined-v94/d2/run.out"}, {"version": "v94", "draw": 3, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r7-combined-v94/d3/run.out"}, {"version": "v95", "draw": 1, "days": ["2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"], "completed": true, "alive": false, "reportedFailures": 0, "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/arms/r8-audit-v95/d1/run.out"}], "proof": {"label": "复查已完成 | 先前结论已撤回", "status": "当前冻结生产配置为 poc-v108（抽取 v74i，低推理）。存档验证与清理已完成，提交 ceed237；当前没有完整回放或存档重发任务运行。新版本未推送、未合并到 main。", "log": "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md"}, "checkedAtShanghai": "2026-11-03T15:13:21+08:00"}</script>
+<script>
+'use strict';
+const base='../../hivemind-extraction-quality-2026-10-28/';
+const n=(id,type,title,copy,example='')=>({id,type,title,copy,example});
+const legacySteps=[
+{name:'入口检查',sub:'这篇文章要不要处理',phase:0,title:'先确认：这篇文章能进来吗？',lead:'代码先筛入口。通过以后，才轮到模型读文章。',rows:[
+[n('a','input','收到一篇文章','带着正文、来源、日期、公司和文章分类。','报道：星河芯片的新产品，预计从 9 月推迟到 12 月交付。')],
+[n('b','code','信息完整？处理过？属于关注范围？','代码检查必填信息、文章编号，以及研究名单和关注类别。')],
+[n('c','code','通过 → 分配处理顺序','文章按系统自己的顺序编号，进入抽取。'),n('d','drop','没通过 → 退出或记录原因','已经处理的跳过；信息不全的记录；未关注的不进入抽取。')]
+],edges:[['a','b'],['b','c'],['b','d']],point:['这一步还没有做投资判断。','它只决定文章是否进入处理，不判断文章里的消息有多重要。'],links:[['入口代码','src/hivemind/dispatch.py'],['入口 PRD','docs/prd/04-dispatch.md']]},
+{name:'读文章抽取',sub:'找证据，同时提出问题',phase:0,title:'读一遍文章，产出两类东西',lead:'同一次抽取调用，既写证据，也提出值得研究的候选问题。',rows:[
+[n('a','input','文章正文＋来源日期＋阅读要求','要求随文章类别变化。当前正文输入上限为 400,000 字符。','虚构原文：“星河芯片表示，新产品将于 12 月开始交付，晚于此前计划的 9 月。”')],
+[n('b','model','抽取模型读文章','gpt-6-luna | 抽取 v53。当前采用的路径不展示已有问题、已有证据或历史判断。')],
+[n('c','input','产物 A：证据','保存原文引用、摘要、发言者、原始来源、日期和证据类别。','证据 e1：公司把首次交付时间从 9 月改到 12 月。'),n('d','input','产物 B：候选新问题','给出问题、到期日、可能结果区间、支持证据及相关研究事项。','候选 c1：新产品何时首次交付？支持证据：e1。')]
+],edges:[['a','b'],['b','c'],['b','d']],point:['提出候选，不等于马上新建。','抽取看不到已有问题，重复与否交给后面的查重。读文章可以提前并行，归题时再读取当时的研究库。'],links:[['抽取调用','src/hivemind/extraction.py'],['抽取 PRD','docs/prd/05-extraction.md']]},
+{name:'检查抽取结果',sub:'原文与结构能否成立',phase:0,title:'先检查，能用的再往下走',lead:'代码能检查引用和结构。摘要有没有完整保留原意，不能只靠这些检查证明。',rows:[
+[n('a','input','抽取输出','证据、候选问题，以及它们之间的编号关系。')],
+[n('b','code','检查引用和候选结构','引用能否在正文找到；日期和结果区间是否合法；关联编号是否有效。相同引用重复输出会合并。')],
+[n('c','code','通过 → 交给归题','此时允许证据尚未关联到已有问题。','e1 的原文确实存在，c1 的支持证据是 e1。'),n('d','drop','不通过 → 丢弃并记录原因','例如引用不在原文、候选到期日不合法。失去全部支持证据的候选也会被丢弃。')]
+],edges:[['a','b'],['b','c'],['b','d']],point:['“引用真实”与“意思忠实”是两件事。','原文检查通过，不代表摘要没有丢条件，也不代表发言者和日期一定判断正确。'],links:[['抽取结果检查','src/hivemind/extraction.py'],['抽取 PRD','docs/prd/05-extraction.md']]},
+{name:'把证据归题',sub:'这条证据属于哪道题',phase:1,title:'给证据找最合适的问题',lead:'另一次模型调用负责归题。它看抽出的证据和已有问题，不重读整篇文章。',rows:[
+[n('a','input','抽出的证据＋文章标题','包括来源、日期、摘要、证据类别和截短的引用。','e1：新产品首次交付从 9 月推迟到 12 月。'),n('b','store','读取已有开放问题','每个问题附有代码写出的“接收什么证据”说明。','库里已经有 Q7：新产品何时首次交付？')],
+[n('c','model','归题模型选择最具体的问题','gpt-6-luna | placement-narrow-v4。问题的接收说明决定证据是否属于它。')],
+[n('d','input','已有问题接收 → 关联过去','选择能接收这条证据的最具体问题。','把 e1 放到 Q7 下。'),n('e','input','已有候选关联 → 继续保留','抽取已经关联到候选问题的关系会保留；后面查重再确定实际去处。','e1 → c1 仍保留。c1 可能随后并入 Q7。'),n('f','drop','两边都没有 → 丢弃','没有已有问题接收，也未关联有效候选问题，记录 no home。')]
+],edges:[['a','c'],['b','c'],['c','d'],['c','e'],['c','f']],point:['归题会实实在在决定信息能不能到达判断。','一个重要消息，如果没有问题接收，也没有候选问题承接，就会在这里丢掉。当前候选链接保留在先，归题的一题优先规则不是最终数据库唯一链接约束。'],links:[['归题调用','src/hivemind/placement.py'],['归题后的处理','src/hivemind/extraction.py'],['研究库 PRD','docs/prd/06-views.md']]},
+{name:'问题与证据查重',sub:'是不是已经知道的事',phase:1,title:'先确认问题身份，再比较证据',lead:'问题是否重复，和证据是否重复，是两次不同的决定。',rows:[
+[n('a','input','候选问题＋已归题的证据','代码先找相关问题和相关旧证据，提供给匹配模型比较。')],
+[n('b','model','第一层：候选问题与已有问题比较','Jev 读语义关系，代码检查身份字段；需要进一步辨别时，调用问题查重裁判 collision-v2。')],
+[n('c','input','同一道题 → 并入','同一问题的一部分，也按规则放回原问题。','c1 与 Q7 是同一道题 → 并入 Q7。'),n('d','input','新题 → 新建；下一期 → 接续','独立问题可以新建；同一指标下一期可以建立接续关系。')],
+[n('e','model','第二层：证据与目标问题下的旧证据比较','Jev 判断是新信息、同一说法还是后续修订。候选并入旧题后，其证据会补做目标问题下的比较。','旧证据：9 月交付。新证据：12 月交付。判断是否构成后续修订。')]
+],edges:[['a','b'],['b','c'],['b','d'],['c','e'],['d','e']],point:['查重在判断“是不是同一件事”。','它不在这里决定这条证据最终会让预测改变多少；这个决定属于最后的判断。'],links:[['Jev 匹配','src/hivemind/views/jev_matching.py'],['两阶段调用','src/hivemind/views/round.py'],['研究库 PRD','docs/prd/06-views.md']]},
+{name:'保存进研究库',sub:'证据、关系和历史留下来',phase:1,title:'把信息和关系一起保存',lead:'保存的不只是新摘要，还包括它属于谁、与旧记录是什么关系、哪些问题因此发生变化。',rows:[
+[n('a','input','通过检查的匹配决定','新建哪些问题，哪些并入，以及证据与旧证据的关系。')],
+[n('b','code','代码落实保存','按身份规则创建问题，解析关联；检查修订的来源与日期条件。')],
+[n('c','store','问题与研究事项','保存问题、结果区间、研究组、依赖及接续关系。','c1 并入 Q7，库里仍是一道交付问题。'),n('d','store','证据与来源关系','同一说法的不同来源分别保存并标关系。修订也保留前后记录。','9 月旧说法与 12 月新说法都保留；关系标明后续修订。')],
+[n('e','store','记下“哪些问题变了”','保存该文章的处理进度和变化问题列表，供当天收尾使用。','Q7 的材料改变了 → 加入今天需要判断的集合。')]
+],edges:[['a','b'],['b','c'],['b','d'],['c','e'],['d','e']],point:['存完这一篇，还不会立刻重判。','继续处理下一篇文章；等当天文章都处理完，再统一判断。匹配称为“替换”的修订，在当前保存实现里也保留前后两条。'],links:[['保存入口','src/hivemind/views/writing.py'],['证据关系','src/hivemind/views/writing.py'],['研究库 PRD','docs/prd/06-views.md']]},
+{name:'每日安排判断',sub:'先上游，再下游',phase:2,title:'当天文章结束，才统一排队',lead:'代码汇总材料变化的问题，并确保下游读到上游这次的新结论。',rows:[
+[n('a','store','今天所有文章已保存','汇总开放问题中，材料或关联结论发生变化的部分。','今天还有客户确认延迟的另一篇报道，也放在 Q7 下。')],
+[n('b','code','筛选并按依赖排顺序','只判开放且有有效证据的问题；同一轮已判断过的跳过。')],
+[n('c','model','先判上游与主题问题','依赖顺序优先；已就绪的问题里先处理主题。彼此没有依赖的可并行。','先更新“出口许可是否放开”的主题判断。')],
+[n('d','model','再判相关公司问题','上游结论变了会带动依赖题；主题结论变了会带动有证据的开放公司题。','公司收入问题读取这次更新后的交付与政策结论。')]
+],edges:[['a','b'],['b','c'],['c','d']],point:['每日判断不等于每天把全部问题重判一遍。','它从当天变化出发，再按依赖和主题变化扩展。一个没有有效证据的问题，即使已经创建，也会保持未判断。'],links:[['每日入口','src/hivemind/views/round.py'],['判断调度','src/hivemind/views/judging.py'],['研究库 PRD','docs/prd/06-views.md']]},
+{name:'形成新判断',sub:'从证据推算最可能结果',phase:2,title:'对照市场预期，推算结果',lead:'最新判断 v7 要写出推算过程，再选择预先定义的结果区间。不是只看事件是否已经被证实。',rows:[
+[n('a','store','组成这次判断的材料包','问题与结果区间；近期和最近引用的证据；依赖与主题的当前结论；上次判断。','Q7 的区间：9 月及以前 / 10—12 月 / 次年及以后。')],
+[n('b','model','写明参照：市场原本期待什么？','gpt-6-luna | judging-v7。参照可以是共识、公司指引、原计划或原定期限。','原计划是 9 月交付 → 对应第一个区间。')],
+[n('c','model','推算：证据使什么结果最可能？','综合证据类别、具体程度、执行风险和关联题结论，写明推算的数字或日期。','公司改口 12 月；客户材料相互支持 → 预测 12 月交付。')],
+[n('d','model','选区间＋理由＋引用＋变化','比较推算结果与区间边界，并解释和上次相比变了什么。','落在“10—12 月”；列出 e1 等引用，说明延迟。')],
+[n('e','code','检查后保存新的历史判断','区间是否合法、引用是否来自本次材料、参照和推算结果是否非空；首次判断或区间变化必须标记变化。')]
+],edges:[['a','b'],['b','c'],['c','d'],['d','e']],point:['减少本次阅读量，不等于把杂音从库里删掉。','在有效证据中，新关联的证据进入接下来的前五次判断；最近十次判断引用过的继续展示。其余可以不再展示给模型，但记录仍在。没有独立的杂音清理步骤，也没有持续更新的完整论证。'],links:[['判断输入','src/hivemind/views/judging.py'],['输出检查与保存','src/hivemind/views/judging.py'],['判断 v7 提示词','src/hivemind/prompts/judging-v7.txt'],['研究库 PRD','docs/prd/06-views.md']]}
+];
+
+const experimentSteps=[
+{...legacySteps[0],point:['这次测试的输入相同。','各次完整回放均使用 2026-07-01 至 07-14 的 NVDA 文章，使用同一份 22 道预设问题和冻结尺子。只有完成入口检查的文章进入后续调用。']},
+{name:'读取当天题库',sub:'先知道已经在研究什么',phase:0,title:'先给抽取一页“我们正在研究什么”',lead:'这是你要求加入的上下文。不是把所有旧证据塞回去，而是给已有问题和每题的收证说明。',rows:[
+[n('a','store','研究库里的开放问题','取与文章对象相关的开放问题、依赖和主题问题；首日含预设的 22 道种子题。','库里已有 Q7：新产品何时首次交付？')],
+[n('b','code','按当天开始时的状态取快照','同一天所有文章看到相同的题目、研究组名称和别名；当天中途变化不改这份上下文。')],
+[n('c','input','给抽取的上下文','每题列编号、对象、到期日、问题，再附“接收什么证据”的说明。不读取旧证据和历史判断。','Q7：何时交付？接收：交付步骤、延迟、取消、配置变化、客户收货表述等。')],
+[n('d','code','当天新开的题，次日进入快照','当天后续文章仍可提出候选，交给匹配并入刚开的题；不为更新上下文重新抽样。')]
+],edges:[['a','b'],['b','c'],['c','d']],point:['一天冻结一次，保留上下文，也保留稳定输入。','首日种子可见、别名按当天开始时的顺序读取，已经有专门测试。传给抽取的是题与收证说明，不是旧证据全文。'],links:[['快照读取','src/hivemind/extraction.py'],['快照与别名测试','tests/test_one_decider.py'],['架构设计','docs/research/2026-11-01-e2e-loop/design-v72.md'],['抽取 PRD','docs/prd/05-extraction.md']]},
+{name:'带题库抽取归题',sub:'看整篇文章，直接关联',phase:0,title:'同一个模型：读文章，也决定证据属于哪道题',lead:'这是历史基线 v94 的抽取 v74：沿用 v72 的题库上下文架构。当前采用的 v108 已进一步修改证据规则与归题说明。',rows:[
+[n('a','input','文章正文＋来源与日期','模型能读原文里的前后关系、简称和否认，不只看一条压缩摘要。','文章先说新产品延期，再引述“我们的路线图没有改变”。'),n('b','store','当天问题快照＋收证说明','模型同时看到问题在问什么，以及哪些说法会影响它。','Q7 接收新产品的时间变动和确认、否认。')],
+[n('c','model','一次抽取调用完成阅读与归题','gpt-6-luna | 历史基线抽取 v74。按同一套收证说明，选择能覆盖证据的最具体开放问题；候选问题照常提出。')],
+[n('d','input','证据直接关联已有问题','证据保留原文、摘要、来源字段，并在 links 写问题编号。','延期和公司否认都可关联 Q7，分量留给判断。'),n('e','input','需要研究的新问题 → 提出候选','仍须满足现有开题规则；已有问题的重复候选交给代码和匹配并入。','独立的新义务若符合规则，可提出 c1；不是清单以外一律不许开题。')]
+],edges:[['a','c'],['b','c'],['c','d'],['c','e']],point:['原来那个单独的“归题模型调用”，在 v92 中取消。','读全文的人现在也看题库、做关联。后面保留引用检查、问题身份匹配、证据比较和保存；不会再把同一批说法交给另一个模型补归题。'],links:[['请求里的开放问题','src/hivemind/extraction.py'],['关联规则的定义','src/hivemind/placement.py'],['历史抽取提示词','src/hivemind/prompts/role-v74.txt'],['抽取 PRD','docs/prd/05-extraction.md']]},
+{name:'检查并保留关联',sub:'代码查引用，不另发归题',phase:0,title:'检查原文与关联，决定哪些继续',lead:'归题已经在抽取输出里完成。这一步是代码检查，没有第二次归题调用。',rows:[
+[n('a','input','抽取的证据＋links＋候选','已有问题编号必须来自当天给模型的快照；也可以关联本次候选编号。')],
+[n('b','code','检查引用、结构与编号；保留更具体的关联','非法关联被剔除。若同一句同时关联具体问题及其依赖的上层问题，代码只保留具体问题；引文仅在符合规则时还原为原文。')],
+[n('c','input','关联已有问题 → 继续','保留抽取写出的有效问题关联。','e1 → Q7，直接交给后续证据比较。'),n('d','input','只关联候选 → 跟随候选','候选失去全部支持证据则被丢弃；重复检查直到关联稳定。','e2 → c1；后面 c1 并入旧题时，e2 跟随过去。'),n('e','drop','没有有效关联 → no home','记录丢弃原因。不再发一次归题调用尝试挽救。')]
+],edges:[['a','b'],['b','c'],['b','d'],['b','e']],point:['收窄重复关联已经实现；归题质量仍有缺口。','例如一条说法同时关联“新产品收入”和它的上层“总收入”，代码保留具体问题。只关联了一道错误问题时，这条代码规则不会替它纠正。'],links:[['v72 跳过归题调用','src/hivemind/extraction.py'],['原文与结构检查','src/hivemind/extraction.py'],['小样证明记录','docs/research/2026-11-01-e2e-loop/proof-v72-links.txt'],['研究库 PRD','docs/prd/06-views.md']]},
+{...legacySteps[4],lead:'这一步沿用对照流程。抽取已经归题，匹配仍负责问题身份和证据关系。'},
+legacySteps[5],legacySteps[6],legacySteps[7]
+];
+const fieldSteps=experimentSteps.map(s=>({...s}));
+fieldSteps[0]={...experimentSteps[0],point:['这里只完成了存档定向验证。','v100 读取既有文章和当时的问题上下文，每篇三次。后面的匹配、保存和每日判断是接入时沿用的路径，本轮没有完整重跑。']};
+fieldSteps[2]={name:'先分类再关联',sub:'实验：模型填四个字段',phase:0,title:'实验 v100：先回答四个问题，再写引文与关联',lead:'历史实验，已备份退役，相关代码已删除。当时模型同时看到文章和当天题库；旧信息也先写出并标记。',rows:[
+[n('a','input','文章＋当天问题快照','上下文来源与 v94 相同。没有追加历史证据全文或历史判断。')],
+[n('b','model','① 新信息，还是已知？ ② 属于哪类？','先填 new / known；再填动作、数字、预测计划、政策、判断、泛泛看法、产品细节或行情变动。','“原有工厂一直在运营”应标为已知；“今天决定扩建”才是一个新动作。')],
+[n('c','model','③ 谁的事？ ④ 有哪些规模信息？','填写当事方与公司的关系，以及规模、日期、名字或都没有。这些标签仍由模型判断。')],
+[n('d','input','输出标签＋原文＋来源＋问题关联','抽取 v80；取消旧版末尾的文字复核。标签写错，后面的代码不会自动理解并改正。')]
+],edges:[['a','b'],['b','c'],['c','d']],point:['改变的是抽取内部的决定方式。','当时的默认 v94 由提示词直接决定写哪些；v100 尝试先写出并分类，再让代码按标签筛。更多字段没有消除模型对新旧和相关性的判断。'],links:[['退役文件清单','docs/research/2026-11-01-e2e-loop/retired-2026-11-03/manifest-sha256.txt'],['退役文件备份','docs/research/2026-11-01-e2e-loop/retired-2026-11-03/retired-variants.tar.gz'],['实验设计与结果','docs/research/2026-11-01-e2e-loop/design-v78-fields.md'],['抽取 PRD','docs/prd/05-extraction.md']]};
+fieldSteps[3]={name:'代码按分类筛选',sub:'实验：明确留下或退出',phase:0,title:'实验 v100：代码读标签，筛掉不收的类别',lead:'这是已删除的历史实验分支，当时按分类字段筛选；当前生产路径没有这道规则。',rows:[
+[n('a','input','带分类标签的抽取结果','仍先过原文引用等现有检查。')],
+[n('b','code','按 evidence_rule 判断分类','已知、泛泛看法、产品细节或行情、无关当事方，以及缺规模/日期/名字的相关方事项，按标签得到拒收原因。')],
+[n('c','drop','分类不通过 → 丢弃并记录原因','这道筛选发生在入库前。标签填错时，也会错误地保留或丢弃。'),n('d','code','分类通过 → 继续原有关联检查','剔除非法编号；收窄重复关联；清掉失去支持的候选；没有有效关联的仍以 no home 退出。')],
+[n('e','input','剩下的结果进入匹配与保存','本次存档实验只量到筛选与有效关联后的结果，没有再跑完整每日判断。')]
+],edges:[['a','b'],['b','c'],['b','d'],['d','e']],point:['不是多了一个更懂内容的代码裁判。','代码执行固定分支，决定质量取决于模型如何填标签。困难组中 v100 仍有 15 / 41 件目标事项三次都没留下；原因包括未写、无有效关联和被标签拦下。'],links:[['分类路线历史设计','docs/research/2026-11-01-e2e-loop/design-v78-fields.md'],['存档验证及局限','docs/research/2026-11-01-e2e-loop/design-v78-fields.md'],['抽取 PRD','docs/prd/05-extraction.md']]};
+for(let i=4;i<8;i++)fieldSteps[i]={...fieldSteps[i],lead:'沿用的下游路径，本轮存档验证未重跑这一段。'+fieldSteps[i].lead};
+const productionSteps=experimentSteps.map(s=>({...s}));
+productionSteps[0]={...experimentSteps[0],point:['当前冻结版本只做过存档定向验证。','v108 采用前在选定的 50 篇文章上每篇发三次；没有新增完整端到端回放。这里展示接入的完整路径，不代表每一步都已在 v108 重新验收。']};
+productionSteps[1]={...experimentSteps[1],lead:'继续在抽取前读取当天题库。v108 把数字题反复重复的通用收证说明移到统一的关联规则，只写一次。',rows:[
+[n('a','store','读取当天开始时的开放问题','第一天包含预设问题；当天新增问题次日进入快照。')],
+[n('b','code','生成问题与各自的收证说明','数字题只列它的指标、范围、期间；事件和政策题仍说明接收的步骤和变化。','Q7：新产品首次交付时间。Q8：公司下一财年的总收入。')],
+[n('c','input','全文＋当天题库，送进同一次抽取调用','统一规则解释需求、供应、竞争、定价如何关联。仍不读取历史证据全文和历史判断。')]
+],edges:[['a','b'],['b','c']],point:['减少重复提示，不撤掉你要求的题库上下文。','每道数字题不再都带同一句宽泛说明；如何关联间接证据由统一规则处理。'],links:[['问题说明生成','src/hivemind/placement.py'],['当前冻结配置','poc/config/poc-v108.json'],['抽取 PRD','docs/prd/05-extraction.md']]};
+productionSteps[2]={name:'先选证据再归题',sub:'一次调用，按顺序决定',phase:0,title:'先判断值得记，再寻找最具体的问题',lead:'抽取 v74i，低推理。下面是同一次模型调用中的顺序；没有额外的归题调用，也不填 v100 的分类字段。',rows:[
+[n('a','input','文章＋来源日期＋当天题库','读完整篇，既看公司，也看客户、供应商、竞争者和政策。')],
+[n('b','model','先决定：分析员会不会记这件事？','按证据规则与唯一的复核清单判断。能放进已有题目，不等于一句话值得记。已有安排、新动作、仍有效的计划按各自定义读。','“客户一直在用软件”是已有安排；“客户决定新扩建一个集群”是新动作。')],
+[n('c','model','先找最具体、真正受影响的问题','有具体题就关联它；同公司、同活动或同生态本身不构成关联。','产品延迟 → 首次交付时间题，而不是每道收入题都关联。')],
+[n('d','model','没有具体题，但会改变公司业绩','通过需求、供应、竞争或定价影响结果的证据，可关联对应期间的公司总收入题。需要新问题时仍按开题规则提出候选。','客户扩大采购计划 → 若没有更具体题，可关联对应期间总收入题。'),n('e','drop','没有题或候选可接收','即使看起来重要，仍输出空关联；代码后续按 no home 丢弃。')],
+[n('f','input','输出保留的证据、引文、来源与 links','例外只解除对应拒收条件，不自动保证保留；每条记录判断它自身所说的事。')]
+],edges:[['a','b'],['b','c'],['c','d'],['c','e'],['c','f'],['d','f']],point:['规则已收窄，但长文章漏读仍是已知限制。','已知的计划不因被重讲就自动丢弃；已有交易也不因带金额就自动算新信息。按长度提高推理强度尚未实现，当前全部用低推理。'],links:[['冻结角色提示词','src/hivemind/prompts/role-v74i.txt'],['唯一复核清单','src/hivemind/prompts/review-v74i.txt'],['统一关联规则','src/hivemind/placement.py'],['抽取 PRD','docs/prd/05-extraction.md']]};
+productionSteps[3]={...experimentSteps[3],lead:'沿用引用、编号、候选与关联检查。当前没有 v100 的分类字段筛选；能否接收证据首先由模型按冻结提示词判断。'};
+let mode='v108',steps=productionSteps;
+const $=id=>document.getElementById(id);let current=1;
+function renderRunStatus(){
+ const snapshot=JSON.parse($('run-snapshot').textContent),runs=snapshot.runs,active=runs.filter(r=>r.alive).length,failures=runs.reduce((sum,r)=>sum+r.reportedFailures,0);
+ const time=snapshot.checkedAt.replace('T',' ')+'（洛杉矶） / '+snapshot.checkedAtShanghai.replace('T',' ')+'（上海）';
+ $('test-summary').textContent=`${runs.length} 遍全部完成 14 天；整条流程回放目前没有在跑。`;
+ $('snapshot-caption').textContent=`核对时间：${time}。来自运行日志、评分报告、默认入口、进程列表和 Claude 会话；本页为静态快照，不自动更新。`;$('proof-status').textContent=snapshot.proof.status;$('proof-label').textContent=snapshot.proof.label;
+ const grid=$('run-grid');grid.replaceChildren();
+ const label=document.createElement('span');label.textContent='回放日期 | 7 月';label.className='date';grid.append(label);
+ for(let day=1;day<=14;day++){const el=document.createElement('span');el.className='date';el.textContent=String(day).padStart(2,'0');grid.append(el)}
+ if(!window.matchMedia('(max-width:650px)').matches){const spacer=document.createElement('span');spacer.className='date desktop-spacer';spacer.textContent='已完成 / 总天数';grid.append(spacer)}
+ for(const run of runs){const name=document.createElement('span');name.className='run-name';name.textContent=`${run.version} 第 ${run.draw} 遍`;grid.append(name);
+ for(let day=1;day<=14;day++){const date=`2026-07-${String(day).padStart(2,'0')}`,done=run.days.includes(date),el=document.createElement('span');el.className='day-cell'+(done?' done':'')+(run.version==='v91'?' control':'');el.textContent=done?'✓':'·';el.setAttribute('aria-label',`${run.version} 第 ${run.draw} 遍，${date}：${done?'已完成':'未报告完成'}`);grid.append(el)}
+ const status=document.createElement('span');status.className='run-end';status.textContent=`${run.days.length}/14 天 | ${run.completed?'回放完成':'待核对'}`;grid.append(status)}
+}
+
+
+const types={input:'输入 / 输出',model:'模型处理',code:'代码处理',store:'研究库',drop:'退出这条路径'};
+const nav=$('step-nav');
+function buildNav(){nav.replaceChildren();steps.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='step-button';b.innerHTML=`<span class="step-number">${String(i+1).padStart(2,'0')}</span><span><b>${s.name}</b><small>${s.sub}</small></span>`;b.addEventListener('click',()=>render(i));nav.append(b)})}
+function setMode(value){
+ mode=value==='v92'?'v94':value;const contextMode=mode!=='v91';
+ steps=mode==='v108'?productionSteps:mode==='v100'?fieldSteps:contextMode?experimentSteps:legacySteps;
+ document.querySelectorAll('[data-mode]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.mode===mode)));
+ $('version-title').textContent=mode==='v108'?'当前冻结 poc-v108 | 抽取 v74i | 低推理':mode==='v100'?'已退役 poc-v100 | 抽取 v80':contextMode?'历史基线 poc-v94 | 抽取 v74':'历史对照 poc-v91 | 抽取 v53';
+ $('version-status').textContent=mode==='v108'?'本地已提交 ceed237 | 未推送、未合并 | 无测试任务运行':mode==='v100'?'分类字段与筛选代码已移除 | 历史结果和备份保留':'历史版本 | 完整回放结果保留';
+ const phases=document.querySelectorAll('[data-phase]'),first=phases[0],second=phases[1];
+ first.querySelector('small').textContent=contextMode?'每篇文章 | 步骤 01—04':'每篇文章 | 步骤 01—03';
+ first.querySelector('strong').textContent=mode==='v100'?'历史字段实验':contextMode?'带着题库读文章':'读出信息';
+ first.querySelector('span').textContent=mode==='v108'?'题库＋全文 → 选证据 → 关联':mode==='v100'?'题库＋文章 → 分类关联 → 代码筛选':contextMode?'当天题库快照＋文章 → 抽取并归题':'原文 → 证据与候选问题';
+ second.dataset.phase=contextMode?'4':'3';second.querySelector('small').textContent=contextMode?'每篇文章 | 步骤 05—06':'每篇文章 | 步骤 04—06';second.querySelector('span').textContent=contextMode?'问题与证据查重 → 保存':'归题 → 查重 → 保存';buildNav();render(mode==='v100'||mode==='v108'?2:1);
+}
+
+
+function render(i){current=i;const s=steps[i];$('step-kicker').textContent=`STEP ${String(i+1).padStart(2,'0')} / ${i<6?'每篇文章':'每天收尾'}`;$('step-title').textContent=s.title;$('lead').textContent=s.lead;
+ $('rows').replaceChildren();s.rows.forEach(row=>{const r=document.createElement('div');r.className='diagram-row'+(row.length===1?' single':'');r.style.setProperty('--cols',row.length);row.forEach(v=>{const el=document.createElement('div');el.className='node '+v.type;el.dataset.node=v.id;for(const [cls,text] of [['node-type',types[v.type]],['node-title',v.title],['node-copy',v.copy]]){const x=document.createElement('div');x.className=cls;x.textContent=text;el.append(x)}if(v.example){const ex=document.createElement('div');ex.className='example';const label=document.createElement('span');label.className='example-label';label.textContent='虚构示例';ex.append(label,document.createTextNode(v.example));el.append(ex)}r.append(el)});$('rows').append(r)});
+ $('key-point').replaceChildren();const b=document.createElement('strong');b.textContent=s.point[0];$('key-point').append(b,document.createTextNode(s.point[1]));$('detail-links').replaceChildren();s.links.forEach(([label,path])=>{const a=document.createElement('a');a.textContent=label+' ↗';a.href=base+path;a.target='_blank';a.rel='noopener';$('detail-links').append(a)});
+ [...nav.children].forEach((el,j)=>j===i?el.setAttribute('aria-current','step'):el.removeAttribute('aria-current'));
+ document.querySelectorAll('[data-phase]').forEach(el=>{const active=steps[Number(el.dataset.phase)].phase===s.phase;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});
+ $('prev').disabled=i===0;$('next').disabled=i===steps.length-1;$('counter').textContent=`${i+1} / ${steps.length} | ${s.name}`;
+ history.replaceState(null,'','#'+mode+'-step-'+(i+1));requestAnimationFrame(drawEdges);
+}
+function drawEdges(){const svg=$('edges'),rect=$('diagram').getBoundingClientRect(),ns='http://www.w3.org/2000/svg';svg.replaceChildren();svg.setAttribute('viewBox',`0 0 ${rect.width} ${rect.height}`);const defs=document.createElementNS(ns,'defs');const m=document.createElementNS(ns,'marker');m.setAttribute('id','arrow');m.setAttribute('viewBox','0 0 10 10');m.setAttribute('refX','8');m.setAttribute('refY','5');m.setAttribute('markerWidth','6');m.setAttribute('markerHeight','6');m.setAttribute('orient','auto-start-reverse');const triangle=document.createElementNS(ns,'path');triangle.setAttribute('d','M 0 0 L 10 5 L 0 10 z');triangle.setAttribute('fill','#84978b');m.append(triangle);defs.append(m);svg.append(defs);
+ const stacked=window.matchMedia('(max-width:650px)').matches;
+ for(const [from,to] of steps[current].edges){const a=document.querySelector(`[data-node="${from}"]`).getBoundingClientRect(),b=document.querySelector(`[data-node="${to}"]`).getBoundingClientRect();let path;
+ if(stacked){const x=5,y1=a.top+a.height/2-rect.top,y2=b.top+b.height/2-rect.top;path=`M ${a.left-rect.left} ${y1} H ${x} V ${y2} H ${b.left-rect.left-2}`}
+ else{const x1=a.left+a.width/2-rect.left,y1=a.bottom-rect.top+1,x2=b.left+b.width/2-rect.left,y2=b.top-rect.top-4,mid=y1+(y2-y1)/2;path=`M ${x1} ${y1} V ${mid} H ${x2} V ${y2}`}
+ const p=document.createElementNS(ns,'path');p.setAttribute('d',path);p.setAttribute('fill','none');p.setAttribute('stroke','#84978b');p.setAttribute('stroke-width','1.4');p.setAttribute('stroke-linejoin','round');p.setAttribute('marker-end','url(#arrow)');svg.append(p)}
+}
+$('prev').addEventListener('click',()=>{if(current>0)render(current-1)});$('next').addEventListener('click',()=>{if(current<steps.length-1)render(current+1)});$('examples').addEventListener('change',e=>{$('content').classList.toggle('hide-examples',!e.target.checked);requestAnimationFrame(drawEdges)});document.querySelectorAll('[data-phase]').forEach(b=>b.addEventListener('click',()=>render(Number(b.dataset.phase))));new ResizeObserver(()=>requestAnimationFrame(drawEdges)).observe($('rows'));window.addEventListener('resize',()=>{drawEdges();renderRunStatus()});document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));renderRunStatus();const match=location.hash.match(/^#(v9[124]|v100|v108)-step-([1-8])$/);if(match)mode=match[1];setMode(mode);if(match)render(Number(match[2])-1);window.addEventListener('hashchange',()=>{const target=location.hash.match(/^#(v9[124]|v100|v108)-step-([1-8])$/);if(target){if(target[1]!==mode)setMode(target[1]);render(Number(target[2])-1)}});
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JSON 示例：抽取质量实测</title><style>body{max-width:1040px;margin:40px auto;padding:0 22px;font:17px/1.7 system-ui;background:#f8f8f5;color:#19252a}h1{font-size:32px}h2{font-size:22px;margin-top:36px}.callout{padding:20px;background:#e6eeea;border-left:4px solid #307862}table{width:100%;border-collapse:collapse;font-size:15px}td,th{padding:10px;text-align:left;border-bottom:1px solid #ccd5d0}details{background:white;border:1px solid #dbe1dd;margin:12px 0;padding:12px}summary{cursor:pointer;font-weight:600}pre{font:13px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f5f3;padding:16px}a{color:#21684e}.note{color:#53635c}code{font-size:.9em}</style>
+<h1>完整 JSON 示例，实际帮到了什么？</h1><p class="callout">D350 审计更正：以下保留历史分数，评分解释已撤回。<a href="../2026-10-27-evaluation-audit/results.md">查看原文与原始输出审计</a>。当前不能据此判断范例有无帮助。</p>
+<p>相同模型、提示、严格 JSON schema 与金标，唯一对比变量是四个输入/输出范例。原计划 18 次，预算预留检查在最后两次前停止：实际 16 次，408 条输出均已人工助手审阅。ROW 每组只有两次，比较不完整。</p>
+<h2>结果</h2><table><tr><th>指标</th><th>无范例</th><th>四个范例</th></tr><tr><td>完整要求</td><td>91/99</td><td>89/99</td></tr><tr><td>整篇成功交付</td><td>6/8</td><td>7/8</td></tr><tr><td>成功交付的完整要求</td><td>71/99</td><td>80/99</td></tr><tr><td>完整论证</td><td>29/37</td><td>27/37</td></tr></table><p class="note">这是助手编写金标与助手评审的开发诊断，不是独立人审或未见数据验收。没有投票、重试、补抽或删除失败。</p>
+<h2>严格 JSON 早已开启</h2><pre>{"response_format":{"type":"json_schema","json_schema":{"name":"source_observations","strict":true,"schema":"本轮实际完整 schema 见请求文件"}}}</pre>
+<p>结构合法不代表内容真实。字符串 <code>pre-date his estimate</code> 是合法 JSON，却不是原文 <code>predate his estimate</code>，仍会被引用校验拒收。年份、说话人、比较前提也需要语义判断。</p>
+<p>这轮将“没有观察就必须写跳过理由”的已有要求补进 schema。两组都使用，不能把此项修复记为示例的功劳。</p>
+<h2>四个范例具体教什么</h2><p>示例内容额外约 1,172 tokens；含消息包装后全请求估算增加 1,347 tokens。以下全部通过实际 schema 和写入校验。它们是虚构数据。</p><details><summary>同一句：记者、匿名专家、CEO 分开；未知年份不补</summary><p>原文（publication_day: 2026-09-10）</p><pre>Operators face maintenance risks; an unnamed engineer estimated in 2023 that DeltaWorks machines have a two-year remaining life. CEO Mara Chen said in March that machines sold four years ago were still fully utilized.</pre><p>完整 JSON 输出</p><pre>{
+  &quot;p001&quot;: {
+    &quot;empty_reason&quot;: &quot;&quot;,
+    &quot;observations&quot;: [
+      {
+        &quot;first_sentence&quot;: &quot;s01&quot;,
+        &quot;last_sentence&quot;: &quot;s01&quot;,
+        &quot;one_line&quot;: &quot;The article identifies maintenance risks for operators of DeltaWorks machines.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;article&quot;,
+          &quot;mention&quot;: null
+        },
+        &quot;time_mentions&quot;: [],
+        &quot;tier&quot;: &quot;third_party_view&quot;
+      },
+      {
+        &quot;first_sentence&quot;: &quot;s01&quot;,
+        &quot;last_sentence&quot;: &quot;s01&quot;,
+        &quot;one_line&quot;: &quot;An unnamed engineer estimated in 2023 that DeltaWorks machines had a two-year remaining life.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;anonymous&quot;,
+          &quot;mention&quot;: {
+            &quot;paragraph&quot;: &quot;p001&quot;,
+            &quot;text&quot;: &quot;an unnamed engineer&quot;
+          }
+        },
+        &quot;time_mentions&quot;: [
+          {
+            &quot;role&quot;: &quot;statement&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;in 2023&quot;
+            }
+          },
+          {
+            &quot;role&quot;: &quot;event&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;two-year remaining life&quot;
+            }
+          }
+        ],
+        &quot;tier&quot;: &quot;third_party_view&quot;
+      },
+      {
+        &quot;first_sentence&quot;: &quot;s02&quot;,
+        &quot;last_sentence&quot;: &quot;s02&quot;,
+        &quot;one_line&quot;: &quot;DeltaWorks CEO Mara Chen said in March that machines sold four years earlier were still fully utilized.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;named&quot;,
+          &quot;mention&quot;: {
+            &quot;paragraph&quot;: &quot;p001&quot;,
+            &quot;text&quot;: &quot;Mara Chen&quot;
+          }
+        },
+        &quot;time_mentions&quot;: [
+          {
+            &quot;role&quot;: &quot;statement&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;in March&quot;
+            }
+          },
+          {
+            &quot;role&quot;: &quot;event&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;four years ago&quot;
+            }
+          }
+        ],
+        &quot;tier&quot;: &quot;fact&quot;
+      }
+    ]
+  }
+}</pre></details><details><summary>跨段：假设、年份、结果与比较基数保留在一起</summary><p>原文（publication_day: 2026-09-10）</p><pre>Sector Institute forecasts a $90 billion market for industrial sensors in 2032.
+
+If DeltaWorks takes 20% of that market, the author estimates $18 billion of annual sensor revenue. That would be three times DeltaWorks&#x27; $6 billion sensor revenue in fiscal 2026.</pre><p>完整 JSON 输出</p><pre>{
+  &quot;p001&quot;: {
+    &quot;empty_reason&quot;: &quot;&quot;,
+    &quot;observations&quot;: [
+      {
+        &quot;first_sentence&quot;: &quot;s01&quot;,
+        &quot;last_sentence&quot;: &quot;s01&quot;,
+        &quot;one_line&quot;: &quot;Sector Institute forecasts a $90 billion industrial-sensor market in 2032.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;named&quot;,
+          &quot;mention&quot;: {
+            &quot;paragraph&quot;: &quot;p001&quot;,
+            &quot;text&quot;: &quot;Sector Institute&quot;
+          }
+        },
+        &quot;time_mentions&quot;: [
+          {
+            &quot;role&quot;: &quot;event&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;in 2032&quot;
+            }
+          }
+        ],
+        &quot;tier&quot;: &quot;third_party_view&quot;
+      }
+    ]
+  },
+  &quot;p002&quot;: {
+    &quot;empty_reason&quot;: &quot;&quot;,
+    &quot;observations&quot;: [
+      {
+        &quot;first_sentence&quot;: &quot;s01&quot;,
+        &quot;last_sentence&quot;: &quot;s02&quot;,
+        &quot;one_line&quot;: &quot;If DeltaWorks captures 20% of the $90 billion industrial-sensor market forecast for 2032, the author estimates $18 billion annual sensor revenue, three times its actual $6 billion sensor revenue in fiscal 2026.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;article&quot;,
+          &quot;mention&quot;: null
+        },
+        &quot;time_mentions&quot;: [
+          {
+            &quot;role&quot;: &quot;event&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;in 2032&quot;
+            }
+          },
+          {
+            &quot;role&quot;: &quot;event&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p002&quot;,
+              &quot;text&quot;: &quot;in fiscal 2026&quot;
+            }
+          }
+        ],
+        &quot;tier&quot;: &quot;third_party_view&quot;
+      }
+    ]
+  }
+}</pre></details><details><summary>软件迁移机制合并；重复跳过，反证保留</summary><p>原文（publication_day: 2026-09-10）</p><pre>AtlasSoft&#x27;s Forge platform has 120,000 developers. Moving from Forge to a competing platform requires rewriting custom integrations.
+
+Customers would have to rewrite these integrations when switching suppliers.
+
+A separate security audit found that Forge failed two compatibility checks.</pre><p>完整 JSON 输出</p><pre>{
+  &quot;p001&quot;: {
+    &quot;empty_reason&quot;: &quot;&quot;,
+    &quot;observations&quot;: [
+      {
+        &quot;first_sentence&quot;: &quot;s01&quot;,
+        &quot;last_sentence&quot;: &quot;s02&quot;,
+        &quot;one_line&quot;: &quot;AtlasSoft&#x27;s Forge platform has 120,000 developers; switching to a competing platform requires rewriting custom integrations.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;article&quot;,
+          &quot;mention&quot;: null
+        },
+        &quot;time_mentions&quot;: [],
+        &quot;tier&quot;: &quot;fact&quot;
+      }
+    ]
+  },
+  &quot;p002&quot;: {
+    &quot;empty_reason&quot;: &quot;Repeats the switching requirement already preserved in p001; no added condition.&quot;,
+    &quot;observations&quot;: []
+  },
+  &quot;p003&quot;: {
+    &quot;empty_reason&quot;: &quot;&quot;,
+    &quot;observations&quot;: [
+      {
+        &quot;first_sentence&quot;: &quot;s01&quot;,
+        &quot;last_sentence&quot;: &quot;s01&quot;,
+        &quot;one_line&quot;: &quot;A security audit found that AtlasSoft&#x27;s Forge platform failed two compatibility checks.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;article&quot;,
+          &quot;mention&quot;: null
+        },
+        &quot;time_mentions&quot;: [],
+        &quot;tier&quot;: &quot;fact&quot;
+      }
+    ]
+  }
+}</pre></details><details><summary>财年开始不等于第一季度；广告跳过</summary><p>原文（publication_day: 2026-09-10）</p><pre>DeltaWorks reported revenue of $240 million at the start of fiscal 2028, double a year earlier.
+
+Subscribe now for new alerts.</pre><p>完整 JSON 输出</p><pre>{
+  &quot;p001&quot;: {
+    &quot;empty_reason&quot;: &quot;&quot;,
+    &quot;observations&quot;: [
+      {
+        &quot;first_sentence&quot;: &quot;s01&quot;,
+        &quot;last_sentence&quot;: &quot;s01&quot;,
+        &quot;one_line&quot;: &quot;DeltaWorks reported revenue of $240 million at the start of fiscal 2028, double the year-earlier amount.&quot;,
+        &quot;claimant&quot;: {
+          &quot;kind&quot;: &quot;named&quot;,
+          &quot;mention&quot;: {
+            &quot;paragraph&quot;: &quot;p001&quot;,
+            &quot;text&quot;: &quot;DeltaWorks&quot;
+          }
+        },
+        &quot;time_mentions&quot;: [
+          {
+            &quot;role&quot;: &quot;event&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;at the start of fiscal 2028&quot;
+            }
+          },
+          {
+            &quot;role&quot;: &quot;event&quot;,
+            &quot;source&quot;: {
+              &quot;paragraph&quot;: &quot;p001&quot;,
+              &quot;text&quot;: &quot;a year earlier&quot;
+            }
+          }
+        ],
+        &quot;tier&quot;: &quot;fact&quot;
+      }
+    ]
+  },
+  &quot;p002&quot;: {
+    &quot;empty_reason&quot;: &quot;Subscription promotion with no business claim.&quot;,
+    &quot;observations&quot;: []
+  }
+}</pre></details><h2>每个样本</h2><table><tr><th>样本</th><th>完整要求</th><th>交付</th><th>实际输入 tokens</th></tr><tr><td>coreweave.1.control</td><td>10/10</td><td>拒收</td><td>3597</td></tr><tr><td>coreweave.1.examples</td><td>9/10</td><td>通过</td><td>4833</td></tr><tr><td>coreweave.2.control</td><td>10/10</td><td>通过</td><td>3597</td></tr><tr><td>coreweave.2.examples</td><td>10/10</td><td>通过</td><td>4833</td></tr><tr><td>coreweave.3.control</td><td>9/10</td><td>通过</td><td>3597</td></tr><tr><td>coreweave.3.examples</td><td>9/10</td><td>拒收</td><td>4833</td></tr><tr><td>motley.1.control</td><td>13/15</td><td>通过</td><td>6333</td></tr><tr><td>motley.1.examples</td><td>14/15</td><td>通过</td><td>7569</td></tr><tr><td>motley.2.control</td><td>13/15</td><td>通过</td><td>6333</td></tr><tr><td>motley.2.examples</td><td>13/15</td><td>通过</td><td>7569</td></tr><tr><td>motley.3.control</td><td>14/15</td><td>通过</td><td>6333</td></tr><tr><td>motley.3.examples</td><td>13/15</td><td>通过</td><td>7569</td></tr><tr><td>restofworld.1.control</td><td>10/12</td><td>拒收</td><td>7708</td></tr><tr><td>restofworld.1.examples</td><td>10/12</td><td>通过</td><td>8944</td></tr><tr><td>restofworld.2.control</td><td>12/12</td><td>通过</td><td>7708</td></tr><tr><td>restofworld.2.examples</td><td>11/12</td><td>通过</td><td>8944</td></tr></table><h2>仍未解决</h2><p>公司代词没有解析成名称；季度信息会丢；估值会缺前提；原文引用仍会被改写；重复并未减少。因此不能继续用“加几条例子”当作完整解决方案。</p><p><a href="results.md">完整结果与下一步</a> · <a href="../../../poc/reports/2026-10-27-source-fewshot/run-2026-10-27/coreweave.examples.request.json">真实完整请求</a> · <a href="../2026-10-27-source-reference-trial/results.md">上一轮 27 次实验</a></p><p class="note">新模型费用估算 $0.0295744；累计保守占用 $0.711480 / $0.75。所有已发请求结束。生产默认未改。</p></html>

@@ -18,8 +18,8 @@ RAW = os.path.join(ROOT, 'raw')
 USER_AGENT = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
               '(KHTML, like Gecko) Chrome/124.0 Safari/537.36')
 SEC_USER_AGENT = 'Hivemind research alex@adventai.io'
-WINDOW_START = '2026-07-24'
-WINDOW_END = '2026-10-22'
+WINDOW_START = os.environ.get('HIVEMIND_WINDOW_START', '2026-07-24')     # the harvest window; a backfill sets both (2026-10-27: 07-01..10-27)
+WINDOW_END = os.environ.get('HIVEMIND_WINDOW_END', '2026-10-22')
 BOOTSTRAP_START = '2026-02-25'
 MAX_BYTES = 8_000_000
 
@@ -111,9 +111,16 @@ _BLOCK_PAGE = re.compile(r'access denied|just a moment|attention required|are yo
                          r'this site can.t be reached|captcha', re.I)
 
 
+# a body that starts with one of these is a file, not a page: JPEG, PNG, GIF, PDF, zip/office, RIFF (webp, wav), gzip, fonts
+_FILE_SIGNATURES = ('\xff\xd8\xff', '\x89PNG', 'GIF8', '%PDF', 'PK\x03\x04', 'RIFF', '\x1f\x8b', 'wOFF', 'OTTO')
+
+
 def page_text(markup):
     """The whole page as text, nothing judged: only script and style elements are removed (they hold code, not
-    prose); navigation, headers, footers, asides, noscript and svg text all stay. This is what the pipeline reads."""
+    prose); navigation, headers, footers, asides, noscript and svg text all stay. This is what the pipeline reads.
+    A body that is a file rather than markup (an image, a PDF, an archive, a gzip stream) has no page text."""
+    if markup.startswith(_FILE_SIGNATURES):
+        return ''
     text = _NON_TEXT.sub(' ', markup)
     text = re.sub(r'<!--.*?-->', ' ', text, flags=re.S)
     text = _BLOCK_TAGS.sub('\n', text)
@@ -233,3 +240,17 @@ def main_guard(function):
     except KeyboardInterrupt:
         log('interrupted')
         sys.exit(130)
+
+
+
+def clean_resolved_url(url):
+    """A stored resolved link as the resolver should have written it: cut at the quote that closed Google's JSON string and
+    decode the escapes. Links stored before 2026-10-27 carry '",1]' or a second URL after that quote; most servers served
+    the right page anyway, some served their shell (assemble.mark_shells)."""
+    raw = (url or '').split('"', 1)[0]
+    if '\\u' not in raw:
+        return raw
+    try:
+        return json.loads('"' + raw + '"')
+    except json.JSONDecodeError:
+        return raw

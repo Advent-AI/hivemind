@@ -205,7 +205,7 @@ def route(db, parts, q):
 def main():
     global ALIASES, CFG, SEMANTIC
     parser = argparse.ArgumentParser()
-    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'english-v29-nvda-3m-2026-10-27', 'snapshots', '2026-10-27T0736', 'views.sqlite'))
+    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
     parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'), help='the items database, for source titles in the idea card')
     parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
     parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'idea-archive.sqlite'), help='where idea model calls are archived for replay')
