@@ -10,7 +10,7 @@ Follow-up D172 implements the recommended offline POC; see its [implementation a
 
 ## What the stored data establishes
 
-Read-only inventories cover both v23 arms, 480 extraction handovers per arm, through August 15. Calls copied from v21 archives are excluded. Audit (local artifact: `../../../poc/reports/2026-10-25-day-batch-review/audit-v2.json`), snapshot reconstruction (local artifact: `../../../poc/reports/2026-10-25-day-batch-review/snapshots.json`), visibility test (local artifact: `../../../poc/reports/2026-10-25-day-batch-review/visibility.json`).
+Read-only inventories cover both v23 arms, 480 extraction handovers per arm, through August 15. Calls copied from v21 archives are excluded. [Audit](../../../poc/reports/2026-10-25-day-batch-review/audit-v2.json), [snapshot reconstruction](../../../poc/reports/2026-10-25-day-batch-review/snapshots.json), [visibility test](../../../poc/reports/2026-10-25-day-batch-review/visibility.json).
 
 | Check | Jev arm | Generative control | Meaning |
 |---|---:|---:|---|
@@ -133,10 +133,10 @@ Structural acceptance is exact: source linkage, temporal visibility, valid IDs, 
 - 960/960 extraction requests reconstructed exactly from real historical SQLite snapshots.
 - Both raw-answer visibility replays completed; the introduced losses are counted above, not hidden.
 - Existing scorer reproduced the Jev week's candidate result (47/47 new; 1/2 merge), August result (35/35 new; 6/7 merge; 0/3 succession) and group coverage (12/13 and 23/25). These are the saved runs before the D168 corrections; fresh controls must run current code. No gold was edited.
-- Five diagnostic controls passed. Two scratch mutants were caught by their intended assertions: admitting future rows, and ignoring the worker limit. Mutant traces (local artifact: `../../../poc/reports/2026-10-25-day-batch-review/mutants.json`).
-- The complete product, corpus-label and diagnostic suites passed together: 128 tests in 12.66 seconds, from a temporary working directory. Test output (local artifact: `../../../poc/reports/2026-10-25-day-batch-review/tests.txt`). Preflight judged all 250 Jev matching records with no refusals or skipped records, and 148 prompt-enum checks had no missing values. Preflight (local artifact: `../../../poc/reports/2026-10-25-day-batch-review/preflight.txt`). Neither establishes fresh model quality or batch-runtime correctness.
+- Five diagnostic controls passed. Two scratch mutants were caught by their intended assertions: admitting future rows, and ignoring the worker limit. [Mutant traces](../../../poc/reports/2026-10-25-day-batch-review/mutants.json).
+- The complete product, corpus-label and diagnostic suites passed together: 128 tests in 12.66 seconds, from a temporary working directory. [Test output](../../../poc/reports/2026-10-25-day-batch-review/tests.txt). Preflight judged all 250 Jev matching records with no refusals or skipped records, and 148 prompt-enum checks had no missing values. [Preflight](../../../poc/reports/2026-10-25-day-batch-review/preflight.txt). Neither establishes fresh model quality or batch-runtime correctness.
 - Runtime scheduler, fresh model quality and live latency tests have not run. Their contracts/acceptance need agreement first; the old experiment budgets are not an authorization for new calls.
-- A read-only review (local artifact: `reviewer-report.txt`) found no serious issue in the proposed contract. It independently reproduced the timing projection, all 960 message pairs and schemas, and the visibility losses. This validates the review's evidence and contract, not a future implementation.
+- A [read-only review](reviewer-report.txt) found no serious issue in the proposed contract. It independently reproduced the timing projection, all 960 message pairs and schemas, and the visibility losses. This validates the review's evidence and contract, not a future implementation.
 
 ## D22 reasoning refresh
 

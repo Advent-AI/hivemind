@@ -1,0 +1,135 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 6000,
+  "system": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the deliverable. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Keep conditions and periods exactly as the texts state them. Comparison opinions are hints with scores; the texts decide. Answer in the JSON schema only.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"Anthropic said Claude Science uses BioNeMo Agent Toolkit skills to connect to life sciences models and libraries in BioNeMo, including Evo 2, Boltz-2, and OpenFold3.\", \"one_line\": \"Anthropic said Claude Science uses BioNeMo Agent Toolkit skills to connect with BioNeMo models and libraries, including Evo 2, Boltz-2, and OpenFold3.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"Anthropic\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\", \"publisher\": \"campustechnology.com\", \"publisher_type\": \"media\", \"publication_day\": \"2026-07-01\", \"category\": \"T7\", \"title\": \"Anthropic, NVIDIA Move AI Agents Deeper into Scientific Workflows\"}, \"source_article\": \"By John K. Waters\\nAnthropic's Claude Science beta and NVIDIA's BioNeMo Agent Toolkit show AI agents moving beyond general productivity into specialized scientific research workflows.\\nThe companies are emphasizing auditability and reproducibility, including preserved code, environments, message history, reviewer agents, and integration with existing research tools.\\nFor enterprises and research teams, the key test will be whether agentic AI can produce traceable, reliable results while keeping humans in control of sensitive data, compute, and scientific judgment.\\nAnthropic has introduced Claude Science , a new AI workbench for scientists that integrates research tools, produces auditable artifacts, and connects to specialized life sciences models and workflows from NVIDIA .\\nThe beta release, announced June 30, gives Claude Pro, Max, Team, and Enterprise users access to an application designed to help researchers work across literature review, data analysis, figure generation, manuscript refinement, and computational workflows. Anthropic said Claude Science is available on macOS and Linux, and can run locally, on remote machines over SSH, or through a high-performance computing login node.\\nThe launch is part of a broader push by AI companies to turn general-purpose assistants into domain-specific workbenches for professional users. In life sciences, that means moving beyond chat-based summarization toward agents that can query databases, write and run code, inspect outputs, preserve research history, and connect to scientific tools already used by labs.\\nAnthropic said Claude Science brings fragmented scientific tools into a single research environment. The app can work with tools such as PubMed , Jupyter , R , cluster terminals, and domain-specific scientific databases, while preserving an auditable history of how outputs were produced.\\nUsers interact with a generalist coordinating agent that has access to more than 60 curated skills and connectors configured for genomics, single-cell analysis, proteomics, structural biology, cheminformatics, and other research areas. The system can also use specialist agents created by users, and includes a reviewer agent that checks citations and calculations, flagging and correcting errors, according to Anthropic.\\nA central claim in the launch is reproducibility. When Claude Science generates a figure, it includes the code and environment used to create it, a plain-language description of the process, and the message history leading up to the output. The company said that history is intended to make results easier to validate and reproduce later.\\nThat focus is likely to matter for researchers and enterprise AI buyers. Scientific AI tools may be judged less by whether they can produce plausible answers and more by whether their work can be traced, challenged, repeated, and incorporated into established review processes.\\nNVIDIA's role comes through its BioNeMo Agent Toolkit , which the chipmaker announced June 23. Anthropic said Claude Science uses BioNeMo Agent Toolkit skills to connect to life sciences models and libraries in BioNeMo, including Evo 2, Boltz-2, and OpenFold3.\\nNVIDIA describes BioNeMo Agent Toolkit as a set of domain-specific tools and skills for agentic life sciences workflows. The toolkit includes NVIDIA life sciences libraries, tools, and open models, and is designed to help agents gather evidence, reason across findings, run computational experiments, and recommend next steps.\\nOpenAI has announced it is preparing to retire Custom GPTs and move the specialized workflows built around them to a new plugin architecture spanning ChatGPT and its Codex coding agent.\\nMeta is returning to open-weight artificial intelligence with Muse Glimmer, a new AI model designed to run on consumer hardware, as CEO Mark Zuckerberg argues that increasingly capable AI should be widely available rather than controlled by a small number of institutions.\\nMarc Booker, vice provost of strategy at the University of Phoenix, examines how to recognize and promote human-centered workforce development in higher education.\\nMicrosoft has unveiled Frontier Company, making a $2.5 billion bet that the next competitive battleground in artificial intelligence will not be foundation models, but helping enterprises put those models to work.\", \"other_source_records\": [{\"id\": \"item:e1\", \"quote\": \"Anthropic has introduced Claude Science , a new AI workbench for scientists that integrates research tools, produces auditable artifacts, and connects to specialized life sciences models and workflows from NVIDIA .\", \"one_line\": \"Anthropic introduced Claude Science, an AI workbench for scientists, with NVIDIA life sciences model and workflow integrations.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"Anthropic\", \"original_day\": \"2026-06-30\", \"tier\": \"fact\", \"event_time\": \"2026-06-30\"}, {\"id\": \"item:e2\", \"quote\": \"The beta release, announced June 30, gives Claude Pro, Max, Team, and Enterprise users access to an application designed to help researchers work across literature review, data analysis, figure generation, manuscript refinement, and computational workflows.\", \"one_line\": \"Anthropic announced the Claude Science beta on June 30, making it available to Claude Pro, Max, Team, and Enterprise users.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"Anthropic\", \"original_day\": \"2026-06-30\", \"tier\": \"fact\", \"event_time\": \"2026-06-30\"}, {\"id\": \"item:e3\", \"quote\": \"Users interact with a generalist coordinating agent that has access to more than 60 curated skills and connectors configured for genomics, single-cell analysis, proteomics, structural biology, cheminformatics, and other research areas.\", \"one_line\": \"Anthropic said Claude Science's coordinating agent has access to more than 60 curated skills and connectors across scientific research areas.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"Anthropic\", \"original_day\": \"2026-06-30\", \"tier\": \"party_statement\", \"event_time\": \"2026-06-30\"}, {\"id\": \"item:e4\", \"quote\": \"NVIDIA's role comes through its BioNeMo Agent Toolkit , which the chipmaker announced June 23.\", \"one_line\": \"NVIDIA announced its BioNeMo Agent Toolkit on June 23, 2026.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"NVIDIA\", \"original_day\": \"2026-06-23\", \"tier\": \"fact\", \"event_time\": \"2026-06-23\"}, {\"id\": \"item:e6\", \"quote\": \"OpenAI has announced it is preparing to retire Custom GPTs and move the specialized workflows built around them to a new plugin architecture spanning ChatGPT and its Codex coding agent.\", \"one_line\": \"OpenAI announced plans to retire Custom GPTs and move their specialized workflows to a new plugin architecture for ChatGPT and Codex.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"OpenAI\", \"original_day\": \"2026-07-01\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e7\", \"quote\": \"Meta is returning to open-weight artificial intelligence with Muse Glimmer, a new AI model designed to run on consumer hardware, as CEO Mark Zuckerberg argues that increasingly capable AI should be widely available rather than controlled by a small number of institutions.\", \"one_line\": \"Meta introduced Muse Glimmer, an open-weight AI model designed to run on consumer hardware.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"Meta\", \"original_day\": \"2026-07-01\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e8\", \"quote\": \"Microsoft has unveiled Frontier Company, making a $2.5 billion bet that the next competitive battleground in artificial intelligence will not be foundation models, but helping enterprises put those models to work.\", \"one_line\": \"Microsoft unveiled Frontier Company and announced a $2.5 billion investment focused on helping enterprises use AI models.\", \"speaker\": \"campustechnology.com, reporting\", \"original_who\": \"Microsoft\", \"original_day\": \"2026-07-01\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\"}], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}]}}"
+    }
+  ],
+  "output_config": {
+    "effort": "medium",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  }
+}

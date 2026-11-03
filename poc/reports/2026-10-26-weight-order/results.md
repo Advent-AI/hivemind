@@ -1,4 +1,4 @@
-# Idea weight presentation and connectors — D198/D199
+# Idea weight presentation and connectors — D292/D293
 
 The final weight pill contains a scale icon and percentage only. Hovering the icon or focusing it from the keyboard shows “Weight factor”. The visible word “Weight” was removed following Alex's final clarification.
 
@@ -16,17 +16,17 @@ Validation:
 
 Reasoning refresh: universe → classification → Config → dispatch → extraction → library → final verdict → pull mode → human review → overview. No pipeline inputs, writes, dates, identity rules or examples change. Current-state and UI text were refreshed for the final icon-only pill, confidence scale, descending order and connector style; historical decisions retain their original wording. `docs/check.py` is the final mechanical check.
 
-## Latest presentation correction — D200/D201
+## Latest presentation correction — D294/D295
 
 Removed the weight tooltip and its keyboard focus target. Icon and percentage now use explicit centred line boxes. All three actual cards have equal icon/number vertical centres and no tooltip node. The stored three-thesis layout and live DOM both measure a 180px horizontal gap, increased from 120px; weight order remains 55 / 25 / 20.
 
 46 UI tests, lint and formatting pass. Route checks cover 94 fan-out sizes and the stored multi-column graph. Final build: 158,612 JavaScript bytes, 90 theses validated in 25.0ms. No model configuration, calculation or database changes.
 
-Reasoning refresh: only shared card presentation and column spacing change. Upstream scope, classification, Config, dispatch, extraction, library, final verdict, pull mode, human review and system semantics retain their existing inputs, writes and dates. UI/Idea descriptions and current state now reflect removal of the tooltip; D198 remains historical.
+Reasoning refresh: only shared card presentation and column spacing change. Upstream scope, classification, Config, dispatch, extraction, library, final verdict, pull mode, human review and system semantics retain their existing inputs, writes and dates. UI/Idea descriptions and current state now reflect removal of the tooltip; D292 remains historical.
 
 [Updated spacing and alignment](alignment-spacing.png).
 
-## Chart text and compact Idea height — D202
+## Chart text and compact Idea height — D296
 
 The Idea SVG previously squeezed a 406-unit viewBox into 326px of card content. It now draws at the actual content width passed by the canvas, matching the Thesis chart’s native scale: subtitle 11px and vertical-axis labels 10px. One shared CSS rule owns the subtitle style.
 
@@ -36,7 +36,7 @@ The completed Idea card fits its content and remains centred within the graph’
 
 [Verified final typography and spacing](chart-type-spacing.png).
 
-## Idea detail header and explanation hierarchy — D203/D204
+## Idea detail header and explanation hierarchy — D297/D298
 
 The detail title is followed by an AI confidence pill and the current UI submission's creation date. The previous bare date was the library cutoff; it is no longer labelled as creation. The date is captured once at submit, in browser-local calendar days, and stays fixed during score replay. Legacy callers without it show Not recorded. This is UI session metadata, without a new backend record.
 
@@ -48,7 +48,7 @@ The reasoning refresh leaves all pipeline module boundaries and examples unchang
 
 [Header](idea-header-final.png) · [Structured thesis explanations](explanations-final.png).
 
-## Contextual confidence help — D205
+## Contextual confidence help — D299
 
 Removed the numerical contribution table and the always-visible method paragraph. A question-mark button beside the analysis subtitle now displays that same paragraph on hover or keyboard focus. The adopted thesis explanations and weight pills remain in their existing order.
 
@@ -58,7 +58,7 @@ Reasoning refresh: no pipeline input, stored value, date, calculation or example
 
 [Normal view](confidence-help-closed.png) · [Visible help popup](confidence-help-open.png).
 
-## Explanation labels and right-hand help — D206
+## Explanation labels and right-hand help — D300
 
 All three thesis explanation dividers are removed. Relevance and Weight rationale now use black, semibold 14px text, matching the 14px body. The help popup opens eight pixels to the right of the question icon, top-aligned with it; its width is limited by the remaining heading row.
 
@@ -66,7 +66,7 @@ Verified all six labels against their body text in the actual browser: 14px / 14
 
 The reasoning refresh preserves every pipeline module's inputs, examples and acceptance; only the Idea presentation contract and current state changed. [Final popup and labels](right-popup.png).
 
-## Correct divider scope, spacing and help alignment — D207/D208
+## Correct divider scope, spacing and help alignment — D301/D302
 
 Corrected the over-broad divider removal: the first thesis has no leading divider; subsequent theses and main analysis sections have the shared 1px rule. Removed stacked spacing: metadata-to-Summary drops from 52px to 24px, confidence-heading-to-first-thesis from 56px to 20px.
 
@@ -76,7 +76,7 @@ The popup uses balanced wrapping at up to 440px on the current desktop layout. B
 
 [Section spacing](section-spacing.png) · [Three-line popup](balanced-popup.png).
 
-## Weight-first headings and compact reading steps — D209/D210
+## Weight-first headings and compact reading steps — D303/D304
 
 Weight tags now precede all three thesis titles, with an 8px gap. The reading trace is a list of closed-by-default topic disclosures, using the existing Thesis detail disclosure component. Each summary shows its numbered topic and subject/period; expansion reveals the unchanged explanation and direct/related thesis lists with consistent body typography.
 
@@ -86,7 +86,7 @@ The reasoning refresh changes no pipeline data or source dates. Idea documentati
 
 [Compact reading steps](reading-steps.png) · [Expanded step and weight-first heading](reading-step-open.png).
 
-## Title-height weight badges and optical icon alignment — D211
+## Title-height weight badges and optical icon alignment — D305
 
 The three detail weight badges now measure 56×44px, matching each 44px title height, with 4px corners. Canvas badges remain unchanged. The confidence help glyph is 16px and raised 1px to align optically with the subtitle text rather than merely centring its line box.
 
@@ -94,7 +94,7 @@ Verified the three badge/title pairs and help transform in the live drawer. The 
 
 [Updated detail view](tall-weight-tags.png).
 
-## Theses title and equal card widths — D212/D213
+## Theses title and equal card widths — D306/D307
 
 The adopted-thesis section is now titled Theses, with its question mark and popup removed. The header confidence pill remains at 61%. Idea and Thesis cards now share one 440px width constant, preserving the 180px column gap. The Idea chart uses the matching 406-unit content width and retains content-fit height.
 
@@ -104,7 +104,7 @@ The reasoning refresh preserves all pipeline module inputs, dates, stored values
 
 [Equal-width cards](equal-width-cards.png) · [Theses heading](theses-title.png).
 
-## Overview, Trace and Response navigation — D214
+## Overview, Trace and Response navigation — D308
 
 The Idea drawer now uses the Thesis-style tab strip. Overview contains only the summary and adopted theses. Trace contains reading steps, search requests/results and excluded choices. Response shows the existing formatted JSON directly. Searches are grouped into expandable rows with query text, optional canonical query, result count and named candidate rows with stable IDs.
 
@@ -116,13 +116,13 @@ The reasoning refresh changes only frontend navigation/readability; pipeline inp
 
 [Overview](tabs-overview.png) · [Trace](tabs-trace.png) · [Expanded search](trace-search-expanded.png) · [Response](tabs-response.png).
 
-## Search titles without count or mode — D215
+## Search titles without count or mode — D309
 
 Removed the candidate-count and retrieval-mode subtitle from all four search rows. Expanded queries/results and the raw Response data remain unchanged. Browser verification finds four search disclosures and zero subtitle nodes. The 47 UI tests, lint/format and build pass; JavaScript is 160,159 bytes and validation of 90 theses takes 29.3ms. The Idea contract and current state were refreshed; no pipeline or source data change.
 
 [Title-only search rows](search-titles-only.png).
 
-## Reading steps open by default — D216
+## Reading steps open by default — D310
 
 All reading steps now start expanded. Secondary search details are grouped under one collapsed Search trace disclosure below them; the original queries and results remain available. The actual browser confirms all three reading steps open and the outer search group closed.
 
@@ -130,7 +130,7 @@ The 47 UI tests, lint/format and build pass. Build: 160,216 JavaScript bytes; 90
 
 [Default expanded reading steps](reading-default-open.png).
 
-## Remove Search trace from the interface — D217
+## Remove Search trace from the interface — D311
 
 Removed the Search trace group, its per-search renderers and unused styles. Reading steps remain expanded by default. Original search fields are preserved in Response. The actual Trace tab contains zero search groups/rows and all three reading steps are open.
 

@@ -1,0 +1,189 @@
+{
+  "model": "gpt-6-luna",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the deliverable. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Keep conditions and periods exactly as the texts state them. Comparison opinions are hints with scores; the texts decide. Answer in the JSON schema only."
+    },
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"This new model enables AI clouds to procure NVIDIA infrastructure for AI-native, enterprise and ISV customers through economic alignment with a revenue-sharing and credit-support model. Through the partnership, AI clouds will sell NVIDIA-powered cloud services, with NVIDIA earning both standard product revenue and a share of the cloud revenue on the supported capacity.\", \"one_line\": \"NVIDIA said its model lets AI clouds procure NVIDIA infrastructure with revenue sharing and credit support; NVIDIA plans to earn product revenue and a share of cloud revenue on supported capacity.\", \"speaker\": \"NVIDIA Corporation\", \"original_who\": \"NVIDIA Corporation\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\", \"publisher\": \"NVIDIA Corporation\", \"publisher_type\": \"company\", \"publication_day\": \"2026-07-01\", \"category\": \"T6\", \"title\": \"NVIDIA Unlocks AI Compute at Scale, Inviting Partners to Power the AI Infrastructure Buildout | NVIDIA Blog\"}, \"source_article\": \"NVIDIA is partnering with AI clouds to deploy large‑scale, multi‑tenant AI factories, aligning economics through a revenue-sharing and credit-support model.\\nAs AI moves from model development to production inference, compute demand is accelerating and shifting toward continuously operating AI factories that generate tokens at scale. This shift requires access to large‑scale, multi‑tenant accelerated computing that can come online quickly, stay highly utilized and support the economics of token‑scale AI services.\\nEmerging AI companies historically have had limited access to capital-intensive infrastructure, with even long-term commitments insufficient to unlock financing for compute.\\nTo address this, NVIDIA is introducing a new business model that opens up compute access to the fast‑growing AI ecosystem of startups, model builders, enterprises, research organizations and regional AI players.\\nThis new model enables AI clouds to procure NVIDIA infrastructure for AI-native, enterprise and ISV customers through economic alignment with a revenue-sharing and credit-support model. Through the partnership, AI clouds will sell NVIDIA-powered cloud services, with NVIDIA earning both standard product revenue and a share of the cloud revenue on the supported capacity. This structure accelerates adoption of NVIDIA platforms among the high-growth, high-conviction AI native sector, and provides NVIDIA with a recurring, usage-linked earnings stream.\\nFor model builders, inference providers, agent platforms and enterprises scaling AI, it can mean faster access to full-stack accelerated computing without waiting through site selection, power procurement, construction and hardware bring-up.\\nThe initiative is already taking shape, with AI cloud companies building DSX AI factories designed to serve customers and workloads across regions.\\n“This strategic collaboration with NVIDIA marks a pivotal moment in Sharon AI’s mission to deliver sovereign, large-scale AI compute infrastructure,” said James Manning, cofounder and CEO of Sharon AI.\\nFirmus is building a DSX AI factory campus in Batam, Indonesia. The campus is expected to scale to 360 megawatts and up to 170,000 NVIDIA GPUs.\\n“AI-native companies need access to scalable, energy- and cost-efficient compute infrastructure to compete globally,” said Tim Rosenfield, co-CEO of Firmus Technologies. “Firmus AI cloud is building a NVIDIA DSX-aligned AI factory, which will enable our cloud to help more customers access the compute they need to build and scale AI.”\\nAI natives such as Baseten, Fireworks AI and Together AI show where compute demand is headed: they need immediate access to AI cloud capacity to run model training, post-training, fine-tuning and high-volume agentic inference for developers, digital natives and enterprises building with AI.\\nTheir customers need reliable access to large-scale NVIDIA accelerated computing as usage grows, but they also need commercial flexibility as products move from pilot to production.\", \"other_source_records\": [{\"id\": \"item:e2\", \"quote\": \"“This strategic collaboration with NVIDIA marks a pivotal moment in Sharon AI’s mission to deliver sovereign, large-scale AI compute infrastructure,” said James Manning, cofounder and CEO of Sharon AI.\", \"one_line\": \"Sharon AI CEO James Manning said Sharon AI is collaborating with NVIDIA on sovereign, large-scale AI compute infrastructure.\", \"speaker\": \"James Manning, cofounder and CEO of Sharon AI, quoted by NVIDIA Corporation\", \"original_who\": \"James Manning, cofounder and CEO of Sharon AI\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e3\", \"quote\": \"The initiative is already taking shape, with AI cloud companies building DSX AI factories designed to serve customers and workloads across regions.\", \"one_line\": \"NVIDIA said AI cloud companies are building DSX AI factories to serve customers and workloads across regions.\", \"speaker\": \"NVIDIA Corporation\", \"original_who\": \"NVIDIA Corporation\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e4\", \"quote\": \"Firmus is building a DSX AI factory campus in Batam, Indonesia. The campus is expected to scale to 360 megawatts and up to 170,000 NVIDIA GPUs.\", \"one_line\": \"Firmus is building a DSX AI factory campus in Batam, Indonesia, expected to scale to 360 megawatts and up to 170,000 NVIDIA GPUs.\", \"speaker\": \"NVIDIA Corporation\", \"original_who\": \"NVIDIA Corporation\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}]}}"
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "research_update",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_quotes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_id": {
+                      "type": "string",
+                      "description": "Evidence id: incoming, item:eN, eN, or source_article."
+                    },
+                    "quote": {
+                      "type": "string",
+                      "description": "A verbatim substring of that source text."
+                    }
+                  },
+                  "required": [
+                    "source_id",
+                    "quote"
+                  ]
+                },
+                "description": "Exact source passages that ground the new investment judgement."
+              },
+              "investment_inference": {
+                "type": "string",
+                "description": "The analyst investment view, including any reasoned inference."
+              },
+              "assumptions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Unconfirmed conditions the investment view relies on."
+              },
+              "unknowns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Material details not established by the sources."
+              }
+            },
+            "required": [
+              "source_quotes",
+              "investment_inference",
+              "assumptions",
+              "unknowns"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  },
+  "max_completion_tokens": 6000,
+  "reasoning_effort": "medium"
+}

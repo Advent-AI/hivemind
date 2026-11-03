@@ -1,6 +1,6 @@
-> Historical D185 trial. D188 makes this a default response capability; see [the current contract](default-composite.md).
+> Historical D279 trial. D282 makes this a default response capability; see [the current contract](default-composite.md).
 
-# D185: Idea composite-history UI trial
+# D279: Idea composite-history UI trial
 
 Alex approved calculating the proposed composite and adding a thesis-style line chart to the Idea card to inspect the UI. This is a bounded trial of the current NVIDIA query, not activation of an automatic scorer for arbitrary ideas.
 
@@ -31,4 +31,4 @@ Each point averages the available representatives' displayed scores times the su
 | Fractional chart | Shared axes/grid/step styling; no future points, no zero for missing, margin for latest dot |
 | UI trial | Same card size, no footer; line instead of evidence subplot; full calculation in analysis |
 
-D130 owns components; D138 owns chosen links; D184 owns returned analysis. D185 permits a manually specified read-only trial without changing those contracts. Future automatic direction/representative selection and persistent Idea-history versions remain separate work.
+D130 owns components; D138 owns chosen links; D278 owns returned analysis. D279 permits a manually specified read-only trial without changing those contracts. Future automatic direction/representative selection and persistent Idea-history versions remain separate work.

@@ -1,0 +1,178 @@
+{
+ "input_id": "gnews:2a6a5a4d0a360f9bbafef002",
+ "title": "AI Native by Design: Lessons Learned from Building NVIDIA TensorRT Model Connect | NVIDIA Technical Blog",
+ "publication_day": "2026-09-29",
+ "publisher": "developer.nvidia.com",
+ "category": "T6",
+ "text": "Parallel work, model family isolation, reversible changes, and GPU-backed validation shaped an open source project designed around coding agents\nBy Yifei Fang\nNVIDIA TensorRT Model Connect is an open source collection of AI model reference implementations in C++ built on NVIDIA TensorRT.\nThe project demonstrates AI-native development by treating AI outputs as modular, verifiable units of work isolated to prevent error cascades.\nEngineering choices include selecting horizontally scalable work, providing agents with outcomes and references instead of recipes, and isolating model-family changes so failures remain local.\nValidation relies on human-legible evidence, agent-native self-improving tests, reproducible CI, and adversarial collaboration between QA and developers.\nHuman judgment shifts upstream to designing the system, setting acceptance criteria, and remaining accountable for release decisions.\nFollow the Quick Start to build and run a supported model.\nExplore Supported Models and their qualification evidence.\nRead the AI and Agent Guide .\nParallel work, model-family isolation, reversible changes, and GPU-backed validation shaped an open source project designed around coding agents\nNVIDIA TensorRT Model Connect is an open source collection of AI model reference implementations in C++, built on top of NVIDIA TensorRT . It began with a practical question: could the performance of the NVIDIA inference stack be made accessible to model developers who are not TensorRT experts?\nThe NVIDIA team initially approached the project as an experiment with coding agents. Within the first few days, however, the interest shifted to a larger question: what would it mean to design a serious software project around AI agents from the beginning—not merely use an agent to accelerate an existing development process?\nThe answer has not been an elaborate orchestration system or an ever-growing collection of prompts. It has been a set of engineering choices:\nAI increases the rate at which candidate implementations can be produced. Architecture and validation determine whether that increased output becomes reliable software.\nWhat does it mean to call TensorRT Model Connect AI native?\nAI native can mean many things. In reference to TensorRT Model Connect, the term is used in a narrow, operational sense. AI-native projects treat AI outputs as modular, verifiable units of work. Isolating these units prevents errors from cascading, ensuring that the inherent unpredictability of AI models does not compromise system stability.\nThis does not mean that AI writes everything. It does not mean that human judgment disappears. And it does not mean that every software project should adopt the same model. Nor does it mean code emitted without supervision; rather, it refers to a production system capable of exploring many candidate changes and subjecting each one to repeatable quality control. Compute helps create the candidates. Tests, reference comparisons, benchmarks, and human review determine what is ready for shipping.\nThe following sections explain the lessons learned from building AI-native TensorRT Model Connect.\nStart with work that can scale horizontally\nSome engineering workloads have a long serial critical path. Others comprise many independent workstreams. Adding agents helps far more in the second category.\nThe long tail of AI models is a natural fit for horizontal work. Model families, configurations, operators, runtime paths, and validation cases can often be investigated independently. Work on one model family does not always need to block work on another.\nThe geometry of that problem is central to TensorRT Model Connect.\nThe project provides family-owned reference implementations that turn supported Hugging Face or local checkpoints into versioned .bundle artifacts, then expose task-oriented native C++ APIs for text, vision, audio, diffusion, segmentation, embedding, forecasting, and other workloads. The build and runtime boundary is documented in the TensorRT Model Connect Project Overview .\nAs of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300. That number is not, in itself, a measure of agent productivity. It does show why the problem benefits from an architecture that can grow by adding independent units rather than extending one serial integration path.\nThe first lesson is therefore simple: AI-native development begins with problem selection. If work cannot be decomposed into parallel tasks, adding more agents mostly introduces coordination overhead and the potential for error cascades.\nProvide agents with outcomes and references, not recipes\nMost TensorRT Model Connect agent runs begin with an outcome: support a model family, close an accuracy gap, improve a performance path, or strengthen a contract. The evidence required to accept the result is also identified. This often includes behavior from an established reference implementation, plus project-specific tests and constraints.\nThe process intentionally began with a simple outer loop: a high-level goal, a general-purpose coding agent, repository instructions, and strict validation. Humans currently continue to initiate most long-running tasks. Prescribing the full implementation plan is generally avoided unless the task or an observed failure mode requires it.\nThe working hypothesis is that a capable general-purpose agent benefits from room to use patterns it has already learned. Instead of encoding an engineer’s preferred implementation into every prompt, specify the result, the boundaries, and the evidence required.\nThe implementation path is flexible. The acceptance criteria are not.\nThis is minimal orchestration, not minimal control. The agent may explore, implement, test, fail, and revise inside an isolated task. The resulting change must still satisfy the same architectural and technical gates as any other contribution. Constraints are added when repeated evidence shows they are needed, not simply because a workflow can be hard-coded.\nThe most important constraint on AI-native development has not been the agent’s ability to complete an individual task. It has been the architecture surrounding that task.\nFor TensorRT Model Connect, components that evolve at different speeds were separated:\nTensorRT and CUDA form the stable execution foundation: Compatibility, performance, reliability, and long-term contracts matter here.\nTensorRT Model Connect is the faster-moving integration layer: It connects a broad and rapidly changing model ecosystem to that foundation.\nModel-family implementations own model-specific knowledge: Builders, runtime pipelines, helper kernels, configuration, and validation evidence stay with the family that needs them.\nThis design prioritizes independence. While shared abstractions can reduce code volume, they often couple unrelated tasks, increase merge conflicts, and expand the impact of potential errors. Some redundancy between similar model families is an acceptable trade-off for scaling.\nTherefore, promote behavior into shared infrastructure only when multiple independent owners need the same assumption-free contract. Everything else stays close to the model family that owns it. The public TensorRT Model Connect Units and Ownership documentation makes those boundaries explicit.\nIsolation does not eliminate all systemic risk: shared build, runtime, packaging, and CI infrastructure can still affect multiple families. But it materially reduces the number of changes that must move together and makes parallel work safer.\nIsolation is paired with reversibility. Two-way doors are preferred: make changes that are easy to evaluate, simple to revert, and unlikely to cascade into unrelated model families. This approach enables rapid learning without mistaking speed for permission to weaken the system.\nWhen candidate code becomes cheaper, evidence becomes more expensive\nAI makes candidate implementations cheap. It does not make correctness cheap. Only a small number of candidates survive automation and human judgment.\nMake evidence human-legible: Machine checks are necessary, but a reviewer cannot quickly interpret a pile of tensors or raw values. Semantic task interfaces—text in/text out or text in/image out—make final behavior legible enough for a human to spot-check quickly. A spot check is not proof. It complements automated tests by ensuring that their evidence ends in behavior a person can understand.\nMake validation agent-native and self-improving: Agents can generate tests, probes, and operating procedures alongside the code, then refine them as real artifacts expose missing assumptions. If automated checks pass but a human finds a bad final artifact, the process has admitted a false success.\nReproduce: Reproduce the failure, encode the missing invariant or regression, and harden the SOP so the next run is harder to fool.\nMake QA and development adversarial collaborators: QA is not a downstream team that receives a finished implementation. QA and developers operate on the same reproducible CI pipeline from organizationally independent positions. QA should function much like a red team attempting to falsify the implementation’s claims. Developers harden the implementation and the pipeline in response. Shared evidence makes findings reproducible. Independent ownership keeps the challenge credible.\nCandidate code can scale with agents and tokens. Trustworthy software can scale only as fast as its evidence and validation system.\nThe practical effect of this approach is that every engineer takes on work that resembles management and direction. The highest-leverage questions move upstream:\nWhat problem is worth solving?\nCan the work be decomposed and scaled safely?\nWhat technical and organizational constraints can turn untrusted candidate outputs into a result that deserves trust?\nAgent outputs begin as untrusted candidates. Model-family ownership, reversible changes, independent QA challenge, reproducible CI, and human-legible evidence do not guarantee correctness. They make claims falsifiable, failures easier to contain, and acceptance or rejection easier to review.\nHumans still inspect implementations and debug failures. But their most valuable work increasingly lies in designing and governing the system: setting intent and acceptance criteria, deciding where independence is required, interpreting anomalous evidence, and remaining accountable for release.\nWhat aspects of TensorRT Model Connect remain unsolved?\nTensorRT Model Connect is currently in public preview, and several parts of this model are still being tested and refined.\nNot every engineering task can be decomposed into independent units.\nMinimal project-specific orchestration is not a universal best practice. Adding structure is expected where repeated failures justify it.\nModel-family isolation reduces blast radius but cannot eliminate failures in shared infrastructure.\nReference implementations are useful comparison points, not infallible oracles. Tests also need independent invariants and carefully reviewed tolerances.\nMore parallel agents can increase demand for validation faster than they increase accepted throughput.\nMost tasks are still initiated by humans. Automated task discovery and large-scale concurrency are future directions, not claims about the current system.\nThese limitations are not incidental. They define the engineering work required to make AI-native development dependable.\nMoving from a production model to a better developer experience\nThe purpose of this work is not just the inference system itself. It is the developer experience that the system can make possible.\nModel developers should not need to become inference experts before they can evaluate and deploy a supported model efficiently on NVIDIA hardware. TensorRT Model Connect aims to provide a clear path from a Hugging Face or local checkpoint to a versioned bundle and native task API, while keeping the model-family implementation visible enough to inspect, extend, and customize.\nThe longer-term aspiration is straightforward: connect a model through a stable boundary, then continue benefiting as TensorRT, CUDA, kernels, compilers, and supported NVIDIA platforms improve underneath it. Note that this is an aspirational goal rather than a guarantee of current compatibility for every model or target. For more detailed information, refer to the TensorRT-Model-Connect documentation .\nTensorRT Model Connect will succeed only if it lowers the expertise barrier while preserving the accuracy, performance, reliability, and maintainability developers expect.\nThat is also the larger promise of AI-native development: not code for its own sake, but a means to make previously expensive, fragmented engineering problems economically possible—without giving up evidence, accountability, or quality.\nTry TensorRT Model Connect and help improve it\nTensorRT Model Connect is open source and evolving rapidly. Want to get involved?\nThe team is still learning what an AI-native open source project should look like. The most valuable feedback will come from developers who try it, inspect its evidence, find its limits, and help improve the boundaries.\nYifei Fang is a senior software engineer on the NVIDIA TensorRT team, where he leads the AI-Native Software initiative for NVIDIA TensorRT Model Connect. His work focuses on expanding model support across the TensorRT ecosystem and fostering a vibrant community around framework-independent inference software.",
+ "gold": {
+  "items": [],
+  "not_kept": [
+   {
+    "span": "NVIDIA TensorRT Model Connect is an open source collection of AI model reference implementations in C++ built on NVIDIA TensorRT.",
+    "weight": "not_kept",
+    "reason": "§5.3 没有业务规模的产品、游戏、驱动、跑分细节：一个免费开源软件库的介绍，没有业务规模；也不是新发布（文章是经验总结）"
+   },
+   {
+    "span": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+    "weight": "optional",
+    "reason": "§6 可选：生态数字（论文数、获奖、下载量、开发者人数、大会人数）（D243 第 3 条）：支持的模型家族数是生态数字；作者自己也说它不衡量生产力"
+   },
+   {
+    "span": "TensorRT Model Connect is currently in public preview, and several parts of this model are still being tested and refined.",
+    "weight": "not_kept",
+    "reason": "§5.3 没有业务规模的产品、游戏、驱动、跑分细节：开源工具的阶段，没有业务规模"
+   },
+   {
+    "span": "AI increases the rate at which candidate implementations can be produced. Architecture and validation determine whether that increased output becomes reliable software.",
+    "weight": "not_kept",
+    "reason": "§5.3 作者的一般性风险清单和没有推导的看法：工程方法论的一般看法"
+   },
+   {
+    "span": "Most tasks are still initiated by humans. Automated task discovery and large-scale concurrency are future directions, not claims about the current system.",
+    "weight": "not_kept",
+    "reason": "§5.3 没有业务规模的产品、游戏、驱动、跑分细节：开发流程细节"
+   },
+   {
+    "span": "Yifei Fang is a senior software engineer on the NVIDIA TensorRT team, where he leads the AI-Native Software initiative for NVIDIA TensorRT Model Connect.",
+    "weight": "not_kept",
+    "reason": "§5.3 模板（署名、作者简介、广告；页面上和本文无关的内容：相关文章预告、推荐列表、别的新闻标题）：作者简介"
+   }
+  ],
+  "questions": {
+   "must_open": [],
+   "may_open": [],
+   "must_not": [
+    {
+     "gist": "TensorRT Model Connect 到某日支持多少个模型家族，或能否结束公开预览",
+     "rule": "§4 测试 1 值得追：写不出会改变哪项收入、利润、现金或信用风险、竞争位置；§3 开题理由是封闭的（D184），不属五类之一"
+    }
+   ]
+  }
+ },
+ "answers": {
+  "A": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+     "one_line": "NVIDIA reported that TensorRT Model Connect covered 128 model families tested on NVIDIA GB300 in the July 29, 2026 public release comparison.",
+     "speaker": "NVIDIA, in a blog post by Yifei Fang",
+     "original_day": "2026-07-29",
+     "tier": "fact"
+    }
+   ],
+   "questions": []
+  },
+  "B": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+     "one_line": "NVIDIA reported that its TensorRT Model Connect project covered 128 model families tested on NVIDIA GB300 in the July 29, 2026 release comparison.",
+     "speaker": "NVIDIA, in a technical blog by Yifei Fang",
+     "original_day": "2026-09-29",
+     "tier": "fact"
+    }
+   ],
+   "questions": []
+  },
+  "C": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+     "one_line": "NVIDIA reported that TensorRT Model Connect covered 128 model families tested on GB300 in the July 29, 2026 release comparison.",
+     "speaker": "NVIDIA, in a blog post by Yifei Fang",
+     "original_day": "2026-09-29",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e2",
+     "quote": "TensorRT Model Connect is currently in public preview, and several parts of this model are still being tested and refined.",
+     "one_line": "NVIDIA said TensorRT Model Connect was in public preview and that several parts were still being tested and refined as of September 29, 2026.",
+     "speaker": "NVIDIA, in a blog post by Yifei Fang",
+     "original_day": "2026-09-29",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "D": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+     "one_line": "NVIDIA reported that, as of its July 29, 2026 release comparison, TensorRT Model Connect covered 128 model families tested on NVIDIA GB300.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-09-29",
+     "tier": "fact"
+    }
+   ],
+   "questions": []
+  },
+  "E": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+     "one_line": "NVIDIA reported that, as of its July 29, 2026 release comparison, TensorRT Model Connect covered 128 model families tested on GB300.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-09-29",
+     "tier": "fact"
+    },
+    {
+     "id": "e2",
+     "quote": "TensorRT Model Connect is currently in public preview, and several parts of this model are still being tested and refined.",
+     "one_line": "NVIDIA stated that TensorRT Model Connect was in public preview and that parts of the project were still being tested and refined.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-09-29",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  },
+  "F": {
+   "statements": [],
+   "questions": []
+  },
+  "G": {
+   "statements": [],
+   "questions": []
+  },
+  "H": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+     "one_line": "NVIDIA reported that TensorRT Model Connect covered 128 model families tested on NVIDIA GB300 in the July 29, 2026 release comparison.",
+     "speaker": "NVIDIA, in a company blog by Yifei Fang",
+     "original_day": "2026-07-29",
+     "tier": "third_party_view"
+    }
+   ],
+   "questions": []
+  },
+  "I": {
+   "statements": [
+    {
+     "id": "e1",
+     "quote": "As of the public July 29, 2026 release comparison, the project covered 128 model families tested on NVIDIA GB300.",
+     "one_line": "NVIDIA stated that its TensorRT Model Connect project covered 128 model families tested on NVIDIA GB300 in the public release comparison as of July 29, 2026.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-07-29",
+     "tier": "party_statement"
+    },
+    {
+     "id": "e2",
+     "quote": "TensorRT Model Connect is currently in public preview, and several parts of this model are still being tested and refined.",
+     "one_line": "NVIDIA said TensorRT Model Connect was in public preview as of September 29, 2026, with several parts still being tested and refined.",
+     "speaker": "NVIDIA",
+     "original_day": "2026-09-29",
+     "tier": "party_statement"
+    }
+   ],
+   "questions": []
+  }
+ }
+}

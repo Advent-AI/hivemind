@@ -1,4 +1,4 @@
-# Weighted Idea pipeline — D194/D195
+# Weighted Idea pipeline — D288/D289
 
 The local default is `poc-v31-idea` with `idea-summary-v6`, the same Luna model and three-call flow. The model decides the participating theses and their impact percentages. The writer requires a complete per-ID JSON result and positive integer weights totaling 100; excluded connections carry zero. The UI displays the percentages in the Idea canvas's Thesis headers and calculates signed weighted history. The library's thesis records have no global weight.
 
@@ -16,7 +16,7 @@ The real cached Data Center example displays v3 60%, v1 40% and overlapping v9 0
 
 ## Live model samples
 
-The same Data Center context ran three fresh old-prompt controls and three weighted candidates. Every weighted answer has valid identities, directions and a 100% total. Percentages are discretionary and differ across fresh model responses, as Alex explicitly allowed in D195; no preferred allocation or fixed thesis count is imposed.
+The same Data Center context ran three fresh old-prompt controls and three weighted candidates. Every weighted answer has valid identities, directions and a 100% total. Percentages are discretionary and differ across fresh model responses, as Alex explicitly allowed in D289; no preferred allocation or fixed thesis count is imposed.
 
 | Candidate | Data Center revenue | Cloud capex | Overlapping segment revenue | Composite |
 |---|---:|---:|---:|---:|

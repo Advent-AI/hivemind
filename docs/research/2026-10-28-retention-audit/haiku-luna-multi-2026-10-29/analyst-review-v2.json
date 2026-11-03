@@ -1,0 +1,387 @@
+{
+  "reviewer": "Codex, directly reading source and outputs; not an independent human gold",
+  "rules": "../haiku-luna-multi-design-2026-10-29.md",
+  "classes": {
+    "complete": "all required information and each contributing record supported; no consequential errors",
+    "partial": "some necessary information present but missing necessary information or support",
+    "error": "material unsupported claim, wrong source/date/period or contradiction; error takes precedence over partial",
+    "absent": "none of core meaning present",
+    "uncertain": "not counted right or wrong",
+    "invalid": "not a completed schema-valid answer"
+  },
+  "rows": [
+    {
+      "case": "memory",
+      "model": "haiku",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "error",
+          "ids": [
+            "e6"
+          ],
+          "reason": "Original day July 18 is the article date, not a sourced SK hynix statement date; quote only says lasting to 2030, missing SK hynix and 2027."
+        },
+        {
+          "n": 2,
+          "grade": "error",
+          "ids": [
+            "ev4"
+          ],
+          "reason": "Quote and summary preserve both years and source, but invent July 18 as SK hynix's statement day."
+        },
+        {
+          "n": 3,
+          "grade": "error",
+          "ids": [
+            "e6"
+          ],
+          "reason": "Quote and summary preserve both years and source, but invent July 18 as SK hynix's statement day."
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "model": "gpt",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "complete",
+          "ids": [
+            "e8"
+          ],
+          "reason": "SK hynix forecast with both years, full quote, original day unknown."
+        },
+        {
+          "n": 2,
+          "grade": "complete",
+          "ids": [
+            "e8"
+          ],
+          "reason": "SK hynix forecast with both years, full quote, original day unknown. event_time is publication date rather than the forecast horizon; separately flagged as ambiguous metadata."
+        },
+        {
+          "n": 3,
+          "grade": "complete",
+          "ids": [
+            "e8"
+          ],
+          "reason": "SK hynix forecast with both years, full quote, original day unknown."
+        }
+      ]
+    },
+    {
+      "case": "amd",
+      "model": "haiku",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "error",
+          "ids": [
+            "e3",
+            "e4"
+          ],
+          "reason": "AMD statement day July 22 is unsupported; e4 quote also omits benchmark and actor context."
+        },
+        {
+          "n": 2,
+          "grade": "error",
+          "ids": [
+            "e4"
+          ],
+          "reason": "AMD statement day July 22 unsupported; summary also does not clearly say the 3.3x is projected."
+        },
+        {
+          "n": 3,
+          "grade": "error",
+          "ids": [
+            "e4"
+          ],
+          "reason": "AMD statement day July 22 unsupported; estimate and both numbers otherwise appear."
+        }
+      ]
+    },
+    {
+      "case": "amd",
+      "model": "gpt",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "error",
+          "ids": [
+            "e5"
+          ],
+          "reason": "AMD statement day July 22 is the article date, not a sourced date."
+        },
+        {
+          "n": 2,
+          "grade": "partial",
+          "ids": [
+            "e6",
+            "e7"
+          ],
+          "reason": "The 3.3x record's excerpt omits AMD and Vera baseline; both numbers appear but its summary is not self-supported."
+        },
+        {
+          "n": 3,
+          "grade": "error",
+          "ids": [
+            "e3",
+            "e4"
+          ],
+          "reason": "AMD statement day July 22 unsupported; e4 quote omits AMD and the baseline."
+        }
+      ]
+    },
+    {
+      "case": "letter",
+      "model": "haiku",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "partial",
+          "ids": [
+            "e1"
+          ],
+          "reason": "Nvidia and the position present; exactly 25 companies not supplied."
+        },
+        {
+          "n": 2,
+          "grade": "partial",
+          "ids": [
+            "e1",
+            "e2"
+          ],
+          "reason": "e1 quote supports 25 but not Nvidia or other named companies in e1's summary; e2 supports Nvidia but lacks exact 25. e1's own summary is not fully quote-supported."
+        },
+        {
+          "n": 3,
+          "grade": "partial",
+          "ids": [
+            "e1"
+          ],
+          "reason": "Nvidia and the position present; exactly 25 companies not supplied."
+        }
+      ]
+    },
+    {
+      "case": "letter",
+      "model": "gpt",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "partial",
+          "ids": [
+            "e1",
+            "e2"
+          ],
+          "reason": "The first summary adds a July 24 date missing from its own quote; the second record cannot repair its quote under the precommitted rule."
+        },
+        {
+          "n": 2,
+          "grade": "partial",
+          "ids": [
+            "e1"
+          ],
+          "reason": "Quote and summary name Nvidia and more than 20 others; 25 occurs in original_who, but quote does not support exactly 25."
+        },
+        {
+          "n": 3,
+          "grade": "partial",
+          "ids": [
+            "e1"
+          ],
+          "reason": "Nvidia and position given; exactly 25 not supported."
+        }
+      ]
+    },
+    {
+      "case": "treasury",
+      "model": "haiku",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "complete",
+          "ids": [
+            "e2"
+          ],
+          "reason": "Secretary, investigation whether theft occurred and sanction power preserved."
+        },
+        {
+          "n": 2,
+          "grade": "partial",
+          "ids": [
+            "e4"
+          ],
+          "reason": "Summary says look into Chinese IP theft rather than whether it occurred, weakening the uncertainty; quote has the qualification."
+        },
+        {
+          "n": 3,
+          "grade": "complete",
+          "ids": [
+            "e2"
+          ],
+          "reason": "Secretary, investigation whether theft occurred and sanction power preserved."
+        }
+      ]
+    },
+    {
+      "case": "treasury",
+      "model": "gpt",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "complete",
+          "ids": [
+            "e4"
+          ],
+          "reason": "Investigation of whether theft occurred and sanction power both preserved."
+        },
+        {
+          "n": 2,
+          "grade": "complete",
+          "ids": [
+            "e3"
+          ],
+          "reason": "Investigation of whether theft occurred and sanction power both preserved."
+        },
+        {
+          "n": 3,
+          "grade": "complete",
+          "ids": [
+            "e2"
+          ],
+          "reason": "Investigation of whether theft occurred and sanction power both preserved."
+        }
+      ]
+    },
+    {
+      "case": "kimi",
+      "model": "haiku",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "complete",
+          "ids": [
+            "e4"
+          ],
+          "reason": "Named White House adviser makes attributed Moonshot/Kimi K3/Anthropic claim; date derivable from Wednesday."
+        },
+        {
+          "n": 2,
+          "grade": "complete",
+          "ids": [
+            "e5"
+          ],
+          "reason": "Named White House adviser makes attributed Moonshot/Kimi K3/Anthropic claim."
+        },
+        {
+          "n": 3,
+          "grade": "complete",
+          "ids": [
+            "e3"
+          ],
+          "reason": "Named White House adviser makes attributed Moonshot/Kimi K3/Anthropic claim."
+        }
+      ]
+    },
+    {
+      "case": "kimi",
+      "model": "gpt",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "complete",
+          "ids": [
+            "e18"
+          ],
+          "reason": "Attributed White House adviser claim names Moonshot, Kimi K3 and Anthropic."
+        },
+        {
+          "n": 2,
+          "grade": "complete",
+          "ids": [
+            "e15"
+          ],
+          "reason": "Attributed White House adviser claim names Moonshot, Kimi K3 and Anthropic."
+        },
+        {
+          "n": 3,
+          "grade": "complete",
+          "ids": [
+            "e13"
+          ],
+          "reason": "Attributed White House adviser claim names Moonshot, Kimi K3 and Anthropic."
+        }
+      ]
+    },
+    {
+      "case": "singapore_exclude",
+      "model": "haiku",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "partial",
+          "ids": [
+            "e4",
+            "e6"
+          ],
+          "reason": "e4 quote does not support the added destination qualification; e6 covers the charges."
+        },
+        {
+          "n": 2,
+          "grade": "partial",
+          "ids": [
+            "e3",
+            "e5"
+          ],
+          "reason": "e3 quote does not support the ultimate destination qualification; e5 summary omits false representation."
+        },
+        {
+          "n": 3,
+          "grade": "partial",
+          "ids": [
+            "e4",
+            "e5"
+          ],
+          "reason": "e4 quote does not support its first corporate prosecution claim; e5 covers servers."
+        }
+      ]
+    },
+    {
+      "case": "singapore_exclude",
+      "model": "gpt",
+      "samples": [
+        {
+          "n": 1,
+          "grade": "complete",
+          "ids": [
+            "e7",
+            "e11"
+          ],
+          "reason": "e7 and e11 support the two case components."
+        },
+        {
+          "n": 2,
+          "grade": "error",
+          "ids": [
+            "e6",
+            "e10"
+          ],
+          "reason": "e6 assigns the July 2 article date as the authorities original statement date without evidence."
+        },
+        {
+          "n": 3,
+          "grade": "error",
+          "ids": [
+            "e7",
+            "e11"
+          ],
+          "reason": "e7 assigns the July 2 article date as the authorities original statement date without evidence."
+        }
+      ]
+    }
+  ],
+  "independent_review": "../haiku-luna-multi-results-review-2026-10-29.txt",
+  "note": "Version 2 incorporates independent review after checking cited original records; version 1 remains unchanged."
+}

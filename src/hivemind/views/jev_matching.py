@@ -8,11 +8,20 @@ piece is the same statement, `replace` when the incoming piece supersedes it, el
 Thresholds are pre-set (0.5); a membership above the threshold is added to the candidate's group references."""
 import dataclasses
 import hashlib
+import concurrent.futures
+import copy
 
-from .. import jev, universe as _universe
+from .. import config, jev, model, universe as _universe
 from . import identity, matching, store
 
 THRESHOLD = 0.5
+# D190: the collision judge. Jev reads wording and calls a population variant of one aggregate 'part of' (six 2026 aggregates on the r3
+# ledger, each judged 'new'); the generative model, asked the analyst's question, merged five of six. It is asked only for the theses of
+# the candidate's own object and measure, and its verdict on those replaces Jev's.
+COLLISION_RELATIONS = ['same_question', 'same_question_other_period', 'distinct_question_same_matter', 'different']
+COLLISION_SCHEMA = {'type': 'object', 'additionalProperties': False, 'required': ['relations'],
+                    'properties': {'relations': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['thesis_id', 'relation', 'why'],
+                                   'properties': {'thesis_id': {'type': 'string'}, 'relation': {'type': 'string', 'enum': COLLISION_RELATIONS}, 'why': {'type': 'string'}}}}}}
 RELATIONS = {"same_quantity_or_event": "both ask about the same defined quantity or the same event: alternative wordings, or two estimates or figures of that one quantity",
              "same_quantity_other_period": "the same defined quantity or event series for another period, such as the next fiscal or calendar year",
              "part_of": "one asks about a strict component or subset of the other, in either direction; not identical",
@@ -41,6 +50,7 @@ class Decision:
     output_tokens: int
     cost_usd: float
     calls: int = 0
+    request_records: list = dataclasses.field(default_factory=list)
 
 
 def candidate_state(c, evidence):
@@ -82,6 +92,13 @@ def piece_question(text):
             'instructions': 'How does the INCOMING PIECE relate to the STORED PIECE below, already under the same thesis? Use only the supplied text. STORED PIECE:\n' + text}
 
 
+def event_home(conn, view_id, key, c):
+    """D248 item 2 (R2-a): an open event question of the same object takes the same event under another deadline; the deadline is
+    evidence, and the successor opens only once the question has closed (can_succeed)."""
+    return bool(key) and key.get('measure') in identity.EVENT_MEASURES and store.is_open(conn, view_id) \
+        and (store.view(conn, view_id) or {}).get('object_id') == c.get('object') and not identity.conflicts(key, c, merging=False)
+
+
 def can_succeed(conn, view_id, key, c):
     """06-views succession: the candidate asks the same object's quantity (no typed field conflicts: measure, event type, a stated
     basis or unit, a code-owned scope) for a later period that does not overlap, and the thesis has no successor yet."""
@@ -89,6 +106,23 @@ def can_succeed(conn, view_id, key, c):
         and not identity.conflicts(key, c, merging=False) \
         and bool(key.get('period_end') and c.get('period_start') and key['period_end'] < c['period_start']) \
         and not conn.execute('select 1 from successions where succeeds=?', (view_id,)).fetchone()
+
+
+def shared_quantity_target(conn, c):
+    """D197: a shared quantity's destination is code's. An open thesis of the same theme, measure and period is the same
+    thesis (merge); the latest earlier period without a successor is its predecessor (succession); otherwise none."""
+    if not identity.is_shared(c) or not c.get('period_start'):
+        return None
+    exact = store.exact_key_views(conn, c)
+    if exact:
+        return 'merge', exact[0]
+    earlier = []
+    for row in conn.execute('select k.view_id, k.period_end from view_keys k join views v using(view_id) where v.object_id=? and k.measure=? order by k.period_end desc',
+                            (c['object'], c['measure'])):
+        key = store.view_key(conn, row['view_id'])
+        if key and identity.is_shared(key) and can_succeed(conn, row['view_id'], key, c):
+            earlier.append(row['view_id'])
+    return ('succession', earlier[0]) if earlier else None
 
 
 def succession_target(conn, c, listed):
@@ -109,14 +143,111 @@ def _summary(answer):
     return f'{top[0]} {top[1]:.2f}'
 
 
-def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None):
-    setting = cfg.matching
+def _answers(archive, cfg, jobs, workers, transport):
+    """Ask independent questions; equal concurrent requests share one archived result."""
+    if not isinstance(workers, int) or isinstance(workers, bool) or workers < 1:
+        raise ValueError('Jev workers must be a positive integer')
+
+    def ask(job):
+        state, questions = job
+        return jev.ask(archive, cfg, cfg.matching, state, questions, 'match', transport=transport)
+
+    if workers == 1:
+        return [ask(job) if job[1] else None for job in jobs]
+    keys, unique, replies = [], {}, {}
+    for state, questions in jobs:
+        if not questions:
+            keys.append(None)
+            continue
+        _, key = model.request_identity(jev.request_for(cfg.matching, state, questions))
+        keys.append(key)
+        if key not in unique:
+            unique[key] = (state, copy.deepcopy(questions))
+    waiting, active = iter(unique.items()), {}
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
+    try:
+        def fill():
+            while len(active) < workers:
+                next_job = next(waiting, None)
+                if next_job is None:
+                    break
+                key, job = next_job
+                active[pool.submit(ask, job)] = key
+        fill()
+        while active:
+            concurrent.futures.wait(active, return_when=concurrent.futures.FIRST_COMPLETED)
+            completed = [future for future in active if future.done()]
+            # Check the whole completed set before submitting any replacement work.
+            for future in completed:
+                future.result()
+            for future in completed:
+                replies[active.pop(future)] = future.result()
+            fill()
+    finally:
+        for future in active:
+            future.cancel()
+        pool.shutdown(wait=True, cancel_futures=True)
+    results, used = [], set()
+    for key in keys:
+        if key is None:
+            results.append(None)
+            continue
+        answer = replies[key]
+        # A later logical use is exactly what a serial archive lookup would return.
+        results.append(dataclasses.replace(answer, cached=True, cost_usd=0.0) if key in used else answer)
+        used.add(key)
+    return results
+
+
+def collision_peers(conn, c, listed):
+    """The listed theses of the candidate's own object and measure: where one question may be held twice under other words."""
+    peers = []
+    for v in listed:
+        key = store.view_key(conn, v) if c.get('measure') else None
+        if key and key.get('measure') == c.get('measure') and (store.view(conn, v) or {}).get('object_id') == c['object']:
+            peers.append(v)
+    return peers
+
+
+def ask_collision_judge(archive, cfg, conn, state, peers, llm_transport):
+    """One generative call: the candidate's state and the peers' thesis texts; returns {thesis_id: relation}."""
+    with open(config.prompt_path(cfg.collision.prompt_version + '.txt'), encoding='utf-8') as handle:
+        system = handle.read()
+    user = state + '\n\nTHESES:\n' + '\n'.join(f'--- {v}\n{thesis_text(conn, v)}' for v in peers) + '\n\nFor each thesis id, state the relation.'
+    answer = model.call(archive, cfg, cfg.collision, system, user, COLLISION_SCHEMA, 'collision', 'match', transport=llm_transport)
+    return answer, {r['thesis_id']: r['relation'] for r in answer.data['relations'] if r['thesis_id'] in peers}
+
+
+def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None, llm_transport=None, workers=1):
     data = {'candidates': [], 'evidence': []}
     total = Decision(data, 0, '', True, 0, 0, 0, 0.0)
     shas = []
+    jobs, candidate_jobs, evidence_jobs = [], [], []
+    # All database reads and request construction stay on the coordinator thread.
+    for c in candidates:
+        listed = list(dict.fromkeys(list(lists.candidate_lists.get(c['id'], [])) + [v['view_id'] for v in shown_views]))
+        fixed = shared_quantity_target(conn, c)                       # D197: code decides a shared quantity's destination; Jev is not asked its relations
+        questions = {} if fixed else {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
+        groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
+        for g in groups:
+            questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
+        candidate_jobs.append((c, listed, groups, len(jobs) if questions else None, fixed))
+        if questions:
+            jobs.append((candidate_state(c, evidence), questions))
+    for e in evidence:
+        pairs = [(e['id'], v) for v in e['links'] if (e['id'], v) in lists.evidence_lists]
+        if not pairs:
+            continue
+        questions = {f'piece__{v}__{x}': piece_question(matching.describe_evidence(conn, x, english=True)) for _, v in pairs for x in lists.evidence_lists[(e['id'], v)]}
+        said_day = e.get('original_day') or item['publication_day']
+        evidence_jobs.append((e, pairs, said_day, len(jobs)))
+        jobs.append((piece_state(e, said_day), questions))
+    replies = _answers(archive, cfg, jobs, workers, transport)
 
-    def ask(state, questions):
-        answer = jev.ask(archive, cfg, setting, state, questions, 'match', transport=transport)
+    def answers_for(index):
+        answer = replies[index]
+        if answer is None:
+            return {}
         total.cost_usd += answer.cost_usd
         total.input_tokens += answer.input_tokens
         total.output_tokens += answer.output_tokens
@@ -125,23 +256,22 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
         total.call_id = answer.call_id
         total.calls += 1
         shas.append(answer.request_sha256)
+        total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
         return answer.data
 
-    for c in candidates:
-        listed = list(dict.fromkeys(list(lists.candidate_lists.get(c['id'], [])) + [v['view_id'] for v in shown_views]))   # the targets matching.check accepts
-        questions = {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
-        # D165: a company's own line may join a group another thesis founded, so membership is asked for every candidate; founding stays guarded in groups.plan
-        groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
-        for g in groups:
-            questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
-        answers = ask(candidate_state(c, evidence), questions) if questions else {}
-        same = sorted(((answers[f'rel__{v}']['probabilities']['same_quantity_or_event'], v) for v in listed
-                       if answers[f'rel__{v}']['choice'] == 'same_quantity_or_event' and answers[f'rel__{v}']['probabilities']['same_quantity_or_event'] >= THRESHOLD),
-                      reverse=True)
+    for c, listed, groups, job_index, fixed in candidate_jobs:
+        answers = answers_for(job_index) if job_index is not None else {}
         joined = [g['group_id'] for g in groups if answers[f'member__{g["group_id"]}']['noul'] >= THRESHOLD]
         for group_id in joined:
             if group_id not in (c.get('group_refs') or []) and group_id not in (c.get('jev_group_refs') or []):
                 c.setdefault('jev_group_refs', []).append(group_id)          # the writer records these with basis 'jev'
+        if fixed:                                                # D197: one aggregate per theme, measure and period; the wording is not identity
+            data['candidates'].append({'id': c['id'], 'outcome': fixed[0], 'target_view_id': fixed[1], 'dependencies': [],
+                                       'reason': f'shared quantity: {fixed[0]} by key (D197); groups joined: {joined or "none"}'})
+            continue
+        same = sorted(((answers[f'rel__{v}']['probabilities']['same_quantity_or_event'], v) for v in listed
+                       if answers[f'rel__{v}']['choice'] == 'same_quantity_or_event' and answers[f'rel__{v}']['probabilities']['same_quantity_or_event'] >= THRESHOLD),
+                      reverse=True)
         reasons = '; '.join(f'{qid[5:]}: {_summary(a)}' for qid, a in answers.items() if qid.startswith('rel__'))
         outcome, target = 'new', ''
         for _, v in same:
@@ -165,22 +295,63 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
                            reverse=True)
             for _, v in other:
                 key = store.view_key(conn, v) if c.get('measure') else None
+                if event_home(conn, v, key, c):
+                    outcome, target = 'merge', v
+                    break
                 if can_succeed(conn, v, key, c):
                     outcome, target = 'succession', v
                     break
         if outcome == 'new':
+            # D258 (R2-e, D248 items 1 and 6): a candidate that asks about a component, instance or subset of an open question is filed
+            # under it; the part is evidence of the card, not a card of its own. The typed fields still decide (a signing question never
+            # merges into an amount), and the collision judge below may keep a component apart under its rule.
+            parts = sorted(((answers[f'rel__{v}']['probabilities']['part_of'], v) for v in listed
+                            if answers[f'rel__{v}']['choice'] == 'part_of' and answers[f'rel__{v}']['probabilities']['part_of'] >= THRESHOLD),
+                           reverse=True)
+            for _, v in parts:
+                key = store.view_key(conn, v) if c.get('measure') else None
+                if key and identity.conflicts(key, c, merging=False):
+                    continue
+                if store.is_open(conn, v):
+                    outcome, target = 'merge', v
+                    break
+        if outcome == 'new':
             successor_of = succession_target(conn, c, listed)
             if successor_of:
-                outcome, target = 'succession', successor_of
+                outcome, target = ('merge' if event_home(conn, successor_of, store.view_key(conn, successor_of), c) else 'succession'), successor_of
+        peers = collision_peers(conn, c, listed) if getattr(cfg, 'collision', None) else []
+        judged = ''
+        if peers:
+            answer, verdicts = ask_collision_judge(archive, cfg, conn, candidate_state(c, evidence), peers, llm_transport)
+            total.cost_usd += answer.cost_usd
+            total.input_tokens += answer.input_tokens
+            total.output_tokens += answer.output_tokens
+            total.calls += 1
+            total.cached = total.cached and answer.cached
+            shas.append(answer.request_sha256)
+            total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
+            judged = '; collision judge: ' + ', '.join(f'{v}: {verdicts.get(v, "(no answer)")}' for v in peers)
+            if target in peers and verdicts.get(target) not in ('same_question', 'same_question_other_period'):
+                outcome, target = 'new', ''                      # Jev's merge or succession on a peer the judge keeps apart
+            if outcome == 'new':
+                for v in peers:
+                    key = store.view_key(conn, v)
+                    if verdicts.get(v) == 'same_question' and not identity.conflicts(key, c, merging=False):
+                        if identity.conflicts(key, c, merging=True):
+                            if can_succeed(conn, v, key, c):
+                                outcome, target = 'succession', v
+                                break
+                            continue
+                        if store.is_open(conn, v):
+                            outcome, target = 'merge', v
+                            break
+                    if verdicts.get(v) == 'same_question_other_period' and can_succeed(conn, v, key, c):
+                        outcome, target = 'succession', v
+                        break
         data['candidates'].append({'id': c['id'], 'outcome': outcome, 'target_view_id': target or '', 'dependencies': [],
-                                   'reason': f'jev: {reasons or "no list"}; groups joined: {joined or "none"}'})
-    for e in evidence:
-        pairs = [(e['id'], v) for v in e['links'] if (e['id'], v) in lists.evidence_lists]
-        if not pairs:
-            continue
-        questions = {f'piece__{v}__{x}': piece_question(matching.describe_evidence(conn, x, english=True)) for _, v in pairs for x in lists.evidence_lists[(e['id'], v)]}
-        said_day = e.get('original_day') or item['publication_day']
-        answers = ask(piece_state(e, said_day), questions) if questions else {}
+                                   'reason': f'jev: {reasons or "no list"}; groups joined: {joined or "none"}{judged}'})
+    for e, pairs, said_day, job_index in evidence_jobs:
+        answers = answers_for(job_index)
         for _, v in pairs:
             scored = [(answers[f'piece__{v}__{x}'], x) for x in lists.evidence_lists[(e['id'], v)]]
             repeats = sorted(((a['probabilities']['same_statement'], x) for a, x in scored if a['choice'] == 'same_statement' and a['probabilities']['same_statement'] >= THRESHOLD), reverse=True)

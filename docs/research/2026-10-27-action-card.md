@@ -4,7 +4,7 @@ Alex requested an Action card to the left of the Trigger: Buy [Spot] [Market Ord
 
 ## Contract before code
 
-D237 edit contract (supersedes immediate typed allocation updates):
+D330 edit contract (supersedes immediate typed allocation updates):
 
 | State | Event | Result |
 | --- | --- | --- |
@@ -15,9 +15,9 @@ D237 edit contract (supersedes immediate typed allocation updates):
 | Not editing | Wheel | Adjust committed percentage by 0.1, as before |
 | Any | Chart range changes | Cancel any unfinished input through blur; retain committed percentage |
 
-The allocation writer is the Enter/unfocused-wheel handler; the host callback and range redraw read only committed settings. Native input owns draft text, including temporarily empty input. All focus paths use blur for cancellation; replacement destroys the draft without sending it. The removed footer has one writer and one CSS rule. Source/currency/time move to the SVG's accessible description. D235's plan-only authority and captured stock data stay unchanged; D236's header stays without a badge. This presentation edit affects no frozen backend module.
+The allocation writer is the Enter/unfocused-wheel handler; the host callback and range redraw read only committed settings. Native input owns draft text, including temporarily empty input. All focus paths use blur for cancellation; replacement destroys the draft without sending it. The removed footer has one writer and one CSS rule. Source/currency/time move to the SVG's accessible description. D328's plan-only authority and captured stock data stay unchanged; D329's header stays without a badge. This presentation edit affects no frozen backend module.
 
-Authority: a read-only price display and editable plan. No submit action, wallet connection, balance request, signer or execution endpoint. The supplied wallet string is an example label. Venue controls have the requested single options; they do not assert that Hyperliquid lists NVIDIA spot. The chart keeps its actual NVDA stock / USD source in its accessible description; D237 sets the visible Action pair and venue label.
+Authority: a read-only price display and editable plan. No submit action, wallet connection, balance request, signer or execution endpoint. The supplied wallet string is an example label. Venue controls have the requested single options; they do not assert that Hyperliquid lists NVIDIA spot. The chart keeps its actual NVDA stock / USD source in its accessible description; D330 sets the visible Action pair and venue label.
 
 | State | Event | Result and writes |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ Authority: a read-only price display and editable plan. No submit action, wallet
 | Completed Idea | Edit investment or chart range | Local settings only; 0–100% in 0.1 steps; one of 1D/1W/1M/1Y |
 | Completed Idea | Replay / date / canvas range | Preserve Action settings; chart remains dated market data, independent of retrospective thesis date |
 | Completed Idea | Leave / return to tab | Preserve settings and camera; close menus, stop animations |
-| Any render | New query / replacement / teardown | Reset new-query settings to 5.0% and 1Y (D240); remove old controls/listeners; cancel old animation |
+| Any render | New query / replacement / teardown | Reset new-query settings to 5.0% and 1Y (D333); remove old controls/listeners; cancel old animation |
 | Price snapshot missing / malformed | Render | Show price unavailable; do not substitute invented points or break the Idea |
 | Reveal in flight | Input / resize / reduced motion | Existing cancellation settles all cards, including Action |
 
@@ -44,7 +44,7 @@ Authority: a read-only price display and editable plan. No submit action, wallet
 | Chart ranges | Use last observed time, not machine date; ordered finite positive USD closes; completed bars only; actual timestamp/source in the chart description |
 | User controls | Shared select keyboard and outside-close lifecycle; investment scroll does not pan canvas; no service request |
 
-Prior decisions: D222 centred the whole occupied width at 100%; D227 scans downward; D229 shows Trigger after the theses; D230 removes directional arrows from Trigger connections; D225 retains the current query on navigation. The additional column requires width-only reduction when the full row exceeds the canvas. No change to vertical fitting or thesis order. Action follows Trigger at the end of the reveal.
+Prior decisions: D316 centred the whole occupied width at 100%; D320 scans downward; D322 shows Trigger after the theses; D323 removes directional arrows from Trigger connections; D318 retains the current query on navigation. The additional column requires width-only reduction when the full row exceeds the canvas. No change to vertical fitting or thesis order. Action follows Trigger at the end of the reveal.
 
 Self-review: the market dates are later than the thesis ledger's August date, so the chart retains its own as-of date in its accessible description and never follows replay. The example wallet is not a real address and grants no authority. Snapshot failure is isolated from existing library rendering. Both connections touching Trigger remain plain. The new column participates in camera bounds and animation cancellation. No open contract choice remains.
 
@@ -64,8 +64,8 @@ Document reasoning refresh: the new market display does not write research input
 
 Final browser correction: focusing the new SVG chart produced 70.5px of native scrolling inside the canvas's `overflow: hidden` container, moving the replay controls off the top even though camera state was unchanged. The canvas is positioned by its camera, so its clipping container now uses `overflow: clip`, which does not create a native scroll container. The browser check focuses the real chart and asserts zero scroll and a fixed replay-toolbar position. This removes the mechanism for every focusable child of the canvas without intercepting focus or adding scroll handlers.
 
-D237/D238 verification: all 56 frontend tests and lint/format checks pass. The real-browser Action checks pass typed Enter commit, Escape cancellation, blur cancellation, empty input, draft wheel cancellation, immediate unfocused wheel, navigation/range retention, removed labels/footer and Monitoring icon. A scratch build that made Escape commit failed specifically with “Escape did not cancel the allocation draft”; the unchanged control passed. The source data and backend are unchanged. Bundle size: 179,200 bytes.
+D330/D331 verification: all 56 frontend tests and lint/format checks pass. The real-browser Action checks pass typed Enter commit, Escape cancellation, blur cancellation, empty input, draft wheel cancellation, immediate unfocused wheel, navigation/range retention, removed labels/footer and Monitoring icon. A scratch build that made Escape commit failed specifically with “Escape did not cancel the allocation draft”; the unchanged control passed. The source data and backend are unchanged. Bundle size: 179,200 bytes.
 
 The outside-click path is checked separately from focus loss: canvas panning prevents the browser’s normal focus change on blank space, so a capture-phase pointer listener cancels the active allocation draft before that handler runs. It uses the component’s existing AbortController and is removed on teardown. The browser check dispatches a pointer event on nonfocusable canvas text and also verifies a real click restores the saved value.
 
-D239 changes only the Monitoring indicator: a six-pixel black dot with a gentle scale/halo pulse replaces the robot. The reduced-motion style leaves a still dot. The old icon and SVG-specific status rule were removed; the Action controls and data paths are unchanged.
+D332 changes only the Monitoring indicator: a six-pixel black dot with a gentle scale/halo pulse replaces the robot. The reduced-motion style leaves a still dot. The old icon and SVG-specific status rule were removed; the Action controls and data paths are unchanged.

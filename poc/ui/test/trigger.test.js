@@ -9,7 +9,7 @@ import {
 import { layoutGraph } from '../src/model/graph.js';
 import { graphOf } from '../src/idea/idea.js';
 
-test('D226: all six Trigger operators distinguish below, equal and above the threshold', () => {
+test('D319: all six Trigger operators distinguish below, equal and above the threshold', () => {
   const expected = {
     '>': [false, false, true],
     '>=': [false, true, true],
@@ -33,7 +33,7 @@ test('D226: all six Trigger operators distinguish below, equal and above the thr
   console.log('Checked 18 operator boundaries, rounding, 0/100 and missing confidence.');
 });
 
-test('D226: unsupported comparisons and percentages fail the closed Trigger contract', () => {
+test('D319: unsupported comparisons and percentages fail the closed Trigger contract', () => {
   for (const condition of [
     null,
     { operator: '==', threshold: 70 },
@@ -48,7 +48,7 @@ test('D226: unsupported comparisons and percentages fail the closed Trigger cont
     assert.throws(() => triggerMatches(DEFAULT_TRIGGER_CONDITION, confidence), TypeError);
 });
 
-test('D228: a Trigger reserves a connected column to the left of the stored Idea graph', () => {
+test('D321: a Trigger reserves a connected column to the left of the stored Idea graph', () => {
   const card = JSON.parse(
     fs.readFileSync(new URL('./fixtures/idea-card-v3.json', import.meta.url), 'utf8'),
   );

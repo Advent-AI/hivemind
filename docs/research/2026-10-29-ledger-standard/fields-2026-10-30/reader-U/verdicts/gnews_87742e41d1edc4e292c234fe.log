@@ -1,0 +1,1020 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18b61-54a5-7e10-bc6a-d4dcdd956bdc
+--------
+user
+You are an independent reader. You are a hedge-fund analyst who covers NVIDIA and the AI-infrastructure themes around it. You did not write the extraction prompt and you have not seen any score. You may read files; do not open any file whose name contains "key", and do not open other packets.
+
+The product: every article goes through an extraction step that writes evidence records (a verbatim quote plus fields) into the analyst's ledger. Downstream, a model judges open research questions using only these records, and a matcher compares new records with old ones. The matcher and the judge read `original_who` (who originally said or did it) and `original_day` (the day it was originally said or done) to tell old news from new and to tell one source repeated by many outlets from several independent sources. So a wrong original speaker or day misleads them; a noise record wastes the judge's attention.
+
+Reference: /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html, the signed standard the product follows. Read sections 5.3, 5.4 and 5.5 before the packet. Use it for definitions:
+- who (5.4): the original claimant; whether it is their own estimate or someone else's measurement.
+- original statement day (5.4): when unknown, written as unknown, never the report day.
+- tier (5.5): the table of five rows (an upper row wins when two apply).
+
+The packet: docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-U/packets/gnews_87742e41d1edc4e292c234fe.json. It holds the article text as the model saw it, its publication_day, publisher and category, and two answers, A and B, from two different versions of the extraction (the order is random). Each answer is the list of records production keeps.
+
+Read the whole article first. Then judge every record of A and then every record of B on its own, against the article. Write your verdict as JSON only (no prose before or after), in this shape:
+
+{
+ "input_id": "...",
+ "A": [
+  {"id": "e1",
+   "worth": "keep" | "marginal" | "noise",
+   "one_line_ok": true | false,
+   "one_line_problem": null | "number/unit, lost condition or hedge, forecast written as done, wrong period, lost who said it, says more than the quote",
+   "who_ok": true | false,
+   "who_note": null | "the right original speaker, as the article gives it, and why",
+   "day_ok": true | false,
+   "day_note": null | "the day the statement was first made or the action taken, as the article gives it; unknown when the article does not say",
+   "tier_ok": true | false,
+   "tier_note": null | "the right tier: fact / party_statement / third_party_view / rumour, and the row of 5.5",
+   "duplicate_of": null | "e#"}
+ ],
+ "B": [ same shape ],
+ "fields_better": "A" | "B" | "same",
+ "fields_better_reason": "one sentence"
+}
+
+Rules for you:
+- Be literal; quote the article in your notes. Judge each field against what the article says, not against the other answer.
+- speaker is who says it in this item; judge it only when it is plainly wrong. original_who and original_day are the fields that matter most.
+- A day is wrong when the record gives the report day for something said or done earlier, a day the article does not support, or leaves empty a day the article states. A month alone is not a day: an empty day is right when the article gives only a month.
+- Check every number in one_line against the quote.
+- An answer that is null was unusable; write [] for it.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'from pathlib import Path; from bs4 import BeautifulSoup; p=Path(\"docs/prd/05-extraction-standard.html\"); s=BeautifulSoup(p.read_text(),\"html.parser\"); print(s.get_text(\"\\n\"))' | rg -n -A 85 -B 5 '5\\.3|5\\.4|5\\.5'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+154-一句话
+155-
+156-
+157-
+158-
+159:在第 5.3 节的不留清单上 
+160-→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留
+161-
+162-
+163-分析员会记 
+164-→ 留为证据
+165-第 5 节
+166-
+167-
+168-
+169-
+170-记来源层：事实、当事人陈述、第三方观点、传闻 
+171:进账本 · 第 5.5 节
+172-
+173-
+174-分量：核心、辅助、可选 
+175-只在评估时判，不进账本 · 第 6 节
+176-
+177-
+178-归档：挂到最窄的那个已开问题 
+179-D207
+180-；没有问题接，记 no home 扔掉，评估时逐条读 
+181-D209
+182-
+183-
+184-这篇文章还提出了值得追的新问题吗？ 
+185-第 4 节
+186-
+187-
+188-
+189-
+190-过了测试，属于五类之一 
+191-→ 候选问题；和库里已有问题是不是重复，由匹配判
+192- 
+193-D211、D190
+194-
+195-
+196-没过 
+197-→ 不开，它只是证据
+198-
+199-
+200-
+201-
+202-
+203-
+204-
+205-
+206-
+207-
+208-
+209-
+210-
+211-
+212-
+213-
+214-已拍
+215-Alex 拍板的 12 条
+216-
+217-
+218-2026-10-29 Alex 签字（D243）。第 5 条他定得比我的倾向更严；其余 11 条按倾向："其他几条的意见我都ok，sign off"。下表每条写定下的是什么、落在哪一节。
+219-
+220-
+221-
+222-
+223-第 5 条，Alex 原话："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"
+224-
+225-
+226-整体方向，Alex 原话："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"
+227-
+228-
+229-
+230-
+231-
+232-
+233-#
+234-定下的
+235-在哪一节
+236-
+237-
+238-
+239-
+240-1
+241-分量按信息量定档：核心要碰到关键判断，并带一个量、一个确定状态或一个带期间的预测；别家公司自己的经营数字、对公司是小事的，算辅助；预测离现在越远，越可能只是辅助，由判断定。缺金额、缺日期只影响分到哪一档，不是不留的理由
+242-第 6 节
+243-
+244-
+245-2
+246-"共同量"按 D191 落实：任何一家公司之外、好几家都会受它影响的量或价格（合计支出、合约价、利率）都可以开题，开题理由叫 
+247-shared_quantity
+248-；期间按自然年。提示词和代码要跟着改
+249-第 3 节 D 类
+250-
+251-
+252-3
+253-生态数字（论文数、获奖、下载量、开发者人数、大会人数）可选
+254-第 6 节
+255-
+256-
+257-4
+258-在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助
+259:第 5.3、6 节
+260-
+261-
+262-5
+263-典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判
+264:第 5.1、5.3 节
+265-
+266-
+267-6
+268-旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提
+269:第 5.3、6 节
+270-
+271-
+272-7
+273-收购算约束性义务（写明规模、尚未完成）
+274-第 3 节 C 类
+275-
+276-
+277-8
+278-改提示词时的回归判法：全部文章各发一次和上一版比，"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；它是诊断，验收仍是三次发送
+279-第 9.3 节
+280-
+281-
+282-9
+283-来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要
+284:第 5.5 节
+285-
+286-
+287-10
+288-只有形容的引语不收
+289:第 5.3 节
+290-
+291-
+292-11
+293-金标冻结后发现错：另记一份带理由的更正，写明改前改后，不覆盖原文件；测量用更正后的版本并注明
+294-第 8 节
+295-
+296-
+297-12
+298-达标线里"垃圾"一项（每篇留下的无关陈述）用定稿金标重算，Luna 基线也重算
+299-第 9.2 节
+300-
+301-
+302-
+303-
+304-我定的记录约定
+305-
+306-
+307-只定怎么记，不改变留不留、开不开。
+308-
+309-
+310-
+311-
+312-页面杂项（广告、相关文章预告、推荐列表、别的新闻标题）一律归第 1 版的"模板"一行，不另起名字。
+313-
+314-
+315-标题里的说法和正文是同一条证据，不单记
+316-第 1 版 §2 同一事实的复述
+317-。
+318-
+319-
+320-分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。
+321-
+322-
+323:金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。
+324-
+325-
+326-
+327-
+328-1
+329-这一页用的词：一词一义
+330-
+331-
+332-
+333-
+334-词
+335-意思
+336-不要和它混
+337-
+338-
+339-
+340-
+341-陈述
+342-原文里某一方说的一句话或一件事
+343-
+344-
+345-证据
+346-被留下的陈述，带引文、摘要、说话人、原始出处、来源层
+347-作者的观点（它本身可以是一条证据）
+348-
+349-
+350-问题（观点）
+351-账本里追踪的一件事：一个问题句、一组结果档、一个到期日，写下后不改
+352-PRD 06
+353-
+354-
+355-候选问题
+356-抽取这一步提议新开的问题
+357-
+358-
+359-标的问题、主题问题
+360-标的：答案是一家可交易公司（或币、商品）自己的经营结果。主题：答案是世界上的一件事，影响很多公司
+361-PRD 06
+362-
+363-
+364-开题理由
+365-候选问题值得开的几类理由之一，答案里写在 
+366-opens_as
+367-D184；英文 admission reason
+368-
+369-
+370-结果档
+371-一个问题事先固定、互不重叠、覆盖全部结果的结局，五档或是非两档
+372-PRD 06；英文 rung
+373-分量
+374-
+375-
+376-来源层
+377-事实、当事人陈述、第三方观点、传闻
+378-PRD 06；英文 evidence tier
+379-分量
+380-
+381-
+382-分量
+383-一条证据对判断有多重要：核心、辅助、可选、不收
+384-第 6 节；D243
+385-。Alex 说的"档位低一点"指它
+386-结果档、来源层
+387-
+388-
+389-研究用途
+390-判断这一步引用一条证据去支持一个具体结论时，它撑得住多强：直接可用、有条件可用、线索、不可用
+391-D221，第 7 节
+392-分量
+393-
+394-
+395-七类驱动
+396-一条陈述为什么对公司业务重要的七条路径
+397-D208
+398-。需求：客户要买多少，如订单、客户支出、贷款需求、客流。供给与投入：能做出多少、成本多少，如产能、原料和零部件价格、燃料、矿石品位。竞争与份额：对手的产品、价格、开店、赢单。定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户。产品周期：发布、出货、试验、获批、延期。政策：法规、许可、关税、利率、监管决定。资本与义务：融资、担保、承诺、投资、收购
+399-问题类型
+400-
+401-
+402-市场预期与估值
+403-市场已经定价了什么：估值倍数、市值、目标价、股价反应。观点的立场要和它比
+404-AGENTS §8
+405-。对一个业务量的一致预期（收入、EPS）是那个业务量的证据，不归这里
+406-七类驱动
+407-
+408-
+--
+937-。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"
+938-D240
+939-。
+940-
+941-
+942:5.3 不留的
+943-第 1 版 §2 的清单，加 D238、D243 的行
+944-
+945-
+946-"按同一行补的例子"一列是我按同一行举的例子。
+947-
+948-
+949-
+950-
+951-不留
+952-第 1 版的例子
+953-按同一行补的例子
+954-边界
+955-
+956-
+957-
+958-
+959-没有业务规模的产品、游戏、驱动、跑分细节
+960-"这张卡 415W"；"Geekbench 跑分"
+961-接口、功率、旧型号的支持周期
+962-对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）
+963-
+964-
+965-股价涨跌、投资人仓位、技术面
+966-"本月跌 13%"；"Burry 做空"
+967-期权成交、基金买卖
+968-股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选
+969-第 1 版 §10.2
+970-；在研公司的估值倍数、市值、孤零零的目标价可选
+971-D243 第 4 条
+972-；别的股价涨跌照旧不留
+973-
+974-
+975-作者的一般性风险清单和没有推导的看法
+976-"如果 AI 退潮会受伤"
+977-"这只股票该持有"；"芯片指数是纯粹的高估"
+978-有假设、有推导、有时点的条件估值要留
+979-第 1 版 §10.1
+980-
+981-
+982-记者的背景和框架
+983-"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"
+984-"公司成立于 1998 年"；通用的技术讲解
+985-没有数字和具体叙事的主张和背景不收；怎么分见 5.1
+986-D243 第 5 条
+987-
+988-
+989-没有数字也没有决定的政治、战略表态
+990-"分散供应商不能减少政治依赖"
+991-大使馆说"立场一贯"
+992-官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）
+993-
+994-
+995-同一事实的复述
+996-一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个
+997-标题和正文说同一件事
+998-
+999-
+1000-已知事实的重述
+1001-两个月后再说一遍 Q1 收入、指引、已公布的回购
+1002-抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提
+1003-D243 第 6 条
+1004-
+1005-
+1006-模板
+1007-署名、作者简介、经纪商页脚、前瞻性声明、广告
+1008-页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）
+1009-
+1010-
+1011-只有形容的引语
+1012-"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）
+1013-D243 第 10 条
+1014-
+1015-
+1016-新加坡转运案件的概况和被告个人资产
+1017-可选，收不收都不扣分
+1018-D231
+1019-
+1020-
+1021-
+1022-
+1023-另外一条来自后来的决定：
+1024-和公司所有市场都无关的别家公司的估值、股价、交易
+1025-不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。
+1026-
+1027-
+1028-不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。
+1029-
+1030-
+1031:5.4 一条记录必须保住的意思
+1032-第 1 版 §3，原样
+1033-
+1034-
+1035-六格里只填这一条用得上的
+1036-D220
+1037-。
+1038-
+1039-
+1040-
+1041-
+1042-格
+1043-要保住
+1044-丢了就错的例子
+1045-
+1046-
+1047-
+1048-
+1049-谁
+1050-原始判断者；是本人估计还是别人实测
+1051-AMD 自己的模拟说成独立实测
+1052-
+1053-
+1054-什么
+1055-业务、指标或动作
+1056-"收入增长 82%"丢了"收入"
+1057-
+1058-
+1059-多少
+1060-金额、比例、数量
+1061-四家 7450 亿写成五家
+1062-
+1063-
+1064-哪个期间
+1065-预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对
+1066-D233
+1067-，余下时间不改成全年
+1068-"今年余下时间"改成 FY2027 全年
+1069-
+1070-
+1071-什么条件
+1072-推导的假设；计划、上限、"最多"
+1073-"最多 4 万颗"写成已部署 4 万颗
+1074-
+1075-
+1076-预测还是已发生
+1077-指引、预计、商谈、传闻不等于已实现、已签约
+1078-"商谈 6000 亿"写成"已承诺"
+1079-
+1080-
+1081-
+1082-
+1083-原始发言日不知道就写不知道，不能填报道日
+1084-D220
+1085-。一条记录单独读要能懂，条件不能只放在旁边另一条里
+1086-第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227
+1087-。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，
+1088-编造了仍算记录错误
+1089-第 1 版 §3
+1090-。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实
+1091-D218
+1092-。
+1093-
+1094-
+1095-边界
+1096-第 1 版 §2
+1097-：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度
+1098-Alex 判 10
+1099-。
+1100-
+1101-
+1102:5.5 来源层
+1103-PRD 06 的四层；D238 采纳的 role-v29 原文
+1104-
+1105-
+1106-PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。
+1107-
+1108-
+1109-role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."
+1110-
+1111-
+1112-这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行
+1113-D243 第 9 条
+1114-。
+1115-
+1116-
+1117-
+1118-
+1119-说的是什么
+1120-层
+1121-
+1122-
+1123-
+1124-
+1125-1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）
+1126-传闻
+1127-
+1128-
+1129-2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）
+1130-事实
+1131-
+1132-
+1133-3. 公司的指引、管理层的表态、官员的讲话
+1134-当事人陈述
+1135-
+1136-
+1137-4. 分析师、媒体、专家的看法和估计
+1138-第三方观点
+1139-
+1140-
+1141-5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）
+1142-传闻
+1143-
+1144-
+1145-
+1146-
+1147-一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事
+1148-D243 第 9 条
+1149-。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下
+1150-D202、D204
+1151-；判断时只有事实能确定到期落在哪一档
+1152-PRD 06
+1153-。
+1154-
+1155-
+1156-6
+1157-分量
+1158-
+1159-
+1160-分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定
+1161-第 1 版 §4；D243 第 1 条
+1162-。缺金额、缺日期只影响分到哪一档，不是不留的理由
+1163-D240
+1164-。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定
+1165-第 1 版 §4
+1166-；离现在远不是不留的理由
+1167-D216
+1168-，它落在核心还是辅助由判断定。
+1169-
+1170-
+1171-
+1172-
+1173-等级
+1174-什么样
+1175-例子
+1176-
+1177-
+1178-
+1179-
+1180-核心
+1181-碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字
+1182-分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持
+1183-
+1184-
+1185-辅助
+1186-支持或反驳上面的判断，或给出可检验的估值假设；碰到关键判断但没有能定位答案的信息；别家公司自己的经营数字（收入、利润率、积压订单）；对公司规模来说是小事的；离现在越远、判断下来只是辅助的预测
+1187-对手自己模拟的 2.4 倍性能比较；公司取消软件订阅费；三条开放模型政策表态；Sharon 六年 72 MW 合同；FY2028 EPS 一致预期；12.76 × 25 的条件估值；一家银行选用对手系统（没写金额）；伙伴把公司模型集成进政府系统（没写金额）；内存厂公布的季度收入和利润率；客户公布的订单积压；客户园区"规划最多 17 万颗 GPU"
+--
+1192-财报后股价反应；在研公司的估值倍数、市值、孤零零的目标价；生态数字；重提的过去实际数；新加坡案件
+1193-D231、D243 第 3、4、6 条
+1194-
+1195-
+1196-不收
+1197:第 5.3 节的各行；与判断无关
+1198-模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张
+1199-
+1200-
+1201-
+1202-
+1203-判法
+1204-
+1205-
+1206-
+1207-
+1208-先判留不留
+1209:按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。
+1210-
+1211-
+1212-是可选的那几样吗？
+1213-在研公司的估值倍数、市值、孤零零的目标价，财报后股价反应，生态数字，重提的过去实际数，新加坡案件，归可选。带推导的条件估值例外，是辅助
+1214-第 1 版 §10.1
+1215-。
+1216-
+1217-
+1218-核心还是辅助
+1219-碰到关键判断、带着能定位答案的信息、对公司不是小事、不是别家公司自己的经营数字，四条都满足是核心；其余是辅助。别家公司直接说出关键投入或需求的状况（短缺到哪年、明年花多少），按关键判断算。预测离现在越远，越可能只是辅助，这由判断定：FY2028 EPS 一致预期是辅助，Alex 说"太久远了"；内存厂说短缺 2027 年最严重、持续到 2030 是核心，它覆盖今明两年。
+1220-
+1221-
+1222-
+1223-
+1224-"确定状态"
+1225-：已经签了、宣布了、开始了、批准了、取消了、推迟到某个日期了、定下了裁决日；没有量的"在谈""在考虑""可能""在探索""打算"不算。确定状态以陈述当天为时间，不要求生效日。
+1226-"带期间的预测"
+1227-：分析师预计今年余下收入增长 82%；内存厂说短缺持续到 2030 年。确定不确定看说法本身的内容；靠不靠得住另记在来源层。
+1228-
+1229-
+1230-Alex 拍过的分量
+1231-D215；gold-check.md，D229
+1232-：收入增速核心；内存短缺核心；AMD 跑分辅助；三条政策辅助；云厂商支出核心；Omniverse 辅助；Sharon "辅助属于供给需求"；商谈最多 6000 亿支持 OpenAI 核心（在谈的金额）；投资 SB Energy 15 亿核心；Broadcom AI 半导体收入 +143%、Google Cloud 三个数辅助（别家公司的经营数字）；FY2028 EPS 辅助（远期）；逐案审核、有拒绝辅助（没有量和确定结果）。
+1233-
+1234-
+1235-分量只在评估时判。
+1236-分量只在金标和测量里判，不进账本，不进抽取的输出
+1237-D240
+1238-；账本只存来源层。抽取的模型决定留不留、怎么写，以及提哪些候选问题
+1239-第 1 版 §1
+1240-。
+1241-
+1242-
+1243-仿真里剩下的分歧几乎都在核心和辅助这条线上："对公司规模来说是不是小事"从一句话里常常看不出来（第 12 节，第三轮）。所以核心和辅助分开报，评估时允许读者间合理的不同判
+1244-D226、D228
+1245-。
+1246-
+1247-
+1248-7
+1249-研究观点标准
+1250-
+1251-
+1252-判断这一步归 PRD 06、D198、D201 管；这里只列和抽取共用的。
+1253-
+1254-
+1255-
+1256-
+1257-观点是什么：
+1258-一个关于业务和世界的、有论证的看法；立场来自论证和市场已经定价的东西相比；报表行是它的证据，不是它的定义
+1259-AGENTS §8
+1260-。
+1261-
+1262-
+1263-判断读什么：
+1264-一个问题的判断看到的，是它仍然有效的证据里的两部分：新到的（在它倒数第五次判断之后挂上的；判断不满五次时全部显示）和依据（最近十次判断里被引用过的）。其余仍在账本里有效，请求里写明还有多少条没显示；答案只能引用和推动显示了的
+1265-D198；从 judging-v5 起，v4 的配置照旧读全部有效证据
+1266-。依赖问题的结论和理由、标的问题的主题块也读
+1267-PRD 06、D195
+1268-。主题结论变了，同一轮里排队重判符合条件的标的问题；主题的结论不作为证据引用
+1269-D195
+1270-。
+1271-
+1272-
+1273-研究的交付物是论证：
+1274-保留不可改的来源记录，和一份有版本的研究论证，写明支持和反对的来源、是否独立、变化和局限
+1275-D201
+1276-。
+1277-
+1278-
+1279-研究用途：
+1280-评估判断时，读者按四级看它引用的每条证据对那个具体结论撑得住多强：直接可用、有条件可用、线索、不可用；同一条证据对不同结论可以不同
+1281-D221
+1282-。这是评估的读法，不是判断这一步要输出或存下的字段（D221："not a numerical confidence score or a new storage layer"）。用途和分量不同：分量问"这条多重要"，用途问"拿它证明这个结论够不够"。
+1283-
+1284-
+1285-事实和推断分开：
+1286-来源没说的结论可以作为分析员推断写出，但要标明
+1287-D218
+1288-。只有事实能确定落在哪一档
+1289-PRD 06
+1290-。
+1291-
+1292-
+1293-重复不是新证据，模型意见一致不是互相印证
+1294-AGENTS §8
+--
+1341-
+1342-
+1343-证据：
+1344-原文逐字片段；属于 5.1 哪一类；定稿分量 
+1345-weight
+1346:（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。
+1347-
+1348-
+1349-不收的句子：
+1350:属于 5.3 哪一行，或按 5.1 的理由；
+1351-weight
+1352- 是不收或可选。可选的留不留都不扣分。
+1353-
+1354-
+1355-问题：
+1356-必须开的（类、开题理由、标的或主题、要点、
+1357-settled_by
+1358-）；可以开的（另一种合理写法）；不该开的（第 4 节哪一行或哪个测试）。
+1359-
+1360-
+1361-没判清的地方：
+1362-两种读法都写出来。
+1363-
+1364-
+1365-
+1366-
+1367-分量的分布（定稿）
+1368-
+1369-
+1370-
+1371-
+1372-那一组
+1373-核心
+1374-辅助
+1375-可选
+1376-要收或可收
+1377-不收
+1378-原列不收、现为可选
+1379-
+1380-
+1381-
+1382-
+1383-那一周 98 篇
+1384-80
+1385-152
+1386-63
+1387-295
+1388-621
+1389-22
+1390-
+1391-
+1392-留出 20 篇
+1393-6
+1394-29
+1395-18
+1396-53
+1397-117
+1398-2
+1399-
+1400-
+1401-
+1402-
+1403-参考答案第 2 版那一周是核心 47、辅助 69、可选 48。辅助多出来的，主要是有名有姓、没写规模的动作（伙伴集成、客户采用、合作）：第 2 版标成"什么都不留"，现在按 D240 收为辅助。
+1404-
+1405-
+1406-怎么写成、怎么核的
+1407-
+1408-
+1409-
+1410-
+1411-六个起草者分批写
+1412-Claude opus 各写 20 篇左右，只读标准和原文；参考答案第 2 版只当起点，每条重判。
+1413-
+1414-
+1415-合并时统一写法
+1416-merge.py
+1417- 统一各批的写法，每处写理由（
+1418-merge-log.txt
+1419-）：旧事重提 49 条逐条判；估值倍数和别家公司股价按现行规则处理；中国是否批准 H200 进口改为主题问题。
+1420-
+1421-
+1422-逐条读改动
+1423-Claude 读了每批相对参考答案第 2 版新增、删掉、改档的条目：新增约 124 条，改档约 37 条；旧条目没对上的 10 条逐条查过，都在，只是引文片段不同或按旧事重提处理。
+1424-
+1425-
+1426-两轮独立盲读
+1427-Codex 读者只读这份标准和原文，不看金标。读者多留的逐条对原文判：金标漏了的补上，其余写明不补的理由。补进来的 49 条，"谁"和"意思"对着原文补齐（
+1428-additions-fields.json
+1429-）。
+1430-
+1431-
+1432-按签字定稿
+1433-finalize.py
+1434- 按 D243 给每一条定分量，39 处改动逐条写理由（
+1435-finalize-log.txt
+--
+1935-第 1 版 §10.3；D243 第 1 条
+1936-
+1937-
+1938-B9
+1939-几套"不要"的类
+1940:抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数
+1941-第 1 版 §2、§4；D221；D240；D243 第 12 条
+1942-
+1943-
+1944-B10
+1945-股价、目标价、重述、新加坡各处判得不同
+1946-财报后股价反应可选（第 1 版 §10.2）；在研公司的估值倍数、市值、孤零零的目标价可选；重提的过去实际数可选；新加坡可选
+1947-第 1 版 §10.2；D231；D243 第 4、6 条
+1948-
+1949-
+1950-B11
+1951-主题怎么连到公司
+1952-一对全部的主题块；文章明写的依赖照记；D208 的通道未建
+1953-D191、D195
+1954-
+1955-
+1956-B12
+1957-研究组、驱动层
+1958-研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"
+1959-D165、D208；评审 §6
+1960-
+1961-
+1962-B13
+1963-PRD 06 的重复和替代说法早于 D202、D204
+1964:这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新
+1965-D202、D204
+1966-
+1967-
+1968-B14
+1969-组成部分算不算同一题
+1970-同一总量的另一种人群或口径是同一题；有自己驱动、答案能分开走的是另一题，要过独立意义测试
+1971-D190；第 1 版 §6
+1972-
+1973-
+1974-B15
+1975-标的五档必须叫"非常看多……"（代码），还是写业务结果（D186）
+1976-这一页按 D186 写；代码是另一模块，D186 未实现照旧记
+1977-D186
+1978-
+1979-
+1980-B16
+1981-转述的公告算事实还是当事人陈述
+1982-事实（role-v29 原文："an announcement or completed deal the item reports is a fact even when the reporter names no source"）；混合的一条按主要说法定层
+1983-PRD 06；D238、D239；D243 第 9 条
+1984-
+1985-
+1986-B17
+1987-代码按自然年拒公司明年的财年量
+1988-已修：年限按公司财年数，测试 
+1989-tests/test_fiscal_year_horizon.py
+1990-PRD 06 梯子第 5 条；D243
+1991-
+1992-
+1993-B18
+1994-"线索""背景"一词多义
+1995:"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行
+1996-D221
+1997-
+1998-
+1999-B19
+2000-谁把候选并进已开问题
+2001-匹配和碰撞裁决；共同量由代码
+2002-D190、D197、D211
+2003-
+2004-
+2005-B20
+2006-AGENTS §8 指向两套标准，D229 又说第 1 版是唯一尺子
+2007-这一页签字后取代第 1 版，AGENTS §8 指向这一页；对两套既有标准（PRD 06 证据层次、90 题评审）的指向保留，它们是这一页的出处
+2008-D228、D229、D243
+2009-
+2010-
+2011-B21
+2012-PRD 06 State 写判断要 "reconsider all evidence still in force"，D198 之后只显示新到的和依据
+2013-按 D198（在后）；PRD 06 签字后更新
+2014-D198
+2015-
+2016-
+2017-
+2018-
+2019-12
+2020-校验记录和出处
+2021-
+2022-
+2023-三轮独立读者仿真
+2024-
+2025-
+2026-每一轮把标准和一组事先定死的案例交给互相看不到答案的读者：作者先写好自己的答案并记 sha256；Claude 的不同模型和 Codex 各读一份。读者只读标准和案例，不读决策、金标、提示词。几方不一致的案例，读原因，追到标准里的一句话，改那一句；下一轮换没见过的读者，加没见过的案例。共 192 个陈述、40 个问题；陈述里 152 个来自测试文章，40 个来自银行、药企、零售、航空、公用事业、矿业、保险等其他行业。
+2027-
+2028-
+2029-
+2030-
+2031-第三轮，一对读者
+2032-新案例：留不留
+2033-新案例：连分量
+2034-难案例复核：留不留
+2035-新问题
+2036-
+2037-
+2038-
+2039-
+2040-作者–Codex
+2041-96%
+2042-87%
+2043-84%
+2044-5/8
+2045-
+2046-
+2047-作者–Claude sonnet
+2048-94%
+2049-83%
+2050-91%
+2051-6/8
+2052-
+2053-
+2054-作者–Claude fable
+2055-93%
+2056-81%
+2057-89%
+2058-6/8
+2059-
+2060-
+2061-Codex–sonnet
+2062-94%
+2063-83%
+2064-86%
+2065-7/8
+2066-
+2067-
+2068-Codex–fable
+2069-93%
+2070-83%
+2071-84%
+2072-7/8
+2073-
+2074-
+2075-sonnet–fable
+2076-98%
+2077-89%
+2078-95%
+2079-8/8
+2080-
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-U/packets/gnews_87742e41d1edc4e292c234fe.json' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+{
+ "input_id": "gnews:87742e41d1edc4e292c234fe",
+ "title": "Alex Karp Touts Palantir-Nvidia Partnership For Secure AI, Criticizes OpenAI And Anthropic Over Lack Of IP Protection",
+ "publication_day": "2026-07-01",
+ "publisher": "es.tradingview.com",
+ "publisher_type": "media",
+ "category": "T7",
+ "text": "/ Alex Karp Touts Palantir-Nvidia Partnership For Secure AI, Criticizes OpenAI And Anthropic Over Lack Of IP Protection\nAlex Karp Touts Palantir-Nvidia Partnership For Secure AI, Criticizes OpenAI And Anthropic Over Lack Of IP Protection\nKarp touted Palantir’s offerings for warfighters and U.S. allies around the world, stating that the company believes these clients should get access to the best technology currently available.\nHe said that warfighters have serious trust issues with the frontier labs, adding that he is basing these comments on what has already been reported.\nKarp added that his alignment with Nvidia is based on what Palantir's technical customers want: control over their compute, models, data stack, and their “alpha.”\nPalantir Technologies Inc. (PLTR) CEO Alex Karp on Wednesday touted the company’s latest partnership with Nvidia Corp. (NVDA) to deliver secure AI offerings to U.S. government agencies, enterprises, and allies worldwide.\nDuring an interview with CNBC, Karp argued that the frontier AI model developers OpenAI and Anthropic reportedly lack measures to protect their clients' intellectual property (IP).\n“The basic view of enterprises in this country... I'm going to basically chillax and waste my time with tokens, I'm going to get no value and they're going to get my IP,” he said.\nPalantir shares were up more than 3% in Wednesday’s pre-market trade, while Nvidia shares were down about 2%.\nKarp Touts PLTR’s Offerings For Warfighters And Allies\nKarp also touted Palantir’s offerings for warfighters and U.S. allies worldwide, stating that the company believes these clients should have access to the best technology currently available.\n“Then you have my enterprises in the private sector, who have the same issues like, ‘why would they get access to my data if they’re going to build my alpha? Why wouldn’t I control the weights?’ And that’s where you get this partnership,” Karp added.\nHe added that his alignment with Nvidia is based on what Palantir's technical customers want: control over their compute, models, data stack, and their “alpha.”\n“They want to know they own the means of production and it’s not being transferred to someone else. They’re not interested in some fake deploy code that somehow is deploying tokens that transfers the alpha to some third party. The jig is up,” Karp said.\nKarp also added that trust needs to be rebuilt, while saying that Palantir now sells a product that allows its customers to switch between models.\nHe said that questions about data ownership, caching, prompt security, and token use need to be answered.\nWhat PLTR Announced In Partnership With NVDA\nPalantir announced earlier this week that it is integrating Nvidia’s Nemotron open AI models into its new intelligent engine to deliver mission-specific sovereign AI for U.S. government agencies and critical infrastructure operators. The company said the system enables organizations to deploy frontier-level AI in secure, air-gapped environments while keeping sensitive data off public networks.\nThe new platform allows agencies to customize Nemotron models using their own data, retain ownership of the resulting model weights, and continuously improve performance through feedback within their own infrastructure.\nPalantir said its Sovereign AI Operating System, built on AIP, Foundry, Ontology and Apollo, provides the security, authorization and audit capabilities required for sensitive government deployments.\nAccording to the companies, combining Nvidia’s open models with Palantir's software gives government agencies and enterprises greater transparency, customization, and cost efficiency than closed AI models do.\nPLTR stock is down 34% year-to-date, while NVDA stock is up 7% over the past 12 months. The Invesco QQQ Trust ETF (QQQ) is up 33% over the past 12 months, while the Vanguard S&P 500 ETF (VOO) is up 21%.",
+ "answers": {
+  "A": [
+   {
+    "id": "e1",
+    "quote": "Palantir announced earlier this week that it is integrating Nvidia’s Nemotron open AI models into its new intelligent engine to deliver mission-specific sovereign AI for U.S. government agencies and critical infrastructure operators.",
+    "one_line": "Palantir announced that it is integrating Nvidia’s Nemotron open AI models into its new intelligent engine for sovereign AI offerings to U.S. government agencies and critical infrastructure operators; the item says the announcement was earlier in the week of 2026-07-01.",
+    "speaker": "es.tradingview.com",
+    "original_who": "Palantir Technologies Inc.",
+    "original_day": "",
+    "tier": "fact"
+   }
+  ],
+  "B": [
+   {
+    "id": "e1",
+    "quote": "Palantir announced earlier this week that it is integrating Nvidia’s Nemotron open AI models into its new intelligent engine to deliver mission-specific sovereign AI for U.S. government agencies and critical infrastructure operators.",
+    "one_line": "Palantir announced that it is integrating Nvidia’s Nemotron open AI models into its new intelligent engine for sovereign AI offerings to U.S. government agencies and critical infrastructure operators.",
+    "speaker": "Palantir Technologies",
+    "original_who": "Palantir Technologies",
+    "original_day": "",
+    "tier": "fact"
+   }
+  ]
+ }
+}
+
+codex
+{
+  "input_id": "gnews:87742e41d1edc4e292c234fe",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both identify Palantir as the original source, leave the original day unknown because the article says only “earlier this week,” and correctly classify the announcement as a fact."
+}
+tokens used
+21,510
+{
+  "input_id": "gnews:87742e41d1edc4e292c234fe",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both identify Palantir as the original source, leave the original day unknown because the article says only “earlier this week,” and correctly classify the announcement as a fact."
+}

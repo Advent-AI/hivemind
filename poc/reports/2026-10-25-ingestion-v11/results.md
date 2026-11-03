@@ -18,7 +18,7 @@ The second concurrent trial wrote no new views, evidence, handovers or judgments
 
 The [saved-call latency breakdown](latency.md) finds that both later preparations were discarded and matching had only one request per phase; it finds no useful extraction overlap in this sample. About 78% of the observed wall-time reduction is explained by the smaller judgment workload.
 
-See continuation-summary.json (local artifact: `continuation-summary.json`) for computed values. All source databases remain unchanged. The next work is completion of the acceleration measurement after handling the transport interruption within the original budget, not a new extraction rewrite.
+See [continuation-summary.json](continuation-summary.json) for computed values. All source databases remain unchanged. The next work is completion of the acceleration measurement after handling the transport interruption within the original budget, not a new extraction rewrite.
 
 ## Historical first-control assessment under withdrawn D178 gate
 
@@ -52,7 +52,7 @@ The NAVER retelling correctly reused e52 and appended its source, rather than cr
 
 The primary defect is a model-written evidence association that passes reference checks. The downstream contract assumes that association is already correct; changing concurrency cannot repair it. The literal direct-link instruction is already in role-v11, so another untested warning added to the prompt would not be a demonstrated fix.
 
-The link census (local artifact: `link-census.json`) reads the three selected sources across all completed D174/D177/D178 trial archives: 12 extraction answers, with v3/v7 links in four. That is a source-specific candidate census, not four automatically failed answers or a global quality rate. The independent source assessment (local artifact: `../../../docs/research/2026-10-25-ingestion-v11/control-assessment-review.txt`) reviewed all six new links and agrees that this control must stop. The raw answers, matching records, handovers and final records remain in `control-1`.
+The [link census](link-census.json) reads the three selected sources across all completed D174/D177/D178 trial archives: 12 extraction answers, with v3/v7 links in four. That is a source-specific candidate census, not four automatically failed answers or a global quality rate. The independent [source assessment](../../../docs/research/2026-10-25-ingestion-v11/control-assessment-review.txt) reviewed all six new links and agrees that this control must stop. The raw answers, matching records, handovers and final records remain in `control-1`.
 
 ## Verification, costs and boundary
 

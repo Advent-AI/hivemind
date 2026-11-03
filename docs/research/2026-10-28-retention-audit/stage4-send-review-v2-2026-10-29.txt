@@ -1,0 +1,18 @@
+**The runner is not ready for count or launch.** Three serious issues remain: it can lose a received response, fail to write the run summary, and proceed without freezing all scripts that affect the requests and records.
+
+For example, when a mocked provider returned `not-provider-json`, the runner recorded a JSON parsing error but saved `response: null`; the received bytes were lost.
+
+1. **A response can still disappear before it reaches the raw record.** The provider helpers parse the HTTP body before returning it to [the runner](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-send-v2-2026-10-29.py:179). If that body is invalid JSON, the runner receives only an exception and writes no body. This leaves the sixth response-preservation requirement incomplete.
+
+2. **A malformed response can abort the final summary.** If the provider returns valid JSON that is a nonempty list, the raw record is saved, but [the scheduler calls `.get()` on the list](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-send-v2-2026-10-29.py:209). The offline test raised `AttributeError` and produced no run summary. Already submitted work still finishes, but the required account of attempted and unsent cases is missing.
+
+3. **The promised script freeze is incomplete.** The [contract](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-send-contract-2026-10-29.md:17) says the scripts for cost checks, writes and input preparation are frozen by hash. The count record checks only the runner and contract hashes; the runner also imports and uses other scripts for request preparation, serialization and provider calls. Those dependencies are not all pinned by the count record, so a change after counting can alter the launch behavior without that check detecting it. See [count verification](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-send-v2-2026-10-29.py:84).
+
+The other checks improved on the six original findings:
+
+- All 10 reconstructed requests passed the existing verifier. Reordered serialized keys were rejected, and mocked transports received the expected serialized bytes for both providers. Dispatch uses the verified in-memory requests; I did not mutate files to test the timing window.
+- Mutated input and output reservation bounds were rejected. Missing input or output usage was rejected for both providers; mocked scheduler runs stopped after eight submitted calls, leaving 22 unsent.
+- Invalid or empty answer text with a normal provider stop was marked provider-complete but **not usable**. Malformed response objects remained present in the parsed record.
+- With an in-memory atomic lock and mocked providers, two concurrent workers produced one completed batch and one lock rejection; a duplicate attempt was rejected before its mocked request. This does not prove the filesystem lock behavior.
+
+The requested offline self-test **did not finish**: it reached the lock test but could not create a temporary directory in this read-only session. The in-memory exercises above made no model calls and edited no files. No count or launch was attempted; the reservation remains an estimate, not a provider-enforced spending cap.

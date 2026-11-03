@@ -1,0 +1,310 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 8000,
+  "system": "You are a senior hedge-fund analyst reading one item. Your first job is evidence: find every material statement in the item. Your second job is candidates: the important questions this item raises, for one of four reasons; the library of open questions is not shown, and a question that is already open is folded into it by code afterwards, so propose it when the item raises it.\n\nEvidence: what to keep\n- A material statement is one of four kinds. (1) The company's own figure, guidance or decision: \"data center revenue was $39.1 billion, up 73%\"; \"management guided next quarter to $54 billion\"; \"the board approved a $50 billion buyback\". (2) A customer's, supplier's, competitor's or partner's action with a size, date or name: \"a cloud provider signed A100 contracts running into 2029\"; \"a national laboratory ordered two supercomputers built on Vera Rubin CPUs\"; \"TSMC said CoWoS capacity will double in 2026\"; \"a survey found executives will put 46% of accelerator budgets into domestic chips\". (3) A named party's claim or estimate: \"the CFO said A100s sold six years ago still run at full utilization\"; \"an analyst raised FY2027 EPS to $8.97\"; \"an investor accused hyperscalers of understating depreciation by $176 billion\". (4) A policy or regulatory decision or step: \"the Commerce Department approved H200 sales to China\"; \"Singapore charged four firms over server exports\".\n- Go through the item from its first paragraph to its last and take every statement of these kinds; a page with eight such statements yields eight evidence items, not a selection. Stop only at the end of the item.\n- Reject everything else: a product, game, driver or benchmark detail without a size (\"the expansion supports DLSS\"; \"the card draws 415W\"); an investor's position or a share-price move (\"he is short the stock\"; \"shares fell 13% this month\"); an author's general risks or valuation arithmetic (\"if AI pulls back it would hurt\"; \"at 34 times earnings the stock is worth $305\"); the reporter's framing or background (\"Gulf states have spent billions but still depend on the company\"; \"the A100 launched in 2020\"); an expert's view on politics or strategy without a figure (\"diversifying suppliers does not reduce political dependence\"); the same fact or arrangement said again in other words: a release that describes one deployment in five sentences yields one evidence item, its figures (\"up to 10x faster\"; \"40 data centers in 15 countries\") a second and third; a quote that only characterizes (\"a pivotal moment\"; \"heterogeneous inference\"); company boilerplate, bylines, forward-looking-statement text.\n- A statement's links name this answer's candidates it is evidence for (c1 …), or nothing; the open questions it bears on are filed by a separate step that reads them.\n\nHow to write evidence\n- One evidence item records one statement. Copy its quote verbatim. Separately write a standalone summary in one_line: who did or said what, how much and for which period.\n- Identify the speaker and, for a retelling, the original speaker and statement day. Use the schema's tier: fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for unnamed-source or unattributed claims.\n- Use only this item's information. Report plans as plans; do not infer committed funding, orders, deliveries or revenue.\n\nWhich questions to propose\n- Open a candidate only for one of four reasons, named in opens_as. main_driver: an annual quantity that carries the company's value (the segment that carries the business, gross margin, capital spending), whether or not the company guides it; the question's ranges settle it, not a guidance figure. Not every reported or guided line. industry_aggregate: one aggregate quantity for one calendar year, such as the combined capital spending of named companies; a later estimate, another population or another wording of the same aggregate is evidence to the shown aggregate thesis. policy_stage: a stage of a policy process, with the authority that decides it named. binding_obligation: an obligation a universe company takes on in its own name (a guarantee, financing, an equity stake, a purchase commitment, a backstop of customers' capacity or revenue). Not yet signed: a yes/no question due on a day after the item by which the signing can be checked, at most 18 months out. Already taken on, as one deal or as a programme: a financing_amount question on the amount the obligation reaches at the company's next annual filing, settled by that filing's commitments note; the announcement itself is evidence to it.\n- A number, a financial line, a target or a named customer project does not by itself open a thesis; a customer's deployment plan is evidence to the supplier's demand and product theses unless it changes the supplier's own cash or credit risk.\n- For every candidate: settled_by names the public material that resolves it (an annual report, a filing's note, an official decision). A different population, source, estimate, wording or direction of a question is the same question; a different quantity, period or decision is another.\n- A yearly metric asks for a quantity over a defined fiscal or calendar period and keeps the current/next-year limit. A milestone asks whether a specified event or project reaches a defined state by a deadline; a numeric completion target can define that state without becoming a yearly metric. Do not repackage a beyond-horizon annual forecast as an event. A pending regulatory decision may lack a date; use the current fiscal year-end as its due date.\n- Do not propose theses about quarterly figures or guidance, undated subjects such as moats or strategy, executive appointments, shareholder votes or bylaws, routine litigation procedure, or buyback authorisations.\n\nHow to write a candidate thesis\n- One thesis concerns one figure for a named period or one event. Separate independently meaningful outcomes.\n- Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date.\n- A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it. A theme thesis asks what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company.\n- Write generated descriptions in English. Copy quote exactly from the source, without translation.\n- Define concrete, verifiable conditions now. Do not propose a ladder whose thresholds depend on an unspecified future target.\n- Use five rungs; only a yes/no question about an event has two. A numeric figure always gets five ranges, never a single threshold. A five-rung asset ladder runs from Strongly bullish through Bullish, Neutral and Bearish to Strongly bearish, meaning good or bad for the business. A theme ladder runs between two ends of an outcome range; label the outcomes, without assigning business sentiment. Conditions must not overlap or leave gaps: exactly one must hold when resolved. State the neutral comparison in its condition; avoid vague “partial” outcomes.\n- Set the due date when the question can be resolved. For a figure, use its publication date. Company figures use the company's fiscal year: “this year” contains the item's publication day, and “next year” follows it. Other figures use calendar years. For an event, name the date at which its outcome is assessed.\n\nResearch groups\n- A research group is one ongoing matter in the world that several questions track together: a product rollout and its customer deployments, a financing or acquisition deal, a policy process, an investment or demand cycle. It usually spans companies and themes. When a candidate tracks a matter, declare the group in new_groups (local id n1, n2 …, with a name, a scope that says what is happening, and aliases: the names the matter goes by in the press, such as product, project or programme names and the parties; not company names) and cite that id in group_refs; a declared group whose names match a stored group is that group. A company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and carry no group: leave their group_refs empty unless the line itself tracks such a matter. A company is not a group, and a thesis is not a group.\n\nIdentity fields and numeric bounds\n- Select the closest measure allowed by the schema. Scope is its actual segment, product, population or event subject. Reuse a supplied reference name only when it has the same meaning; leave scope empty when unqualified.\n- period_start and period_end describe the period the figure covers. Convert fiscal years using the supplied fiscal-year note. Calendar year 2026 is 2026-01-01 through 2026-12-31. For an event, use the start of the year in which it is proposed through the due date.\n- Identify the accounting basis and unit. For event or policy_event, select the event type; otherwise use n/a. The schema supplies the allowed values.\n- Each numeric rung has an inclusive lower bound lo and exclusive upper bound hi, in the stated unit. Dollars are full dollar amounts; percentages use 73, not 0.73. The lowest numeric range has lo null, the highest hi null. Both bounds are null for yes/no outcomes.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "[Category and how to read it] T8. Opinion and analysis: sell-side or independent research, commentary and personal posts. The author's opinions and estimates are third-party views, not facts; quoted company statements are party statements.\n\n[Subjects] The objects this item concerns: NVDA. For a candidate thesis about a company, object is its ticker; about a theme, choose an id from this list, or state what the matter is when none fits:\n  - chip-export-controls: Chip export controls\n  - ai-capex: AI capital spending\n  - custom-silicon: Custom silicon at cloud providers\n  - semiconductor-cycle: Semiconductor cycle\n  - fed-policy-rate: Fed policy rate\n  - us-inflation: US inflation\n  - us-recession-risk: US recession risk\n  - us-china-tariffs: US–China tariffs\n  - taiwan-strait: Taiwan Strait\n  - middle-east-conflict: Middle East conflict and oil prices\n  - russia-ukraine-war: Russia–Ukraine war\n  - supply-chain-shift: Supply-chain shift and shipping\nFiscal-year note (a numeric thesis takes its year and due date from it):\nNVDA's fiscal year ends in month 1 and is named for the calendar year in which it ends: FY2027 runs from 2026-02 to 2027-01; the publication day 2026-07-29 falls in FY2027, so this year is FY2027 and next year is FY2028; FY2027's full-year figures are published in the annual report around 2027-02; use that day as the due date.\n\n[What to read out] The author's forecasts, ratings and price targets with their figures; the facts and figures the author cites, with their original attribution. Not the author's general arguments or risk lists.\n\n[Research reference] Existing quantities and scopes (measure[scope](event_type)). Reuse a name only when the meaning is the same; propose important questions outside the list as usual, with their actual scope:\n  - NVDA: total_revenue; segment_revenue; gross_margin; operating_margin; operating_expense_growth; tax_rate; capex; product_revenue[Blackwell+Rubin]; product_revenue[Vera]; shipments_or_capacity[Rubin]; event[Rubin](shipment); event[Rubin](launch); event[H20/H200 China](licence); event[SK Telecom AI factory](deployment)\n\n[Research groups] None yet. For a candidate that tracks an ongoing matter (a product rollout, a deal, a policy process, an investment or demand cycle), declare the group in new_groups (local ids n1, n2 …) and cite it in group_refs; leave group_refs empty for a company's own financial lines.\n\n[Item] id gnews:4b34a84a492cb836ad1ba1ed, category T8, author equiti.com (analyst), published 2026-07-29, title: Nvidia Stock Outlook: Is There Still Room to Rally After AI Expansion?\n\nNvidia's biggest week leaves investors asking one question: is there still room to rally?\nNvidia spent the past week doing what it has done better than any company since the AI boom began expanding its reach. New partnerships in South Korea, a sovereign AI investment in Naver, and a broader push into Japan's industrial sector all reinforce the same strategy: Nvidia doesn't just want to sell the chips powering artificial intelligence. It wants to become part of every layer of the AI ecosystem, from memory and data centers to robotics and national AI infrastructure.\nBy Yazeed Abu Summaqa | @Yazeed Abu Summaqa\nNvidia expanded its AI ecosystem through major partnerships in South Korea and Japan.\nA new collaboration with SK Group strengthens Nvidia's long-term AI memory supply chain through 2027.\nNvidia is deepening its sovereign AI strategy with a $1 billion investment in South Korea's Naver.\nThere was a time when Nvidia's story revolved almost entirely around GPUs. Today, selling chips is only part of the equation. The company's latest announcements show a business trying to secure every critical component surrounding AI deployment. That means locking in memory supply, helping countries build domestic AI infrastructure, expanding data-center capacity and creating partnerships that make Nvidia technology increasingly difficult to replace.\nThe objective is clear. Rather than competing product by product, Nvidia is building an ecosystem that encourages customers to remain inside its platform as AI adoption accelerates. That strategy also reduces dependence on any single source of demand. Cloud providers remain central to Nvidia's growth, but they are no longer the only market the company is targeting.\nNvidia's partnership with SK Group goes well beyond securing access to advanced memory chips. It strengthens one of the most important parts of the AI supply chain at a time when demand for high-bandwidth memory continues to outpace supply. For Nvidia, ensuring long-term access to memory may prove just as valuable as designing the next generation of GPUs. AI systems cannot scale without both.\nThe company also agreed to invest $1 billion in Naver, supporting the expansion of sovereign AI infrastructure through the GAK Sejong data center. That investment reflects a broader trend emerging across industry as governments and domestic technology companies increasingly seek to develop AI capabilities without relying entirely on foreign cloud providers. Sovereign AI has quickly evolved from a niche concept into one of the industry's fastest-growing opportunities, and Nvidia appears determined to establish an early presence wherever those projects emerge.\nFor much of the AI boom, demand has been driven by hyperscale cloud providers racing to build larger computing clusters. Nvidia now appears to be preparing for the next stage, where AI expands beyond internet companies and into manufacturing. Partnerships involving companies such as Toyota, Fanuc and Kioxia illustrate that shift.\nFactories, industrial robots and autonomous production systems require a different type of computing infrastructure than chatbots or large language models, but they represent an equally significant opportunity over the long term.\nIf enterprise AI defined the first phase of the industry's expansion, industrial AI could become the next. That would broaden Nvidia's customer base considerably while reducing reliance on a relatively small number of cloud providers.\nStrong fundamentals no longer guarantee a higher share price\nDespite another week filled with major announcements, Nvidia's share price has struggled to generate the kind of momentum investors became accustomed to over the past two years. That doesn't necessarily reflect fading confidence in artificial intelligence.\nThe AI investment cycle has reached a point where every new project carries a larger price tag than the last. Building advanced AI infrastructure requires enormous spending on chips, networking equipment, electricity and data centers, forcing investors to think more carefully about future returns. Markets are no longer rewarding companies simply for spending more. They want evidence that today's capital expenditure will translate into tomorrow's earnings.\nGuidance matters more than another record quarter\nAnalysts expect Nvidia to generate roughly $91 billion in revenue for the second quarter of fiscal 2027, extending one of the strongest periods of growth ever seen in the semiconductor industry. A few years ago, numbers like that would have been enough to drive the stock higher almost on their own.\nWall Street already assumes Nvidia will report exceptional growth. What investors want now is confidence that demand remains durable beyond the current investment cycle. Management's outlook on hyperscale spending, sovereign AI projects and customer investment plans may ultimately carry more weight than the quarterly revenue figure itself. When expectations become this high, strong results are often treated as the minimum requirement rather than a positive surprise.\nMargined FX and contracts for difference are complex leveraged products which carry a high level of risk and can result in losses that exceed your initial investment. We recommend you seek professional advice before investing.\nEquiti Brokerage (Seychelles) Limited is a company incorporated with limited liability under the laws of the Republic of Seychelles, under registration number 8428558-1, with its registered address at First Floor, Marina House, Eden Island, Republic of Seychelles.\nEquiti Brokerage (Seychelles) Limited is authorised by the Financial Services Authority of Seychelles under license number SD064 as a Securities Dealers Broker.\nAny analysis, opinion, commentary or research-based material on our website is for information and educational purposes only and is not, under any circumstances, intended to be an offer, recommendation, advice or solicitation to buy or sell.\nThe information provided on this website is not intended for distribution to, or use by, any person or entity residing in the United States, Belgium, Canada, Japan, or any jurisdiction where such distribution or use would be contrary to local laws or regulations.\n\nReturn evidence and candidates per the JSON schema. A candidate's evidence_ids are its own evidence ids; an evidence item's links are this answer's candidate ids (such as c1), or empty. year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). Return empty arrays only for a page with no business content."
+    }
+  ],
+  "output_config": {
+    "effort": "low",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence",
+          "candidates",
+          "new_groups"
+        ],
+        "properties": {
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "quote",
+                "one_line",
+                "speaker",
+                "original_who",
+                "original_day",
+                "tier",
+                "event_time",
+                "links"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "quote": {
+                  "type": "string"
+                },
+                "one_line": {
+                  "type": "string"
+                },
+                "speaker": {
+                  "type": "string"
+                },
+                "original_who": {
+                  "type": "string"
+                },
+                "original_day": {
+                  "type": "string"
+                },
+                "tier": {
+                  "type": "string",
+                  "enum": [
+                    "fact",
+                    "party_statement",
+                    "third_party_view",
+                    "rumour"
+                  ]
+                },
+                "event_time": {
+                  "type": "string"
+                },
+                "links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "object",
+                "kind",
+                "looks_at",
+                "question",
+                "rungs",
+                "due_day",
+                "year",
+                "evidence_ids",
+                "measure",
+                "scope",
+                "period_start",
+                "period_end",
+                "basis",
+                "unit",
+                "event_type",
+                "group_refs",
+                "opens_as",
+                "settled_by"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "asset",
+                    "theme"
+                  ]
+                },
+                "looks_at": {
+                  "type": "string"
+                },
+                "question": {
+                  "type": "string"
+                },
+                "rungs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "label",
+                      "condition",
+                      "lo",
+                      "hi"
+                    ],
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "condition": {
+                        "type": "string"
+                      },
+                      "lo": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "hi": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "due_day": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "year": {
+                  "type": "string"
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "measure": {
+                  "type": "string",
+                  "enum": [
+                    "total_revenue",
+                    "segment_revenue",
+                    "product_revenue",
+                    "gross_margin",
+                    "operating_margin",
+                    "operating_expense_growth",
+                    "total_expenses",
+                    "operating_loss",
+                    "tax_rate",
+                    "capex",
+                    "shipments_or_capacity",
+                    "run_rate",
+                    "design_wins",
+                    "event",
+                    "spend_total",
+                    "market_size",
+                    "project_cost",
+                    "financing_amount",
+                    "price",
+                    "capacity",
+                    "growth_rate",
+                    "policy_event",
+                    "other"
+                  ]
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "period_start": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "period_end": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "basis": {
+                  "type": "string",
+                  "enum": [
+                    "GAAP",
+                    "non_GAAP",
+                    "n/a"
+                  ]
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "percent",
+                    "count",
+                    "GW",
+                    "MW",
+                    "TWD",
+                    "multiple",
+                    "n/a"
+                  ]
+                },
+                "event_type": {
+                  "type": "string",
+                  "enum": [
+                    "launch",
+                    "shipment",
+                    "licence",
+                    "approval",
+                    "deal_close",
+                    "deployment",
+                    "other",
+                    "n/a"
+                  ]
+                },
+                "group_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(?:n[1-9][0-9]*)$"
+                  }
+                },
+                "opens_as": {
+                  "type": "string",
+                  "enum": [
+                    "main_driver",
+                    "industry_aggregate",
+                    "policy_stage",
+                    "binding_obligation"
+                  ]
+                },
+                "settled_by": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "new_groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "name",
+                "scope",
+                "aliases"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^n[1-9][0-9]*$"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "aliases": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

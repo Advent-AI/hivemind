@@ -1,0 +1,277 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18b88-c888-7881-ac7a-d3508bfbeac8
+--------
+user
+You are an independent reader. You are a hedge-fund analyst who covers NVIDIA and the AI-infrastructure themes around it. You did not write the extraction prompt and you have not seen any score. You may read files; do not open any file whose name contains "key", and do not open other packets.
+
+The product: every article goes through an extraction step that writes evidence records (a verbatim quote plus fields) into the analyst's ledger. Downstream, a model judges open research questions using only these records, and a matcher compares new records with old ones. The matcher and the judge read `original_who` (who originally said or did it) and `original_day` (the day it was originally said or done) to tell old news from new and to tell one source repeated by many outlets from several independent sources. So a wrong original speaker or day misleads them; a noise record wastes the judge's attention.
+
+Reference: /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html, the signed standard the product follows. Read sections 5.3, 5.4 and 5.5 before the packet. Use it for definitions:
+- who (5.4): the original claimant; whether it is their own estimate or someone else's measurement.
+- original statement day (5.4): when unknown, written as unknown, never the report day.
+- tier (5.5): the table of five rows (an upper row wins when two apply).
+
+The packet: docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-W/packets/gnews_1a116fecd5de1747cc5a06b1.json. It holds the article text as the model saw it, its publication_day, publisher and category, and two answers, A and B, from two different versions of the extraction (the order is random). Each answer is the list of records production keeps.
+
+Read the whole article first. Then judge every record of A and then every record of B on its own, against the article. Write your verdict as JSON only (no prose before or after), in this shape:
+
+{
+ "input_id": "...",
+ "A": [
+  {"id": "e1",
+   "worth": "keep" | "marginal" | "noise",
+   "one_line_ok": true | false,
+   "one_line_problem": null | "number/unit, lost condition or hedge, forecast written as done, wrong period, lost who said it, says more than the quote",
+   "who_ok": true | false,
+   "who_note": null | "the right original speaker, as the article gives it, and why",
+   "day_ok": true | false,
+   "day_note": null | "the day the statement was first made or the action taken, as the article gives it; unknown when the article does not say",
+   "tier_ok": true | false,
+   "tier_note": null | "the right tier: fact / party_statement / third_party_view / rumour, and the row of 5.5",
+   "duplicate_of": null | "e#"}
+ ],
+ "B": [ same shape ],
+ "fields_better": "A" | "B" | "same",
+ "fields_better_reason": "one sentence"
+}
+
+Rules for you:
+- Be literal; quote the article in your notes. Judge each field against what the article says, not against the other answer.
+- speaker is who says it in this item; judge it only when it is plainly wrong. original_who and original_day are the fields that matter most.
+- A day is wrong when the record gives the report day for something said or done earlier, a day the article does not support, or leaves empty a day the article states. A month alone is not a day: an empty day is right when the article gives only a month.
+- Check every number in one_line against the quote.
+- An answer that is null was unusable; write [] for it.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '5\\.3|5\\.4|5\\.5' docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+27:body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.75;margin:0;padding-inline:16px;padding-block:0 64px}
+166:    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+169:        <li>记来源层：事实、当事人陈述、第三方观点、传闻 <span class="tag">进账本 · 第 5.5 节</span></li>
+196:<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+197:<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+198:<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+201:<tr><td>9</td><td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+202:<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+213:<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+354:<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+373:<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+388:<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+411:<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+416:<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+448:<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+449:<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+585:<tr><td>B9</td><td>几套"不要"的类</td><td>抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数</td><td>第 1 版 §2、§4；D221；D240；D243 第 12 条</td></tr>
+589:<tr><td>B13</td><td>PRD 06 的重复和替代说法早于 D202、D204</td><td>这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新</td><td>D202、D204</td></tr>
+594:<tr><td>B18</td><td>"线索""背景"一词多义</td><td>"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行</td><td>D221</td></tr>
+626:<rect class="bar" x="266" y="145.5" width="34" height="24.5"/><text class="val" x="283" y="139" text-anchor="middle">7</text><text x="283" y="186" text-anchor="middle">2.8</text>
+627:<rect class="bar" x="312" y="145.5" width="34" height="24.5"/><text class="val" x="329" y="139" text-anchor="middle">7</text><text x="329" y="186" text-anchor="middle">2.9</text>
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '354,404p' docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+<div class="table-wrap wide"><table>
+<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+<tbody>
+<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+</tbody></table></div>
+<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+
+<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+<tbody>
+<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+</tbody></table></div>
+<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+
+<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+<tbody>
+<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+</tbody></table></div>
+<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+
+<h2 id="weight"><span class="num">6</span>分量</h2>
+<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-W/packets/gnews_1a116fecd5de1747cc5a06b1.json' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+{
+ "input_id": "gnews:1a116fecd5de1747cc5a06b1",
+ "title": "Palantir (PLTR) Partners with Nvidia For Secure AI Offerings",
+ "publication_day": "2026-07-07",
+ "publisher": "finance.yahoo.com",
+ "publisher_type": "media",
+ "category": "T7",
+ "text": "Palantir Technologies Inc. (NASDAQ: PLTR ) is one of the top 10 AI stocks that will skyrocket .\nOn July 1, Alex Karp, the Chief Executive Officer of Palantir Technologies Inc. (NASDAQ:PLTR) highlighted the company's recent partnership with Nvidia Corp. (NASDAQ:NVDA) to provide safe AI services to U.S. government agencies, allies, and enterprises across the globe.\nchristina-wocintechchat-com-FVgECvTjlBQ-unsplash\nIn a CNBC interview, Karp said that the frontier AI model developers, Anthropic and OpenAI, have limited protections for their clients' intellectual property. Reflecting on trust issues that warfighters have with existing frontier AI model developers, he further stated:\n\"Then you have my enterprises in the private sector, who have the same issues like, 'why would they get access to my data if they're going to build my alpha? Why wouldn't I control the weights?' And that's where you get this partnership.\"\nEarlier this week, Palantir announced that it is combining its new intelligence engine and Nvidia's Nemotron open AI models to deliver mission-focused AI for government agencies and major infrastructure operators in the U.S.\nThis new platform allows agencies to tailor Nemotron models using their own data, maintain model weight ownership, and enhance performance via feedback. Palantir said that its Sovereign AI Operating System, developed on Foundry, Ontology, AIP, and Apollo, delivers the authorization, security, and audit features needed for sensitive government deployments.\nPalantir Technologies Inc. (NASDAQ:PLTR) creates and uses software platforms to support counter-terrorism activities and investigations. The company's products integrate with defense systems to provide situational awareness for improved operational decision-making.\nWhile we acknowledge the potential of PLTR as an investment, we believe certain AI stocks offer greater upside potential and carry less downside risk. If you're looking for an extremely undervalued AI stock that also stands to benefit significantly from Trump-era tariffs and the onshoring trend, see our free report on the best short-term AI stock .",
+ "answers": {
+  "A": [
+   {
+    "id": "e1",
+    "quote": "Earlier this week, Palantir announced that it is combining its new intelligence engine and Nvidia's Nemotron open AI models to deliver mission-focused AI for government agencies and major infrastructure operators in the U.S.",
+    "one_line": "Palantir announced a plan to combine its intelligence engine with Nvidia's Nemotron models to deliver mission-focused AI for U.S. government agencies and major infrastructure operators; no quantity was stated.",
+    "speaker": "finance.yahoo.com",
+    "original_who": "Palantir Technologies Inc.",
+    "original_day": "",
+    "tier": "fact"
+   }
+  ],
+  "B": [
+   {
+    "id": "e1",
+    "quote": "Earlier this week, Palantir announced that it is combining its new intelligence engine and Nvidia's Nemotron open AI models to deliver mission-focused AI for government agencies and major infrastructure operators in the U.S.",
+    "one_line": "Palantir announced earlier in the week of 2026-07-07 that it would combine its intelligence engine with Nvidia’s Nemotron open AI models to provide mission-focused AI for U.S. government agencies and major infrastructure operators.",
+    "speaker": "Palantir Technologies",
+    "original_who": "Palantir Technologies",
+    "original_day": "",
+    "tier": "fact"
+   },
+   {
+    "id": "e2",
+    "quote": "Then you have my enterprises in the private sector, who have the same issues like, 'why would they get access to my data if they're going to build my alpha? Why wouldn't I control the weights?' And that's where you get this partnership.",
+    "one_line": "Palantir CEO Alex Karp said private-sector enterprises worry that AI developers could access their data and build their alpha, and that they would want control of model weights; he presented these concerns as a reason for the Nvidia partnership.",
+    "speaker": "Alex Karp, CEO of Palantir Technologies",
+    "original_who": "Alex Karp, speaking in a CNBC interview",
+    "original_day": "2026-07-01",
+    "tier": "party_statement"
+   }
+  ]
+ }
+}
+
+codex
+{
+  "input_id": "gnews:1a116fecd5de1747cc5a06b1",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both answers correctly identify Palantir as the source of the announcement, leave its unspecified original day empty, and use the fact tier; B's additional record also has supported fields."
+}
+tokens used
+7,856
+{
+  "input_id": "gnews:1a116fecd5de1747cc5a06b1",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both answers correctly identify Palantir as the source of the announcement, leave its unspecified original day empty, and use the fact tier; B's additional record also has supported fields."
+}

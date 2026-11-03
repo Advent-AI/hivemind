@@ -15,11 +15,13 @@ TABLES = {
     'rungs': 'view_id text, position integer, label text, condition text, lo real, hi real',
     'view_keys': 'view_id text primary key, measure text, scope text, scope_key text, period_start text, period_end text, basis text, unit text, event_type text, seq integer, scope_source text, key_version integer',
     'view_switches': 'id integer primary key autoincrement, view_id text, open integer, reason text, by_whom text, after_seq integer',
-    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text',
+    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text, theme_pushes_json text, reference text, implied_outcome text',
     'evidence': 'evidence_id text primary key, quote text, one_line text, speaker text, original_who text, original_day text, tier text, event_time text, created_seq integer, created_from_input text',
     'evidence_sources': 'id integer primary key autoincrement, evidence_id text, input_id text, category text, publication_day text, location text, seq integer',
     'evidence_links': 'id integer primary key autoincrement, evidence_id text, view_id text, seq integer',
-    'replacements': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',
+    'replacements': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',   # history: written before D202, read as before
+    'revisions': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',      # D202: the new piece revises the old; both stay in force
+    'same_claims': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, seq integer',                    # D204: the matcher read the new piece as the same claim as the old; both stored, both in force
     'dependencies': 'dependency_id integer primary key autoincrement, view_id text, depends_on text, wait_chain_view_id text, wait_year text, direction text, seq integer',
     'dependency_resolutions': 'id integer primary key autoincrement, dependency_id integer, resolved_to text, reason text, seq integer',
     'successions': 'id integer primary key autoincrement, view_id text, succeeds text, seq integer',
@@ -32,6 +34,8 @@ TABLES = {
     # D149 research groups: an ongoing business subject several distinct theses belong to; membership is decided by extraction and written with the thesis
     'thesis_groups': 'group_id text primary key, name text, scope text, aliases text, created_seq integer, created_from_input text',
     'thesis_group_members': 'id integer primary key autoincrement, group_id text, view_id text, seq integer, input_id text, basis text',
+    # D166 (2026-11-01): the names a later declaration gives a stored group, appended once each; a group's aliases are its creation's plus these
+    'thesis_group_aliases': 'id integer primary key autoincrement, group_id text, alias text, seq integer, input_id text',
 }
 
 INDEXES = [
@@ -99,9 +103,11 @@ def rungs_of(conn, view_id):
 def add_key(conn, view_id, key, seq):
     """The view's key (keyed-views-plan.md 2.1), written once with the view."""
     from .. import universe as _universe
+    from .identity import is_shared
+    scope_source = 'shared' if is_shared(key) else key.get('scope_source', 'model')      # D197: an aggregate's scope is wording
     insert(conn, 'view_keys', view_id=view_id, measure=key['measure'], scope=key.get('scope', ''), scope_key=_universe.scope_key(key.get('scope', '')),
            period_start=key.get('period_start', ''), period_end=key.get('period_end', ''), basis=key.get('basis', 'n/a'), unit=key.get('unit', 'n/a'),
-           event_type=key.get('event_type', 'n/a'), seq=seq, scope_source=key.get('scope_source', 'model'), key_version=key.get('key_version'))
+           event_type=key.get('event_type', 'n/a'), seq=seq, scope_source=scope_source, key_version=key.get('key_version'))
 
 
 def ensure_key_columns(conn):
@@ -116,7 +122,7 @@ def ensure_key_columns(conn):
 
 def ensure_group_tables(conn):
     """A ledger written before research groups (D165) gains the group tables at its first write; nothing else changes."""
-    for name in ('thesis_groups', 'thesis_group_members'):
+    for name in ('thesis_groups', 'thesis_group_members', 'thesis_group_aliases'):
         conn.execute(f'create table if not exists {name} ({TABLES[name]})')
         conn.execute(f"create trigger if not exists {name}_no_update before update on {name} begin select raise(abort, 'append-only'); end")
         conn.execute(f"create trigger if not exists {name}_no_delete before delete on {name} begin select raise(abort, 'append-only'); end")
@@ -138,6 +144,12 @@ def ensure_writable_columns(conn):
     for field in ('lo', 'hi'):
         if field not in columns:
             conn.execute(f'alter table rungs add column {field} real')
+    judgement_columns = {r[1] for r in conn.execute('pragma table_info(judgements)')}
+    if 'theme_pushes_json' not in judgement_columns:
+        conn.execute('alter table judgements add column theme_pushes_json text')     # D195: judgements written before the theme block read as []
+    for field in ('reference', 'implied_outcome'):
+        if field not in judgement_columns:
+            conn.execute(f'alter table judgements add column {field} text')        # D260: judgements written before the stance fields read as null
 
 
 def view_key(conn, view_id):
@@ -227,6 +239,13 @@ def dependencies_of(conn, view_id):
     return out
 
 
+def direct_parents(conn, view_id, seq=None):
+    """The views this view depends on directly (a driver's root, D208; the seeds' depends_on), written at or before `seq` when given.
+    The filing reads it to keep a statement under the narrower of two linked questions (D207's narrowest rule, extraction.file_reading)."""
+    rows = conn.execute("select depends_on from dependencies where view_id=? and depends_on != '' and (? is null or seq <= ?) order by dependency_id", (view_id, seq, seq))
+    return list(dict.fromkeys(r[0] for r in rows))
+
+
 def dependants_of(conn, view_id):
     direct = [r['view_id'] for r in conn.execute('select view_id from dependencies where depends_on=?', (view_id,))]
     resolved = [r['view_id'] for r in conn.execute(
@@ -250,15 +269,45 @@ def would_cycle(conn, view_id, depends_on):
     return False
 
 
-def views_for_prompt(conn, object_ids):
+def day_start_seq(conn, day):
+    """D251: the sequence number the start of `day` stands at: the seq of the last completed day before it, or 0 before the first
+    completed day, where the seed questions live (D253: seeds are created at seq 0, before any item)."""
+    row = conn.execute('select max(seq) from days_completed where day < ?', (day,)).fetchone()
+    return row[0] if row is not None and row[0] is not None else 0
+
+
+def views_open_at_day_start(conn, object_ids, day):
+    """D251: the questions open at the start of `day`, as every item of that day sees them: views created at or before the day's start
+    seq (day_start_seq) whose last switch at that seq is open, the objects' own and every theme, in creation order; before the first
+    completed day that is the seeds. Each row carries `snapshot_seq`, the seq its groups and aliases are read at (groups_of_view_at),
+    so the list is the same for every item of the day whatever the day's items write. Question, looks_at, kind, object and due day only."""
+    seq = day_start_seq(conn, day)
+    out = []
+    for v in conn.execute('select view_id, object_id, object_kind, kind, looks_at, question, due_day, year, created_seq from views where created_seq <= ? order by created_seq', (seq,)):
+        if v['kind'] != 'theme' and v['object_id'] not in object_ids:
+            continue
+        switch = conn.execute('select open from view_switches where view_id=? and after_seq <= ? order by id desc limit 1', (v['view_id'], seq)).fetchone()
+        if switch and switch['open']:
+            out.append(dict(v, snapshot_seq=seq))
+    return out
+
+
+def views_for_prompt(conn, object_ids, themes=False):
     """05-extraction block 5: the objects' open views plus every view they depend on, open or closed, with who
-    depends on whom; question, looks_at and due day only."""
+    depends on whom; question, looks_at and due day only. With themes, every open theme thesis follows the objects' own
+    (A, extraction v19): a company item's statement about a theme matter links to the theme thesis instead of being dropped."""
     shown, order = {}, []
     for object_id in object_ids:
         for view_id in views_of_object(conn, object_id):
             if view_id not in shown:
                 shown[view_id] = dict(view(conn, view_id), open=True, depends_on=[], dependencies=[])
                 order.append(view_id)
+    if themes:
+        for row in conn.execute("select view_id from views where kind='theme' order by created_seq"):
+            if row['view_id'] not in shown and is_open(conn, row['view_id']):
+                shown[row['view_id']] = dict(view(conn, row['view_id']), open=True, depends_on=[], dependencies=[])
+                order.append(row['view_id'])
+        order.sort(key=lambda view_id: shown[view_id]['created_seq'])      # one list in creation order
     for view_id in list(order):
         for dep in dependencies_of(conn, view_id):
             target = dep['resolved_to']
@@ -306,7 +355,40 @@ def link(conn, evidence_id, view_id, seq):
 
 
 def replace(conn, old_id, new_id, said_day, seq):
+    """Retires old_id (history before D202; kept for the readers and tests of stored ledgers, no longer called by the writer)."""
     insert(conn, 'replacements', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
+
+
+def revise(conn, old_id, new_id, said_day, seq):
+    """D202: new_id is the matcher's later version of old_id; both stay in force, the judge sees the path."""
+    insert(conn, 'revisions', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
+
+
+def relate_same(conn, old_id, new_id, seq):
+    """D204: the matcher's opinion that new_id restates old_id; a labelled relation, never a merge."""
+    insert(conn, 'same_claims', old_evidence_id=old_id, new_evidence_id=new_id, seq=seq)
+
+
+def same_claim_group(conn, evidence_id):
+    """The other pieces related to this one as the same claim, in either direction (empty on a ledger without the table)."""
+    if not conn.execute("select 1 from sqlite_master where type='table' and name='same_claims'").fetchone():
+        return []
+    rows = conn.execute('select old_evidence_id, new_evidence_id from same_claims where old_evidence_id=? or new_evidence_id=?', (evidence_id, evidence_id)).fetchall()
+    return sorted(({r['old_evidence_id'] for r in rows} | {r['new_evidence_id'] for r in rows}) - {evidence_id}, key=lambda x: int(x[1:]) if x[1:].isdigit() else x)
+
+
+def revision_of(conn, evidence_id):
+    """None on a ledger written before D202 (no revisions table), which read-only openers cannot extend."""
+    if not conn.execute("select 1 from sqlite_master where type='table' and name='revisions'").fetchone():
+        return None
+    row = conn.execute('select old_evidence_id from revisions where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
+    return row['old_evidence_id'] if row else None
+
+
+def recent_judgements(conn, view_id, n):
+    """The thesis's last n judgements, newest first: (seq, cited evidence ids)."""
+    rows = conn.execute('select seq, cited_evidence_json from judgements where view_id=? order by judgement_id desc limit ?', (view_id, n)).fetchall()
+    return [{'seq': r['seq'], 'cites': json.loads(r['cited_evidence_json'] or '[]')} for r in rows]
 
 
 def is_replaced(conn, evidence_id):
@@ -328,7 +410,8 @@ def evidence(conn, evidence_id):
 
 
 def evidence_in_force(conn, view_id):
-    """Evidence linked to the view and not replaced, each with its replaced predecessor when there is one."""
+    """Evidence linked to the view and not replaced (history), each with its replaced predecessor when there is one and, since D202,
+    the piece it revises (both in force)."""
     out = []
     for row in conn.execute('select evidence_id from evidence_links where view_id=? order by id', (view_id,)):
         evidence_id = row['evidence_id']
@@ -337,6 +420,9 @@ def evidence_in_force(conn, view_id):
         record = evidence(conn, evidence_id)
         previous = predecessor_of(conn, evidence_id)
         record['replaced'] = evidence(conn, previous) if previous else None
+        revised = revision_of(conn, evidence_id)
+        record['revises'] = evidence(conn, revised) if revised else None
+        record['same_as'] = [x for x in same_claim_group(conn, evidence_id) if not is_replaced(conn, x)]
         out.append(record)
     return out
 
@@ -400,6 +486,22 @@ def add_group(conn, *, group_id, name, scope, seq, input_id, object_ids=(), alia
     conn.execute('insert into groups_fts (group_id, text) values (?, ?)', (group_id, f'{" ".join(object_ids)} {name} {scope} {" ".join(aliases)}'))
 
 
+def add_group_aliases(conn, group_id, aliases, seq, input_id):
+    """The names a later declaration gives a stored group (D166: a declaration whose names hit a stored group is that group, so its
+    other names are the matter's too). Each name is appended once, case-insensitively, and joins the group's search text.
+    Returns the names added."""
+    known = {a.casefold() for a in group(conn, group_id)['aliases']}
+    added = []
+    for alias in aliases:
+        if alias.casefold() in known:
+            continue
+        insert(conn, 'thesis_group_aliases', group_id=group_id, alias=alias, seq=seq, input_id=input_id)
+        known.add(alias.casefold()); added.append(alias)
+    if added:
+        conn.execute('insert into groups_fts (group_id, text) values (?, ?)', (group_id, ' '.join(added)))
+    return added
+
+
 def add_member(conn, group_id, view_id, seq, input_id, basis='model'):
     """basis: 'model' when the model cited the group, 'alias:<name>' when the thesis's own text carries the group's name."""
     if conn.execute('select 1 from thesis_group_members where group_id=? and view_id=?', (group_id, view_id)).fetchone():
@@ -408,21 +510,39 @@ def add_member(conn, group_id, view_id, seq, input_id, basis='model'):
     return True
 
 
-def _group_record(row):
-    """A thesis_groups row with its aliases as a list (stored as JSON text)."""
+def _group_record(row, conn=None):
+    """A thesis_groups row with its aliases as a list: the creation's (stored as JSON text) and, given the connection, the names
+    later declarations added (thesis_group_aliases; a ledger written before that table has none)."""
     record = dict(row)
     stored = record.get('aliases')
     record['aliases'] = json.loads(stored or '[]') if isinstance(stored, str) else list(stored or [])
+    if conn is not None:
+        try:
+            record['aliases'] += [r[0] for r in conn.execute('select alias from thesis_group_aliases where group_id=? order by id', (record['group_id'],))]
+        except sqlite3.OperationalError:
+            pass
     return record
 
 
 def group(conn, group_id):
     row = conn.execute('select * from thesis_groups where group_id=?', (group_id,)).fetchone()
-    return _group_record(row) if row else None
+    return _group_record(row, conn) if row else None
 
 
 def groups_of_view(conn, view_id):
-    return [_group_record(r) for r in conn.execute('select g.* from thesis_group_members m join thesis_groups g on g.group_id=m.group_id where m.view_id=? order by m.id', (view_id,))]
+    return [_group_record(r, conn) for r in conn.execute('select g.* from thesis_group_members m join thesis_groups g on g.group_id=m.group_id where m.view_id=? order by m.id', (view_id,))]
+
+
+def groups_of_view_at(conn, view_id, seq):
+    """The view's groups as they stood at `seq`: memberships written at or before it, each group with its creation aliases and the
+    aliases later declarations added at or before it (D257). The day-start snapshot (D251) reads groups here so that a takes line
+    is the same for every item of the day whatever that day's items merge."""
+    records = []
+    for row in conn.execute('select g.* from thesis_group_members m join thesis_groups g on g.group_id=m.group_id where m.view_id=? and m.seq <= ? order by m.id', (view_id, seq)):
+        record = _group_record(row)
+        record['aliases'] += [r[0] for r in conn.execute('select alias from thesis_group_aliases where group_id=? and seq <= ? order by id', (record['group_id'], seq))]
+        records.append(record)
+    return records
 
 
 def members_of_group(conn, group_id):
@@ -438,7 +558,7 @@ def groups_for_prompt(conn, object_ids, text, top_n=10):
         for row in conn.execute("""select distinct g.* from thesis_groups g join thesis_group_members m on m.group_id=g.group_id
                                    join views v on v.view_id=m.view_id where v.object_id=? order by g.created_seq""", (object_id,)):
             if row['group_id'] not in found:
-                found[row['group_id']] = _group_record(row); order.append(row['group_id'])
+                found[row['group_id']] = _group_record(row, conn); order.append(row['group_id'])
     words = [w for w in re.findall(r'[A-Za-z0-9][A-Za-z0-9.&-]+', f'{" ".join(object_ids)} {text or ""}') if len(w) >= 3]
     if words:
         query = ' OR '.join('"' + w.replace('"', '') + '"' for w in dict.fromkeys(words[:24]))

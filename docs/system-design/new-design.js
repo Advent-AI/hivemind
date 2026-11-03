@@ -97,7 +97,6 @@ window.HIVEMIND_DESIGNS.new = {
       ],
       open: [
         "Validate each category prompt on stored items before settling its wording; record versions in Config.",
-        "Thesis granularity needs research: avoid reducing everything to financial metrics, bundling separate questions or splitting one question too finely. Then reflect the decision in prompts.",
       ],
       refs: [
         { path: 'docs/system-design/new-facts.js', symbol: 'TEMPLATE · PROMPT_EXAMPLE · CATEGORY_READS · EXTRACT_STEPS · EXTRACT_TWO · EXTRACT_SORT_TREE · EXTRACT_RELATIONS · SOURCE_TREE · EXTRACT_EXAMPLE_TREE' },
@@ -116,7 +115,6 @@ window.HIVEMIND_DESIGNS.new = {
       checks: "Destinations must be shown IDs or evidence within the relevant thesis. Merge only into open theses. Check judgement reasons against records. Every judgement declares whether its conclusion changed; a first judgement or rung change must say yes. Dependencies must refer to shown theses or an explicitly awaited year on their chain, without cycles. Only one queue writes each thesis. Only incoming items create evidence; theses send notifications, not evidence. Append records without rewriting history. Store group associations against the final thesis under the grouping contract.",
       open: [
         "Search method and ranking: semantic, keyword or both. Initial result count is 10.",
-        "Decide granularity separately: a material segment deserves its own question (NVDA China revenue is not merged into total revenue), but theses must not become only financial metrics. Research hedge-fund theses and the number of questions to track per subject.",
         "Labelling details and checks for omitted or mislinked extraction evidence remain to be defined.",
         "Two proposals remain for pull-mode design; see the end of the detailed page.",
       ],

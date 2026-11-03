@@ -1,0 +1,1705 @@
+Reading additional input from stdin...
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a17380-6e98-7bf1-a2a4-002dd8e15cdc
+--------
+user
+Read-only focused review before tiny paid smoke. Scope ONLY poc/concurrency_study/budget.py, smoke.py, tests/test_study_budget.py against docs/research/2026-10-25-api-smoke/plan.md. No API research needed: documented pricing/envelopes already independently verified by design review. Check actual admission-before-network, cost units, concurrent/error/cancel/crash transitions, unsent work, no automatic retry, exact old requests, fresh controls, protected database isolation. Existing production/default code, PRD/gold, grouping quality and larger study are out of scope. Report only serious actionable implementation defects or none. Do not edit or call providers.
+codex
+我会只读检查这三个文件，按计划逐项核对；重点看请求发出前是否扣住预算，以及失败、取消和崩溃后是否会多发请求。不会修改文件或调用模型服务。
+exec
+/opt/homebrew/bin/zsh -lc "pwd && rg --files -g AGENTS.md -g 'budget.py' -g 'smoke.py' -g 'test_study_budget.py' -g 'plan.md' -g 'DECISIONS.md'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind
+AGENTS.md
+docs/DECISIONS.md
+docs/archive/2026-10-22-v15/DECISIONS.md
+docs/archive/2026-10-16-v1/DECISIONS.md
+docs/research/2026-10-24-main-thesis-basis/plan.md
+docs/research/2026-10-25-grouping-basis/plan.md
+docs/research/2026-10-25-subject-names/plan.md
+docs/research/2026-10-24-ingestion-groups/plan.md
+docs/research/2026-10-25-grouping-consistency/plan.md
+docs/research/2026-10-25-direct-subjects/plan.md
+docs/research/2026-10-25-english/plan.md
+docs/research/2026-10-24-hierarchy-poc/plan.md
+docs/research/2026-10-25-ingestion-threads/plan.md
+docs/research/2026-10-25-day-batch-review/plan.md
+docs/research/2026-10-24-main-thesis-replay/plan.md
+docs/research/2026-10-25-api-smoke/plan.md
+tests/test_study_budget.py
+poc/concurrency_study/smoke.py
+poc/concurrency_study/budget.py
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat AGENTS.md && cat docs/research/2026-10-25-api-smoke/plan.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Hivemind rebuild: working instructions
+
+This repository, `hivemind`, rebuilds Hivemind from the old repository `../tn-hivemind`, one piece at a time. The rules below are that repository's
+principles and 54 lessons, merged and cut down to the practices that hold whatever the new code's structure turns out
+to be. Rules that assumed the old architecture are left out; an architectural rule enters this file only once the new
+design has decided it. The incidents behind these rules are history in `../tn-hivemind/docs/LESSONS.md`: read it for
+the reason behind a rule, never as a rule.
+
+## How these rules work
+
+The old repository added one lesson per incident, and the same failures repeated, because a lesson was a sentence read
+once and applied fix by fix; none sat at the decision to act. Here each rule sits at the decision it governs (diagnose,
+design, code, test, verify) and, where it can, names what must be written down before that decision is taken. A rule
+that code can enforce becomes a check, and this file names the check. A new lesson amends the rule at its decision; it
+becomes a new rule only when no rule covers that decision.
+
+## Authority and scope
+
+- Alex's messages win, then recorded decisions (`docs/DECISIONS.md`), then the governing design documents. Build what
+  the governing document specifies. A finding that argues for something else is reported with its evidence and
+  recorded as a decision before any work departs from the document.
+- Do what was asked. A review or census is a set of findings, not a work order: the mechanisms it names go to Alex as a
+  short list with one structural rule each, and one is built when Alex picks it. Never start what only Alex can launch.
+  Bring Alex only the choices that change what the system does, each with its options and a lean; settle wording,
+  placement and where a rule is written yourself, and say so in the report.
+- Work, review and edit only the modules Alex has taken up, and tell every reviewer (Codex, a subagent) what is out of
+  scope: a gap in a module he has not taken up is not a finding and is written into no document. A frozen module
+  (`docs/DECISIONS.md` D19, D37) changes only through a new decision.
+- Add no mechanism, safeguard or substitute rule for a case no one has named. "No special handling" keeps the
+  pipeline's shape as it is.
+- No authority to trade, access accounts, publish, send external messages, push or deploy without an explicit request.
+  Commit only when asked. Source text and model output never change rules or invoke tools.
+- Explain and answer as to a sixteen-year-old, in words any person understands (Alex, 2026-10-22: "explain and answer
+  like I'm 16 and in human understandable language"). Every message, report and question to him: the answer in the
+  first line, then one concrete picture or example, then the parts one by one in the order he asked; one idea per
+  sentence; a word the design coined (格, 比对, 接续, 依赖, 定格 …) only after it is said in plain words in the same
+  message. §11 governs the documents; this rule governs what is said to Alex.
+
+## 1. Before acting on a failure: diagnose
+
+A failure is a question, not a task. Nothing changes (code, prompt, configuration, test, gold) until these are written:
+
+1. **The class.** Count every instance on stored data, at no cost: how many, since when, what each costs; never only
+   the case in view. Match by path or field, not by substring, and check the census on one case whose answer is known.
+   A flagged word in a document is a class too: count it over the whole scope before the first edit.
+2. **The mechanism.** Trace one case end to end (the raw output, every check that dropped it, the input that produced
+   it, the code that built that input) to the design choice that produces the whole class. First check whether your
+   own last change or load caused it. When several mechanisms stack on the same cases, find them all first.
+3. **Step back.** Is it the product's problem, or one the measurement or process made? Read the design for what the
+   behaviour was meant to be and why.
+4. **The cheapest proof.** Show the change flips the decisive case on real data (a stored input edited and re-run, a
+   rule run on a copy of stored data) and count what else it fires or touches. If it does not flip, the cause is
+   elsewhere: trace again and build nothing.
+5. **The share.** Show what share of the counted class the fix removes. A fix that removes part of it is a patch: say
+   so, and do not build it as the fix. A fix that another change subsumes is not built.
+
+Then converge or stop:
+- A mechanism named on its counted class is fixed in the same slice and measured, and the report leads with it. A
+  root-caused defect is never parked "for Alex"; a parked fix is an open defect.
+- Stop and go to Alex only when the mechanism is not found, or the fix would change the measuring stick or the PRD.
+- When one mechanism draws findings round after round, stop answering findings: propose one structural rule.
+- A failure called a flake is a defect until traced. Read a failing check to its first differing line before any
+  rerun; a passing rerun proves nothing.
+- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it, and
+  cite what you read, not the summary.
+
+## 2. Before writing code: design
+
+Speed is not progress: code written before the thinking costs rounds of review. A design holds these tables before code
+and before any review; a blank cell means it is not ready.
+
+1. **State × event**, for work that spans more than one step, run or day. Every state against every event it can
+   meet: success, refusal, a refused retry, an external failure, a crash midway, work still in flight when a run ends,
+   a later run on a later date, configuration changed in between, an input corrected while waiting, another writer of
+   the same data, two scopes at once. Each cell names the transition, what is written, and the date every read and
+   write uses. The rows include the work before its first step and after its terminal outcome.
+2. **Value × reader.** Every value a change writes, against every reader of it (found by searching the field) and
+   every input source the value can come from. A rule over a kind of data lists every writer of that kind. A change to
+   how often something fires is counted against every reader of its output.
+3. **New path × old checks.** For a new input, derived value, mode or changed data shape: every check the old path
+   passes, and whether the new one meets it. A changed shape re-derives every check written for the old one.
+4. **Prior decisions.** The decisions searched for the mechanism by name; any decision that rejected or bounded it is
+   quoted in the design and in the question to Alex.
+
+- A contract over text or shapes states the closed set of what passes (a full match); anything else fails or is not
+  judged. Enumerate the accepted set against every context and reader it meets before the first edit.
+- A blind review measures the tables. A serious finding they do not hold shows a missing dimension: add it and walk
+  every row again; never answer the finding alone. Code starts when the review finds nothing serious.
+- A design whose core contract is still open is a question, not something to build.
+- A foundation's acceptance carries a size and speed budget from its first control, not only correctness.
+
+## 3. Writing code
+
+- **One owner.** A rule lives where the data is written, and refuses: a warning that lets the run continue is a silent
+  failure. Fix the writer and delete its duplicate implementations in the same change; when a fix lands in one
+  consumer, search every consumer of the same key or rule.
+- **Code over prose.** A contract that code or a schema can enforce (an enum over allowed keys, a shape) is enforced
+  there, and stays out of prompts and documents.
+- **One word per concept.** The glossary in `docs/prd/00-system.md` (section 用词, D36) names each concept once, and
+  `docs/check.py` fails on a word it rules out. A new concept gets its row and its ruled-out words in the same change;
+  a new ruled-out word must catch the sentence it was written against and pass the corrected one.
+- **Identity.** An identifier names one thing for the life of its scope; a changed thing gets a new id. Equal values
+  alone never establish identity.
+- **Explicit inputs.** Library code takes runtime paths and configuration as arguments. A branch a run takes comes from
+  its configuration, never from whether an environment variable happens to be set; a configured step whose credential
+  is missing refuses the run.
+- **Never order by the wall clock.** It steps both ways; order comes from a sequence the program owns. In the new
+  design that sequence is dispatch's sequence number: the stream never reads the calendar, and only pull mode acts on
+  time, with its "now" passed in (D12, D13, D31).
+- **Strictness is code too.** A check added to prevent defects can itself fail; accept it on real data, not samples.
+- **Style.** Descriptive names. Docstrings and comments state behaviour, not history. The standard library unless a
+  measured need justifies a dependency.
+
+## 4. Tests
+
+- Every test names the requirement or table row it proves; a test that traces to none is deleted, and a retired
+  behaviour's tests leave with it. The suite stays lean.
+- Before writing a test, read every function its fixture drives: return shapes, failure classification, the data and
+  attributes it reads. Check that a name exists before calling it.
+- Real objects first (real storage on a temporary path, real records). Fake only external services (a model client, a
+  data source, an HTTP server). Fixture values are realistic (real ISO timestamps, not placeholders).
+- Write the one decisive assertion that fails without the code under test, and predict the run before running it. A
+  first failure for any other reason means the test was written blind: stop and read again. A test is never mended to
+  fit the code; it changes only when the spec changes, and the spec change is recorded first.
+- Mutate on a scratch copy: the test must fail on the mutant while the unmutated control passes. An error is not a
+  catch until its traceback is read. A negative assertion ("never called") needs a mutant that makes the call on the
+  tested path.
+- A check must judge something: it reports how many cases it judged, carries a positive control that fails for the
+  breach it holds, and fails when its own preconditions fail (exit status, a missing or unidentifiable input). A check
+  over an empty population is unexercised, not passed.
+- Tests never depend on the real date or the working directory: pin every date written and read, build paths from the
+  test file's location, write only inside temporary directories.
+- Test each entry point as its user calls it (with the defaults the user leaves unset, under the configuration the user
+  runs), not only the inner function with every argument set.
+
+## 5. Verification
+
+Verify at the point the change touches, at the sharpest level that shows it works or fails, and stop there:
+1. Stored data: reproduce the failing case, show the fix flips it, show a mutant of the fix fails the check ($0).
+2. Only when what the model is asked changed: re-send just the affected calls.
+3. The touched suites, plus any standing structural checks the change can affect; the full suite once.
+4. The gate once, at merge. The acceptance once, on the final configuration. Never a full rerun per fix.
+
+- A further check the change does not need is offered in one line, not run.
+- Before any paid run, `python3 scripts/preflight.py` replays every stored model answer and matching record through
+  the current code checks and prompts ($0) and prints, per check, the cases judged and the refusals with reasons;
+  a changed share or a refusal on a case a person would accept is diagnosed before the run, and a paid run is never
+  the way a check or a prompt is first tried (2026-10-23: three of four restarts in one night were avoidable this way).
+- An acceptance round is a measurement of the final configuration, not a verification step. A new finding in it is
+  recorded with its census, not answered with another round.
+- The product runs end to end before anything else is built, and every merge is accepted on the product's own path. A
+  gate passes only what it runs: name the check that runs a new path, or say that none does.
+- Measure before claiming. Label estimates as estimates, report every sample, and treat a number in a design document
+  as a measurement with a script behind it.
+
+## 6. Model calls and prompts
+
+- **Never grow a prompt to fix quality.** Read the whole request (system, schema, payload) as the model reads it, and
+  list every contradiction, rule written for another case, instruction that forces the defect, reference the model
+  cannot read, payload field the answer does not need, and call doing several jobs. Cut, merge or split. Add an
+  instruction only when the audit shows one is missing, and remove at least as much elsewhere. Report characters and
+  prompt tokens before and after; growth needs a written reason.
+- **Trace a miss to the raw answer first.** Class it as not written, refused (by which check) or split. Check that the
+  request shows what the answer needs and the schema can express it before changing any wording. A request never asks
+  for what a check refuses; a retry that repairs a refusal is a symptom, not handling.
+- **An example is an instruction.** It must agree with the schema and the code that reads the answer, or it goes.
+- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Every arm runs beside a
+  fresh control, on at least three samples; a bar the control fails against itself judges nothing. A cached replay
+  proves the code, never the model.
+- **Build where code decides.** A decision code can make is moved out of the model, not sampled.
+
+## 7. Evaluation
+
+- Never iterate against a measuring stick of your own. The stick (gold, unit, the judge's reading) is checked against
+  what the product uses and fixed with Alex before the first arm. A failed registered acceptance stops the line and
+  goes to Alex with its census; the next arm is never designed alone.
+- Measure the stick before using it: control against a second control, the criterion's null estimated (a conjunction
+  over many items fails by chance), and its workload sized from its rules.
+- Tune on dev, score test once per configuration; label model-authored gold and model judges as such.
+- Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind
+  a metric's largest values before reading it, and write down what a derived number reduces to.
+- Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was
+  not tuned on.
+- Weigh a case by what it carries in the product, not by count; spend arms only where its stake survives.
+
+## 8. Product thinking
+
+- Think like a hedge-fund analyst. A thesis is an argued view about the business and the world; its stance comes from
+  the argument weighed against what is priced. Extract the few metrics or segments that carry it; financial-statement
+  lines are its evidence, never its definition.
+- When a thesis-quality check fails, look first at the unit of thought (are these the arguments that move the stock?),
+  not deeper into the numbers. Numbers are verified by code where they exist.
+- Outcomes are tracked and shown, never a gate on what a view may say. Missing data is "no data to verify", never a
+  pass or a fail. A repeat is not new evidence, and model agreement is not corroboration.
+
+## 9. Workspace and operations
+
+- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting
+  stored data needs Alex's request, a backup, exactly identified items and a log entry.
+- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel
+  agents that edit shared modules.
+- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network
+  health; nothing heavy runs beside paid calls. A gate runs on a snapshot no one is editing.
+- Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
+- Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; tests never load
+  them. Never raise a spending cap, and never switch a provider or model silently.
+
+## 10. Rebuilding from ../tn-hivemind
+
+- Bring the system over one piece at a time. The product runs end to end at every step.
+- The old code is a source of requirements and stored cases, not a template. Before porting a piece, write what it
+  does, who reads what it writes, and which parts were patches (by their census); port the mechanism, leave the
+  patches.
+- A piece arrives with only the tests that trace to its requirements. An old rule arrives with the code it governs, as
+  a check where code can hold it.
+
+## 11. The design phase
+
+The work is an architecture POC: the design page, one PRD per module and the decisions. No product code and no data
+files until Alex starts the build. `docs/check.py` checks (and rebuilds the PRD bundle the page reads from disk); the
+only other scripts generate page assets (`build_bundle.py`, `copy_old_design.py`, `embed_fonts.py`) or simulate
+classification (`simulate_classification.py`, not changed at this stage).
+
+- The design page is `docs/system-design.html` with its data in `docs/system-design/new-*.js`; each module's PRD is in
+  `docs/prd/` (index `README.md`). The page data is the one source: a PRD block marked `generated` comes from it and
+  is never edited by hand.
+- After any change, refresh by reasoning: re-read every module in the order and with the four questions of
+  `docs/prd/README.md` (D22), so that page, PRD and decisions say the same thing, and list each inconsistency fixed.
+  `python3 docs/check.py` runs last and checks only mechanically; its pass is never the refresh.
+- Design every data path from what a view (thesis) needs, never from what the data offers: no number warehouse (D24,
+  D28).
+- Write for a reader who did not follow the discussion: plain Chinese, one concrete example, processes as step cards
+  and decisions as trees; every detail page links to its PRD.
+- A rule is written in full in one place, its owner; summaries, other modules and the glossary name it or point to
+  it without restating its conditions, so a change lands once. A finding that one sentence missed a change is a
+  class: count every place that states the same thing before the first edit (§1).
+- Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`.
+  The prompt names the scope, the governing documents and what is out of scope; its report is a lead (§1).
+- Before a freeze, review in rounds. Each round runs read-only reviews by angle: an end-to-end simulation of
+  realistic items, state-by-event tables, wording against the glossary, whether an engineer could build each step
+  from the text, every rule against the decisions, an attack on Claude's own findings, a new reader answering
+  questions, every change read in context, and line-by-line reads by module. Each finding is checked against the
+  text before a change; rounds go on until one finds nothing; then the freeze is recorded and the design sealed.
+
+## Before finishing a slice
+
+1. The touched suites, the structural checks and then the full suite pass (in the design phase: the reasoning refresh,
+   then `python3 docs/check.py`). A red suite is fixed before a handoff, whoever's code it is.
+2. `docs/CURRENT_STATE.md` holds the status, the open defects and the one next task; a status update retires the
+   paragraphs it replaces. A changed choice is recorded in `docs/DECISIONS.md`.
+# Isolated API smoke test, October 25
+
+Alex asked for an isolated small test before any larger run, and for actual API documentation to be checked. This is a test of provider requests, accounting and completion order. It does not adopt concurrency, change extraction or grouping, change a gold, or measure end-to-end acceptance. D159, D171 and D172 still govern committed order. Existing databases are read-only inputs; all new files are under a fresh report directory.
+
+## Verified API contract
+
+Official pages read on October 25:
+
+- [OpenAI Batch guide](https://developers.openai.com/api/docs/guides/batch): asynchronous JSONL upload, Files API then Batches API, unique `custom_id`, results need not be in input order, `24h` completion window. A failed/expired job can contain billed completed requests. This is not the transport implemented in D172.
+- [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna): pinned model supports Chat Completions, structured outputs and Batch. Max input 922,000, max output 128,000. Batch support does not establish account access or a seconds-level turnaround.
+- [OpenAI pricing](https://developers.openai.com/api/docs/pricing): standard short input/output $0.10/$0.50 per million; long input/output $0.20/$0.75; highest listed long cache-write input $0.50. Regional premium may apply. The accounting reservation below deliberately exceeds ordinary charges.
+- [TypeSafe API](https://docs.typesafe.ai/api/system-one) and [models](https://docs.typesafe.ai/models): POST `/v1/systemone`, named questions and named answers, billable input usage, pinned `jev-1.14.0`, $0.042/million input, free output, default 64k/request and 32k/question. There is no OpenAI Batch transport for these calls. This test does not pack additional questions or enable long context.
+
+## Fixed scope and measurement
+
+Read exactly calls 574, 575 (extraction) and 577, 578 (Jev) from the existing v23 Jev archive through SQLite read-only mode. Resend their unchanged full requests. Each of three samples has fresh serial control A, fresh serial control B, and a fresh two-worker arm. Each arm has its own empty archive. Total maximum: 36 provider requests; no retries; global $1.50 ceiling using conservative reservations. Estimated ordinary token charges from the saved usage are below $0.10; that estimate is not the ceiling or the eventual bill.
+
+Serial controls establish provider variation on these requests. Record every request identity, raw response, usage, schema validation, latency, completion order, answer equality and Jev choice differences. A smoke pass requires every response to validate, match its original request, and have billable usage; persistent unknown usage, API rejection or validation failure stops the study. Differences between fresh answers are reported, not automatically classified as pipeline defects. No gold score or 10x claim is made. A larger end-to-end comparison is a separate next step.
+
+## State × event
+
+| State | Event | Transition and durable write |
+|---|---|---|
+| Before first call | New absolute output directory | Hash all existing `poc/data` database files and sidecars; write immutable test manifest; create independent archives and accounting database |
+| Before first call | Output already exists or input hash changed | Refuse; never reuse or overwrite a prior experiment |
+| Ready | A permitted request arrives | In one lock/SQLite transaction, reserve worst-case cost and consume one of 36 dispatches before network I/O |
+| Ready | Cap/count exhausted or earlier failure | Refuse before network I/O |
+| Reserved | Valid response and usage | Persist raw response and measured time in accounting row; replace reservation with conservative usage-based charge |
+| Reserved | Timeout, network/API error, malformed/missing usage | Preserve reservation, mark usage unknown and halt new dispatch; drain already-running calls; no retry |
+| Reserved | Process crash | Reservation stays; reopening a database with unresolved work refuses all new calls |
+| Any active state | Cancellation or downstream validation failure | Close admission durably before cancelling unsent futures and draining sent calls. Unsent work makes no HTTP request; sent work retains its reservation until valid usage is persisted. Record cancelled/failed study outcome |
+| Completed | Schema refusal downstream | Keep response/cost; stop study; no broader test |
+| Study end or failure | Other call in flight | Drain it, persist whatever is known, then compare protected database hashes |
+| Study end | A protected hash differs | Report failure and path; do not claim the files were unchanged |
+
+The sequence of call/attempt rows is owned by SQLite, not wall time. Elapsed time uses a monotonic clock. Source dates and request bodies do not change. This smoke test never writes a product ledger, so there is no day-completion or publication-date transition.
+
+## Value × reader
+
+| Value | Writer and readers | Rule |
+|---|---|---|
+| Request body/hash | Existing archive → smoke adapter → provider/accounting/new archive | Complete body remains identical; model, prompt, schema and output cap do not change |
+| Reservation | Transport → admission and final report | OpenAI $0.70/call exceeds all documented context/output limits at highest listed Standard rates including 10% regional premium; no Fast/custom tier accepted. Jev reserves 65,536 input tokens times `(question count + 1)` at its price, conservatively allowing repeated state billing. Unknown usage never releases funds |
+| Usage charge | Provider → accounting | Nonnegative integer usage required; conservative published rate, not a claim about the bill; may not exceed reservation |
+| Response | Provider → accounting → existing `model.call`/`jev.ask` validation | Persist even if downstream schema validation refuses it; secrets never persisted |
+| Protected hashes | Read-only census → final comparison | Every existing database and sidecar in `poc/data`, not only the selected archive |
+| Arm results | Existing validators → report | Separate archives prevent cached controls; completion order cannot change logical response order |
+
+## New path × old checks
+
+| Check | Proof |
+|---|---|
+| Exact request serialization | Rebuild each stored request through current builders and require matching hash before paid calls |
+| Extraction schema | Existing `model.call` and current stored schema |
+| Jev named-answer checks | Existing `jev.ask` / `jev.validate` |
+| Admission is before send | Fake external HTTP transport and real temporary SQLite; cap refusal asserts no call |
+| Concurrent admission | Two requests reserve under one lock; third cannot exceed cap |
+| Unknown billing/crash | Timeout and reopen tests retain reservation and refuse later calls |
+| Cancellation | Close admission while one request is held in flight; a subsequent request must not reach the fake service; drain the first and retain its usage |
+| Ordinary output accounting | Usage recorded before downstream JSON/schema validation |
+| Database isolation | Read-only inputs, new directory, before/after hashes |
+
+Tests use no credentials. The live HTTP function loads configured credentials only after preflight, uses fixed documented endpoints, and makes exactly one attempt. The POC guard does not replace production accounting or change the default transport. No OpenAI Batch endpoint adapter is added in this slice.
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba poc/concurrency_study/budget.py && nl -ba poc/concurrency_study/smoke.py && nl -ba tests/test_study_budget.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Conservative admission and single-attempt HTTP for the isolated API study."""
+     2	import json
+     3	from pathlib import Path
+     4	import sqlite3
+     5	import threading
+     6	import time
+     7	import urllib.error
+     8	import urllib.request
+     9	
+    10	from hivemind import jev, model
+    11	
+    12	
+    13	class BudgetError(RuntimeError):
+    14	    pass
+    15	
+    16	
+    17	def envelope(provider, request):
+    18	    """Reserve documented maximum usage, without guessing tokens from characters."""
+    19	    if provider == 'openai' and request.get('model') == 'gpt-6-luna':
+    20	        allowed = {'model', 'messages', 'response_format', 'reasoning_effort', 'max_completion_tokens'}
+    21	        if set(request) - allowed:
+    22	            raise BudgetError('unreviewed OpenAI request fields')
+    23	        cap = request.get('max_completion_tokens')
+    24	        if type(cap) is not int or not 1 <= cap <= 128000:
+    25	            raise BudgetError('unreviewed OpenAI output limit')
+    26	        # More than 922K input * $0.50/M plus 128K output * $0.75/M, including 10% regional premium.
+    27	        return 700000, 922000, cap
+    28	    if provider == 'jev' and request.get('model') == 'jev-1.14.0':
+    29	        if set(request) != {'model', 'state', 'questions'} or not request['questions']:
+    30	            raise BudgetError('unreviewed Jev request shape')
+    31	        tokens = 65536 * (len(request['questions']) + 1)
+    32	        return (tokens * 42 + 999) // 1000, tokens, None
+    33	    raise BudgetError('unreviewed provider or model')
+    34	
+    35	
+    36	def charge(provider, response, max_input, max_output):
+    37	    usage = response.get('usage', {}) if isinstance(response, dict) else {}
+    38	    names = ('prompt_tokens', 'completion_tokens') if provider == 'openai' else ('input_tokens', 'output_tokens')
+    39	    counts = [usage.get(k) for k in names]
+    40	    if any(type(n) is not int or n < 0 for n in counts) or counts[0] > max_input or (max_output is not None and counts[1] > max_output):
+    41	        raise BudgetError('missing, invalid or above-envelope usage')
+    42	    a, b = counts
+    43	    # Integer microdollars, rounded up. OpenAI uses the highest reviewed Standard rate,
+    44	    # not an estimate of a discount or the provider's eventual bill.
+    45	    cost = (a * 550 + b * 825 + 999) // 1000 if provider == 'openai' else (a * 42 + 999) // 1000
+    46	    return cost
+    47	
+    48	
+    49	class GuardedTransport:
+    50	    """One coordinator's journal; unresolved work survives crashes and closes admission."""
+    51	
+    52	    def __init__(self, path, send, *, cap_microdollars=1500000, max_calls=36):
+    53	        path = Path(path)
+    54	        if not path.is_absolute() or type(cap_microdollars) is not int or cap_microdollars <= 0 or type(max_calls) is not int or max_calls <= 0:
+    55	            raise ValueError('absolute journal path and positive integer limits required')
+    56	        self.lock, self.send = threading.Lock(), send
+    57	        self.conn = sqlite3.connect(path, check_same_thread=False)
+    58	        self.conn.executescript('''
+    59	            create table if not exists settings (id integer primary key check(id=1), cap integer, max_calls integer, halted text);
+    60	            create table if not exists attempts (
+    61	              id integer primary key, provider text, request_sha256 text, request_json text,
+    62	              reserved integer, charged integer, state text, response_json text, error text,
+    63	              seconds real, completed_order integer);
+    64	        ''')
+    65	        row = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    66	        if row is None:
+    67	            self.conn.execute('insert into settings values (1,?,?,NULL)', (cap_microdollars, max_calls))
+    68	        elif row[:2] != (cap_microdollars, max_calls):
+    69	            raise BudgetError('journal limits changed')
+    70	        if self.conn.execute("select 1 from attempts where state!='complete' limit 1").fetchone():
+    71	            self.conn.execute("update settings set halted='unresolved prior attempt' where id=1")
+    72	        self.conn.commit()
+    73	
+    74	    def stop(self, reason):
+    75	        with self.lock:
+    76	            self.conn.execute('update settings set halted=coalesce(halted,?) where id=1', (reason,))
+    77	            self.conn.commit()
+    78	
+    79	    def summary(self):
+    80	        with self.lock:
+    81	            self.conn.row_factory = sqlite3.Row
+    82	            attempts = [dict(r) for r in self.conn.execute('select id,provider,request_sha256,reserved,charged,state,error,seconds,completed_order from attempts order by id')]
+    83	            halted = self.conn.execute('select halted from settings').fetchone()[0]
+    84	            self.conn.row_factory = None
+    85	        return {'attempts': attempts, 'halted': halted,
+    86	                'held_microdollars': sum(r['charged'] if r['state'] == 'complete' else r['reserved'] for r in attempts)}
+    87	
+    88	    def __call__(self, *args):
+    89	        provider, request = args if len(args) == 2 else ('jev', args[0])
+    90	        reserved, max_input, max_output = envelope(provider, request)
+    91	        text, sha = model.request_identity(request)
+    92	        with self.lock:
+    93	            cap, max_calls, halted = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    94	            count, held = self.conn.execute("select count(*),coalesce(sum(case when state='complete' then charged else reserved end),0) from attempts").fetchone()
+    95	            if halted or count >= max_calls or held + reserved > cap:
+    96	                raise BudgetError('admission closed or study limit reached')
+    97	            cur = self.conn.execute("insert into attempts(provider,request_sha256,request_json,reserved,state) values (?,?,?,?,'reserved')", (provider, sha, text, reserved))
+    98	            ident = cur.lastrowid
+    99	            self.conn.commit()
+   100	        start = time.perf_counter()
+   101	        encoded = None
+   102	        try:
+   103	            response = self.send(provider, request)
+   104	            encoded = json.dumps(response, ensure_ascii=False)
+   105	            cost = charge(provider, response, max_input, max_output)
+   106	            if cost > reserved:
+   107	                raise BudgetError('usage exceeds reserved cost')
+   108	        except BaseException as exc:
+   109	            # No raw exception text: HTTP/SDK exceptions can contain credentials or headers.
+   110	            with self.lock:
+   111	                self.conn.execute("update attempts set state='unknown',response_json=?,error=?,seconds=? where id=?", (encoded, type(exc).__name__, time.perf_counter()-start, ident))
+   112	                self.conn.execute("update settings set halted=coalesce(halted,'unknown usage') where id=1")
+   113	                self.conn.commit()
+   114	            raise
+   115	        with self.lock:
+   116	            order = self.conn.execute('select coalesce(max(completed_order),0)+1 from attempts').fetchone()[0]
+   117	            self.conn.execute("update attempts set state='complete',charged=?,response_json=?,seconds=?,completed_order=? where id=?", (cost, encoded, time.perf_counter()-start, order, ident))
+   118	            self.conn.commit()
+   119	        return response
+   120	
+   121	
+   122	def single_attempt_http():
+   123	    """Explicit live opt-in. Credentials are loaded once; tests supply a fake sender."""
+   124	    keys = {'openai': model._key('openai'), 'jev': jev._key()}
+   125	    urls = {'openai': model.ENDPOINTS['openai'][0], 'jev': jev.ENDPOINT}
+   126	    if any(not isinstance(k, str) or not k for k in keys.values()):
+   127	        raise BudgetError('configured provider credential missing')
+   128	
+   129	    def send(provider, body):
+   130	        headers = {'Authorization': 'Bearer ' + keys[provider], 'Content-Type': 'application/json', 'Accept': 'application/json'}
+   131	        data = json.dumps(body, sort_keys=True, ensure_ascii=False).encode('utf-8')
+   132	        try:
+   133	            with urllib.request.urlopen(urllib.request.Request(urls[provider], data, headers), timeout=60) as reply:
+   134	                raw = reply.read()
+   135	        except urllib.error.HTTPError as exc:
+   136	            raise model.TransportError(f'{provider} HTTP {exc.code}; no automatic retry') from None
+   137	        if any(k.encode('utf-8') in raw for k in keys.values()):
+   138	            raise model.TransportError('credential in response; response not saved')
+   139	        return json.loads(raw)
+   140	    return send
+     1	"""Two stored requests per provider; fresh serial controls and two-worker samples."""
+     2	import argparse
+     3	from concurrent.futures import ThreadPoolExecutor
+     4	import contextlib
+     5	import hashlib
+     6	import json
+     7	from pathlib import Path
+     8	import re
+     9	import sqlite3
+    10	import sys
+    11	import time
+    12	
+    13	ROOT = Path(__file__).resolve().parents[2]
+    14	sys.path.insert(0, str(ROOT / 'src'))
+    15	sys.path.insert(0, str(ROOT / 'poc'))
+    16	sys.path.insert(0, str(ROOT / 'docs/research/2026-10-25-day-batch-review'))
+    17	from snapshot_proof import snapshot
+    18	from hivemind import config, extraction, jev, model, universe
+    19	from hivemind.views import store
+    20	from concurrency_study.budget import GuardedTransport, single_attempt_http
+    21	
+    22	CALLS = (574, 575, 577, 578)
+    23	
+    24	
+    25	def fingerprint(path):
+    26	    h = hashlib.sha256()
+    27	    with Path(path).open('rb') as handle:
+    28	        for chunk in iter(lambda: handle.read(1024 * 1024), b''):
+    29	            h.update(chunk)
+    30	    return h.hexdigest()
+    31	
+    32	
+    33	def readonly(path):
+    34	    return contextlib.closing(sqlite3.connect(Path(path).as_uri() + '?mode=ro', uri=True))
+    35	
+    36	
+    37	def jobs_for(directory):
+    38	    """Rebuild all four full requests with current builders before using credentials."""
+    39	    cfg = config.load(ROOT / 'poc/config/poc-v23.json')
+    40	    uni = universe.load(ROOT / 'poc/universe.json')
+    41	    jobs = []
+    42	    with readonly(directory / 'inputs/archive.sqlite') as archive, readonly(directory / 'inputs/items.sqlite') as items, readonly(directory / 'inputs/views.sqlite') as views:
+    43	        for conn in (archive, items, views):
+    44	            conn.row_factory = sqlite3.Row
+    45	        for ident in CALLS:
+    46	            row = dict(archive.execute('select * from model_calls where call_id=?', (ident,)).fetchone())
+    47	            req = json.loads(row['request_json'])
+    48	            job = {'original_call_id': ident, 'purpose': row['purpose'], 'request': req}
+    49	            if row['purpose'] == 'extract':
+    50	                item_id = re.search(r'^\[Item\] id (.+?), category ', req['messages'][1]['content'], re.M).group(1)
+    51	                item = dict(items.execute('select * from items where input_id=?', (item_id,)).fetchone())
+    52	                item['object_identifiers'] = json.loads(item['object_identifiers'])
+    53	                seq = views.execute('select min(sequence_no) from processing_steps where input_id=? and sequence_no>0', (item_id,)).fetchone()[0]
+    54	                db = snapshot(views, seq)
+    55	                try:
+    56	                    objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
+    57	                    setting, system, user, schema = extraction.request_for(cfg, item, item['text'], store.views_for_prompt(db, objects), uni, store.groups_for_prompt(db, objects, item['title'] or ''))
+    58	                    rebuilt = model.build_request(setting, system, user, schema, 'extraction', cfg.provider)
+    59	                finally:
+    60	                    db.close()
+    61	                job.update(setting=setting, system=system, user=user, schema=schema)
+    62	            else:
+    63	                rebuilt = jev.request_for(cfg.matching, req['state'], req['questions'])
+    64	                problems = jev.validate(json.loads(row['answer_json']), req['questions'])
+    65	                if problems:
+    66	                    raise ValueError('stored Jev control does not validate')
+    67	            _, sha = model.request_identity(rebuilt)
+    68	            if sha != row['request_sha256'] or rebuilt != req:
+    69	                raise ValueError(f'current full request differs from stored call {ident}')
+    70	            job['request_sha256'] = sha
+    71	            jobs.append(job)
+    72	    return cfg, jobs
+    73	
+    74	
+    75	def call_job(job, archive, cfg, transport):
+    76	    if job['purpose'] == 'extract':
+    77	        answer = model.call(archive, cfg, job['setting'], job['system'], job['user'], job['schema'], 'extraction', 'extract', transport=transport)
+    78	    else:
+    79	        req = job['request']
+    80	        answer = jev.ask(archive, cfg, cfg.matching, req['state'], req['questions'], 'match', transport=transport)
+    81	    if answer.cached or answer.request_sha256 != job['request_sha256']:
+    82	        raise ValueError('smoke response is cached or has a different request identity')
+    83	    return {'original_call_id': job['original_call_id'], 'request_sha256': answer.request_sha256,
+    84	            'data': answer.data, 'input_tokens': answer.input_tokens, 'output_tokens': answer.output_tokens,
+    85	            'standard_list_cost_usd': answer.cost_usd}
+    86	
+    87	
+    88	def run(directory, *, live=False):
+    89	    directory = Path(directory).resolve()
+    90	    protected = json.loads((directory / 'protected-before.json').read_text())
+    91	    changed = [p for p, expected in protected.items() if not Path(p).is_file() or fingerprint(p) != expected]
+    92	    if changed:
+    93	        raise ValueError('protected database changed before smoke: ' + ', '.join(changed))
+    94	    cfg, jobs = jobs_for(directory)
+    95	    manifest = {'calls': [{k: j[k] for k in ('original_call_id', 'purpose', 'request_sha256')} for j in jobs],
+    96	                'max_calls': 36, 'cap_usd': 1.5, 'workers': 2, 'samples': 3, 'mode': 'ordinary API concurrency',
+    97	                'inputs': {p.name: fingerprint(p) for p in (directory / 'inputs').glob('*.sqlite')},
+    98	                'config_sha256': fingerprint(ROOT / 'poc/config/poc-v23.json')}
+    99	    manifest_path = directory / 'manifest.json'
+   100	    if manifest_path.exists() and json.loads(manifest_path.read_text()) != manifest:
+   101	        raise ValueError('smoke manifest changed')
+   102	    if not manifest_path.exists():
+   103	        with manifest_path.open('x') as handle:
+   104	            json.dump(manifest, handle, indent=2)
+   105	    if not live:
+   106	        print(json.dumps({'prepared': True, **manifest}, indent=2))
+   107	        return
+   108	    if (directory / 'budget.sqlite').exists():
+   109	        raise ValueError('live smoke already attempted; do not silently restart or retry')
+   110	    transport = GuardedTransport(directory / 'budget.sqlite', single_attempt_http())
+   111	    results, failure = [], None
+   112	    try:
+   113	        for sample in range(3):
+   114	            # Rotate the schedule; the concurrent arm is not always last.
+   115	            order = ('control-a', 'control-b', 'concurrent')
+   116	            order = order[sample:] + order[:sample]
+   117	            for arm in order:
+   118	                folder = directory / f'sample-{sample + 1}-{arm}'
+   119	                folder.mkdir()
+   120	                archive = model.Archive(folder / 'archive.sqlite')
+   121	                try:
+   122	                    for purpose in ('extract', 'match'):
+   123	                        selected = [j for j in jobs if j['purpose'] == purpose]
+   124	                        start = time.perf_counter()
+   125	                        if arm == 'concurrent':
+   126	                            pool = ThreadPoolExecutor(max_workers=2)
+   127	                            futures = []
+   128	                            try:
+   129	                                futures = [pool.submit(call_job, j, archive, cfg, transport) for j in selected]
+   130	                                replies = [f.result() for f in futures]
+   131	                            except BaseException:
+   132	                                transport.stop('study failed or cancelled')
+   133	                                for future in futures:
+   134	                                    future.cancel()
+   135	                                raise
+   136	                            finally:
+   137	                                pool.shutdown(wait=True, cancel_futures=True)
+   138	                        else:
+   139	                            replies = [call_job(j, archive, cfg, transport) for j in selected]
+   140	                        result = {'sample': sample + 1, 'arm': arm, 'purpose': purpose,
+   141	                                  'seconds': round(time.perf_counter() - start, 3), 'answers': replies}
+   142	                        results.append(result)
+   143	                        (directory / 'progress.json').write_text(json.dumps(results, indent=2, ensure_ascii=False))
+   144	                        print(json.dumps({k: result[k] for k in ('sample', 'arm', 'purpose', 'seconds')}), flush=True)
+   145	                finally:
+   146	                    archive.conn.close()
+   147	    except BaseException as exc:
+   148	        transport.stop('study failed or cancelled')
+   149	        failure = type(exc).__name__
+   150	        raise
+   151	    finally:
+   152	        changed = [p for p, expected in protected.items() if not Path(p).is_file() or fingerprint(p) != expected]
+   153	        report = {'failure': failure, 'protected_files': len(protected), 'changed_protected_files': changed,
+   154	                  'results': results, 'accounting': transport.summary()}
+   155	        (directory / 'result.json').write_text(json.dumps(report, indent=2, ensure_ascii=False))
+   156	        print(json.dumps({'failure': failure, 'changed_protected_files': changed,
+   157	                          'attempts': len(report['accounting']['attempts']),
+   158	                          'conservative_cost_usd': report['accounting']['held_microdollars'] / 1e6}), flush=True)
+   159	        if changed and failure is None:
+   160	            raise ValueError('protected database changed during smoke')
+   161	
+   162	
+   163	if __name__ == '__main__':
+   164	    parser = argparse.ArgumentParser(description=__doc__)
+   165	    parser.add_argument('--directory', type=Path, required=True)
+   166	    parser.add_argument('--live', action='store_true')
+   167	    args = parser.parse_args()
+   168	    run(args.directory, live=args.live)
+     1	"""The isolated live study's admission table, with no credentials or live calls."""
+     2	from concurrent.futures import ThreadPoolExecutor
+     3	import json
+     4	from pathlib import Path
+     5	import sys
+     6	import threading
+     7	
+     8	import pytest
+     9	
+    10	from hivemind import model
+    11	
+    12	sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'poc'))
+    13	from concurrency_study.budget import BudgetError, GuardedTransport, charge, envelope
+    14	
+    15	REQUEST = {'model': 'gpt-6-luna', 'messages': [], 'max_completion_tokens': 16000}
+    16	
+    17	
+    18	def reply():
+    19	    return {'usage': {'prompt_tokens': 1000, 'completion_tokens': 100}, 'choices': [{'message': {'content': '{}'}}]}
+    20	
+    21	
+    22	def test_reservation_covers_maximum_documented_usage():
+    23	    """Value-reader: reviewed prices and maximum context fit the reservation; units are microdollars."""
+    24	    reserve, max_input, _ = envelope('openai', REQUEST)
+    25	    maximum = {'usage': {'prompt_tokens': max_input, 'completion_tokens': 128000}}
+    26	    assert charge('openai', reply(), max_input, 16000) == 633
+    27	    assert charge('openai', maximum, max_input, 128000) == 612700 <= reserve
+    28	    request = {'model': 'jev-1.14.0', 'state': '', 'questions': {'q': {}}}
+    29	    reserve, max_input, _ = envelope('jev', request)
+    30	    assert charge('jev', {'usage': {'input_tokens': max_input, 'output_tokens': 99}}, max_input, None) <= reserve
+    31	
+    32	
+    33	def test_concurrent_admission_cannot_overspend(tmp_path):
+    34	    """Ready/admit: reserve both in-flight costs before a third request can send."""
+    35	    entered, release = threading.Event(), threading.Event()
+    36	    count = 0
+    37	    lock = threading.Lock()
+    38	    def send(*args):
+    39	        nonlocal count
+    40	        with lock:
+    41	            count += 1
+    42	            if count == 2:
+    43	                entered.set()
+    44	        assert release.wait(5)
+    45	        return reply()
+    46	    guard = GuardedTransport(tmp_path / 'budget.sqlite', send)
+    47	    with ThreadPoolExecutor(max_workers=2) as pool:
+    48	        first = pool.submit(guard, 'openai', REQUEST)
+    49	        second = pool.submit(guard, 'openai', REQUEST)
+    50	        try:
+    51	            assert entered.wait(5)
+    52	            with pytest.raises(BudgetError):
+    53	                guard('openai', REQUEST)
+    54	            assert count == 2
+    55	            assert guard.summary()['held_microdollars'] == 1400000
+    56	        finally:
+    57	            release.set()
+    58	        first.result(); second.result()
+    59	    assert guard.summary()['held_microdollars'] == 1266
+    60	
+    61	
+    62	@pytest.mark.parametrize('outcome', ['timeout', 'missing_usage'])
+    63	def test_unknown_usage_survives_restart_and_refuses_send(tmp_path, outcome):
+    64	    """Reserved/unknown: neither timeout nor malformed usage releases reserved money."""
+    65	    def fail(*args):
+    66	        if outcome == 'timeout':
+    67	            raise TimeoutError('uncertain remote outcome')
+    68	        return {'choices': []}
+    69	    path = tmp_path / 'budget.sqlite'
+    70	    guard = GuardedTransport(path, fail)
+    71	    with pytest.raises((BudgetError, TimeoutError)):
+    72	        guard('openai', REQUEST)
+    73	    assert guard.summary()['held_microdollars'] == 700000
+    74	    def forbidden(*args):
+    75	        raise AssertionError('closed admission reached HTTP')
+    76	    resumed = GuardedTransport(path, forbidden)
+    77	    with pytest.raises(BudgetError):
+    78	        resumed('openai', REQUEST)
+    79	    assert resumed.summary()['held_microdollars'] == 700000
+    80	
+    81	
+    82	def test_cancellation_closes_admission_before_draining(tmp_path):
+    83	    """Cancellation: sent call drains with usage; unsent call never reaches HTTP."""
+    84	    entered, release = threading.Event(), threading.Event()
+    85	    calls = []
+    86	    def send(*args):
+    87	        calls.append(1); entered.set()
+    88	        assert release.wait(5)
+    89	        return reply()
+    90	    guard = GuardedTransport(tmp_path / 'budget.sqlite', send)
+    91	    with ThreadPoolExecutor(max_workers=1) as pool:
+    92	        future = pool.submit(guard, 'openai', REQUEST)
+    93	        try:
+    94	            assert entered.wait(5)
+    95	            guard.stop('cancelled')
+    96	            with pytest.raises(BudgetError):
+    97	                guard('openai', REQUEST)
+    98	        finally:
+    99	            release.set()
+   100	        future.result()
+   101	    assert calls == [1]
+   102	    assert guard.summary()['halted'] == 'cancelled'
+   103	    assert guard.summary()['held_microdollars'] == 633
+   104	
+   105	
+   106	def test_downstream_schema_failure_does_not_erase_usage(tmp_path):
+   107	    """Completed/invalid answer: accounting precedes model JSON validation."""
+   108	    guard = GuardedTransport(tmp_path / 'budget.sqlite', lambda *args: reply())
+   109	    response = guard('openai', REQUEST)
+   110	    assert model.check_schema(json.loads(response['choices'][0]['message']['content']), {'type': 'object', 'required': ['answer']})
+   111	    guard.stop('schema failure')
+   112	    assert guard.summary()['held_microdollars'] == 633
+   113	    assert guard.conn.execute('select response_json from attempts').fetchone()[0]
+   114	
+   115	
+   116	def test_dispatch_count_is_a_separate_limit(tmp_path):
+   117	    """Ready/refusal: cheap or zero-token replies cannot make more than the registered calls."""
+   118	    calls = []
+   119	    guard = GuardedTransport(tmp_path / 'budget.sqlite', lambda *args: calls.append(1) or reply(), max_calls=1)
+   120	    guard('openai', REQUEST)
+   121	    with pytest.raises(BudgetError):
+   122	        guard('openai', REQUEST)
+   123	    assert calls == [1]
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba poc/concurrency_study/budget.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-10-25-api-smoke/plan.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Conservative admission and single-attempt HTTP for the isolated API study."""
+     2	import json
+     3	from pathlib import Path
+     4	import sqlite3
+     5	import threading
+     6	import time
+     7	import urllib.error
+     8	import urllib.request
+     9	
+    10	from hivemind import jev, model
+    11	
+    12	
+    13	class BudgetError(RuntimeError):
+    14	    pass
+    15	
+    16	
+    17	def envelope(provider, request):
+    18	    """Reserve documented maximum usage, without guessing tokens from characters."""
+    19	    if provider == 'openai' and request.get('model') == 'gpt-6-luna':
+    20	        allowed = {'model', 'messages', 'response_format', 'reasoning_effort', 'max_completion_tokens'}
+    21	        if set(request) - allowed:
+    22	            raise BudgetError('unreviewed OpenAI request fields')
+    23	        cap = request.get('max_completion_tokens')
+    24	        if type(cap) is not int or not 1 <= cap <= 128000:
+    25	            raise BudgetError('unreviewed OpenAI output limit')
+    26	        # More than 922K input * $0.50/M plus 128K output * $0.75/M, including 10% regional premium.
+    27	        return 700000, 922000, cap
+    28	    if provider == 'jev' and request.get('model') == 'jev-1.14.0':
+    29	        if set(request) != {'model', 'state', 'questions'} or not request['questions']:
+    30	            raise BudgetError('unreviewed Jev request shape')
+    31	        tokens = 65536 * (len(request['questions']) + 1)
+    32	        return (tokens * 42 + 999) // 1000, tokens, None
+    33	    raise BudgetError('unreviewed provider or model')
+    34	
+    35	
+    36	def charge(provider, response, max_input, max_output):
+    37	    usage = response.get('usage', {}) if isinstance(response, dict) else {}
+    38	    names = ('prompt_tokens', 'completion_tokens') if provider == 'openai' else ('input_tokens', 'output_tokens')
+    39	    counts = [usage.get(k) for k in names]
+    40	    if any(type(n) is not int or n < 0 for n in counts) or counts[0] > max_input or (max_output is not None and counts[1] > max_output):
+    41	        raise BudgetError('missing, invalid or above-envelope usage')
+    42	    a, b = counts
+    43	    # Integer microdollars, rounded up. OpenAI uses the highest reviewed Standard rate,
+    44	    # not an estimate of a discount or the provider's eventual bill.
+    45	    cost = (a * 550 + b * 825 + 999) // 1000 if provider == 'openai' else (a * 42 + 999) // 1000
+    46	    return cost
+    47	
+    48	
+    49	class GuardedTransport:
+    50	    """One coordinator's journal; unresolved work survives crashes and closes admission."""
+    51	
+    52	    def __init__(self, path, send, *, cap_microdollars=1500000, max_calls=36):
+    53	        path = Path(path)
+    54	        if not path.is_absolute() or type(cap_microdollars) is not int or cap_microdollars <= 0 or type(max_calls) is not int or max_calls <= 0:
+    55	            raise ValueError('absolute journal path and positive integer limits required')
+    56	        self.lock, self.send = threading.Lock(), send
+    57	        self.conn = sqlite3.connect(path, check_same_thread=False)
+    58	        self.conn.executescript('''
+    59	            create table if not exists settings (id integer primary key check(id=1), cap integer, max_calls integer, halted text);
+    60	            create table if not exists attempts (
+    61	              id integer primary key, provider text, request_sha256 text, request_json text,
+    62	              reserved integer, charged integer, state text, response_json text, error text,
+    63	              seconds real, completed_order integer);
+    64	        ''')
+    65	        row = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    66	        if row is None:
+    67	            self.conn.execute('insert into settings values (1,?,?,NULL)', (cap_microdollars, max_calls))
+    68	        elif row[:2] != (cap_microdollars, max_calls):
+    69	            raise BudgetError('journal limits changed')
+    70	        if self.conn.execute("select 1 from attempts where state!='complete' limit 1").fetchone():
+    71	            self.conn.execute("update settings set halted='unresolved prior attempt' where id=1")
+    72	        self.conn.commit()
+    73	
+    74	    def stop(self, reason):
+    75	        with self.lock:
+    76	            self.conn.execute('update settings set halted=coalesce(halted,?) where id=1', (reason,))
+    77	            self.conn.commit()
+    78	
+    79	    def summary(self):
+    80	        with self.lock:
+    81	            self.conn.row_factory = sqlite3.Row
+    82	            attempts = [dict(r) for r in self.conn.execute('select id,provider,request_sha256,reserved,charged,state,error,seconds,completed_order from attempts order by id')]
+    83	            halted = self.conn.execute('select halted from settings').fetchone()[0]
+    84	            self.conn.row_factory = None
+    85	        return {'attempts': attempts, 'halted': halted,
+    86	                'held_microdollars': sum(r['charged'] if r['state'] == 'complete' else r['reserved'] for r in attempts)}
+    87	
+    88	    def __call__(self, *args):
+    89	        provider, request = args if len(args) == 2 else ('jev', args[0])
+    90	        reserved, max_input, max_output = envelope(provider, request)
+    91	        text, sha = model.request_identity(request)
+    92	        with self.lock:
+    93	            cap, max_calls, halted = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    94	            count, held = self.conn.execute("select count(*),coalesce(sum(case when state='complete' then charged else reserved end),0) from attempts").fetchone()
+    95	            if halted or count >= max_calls or held + reserved > cap:
+    96	                raise BudgetError('admission closed or study limit reached')
+    97	            cur = self.conn.execute("insert into attempts(provider,request_sha256,request_json,reserved,state) values (?,?,?,?,'reserved')", (provider, sha, text, reserved))
+    98	            ident = cur.lastrowid
+    99	            self.conn.commit()
+   100	        start = time.perf_counter()
+   101	        encoded = None
+   102	        try:
+   103	            response = self.send(provider, request)
+   104	            encoded = json.dumps(response, ensure_ascii=False)
+   105	            cost = charge(provider, response, max_input, max_output)
+   106	            if cost > reserved:
+   107	                raise BudgetError('usage exceeds reserved cost')
+   108	        except BaseException as exc:
+   109	            # No raw exception text: HTTP/SDK exceptions can contain credentials or headers.
+   110	            with self.lock:
+   111	                self.conn.execute("update attempts set state='unknown',response_json=?,error=?,seconds=? where id=?", (encoded, type(exc).__name__, time.perf_counter()-start, ident))
+   112	                self.conn.execute("update settings set halted=coalesce(halted,'unknown usage') where id=1")
+   113	                self.conn.commit()
+   114	            raise
+   115	        with self.lock:
+   116	            order = self.conn.execute('select coalesce(max(completed_order),0)+1 from attempts').fetchone()[0]
+   117	            self.conn.execute("update attempts set state='complete',charged=?,response_json=?,seconds=?,completed_order=? where id=?", (cost, encoded, time.perf_counter()-start, order, ident))
+   118	            self.conn.commit()
+   119	        return response
+   120	
+   121	
+   122	def single_attempt_http():
+   123	    """Explicit live opt-in. Credentials are loaded once; tests supply a fake sender."""
+   124	    keys = {'openai': model._key('openai'), 'jev': jev._key()}
+   125	    urls = {'openai': model.ENDPOINTS['openai'][0], 'jev': jev.ENDPOINT}
+   126	    if any(not isinstance(k, str) or not k for k in keys.values()):
+   127	        raise BudgetError('configured provider credential missing')
+   128	
+   129	    def send(provider, body):
+   130	        headers = {'Authorization': 'Bearer ' + keys[provider], 'Content-Type': 'application/json', 'Accept': 'application/json'}
+   131	        data = json.dumps(body, sort_keys=True, ensure_ascii=False).encode('utf-8')
+   132	        try:
+   133	            with urllib.request.urlopen(urllib.request.Request(urls[provider], data, headers), timeout=60) as reply:
+   134	                raw = reply.read()
+   135	        except urllib.error.HTTPError as exc:
+   136	            raise model.TransportError(f'{provider} HTTP {exc.code}; no automatic retry') from None
+   137	        if any(k.encode('utf-8') in raw for k in keys.values()):
+   138	            raise model.TransportError('credential in response; response not saved')
+   139	        return json.loads(raw)
+   140	    return send
+
+ succeeded in 0ms:
+# Isolated API smoke test, October 25
+
+Alex asked for an isolated small test before any larger run, and for actual API documentation to be checked. This is a test of provider requests, accounting and completion order. It does not adopt concurrency, change extraction or grouping, change a gold, or measure end-to-end acceptance. D159, D171 and D172 still govern committed order. Existing databases are read-only inputs; all new files are under a fresh report directory.
+
+## Verified API contract
+
+Official pages read on October 25:
+
+- [OpenAI Batch guide](https://developers.openai.com/api/docs/guides/batch): asynchronous JSONL upload, Files API then Batches API, unique `custom_id`, results need not be in input order, `24h` completion window. A failed/expired job can contain billed completed requests. This is not the transport implemented in D172.
+- [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna): pinned model supports Chat Completions, structured outputs and Batch. Max input 922,000, max output 128,000. Batch support does not establish account access or a seconds-level turnaround.
+- [OpenAI pricing](https://developers.openai.com/api/docs/pricing): standard short input/output $0.10/$0.50 per million; long input/output $0.20/$0.75; highest listed long cache-write input $0.50. Regional premium may apply. The accounting reservation below deliberately exceeds ordinary charges.
+- [TypeSafe API](https://docs.typesafe.ai/api/system-one) and [models](https://docs.typesafe.ai/models): POST `/v1/systemone`, named questions and named answers, billable input usage, pinned `jev-1.14.0`, $0.042/million input, free output, default 64k/request and 32k/question. There is no OpenAI Batch transport for these calls. This test does not pack additional questions or enable long context.
+
+## Fixed scope and measurement
+
+Read exactly calls 574, 575 (extraction) and 577, 578 (Jev) from the existing v23 Jev archive through SQLite read-only mode. Resend their unchanged full requests. Each of three samples has fresh serial control A, fresh serial control B, and a fresh two-worker arm. Each arm has its own empty archive. Total maximum: 36 provider requests; no retries; global $1.50 ceiling using conservative reservations. Estimated ordinary token charges from the saved usage are below $0.10; that estimate is not the ceiling or the eventual bill.
+
+Serial controls establish provider variation on these requests. Record every request identity, raw response, usage, schema validation, latency, completion order, answer equality and Jev choice differences. A smoke pass requires every response to validate, match its original request, and have billable usage; persistent unknown usage, API rejection or validation failure stops the study. Differences between fresh answers are reported, not automatically classified as pipeline defects. No gold score or 10x claim is made. A larger end-to-end comparison is a separate next step.
+
+## State × event
+
+| State | Event | Transition and durable write |
+|---|---|---|
+| Before first call | New absolute output directory | Hash all existing `poc/data` database files and sidecars; write immutable test manifest; create independent archives and accounting database |
+| Before first call | Output already exists or input hash changed | Refuse; never reuse or overwrite a prior experiment |
+| Ready | A permitted request arrives | In one lock/SQLite transaction, reserve worst-case cost and consume one of 36 dispatches before network I/O |
+| Ready | Cap/count exhausted or earlier failure | Refuse before network I/O |
+| Reserved | Valid response and usage | Persist raw response and measured time in accounting row; replace reservation with conservative usage-based charge |
+| Reserved | Timeout, network/API error, malformed/missing usage | Preserve reservation, mark usage unknown and halt new dispatch; drain already-running calls; no retry |
+| Reserved | Process crash | Reservation stays; reopening a database with unresolved work refuses all new calls |
+| Any active state | Cancellation or downstream validation failure | Close admission durably before cancelling unsent futures and draining sent calls. Unsent work makes no HTTP request; sent work retains its reservation until valid usage is persisted. Record cancelled/failed study outcome |
+| Completed | Schema refusal downstream | Keep response/cost; stop study; no broader test |
+| Study end or failure | Other call in flight | Drain it, persist whatever is known, then compare protected database hashes |
+| Study end | A protected hash differs | Report failure and path; do not claim the files were unchanged |
+
+The sequence of call/attempt rows is owned by SQLite, not wall time. Elapsed time uses a monotonic clock. Source dates and request bodies do not change. This smoke test never writes a product ledger, so there is no day-completion or publication-date transition.
+
+## Value × reader
+
+| Value | Writer and readers | Rule |
+|---|---|---|
+| Request body/hash | Existing archive → smoke adapter → provider/accounting/new archive | Complete body remains identical; model, prompt, schema and output cap do not change |
+| Reservation | Transport → admission and final report | OpenAI $0.70/call exceeds all documented context/output limits at highest listed Standard rates including 10% regional premium; no Fast/custom tier accepted. Jev reserves 65,536 input tokens times `(question count + 1)` at its price, conservatively allowing repeated state billing. Unknown usage never releases funds |
+| Usage charge | Provider → accounting | Nonnegative integer usage required; conservative published rate, not a claim about the bill; may not exceed reservation |
+| Response | Provider → accounting → existing `model.call`/`jev.ask` validation | Persist even if downstream schema validation refuses it; secrets never persisted |
+| Protected hashes | Read-only census → final comparison | Every existing database and sidecar in `poc/data`, not only the selected archive |
+| Arm results | Existing validators → report | Separate archives prevent cached controls; completion order cannot change logical response order |
+
+## New path × old checks
+
+| Check | Proof |
+|---|---|
+| Exact request serialization | Rebuild each stored request through current builders and require matching hash before paid calls |
+| Extraction schema | Existing `model.call` and current stored schema |
+| Jev named-answer checks | Existing `jev.ask` / `jev.validate` |
+| Admission is before send | Fake external HTTP transport and real temporary SQLite; cap refusal asserts no call |
+| Concurrent admission | Two requests reserve under one lock; third cannot exceed cap |
+| Unknown billing/crash | Timeout and reopen tests retain reservation and refuse later calls |
+| Cancellation | Close admission while one request is held in flight; a subsequent request must not reach the fake service; drain the first and retain its usage |
+| Ordinary output accounting | Usage recorded before downstream JSON/schema validation |
+| Database isolation | Read-only inputs, new directory, before/after hashes |
+
+Tests use no credentials. The live HTTP function loads configured credentials only after preflight, uses fixed documented endpoints, and makes exactly one attempt. The POC guard does not replace production accounting or change the default transport. No OpenAI Batch endpoint adapter is added in this slice.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^(def (call|ask|request_for|build_request|request_identity)|class Archive)|transport|cached|retry|connect'"\\(' src/hivemind/model.py src/hivemind/jev.py && cat poc/config/poc-v23.json" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+src/hivemind/model.py:27:# cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
+src/hivemind/model.py:55:    cached: bool
+src/hivemind/model.py:62:class Archive:
+src/hivemind/model.py:67:        self.conn = sqlite3.connect(path, check_same_thread=False)
+src/hivemind/model.py:101:def build_request(setting, system, user, schema, schema_name, provider):
+src/hivemind/model.py:119:def openai_transport(provider, request, timeout=600):
+src/hivemind/model.py:190:def request_identity(request):
+src/hivemind/model.py:196:def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, transport=None):
+src/hivemind/model.py:206:    response = (transport or openai_transport)(provider, request)
+src/hivemind/jev.py:26:def transport(request, timeout=60):
+src/hivemind/jev.py:27:    """POST the request; one retry after a pause on a rate-limit or overload status; any other failure is a TransportError.
+src/hivemind/jev.py:43:            raise model.TransportError(f'Jev transport failed: {type(error).__name__}') from None
+src/hivemind/jev.py:79:def request_for(setting, state, questions):
+src/hivemind/jev.py:84:def ask(archive, cfg, setting, state, questions, purpose, *, transport=None):
+src/hivemind/jev.py:94:    response = (transport or globals()['transport'])(request)
+{
+ "version": "poc-v23",
+ "_note": "D167 (2026-10-25): extraction v10 (measure vocabulary with market_size and project_cost), the writer's replacement rule by tier and date, matching engine jev; the two poc-v23 configs differ only in the matching engine, so the August comparison is fair. Otherwise poc-v22.",
+ "provider": "openai",
+ "search_top_n": 10,
+ "extraction": {
+  "T1": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T1-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T2": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T2-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T3": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T3-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T4": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T4-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T5": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T5-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T6": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T6-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T7": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T7-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 8000
+  },
+  "T8": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T8-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 8000
+  },
+  "T10": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T10-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T11": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T11-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  }
+ },
+ "matching": {
+  "model": "jev-1.14.0",
+  "prompt_version": "matching-v3",
+  "temperature": 0.1,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 12000,
+  "engine": "jev"
+ },
+ "rejudging": {
+  "model": "gpt-6-luna",
+  "prompt_version": "judging-v3",
+  "temperature": 0.0,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 8000
+ },
+ "final_verdict": {
+  "model": "gpt-6-luna",
+  "prompt_version": "verdict-v0",
+  "temperature": 0.0,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 8000
+ },
+ "idea": {
+  "model": "gpt-6-luna",
+  "prompt_version": "idea-v11",
+  "temperature": 0.1,
+  "reasoning_effort": "none",
+  "max_output_tokens": 4000
+ }
+}
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'api.smoke|concurren|D159|D171|D172|protect' docs/DECISIONS.md && ls -la docs/research/2026-10-25-api-smoke && rg -n 'protected-before|inputs/archive|api-smoke' poc/concurrency_study tests/test_study_budget.py docs/research/2026-10-25-api-smoke" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+37:## D3 · 2026-10-15 · Config has no budget or concurrency limits
+40:- Decides: the limits section (budget per policy, total budget, concurrency) is not part of Config. Where limits live,
+2270:## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
+2280:- Alex 同意 D159 的界限并要求继续完整修复。以同一可核对问题判去重，以同一业务过程判归组；拟议担保改成当年实际付款属于抽取失真，不能强行合并算修复。
+2359:## D171 · 2026-10-25 · Review and free proofs for the day-batch acceleration proposal
+2364:- Recommendation awaiting Alex's choice: concurrent request preparation with exact read validation before sequential commits, retaining D149/D159 semantics; re-run requests whose inputs changed. A more aggressive day-start extraction contract must be decided and tested separately. The review defines both boundaries, failure/recovery states, local-ID namespacing, evaluation limits and staged tests.
+2368:## D172 · 2026-10-25 · Build the isolated ordered-concurrency POC
+2370:- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
+2371:- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
+2372:- The [first implementation slice](research/2026-10-25-day-batch-review/implementation.md) covers offline coordinator, independent Jev calls and failure/restart verification on temporary storage. No paid call, new spending cap or default activation is authorized by this slice. The current per-item spend check is not safe reservation accounting for concurrent paid calls; resolve it before a live comparison.
+2373:- Offline slice result: [ordered-concurrency POC](../poc/reports/2026-10-25-concurrency-poc/results.md). Shared request identity prevents conflicting concurrent answers under one archive ID. Bounded Jev submission cancels pending work on failure; the daily cost log includes discarded speculative work. Default replay remains serial. 143 tests pass; five intended mutants fail; 3,595 historical request hashes are unchanged. Final focused review finds no serious issue. Live accounting, fresh controls and speed measurement remain outstanding; no paid ingestion calls were made.
+total 432
+drwxr-xr-x@  6 lchingen  staff     192 Oct 25 22:39 .
+drwxr-xr-x@ 32 lchingen  staff    1024 Oct 25 22:37 ..
+-rw-r--r--@  1 lchingen  staff   71553 Oct 25 22:39 code-review.log
+-rw-r--r--@  1 lchingen  staff    7424 Oct 25 22:38 plan.md
+-rw-r--r--@  1 lchingen  staff  129946 Oct 25 22:38 review.log
+-rw-r--r--@  1 lchingen  staff    1225 Oct 25 22:38 review.txt
+poc/concurrency_study/smoke.py:42:    with readonly(directory / 'inputs/archive.sqlite') as archive, readonly(directory / 'inputs/items.sqlite') as items, readonly(directory / 'inputs/views.sqlite') as views:
+poc/concurrency_study/smoke.py:90:    protected = json.loads((directory / 'protected-before.json').read_text())
+docs/research/2026-10-25-api-smoke/code-review.log:14:Read-only focused review before tiny paid smoke. Scope ONLY poc/concurrency_study/budget.py, smoke.py, tests/test_study_budget.py against docs/research/2026-10-25-api-smoke/plan.md. No API research needed: documented pricing/envelopes already independently verified by design review. Check actual admission-before-network, cost units, concurrent/error/cancel/crash transitions, unsent work, no automatic retry, exact old requests, fresh controls, protected database isolation. Existing production/default code, PRD/gold, grouping quality and larger study are out of scope. Report only serious actionable implementation defects or none. Do not edit or call providers.
+docs/research/2026-10-25-api-smoke/code-review.log:36:docs/research/2026-10-25-api-smoke/plan.md
+docs/research/2026-10-25-api-smoke/code-review.log:42:/opt/homebrew/bin/zsh -lc 'cat AGENTS.md && cat docs/research/2026-10-25-api-smoke/plan.md' in /Users/lchingen/hivemind
+docs/research/2026-10-25-api-smoke/code-review.log:543:    42	    with readonly(directory / 'inputs/archive.sqlite') as archive, readonly(directory / 'inputs/items.sqlite') as items, readonly(directory / 'inputs/views.sqlite') as views:
+docs/research/2026-10-25-api-smoke/code-review.log:591:    90	    protected = json.loads((directory / 'protected-before.json').read_text())
+docs/research/2026-10-25-api-smoke/code-review.log:797:/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-10-25-api-smoke/plan.md' in /Users/lchingen/hivemind
+docs/research/2026-10-25-api-smoke/review.txt:5:- [plan.md:26–32](/Users/lchingen/hivemind/docs/research/2026-10-25-api-smoke/plan.md:26) defines admission, errors, crashes and draining, but does not specify cancellation or what happens to requests not yet sent.
+docs/research/2026-10-25-api-smoke/review.log:14:Review only docs/research/2026-10-25-api-smoke/plan.md against AGENTS.md, decisions D159 D171 D172, and current model/jev transports. Scope is isolated 36-call provider smoke and conservative reservation accounting. Production redesign, frozen PRDs, grouping, prompts, UI and broader evaluations are OUT OF SCOPE. Check state-event/value-reader completeness, isolation, budget bounds, true API-vs-concurrency claims, failure/cancel/crash behavior. Read only; no edits. Report serious blocking findings with exact references, or explicitly none. Do not treat this as an OpenAI Batch implementation.
+docs/research/2026-10-25-api-smoke/review.log:53:docs/research/2026-10-25-api-smoke/plan.md
+docs/research/2026-10-25-api-smoke/review.log:64:/opt/homebrew/bin/zsh -lc 'cat AGENTS.md && nl -ba docs/research/2026-10-25-api-smoke/plan.md' in /Users/lchingen/hivemind
+docs/research/2026-10-25-api-smoke/review.log:898:/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-10-25-api-smoke/plan.md && rg -n -A 35 -B 3 '"'^## D(159|171|172)'"\\b' docs/DECISIONS.md" in /Users/lchingen/hivemind
+docs/research/2026-10-25-api-smoke/review.log:1021:/opt/homebrew/bin/zsh -lc "rg --files docs/research/2026-10-25-api-smoke src/hivemind scripts tests poc/data && rg -n 'api.smoke|reserve|reservation|spend|cancel|timeout|transport' tests/test_jev_concurrency.py src/hivemind/concurrency.py docs/research/2026-10-25-day-batch-review/implementation.md scripts/preflight.py && rg -n 'archive|v23|jev' docs/CURRENT_STATE.md" in /Users/lchingen/hivemind
+docs/research/2026-10-25-api-smoke/review.log:1024:docs/research/2026-10-25-api-smoke/plan.md
+docs/research/2026-10-25-api-smoke/review.log:1025:docs/research/2026-10-25-api-smoke/review.log
+docs/research/2026-10-25-api-smoke/review.log:1569:- [plan.md:26–32](/Users/lchingen/hivemind/docs/research/2026-10-25-api-smoke/plan.md:26) defines admission, errors, crashes and draining, but does not specify cancellation or what happens to requests not yet sent.
+docs/research/2026-10-25-api-smoke/review.log:1582:- [plan.md:26–32](/Users/lchingen/hivemind/docs/research/2026-10-25-api-smoke/plan.md:26) defines admission, errors, crashes and draining, but does not specify cancellation or what happens to requests not yet sent.
+
+codex
+预算金额的单位和发送前预留逻辑目前一致。接下来核对两个容易漏掉的边界：一个并发请求先失败时，另一个是否还会继续发送；保护清单是否确实覆盖全部已有数据库。
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1,125p' src/hivemind/model.py && sed -n '190,285p' src/hivemind/model.py && sed -n '75,160p' src/hivemind/jev.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""One model call, archived and replayable.
+
+`call()` sends a system and user message with a strict JSON schema to an OpenAI-compatible chat endpoint (OpenAI,
+or DeepSeek through the same wire format), checks the answer against the schema, and records the exact request and
+raw answer in an archive (SQLite, a POC artefact kept beside the test database, never inside the views database).
+A request whose sha256 is already in the archive is answered from it without a network call, so a rerun of a
+replay costs nothing and gives the same answers. The provider key is read from the owner-only credentials file and
+never appears in the archive, logs or arguments.
+"""
+import dataclasses
+import hashlib
+import http.client
+import json
+import re
+import os
+import sqlite3
+import time
+import uuid
+import urllib.error
+import urllib.request
+
+CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
+ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
+             'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
+# USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+# gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
+# cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
+# the published rate; the token columns are the measurement, the bill is the provider's.
+PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+          'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+
+SCHEMA_SQL = """
+create table if not exists model_calls (
+  call_id integer primary key autoincrement, purpose text, config_version text, config_checksum text, model text,
+  request_sha256 text unique, request_json text, response_json text, answer_json text, prompt_chars integer,
+  input_tokens integer, output_tokens integer, cost_usd real, seconds real, created_at text
+);
+create index if not exists model_calls_sha on model_calls(request_sha256);
+"""
+
+
+class SchemaError(ValueError):
+    pass
+
+
+class TransportError(RuntimeError):
+    pass
+
+
+@dataclasses.dataclass
+class Answer:
+    data: dict
+    call_id: int
+    request_sha256: str
+    cached: bool
+    prompt_chars: int
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+
+
+class Archive:
+    """Shared by the extraction worker threads: one connection, every access under a lock."""
+
+    def __init__(self, path):
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        self.conn = sqlite3.connect(path, check_same_thread=False)
+        self.conn.executescript(SCHEMA_SQL)
+        import threading
+        self.lock = threading.Lock()
+
+    def lookup(self, sha):
+        with self.lock:
+            return self.conn.execute('select call_id, answer_json, prompt_chars, input_tokens, output_tokens from model_calls where request_sha256=?', (sha,)).fetchone()
+
+    def record(self, **fields):
+        """One row per distinct request; a second identical request recorded at the same moment (two threads, or a
+        failed answer repeated within the same second) keeps the first row's id instead of failing."""
+        columns = list(fields)
+        with self.lock:
+            cursor = self.conn.execute(f'insert or ignore into model_calls ({",".join(columns)}) values ({",".join("?" * len(columns))})',
+                                       [fields[c] for c in columns])
+            self.conn.commit()
+            if cursor.rowcount == 0:
+                return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
+            return cursor.lastrowid
+
+    def totals(self):
+        with self.lock:
+            return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()
+
+
+def _key(provider):
+    name = ENDPOINTS[provider][1]
+    if os.environ.get(name):
+        return os.environ[name]
+    with open(CREDENTIALS, encoding='utf-8') as handle:
+        return json.load(handle)[name]
+
+
+def build_request(setting, system, user, schema, schema_name, provider):
+    request = {
+        'model': setting.model,
+        'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
+        'response_format': {'type': 'json_schema', 'json_schema': {'name': schema_name, 'strict': True, 'schema': schema}},
+    }
+    if provider == 'openai':
+        # gpt-6-luna is a reasoning model: it refuses any temperature but the default, so the setting's temperature
+        # is recorded in Config but not sent; reasoning_effort is what steers it.
+        request['max_completion_tokens'] = setting.max_output_tokens
+        if setting.reasoning_effort:
+            request['reasoning_effort'] = setting.reasoning_effort
+    else:
+        request['temperature'] = setting.temperature
+        request['max_tokens'] = setting.max_output_tokens
+    return request
+
+
+def openai_transport(provider, request, timeout=600):
+    url, _ = ENDPOINTS[provider]
+    body = json.dumps(request).encode('utf-8')
+    headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
+    last = None
+    for attempt in range(3):
+        try:
+def request_identity(request):
+    """The exact serialized request and its archive key, shared by callers and validation."""
+    encoded = json.dumps(request, sort_keys=True, ensure_ascii=False)
+    return encoded, hashlib.sha256(encoded.encode('utf-8')).hexdigest()
+
+
+def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, transport=None):
+    provider = cfg.provider
+    request = build_request(setting, system, user, schema, schema_name, provider)
+    request_json, sha = request_identity(request)
+    hit = archive.lookup(sha)
+    prompt_chars = len(system) + len(user)
+    if hit:
+        call_id, answer_json, _, input_tokens, output_tokens = hit
+        return Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+    started = time.time()
+    response = (transport or openai_transport)(provider, request)
+    seconds = round(time.time() - started, 1)
+    try:
+        content = response['choices'][0]['message']['content']
+        data = json.loads(content)
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+        archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+                       request_sha256=sha + ':malformed:' + uuid.uuid4().hex[:8], request_json=request_json,
+                       response_json=json.dumps(response)[:200000], answer_json=None, prompt_chars=prompt_chars,
+                       input_tokens=0, output_tokens=0, cost_usd=0.0, seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+        raise SchemaError(f'malformed answer: {error}')
+    errors = check_schema(data, schema)
+    usage = response.get('usage') or {}
+    input_tokens = int(usage.get('prompt_tokens') or 0)
+    output_tokens = int(usage.get('completion_tokens') or 0)
+    price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
+    cost = round(input_tokens / 1e6 * price_in + output_tokens / 1e6 * price_out, 6)
+    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+                             request_sha256=sha if not errors else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+                             response_json=json.dumps(response)[:200000], answer_json=json.dumps(data, ensure_ascii=False),
+                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    if errors:
+        raise SchemaError('; '.join(errors[:5]))
+    return Answer(data, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+                problems.append(f'{qid}: choice is not the most probable option')
+    return problems
+
+
+def request_for(setting, state, questions):
+    """The complete Jev request used both for dispatch and in-flight identity."""
+    return {'model': setting.model, 'state': state, 'questions': questions}
+
+
+def ask(archive, cfg, setting, state, questions, purpose, *, transport=None):
+    """One Jev request, archived; returns model.Answer whose data is the `answers` map."""
+    request = request_for(setting, state, questions)
+    request_json, sha = model.request_identity(request)
+    prompt_chars = len(request_json)
+    hit = archive.lookup(sha)
+    if hit:
+        call_id, answer_json, _, input_tokens, output_tokens = hit
+        return model.Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+    started = time.time()
+    response = (transport or globals()['transport'])(request)
+    seconds = round(time.time() - started, 2)
+    answers = response.get('answers') if isinstance(response, dict) else None
+    problems = validate(answers, questions)
+    usage = response.get('usage') or {} if isinstance(response, dict) else {}
+    input_tokens, output_tokens = int(usage.get('input_tokens') or 0), int(usage.get('output_tokens') or 0)
+    price_in, _ = model.PRICES.get(setting.model, (0.0, 0.0))
+    cost = round(input_tokens / 1e6 * price_in, 6)
+    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+                             request_sha256=sha if not problems else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+                             response_json=json.dumps(response, ensure_ascii=False)[:200000], answer_json=json.dumps(answers, ensure_ascii=False) if answers is not None else None,
+                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    if problems:
+        raise model.SchemaError('; '.join(problems[:5]))
+    return model.Answer(answers, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files poc/reports | rg 'api-smoke|protected-before|manifest.json' && nl -ba docs/research/2026-10-25-day-batch-review/snapshot_proof.py | head -120 && rg -n 'def validate|def request_for|mode|temperature' src/hivemind/jev.py src/hivemind/model.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/reports/2026-10-25-source-first-01/manifest.json
+poc/reports/2026-10-24-main-thesis-replay-01/manifest.json
+poc/reports/2026-10-25-subject-names-01/manifest.json
+poc/reports/2026-10-25-ohio-grouping-03/manifest.json
+poc/reports/2026-10-25-grouping-consistency-01/manifest.json
+poc/reports/2026-10-25-ohio-grouping-02/manifest.json
+poc/reports/2026-10-25-extraction-evidence-01/manifest.json
+poc/reports/2026-10-25-api-smoke/protected-before.json
+poc/reports/2026-10-24-hierarchy-poc-2246/manifest.json
+poc/reports/2026-10-25-api-smoke/inputs/views.sqlite
+poc/reports/2026-10-25-api-smoke/inputs/archive.sqlite
+poc/reports/2026-10-25-api-smoke/inputs/items.sqlite
+poc/reports/2026-10-25-api-smoke/targeted.txt
+poc/reports/2026-10-25-api-smoke/manifest.json
+poc/reports/2026-10-25-api-smoke/preflight.txt
+poc/reports/2026-10-25-api-smoke/prepare.txt
+poc/reports/2026-10-25-ingestion-threads-01/manifest.json
+poc/reports/2026-10-25-ohio-grouping-01/manifest.json
+poc/reports/2026-10-24-ingestion-groups-01/manifest.json
+poc/reports/2026-10-25-membership-basis-01/manifest.json
+poc/reports/2026-10-25-english-library-01/source-manifest.json
+poc/reports/2026-10-25-direct-subjects-01/manifest.json
+poc/reports/2026-10-24-main-thesis-basis-01/manifest.json
+poc/reports/2026-10-24-relation-handoff-01/manifest.json
+poc/reports/2026-10-25-direct-subjects-01/membership-manifest.json
+poc/reports/2026-10-25-direct-subjects-01/flat-manifest.json
+poc/reports/2026-10-25-direct-subjects-01/retained-manifest.json
+     1	"""Build real historical SQLite snapshots and compare complete extraction requests.
+     2	
+     3	Each snapshot retains original IDs, sequence order and FTS text, and excludes
+     4	later writes. No model request is sent and no source database is modified.
+     5	"""
+     6	import argparse
+     7	import collections
+     8	import json
+     9	from pathlib import Path
+    10	import sqlite3
+    11	import sys
+    12	
+    13	sys.path.insert(0, str(Path(__file__).resolve().parent))
+    14	from audit import ARMS, ROOT, ITEM, connect  # noqa: E402
+    15	sys.path.insert(0, str(ROOT / 'src'))
+    16	from hivemind import extraction, universe  # noqa: E402
+    17	from hivemind.views import store  # noqa: E402
+    18	
+    19	
+    20	def snapshot(source, before_seq):
+    21	    """Records strictly before a sequence, including original FTS insertion order."""
+    22	    dest = sqlite3.connect(':memory:')
+    23	    dest.row_factory = sqlite3.Row
+    24	    kept_views = {r['view_id'] for r in source.execute('select view_id from views where created_seq<?', (before_seq,))}
+    25	    for table, schema in store.TABLES.items():
+    26	        dest.execute(f'create table {table} ({schema})')
+    27	        rows = source.execute(f'select * from {table} order by rowid')
+    28	        for row in rows:
+    29	            fields = list(row.keys())
+    30	            sequence = next((f for f in ('created_seq', 'after_seq', 'seq', 'sequence_no') if f in fields), None)
+    31	            if sequence and row[sequence] >= before_seq:
+    32	                continue
+    33	            if table == 'rungs' and row['view_id'] not in kept_views:
+    34	                continue
+    35	            dest.execute(f'insert into {table} ({",".join(fields)}) values ({",".join("?" for _ in fields)})', tuple(row))
+    36	    for table, id_field, records in [('views_fts', 'view_id', 'views'), ('groups_fts', 'group_id', 'thesis_groups')]:
+    37	        dest.execute(f'create virtual table {table} using fts5({id_field} unindexed, text, tokenize="trigram")')
+    38	        kept = {r[0] for r in dest.execute(f'select {id_field} from {records}')}
+    39	        for row in source.execute(f'select {id_field},text from {table} order by rowid'):
+    40	            if row[0] in kept:
+    41	                dest.execute(f'insert into {table} ({id_field},text) values (?,?)', tuple(row))
+    42	    return dest
+    43	
+    44	
+    45	def audit(folder, config):
+    46	    uni = universe.load(str(ROOT / 'poc/universe.json'))
+    47	    counts, examples, mismatches = collections.Counter(), [], []
+    48	    with connect(ROOT / 'poc/data' / folder / 'views.sqlite') as source, connect(ROOT / 'poc/data' / folder / 'archive.sqlite') as archive, connect(ROOT / 'poc/data/items-window-tags2-2026-10-24.sqlite') as inputs:
+    49	        meta = {r['input_id']: dict(r) for r in source.execute('select input_id,min(sequence_no) seq,min(publication_day) day from processing_steps where sequence_no>0 group by input_id')}
+    50	        day_start = {}
+    51	        for row in meta.values():
+    52	            day_start[row['day']] = min(day_start.get(row['day'], row['seq']), row['seq'])
+    53	        requests = list(archive.execute("select request_json from model_calls where config_version=? and purpose='extract' order by call_id", (config,)))
+    54	        for row in requests:
+    55	            original = json.loads(row[0])
+    56	            input_id, day = ITEM.search(original['messages'][1]['content']).groups()
+    57	            item = dict(inputs.execute('select * from items where input_id=?', (input_id,)).fetchone())
+    58	            item['object_identifiers'] = json.loads(item['object_identifiers'])
+    59	            objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
+    60	            built = []
+    61	            for seq in (meta[input_id]['seq'], day_start[day]):
+    62	                db = snapshot(source, seq)
+    63	                try:
+    64	                    shown = store.views_for_prompt(db, objects)
+    65	                    groups = store.groups_for_prompt(db, objects, item['title'] or '')
+    66	                    built.append(extraction.build_prompt(item, item['text'], shown, uni, 'v10', groups))
+    67	                finally:
+    68	                    db.close()
+    69	            saved = tuple(m['content'] for m in original['messages'])
+    70	            counts['requests'] += 1
+    71	            if built[0] != saved:
+    72	                mismatches.append(input_id)
+    73	                continue
+    74	            counts['reproduced_original_request'] += 1
+    75	            if built[0] != built[1]:
+    76	                counts['different_at_day_start'] += 1
+    77	                if len(examples) < 3:
+    78	                    examples.append({'input_id': input_id, 'day': day, 'sequence': meta[input_id]['seq'], 'day_start_sequence': day_start[day]})
+    79	        return {'counts': dict(counts), 'examples': examples, 'reconstruction_mismatches': mismatches}
+    80	
+    81	
+    82	def main():
+    83	    parser = argparse.ArgumentParser(description=__doc__)
+    84	    parser.add_argument('--out', type=Path, required=True)
+    85	    args = parser.parse_args()
+    86	    results = {name: audit(*spec) for name, spec in ARMS.items()}
+    87	    with args.out.open('x') as handle:
+    88	        json.dump(results, handle, indent=2)
+    89	    for name, result in results.items():
+    90	        print(name, result['counts'], 'reconstruction mismatches', len(result['reconstruction_mismatches']))
+    91	    if any(v['reconstruction_mismatches'] for v in results.values()):
+    92	        raise SystemExit('historical reconstruction not exact: inspect mismatches before using the measure')
+    93	
+    94	
+    95	if __name__ == '__main__':
+    96	    main()
+src/hivemind/jev.py:1:"""TypeSafe Jev (https://docs.typesafe.ai): typed answers over one state, no generated text. A request is `{model, state,
+src/hivemind/jev.py:3:`confidence`) or `score`. Every call is archived in `model_calls` like every other model call, keyed by the request's
+src/hivemind/jev.py:4:digest, so a byte-identical request is served from the archive; input is priced from `model.PRICES`, output is free."""
+src/hivemind/jev.py:12:from . import model
+src/hivemind/jev.py:22:    with open(model.CREDENTIALS, encoding='utf-8') as handle:
+src/hivemind/jev.py:41:            raise model.TransportError(f'Jev HTTP {error.code}') from None
+src/hivemind/jev.py:43:            raise model.TransportError(f'Jev transport failed: {type(error).__name__}') from None
+src/hivemind/jev.py:45:        raise model.TransportError('Jev response echoed the credential; not archived')
+src/hivemind/jev.py:54:def validate(answers, questions):
+src/hivemind/jev.py:79:def request_for(setting, state, questions):
+src/hivemind/jev.py:81:    return {'model': setting.model, 'state': state, 'questions': questions}
+src/hivemind/jev.py:85:    """One Jev request, archived; returns model.Answer whose data is the `answers` map."""
+src/hivemind/jev.py:87:    request_json, sha = model.request_identity(request)
+src/hivemind/jev.py:92:        return model.Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+src/hivemind/jev.py:100:    price_in, _ = model.PRICES.get(setting.model, (0.0, 0.0))
+src/hivemind/jev.py:102:    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+src/hivemind/jev.py:108:        raise model.SchemaError('; '.join(problems[:5]))
+src/hivemind/jev.py:109:    return model.Answer(answers, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+src/hivemind/model.py:1:"""One model call, archived and replayable.
+src/hivemind/model.py:26:# gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
+src/hivemind/model.py:30:          'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+src/hivemind/model.py:33:create table if not exists model_calls (
+src/hivemind/model.py:34:  call_id integer primary key autoincrement, purpose text, config_version text, config_checksum text, model text,
+src/hivemind/model.py:38:create index if not exists model_calls_sha on model_calls(request_sha256);
+src/hivemind/model.py:74:            return self.conn.execute('select call_id, answer_json, prompt_chars, input_tokens, output_tokens from model_calls where request_sha256=?', (sha,)).fetchone()
+src/hivemind/model.py:81:            cursor = self.conn.execute(f'insert or ignore into model_calls ({",".join(columns)}) values ({",".join("?" * len(columns))})',
+src/hivemind/model.py:85:                return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
+src/hivemind/model.py:90:            return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()
+src/hivemind/model.py:103:        'model': setting.model,
+src/hivemind/model.py:108:        # gpt-6-luna is a reasoning model: it refuses any temperature but the default, so the setting's temperature
+src/hivemind/model.py:114:        request['temperature'] = setting.temperature
+src/hivemind/model.py:212:        archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+src/hivemind/model.py:221:    price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
+src/hivemind/model.py:223:    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'from pathlib import Path
+import json,sqlite3
+root=Path(\"/Users/lchingen/hivemind\")
+d=root/\"poc/reports/2026-10-25-api-smoke\"
+protected=json.loads((d/\"protected-before.json\").read_text())
+actual={str(p.resolve()) for p in (root/\"poc/data\").rglob(\"*\") if p.is_file() and p.name.endswith((\".sqlite\",\".sqlite-wal\",\".sqlite-shm\",\".sqlite-journal\",\".db\",\".db-wal\",\".db-shm\",\".db-journal\"))}
+print(\"protected entries:\",len(protected),\"databases/sidecars:\",len(actual),\"unlisted:\",sorted(actual-set(protected)))
+print(\"manifest:\",(d/\"manifest.json\").read_text())
+with sqlite3.connect((d/\"inputs/archive.sqlite\").as_uri()+\"?mode=ro\",uri=True) as c:
+ for ident,purpose,req,sha in c.execute(\"select call_id,purpose,request_json,request_sha256 from model_calls where call_id in (574,575,577,578) order by call_id\"):
+  r=json.loads(req)
+  print(\"call:\",ident,purpose,\"model:\",r.get(\"model\"),\"fields:\",list(r),\"hash:\",sha,\"questions:\",len(r.get(\"questions\",{})))'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+protected entries: 122 databases/sidecars: 122 unlisted: []
+manifest: {
+  "calls": [
+    {
+      "original_call_id": 574,
+      "purpose": "extract",
+      "request_sha256": "a82baefd7e572f933613498b9181efb52b08e5650922a711d290182733015fb7"
+    },
+    {
+      "original_call_id": 575,
+      "purpose": "extract",
+      "request_sha256": "5a47479842c800d005ebafeb06b783ba7ada6491db1ece9e8b45696a557cbc33"
+    },
+    {
+      "original_call_id": 577,
+      "purpose": "match",
+      "request_sha256": "b2f0326df5ef72870b104a5a2a28a5b52ef4e37ceaae2b5af1a8d0a39292e4be"
+    },
+    {
+      "original_call_id": 578,
+      "purpose": "match",
+      "request_sha256": "83e34e05310b73b8dabc9ab98c281b6bedc69492db653d12fcafa615cbe8fdaa"
+    }
+  ],
+  "max_calls": 36,
+  "cap_usd": 1.5,
+  "workers": 2,
+  "samples": 3,
+  "mode": "ordinary API concurrency",
+  "inputs": {
+    "items.sqlite": "d3e71773ae6669129827974cad33b0fe0a4f1ad98507432b47b2d9c256d3ee5a",
+    "archive.sqlite": "92a02e091b30de071957953fca726cc8fb6d7e16a9efea8628abea1927062d51",
+    "views.sqlite": "7ff98bd298709a37828f4ec5796b479e78f4d53a7bd85299315baf0c2d6fc7c2"
+  },
+  "config_sha256": "4258823f0912b918d106a134f9d6e44d33dc8b4d517480b63064b70ddb389e4d"
+}
+call: 574 extract model: gpt-6-luna fields: ['max_completion_tokens', 'messages', 'model', 'reasoning_effort', 'response_format'] hash: a82baefd7e572f933613498b9181efb52b08e5650922a711d290182733015fb7 questions: 0
+call: 575 extract model: gpt-6-luna fields: ['max_completion_tokens', 'messages', 'model', 'reasoning_effort', 'response_format'] hash: 5a47479842c800d005ebafeb06b783ba7ada6491db1ece9e8b45696a557cbc33 questions: 0
+call: 577 match model: jev-1.14.0 fields: ['model', 'questions', 'state'] hash: b2f0326df5ef72870b104a5a2a28a5b52ef4e37ceaae2b5af1a8d0a39292e4be questions: 9
+call: 578 match model: jev-1.14.0 fields: ['model', 'questions', 'state'] hash: 83e34e05310b73b8dabc9ab98c281b6bedc69492db653d12fcafa615cbe8fdaa questions: 2
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'from pathlib import Path
+import sys
+sys.path.insert(0,\"/Users/lchingen/hivemind/poc\")
+from concurrency_study import smoke
+cfg,jobs=smoke.jobs_for(Path(\"/Users/lchingen/hivemind/poc/reports/2026-10-25-api-smoke\"))
+print(\"Exact current-builder reconstruction:\",[(j[\"original_call_id\"],j[\"purpose\"],j[\"request_sha256\"]) for j in jobs])'" in /Users/lchingen/hivemind
+ succeeded in 5ms:
+Exact current-builder reconstruction: [(574, 'extract', 'a82baefd7e572f933613498b9181efb52b08e5650922a711d290182733015fb7'), (575, 'extract', '5a47479842c800d005ebafeb06b783ba7ada6491db1ece9e8b45696a557cbc33'), (577, 'match', 'b2f0326df5ef72870b104a5a2a28a5b52ef4e37ceaae2b5af1a8d0a39292e4be'), (578, 'match', '83e34e05310b73b8dabc9ab98c281b6bedc69492db653d12fcafa615cbe8fdaa')]
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import sys,sqlite3,threading,time
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
+from types import SimpleNamespace
+sys.path[:0]=[\"/Users/lchingen/hivemind/poc\",\"/Users/lchingen/hivemind/src\"]
+from concurrency_study import budget
+connect=sqlite3.connect
+with patch.object(budget.sqlite3,\"connect\",side_effect=lambda *a,**k:connect(\":memory:\",check_same_thread=False)):
+ sent=[]
+ guard=budget.GuardedTransport(\"/unused/in-memory.sqlite\",lambda *a:sent.append(guard.summary()[\"halted\"]) or {\"usage\":{\"prompt_tokens\":1000,\"completion_tokens\":100}})
+reserved,release=threading.Event(),threading.Event()
+real_clock=time.perf_counter
+first=[True]
+def clock():
+ if threading.current_thread().name.startswith(\"cancel-proof\") and first[0]:
+  first[0]=False
+  reserved.set()
+  assert release.wait(5)
+ return real_clock()
+with patch.object(budget,\"time\",SimpleNamespace(perf_counter=clock)):
+ with ThreadPoolExecutor(max_workers=1,thread_name_prefix=\"cancel-proof\") as pool:
+  future=pool.submit(guard,\"openai\",{\"model\":\"gpt-6-luna\",\"messages\":[],\"max_completion_tokens\":16000})
+  assert reserved.wait(5)
+  print(\"Before cancellation:\",guard.summary())
+  guard.stop(\"cancelled before HTTP\")
+  release.set()
+  future.result()
+print(\"HTTP sends and halted state observed by sender:\",sent)
+print(\"Final:\",guard.summary())'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+Before cancellation: {'attempts': [{'id': 1, 'provider': 'openai', 'request_sha256': 'a5a12c792a3f9dc1487687d5afd2538d6e1d213493898b397a372f5df09e6de6', 'reserved': 700000, 'charged': None, 'state': 'reserved', 'error': None, 'seconds': None, 'completed_order': None}], 'halted': None, 'held_microdollars': 700000}
+HTTP sends and halted state observed by sender: ['cancelled before HTTP']
+Final: {'attempts': [{'id': 1, 'provider': 'openai', 'request_sha256': 'a5a12c792a3f9dc1487687d5afd2538d6e1d213493898b397a372f5df09e6de6', 'reserved': 700000, 'charged': 633, 'state': 'complete', 'error': None, 'seconds': 3.62499849870801e-05, 'completed_order': 1}], 'halted': 'cancelled before HTTP', 'held_microdollars': 633}
+
+codex
+已复现一个严重问题：请求预留了预算、但尚未发送时，即使取消已写入数据库，它仍会继续发送。现有取消测试没有覆盖这个窗口。四个旧请求都能完整重建；当前保护清单也覆盖了全部 122 个数据库及附属文件。
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import sys, sqlite3, threading, io
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
+from types import SimpleNamespace
+sys.path[:0] = [\"/Users/lchingen/hivemind/poc\", \"/Users/lchingen/hivemind/src\"]
+from concurrency_study import smoke, budget
+connect = sqlite3.connect
+sent = []
+with patch.object(budget.sqlite3, \"connect\", side_effect=lambda *a, **k: connect(\":memory:\", check_same_thread=False)):
+    guard = budget.GuardedTransport(\"/unused/in-memory.sqlite\", lambda *a: sent.append(guard.summary()[\"halted\"]) or {\"usage\": {\"prompt_tokens\": 1000, \"completion_tokens\": 100}})
+failed = threading.Event()
+class Pool(ThreadPoolExecutor):
+    def submit(self, fn, *args, **kwargs):
+        future = super().submit(fn, *args, **kwargs)
+        if args[0][\"id\"] == 2:
+            future.add_done_callback(lambda f: failed.set() if f.exception() else None)
+        return future
+def call(job, archive, cfg, transport):
+    if job[\"id\"] == 2:
+        raise smoke.model.SchemaError(\"downstream validation failed\")
+    if threading.current_thread().name == \"MainThread\":
+        return {}
+    assert failed.wait(5)
+    transport(\"openai\", {\"model\": \"gpt-6-luna\", \"messages\": [], \"max_completion_tokens\": 16000})
+    return {}
+jobs = [{\"id\": i, \"original_call_id\": i, \"purpose\": \"extract\", \"request_sha256\": str(i)} for i in (1,2)]
+with patch.object(smoke, \"jobs_for\", return_value=(None,jobs)), patch.object(smoke, \"fingerprint\", return_value=\"fake\"), patch.object(smoke, \"single_attempt_http\", return_value=None), patch.object(smoke, \"GuardedTransport\", return_value=guard), patch.object(smoke, \"ThreadPoolExecutor\", Pool), patch.object(smoke, \"call_job\", side_effect=call), patch.object(smoke.model, \"Archive\", return_value=SimpleNamespace(conn=SimpleNamespace(close=lambda:None))), patch.object(Path,\"read_text\",return_value=\"{}\"), patch.object(Path,\"exists\",return_value=False), patch.object(Path,\"glob\",return_value=[]), patch.object(Path,\"open\",side_effect=lambda *a,**k:io.StringIO()), patch.object(Path,\"mkdir\"), patch.object(Path,\"write_text\"):
+    # The first two serial arms must succeed, then the real concurrent-arm loop runs.
+    calls = [0]
+    def controlled_call(job, archive, cfg, transport):
+        if threading.current_thread().name == \"MainThread\":
+            return {}
+        return call(job, archive, cfg, transport)
+    with patch.object(smoke,\"call_job\",side_effect=controlled_call):
+        try:
+            smoke.run(\"/unused/smoke\", live=True)
+        except smoke.model.SchemaError:
+            pass
+print(\"HTTP sends after second future has failed; halted state at send:\",sent)
+print(\"Final halted state:\",guard.summary()[\"halted\"])
+'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{"sample": 1, "arm": "control-a", "purpose": "extract", "seconds": 0.0}
+{"sample": 1, "arm": "control-a", "purpose": "match", "seconds": 0.0}
+{"sample": 1, "arm": "control-b", "purpose": "extract", "seconds": 0.0}
+{"sample": 1, "arm": "control-b", "purpose": "match", "seconds": 0.0}
+{"failure": "SchemaError", "changed_protected_files": [], "attempts": 1, "conservative_cost_usd": 0.000633}
+HTTP sends after second future has failed; halted state at send: [None]
+Final halted state: study failed or cancelled
+
+codex
+发现 **2 个需要在付费 smoke 前修复的缺陷**。均用内存数据库和假发送器复现，未改文件或调用提供商。
+
+1. **取消后，尚未发送的请求仍会发送。** [budget.py:99](/Users/lchingen/hivemind/poc/concurrency_study/budget.py:99) 提交预留后释放锁，随后直接调用 `send`。例如，此时另一线程已执行 `stop()`，该请求仍会发出。停止与开始发送需要同步协调；[现有取消测试](/Users/lchingen/hivemind/tests/test_study_budget.py:82) 在发送器进入后才取消，漏掉这个窗口。
+
+2. **后提交的任务验证失败，不能及时关闭发送入口。** [smoke.py:130](/Users/lchingen/hivemind/poc/concurrency_study/smoke.py:130) 按提交顺序等待结果。若第二个任务先验证失败，第一个尚未发送，主线程仍在等第一个；它随后可以继续发送。复现时，第二个任务已失败，发送器读到的 `halted` 仍为 `None`。应在任一任务失败时立即关闭入口，再取消未发送任务并等待已发送任务结束。
+tokens used
+40,410
+发现 **2 个需要在付费 smoke 前修复的缺陷**。均用内存数据库和假发送器复现，未改文件或调用提供商。
+
+1. **取消后，尚未发送的请求仍会发送。** [budget.py:99](/Users/lchingen/hivemind/poc/concurrency_study/budget.py:99) 提交预留后释放锁，随后直接调用 `send`。例如，此时另一线程已执行 `stop()`，该请求仍会发出。停止与开始发送需要同步协调；[现有取消测试](/Users/lchingen/hivemind/tests/test_study_budget.py:82) 在发送器进入后才取消，漏掉这个窗口。
+
+2. **后提交的任务验证失败，不能及时关闭发送入口。** [smoke.py:130](/Users/lchingen/hivemind/poc/concurrency_study/smoke.py:130) 按提交顺序等待结果。若第二个任务先验证失败，第一个尚未发送，主线程仍在等第一个；它随后可以继续发送。复现时，第二个任务已失败，发送器读到的 `halted` 仍为 `None`。应在任一任务失败时立即关闭入口，再取消未发送任务并等待已发送任务结束。

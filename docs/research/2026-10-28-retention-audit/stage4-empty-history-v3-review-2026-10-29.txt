@@ -1,0 +1,10 @@
+**No blocking defect found in this read-only check.** A control answer containing `"same_claim_as": null` now stops further dispatch without losing the response or run summary.
+
+- **Malformed relations:** 144/144 checks passed across both providers, three fields and three empty-history controls, covering the original 72 cases. Removing the [v3 guard](docs/research/2026-10-28-retention-audit/stage4-empty-history-arm-v3-2026-10-29.py:115) in memory reproduced the crash.
+- **Controls:** all 16 valid case/provider combinations passed. All seven stored relation failures continued while remaining unusable, tested under both provider envelopes. Three required the previously disclosed legacy judgement-field normalization.
+- **Other failures:** 96 non-object checks preserved their answers and provider envelopes and stopped. All 42 unrelated-failure checks stopped.
+- **Worker simulation:** six malformed controls and two valid in-flight treatments completed; all eight raw and parsed records survived. The final summary correctly listed **8 attempted, 40 unsent**. Separate valid and expected-invalid simulations each completed all 48 jobs.
+- **Order and duplicate protection:** submissions followed the frozen order; reordered manifests were rejected. Duplicate workers and attempts produced zero additional sends.
+- **Experiment unchanged:** all 16 requests are byte-identical to v2; all 127 dependency hashes verified. Reservation remains **$0.3166821 / $0.60**. Only empty-history treatment schemas lose the three relation fields. Sharon remains byte-identical between arms. Valar retains the same holdout status and disclosed prior extraction exposure.
+
+The original v3-check also passed using memory-only temporary storage. No files changed, credentials accessed, or providers called.

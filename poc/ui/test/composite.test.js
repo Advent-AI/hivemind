@@ -44,7 +44,7 @@ function weightedCard() {
   return card;
 }
 
-test('D197: confidence maps the entire score scale to percent and preserves missing values', () => {
+test('D291: confidence maps the entire score scale to percent and preserves missing values', () => {
   assert.deepEqual([-2, -1, 0, 1, 2].map(confidenceFromScore), [0, 25, 50, 75, 100]);
   assert.equal(confidenceFromScore(null), null);
   assert.equal(formatConfidence(null), '—');
@@ -54,7 +54,7 @@ test('D197: confidence maps the entire score scale to percent and preserves miss
   assert.throws(() => confidenceFromScore(NaN), TypeError);
 });
 
-test('D197: Idea history and detail show confidence percentages instead of a signed composite', () => {
+test('D291: Idea history and detail show confidence percentages instead of a signed composite', () => {
   const card = weightedCard();
   const composite = prepareIdeaComposite(card, data);
   const series = confidenceHistory(composite);
@@ -92,7 +92,7 @@ test('D197: Idea history and detail show confidence percentages instead of a sig
   assert.equal(missing[0].value, null);
 });
 
-test('D196: graph and score use only the positive selected set, with no excluded cards', () => {
+test('D290: graph and score use only the positive selected set, with no excluded cards', () => {
   const card = weightedCard();
   const plan = card.reading.composite;
   plan.version = 'idea-composite/4';
@@ -114,7 +114,7 @@ test('D196: graph and score use only the positive selected set, with no excluded
   assert.throws(() => prepareIdeaComposite(zero, data), /impact percent/);
 });
 
-test('D194/D205: explicit unequal impact weights drive the same dated chart and weight pills', () => {
+test('D288/D299: explicit unequal impact weights drive the same dated chart and weight pills', () => {
   const card = weightedCard();
   const plan = prepareIdeaComposite(card, data);
   const point = compositeAt(plan, data.as_of);
@@ -136,7 +136,7 @@ test('D194/D205: explicit unequal impact weights drive the same dated chart and 
   assert.equal(compositeAt(prepareIdeaComposite(card, data), data.as_of).value, -0.3);
 });
 
-test('D194: missing weighted assessments stay unavailable without reallocating impact', () => {
+test('D288: missing weighted assessments stay unavailable without reallocating impact', () => {
   const copy = structuredClone(data);
   copy.theses.find((t) => t.id === 'v3').judgements = [];
   const point = compositeAt(prepareIdeaComposite(weightedCard(), copy), data.as_of);
@@ -151,7 +151,7 @@ test('D194: missing weighted assessments stay unavailable without reallocating i
   );
 });
 
-test('D194: explicit percentages total 100 or the plan is rejected', () => {
+test('D288: explicit percentages total 100 or the plan is rejected', () => {
   for (const value of [0, -1, 69, 101, true, 70.5]) {
     const card = weightedCard();
     card.reading.composite.drivers.find((d) => d.thesis_id === 'v3').weight_percent = value;
@@ -173,7 +173,7 @@ test('D194: explicit percentages total 100 or the plan is rejected', () => {
   assert.equal(compositeAt(prepareIdeaComposite(empty, data), data.as_of).value, null);
 });
 
-test('D188: the current three-thesis Idea gets a default chart without matching a query string', () => {
+test('D282: the current three-thesis Idea gets a default chart without matching a query string', () => {
   const composite = prepareIdeaComposite(defaultCard, data);
   assert.equal(compositeAt(composite, '2026-08-15').value, 0.5);
   assert.equal(composite.drivers.find((d) => d.thesis_id === 'v1').direction, 1);
@@ -188,7 +188,7 @@ test('D188: the current three-thesis Idea gets a default chart without matching 
   assert.equal(compositeAt(prepareIdeaComposite(rephrased, data), '2026-08-15').value, -0.5);
 });
 
-test('D188: empty and unassessed baskets have no invented zero; every chosen thesis is accounted for', () => {
+test('D282: empty and unassessed baskets have no invented zero; every chosen thesis is accounted for', () => {
   const unassessed = structuredClone(data);
   for (const thesis of unassessed.theses) thesis.judgements = [];
   assert.equal(compositeAt(prepareIdeaComposite(defaultCard, unassessed), data.as_of).value, null);
@@ -219,7 +219,7 @@ test('D188: empty and unassessed baskets have no invented zero; every chosen the
   assert.equal(prepareIdeaComposite(card, data), null);
 });
 
-test('D188: binary representatives preserve the same two endpoint scores', () => {
+test('D282: binary representatives preserve the same two endpoint scores', () => {
   const thesis = data.theses.find((entry) => entry.rungs.length === 2 && entry.judgements.length);
   assert(thesis);
   const binary = structuredClone(defaultCard);
@@ -245,7 +245,7 @@ test('D188: binary representatives preserve the same two endpoint scores', () =>
   assert.equal(compositeAt(prepareIdeaComposite(binary, data), data.as_of).value, -first);
 });
 
-test('D258: a No-first yes/no thesis shows its own outcome and keeps the same composite value', () => {
+test('D335: a No-first yes/no thesis shows its own outcome and keeps the same composite value', () => {
   const source = current.views.find(
     (view) => view.rungs.length === 2 && view.rungs[0].label === 'Yes' && view.judgements.length,
   );
@@ -293,7 +293,7 @@ test('D258: a No-first yes/no thesis shows its own outcome and keeps the same co
   assert.equal(valueOf(reversed, 'last'), valueOf(original, 'first'));
 });
 
-test('D259: a yes/no ladder with named outcomes shows its own outcome once', () => {
+test('D336: a yes/no ladder with named outcomes shows its own outcome once', () => {
   const source = current.views.find(
     (view) => view.rungs.length === 2 && view.rungs[0].label === 'Yes' && view.judgements.length,
   );
@@ -315,7 +315,7 @@ test('D259: a yes/no ladder with named outcomes shows its own outcome once', () 
   assert.equal(stateText(ordinal, 2), `${ordinal.rungs[1].score} ${ordinal.rungs[1].label}`);
 });
 
-test('D185: the real reviewed basket calculates 0, +0.5, then 0 using historical states', () => {
+test('D279: the real reviewed basket calculates 0, +0.5, then 0 using historical states', () => {
   const trial = prepareCompositeTrial(plans, card, data);
   assert.equal(compositeAt(trial, '2026-07-28').value, 0);
   assert.equal(compositeAt(trial, '2026-07-29').value, 0.5);
@@ -334,7 +334,7 @@ test('D185: the real reviewed basket calculates 0, +0.5, then 0 using historical
   assert.equal(compositeAt(prepareCompositeTrial(inverted, card, data), '2026-07-29').value, -0.5);
 });
 
-test('D185: missing judgements stay missing and repeated connections do not gain weight', () => {
+test('D279: missing judgements stay missing and repeated connections do not gain weight', () => {
   const missing = structuredClone(data);
   missing.theses.find((t) => t.id === 'v1').judgements = [];
   let point = compositeAt(prepareCompositeTrial(plans, card, missing), '2026-08-15');
@@ -349,7 +349,7 @@ test('D185: missing judgements stay missing and repeated connections do not gain
   assert.equal(compositeAt(prepareCompositeTrial(plans, repeated, data), '2026-07-29').value, 0.5);
 });
 
-test('D185: trial identity, unique representatives and explicit directions are required', () => {
+test('D279: trial identity, unique representatives and explicit directions are required', () => {
   assert.equal(
     prepareCompositeTrial(plans, { ...card, reading: { ...card.reading, chosen: [] } }, data),
     null,
@@ -380,7 +380,7 @@ test('D185: trial identity, unique representatives and explicit directions are r
   }
 });
 
-test('D185: fractional plot uses the selected history cutoff and keeps its last dot inside the margin', () => {
+test('D279: fractional plot uses the selected history cutoff and keeps its last dot inside the margin', () => {
   const trial = prepareCompositeTrial(plans, card, data);
   const html = scoreHistoryChart(trial.series, {
     start: trial.start,

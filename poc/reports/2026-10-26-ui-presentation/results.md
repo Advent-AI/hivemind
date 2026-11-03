@@ -1,4 +1,4 @@
-# D182 frontend presentation cleanup
+# D276 frontend presentation cleanup
 
 The four requested interface elements are removed: connection/Refresh area, Research library eyebrow, As of date picker and duplicate count/date row. Workspace and Research groups use sentence case. Card subject/year and dependency metadata use the shared `|` separator. Both library and evidence pagination say “Show more”. Removed controls, event handlers and unused CSS were removed together.
 

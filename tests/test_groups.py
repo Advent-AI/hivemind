@@ -174,5 +174,5 @@ def test_aliases_decide_group_identity_and_membership(tmp_path):
     shown = store.groups_for_prompt(conn, ['NVDA'], 'Rubin')
     assert isinstance(shown[0]['aliases'], list) and store.group(conn, 'g1')['aliases'][1] == 'Vera Rubin'      # aliases read back as a list, never as JSON text
     _, user = extraction.build_prompt(ITEM, TEXT, [], UNIVERSE, 'v9', shown)
-    assert '(also: Vera Rubin, Rubin, Blackwell, Vera)' in user
+    assert '(also: Vera Rubin, Rubin, Blackwell, Vera, SK Telecom AI factory deployment, SK Telecom)' in user     # D166 (2026-11-01, D257): the SK Telecom declaration's other names joined g1
     assert 'aliases' in extraction.schema_for('v9', ['g1'])['properties']['new_groups']['items']['required']

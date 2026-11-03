@@ -1,0 +1,32 @@
+preflight over docs/research/2026-11-01-e2e-loop/arms/r1-seeds-v2/d1/archive.sqlite and 1 views databases: d1
+
+== A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side): judged 0, refused/dropped 0 (n/a)
+
+   extraction archive rows 243: replayed 243, earlier refused 0, source not rebuildable 0, unidentifiable 0
+   extraction answers 243: evidence produced 1057 kept 1044; candidates produced 64 kept 61
+
+== B. current extraction checks before placement, using the supplied universe: judged 1121, refused/dropped 16 (1%)
+       7  same quote as #; merged
+          e.g. gnews:f0423de52e9bd77b530ba76e e3: same quote as e2; merged
+          e.g. gnews:f0423de52e9bd77b530ba76e e5: same quote as e4; merged
+       6  quote not in item
+          e.g. gnews:cfa20b22ec2a161c6fd85d8e e1: quote not in item
+          e.g. gnews:c1658c3cc3b216fa2b0eaa54 e1: quote not in item
+       1  year 2028 is beyond next year: not opened (06-views 不开)
+          e.g. gnews:085b1e1a1543437edb9756d6 c1: year 2028 is beyond next year: not opened (06-views 不开)
+       1  candidate ladder: object view rungs must be ['…', '…', '…', '…', '…'], got ['…', '…', '…',
+          e.g. gnews:085b1e1a1543437edb9756d6 c2: candidate ladder: object view rungs must be ['Strongly bullish', 'Bullish', 'Neu
+       1  candidate without surviving evidence
+          e.g. gnews:c8c39f971721fd820aab5c1c c1: candidate without surviving evidence
+
+== C. matching code checks over stored records (database state is the final one, not the state at the time): judged 120, refused/dropped 0 (0%)
+       ledger d1: judged 120, skipped 8 {'request not in this archive': 8}
+
+== D. schema enum values named in the prompts: judged 781, missing 3
+    role-v55.txt lacks the enum value 'party_statement'
+    role-v55.txt lacks the enum value 'third_party_view'
+    role-v55.txt lacks the enum value 'rumour'
+
+== E. keyed views in views.sqlite: open views 41, keyed 41, duplicate keys 0 groups, review pool 0 candidates outside the watch list
+
+preflight done

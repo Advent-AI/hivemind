@@ -1,4 +1,4 @@
-# D196: positive-weight selection is the Idea association
+# D290: positive-weight selection is the Idea association
 
 The final Idea response is the model's adopted thesis list, not its input candidate list. Each adopted thesis must have a positive impact percentage, and nonempty lists total 100. The model chooses how many. There is no 0%-weight thesis in the Idea.
 

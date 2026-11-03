@@ -1,0 +1,11 @@
+发现 **1 个阻碍落实预算上限的严重缺口**：设计没有说明如何为估算误差和用量未知的请求预留费用。
+
+例如，上一轮 DeepSeek 测试中，一次请求的输出上限设为 8,000 token，返回的用量却是 8,001。当前[设计第 26 行]( /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/deepseek-extraction-probe-design-2026-10-29.md:26)要求按 DeepSeek tokenizer 的**估算**预留六次费用，但没有规定估算余量，也没有规定超时、断线或缺失 usage 时如何计算和报告可能已发生的费用。[上一轮结果]( /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/deepseek-judge-trial-results-2026-10-29.md:12)记录了上限与报告用量相差 1 的情况。发送前需要写明保守余量和未知用量的处理方式；未知费用不能记为零，否则不能确认这组请求符合 $0.60 上限。
+
+其余指定范围内没有发现阻碍这次单篇探针的严重缺口：
+
+- 归档 call 209 是 v38 的该文章抽取；它的第二条确实保留了 82% 和 41%，却说指标未指明。设计要求重建生产请求并核对摘要，也要求按生产构建顺序发送，而非使用归档排序后的字段。
+- [参考文件]( /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/gold-user-2026-10-29-v3/reference.json:1679)支持两条核心事实；EPS 可保留，但权重和目标未定。设计对两条事实要求核对完整意思、来源、归属、预测性质、两个时期和引文支持，并将其他内容单独阅读，范围合适。
+- 三次新鲜对照、相同 system 和 user 消息、生产筛选、拒答或截断不计有效结果及不重试，均已写入设计。[DeepSeek 的 Responses API 文档](https://api-docs.deepseek.com/api/create-response/)支持这些消息角色、思考模式和 JSON Schema 格式；不同接口外壳及思考设置仍限制模型之间的归因。
+
+剩余未知是：实际重建请求能否与 call 209 摘要一致；DeepSeek 是否接受并完成**这一份具体 schema**；六次调用是否有足够的完整回答；以及人工逐条核对后两条事实各保留得如何。这些要到实施和试验后才知道，不能据此推断整条产品流程或默认模型应改变。

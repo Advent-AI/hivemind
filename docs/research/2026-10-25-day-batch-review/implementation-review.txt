@@ -1,0 +1,7 @@
+One serious logical hole: **concurrent identical requests have no defined shared result.**
+
+Two Jev candidates can produce identical request inputs: [`candidate_state`](/Users/lchingen/hivemind/src/hivemind/views/jev_matching.py:46) excludes candidate IDs, and their [questions](/Users/lchingen/hivemind/src/hivemind/views/jev_matching.py:130) can match. The [plan](/Users/lchingen/hivemind/docs/research/2026-10-25-day-batch-review/implementation.md:13) permits these calls concurrently but does not cover this case.
+
+The archive lock protects writes, not the whole request lifecycle. [`Archive.record`](/Users/lchingen/hivemind/src/hivemind/model.py:81) keeps the first stored answer and returns its call ID to subsequent writers. [`model.call`](/Users/lchingen/hivemind/src/hivemind/model.py:218) nevertheless returns the caller’s own answer data. Thus two different responses can share one call ID, while replay returns only the first stored response.
+
+Before implementation, define one result per request hash: either share the in-flight request or require every caller to consume the stored winner. Verify with two identical concurrent requests whose fake responses differ. This concerns replay consistency, not model quality.

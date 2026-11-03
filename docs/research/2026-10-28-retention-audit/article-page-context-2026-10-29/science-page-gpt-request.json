@@ -1,0 +1,315 @@
+{
+  "model": "gpt-6-luna",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a senior hedge-fund analyst reading one item. Your first job is evidence: find every material statement in the item. Your second job is candidates: the important questions this item raises, for one of four reasons; the library of open questions is not shown, and a question that is already open is folded into it by code afterwards, so propose it when the item raises it.\n\nEvidence: what to keep\n- A material statement is one of four kinds. (1) The company's own figure, guidance or decision: \"data center revenue was $39.1 billion, up 73%\"; \"management guided next quarter to $54 billion\"; \"the board approved a $50 billion buyback\". (2) A customer's, supplier's, competitor's or partner's action with a size, date or name: \"a cloud provider signed A100 contracts running into 2029\"; \"a national laboratory ordered two supercomputers built on Vera Rubin CPUs\"; \"TSMC said CoWoS capacity will double in 2026\"; \"a survey found executives will put 46% of accelerator budgets into domestic chips\". (3) A named party's claim or estimate: \"the CFO said A100s sold six years ago still run at full utilization\"; \"an analyst raised FY2027 EPS to $8.97\"; \"an investor accused hyperscalers of understating depreciation by $176 billion\". (4) A policy or regulatory decision or step: \"the Commerce Department approved H200 sales to China\"; \"Singapore charged four firms over server exports\".\n- Go through the item from its first paragraph to its last and take every statement of these kinds; a page with eight such statements yields eight evidence items, not a selection. Stop only at the end of the item.\n- Reject everything else: a product, game, driver or benchmark detail without a size (\"the expansion supports DLSS\"; \"the card draws 415W\"); an investor's position or a share-price move (\"he is short the stock\"; \"shares fell 13% this month\"); an author's general risks or valuation arithmetic (\"if AI pulls back it would hurt\"; \"at 34 times earnings the stock is worth $305\"); the reporter's framing or background (\"Gulf states have spent billions but still depend on the company\"; \"the A100 launched in 2020\"); an expert's view on politics or strategy without a figure (\"diversifying suppliers does not reduce political dependence\"); the same fact or arrangement said again in other words: a release that describes one deployment in five sentences yields one evidence item, its figures (\"up to 10x faster\"; \"40 data centers in 15 countries\") a second and third; a quote that only characterizes (\"a pivotal moment\"; \"heterogeneous inference\"); company boilerplate, bylines, forward-looking-statement text.\n- A statement's links name this answer's candidates it is evidence for (c1 …), or nothing; the open questions it bears on are filed by a separate step that reads them.\n\nHow to write evidence\n- One evidence item records one statement. Copy its quote verbatim. Separately write a standalone summary in one_line: who did or said what, how much and for which period.\n- Identify the speaker and, for a retelling, the original speaker and statement day. Use the schema's tier: fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for unnamed-source or unattributed claims.\n- Use only this item's information. Report plans as plans; do not infer committed funding, orders, deliveries or revenue.\n\nWhich questions to propose\n- Open a candidate only for one of four reasons, named in opens_as. main_driver: an annual quantity that carries the company's value (the segment that carries the business, gross margin, capital spending), whether or not the company guides it; the question's ranges settle it, not a guidance figure. Not every reported or guided line. industry_aggregate: one aggregate quantity for one calendar year, such as the combined capital spending of named companies; a later estimate, another population or another wording of the same aggregate is evidence to the shown aggregate thesis. policy_stage: a stage of a policy process, with the authority that decides it named. binding_obligation: an obligation a universe company takes on in its own name (a guarantee, financing, an equity stake, a purchase commitment, a backstop of customers' capacity or revenue). Not yet signed: a yes/no question due on a day after the item by which the signing can be checked, at most 18 months out. Already taken on, as one deal or as a programme: a financing_amount question on the amount the obligation reaches at the company's next annual filing, settled by that filing's commitments note; the announcement itself is evidence to it.\n- A number, a financial line, a target or a named customer project does not by itself open a thesis; a customer's deployment plan is evidence to the supplier's demand and product theses unless it changes the supplier's own cash or credit risk.\n- For every candidate: settled_by names the public material that resolves it (an annual report, a filing's note, an official decision). A different population, source, estimate, wording or direction of a question is the same question; a different quantity, period or decision is another.\n- A yearly metric asks for a quantity over a defined fiscal or calendar period and keeps the current/next-year limit. A milestone asks whether a specified event or project reaches a defined state by a deadline; a numeric completion target can define that state without becoming a yearly metric. Do not repackage a beyond-horizon annual forecast as an event. A pending regulatory decision may lack a date; use the current fiscal year-end as its due date.\n- Do not propose theses about quarterly figures or guidance, undated subjects such as moats or strategy, executive appointments, shareholder votes or bylaws, routine litigation procedure, or buyback authorisations.\n\nHow to write a candidate thesis\n- One thesis concerns one figure for a named period or one event. Separate independently meaningful outcomes.\n- Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date.\n- A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it. A theme thesis asks what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company.\n- Write generated descriptions in English. Copy quote exactly from the source, without translation.\n- Define concrete, verifiable conditions now. Do not propose a ladder whose thresholds depend on an unspecified future target.\n- Use five rungs; only a yes/no question about an event has two. A numeric figure always gets five ranges, never a single threshold. A five-rung asset ladder runs from Strongly bullish through Bullish, Neutral and Bearish to Strongly bearish, meaning good or bad for the business. A theme ladder runs between two ends of an outcome range; label the outcomes, without assigning business sentiment. Conditions must not overlap or leave gaps: exactly one must hold when resolved. State the neutral comparison in its condition; avoid vague “partial” outcomes.\n- Set the due date when the question can be resolved. For a figure, use its publication date. Company figures use the company's fiscal year: “this year” contains the item's publication day, and “next year” follows it. Other figures use calendar years. For an event, name the date at which its outcome is assessed.\n\nResearch groups\n- A research group is one ongoing matter in the world that several questions track together: a product rollout and its customer deployments, a financing or acquisition deal, a policy process, an investment or demand cycle. It usually spans companies and themes. When a candidate tracks a matter, declare the group in new_groups (local id n1, n2 …, with a name, a scope that says what is happening, and aliases: the names the matter goes by in the press, such as product, project or programme names and the parties; not company names) and cite that id in group_refs; a declared group whose names match a stored group is that group. A company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and carry no group: leave their group_refs empty unless the line itself tracks such a matter. A company is not a group, and a thesis is not a group.\n\nIdentity fields and numeric bounds\n- Select the closest measure allowed by the schema. Scope is its actual segment, product, population or event subject. Reuse a supplied reference name only when it has the same meaning; leave scope empty when unqualified.\n- period_start and period_end describe the period the figure covers. Convert fiscal years using the supplied fiscal-year note. Calendar year 2026 is 2026-01-01 through 2026-12-31. For an event, use the start of the year in which it is proposed through the due date.\n- Identify the accounting basis and unit. For event or policy_event, select the event type; otherwise use n/a. The schema supplies the allowed values.\n- Each numeric rung has an inclusive lower bound lo and exclusive upper bound hi, in the stated unit. Dollars are full dollar amounts; percentages use 73, not 0.73. The lowest numeric range has lo null, the highest hi null. Both bounds are null for yes/no outcomes.\n"
+    },
+    {
+      "role": "user",
+      "content": "[Category and how to read it] T7. News: media reporting. Officially or company-confirmed events are facts; unnamed-source claims and unconfirmed reports are rumours; quoted company or official statements are party statements; the journalist's own judgements are third-party views.\n\n[Subjects] The objects this item concerns: NVDA. For a candidate thesis about a company, object is its ticker; about a theme, choose an id from this list, or state what the matter is when none fits:\n  - chip-export-controls: Chip export controls\n  - ai-capex: AI capital spending\n  - custom-silicon: Custom silicon at cloud providers\n  - semiconductor-cycle: Semiconductor cycle\n  - fed-policy-rate: Fed policy rate\n  - us-inflation: US inflation\n  - us-recession-risk: US recession risk\n  - us-china-tariffs: US–China tariffs\n  - taiwan-strait: Taiwan Strait\n  - middle-east-conflict: Middle East conflict and oil prices\n  - russia-ukraine-war: Russia–Ukraine war\n  - supply-chain-shift: Supply-chain shift and shipping\nFiscal-year note (a numeric thesis takes its year and due date from it):\nNVDA's fiscal year ends in month 1 and is named for the calendar year in which it ends: FY2027 runs from 2026-02 to 2027-01; the publication day 2026-07-01 falls in FY2027, so this year is FY2027 and next year is FY2028; FY2027's full-year figures are published in the annual report around 2027-02; use that day as the due date.\n\n[What to read out] What happened, when and who was involved; attribution, including the original source and statement day; quoted figures.\n\n[Research reference] Existing quantities and scopes (measure[scope](event_type)). Reuse a name only when the meaning is the same; propose important questions outside the list as usual, with their actual scope:\n  - NVDA: total_revenue; segment_revenue; gross_margin; operating_margin; operating_expense_growth; tax_rate; capex; product_revenue[Blackwell+Rubin]; product_revenue[Vera]; shipments_or_capacity[Rubin]; event[Rubin](shipment); event[Rubin](launch); event[H20/H200 China](licence); event[SK Telecom AI factory](deployment)\n\n[Research groups] None yet. For a candidate that tracks an ongoing matter (a product rollout, a deal, a policy process, an investment or demand cycle), declare the group in new_groups (local ids n1, n2 …) and cite it in group_refs; leave group_refs empty for a company's own financial lines.\n\n[Item] id gnews:8f5a03f1dde395491fc3814b, category T7, author campustechnology.com (media), published 2026-07-01, title: Anthropic, NVIDIA Move AI Agents Deeper into Scientific Workflows\n\nAnthropic, NVIDIA Move AI Agents Deeper into Scientific Workflows -- Campus Technology\nCampus Technology\nSkip to main content\nYour source for AI, IT, and the future-ready campus\nAdd as a preferred source on Google\nNews\nFeatures\nViewpoints\nAwards\nEntry Form\nWinners\nResearch\nPodcasts\nEpisodes\nTranscripts\nResources\nWebcasts\nWhitepapers\nMicrosites\nEvents Calendar\nVideos\nGlossary\nEvents\nTech Tactics in Education\nEvents Calendar\nNewsletters\nMore\nAbout Us\nSubscribe\nAdvertising\nContact Us\nSitemap\nMagazine Archives\nRSS\nLicensing/Reprints\nList Rental\nProduct Awards\nAI\nHybrid Learning\nNetworking/Wireless\nDigital Transformation\nSecurity\nTech Tactics in Education\nArtificial Intelligence\nAnthropic, NVIDIA Move AI Agents Deeper into Scientific Workflows\nBy John K. Waters\n07/01/26\nKey Takeaways\nAnthropic's Claude Science beta and NVIDIA's BioNeMo Agent Toolkit show AI agents moving beyond general productivity into specialized scientific research workflows.\nThe companies are emphasizing auditability and reproducibility, including preserved code, environments, message history, reviewer agents, and integration with existing research tools.\nFor enterprises and research teams, the key test will be whether agentic AI can produce traceable, reliable results while keeping humans in control of sensitive data, compute, and scientific judgment.\nAnthropic has introduced Claude Science , a new AI workbench for scientists that integrates research tools, produces auditable artifacts, and connects to specialized life sciences models and workflows from NVIDIA .\nThe beta release, announced June 30, gives Claude Pro, Max, Team, and Enterprise users access to an application designed to help researchers work across literature review, data analysis, figure generation, manuscript refinement, and computational workflows. Anthropic said Claude Science is available on macOS and Linux, and can run locally, on remote machines over SSH, or through a high-performance computing login node.\nThe launch is part of a broader push by AI companies to turn general-purpose assistants into domain-specific workbenches for professional users. In life sciences, that means moving beyond chat-based summarization toward agents that can query databases, write and run code, inspect outputs, preserve research history, and connect to scientific tools already used by labs.\nAnthropic said Claude Science brings fragmented scientific tools into a single research environment. The app can work with tools such as PubMed , Jupyter , R , cluster terminals, and domain-specific scientific databases, while preserving an auditable history of how outputs were produced.\nUsers interact with a generalist coordinating agent that has access to more than 60 curated skills and connectors configured for genomics, single-cell analysis, proteomics, structural biology, cheminformatics, and other research areas. The system can also use specialist agents created by users, and includes a reviewer agent that checks citations and calculations, flagging and correcting errors, according to Anthropic.\nA central claim in the launch is reproducibility. When Claude Science generates a figure, it includes the code and environment used to create it, a plain-language description of the process, and the message history leading up to the output. The company said that history is intended to make results easier to validate and reproduce later.\nThat focus is likely to matter for researchers and enterprise AI buyers. Scientific AI tools may be judged less by whether they can produce plausible answers and more by whether their work can be traced, challenged, repeated, and incorporated into established review processes.\nNVIDIA's role comes through its BioNeMo Agent Toolkit , which the chipmaker announced June 23. Anthropic said Claude Science uses BioNeMo Agent Toolkit skills to connect to life sciences models and libraries in BioNeMo, including Evo 2, Boltz-2, and OpenFold3.\nNVIDIA describes BioNeMo Agent Toolkit as a set of domain-specific tools and skills for agentic life sciences workflows. The toolkit includes NVIDIA life sciences libraries, tools, and open models, and is designed to help agents gather evidence, reason across findings, run computational experiments, and recommend next steps.\n« previous\n1\n2\nnext »\nE-Mail this page\nPrintable Format\nFeatured\nOpenAI Discontinuing Custom GPTs and Moving to Plugin Architecture\nOpenAI has announced it is preparing to retire Custom GPTs and move the specialized workflows built around them to a new plugin architecture spanning ChatGPT and its Codex coding agent.\nMeta Releases Muse Glimmer, an Open-Weight AI Model Designed to Run on Consumer Hardware\nMeta is returning to open-weight artificial intelligence with Muse Glimmer, a new AI model designed to run on consumer hardware, as CEO Mark Zuckerberg argues that increasingly capable AI should be widely available rather than controlled by a small number of institutions.\nHuman-Centered Workforce Development in an Age of Advanced Technology\nMarc Booker, vice provost of strategy at the University of Phoenix, examines how to recognize and promote human-centered workforce development in higher education.\nNew Initiative Aims to Help Move AI Projects from Experimentation to Production\nMicrosoft has unveiled Frontier Company, making a $2.5 billion bet that the next competitive battleground in artificial intelligence will not be foundation models, but helping enterprises put those models to work.\nCAMPUS TECHNOLOGY NEWS\nSign up for our newsletter.\nEmail Address* * * Country*\nUnited States of America\nAfghanistan\nÅland Islands\nAlbania\nAlgeria\nAmerican Samoa\nAndorra\nAngola\nAnguilla\nAntarctica\nAntigua and Barbuda\nArgentina\nArmenia\nAruba\nAustralia\nAzerbaijan\nAustria\nBahamas\nBahrain\nBangladesh\nBarbados\nBelarus\nBelgium\nBelize\nBenin\nBermuda\nBhutan\nBolivia, Plurinational State of\nBonaire, Sint Eustatius and Saba\nBosnia and Herzegovina\nBotswana\nBouvet Island\nBrazil\nBritish Indian Ocean Territory\nBrunei Darussalam\nBulgaria\nBurkina Faso\nBurundi\nCambodia\nCameroon\nCanada\nCape Verde (Cabo Verde)\nCayman Islands\nCuraçao\nCentral African Republic\nChad\nChile\nChina\nChristmas Island\nCocos (Keeling) Islands\nColombia\nComoros\nCongo\nCongo, the Democratic Republic of the\nCook Islands\nCosta Rica\nCôte d'Ivoire\nCroatia\nCuba\nCyprus\nCzech Republic\nDenmark\nDjibouti\nDominica\nDominican Republic\nEcuador\nEgypt\nEl Salvador\nEquatorial Guinea\nEritrea\nEstonia\nEthiopia\nFalkland Islands (Malvinas)\nFaroe Islands\nFiji\nFinland\nFrance\nFrench Guiana\nFrench Polynesia\nFrench Southern Territories\nGabon\nGambia\nGeorgia\nGermany\nGhana\nGibraltar\nGreece\nGreenland\nGrenada\nGuadeloupe\nGuam\nGuatemala\nGuernsey\nGuinea\nGuinea-Bissau\nGuyana\nHaiti\nHeard Island and McDonald Islands\nHoly See (Vatican City State)\nHonduras\nHong Kong\nHungary\nIceland\nIndia\nIndonesia\nIran, Islamic Republic of\nIraq\nIreland\nIsle of Man\nIsrael\nItaly\nJamaica\nJapan\nJersey\nJordan\nKazakhstan\nKenya\nKiribati\nKorea, Democratic People's Republic of\nKorea, Republic of\nKuwait\nKyrgyzstan\nLao People's Democratic Republic\nLatvia\nLebanon\nLesotho\nLiberia\nLibya\nLiechtenstein\nLithuania\nLuxembourg\nMacao\nMacedonia, the former Yugoslav Republic of\nMadagascar\nMalawi\nMalaysia\nMaldives\nMali\nMalta\nMarshall Islands\nMartinique\nMauritania\nMauritius\nMayotte\nMexico\nMicronesia, Federated States of\nMoldova, Republic of\nMonaco\nMongolia\nMontenegro\nMontserrat\nMorocco\nMozambique\nMyanmar\nNamibia\nNauru\nNepal\nNetherlands\nNew Caledonia\nNew Zealand\nNicaragua\nNiger\nNigeria\nNiue\nNorfolk Island\nNorthern Mariana Islands\nNorway\nPakistan\nOman\nPalau\nPalestinian Territory, Occupied\nPanama\nParaguay\nPapua New Guinea\nPeru\nPhilippines\nPitcairn\nPoland\nPortugal\nPuerto Rico\nQatar\nRéunion\nRomania\nRussian Federation\nRwanda\nSaint Barthélemy\nSaint Helena, Ascension and Tristan da Cunha\nSaint Kitts and Nevis\nSaint Lucia\nSaint Martin (French part)\nSaint Pierre and Miquelon\nSaint Vincent and the Grenadines\nSamoa\nSan Marino\nSao Tome and Principe\nSaudi Arabia\nSenegal\nSerbia\nSeychelles\nSierra Leone\nSingapore\nSint Maarten (Dutch part)\nSlovakia\nSlovenia\nSolomon Islands\nSomalia\nSouth Africa\nSouth Georgia and the South Sandwich Islands\nSouth Sudan\nSpain\nSri Lanka\nSudan\nSuriname\nSvalbard and Jan Mayen\nEswatini (Swaziland)\nSweden\nSwitzerland\nSyrian Arab Republic\nTaiwan, Province of China\nTajikistan\nTanzania, United Republic of\nThailand\nTimor-Leste\nTogo\nTokelau\nTonga\nTrinidad and Tobago\nTunisia\nTurkey\nTurkmenistan\nTurks and Caicos Islands\nTuvalu\nUganda\nUkraine\nUnited Arab Emirates\nUnited Kingdom\nUnited States Minor Outlying Islands\nUruguay\nUzbekistan\nVanuatu\nViet Nam\nVenezuela, Bolivarian Republic of\nVirgin Islands, British\nVirgin Islands, U.S.\nWallis and Futuna\nWestern Sahara\nYemen\nZambia\nZimbabwe\n* Select primary job title/function*\nPolicy/Top Execs & Mgmt\nAdmin/Admin Mgt\nIT Director/Management\nInstructional Program Mgt/Dept\nInstitutes/Research Programs/Assoc\nCampus Services/Vendor/Consultant\nOther\n*\nI agree to this site's Privacy Policy\nPlease type the letters/numbers you see above.\nEd Tech Visionaries\nAI, Identity, and Speed: Cybersecurity Priorities for Higher Ed\nMore\nPortals\nArtificial Intelligence\nCybersecurity\nData & Analytics\nLearning Tools\nStudent Services\nMore Portals\nWEBCASTS\nBuilding the AI-Ready Campus: Rethinking Infrastructure for AI and Research\nGetting Ahead of Student Risk with Proactive Support\nNo New Budget, No Added IT Staff: AI Agents at St. Petersburg College\nAsk Us Anything: Securing Data, Code, and the Modern Cloud at AI Speed\nMore Webcasts\nWhitepapers\nIT Maturity Scale: Assessing Digital Resilience In Higher Education\nIs your learning ecosystem designed for change?\nWebinar Yes What Students Actually Want from Your Institution’s Digital Tools\nFrom Fragmented Processes to Enterprise-Wide Visibility\nMore White Papers\nSPONSORED CONTENT\nWhy Cross-Skilling Is the Smartest Investment a Campus IT Team Can Make\nBeyond the Feed: How Higher Ed Turns Social Media Into a Measurable Enrollment Engine\nIntel® AI EmpowerED: The AI-Ready Campus, Delivered\nBest Practices for Designing Higher-Ed AV Environments\nHow Colleges Are Connecting the Student Lifecycle to Improve Student Success\nHow Colleges Are Using AI to Strengthen Student Services and Support Staff\nAI Boardroom\nADTmag\nAWS Insider\nCampus Security Today\nCampus Technology\nEnvironmental Protection\nLive! 360 Events\nMCPmag\nMedCloudInsider\nOccupational Health & Safety\nPure AI\nPure Robotics\nRedmond\nRedmond Channel Partner\nSecurity Today\nSpaces 4 Learning\nTechMentor\nTech Tactics in Education\nThe AI Pivot\nTHE Journal\nVirtualization & Cloud Review\nVisual Studio Magazine\nVisual Studio Live!\n©\n1105 Media Inc . See our Privacy Policy , Cookie Policy and Terms of Use . CA: Do Not Sell My Personal Info |\n\nReturn evidence and candidates per the JSON schema. A candidate's evidence_ids are its own evidence ids; an evidence item's links are this answer's candidate ids (such as c1), or empty. year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). Return empty arrays only for a page with no business content."
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "extraction",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence",
+          "candidates",
+          "new_groups"
+        ],
+        "properties": {
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "quote",
+                "one_line",
+                "speaker",
+                "original_who",
+                "original_day",
+                "tier",
+                "event_time",
+                "links"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "quote": {
+                  "type": "string"
+                },
+                "one_line": {
+                  "type": "string"
+                },
+                "speaker": {
+                  "type": "string"
+                },
+                "original_who": {
+                  "type": "string"
+                },
+                "original_day": {
+                  "type": "string"
+                },
+                "tier": {
+                  "type": "string",
+                  "enum": [
+                    "fact",
+                    "party_statement",
+                    "third_party_view",
+                    "rumour"
+                  ]
+                },
+                "event_time": {
+                  "type": "string"
+                },
+                "links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "object",
+                "kind",
+                "looks_at",
+                "question",
+                "rungs",
+                "due_day",
+                "year",
+                "evidence_ids",
+                "measure",
+                "scope",
+                "period_start",
+                "period_end",
+                "basis",
+                "unit",
+                "event_type",
+                "group_refs",
+                "opens_as",
+                "settled_by"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "asset",
+                    "theme"
+                  ]
+                },
+                "looks_at": {
+                  "type": "string"
+                },
+                "question": {
+                  "type": "string"
+                },
+                "rungs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "label",
+                      "condition",
+                      "lo",
+                      "hi"
+                    ],
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "condition": {
+                        "type": "string"
+                      },
+                      "lo": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "hi": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "due_day": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "year": {
+                  "type": "string"
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "measure": {
+                  "type": "string",
+                  "enum": [
+                    "total_revenue",
+                    "segment_revenue",
+                    "product_revenue",
+                    "gross_margin",
+                    "operating_margin",
+                    "operating_expense_growth",
+                    "total_expenses",
+                    "operating_loss",
+                    "tax_rate",
+                    "capex",
+                    "shipments_or_capacity",
+                    "run_rate",
+                    "design_wins",
+                    "event",
+                    "spend_total",
+                    "market_size",
+                    "project_cost",
+                    "financing_amount",
+                    "price",
+                    "capacity",
+                    "growth_rate",
+                    "policy_event",
+                    "other"
+                  ]
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "period_start": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "period_end": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "basis": {
+                  "type": "string",
+                  "enum": [
+                    "GAAP",
+                    "non_GAAP",
+                    "n/a"
+                  ]
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "percent",
+                    "count",
+                    "GW",
+                    "MW",
+                    "TWD",
+                    "multiple",
+                    "n/a"
+                  ]
+                },
+                "event_type": {
+                  "type": "string",
+                  "enum": [
+                    "launch",
+                    "shipment",
+                    "licence",
+                    "approval",
+                    "deal_close",
+                    "deployment",
+                    "other",
+                    "n/a"
+                  ]
+                },
+                "group_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(?:n[1-9][0-9]*)$"
+                  }
+                },
+                "opens_as": {
+                  "type": "string",
+                  "enum": [
+                    "main_driver",
+                    "industry_aggregate",
+                    "policy_stage",
+                    "binding_obligation"
+                  ]
+                },
+                "settled_by": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "new_groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "name",
+                "scope",
+                "aliases"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^n[1-9][0-9]*$"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "aliases": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "max_completion_tokens": 8000,
+  "reasoning_effort": "low"
+}

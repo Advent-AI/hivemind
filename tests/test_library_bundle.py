@@ -1,4 +1,4 @@
-"""D181: the library read surface preserves collected groups and dated records."""
+"""D275: the library read surface preserves collected groups and dated records."""
 import json
 from pathlib import Path
 import sys
@@ -45,7 +45,7 @@ def test_full_collected_library_and_selected_group_members_are_exact():
 
 
 def test_projection_preserves_waiting_resolution_replacement_and_succession_dates(tmp_path):
-    """D181 state table: current resolutions cannot leak into an earlier snapshot."""
+    """D275 state table: current resolutions cannot leak into an earlier snapshot."""
     ledger = store.open_db(tmp_path / 'views.sqlite')
     try:
         for seq, day in enumerate(['2026-07-24', '2026-07-25', '2026-07-26'], 1):

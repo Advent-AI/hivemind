@@ -1,4 +1,4 @@
-# D183: inline Idea send control
+# D277: inline Idea send control
 
 Alex asked for an arrow send button inside the Idea input: grey and disabled when blank, black when text exists, Enter to send. Current census: one Idea form, one external Explore submit button, one submit handler. The existing native form already supports Enter and trims blank input; presentation and button state are missing.
 
@@ -10,7 +10,7 @@ Alex asked for an arrow send button inside the Idea input: grey and disabled whe
 | Answer, failure or cancellation | Recompute from current input; retain draft text |
 | Switch away and back | Existing cancellation applies; recompute on entry |
 
-The template owns one accessible Send idea button and input wrapper. Bootstrap owns enablement from trimmed input and its existing in-flight request. CSS owns shape, colour and focus. The existing request, response, archive, dataset and graph paths do not change. D130 component ownership, D182 sentence case and no native hover titles remain in effect. No new dependencies.
+The template owns one accessible Send idea button and input wrapper. Bootstrap owns enablement from trimmed input and its existing in-flight request. CSS owns shape, colour and focus. The existing request, response, archive, dataset and graph paths do not change. D130 component ownership, D276 sentence case and no native hover titles remain in effect. No new dependencies.
 
 Verify blank/whitespace/typed states, arrow bounds, focus, native Enter and a completed response in the real browser. Reuse the already-cached user query and confirm model archive row counts do not increase. Run existing UI tests, lint/format and Python suite once; refresh the UI documentation and run docs/check.py last.
 

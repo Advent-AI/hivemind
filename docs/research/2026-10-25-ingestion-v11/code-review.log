@@ -1,0 +1,1843 @@
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a173af-1435-70b0-928d-5651109ebb64
+--------
+user
+Read-only follow-up. Scope ONLY explicit --config support now implemented in /Users/lchingen/hivemind/poc/concurrency_study/ingestion.py and offline_check.py in poc/reports/2026-10-25-ingestion-v11. Governing plan: docs/research/2026-10-25-ingestion-v11/plan.md (already reviewed, no serious findings). Check selected config reaches prepare, frozen contract, serial/concurrent replay and accepted-request audit; changed path/bytes must refuse before any live transport. Existing default v23 must stay. Identify serious bugs in THIS DELTA only. Out of scope: UI, production promotion, all unrelated historical issues. No edits, providers, tests, subagents or recursive searches outside this repository. Return concise findings.
+
+codex
+I’ll trace the selected config through preparation, replay, and the accepted-request audit, then check that drift is refused before transport. I’ll keep this read-only and limited to the two changed files.
+
+exec
+/opt/homebrew/bin/zsh -lc 'pwd && git status --short && git diff -- poc/concurrency_study/ingestion.py poc/reports/2026-10-25-ingestion-v11/offline_check.py && cat docs/research/2026-10-25-ingestion-v11/plan.md' in /Users/lchingen/hivemind
+ succeeded in 2715ms:
+/Users/lchingen/hivemind
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-C4BNUOLL' (errno=Operation not permitted)
+2026-10-25 23:30:25.250 xcodebuild[97354:8799765]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:30:25.371 xcodebuild[97354:8799764] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-22JekGZ3' (errno=Operation not permitted)
+2026-10-25 23:30:25.717 xcodebuild[97359:8799816]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:30:25.835 xcodebuild[97359:8799815] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+ M docs/CURRENT_STATE.md
+ M docs/DECISIONS.md
+ M src/hivemind/extraction.py
+ M src/hivemind/jev.py
+ M src/hivemind/model.py
+ M src/hivemind/replay.py
+ M src/hivemind/views/jev_matching.py
+ M src/hivemind/views/round.py
+?? docs/research/2026-10-25-api-smoke/
+?? docs/research/2026-10-25-day-batch-review/
+?? docs/research/2026-10-25-ingestion-smoke/
+?? docs/research/2026-10-25-ingestion-v11/
+?? docs/research/2026-10-25-naver-admission/
+?? docs/research/2026-10-25-thesis-admission/
+?? poc/concurrency_study/
+?? poc/config/poc-v24-admission-test.json
+?? poc/naver_admission.py
+?? poc/reports/2026-10-25-api-smoke/
+?? poc/reports/2026-10-25-concurrency-poc/
+?? poc/reports/2026-10-25-day-batch-review/
+?? poc/reports/2026-10-25-ingestion-smoke/
+?? poc/reports/2026-10-25-ingestion-v11/
+?? poc/reports/2026-10-25-naver-admission/
+?? src/hivemind/prompts/categories-v11.json
+?? src/hivemind/prompts/role-v11.txt
+?? tests/test_concurrency.py
+?? tests/test_ingestion_study.py
+?? tests/test_jev_concurrency.py
+?? tests/test_study_budget.py
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-MM9Li2YO' (errno=Operation not permitted)
+2026-10-25 23:30:26.718 xcodebuild[97370:8799907]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:30:26.837 xcodebuild[97370:8799906] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-NV6BA01k' (errno=Operation not permitted)
+2026-10-25 23:30:27.181 xcodebuild[97372:8799922]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:30:27.304 xcodebuild[97372:8799921] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+# Resume the small ordered-concurrency comparison
+
+Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+
+Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+
+## Fixed measurement and stop rules
+
+Run control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3; inspect each before starting the next. Each uses a fresh archive and separate baseline copy through `replay.run`, including daily judging and completion. The old product remains sequential by default. Both arms share the two-request outbound limit; only the experimental arm adds two-worker speculative extraction and independent Jev matching.
+
+This is a new isolated journal with the same **$1.50 conservative ceiling and 144 physical-request maximum** as D174, not an increased cap or a reuse of its halted journal. Do not retry transport failures or launch the next trial on failure. Preserve unknown usage. No heavy task runs beside paid calls.
+
+Score information coverage, direct attachment and faithful source status under D176/D177. Inspect the full raw answers and final links against the source, not only the counts or an automatic label:
+
+- SK: retain the material proposed first-factory deployment, 2027 timing and explicitly stated platform facts under a directly relevant question. Do not turn announced capacity into delivered capacity or orders.
+- NAVER: retain the GAK Sejong expansion's 200 MW target and 2028 timing as a plan. In this baseline no existing question directly covers it. Do not substitute Rubin production or generic NVIDIA revenue for this deployment.
+- Keep the two customer projects distinct. Group membership may include an applicable broader rollout group; a shared group alone is not a duplicate thesis or wrong identity. Do not force customer-specific group counts or names.
+- On the follow-up, use the existing appropriate questions for repeated project statements; a retelling is not independent corroboration. Missing a nonessential sentence is not failure. Report any new material fact separately.
+- Read every additional proposed/written question, evidence link, source quote, group membership and judgement for unsupported assertions, lost material information or duplicate counting. A different but valid business question is not wrong merely because it differs from gold wording.
+
+Compare all three controls to each other before interpreting differences between modes. Report every sample, accepted/reused/stale extraction count, physical calls, cost and end-to-end wall time. Report paired control/concurrent ratios and their median, without claiming whole-day 10x from three related documents. Saved response replay proves implementation, not fresh model agreement.
+
+Stop before further paid trials if the first control fails coverage, if any trial introduces material unsupported/wrong/duplicate information, or if the structural audit fails. Preserve that result and report it; do not tune another arm in this experiment. A successful first control is read before launching concurrent-1.
+
+## Addition to the state × event table
+
+| State | Event | Required behavior |
+|---|---|---|
+| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+| Prepared | Different path or changed content | Refuse before credentials, archive, trial directory or provider calls |
+| Trial finished | Manual source assessment fails | Record failure and stop the study; no next trial |
+| Trial finished | Assessment passes | Next named trial may be started explicitly |
+
+The earlier success, refusal, partial failure, cancellation, changed input, restart and day-completion rows remain D174's; no additional writer or runtime mode is introduced.
+
+## Value × reader and new path × checks
+
+| Value | Writer → readers | Check |
+|---|---|---|
+| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+| Assessment | Source review → permission to start next named trial | Explicit per-trial reasons; no row-count substitute |
+
+Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+
+Prior decisions: D149/D166 keep association during extraction; D159/D172 keep accepted requests bound to the committed prefix; D173 is ordinary API concurrency, not the asynchronous Batch API; D174 is stopped; D176/D177 define source coverage without mandatory cards in every context. This experiment does not change them or promote v11.
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba poc/concurrency_study/ingestion.py && nl -ba poc/reports/2026-10-25-ingestion-v11/offline_check.py && cat docs/research/2026-10-25-ingestion-smoke/plan.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Selected whole-document ingestion through the product's ordered replay path."""
+     2	import argparse
+     3	import contextlib
+     4	import dataclasses
+     5	import json
+     6	from pathlib import Path
+     7	import shutil
+     8	import signal
+     9	import sqlite3
+    10	import sys
+    11	import threading
+    12	import time
+    13	
+    14	ROOT = Path(__file__).resolve().parents[2]
+    15	sys.path.insert(0, str(ROOT / 'src'))
+    16	sys.path.insert(0, str(ROOT / 'poc'))
+    17	sys.path.insert(0, str(ROOT / 'docs/research/2026-10-25-day-batch-review'))
+    18	from snapshot_proof import snapshot
+    19	from hivemind import config, extraction, jev, model, replay, testdb, universe
+    20	from hivemind.views import round as rounds, store
+    21	from concurrency_study.budget import GuardedTransport, single_attempt_http
+    22	from concurrency_study.runner import DayRunner, digest, extraction_key
+    23	
+    24	DAY = '2026-07-24'
+    25	FIRST = 21
+    26	INPUTS = (
+    27	    'nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory',
+    28	    'nvidianews:naver-nvidia-and-brookfield-to-expand-koreas-national-ai-factory-infrastructure-buildout',
+    29	    'nvblog:ai-summit-korea-partners-and-nvidia',
+    30	)
+    31	ORDER = ('control-1', 'concurrent-1', 'concurrent-2', 'control-2', 'control-3', 'concurrent-3')
+    32	DEFAULT_CONFIG = ROOT / 'poc/config/poc-v23.json'
+    33	
+    34	
+    35	def readonly(path):
+    36	    conn = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True)
+    37	    conn.row_factory = sqlite3.Row
+    38	    return contextlib.closing(conn)
+    39	
+    40	
+    41	def protected_changes(directory):
+    42	    expected = json.loads((directory / 'protected-before.json').read_text())
+    43	    return [name for name, sha in expected.items() if not Path(name).is_file() or digest(Path(name)) != sha]
+    44	
+    45	
+    46	def baseline_problems(conn):
+    47	    problems = []
+    48	    for table in store.TABLES:
+    49	        fields = [r[1] for r in conn.execute(f'pragma table_info({table})')]
+    50	        seq = next((f for f in ('created_seq', 'after_seq', 'seq', 'sequence_no') if f in fields), None)
+    51	        if seq and conn.execute(f'select count(*) from {table} where {seq}=0 or {seq}>=?', (FIRST,)).fetchone()[0]:
+    52	            problems.append(f'{table}: unordered or future sequence')
+    53	        for date in ('publication_day', 'day'):
+    54	            if date in fields and conn.execute(f'select count(*) from {table} where {date}>=?', (DAY,)).fetchone()[0]:
+    55	                problems.append(f'{table}: future date')
+    56	    return problems
+    57	
+    58	
+    59	def configuration(config_path=DEFAULT_CONFIG):
+    60	    return config.load(config_path), universe.load(ROOT / 'poc/universe.json')
+    61	
+    62	
+    63	def contract(directory, config_path=DEFAULT_CONFIG):
+    64	    directory = Path(directory).resolve()
+    65	    config_path = Path(config_path).resolve()
+    66	    cfg, uni = configuration(config_path)
+    67	    paths = [directory / 'items.sqlite', directory / 'ordered-baseline.sqlite',
+    68	             config_path, ROOT / 'poc/universe.json', Path(__file__),
+    69	             ROOT / 'poc/concurrency_study/budget.py', ROOT / 'poc/concurrency_study/runner.py',
+    70	             ROOT / 'docs/research/2026-10-25-day-batch-review/snapshot_proof.py']
+    71	    paths += sorted((ROOT / 'src/hivemind').rglob('*.py')) + sorted((ROOT / 'src/hivemind/prompts').glob('*'))
+    72	    return {'day': DAY, 'first_sequence': FIRST, 'inputs': list(INPUTS), 'trial_order': list(ORDER),
+    73	            'config_path': str(config_path), 'config': dataclasses.asdict(cfg), 'universe': vars(uni),
+    74	            'sha256': {str(p): digest(p) for p in paths if p.is_file()},
+    75	            'max_calls': 144, 'cap_microdollars': 1500000, 'outbound_workers': 2}
+    76	
+    77	
+    78	def prepare(directory, *, config_path=DEFAULT_CONFIG):
+    79	    directory = Path(directory).resolve()
+    80	    path = directory / 'ordered-baseline.sqlite'
+    81	    if path.exists() or (directory / 'study.json').exists():
+    82	        raise ValueError('study already prepared; preserve it')
+    83	    if protected_changes(directory):
+    84	        raise ValueError('protected inputs changed')
+    85	    with readonly(directory / 'inputs/views.sqlite') as source:
+    86	        projected = snapshot(source, FIRST, exclude_unordered=True)
+    87	        try:
+    88	            problems = baseline_problems(projected)
+    89	            if problems:
+    90	                raise ValueError('; '.join(problems))
+    91	            projected.commit()
+    92	            with sqlite3.connect(path) as dest:
+    93	                projected.backup(dest)
+    94	        finally:
+    95	            projected.close()
+    96	    with readonly(directory / 'items.sqlite') as conn:
+    97	        items = list(testdb.feed(conn, DAY, DAY))
+    98	    if [i['input_id'] for i in items] != list(INPUTS):
+    99	        raise ValueError('selected input order differs')
+   100	    with readonly(directory / 'inputs/items.sqlite') as original:
+   101	        for item in items:
+   102	            row = dict(original.execute('select * from items where input_id=?', (item['input_id'],)).fetchone())
+   103	            row['object_identifiers'] = json.loads(row['object_identifiers'])
+   104	            if row != item:
+   105	                raise ValueError('selected input changed')
+   106	    with (directory / 'study.json').open('x') as handle:
+   107	        json.dump(contract(directory, config_path), handle, indent=2, ensure_ascii=False)
+   108	
+   109	
+   110	class StudyTransport:
+   111	    """Shared across extraction, matching and judging; validate before freeing a slot."""
+   112	
+   113	    def __init__(self, guard, workers=2):
+   114	        self.guard = guard
+   115	        self.slots = threading.BoundedSemaphore(workers)
+   116	        self.stopped = threading.Event()
+   117	
+   118	    def stop(self, reason):
+   119	        self.guard.stop(reason)
+   120	        self.stopped.set()
+   121	
+   122	    def __call__(self, *args):
+   123	        with self.slots:
+   124	            try:
+   125	                response = self.guard(*args)
+   126	                request = args[-1]
+   127	                if len(args) == 2:
+   128	                    value = json.loads(response['choices'][0]['message']['content'])
+   129	                    errors = model.check_schema(value, request['response_format']['json_schema']['schema'])
+   130	                else:
+   131	                    errors = jev.validate(response.get('answers'), request['questions'])
+   132	                if errors:
+   133	                    raise model.SchemaError('; '.join(errors[:5]))
+   134	                return response
+   135	            except BaseException:
+   136	                self.stop('terminal worker failure or cancellation')
+   137	                raise
+   138	
+   139	
+   140	def study_day(runner, transport):
+   141	    def run(*args, **kwargs):
+   142	        iterator = runner(*args, **kwargs)
+   143	        try:
+   144	            for result in iterator:
+   145	                if result.failed:
+   146	                    transport.stop('authoritative item failed')
+   147	                yield result
+   148	        except BaseException:
+   149	            transport.stop('day cancelled or failed')
+   150	            raise
+   151	        finally:
+   152	            iterator.close()
+   153	    return run
+   154	
+   155	
+   156	def audit(directory, trial, cfg, uni):
+   157	    """Read actual product records and rebuild the accepted requests; never call a model."""
+   158	    folder = directory / trial
+   159	    errors, requests = [], []
+   160	    with readonly(directory / 'ordered-baseline.sqlite') as baseline, readonly(folder / 'views.sqlite') as conn, readonly(folder / 'archive.sqlite') as archive, readonly(directory / 'items.sqlite') as source:
+   161	        items = {i['input_id']: i for i in testdb.feed(source, DAY, DAY)}
+   162	        for table in store.TABLES:
+   163	            old = [tuple(r) for r in baseline.execute(f'select * from {table} order by rowid')]
+   164	            prefix = [tuple(r) for r in conn.execute(f'select * from {table} order by rowid limit ?', (len(old),))]
+   165	            if old != prefix:
+   166	                errors.append(f'baseline changed: {table}')
+   167	        hands = list(conn.execute('select * from handovers where seq>=? order by seq', (FIRST,)))
+   168	        if [(r['input_id'], r['seq']) for r in hands] != [(i, FIRST + n) for n, i in enumerate(INPUTS)]:
+   169	            errors.append('handover order/count differs')
+   170	        for hand in hands:
+   171	            item = items[hand['input_id']]
+   172	            before = snapshot(conn, hand['seq'], exclude_unordered=True)
+   173	            try:
+   174	                objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
+   175	                shown = store.views_for_prompt(before, objects)
+   176	                groups = store.groups_for_prompt(before, objects, item.get('title') or '')
+   177	                key = extraction_key(cfg, item, item['text'], shown, uni, groups)
+   178	            finally:
+   179	                before.close()
+   180	            accepted = archive.execute("select call_id,request_json,answer_json from model_calls where request_sha256=? and purpose='extract'", (key,)).fetchone()
+   181	            if not accepted:
+   182	                errors.append('accepted request not rebuilt: ' + item['input_id'])
+   183	            else:
+   184	                if model.request_identity(json.loads(accepted['request_json']))[1] != key:
+   185	                    errors.append('archived request hash differs from body')
+   186	                version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
+   187	                evidence, candidates, dropped, new_groups = extraction.sift_with_groups(
+   188	                    json.loads(accepted['answer_json']), item, item['text'], {v['view_id'] for v in shown}, uni,
+   189	                    english=extraction.is_english(version), shown_group_ids=[g['group_id'] for g in groups])
+   190	                expected_hand = {'evidence': evidence, 'candidates': candidates, 'dropped': dropped, 'new_groups': new_groups}
+   191	                if json.loads(json.dumps(expected_hand)) != json.loads(hand['handover_json']):
+   192	                    errors.append('accepted handover differs from the bound request answer: ' + item['input_id'])
+   193	            requests.append({'input_id': item['input_id'], 'seq': hand['seq'], 'request_sha256': key,
+   194	                             'call_id': accepted['call_id'] if accepted else None})
+   195	            for evidence in json.loads(hand['handover_json'])['evidence']:
+   196	                if extraction.normalise(evidence['quote']) not in extraction.normalise(item['text']):
+   197	                    errors.append('quote missing from selected whole item')
+   198	        for record in conn.execute('select * from match_records where seq>=?', (FIRST,)):
+   199	            if json.loads(record['checks_json'])['refusals']:
+   200	                errors.append('matching refusal')
+   201	            for call in json.loads(record['shown_json']).get('requests', []):
+   202	                if not archive.execute('select 1 from model_calls where call_id=? and request_sha256=?', (call['call_id'], call['request_sha256'])).fetchone():
+   203	                    errors.append('matching request trace missing')
+   204	        changed = rounds.changed_views_of_day(conn, DAY)
+   205	        expected = {v for v in changed if store.is_open(conn, v) and store.evidence_in_force(conn, v)}
+   206	        judgments = list(conn.execute('select * from judgements where seq>=?', (FIRST,)))
+   207	        if sorted(r['view_id'] for r in judgments) != sorted(expected):
+   208	            errors.append('daily judgement population differs')
+   209	        if any(r['seq'] != FIRST + len(INPUTS) - 1 or r['input_id'] != 'day:' + DAY or r['publication_day'] != DAY for r in judgments):
+   210	            errors.append('daily judgement ordering differs')
+   211	        if store.last_completed_day(conn) != DAY:
+   212	            errors.append('day not completed')
+   213	        missing = conn.execute('select count(*) from thesis_group_members m left join views v using(view_id) left join thesis_groups g using(group_id) where v.view_id is null or g.group_id is null').fetchone()[0]
+   214	        if missing:
+   215	            errors.append('dangling group membership')
+   216	        views = [dict(r) for r in conn.execute('select * from views order by rowid')]
+   217	        groups = [dict(r) for r in conn.execute('select * from thesis_groups order by rowid')]
+   218	        members = [dict(r) for r in conn.execute('select * from thesis_group_members order by rowid')]
+   219	        evidence = [dict(r) for r in conn.execute('select * from evidence order by rowid')]
+   220	        links = [dict(r) for r in conn.execute('select * from evidence_links order by rowid')]
+   221	        sources = [dict(r) for r in conn.execute('select * from evidence_sources order by rowid')]
+   222	        return {'errors': errors, 'accepted_requests': requests, 'views': views, 'groups': groups, 'members': members,
+   223	                'evidence': evidence, 'links': links, 'sources': sources, 'judgements': [dict(r) for r in judgments],
+   224	                'baseline_dependencies': baseline.execute('select count(*) from dependencies').fetchone()[0]}
+   225	
+   226	
+   227	def run_trial(directory, trial, *, live=False, transport=None, config_path=DEFAULT_CONFIG):
+   228	    directory = Path(directory).resolve()
+   229	    if trial not in ORDER or contract(directory, config_path) != json.loads((directory / 'study.json').read_text()):
+   230	        raise ValueError('unknown trial or changed study contract')
+   231	    previous = ORDER[:ORDER.index(trial)]
+   232	    for name in previous:
+   233	        saved = json.loads((directory / name / 'result.json').read_text())
+   234	        if saved['failure'] or saved['audit']['errors']:
+   235	            raise ValueError('prior trial failed')
+   236	    if protected_changes(directory):
+   237	        raise ValueError('protected database changed')
+   238	    folder = directory / trial
+   239	    if folder.exists():
+   240	        raise ValueError('trial already started; preserve it')
+   241	    cfg, uni = configuration(config_path)
+   242	    if transport is None:
+   243	        if not live:
+   244	            raise ValueError('explicit offline transport or --live required')
+   245	        transport = StudyTransport(GuardedTransport(directory / 'budget.sqlite', single_attempt_http(), max_calls=144))
+   246	    folder.mkdir()
+   247	    shutil.copyfile(directory / 'ordered-baseline.sqlite', folder / 'views.sqlite')
+   248	    archive = model.Archive(folder / 'archive.sqlite')
+   249	    runner = DayRunner(directory / 'items.sqlite', folder / 'manifests') if trial.startswith('concurrent') else None
+   250	    before = transport.guard.summary()
+   251	    old_handlers = {}
+   252	    if live:
+   253	        def cancel(signum, frame):
+   254	            transport.stop('cancelled')
+   255	            raise KeyboardInterrupt
+   256	        for sig in (signal.SIGINT, signal.SIGTERM):
+   257	            old_handlers[sig] = signal.signal(sig, cancel)
+   258	    failed, result, inspected = None, None, None
+   259	    started = time.perf_counter()
+   260	    try:
+   261	        result = replay.run(testdb_path=str(directory / 'items.sqlite'), views_path=str(folder / 'views.sqlite'), archive=archive,
+   262	                            cfg=cfg, universe=uni, from_day=DAY, until_day=DAY, transport=transport,
+   263	                            day_runner=study_day(runner, transport) if runner else None, log=lambda msg: print(msg, flush=True))
+   264	        inspected = audit(directory, trial, cfg, uni)
+   265	        if inspected['errors']:
+   266	            raise ValueError('structural audit failed: ' + '; '.join(inspected['errors']))
+   267	    except BaseException as exc:
+   268	        transport.stop('trial failed')
+   269	        failed = {'type': type(exc).__name__, 'message': str(exc)[:500]}
+   270	        raise
+   271	    finally:
+   272	        elapsed = time.perf_counter() - started
+   273	        for sig, handler in old_handlers.items():
+   274	            signal.signal(sig, handler)
+   275	        archive.conn.close()
+   276	        after = transport.guard.summary()
+   277	        report = {'trial': trial, 'seconds': elapsed, 'failure': failed, 'result': result, 'audit': inspected,
+   278	                  'events': runner.events if runner else [], 'changed_protected': protected_changes(directory),
+   279	                  'new_attempts': after['attempts'][len(before['attempts']):],
+   280	                  'conservative_cost_microdollars': after['held_microdollars'] - before['held_microdollars']}
+   281	        (folder / 'result.json').write_text(json.dumps(report, indent=2, ensure_ascii=False))
+   282	        print(json.dumps({k: report[k] for k in ('trial', 'seconds', 'failure', 'changed_protected', 'conservative_cost_microdollars')}), flush=True)
+   283	        if report['changed_protected'] and not failed:
+   284	            raise ValueError('protected database changed')
+   285	
+   286	
+   287	if __name__ == '__main__':
+   288	    parser = argparse.ArgumentParser(description=__doc__)
+   289	    parser.add_argument('--directory', type=Path, required=True)
+   290	    parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+   291	    parser.add_argument('--prepare', action='store_true')
+   292	    parser.add_argument('--trial', choices=ORDER)
+   293	    parser.add_argument('--live', action='store_true')
+   294	    args = parser.parse_args()
+   295	    if args.prepare:
+   296	        prepare(args.directory.resolve(), config_path=args.config.resolve())
+   297	    elif args.trial:
+   298	        run_trial(args.directory, args.trial, live=args.live, config_path=args.config.resolve())
+   299	    else:
+   300	        parser.error('choose --prepare or --trial')
+     1	"""Harness plumbing only: real stored answers through a fake provider, not model-quality evidence."""
+     2	import copy
+     3	import json
+     4	from pathlib import Path
+     5	import re
+     6	import shutil
+     7	import sqlite3
+     8	import sys
+     9	import tempfile
+    10	
+    11	ROOT = Path(__file__).resolve().parents[3]
+    12	sys.path.insert(0, str(ROOT / 'src'))
+    13	sys.path.insert(0, str(ROOT / 'poc'))
+    14	from concurrency_study import ingestion
+    15	from concurrency_study.budget import GuardedTransport
+    16	
+    17	ARTIFACTS = Path(__file__).resolve().parent
+    18	CONFIG = ROOT / 'poc/config/poc-v24-admission-test.json'
+    19	raw = {}
+    20	with ingestion.readonly(ARTIFACTS / 'inputs/archive.sqlite') as db:
+    21	    for row in db.execute("select request_json,answer_json from model_calls where purpose='extract' and config_version='poc-v23'"):
+    22	        req = json.loads(row['request_json'])
+    23	        found = re.search(r'^\[Item\] id (.+?), category ', req['messages'][1]['content'], re.M)
+    24	        if found and found[1] in ingestion.INPUTS:
+    25	            raw[found[1]] = json.loads(row['answer_json'])
+    26	assert len(raw) == 3
+    27	
+    28	
+    29	def remap(value):
+    30	    if isinstance(value, dict):
+    31	        return {k: remap(v) for k, v in value.items()}
+    32	    if isinstance(value, list):
+    33	        return [remap(v) for v in value]
+    34	    if isinstance(value, str) and re.fullmatch(r'v\d+', value) and int(value[1:]) >= 15:
+    35	        return 'v' + str(int(value[1:]) - 2)  # Omitted INTC's two unrelated views in this selected-subset fixture.
+    36	    return value
+    37	
+    38	
+    39	def prepare(provider, req):
+    40	    def send():
+    41	        if provider == 'jev':
+    42	            answers = {}
+    43	            for key, q in req['questions'].items():
+    44	                if q['type'] == 'noul':
+    45	                    answers[key] = {'type': 'noul', 'noul': 0.05}
+    46	                else:
+    47	                    pick = 'same_statement' if key.startswith('piece__v13__') else 'different'
+    48	                    answers[key] = {'type': 'choice', 'choice': pick, 'confidence': 1,
+    49	                                    'probabilities': {k: int(k == pick) for k in q['criteria']}}
+    50	            return {'model': req['model'], 'answers': answers, 'usage': {'input_tokens': 1000, 'output_tokens': 100}}
+    51	        prompt = req['messages'][1]['content']
+    52	        if req['response_format']['json_schema']['name'] == 'extraction':
+    53	            ident = re.search(r'^\[Item\] id (.+?), category ', prompt, re.M)[1]
+    54	            answer = remap(copy.deepcopy(raw[ident]))
+    55	        else:
+    56	            answer = {'rung': 1, 'reasons': 'The supplied source reports the project plan.',
+    57	                      'cites': list(dict.fromkeys(re.findall(r'^- (e\d+) \[', prompt, re.M))), 'cites_views': [],
+    58	                      'pushes': [], 'changed': True, 'why_changed': 'The source adds a project statement.'}
+    59	        return {'model': req['model'], 'choices': [{'message': {'content': json.dumps(answer)}}],
+    60	                'usage': {'prompt_tokens': 1000, 'completion_tokens': 100}}
+    61	    return send
+    62	
+    63	
+    64	with tempfile.TemporaryDirectory() as name:
+    65	    directory = Path(name)
+    66	    for file in ('items.sqlite', 'ordered-baseline.sqlite', 'protected-before.json'):
+    67	        shutil.copyfile(ARTIFACTS / file, directory / file)
+    68	    (directory / 'study.json').write_text(json.dumps(ingestion.contract(directory, CONFIG)))
+    69	    transport = ingestion.StudyTransport(GuardedTransport(directory / 'budget.sqlite', prepare, max_calls=144))
+    70	    for trial in ('control-1', 'concurrent-1'):
+    71	        ingestion.run_trial(directory, trial, transport=transport, config_path=CONFIG)
+    72	        result = json.loads((directory / trial / 'result.json').read_text())
+    73	        print(trial, 'structural errors', result['audit']['errors'], 'events', [e['event'] for e in result['events']], flush=True)
+    74	    mutant = directory / 'substituted'; mutant.mkdir()
+    75	    for name in ('views.sqlite', 'archive.sqlite'):
+    76	        shutil.copyfile(directory / 'control-1' / name, mutant / name)
+    77	    with sqlite3.connect(mutant / 'views.sqlite') as db:
+    78	        db.execute('drop trigger handovers_no_update')
+    79	        db.execute('update handovers set handover_json=? where seq=21',
+    80	                   (json.dumps({'evidence': [], 'candidates': [], 'dropped': [], 'new_groups': []}),))
+    81	    cfg, uni = ingestion.configuration(CONFIG)
+    82	    caught = ingestion.audit(directory, 'substituted', cfg, uni)['errors']
+    83	    assert any('bound request answer' in error for error in caught), caught
+    84	    print('substituted-handover mutant caught', caught, flush=True)
+    85	
+    86	    # Same path, changed config bytes: fail before credentials or trial state.
+    87	    config_copy = directory / 'config.json'
+    88	    config_copy.write_text(CONFIG.read_text())
+    89	    frozen = ingestion.contract(directory, config_copy)
+    90	    (directory / 'study.json').write_text(json.dumps(frozen))
+    91	    config_copy.write_text(config_copy.read_text() + '\n')
+    92	    try:
+    93	        ingestion.run_trial(directory, 'concurrent-2', live=True, config_path=config_copy)
+    94	    except ValueError as exc:
+    95	        assert str(exc) == 'unknown trial or changed study contract'
+    96	        assert not (directory / 'concurrent-2').exists()
+    97	        print('changed-config mutant refused before trial/credentials', flush=True)
+    98	    else:
+    99	        raise AssertionError('changed config was accepted')
+# Three-document ingestion comparison
+
+Alex asked to continue after the isolated API smoke (D173). This next slice runs the product's replay entry point on independent scratch ledgers. It does not enable production concurrency, change a prompt, change a gold, or implement the asynchronous OpenAI Batch API.
+
+## Source and fixed comparison
+
+Use the complete stored July 24 documents, unchanged:
+
+1. `nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory`
+2. `nvidianews:naver-nvidia-and-brookfield-to-expand-koreas-national-ai-factory-infrastructure-buildout`
+3. `nvblog:ai-summit-korea-partners-and-nvidia`
+
+The baseline is the historical Jev ledger strictly before sequence 21, the start of July 24. It contains no July 24 writes. The new source database contains only the three selected whole rows, preserving their metadata and order. This is a selected-subset stress test, not a replay of the entire day. The old Rubin test fixture contains excerpts and is not used as live source material. Source navigation/footer text is preserved too; no new cleaning rule is introduced.
+
+The snapshot call explicitly excludes sequence-zero rows: those audit records have no order within the dispatch sequence. Census of both stored ledgers found 31 sequence-zero processing records each, all dated July 24 or later, plus 6/13 sequence-zero review-pool records without a recoverable originating input/date. The study's baseline omits these unordered audit rows rather than guessing their time. It is a projection of ordered product state, not a complete export of historical audit records. The baseline check also refuses any dated processing/evidence/judgement/day-completion record on or after July 24. Earlier positive-sequence product state is preserved. Prior snapshot diagnostics keep their default behavior; this new option is explicit for the study.
+
+Run the unchanged `poc-v23` configuration through `replay.run`. Three fresh serial controls and three fresh concurrent trials, with their own empty archives and copies of one baseline, provide three paired samples and a serial-versus-serial variation check. Fixed order: control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3. Read the first serial result before starting a concurrent trial. Each trial is launched explicitly; a failure does not automatically retry or start the next trial. Maximum 144 physical API calls and $1.50 total conservative cost, shared across all trials. This is a fresh budget, not a continuation of the API smoke's spending. No cap increases.
+
+Both modes share a maximum of two in-flight provider calls, including daily judging. The serial control still uses the original item-by-item path and the original dependency-ordered day judging. The concurrent arm additionally uses D172's two extraction workers and two Jev workers. A semaphore in the study transport limits outbound calls; it does not change prompts, item order, matching, writer or judging rules. Network/unknown-usage failure closes admission. Known model refusals follow the existing product retry rules; every physical attempt counts. An authoritative failed item closes admission before the concurrent generator is drained.
+
+After accounting durably records a response and before the study transport releases its semaphore slot, it validates the raw JSON/schema or Jev answer map with the existing validators. Malformed JSON, schema refusal or invalid Jev structure closes admission in that worker, covering day-judging workers as well as ingestion. Other slot waiters must recheck admission and cannot send. A valid-schema answer that fails a later product reference check still follows that product's existing correction rules; the study transport does not invent a semantic validator. Cancellation signals close admission before unwinding executors. Tests cover both an authoritative failed item and a schema failure within the actual daily-judging executor.
+
+The budget reservation will use the request's actual validated output limit instead of reserving the model's maximum 128K output for every request. Keep the full 922K input bound and the same worst-case published Standard rates. For 16K output this reserves $0.520300, not $0.70; for 128K it reserves $0.612700. This does not raise the cap or infer tokens from text length. See the official source links in the D173 plan. Budget admission remains a refusal, never permission to overspend.
+
+## Measure and calibration
+
+The governing semantics come from D159/D172 and the existing Claude-authored `week-benchmark-v23-2026-10-25.json`. Its SK and NAVER candidates are distinct new events; their project groups are separate; Rubin association is optional for these deployments. Read the saved source statements: SK's first factory is planned for 2027 and uses Vera Rubin; NAVER's GAK Sejong expansion targets 200 MW by 2028 and also describes Rubin. The follow-up reports the same announced projects. Do not compare fresh candidate/group IDs literally with the gold's IDs, or classify every unlabelled new candidate as correct.
+
+Report, for every trial:
+
+- The two project questions and their source evidence; separate identity and customer-specific group membership. Additional well-sourced questions are not a failure merely because counts differ. Manually map the small result to the source and existing gold; record the mapping and reasons. A wrong/missing required project is reported separately from optional grouping variation.
+- Whether the follow-up cites existing project questions, repeats an earlier statement or creates a duplicate. A repeated statement adds a source; it is not independent confirmation. Do not require the model to extract every sentence of the blog.
+- Every accepted extraction's complete request hash rebuilt from its actual committed prefix, including schema and group context. Find that exact call's archived body/answer, re-run the existing extraction checks, and require the resulting handover to equal the saved handover. Existence of a matching request alone is insufficient. Every accepted input, dispatch sequence and write sequence must agree.
+- Source quotation validation, existence/order of destinations, preservation of baseline questions/ladders, new group/member records, and daily judgement followed by day completion. Each changed eligible thesis is judged at most once at that sequence; cited evidence belongs to it.
+- End-to-end elapsed time, physical calls, accepted/reused/stale requests, and conservative and Standard list-price cost. Include discarded speculative calls. A failed or unexercised case does not count as a pass. This small dependent workload cannot establish whole-day 10x acceleration.
+
+If the first control misses a required project, stop before further paid trials and examine its raw output, checks and final writes. If any structural check fails, stop. Read each trial before the next. The six-trial set is a diagnostic comparison, not registered production acceptance or a new gold standard. Production remains unapproved.
+
+## State × event
+
+| State | Event | Transition and write |
+|---|---|---|
+| Unprepared | Existing output folder / changed source | Refuse overwriting or mixing experiments |
+| Prepared | New explicit trial | Copy the same baseline into a new trial directory; empty archive; record config/runtime/source/baseline hashes |
+| Trial waiting | Caller resubmits started trial | Refuse; preserve its data, no automatic resume |
+| Waiting for outbound slot | Slot opens | Guard checks budget and cancellation before reserving/dispatching |
+| Request dispatched | Known response | Journal usage, archive, and continue normal schema/content checks |
+| Request dispatched | Transport failure or unknown usage | Retain reservation, close admission, drain existing calls, fail trial |
+| Accounted response | Invalid raw JSON/schema/Jev shape in any worker | Close admission before releasing the slot or draining any parent executor; raw response and known cost remain in the guard journal |
+| Speculation ready | Earlier committed prefix changes | Existing D172 rule recomputes; both calls are counted |
+| Authoritative item fails | Later preparation is pending | Close admission before generator cleanup; cancel pending and drain dispatched calls; no later authoritative write |
+| Judging | Independent/dependent views | Existing topology; shared outbound limit; no next day/trial automatically |
+| Trial finished | Structural and manual review pass | Record results; next named trial may be started explicitly |
+| Trial finished | Structural failure / missing required control result | Preserve result and stop the comparison |
+| Any end | Protected originals changed | Report changed paths; no claim of database isolation |
+| Any active state | Cancellation signal | Close admission before raising cancellation; queued slot waiters never dispatch; drain committed requests |
+
+## Value × reader and new path × checks
+
+| Value | Writer and readers | Check |
+|---|---|---|
+| Three complete item rows | Prepared from read-only source → replay | Full row/text identity; fixed order; only selected IDs |
+| Historical baseline | Existing snapshot function → every trial writer | No sequence >=21; identical baseline digest; never write the original |
+| Exact request/context | Existing extraction builder → workers and acceptance audit | Rebuild against each committed prefix, schema included |
+| Reservation | POC guard → every provider stage | Actual request output cap plus full model input bound; tests cover maximum and small caps; same total cap |
+| Semaphore | Study transport → all provider threads | Real temp journals + fake provider prove <=2 dispatched calls; cancelled waiters never send |
+| Failed item | Product result → study day wrapper → guard | Close admission before drain; fake held preparation proves no later dispatch |
+| Failed judge worker | Raw response → shared study transport → guard | Actual judging executor with more jobs than slots; malformed first response prevents queued sends |
+| Judgements/completion | Existing product code → structural audit | Current day/sequence; evidence ownership; no completion before successful judging |
+| Gold correspondence | Manual source review → report | Stable meaning, not numeric IDs, names or equal counts |
+
+The only reusable change is tighter reservation based on the request's existing output cap, in the POC budget owner. Other code stays in the study harness. The source corpus, golds, default transport and production runtime are out of scope. Read-only review checks these tables before implementation; offline controls precede any live trial.
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba src/hivemind/config.py && nl -ba poc/concurrency_study/runner.py && nl -ba src/hivemind/replay.py && cat poc/config/poc-v23.json && cat poc/config/poc-v24-admission-test.json' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Config (docs/prd/03-config.md): a versioned file of the settings a person chooses, with a checksum written into
+     2	every model call's record. A version that references a missing setting is refused whole."""
+     3	import dataclasses
+     4	import hashlib
+     5	import json
+     6	import os
+     7	
+     8	PROMPTS = os.path.join(os.path.dirname(__file__), 'prompts')
+     9	
+    10	
+    11	class ConfigError(ValueError):
+    12	    pass
+    13	
+    14	
+    15	def prompt_path(name):
+    16	    """The file of a prompt the config names, for example role-v1.txt or matching-v1.txt."""
+    17	    return os.path.join(PROMPTS, name)
+    18	
+    19	
+    20	def _prompt_files(extraction, matching, rejudging, idea=None):
+    21	    """03-config: a version that names a prompt that does not exist is refused whole. An extraction setting's
+    22	    prompt_version is '<category>-<v>': block 2 and 4 come from categories-<v>.json (the category's entry) and the
+    23	    role from role-<v>.txt; matching, re-judging and the idea reading name their file without the extension."""
+    24	    for category, setting in extraction.items():
+    25	        prefix, _, version = setting.prompt_version.rpartition('-')
+    26	        if prefix != category or not version:
+    27	            raise ConfigError(f'extraction.{category}: prompt_version {setting.prompt_version!r} must be {category}-<version>')
+    28	        categories_file = prompt_path(f'categories-{version}.json')
+    29	        if not os.path.exists(categories_file) or not os.path.exists(prompt_path(f'role-{version}.txt')):
+    30	            raise ConfigError(f'extraction.{category}: prompts for version {version!r} do not exist')
+    31	        with open(categories_file, encoding='utf-8') as handle:
+    32	            if category not in json.load(handle):
+    33	                raise ConfigError(f'extraction.{category}: categories-{version}.json has no entry for {category}')
+    34	    for setting in (matching, rejudging, idea):
+    35	        if setting is not None and not os.path.exists(prompt_path(setting.prompt_version + '.txt')):
+    36	            raise ConfigError(f'{setting.name}: prompt {setting.prompt_version}.txt does not exist')
+    37	
+    38	
+    39	@dataclasses.dataclass(frozen=True)
+    40	class Setting:
+    41	    name: str
+    42	    model: str
+    43	    prompt_version: str
+    44	    temperature: float
+    45	    reasoning_effort: str
+    46	    max_output_tokens: int
+    47	    engine: str = 'llm'       # matching only: 'llm' (the generative call) or 'jev' (TypeSafe Jev, views/jev_matching.py)
+    48	
+    49	
+    50	ENGINES = ('llm', 'jev')
+    51	
+    52	
+    53	@dataclasses.dataclass(frozen=True)
+    54	class Config:
+    55	    version: str
+    56	    checksum: str
+    57	    provider: str
+    58	    search_top_n: int
+    59	    extraction: dict          # category -> Setting
+    60	    matching: Setting
+    61	    rejudging: Setting
+    62	    final_verdict: Setting
+    63	    idea: Setting = None      # the service's reading of a user's idea (docs/poc/idea-card.md); absent in pipeline-only configs
+    64	
+    65	    def extraction_setting(self, category):
+    66	        setting = self.extraction.get(category)
+    67	        if setting is None:
+    68	            raise ConfigError(f'no extraction setting for category {category} in config {self.version}')
+    69	        return setting
+    70	
+    71	
+    72	REQUIRED = ('model', 'prompt_version', 'temperature', 'reasoning_effort', 'max_output_tokens')
+    73	
+    74	
+    75	def _setting(name, raw):
+    76	    if not isinstance(raw, dict):
+    77	        raise ConfigError(f'setting {name} is missing')
+    78	    missing = [key for key in REQUIRED if key not in raw]
+    79	    if missing:
+    80	        raise ConfigError(f'setting {name} lacks {missing}')
+    81	    engine = str(raw.get('engine', 'llm'))
+    82	    if engine not in ENGINES:
+    83	        raise ConfigError(f'setting {name}: engine {engine!r} is not one of {ENGINES}')
+    84	    return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
+    85	                   temperature=float(raw['temperature']), reasoning_effort=str(raw['reasoning_effort']),
+    86	                   max_output_tokens=int(raw['max_output_tokens']), engine=engine)
+    87	
+    88	
+    89	def load(path):
+    90	    with open(path, encoding='utf-8') as handle:
+    91	        text = handle.read()
+    92	    raw = json.loads(text)
+    93	    for key in ('version', 'provider', 'search_top_n', 'extraction', 'matching', 'rejudging', 'final_verdict'):
+    94	        if key not in raw:
+    95	            raise ConfigError(f'config lacks {key}')
+    96	    canonical = json.dumps({k: v for k, v in raw.items() if not k.startswith('_')}, sort_keys=True, ensure_ascii=False)
+    97	    checksum = hashlib.sha256(canonical.encode('utf-8')).hexdigest()[:16]
+    98	    extraction = {category: _setting(f'extraction.{category}', setting) for category, setting in raw['extraction'].items()}
+    99	    matching, rejudging = _setting('matching', raw['matching']), _setting('rejudging', raw['rejudging'])
+   100	    idea = _setting('idea', raw['idea']) if 'idea' in raw else None
+   101	    _prompt_files(extraction, matching, rejudging, idea)       # final_verdict is kept in the file but no POC step calls it
+   102	    return Config(version=str(raw['version']), checksum=checksum, provider=str(raw['provider']),
+   103	                  search_top_n=int(raw['search_top_n']), extraction=extraction,
+   104	                  matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea)
+     1	"""D172 offline POC: speculative extraction, validated at ordered commit time.
+     2	
+     3	The coordinator alone reads/writes the thesis ledger. Workers receive copied
+     4	inputs and only write the thread-safe model archive. Use an explicit offline
+     5	transport; live cost reservation is not implemented by this POC.
+     6	"""
+     7	import concurrent.futures
+     8	import copy
+     9	import dataclasses
+    10	import hashlib
+    11	import json
+    12	from pathlib import Path
+    13	
+    14	from hivemind import extraction, model
+    15	from hivemind.views import round as rounds, store
+    16	
+    17	ROOT = Path(__file__).resolve().parents[2]
+    18	
+    19	
+    20	def digest(path):
+    21	    value = hashlib.sha256()
+    22	    with path.open('rb') as handle:
+    23	        for chunk in iter(lambda: handle.read(1024 * 1024), b''):
+    24	            value.update(chunk)
+    25	    return value.hexdigest()
+    26	
+    27	
+    28	def environment_key(cfg, universe):
+    29	    return model.request_identity({'config': dataclasses.asdict(cfg), 'universe': vars(universe)})[1]
+    30	
+    31	
+    32	def runtime_key():
+    33	    files = sorted((ROOT / 'src/hivemind').rglob('*.py')) + sorted((ROOT / 'src/hivemind/prompts').glob('*')) + [Path(__file__)]
+    34	    return model.request_identity({str(path.relative_to(ROOT)): digest(path) for path in files if path.is_file()})[1]
+    35	
+    36	
+    37	def item_key(item):
+    38	    return model.request_identity(item)[1]
+    39	
+    40	
+    41	def extraction_key(cfg, item, text, shown, universe, groups):
+    42	    setting, system, user, schema = extraction.request_for(cfg, item, text, shown, universe, groups)
+    43	    return model.request_identity(model.build_request(setting, system, user, schema, 'extraction', cfg.provider))[1]
+    44	
+    45	
+    46	class DayRunner:
+    47	    """Opt-in day_runner for replay.run; defaults remain on the serial path."""
+    48	
+    49	    def __init__(self, source_path, manifest_dir, *, extraction_workers=2, jev_workers=2):
+    50	        for workers in (extraction_workers, jev_workers):
+    51	            if not isinstance(workers, int) or isinstance(workers, bool) or workers < 1:
+    52	                raise ValueError('worker counts must be positive integers')
+    53	        self.source_path, self.manifest_dir = Path(source_path), Path(manifest_dir)
+    54	        if not self.source_path.is_absolute() or not self.source_path.is_file() or not self.manifest_dir.is_absolute():
+    55	            raise ValueError('use an existing absolute source path and an absolute manifest directory')
+    56	        self.extraction_workers, self.jev_workers = extraction_workers, jev_workers
+    57	        self.events = []
+    58	
+    59	    def _manifest(self, conn, cfg, universe, items, day):
+    60	        self.manifest_dir.mkdir(parents=True, exist_ok=True)
+    61	        path = self.manifest_dir / f'day-{day}.json'
+    62	        metadata = {'day': day, 'environment': environment_key(cfg, universe), 'runtime': runtime_key(),
+    63	                    'source': digest(self.source_path), 'extraction_workers': self.extraction_workers,
+    64	                    'jev_workers': self.jev_workers}
+    65	        entries = [{'input_id': item['input_id'], 'seq': route.sequence_no, 'hash': item_key(item)} for item, route in items]
+    66	        if not path.exists():
+    67	            if conn.execute("select 1 from processing_steps where publication_day=? and step in ('extracted','written','handed_over') limit 1", (day,)).fetchone():
+    68	                raise ValueError('cannot adopt a partially processed day without its concurrency manifest')
+    69	            with path.open('x', encoding='utf-8') as handle:
+    70	                json.dump(dict(metadata, inputs=entries), handle, sort_keys=True)
+    71	        try:
+    72	            saved = json.loads(path.read_text())
+    73	        except (OSError, ValueError) as error:
+    74	            raise ValueError('unreadable concurrency manifest; refusing to guess its inputs') from error
+    75	        if {k: saved.get(k) for k in metadata} != metadata:
+    76	            raise ValueError('concurrency manifest source, configuration or runtime changed')
+    77	        remaining = [entry for entry in saved['inputs'] if not store.is_processed(conn, entry['input_id'])]
+    78	        if remaining != entries:
+    79	            raise ValueError('concurrency manifest input order or content changed')
+    80	        return metadata
+    81	
+    82	    def __call__(self, conn, archive, cfg, universe, items, *, day, transport=None, log=print):
+    83	        if transport is None:
+    84	            raise ValueError('offline concurrency POC requires an explicit transport; live cost reservation is not implemented')
+    85	        if cfg.matching.engine != 'jev' and self.jev_workers != 1:
+    86	            raise ValueError('parallel matching is only implemented for Jev')
+    87	        metadata = self._manifest(conn, cfg, universe, items, day)
+    88	        frozen_cfg, frozen_universe = copy.deepcopy(cfg), copy.deepcopy(universe)
+    89	        pending, prepared_futures, next_index = {}, [], 0
+    90	        pool = concurrent.futures.ThreadPoolExecutor(max_workers=self.extraction_workers)
+    91	
+    92	        def fill():
+    93	            nonlocal next_index
+    94	            while next_index < len(items) and len(pending) < self.extraction_workers:
+    95	                item, route = items[next_index]
+    96	                next_index += 1
+    97	                if route.resume_from and route.resume_from != 'extracted':
+    98	                    continue  # The authoritative saved handover is owned by normal recovery.
+    99	                objects = [o['value'] for o in item.get('object_identifiers') or [] if frozen_universe.has(o['value'])]
+   100	                shown = copy.deepcopy(store.views_for_prompt(conn, objects))
+   101	                groups = copy.deepcopy(store.groups_for_prompt(conn, objects, item.get('title') or ''))
+   102	                owned_item = copy.deepcopy(item)
+   103	                key = extraction_key(frozen_cfg, owned_item, owned_item['text'], shown, frozen_universe, groups)
+   104	                future = pool.submit(extraction.extract, archive, frozen_cfg, owned_item, owned_item['text'], shown,
+   105	                                     frozen_universe, shown_groups=groups, transport=transport)
+   106	                pending[item['input_id']] = (key, item_key(owned_item), future)
+   107	                prepared_futures.append((item['input_id'], future))
+   108	                self.events.append({'input_id': item['input_id'], 'event': 'prepared', 'request': key})
+   109	
+   110	        def accepted_extraction(current_archive, current_cfg, item, text, shown, current_universe, *, shown_groups=(), transport=None):
+   111	            prior_key, source_key, future = pending[item['input_id']]
+   112	            def validate_inputs():
+   113	                if (environment_key(current_cfg, current_universe) != metadata['environment']
+   114	                        or environment_key(cfg, universe) != metadata['environment'] or runtime_key() != metadata['runtime']):
+   115	                    raise ValueError('configuration, universe or runtime changed during the day')
+   116	                if item_key(item) != source_key or text != item['text']:
+   117	                    raise ValueError('source changed after preparation')
+   118	            validate_inputs()
+   119	            current_key = extraction_key(current_cfg, item, text, shown, current_universe, shown_groups)
+   120	            if current_key == prior_key:
+   121	                answer = future.result()
+   122	                validate_inputs()
+   123	                if answer.request_sha256 != current_key:
+   124	                    raise ValueError('prepared extraction does not match its validated request')
+   125	                self.events.append({'input_id': item['input_id'], 'event': 'reused', 'request': current_key})
+   126	                return answer
+   127	            future.cancel()
+   128	            self.events.append({'input_id': item['input_id'], 'event': 'stale', 'before': prior_key, 'request': current_key})
+   129	            answer = extraction.extract(current_archive, current_cfg, item, text, shown, current_universe,
+   130	                                        shown_groups=shown_groups, transport=transport)
+   131	            validate_inputs()
+   132	            return answer
+   133	
+   134	        try:
+   135	            fill()
+   136	            for item, route in items:
+   137	                result = rounds.run(conn, archive, frozen_cfg, frozen_universe, item, route.sequence_no, resume_from=route.resume_from,
+   138	                                    transport=transport, log=log, extractor=accepted_extraction, matching_workers=self.jev_workers)
+   139	                self.events.append({'input_id': item['input_id'], 'event': 'failed' if result.failed else 'accepted'})
+   140	                yield result
+   141	                if result.failed:
+   142	                    return
+   143	                pending.pop(item['input_id'], None)
+   144	                fill()
+   145	        finally:
+   146	            # Running calls may still archive a response; none can become a handover here.
+   147	            for _, _, future in pending.values():
+   148	                future.cancel()
+   149	            pool.shutdown(wait=True, cancel_futures=True)
+   150	            for input_id, future in prepared_futures:
+   151	                if not future.cancelled() and future.exception() is not None:
+   152	                    self.events.append({'input_id': input_id, 'event': 'speculative_error', 'error': type(future.exception()).__name__})
+     1	"""Replay the test database through the pipeline day by day with no look-ahead.
+     2	
+     3	For every calendar day from from_day to until_day: route each item published that day (dispatch), run its round
+     4	(extraction → matching → writing), then the day's one re-judging round over the views whose reading changed (D63),
+     5	then pull mode for that day. A guard refuses an item whose
+     6	publication day is after the replay day. The views database refuses to run a day at or before the last day it
+     7	completed (no backdating). After day0's pull the views database is copied to <views>.day0.sqlite for the agent
+     8	layer. Every day prints one line and the archive's cumulative cost."""
+     9	import datetime
+    10	import shutil
+    11	import time
+    12	
+    13	from . import dispatch, pull, testdb
+    14	from .views import round as round_module, store
+    15	
+    16	
+    17	class StaleHandoverError(RuntimeError):
+    18	    """A saved parallel extraction cannot establish that it read its predecessors."""
+    19	
+    20	
+    21	def refuse_unfinished_parallel(conn):
+    22	    """D159: preserve old handovers, but never resume a day-start read as a sequential read."""
+    23	    pending = conn.execute("""select p.input_id, p.reason from processing_steps p
+    24	        where p.step='extracted' and p.result='ok'
+    25	        and p.id=(select max(q.id) from processing_steps q
+    26	                  where q.input_id=p.input_id and q.step='extracted' and q.result='ok')
+    27	        and not exists (select 1 from processing_steps q
+    28	                        where q.input_id=p.input_id and q.step='handed_over' and q.result='ok')
+    29	        order by p.sequence_no""")
+    30	    ids = [row['input_id'] for row in pending if row['reason'].endswith(' (parallel)')]
+    31	    if ids:
+    32	        raise StaleHandoverError('unfinished day-start extractions; keep this ledger and replay into a new one: ' + ', '.join(ids))
+    33	
+    34	
+    35	class LookAheadError(RuntimeError):
+    36	    pass
+    37	
+    38	
+    39	class BackdatingError(RuntimeError):
+    40	    pass
+    41	
+    42	
+    43	def calendar_days(from_day, until_day):
+    44	    day = datetime.date.fromisoformat(from_day)
+    45	    last = datetime.date.fromisoformat(until_day)
+    46	    while day <= last:
+    47	        yield day.isoformat()
+    48	        day += datetime.timedelta(days=1)
+    49	
+    50	
+    51	def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day, day0=None, spend_cap_usd=None,
+    52	        transport=None, log=print, only_objects=None, max_items_per_day=None, day_runner=None):
+    53	    items_db = testdb.open_db(testdb_path)
+    54	    conn = store.open_db(views_path)
+    55	    refuse_unfinished_parallel(conn)
+    56	    last_done = store.last_completed_day(conn)
+    57	    start = from_day
+    58	    if last_done and from_day <= last_done:
+    59	        next_day = (datetime.date.fromisoformat(last_done) + datetime.timedelta(days=1)).isoformat()
+    60	        if next_day > until_day:
+    61	            raise BackdatingError(f'views database already completed {last_done}; nothing to run before it')
+    62	        log(f'resuming after the last completed day {last_done}')
+    63	        start = next_day
+    64	    last_written = conn.execute('select max(publication_day) from processing_steps where sequence_no > 0').fetchone()[0]
+    65	    if last_written and start < last_written:
+    66	        raise BackdatingError(f'views database already holds rounds of {last_written}; a replay cannot start before it (D31)')
+    67	    totals = {'items': 0, 'extracted': 0, 'skipped': 0, 'merged': 0, 'not_processed': 0, 'returned': 0, 'failed': 0,
+    68	              'evidence': 0, 'new_views': 0, 'judged': 0, 'changed': 0, 'closed': 0}
+    69	    calls_before, cost_before, *_ = archive.totals()
+    70	    for day in calendar_days(start, until_day):
+    71	        day_stats = {k: 0 for k in totals}
+    72	        day_cost_before = archive.totals()[1]
+    73	        processed = 0
+    74	        to_run = []
+    75	        for item in testdb.feed(items_db, day, day):
+    76	            if item['publication_day'] > day:
+    77	                raise LookAheadError(f'{item["input_id"]} is dated {item["publication_day"]}, after replay day {day}')
+    78	            if only_objects and not any(o['value'] in only_objects for o in item['object_identifiers']):
+    79	                continue
+    80	            if max_items_per_day and processed >= max_items_per_day:
+    81	                break
+    82	            day_stats['items'] += 1
+    83	            route = dispatch.route(conn, item, universe)
+    84	            if route.kind != 'extract':
+    85	                day_stats[route.kind] += 1
+    86	                if route.kind == 'merged':
+    87	                    dispatch.mark(conn, item, 0, 'merged', 'ok', route.reason)
+    88	                    conn.commit()
+    89	                continue
+    90	            processed += 1
+    91	            to_run.append((item, route))
+    92	        results = (day_runner(conn, archive, cfg, universe, to_run, day=day, transport=transport, log=log) if day_runner else
+    93	                   (round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
+    94	                    for item, route in to_run))
+    95	        finished = 0
+    96	        try:
+    97	            for index, result in enumerate(results):
+    98	                if index >= len(to_run) or result.input_id != to_run[index][0]['input_id']:
+    99	                    raise RuntimeError('day runner returned results out of input order')
+   100	                finished += 1
+   101	                day_stats['extracted'] += 1
+   102	                day_stats['evidence'] += result.evidence
+   103	                day_stats['new_views'] += result.new_views
+   104	                day_stats['judged'] += result.judged
+   105	                day_stats['changed'] += result.changed
+   106	                if result.failed:
+   107	                    day_stats['failed'] += 1
+   108	                    log(f'  ! {result.input_id[:60]}: {result.failed}')
+   109	                    raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
+   110	                if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
+   111	                    raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
+   112	        finally:
+   113	            if hasattr(results, 'close'):
+   114	                results.close()
+   115	        if finished != len(to_run):
+   116	            raise RuntimeError('day runner did not complete every routed item')
+   117	        seq = store.next_sequence(conn) - 1
+   118	        judged = round_module.judge_day(conn, archive, cfg, day, seq, transport=transport, log=log)
+   119	        day_stats['judged'] += judged.judged
+   120	        day_stats['changed'] += judged.changed
+   121	        if judged.failed:
+   122	            day_stats['failed'] += 1
+   123	            log(f'  ! day judging: {judged.failed}')
+   124	            raise RuntimeError(f'judging failed; day {day} remains resumable: {judged.failed}')
+   125	        closed = pull.end_of_day(conn, day, seq)
+   126	        day_stats['closed'] = len(closed)
+   127	        store.complete_day(conn, day, seq, time.strftime('%Y-%m-%dT%H:%M:%S'))
+   128	        conn.commit()
+   129	        for key in totals:
+   130	            totals[key] += day_stats[key]
+   131	        calls, cost, _, _ = archive.totals()
+   132	        day_cost = cost - day_cost_before  # Includes discarded speculative calls and repaired refusals.
+   133	        open_count = len(store.open_views(conn))
+   134	        log(f'{day} | items {day_stats["items"]:3d} extracted {day_stats["extracted"]:3d} merged {day_stats["merged"]:2d} skipped {day_stats["not_processed"]:2d} '
+   135	            f'failed {day_stats["failed"]:2d} | evidence {day_stats["evidence"]:3d} new views {day_stats["new_views"]:2d} judged {day_stats["judged"]:3d} '
+   136	            f'changed {day_stats["changed"]:3d} closed {len(closed)} | open views {open_count} | day ${day_cost:.2f} total ${cost - cost_before:.2f} calls {calls - calls_before}')
+   137	        if day0 and day == day0:
+   138	            conn.commit()
+   139	            shutil.copy(views_path, views_path + '.day0.sqlite')
+   140	            log(f'day 0 snapshot written: {views_path}.day0.sqlite')
+   141	    return totals
+{
+ "version": "poc-v23",
+ "_note": "D167 (2026-10-25): extraction v10 (measure vocabulary with market_size and project_cost), the writer's replacement rule by tier and date, matching engine jev; the two poc-v23 configs differ only in the matching engine, so the August comparison is fair. Otherwise poc-v22.",
+ "provider": "openai",
+ "search_top_n": 10,
+ "extraction": {
+  "T1": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T1-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T2": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T2-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T3": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T3-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T4": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T4-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T5": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T5-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T6": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T6-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T7": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T7-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 8000
+  },
+  "T8": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T8-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 8000
+  },
+  "T10": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T10-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T11": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T11-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  }
+ },
+ "matching": {
+  "model": "jev-1.14.0",
+  "prompt_version": "matching-v3",
+  "temperature": 0.1,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 12000,
+  "engine": "jev"
+ },
+ "rejudging": {
+  "model": "gpt-6-luna",
+  "prompt_version": "judging-v3",
+  "temperature": 0.0,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 8000
+ },
+ "final_verdict": {
+  "model": "gpt-6-luna",
+  "prompt_version": "verdict-v0",
+  "temperature": 0.0,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 8000
+ },
+ "idea": {
+  "model": "gpt-6-luna",
+  "prompt_version": "idea-v11",
+  "temperature": 0.1,
+  "reasoning_effort": "none",
+  "max_output_tokens": 4000
+ }
+}
+{
+ "version": "poc-v24-admission-test",
+ "_note": "NAVER-only instruction counterfactual: T6 role v11; schema, model, limits, matching and writer unchanged. Not adopted as default.",
+ "provider": "openai",
+ "search_top_n": 10,
+ "extraction": {
+  "T1": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T1-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T2": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T2-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T3": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T3-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T4": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T4-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 16000
+  },
+  "T5": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T5-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T6": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T6-v11",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T7": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T7-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 8000
+  },
+  "T8": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T8-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 8000
+  },
+  "T10": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T10-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  },
+  "T11": {
+   "model": "gpt-6-luna",
+   "prompt_version": "T11-v10",
+   "temperature": 0.2,
+   "reasoning_effort": "low",
+   "max_output_tokens": 12000
+  }
+ },
+ "matching": {
+  "model": "jev-1.14.0",
+  "prompt_version": "matching-v3",
+  "temperature": 0.1,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 12000,
+  "engine": "jev"
+ },
+ "rejudging": {
+  "model": "gpt-6-luna",
+  "prompt_version": "judging-v3",
+  "temperature": 0.0,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 8000
+ },
+ "final_verdict": {
+  "model": "gpt-6-luna",
+  "prompt_version": "verdict-v0",
+  "temperature": 0.0,
+  "reasoning_effort": "medium",
+  "max_output_tokens": 8000
+ },
+ "idea": {
+  "model": "gpt-6-luna",
+  "prompt_version": "idea-v11",
+  "temperature": 0.1,
+  "reasoning_effort": "none",
+  "max_output_tokens": 4000
+ }
+}
+
+codex
+The selected config reaches both replay modes and the accepted-request audit, and v23 remains the default. I’m checking the refusal order and the offline check’s coverage of path and byte changes.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'config|prepare|contract|single_attempt_http|credential' tests/test_ingestion_study.py poc/concurrency_study/budget.py poc/reports/2026-10-25-ingestion-v11 docs/research/2026-10-25-ingestion-v11 && rg -n 'cfg|extraction_setting|request_for|def judge_day' src/hivemind/extraction.py src/hivemind/views/round.py src/hivemind/views/jev_matching.py && nl -ba poc/concurrency_study/budget.py | sed -n '1,170p' && nl -ba tests/test_ingestion_study.py | sed -n '1,220p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/concurrency_study/budget.py:54:    def __init__(self, path, prepare, *, cap_microdollars=1500000, max_calls=36):
+poc/concurrency_study/budget.py:58:        self.lock, self.prepare = threading.Lock(), prepare
+poc/concurrency_study/budget.py:108:            send = self.prepare(provider, request)
+poc/concurrency_study/budget.py:121:            # No raw exception text: HTTP/SDK exceptions can contain credentials or headers.
+poc/concurrency_study/budget.py:136:def single_attempt_http():
+poc/concurrency_study/budget.py:141:        raise BudgetError('configured provider credential missing')
+poc/concurrency_study/budget.py:143:    def prepare(provider, body):
+poc/concurrency_study/budget.py:154:                raise model.TransportError('credential in response; response not saved')
+poc/concurrency_study/budget.py:157:    return prepare
+docs/research/2026-10-25-ingestion-v11/code-review.log:13:Read-only follow-up. Scope ONLY explicit --config support now implemented in /Users/lchingen/hivemind/poc/concurrency_study/ingestion.py and offline_check.py in poc/reports/2026-10-25-ingestion-v11. Governing plan: docs/research/2026-10-25-ingestion-v11/plan.md (already reviewed, no serious findings). Check selected config reaches prepare, frozen contract, serial/concurrent replay and accepted-request audit; changed path/bytes must refuse before any live transport. Existing default v23 must stay. Identify serious bugs in THIS DELTA only. Out of scope: UI, production promotion, all unrelated historical issues. No edits, providers, tests, subagents or recursive searches outside this repository. Return concise findings.
+docs/research/2026-10-25-ingestion-v11/code-review.log:16:I’ll trace the selected config through preparation, replay, and the accepted-request audit, then check that drift is refused before transport. I’ll keep this read-only and limited to the two changed files.
+docs/research/2026-10-25-ingestion-v11/code-review.log:45:?? poc/config/poc-v24-admission-test.json
+docs/research/2026-10-25-ingestion-v11/code-review.log:69:Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+docs/research/2026-10-25-ingestion-v11/code-review.log:71:Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+docs/research/2026-10-25-ingestion-v11/code-review.log:95:| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+docs/research/2026-10-25-ingestion-v11/code-review.log:96:| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+docs/research/2026-10-25-ingestion-v11/code-review.log:97:| Prepared | Different path or changed content | Refuse before credentials, archive, trial directory or provider calls |
+docs/research/2026-10-25-ingestion-v11/code-review.log:107:| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+docs/research/2026-10-25-ingestion-v11/code-review.log:108:| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+docs/research/2026-10-25-ingestion-v11/code-review.log:111:Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+docs/research/2026-10-25-ingestion-v11/code-review.log:136:    19	from hivemind import config, extraction, jev, model, replay, testdb, universe
+docs/research/2026-10-25-ingestion-v11/code-review.log:138:    21	from concurrency_study.budget import GuardedTransport, single_attempt_http
+docs/research/2026-10-25-ingestion-v11/code-review.log:149:    32	DEFAULT_CONFIG = ROOT / 'poc/config/poc-v23.json'
+docs/research/2026-10-25-ingestion-v11/code-review.log:176:    59	def configuration(config_path=DEFAULT_CONFIG):
+docs/research/2026-10-25-ingestion-v11/code-review.log:177:    60	    return config.load(config_path), universe.load(ROOT / 'poc/universe.json')
+docs/research/2026-10-25-ingestion-v11/code-review.log:180:    63	def contract(directory, config_path=DEFAULT_CONFIG):
+docs/research/2026-10-25-ingestion-v11/code-review.log:182:    65	    config_path = Path(config_path).resolve()
+docs/research/2026-10-25-ingestion-v11/code-review.log:183:    66	    cfg, uni = configuration(config_path)
+docs/research/2026-10-25-ingestion-v11/code-review.log:185:    68	             config_path, ROOT / 'poc/universe.json', Path(__file__),
+docs/research/2026-10-25-ingestion-v11/code-review.log:190:    73	            'config_path': str(config_path), 'config': dataclasses.asdict(cfg), 'universe': vars(uni),
+docs/research/2026-10-25-ingestion-v11/code-review.log:195:    78	def prepare(directory, *, config_path=DEFAULT_CONFIG):
+docs/research/2026-10-25-ingestion-v11/code-review.log:199:    82	        raise ValueError('study already prepared; preserve it')
+docs/research/2026-10-25-ingestion-v11/code-review.log:224:   107	        json.dump(contract(directory, config_path), handle, indent=2, ensure_ascii=False)
+docs/research/2026-10-25-ingestion-v11/code-review.log:344:   227	def run_trial(directory, trial, *, live=False, transport=None, config_path=DEFAULT_CONFIG):
+docs/research/2026-10-25-ingestion-v11/code-review.log:346:   229	    if trial not in ORDER or contract(directory, config_path) != json.loads((directory / 'study.json').read_text()):
+docs/research/2026-10-25-ingestion-v11/code-review.log:347:   230	        raise ValueError('unknown trial or changed study contract')
+docs/research/2026-10-25-ingestion-v11/code-review.log:358:   241	    cfg, uni = configuration(config_path)
+docs/research/2026-10-25-ingestion-v11/code-review.log:362:   245	        transport = StudyTransport(GuardedTransport(directory / 'budget.sqlite', single_attempt_http(), max_calls=144))
+docs/research/2026-10-25-ingestion-v11/code-review.log:407:   290	    parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+docs/research/2026-10-25-ingestion-v11/code-review.log:408:   291	    parser.add_argument('--prepare', action='store_true')
+docs/research/2026-10-25-ingestion-v11/code-review.log:412:   295	    if args.prepare:
+docs/research/2026-10-25-ingestion-v11/code-review.log:413:   296	        prepare(args.directory.resolve(), config_path=args.config.resolve())
+docs/research/2026-10-25-ingestion-v11/code-review.log:415:   298	        run_trial(args.directory, args.trial, live=args.live, config_path=args.config.resolve())
+docs/research/2026-10-25-ingestion-v11/code-review.log:417:   300	        parser.error('choose --prepare or --trial')
+docs/research/2026-10-25-ingestion-v11/code-review.log:435:    18	CONFIG = ROOT / 'poc/config/poc-v24-admission-test.json'
+docs/research/2026-10-25-ingestion-v11/code-review.log:438:    21	    for row in db.execute("select request_json,answer_json from model_calls where purpose='extract' and config_version='poc-v23'"):
+docs/research/2026-10-25-ingestion-v11/code-review.log:456:    39	def prepare(provider, req):
+docs/research/2026-10-25-ingestion-v11/code-review.log:485:    68	    (directory / 'study.json').write_text(json.dumps(ingestion.contract(directory, CONFIG)))
+docs/research/2026-10-25-ingestion-v11/code-review.log:486:    69	    transport = ingestion.StudyTransport(GuardedTransport(directory / 'budget.sqlite', prepare, max_calls=144))
+docs/research/2026-10-25-ingestion-v11/code-review.log:488:    71	        ingestion.run_trial(directory, trial, transport=transport, config_path=CONFIG)
+docs/research/2026-10-25-ingestion-v11/code-review.log:498:    81	    cfg, uni = ingestion.configuration(CONFIG)
+docs/research/2026-10-25-ingestion-v11/code-review.log:503:    86	    # Same path, changed config bytes: fail before credentials or trial state.
+docs/research/2026-10-25-ingestion-v11/code-review.log:504:    87	    config_copy = directory / 'config.json'
+docs/research/2026-10-25-ingestion-v11/code-review.log:505:    88	    config_copy.write_text(CONFIG.read_text())
+docs/research/2026-10-25-ingestion-v11/code-review.log:506:    89	    frozen = ingestion.contract(directory, config_copy)
+docs/research/2026-10-25-ingestion-v11/code-review.log:508:    91	    config_copy.write_text(config_copy.read_text() + '\n')
+docs/research/2026-10-25-ingestion-v11/code-review.log:510:    93	        ingestion.run_trial(directory, 'concurrent-2', live=True, config_path=config_copy)
+docs/research/2026-10-25-ingestion-v11/code-review.log:512:    95	        assert str(exc) == 'unknown trial or changed study contract'
+docs/research/2026-10-25-ingestion-v11/code-review.log:514:    97	        print('changed-config mutant refused before trial/credentials', flush=True)
+docs/research/2026-10-25-ingestion-v11/code-review.log:516:    99	        raise AssertionError('changed config was accepted')
+docs/research/2026-10-25-ingestion-v11/code-review.log:533:Run the unchanged `poc-v23` configuration through `replay.run`. Three fresh serial controls and three fresh concurrent trials, with their own empty archives and copies of one baseline, provide three paired samples and a serial-versus-serial variation check. Fixed order: control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3. Read the first serial result before starting a concurrent trial. Each trial is launched explicitly; a failure does not automatically retry or start the next trial. Maximum 144 physical API calls and $1.50 total conservative cost, shared across all trials. This is a fresh budget, not a continuation of the API smoke's spending. No cap increases.
+docs/research/2026-10-25-ingestion-v11/code-review.log:559:| Unprepared | Existing output folder / changed source | Refuse overwriting or mixing experiments |
+docs/research/2026-10-25-ingestion-v11/code-review.log:560:| Prepared | New explicit trial | Copy the same baseline into a new trial directory; empty archive; record config/runtime/source/baseline hashes |
+docs/research/2026-10-25-ingestion-v11/code-review.log:591:/opt/homebrew/bin/zsh -lc 'nl -ba src/hivemind/config.py && nl -ba poc/concurrency_study/runner.py && nl -ba src/hivemind/replay.py && cat poc/config/poc-v23.json && cat poc/config/poc-v24-admission-test.json' in /Users/lchingen/hivemind
+docs/research/2026-10-25-ingestion-v11/code-review.log:593:     1	"""Config (docs/prd/03-config.md): a versioned file of the settings a person chooses, with a checksum written into
+docs/research/2026-10-25-ingestion-v11/code-review.log:608:    16	    """The file of a prompt the config names, for example role-v1.txt or matching-v1.txt."""
+docs/research/2026-10-25-ingestion-v11/code-review.log:613:    21	    """03-config: a version that names a prompt that does not exist is refused whole. An extraction setting's
+docs/research/2026-10-25-ingestion-v11/code-review.log:655:    63	    idea: Setting = None      # the service's reading of a user's idea (docs/poc/idea-card.md); absent in pipeline-only configs
+docs/research/2026-10-25-ingestion-v11/code-review.log:660:    68	            raise ConfigError(f'no extraction setting for category {category} in config {self.version}')
+docs/research/2026-10-25-ingestion-v11/code-review.log:687:    95	            raise ConfigError(f'config lacks {key}')
+docs/research/2026-10-25-ingestion-v11/code-review.log:725:    29	    return model.request_identity({'config': dataclasses.asdict(cfg), 'universe': vars(universe)})[1]
+docs/research/2026-10-25-ingestion-v11/code-review.log:772:    76	            raise ValueError('concurrency manifest source, configuration or runtime changed')
+docs/research/2026-10-25-ingestion-v11/code-review.log:785:    89	        pending, prepared_futures, next_index = {}, [], 0
+docs/research/2026-10-25-ingestion-v11/code-review.log:803:   107	                prepared_futures.append((item['input_id'], future))
+docs/research/2026-10-25-ingestion-v11/code-review.log:804:   108	                self.events.append({'input_id': item['input_id'], 'event': 'prepared', 'request': key})
+docs/research/2026-10-25-ingestion-v11/code-review.log:811:   115	                    raise ValueError('configuration, universe or runtime changed during the day')
+docs/research/2026-10-25-ingestion-v11/code-review.log:820:   124	                    raise ValueError('prepared extraction does not match its validated request')
+docs/research/2026-10-25-ingestion-v11/code-review.log:846:   150	            for input_id, future in prepared_futures:
+docs/research/2026-10-25-ingestion-v11/code-review.log:992: "_note": "D167 (2026-10-25): extraction v10 (measure vocabulary with market_size and project_cost), the writer's replacement rule by tier and date, matching engine jev; the two poc-v23 configs differ only in the matching engine, so the August comparison is fair. Otherwise poc-v22.",
+docs/research/2026-10-25-ingestion-v11/code-review.log:1206:The selected config reaches both replay modes and the accepted-request audit, and v23 remains the default. I’m checking the refusal order and the offline check’s coverage of path and byte changes.
+docs/research/2026-10-25-ingestion-v11/design-review.txt:1:No serious issues found in the proposed plan or explicit-config-path design.
+docs/research/2026-10-25-ingestion-v11/design-review.txt:3:- Both arms use the same configuration, preserving a fair comparison. [Plan:3](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:3)
+docs/research/2026-10-25-ingestion-v11/design-review.txt:6:- Freezing the selected path, file content and resolved settings is implementable within the existing contract check before transport or trial creation. [Plan:29](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:29), [ingestion.py:225](/Users/lchingen/hivemind/poc/concurrency_study/ingestion.py:225)
+docs/research/2026-10-25-ingestion-v11/plan.md:3:Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+docs/research/2026-10-25-ingestion-v11/plan.md:5:Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+docs/research/2026-10-25-ingestion-v11/plan.md:29:| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+docs/research/2026-10-25-ingestion-v11/plan.md:30:| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+docs/research/2026-10-25-ingestion-v11/plan.md:31:| Prepared | Different path or changed content | Refuse before credentials, archive, trial directory or provider calls |
+docs/research/2026-10-25-ingestion-v11/plan.md:41:| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+docs/research/2026-10-25-ingestion-v11/plan.md:42:| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+docs/research/2026-10-25-ingestion-v11/plan.md:45:Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+poc/reports/2026-10-25-ingestion-v11/offline-check.txt:6:concurrent-1 structural errors [] events ['prepared', 'prepared', 'reused', 'accepted', 'prepared', 'stale', 'accepted', 'stale', 'accepted']
+poc/reports/2026-10-25-ingestion-v11/offline-check.txt:8:changed-config mutant refused before trial/credentials
+docs/research/2026-10-25-ingestion-v11/design-review.log:13:Read-only review. Scope ONLY /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md and the proposed explicit-config-path delta in poc/concurrency_study/ingestion.py. Read existing D174 plan, ingestion.py and D176/D177 decisions for context. Out of scope: UI, default adoption, other modules or pre-existing issues unrelated to this tiny resume experiment. Check whether the fixed same-config serial/concurrent comparison and its coverage criteria, paid cap, and config manifest behavior contradict current contracts or cannot be implemented. Report serious issues with concrete citations, or none. Do not edit files or call providers. Do not launch subagents.
+docs/research/2026-10-25-ingestion-v11/design-review.log:16:I’ll review the plan and proposed explicit config-path change without editing files or calling providers. I’ll check whether the two runs stay comparable and follow the existing contracts.
+docs/research/2026-10-25-ingestion-v11/design-review.log:66:     3	Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+docs/research/2026-10-25-ingestion-v11/design-review.log:68:     5	Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+docs/research/2026-10-25-ingestion-v11/design-review.log:92:    29	| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+docs/research/2026-10-25-ingestion-v11/design-review.log:93:    30	| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+docs/research/2026-10-25-ingestion-v11/design-review.log:94:    31	| Prepared | Different path or changed content | Refuse before credentials, archive, trial directory or provider calls |
+docs/research/2026-10-25-ingestion-v11/design-review.log:104:    41	| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+docs/research/2026-10-25-ingestion-v11/design-review.log:105:    42	| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+docs/research/2026-10-25-ingestion-v11/design-review.log:108:    45	Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+docs/research/2026-10-25-ingestion-v11/design-review.log:131:    19	from hivemind import config, extraction, jev, model, replay, testdb, universe
+docs/research/2026-10-25-ingestion-v11/design-review.log:133:    21	from concurrency_study.budget import GuardedTransport, single_attempt_http
+docs/research/2026-10-25-ingestion-v11/design-review.log:170:    58	def configuration():
+docs/research/2026-10-25-ingestion-v11/design-review.log:171:    59	    return config.load(ROOT / 'poc/config/poc-v23.json'), universe.load(ROOT / 'poc/universe.json')
+docs/research/2026-10-25-ingestion-v11/design-review.log:174:    62	def contract(directory):
+docs/research/2026-10-25-ingestion-v11/design-review.log:176:    64	    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:178:    66	             ROOT / 'poc/config/poc-v23.json', ROOT / 'poc/universe.json', Path(__file__),
+docs/research/2026-10-25-ingestion-v11/design-review.log:183:    71	            'config': dataclasses.asdict(cfg), 'universe': vars(uni),
+docs/research/2026-10-25-ingestion-v11/design-review.log:188:    76	def prepare(directory):
+docs/research/2026-10-25-ingestion-v11/design-review.log:192:    80	        raise ValueError('study already prepared; preserve it')
+docs/research/2026-10-25-ingestion-v11/design-review.log:217:   105	        json.dump(contract(directory), handle, indent=2, ensure_ascii=False)
+docs/research/2026-10-25-ingestion-v11/design-review.log:339:   227	    if trial not in ORDER or contract(directory) != json.loads((directory / 'study.json').read_text()):
+docs/research/2026-10-25-ingestion-v11/design-review.log:340:   228	        raise ValueError('unknown trial or changed study contract')
+docs/research/2026-10-25-ingestion-v11/design-review.log:351:   239	    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:355:   243	        transport = StudyTransport(GuardedTransport(directory / 'budget.sqlite', single_attempt_http(), max_calls=144))
+docs/research/2026-10-25-ingestion-v11/design-review.log:400:   288	    parser.add_argument('--prepare', action='store_true')
+docs/research/2026-10-25-ingestion-v11/design-review.log:404:   292	    if args.prepare:
+docs/research/2026-10-25-ingestion-v11/design-review.log:405:   293	        prepare(args.directory.resolve())
+docs/research/2026-10-25-ingestion-v11/design-review.log:409:   297	        parser.error('choose --prepare or --trial')
+docs/research/2026-10-25-ingestion-v11/design-review.log:442:2402-- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
+docs/research/2026-10-25-ingestion-v11/design-review.log:447:2407-- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
+docs/research/2026-10-25-ingestion-v11/design-review.log:749:    17	Run the unchanged `poc-v23` configuration through `replay.run`. Three fresh serial controls and three fresh concurrent trials, with their own empty archives and copies of one baseline, provide three paired samples and a serial-versus-serial variation check. Fixed order: control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3. Read the first serial result before starting a concurrent trial. Each trial is launched explicitly; a failure does not automatically retry or start the next trial. Maximum 144 physical API calls and $1.50 total conservative cost, shared across all trials. This is a fresh budget, not a continuation of the API smoke's spending. No cap increases.
+docs/research/2026-10-25-ingestion-v11/design-review.log:775:    43	| Unprepared | Existing output folder / changed source | Refuse overwriting or mixing experiments |
+docs/research/2026-10-25-ingestion-v11/design-review.log:776:    44	| Prepared | New explicit trial | Copy the same baseline into a new trial directory; empty archive; record config/runtime/source/baseline hashes |
+docs/research/2026-10-25-ingestion-v11/design-review.log:856:   227	    if trial not in ORDER or contract(directory) != json.loads((directory / 'study.json').read_text()):
+docs/research/2026-10-25-ingestion-v11/design-review.log:857:   228	        raise ValueError('unknown trial or changed study contract')
+docs/research/2026-10-25-ingestion-v11/design-review.log:868:   239	    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:872:   243	        transport = StudyTransport(GuardedTransport(directory / 'budget.sqlite', single_attempt_http(), max_calls=144))
+docs/research/2026-10-25-ingestion-v11/design-review.log:917:   288	    parser.add_argument('--prepare', action='store_true')
+docs/research/2026-10-25-ingestion-v11/design-review.log:921:   292	    if args.prepare:
+docs/research/2026-10-25-ingestion-v11/design-review.log:922:   293	        prepare(args.directory.resolve())
+docs/research/2026-10-25-ingestion-v11/design-review.log:926:   297	        parser.error('choose --prepare or --trial')
+docs/research/2026-10-25-ingestion-v11/design-review.log:937:/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/docs/DECISIONS.md | sed -n '2370,2445p'; rg -n 'v11|config' /Users/lchingen/hivemind/poc/config/*v11* /Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/* 2>/dev/null" in /Users/lchingen/hivemind
+docs/research/2026-10-25-ingestion-v11/design-review.log:940:  2371	- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
+docs/research/2026-10-25-ingestion-v11/design-review.log:971:  2402	- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
+docs/research/2026-10-25-ingestion-v11/design-review.log:976:  2407	- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
+docs/research/2026-10-25-ingestion-v11/design-review.log:980:  2411	- Alex asked to push the change and return to the acceleration POC. The prompt candidate is already pushed as `8848660`; it remains inactive by default. The [resumed comparison](research/2026-10-25-ingestion-v11/plan.md) uses the identical `poc-v24-admission-test` configuration in both modes, the same three complete source items and ordered baseline, and fresh scratch ledgers and archives.
+docs/research/2026-10-25-ingestion-v11/design-review.log:981:  2412	- Keep D174's two-request outbound limit, $1.50 conservative ceiling and 144-call maximum. No provider/model, production schema, horizon, grouping or writer changes. Add only an explicit study `--config` path whose path/content are frozen before any live call. The prior stopped journal is not resumed.
+docs/research/2026-10-25-ingestion-v11/design-review.log:983:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:3:Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+docs/research/2026-10-25-ingestion-v11/design-review.log:984:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:5:Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+docs/research/2026-10-25-ingestion-v11/design-review.log:985:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:29:| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+docs/research/2026-10-25-ingestion-v11/design-review.log:986:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:30:| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+docs/research/2026-10-25-ingestion-v11/design-review.log:987:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:41:| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+docs/research/2026-10-25-ingestion-v11/design-review.log:988:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:42:| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+docs/research/2026-10-25-ingestion-v11/design-review.log:989:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:45:Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+docs/research/2026-10-25-ingestion-v11/design-review.log:991:/Users/lchingen/hivemind/poc/config/poc-v11.json:2:  "version": "poc-v11",
+docs/research/2026-10-25-ingestion-v11/design-review.log:992:/Users/lchingen/hivemind/poc/config/poc-v11.json:3:  "_note": "poc-v11: poc-v9 with prompt idea-v8 (tuning log iteration 10): no per-part reason, each candidate written once, a two-sentence summary.",
+docs/research/2026-10-25-ingestion-v11/design-review.log:995:/Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md:37:| Prepared | Input/baseline/config/runtime changed | Refuse before any provider call |
+docs/research/2026-10-25-ingestion-v11/design-review.log:997:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:13:Read-only review. Scope ONLY /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md and the proposed explicit-config-path delta in poc/concurrency_study/ingestion.py. Read existing D174 plan, ingestion.py and D176/D177 decisions for context. Out of scope: UI, default adoption, other modules or pre-existing issues unrelated to this tiny resume experiment. Check whether the fixed same-config serial/concurrent comparison and its coverage criteria, paid cap, and config manifest behavior contradict current contracts or cannot be implemented. Report serious issues with concrete citations, or none. Do not edit files or call providers. Do not launch subagents.
+docs/research/2026-10-25-ingestion-v11/design-review.log:998:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:16:I’ll review the plan and proposed explicit config-path change without editing files or calling providers. I’ll check whether the two runs stay comparable and follow the existing contracts.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1001:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:66:     3	Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1002:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:68:     5	Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1003:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:92:    29	| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+docs/research/2026-10-25-ingestion-v11/design-review.log:1004:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:93:    30	| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+docs/research/2026-10-25-ingestion-v11/design-review.log:1005:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:104:    41	| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+docs/research/2026-10-25-ingestion-v11/design-review.log:1006:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:105:    42	| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+docs/research/2026-10-25-ingestion-v11/design-review.log:1007:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:108:    45	Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1009:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:131:    19	from hivemind import config, extraction, jev, model, replay, testdb, universe
+docs/research/2026-10-25-ingestion-v11/design-review.log:1010:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:170:    58	def configuration():
+docs/research/2026-10-25-ingestion-v11/design-review.log:1011:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:171:    59	    return config.load(ROOT / 'poc/config/poc-v23.json'), universe.load(ROOT / 'poc/universe.json')
+docs/research/2026-10-25-ingestion-v11/design-review.log:1012:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:176:    64	    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:1013:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:178:    66	             ROOT / 'poc/config/poc-v23.json', ROOT / 'poc/universe.json', Path(__file__),
+docs/research/2026-10-25-ingestion-v11/design-review.log:1014:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:183:    71	            'config': dataclasses.asdict(cfg), 'universe': vars(uni),
+docs/research/2026-10-25-ingestion-v11/design-review.log:1015:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:351:   239	    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:1017:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:442:2402-- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1018:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:447:2407-- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1021:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:749:    17	Run the unchanged `poc-v23` configuration through `replay.run`. Three fresh serial controls and three fresh concurrent trials, with their own empty archives and copies of one baseline, provide three paired samples and a serial-versus-serial variation check. Fixed order: control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3. Read the first serial result before starting a concurrent trial. Each trial is launched explicitly; a failure does not automatically retry or start the next trial. Maximum 144 physical API calls and $1.50 total conservative cost, shared across all trials. This is a fresh budget, not a continuation of the API smoke's spending. No cap increases.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1022:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:776:    44	| Prepared | New explicit trial | Copy the same baseline into a new trial directory; empty archive; record config/runtime/source/baseline hashes |
+docs/research/2026-10-25-ingestion-v11/design-review.log:1024:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:868:   239	    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:1027:The plan keeps both arms on the same configuration and follows D176/D177’s coverage rule. For example, NAVER’s planned expansion must reach a relevant business question, but it need not get a separate card or group. I’m checking whether the config can be passed consistently through preparation, execution and audit.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1030:/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/src/hivemind/config.py | sed -n '1,225p'; nl -ba /Users/lchingen/hivemind/poc/concurrency_study/budget.py | sed -n '1,125p'" in /Users/lchingen/hivemind
+docs/research/2026-10-25-ingestion-v11/design-review.log:1032:     1	"""Config (docs/prd/03-config.md): a versioned file of the settings a person chooses, with a checksum written into
+docs/research/2026-10-25-ingestion-v11/design-review.log:1047:    16	    """The file of a prompt the config names, for example role-v1.txt or matching-v1.txt."""
+docs/research/2026-10-25-ingestion-v11/design-review.log:1052:    21	    """03-config: a version that names a prompt that does not exist is refused whole. An extraction setting's
+docs/research/2026-10-25-ingestion-v11/design-review.log:1094:    63	    idea: Setting = None      # the service's reading of a user's idea (docs/poc/idea-card.md); absent in pipeline-only configs
+docs/research/2026-10-25-ingestion-v11/design-review.log:1099:    68	            raise ConfigError(f'no extraction setting for category {category} in config {self.version}')
+docs/research/2026-10-25-ingestion-v11/design-review.log:1126:    95	            raise ConfigError(f'config lacks {key}')
+docs/research/2026-10-25-ingestion-v11/design-review.log:1189:    54	    def __init__(self, path, prepare, *, cap_microdollars=1500000, max_calls=36):
+docs/research/2026-10-25-ingestion-v11/design-review.log:1193:    58	        self.lock, self.prepare = threading.Lock(), prepare
+docs/research/2026-10-25-ingestion-v11/design-review.log:1243:   108	            send = self.prepare(provider, request)
+docs/research/2026-10-25-ingestion-v11/design-review.log:1256:   121	            # No raw exception text: HTTP/SDK exceptions can contain credentials or headers.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1263:/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/poc/config/poc-v24-admission-test.json; nl -ba /Users/lchingen/hivemind/poc/config/poc-v23.json; rg -n 'def load|prompt_version|class Config|def extraction_setting' /Users/lchingen/hivemind/src/hivemind/config.py; rg -n 'cap_microdollars|max_calls|def __init__|def single_attempt_http' /Users/lchingen/hivemind/poc/concurrency_study/budget.py; rg -n 'configuration\\(|contract\\(|prepare\\(|run_trial\\(' /Users/lchingen/hivemind/poc/concurrency_study/ingestion.py" in /Users/lchingen/hivemind
+docs/research/2026-10-25-ingestion-v11/design-review.log:1374:     3	 "_note": "D167 (2026-10-25): extraction v10 (measure vocabulary with market_size and project_cost), the writer's replacement rule by tier and date, matching engine jev; the two poc-v23 configs differ only in the matching engine, so the August comparison is fair. Otherwise poc-v22.",
+docs/research/2026-10-25-ingestion-v11/design-review.log:1491:54:    def __init__(self, path, prepare, *, cap_microdollars=1500000, max_calls=36):
+docs/research/2026-10-25-ingestion-v11/design-review.log:1499:136:def single_attempt_http():
+docs/research/2026-10-25-ingestion-v11/design-review.log:1500:58:def configuration():
+docs/research/2026-10-25-ingestion-v11/design-review.log:1501:62:def contract(directory):
+docs/research/2026-10-25-ingestion-v11/design-review.log:1502:64:    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:1503:76:def prepare(directory):
+docs/research/2026-10-25-ingestion-v11/design-review.log:1504:105:        json.dump(contract(directory), handle, indent=2, ensure_ascii=False)
+docs/research/2026-10-25-ingestion-v11/design-review.log:1506:227:    if trial not in ORDER or contract(directory) != json.loads((directory / 'study.json').read_text()):
+docs/research/2026-10-25-ingestion-v11/design-review.log:1507:239:    cfg, uni = configuration()
+docs/research/2026-10-25-ingestion-v11/design-review.log:1508:293:        prepare(args.directory.resolve())
+docs/research/2026-10-25-ingestion-v11/design-review.log:1512:No serious issues found in the proposed plan or explicit-config-path design.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1514:- Both arms use the same configuration, preserving a fair comparison. [Plan:3](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:3)
+docs/research/2026-10-25-ingestion-v11/design-review.log:1517:- Freezing the selected path, file content and resolved settings is implementable within the existing contract check before transport or trial creation. [Plan:29](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:29), [ingestion.py:225](/Users/lchingen/hivemind/poc/concurrency_study/ingestion.py:225)
+docs/research/2026-10-25-ingestion-v11/design-review.log:1522:No serious issues found in the proposed plan or explicit-config-path design.
+docs/research/2026-10-25-ingestion-v11/design-review.log:1524:- Both arms use the same configuration, preserving a fair comparison. [Plan:3](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:3)
+docs/research/2026-10-25-ingestion-v11/design-review.log:1527:- Freezing the selected path, file content and resolved settings is implementable within the existing contract check before transport or trial creation. [Plan:29](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:29), [ingestion.py:225](/Users/lchingen/hivemind/poc/concurrency_study/ingestion.py:225)
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:18:CONFIG = ROOT / 'poc/config/poc-v24-admission-test.json'
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:21:    for row in db.execute("select request_json,answer_json from model_calls where purpose='extract' and config_version='poc-v23'"):
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:39:def prepare(provider, req):
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:68:    (directory / 'study.json').write_text(json.dumps(ingestion.contract(directory, CONFIG)))
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:69:    transport = ingestion.StudyTransport(GuardedTransport(directory / 'budget.sqlite', prepare, max_calls=144))
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:71:        ingestion.run_trial(directory, trial, transport=transport, config_path=CONFIG)
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:81:    cfg, uni = ingestion.configuration(CONFIG)
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:86:    # Same path, changed config bytes: fail before credentials or trial state.
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:87:    config_copy = directory / 'config.json'
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:88:    config_copy.write_text(CONFIG.read_text())
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:89:    frozen = ingestion.contract(directory, config_copy)
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:91:    config_copy.write_text(config_copy.read_text() + '\n')
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:93:        ingestion.run_trial(directory, 'concurrent-2', live=True, config_path=config_copy)
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:95:        assert str(exc) == 'unknown trial or changed study contract'
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:97:        print('changed-config mutant refused before trial/credentials', flush=True)
+poc/reports/2026-10-25-ingestion-v11/offline_check.py:99:        raise AssertionError('changed config was accepted')
+poc/reports/2026-10-25-ingestion-v11/study.json:17:  "config_path": "/Users/lchingen/hivemind/poc/config/poc-v24-admission-test.json",
+poc/reports/2026-10-25-ingestion-v11/study.json:18:  "config": {
+poc/reports/2026-10-25-ingestion-v11/study.json:842:              "contracted power"
+poc/reports/2026-10-25-ingestion-v11/study.json:1375:    "/Users/lchingen/hivemind/poc/config/poc-v24-admission-test.json": "c28bf901bc8e1e858ad9b158ea64a49dba65fc8b46360443016bf9aec3a8969f",
+poc/reports/2026-10-25-ingestion-v11/study.json:1383:    "/Users/lchingen/hivemind/src/hivemind/config.py": "cdd78abc478b6d15248929da2ffc92c8221c5c3af9455b0b851692637319309b",
+tests/test_ingestion_study.py:11:from hivemind import config, model, replay
+tests/test_ingestion_study.py:54:    def prepare(provider, request):
+tests/test_ingestion_study.py:70:    transport = StudyTransport(GuardedTransport(tmp_path / 'budget.sqlite', prepare))
+tests/test_ingestion_study.py:92:    def prepare(provider, request):
+tests/test_ingestion_study.py:105:    transport = StudyTransport(GuardedTransport(tmp_path / 'budget.sqlite', prepare))
+tests/test_ingestion_study.py:118:    cfg = config.load(ROOT / 'poc/config/poc-v23.json')
+tests/test_ingestion_study.py:134:    def prepare(provider, request):
+tests/test_ingestion_study.py:140:    transport = StudyTransport(GuardedTransport(tmp_path / 'budget.sqlite', prepare))
+src/hivemind/views/round.py:35:def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence, lists, shown, *, extra_views=(), call_offset=0, transport=None, workers=1):
+src/hivemind/views/round.py:39:    engine = jev_matching if cfg.matching.engine == 'jev' else matching      # Jev answers once; a retry would be the same answer
+src/hivemind/views/round.py:43:            answer = engine.decide(archive, cfg, conn, item, candidates, evidence, lists, shown, extra_views=extra_views, retry_note=note, transport=transport, **options)
+src/hivemind/views/round.py:72:def judge_day(conn, archive, cfg, day, seq, *, transport=None, log=print):
+src/hivemind/views/round.py:82:        judged = judging.round_of_judgements(archive, cfg, conn, sorted(changed), seq, marker, transport=transport)
+src/hivemind/views/round.py:96:def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print, extractor=None, matching_workers=1):
+src/hivemind/views/round.py:114:            handover = (extractor or extraction.extract)(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
+src/hivemind/views/round.py:129:    lists = matching.build_lists(conn, handover, shown, cfg.search_top_n)
+src/hivemind/views/round.py:130:    checked = _match(conn, archive, cfg, universe, item, seq, result, handover.candidates, handover.evidence, lists, shown, transport=transport, workers=matching_workers)
+src/hivemind/views/round.py:142:        lists2 = matching.Lists({}, {(e['id'], view_id): matching.rank_evidence(conn, view_id, e['one_line'], cfg.search_top_n) for e, view_id in pending})
+src/hivemind/views/round.py:148:        checked2 = _match(conn, archive, cfg, universe, item, seq, result, [], evidence2, lists2, [], extra_views=sorted({v for _, v in pending}),
+src/hivemind/extraction.py:314:def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
+src/hivemind/extraction.py:316:    setting = cfg.extraction_setting(item['category'])
+src/hivemind/extraction.py:323:def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
+src/hivemind/extraction.py:324:    setting, system, user, schema = request_for(cfg, item, text, shown_views, universe, shown_groups)
+src/hivemind/extraction.py:327:    answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
+src/hivemind/views/jev_matching.py:115:def _answers(archive, cfg, jobs, workers, transport):
+src/hivemind/views/jev_matching.py:122:        return jev.ask(archive, cfg, cfg.matching, state, questions, 'match', transport=transport)
+src/hivemind/views/jev_matching.py:131:        _, key = model.request_identity(jev.request_for(cfg.matching, state, questions))
+src/hivemind/views/jev_matching.py:171:def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *, extra_views=(), retry_note='', transport=None, workers=1):
+src/hivemind/views/jev_matching.py:193:    replies = _answers(archive, cfg, jobs, workers, transport)
+     1	"""Conservative admission and single-attempt HTTP for the isolated API study."""
+     2	import json
+     3	from pathlib import Path
+     4	import sqlite3
+     5	import threading
+     6	import time
+     7	import urllib.error
+     8	import urllib.request
+     9	
+    10	from hivemind import jev, model
+    11	
+    12	
+    13	class BudgetError(RuntimeError):
+    14	    pass
+    15	
+    16	
+    17	def envelope(provider, request):
+    18	    """Reserve documented maximum usage, without guessing tokens from characters."""
+    19	    if provider == 'openai' and request.get('model') == 'gpt-6-luna':
+    20	        allowed = {'model', 'messages', 'response_format', 'reasoning_effort', 'max_completion_tokens'}
+    21	        if set(request) - allowed:
+    22	            raise BudgetError('unreviewed OpenAI request fields')
+    23	        cap = request.get('max_completion_tokens')
+    24	        if type(cap) is not int or not 1 <= cap <= 128000:
+    25	            raise BudgetError('unreviewed OpenAI output limit')
+    26	        # Full documented input bound and the requested output bound, including
+    27	        # highest reviewed Standard rates and the 10% regional premium.
+    28	        reserved = (922000 * 550 + cap * 825 + 999) // 1000
+    29	        return reserved, 922000, cap
+    30	    if provider == 'jev' and request.get('model') == 'jev-1.14.0':
+    31	        if set(request) != {'model', 'state', 'questions'} or not request['questions']:
+    32	            raise BudgetError('unreviewed Jev request shape')
+    33	        tokens = 65536 * (len(request['questions']) + 1)
+    34	        return (tokens * 42 + 999) // 1000, tokens, None
+    35	    raise BudgetError('unreviewed provider or model')
+    36	
+    37	
+    38	def charge(provider, response, max_input, max_output):
+    39	    usage = response.get('usage', {}) if isinstance(response, dict) else {}
+    40	    names = ('prompt_tokens', 'completion_tokens') if provider == 'openai' else ('input_tokens', 'output_tokens')
+    41	    counts = [usage.get(k) for k in names]
+    42	    if any(type(n) is not int or n < 0 for n in counts) or counts[0] > max_input or (max_output is not None and counts[1] > max_output):
+    43	        raise BudgetError('missing, invalid or above-envelope usage')
+    44	    a, b = counts
+    45	    # Integer microdollars, rounded up. OpenAI uses the highest reviewed Standard rate,
+    46	    # not an estimate of a discount or the provider's eventual bill.
+    47	    cost = (a * 550 + b * 825 + 999) // 1000 if provider == 'openai' else (a * 42 + 999) // 1000
+    48	    return cost
+    49	
+    50	
+    51	class GuardedTransport:
+    52	    """One coordinator's journal; unresolved work survives crashes and closes admission."""
+    53	
+    54	    def __init__(self, path, prepare, *, cap_microdollars=1500000, max_calls=36):
+    55	        path = Path(path)
+    56	        if not path.is_absolute() or type(cap_microdollars) is not int or cap_microdollars <= 0 or type(max_calls) is not int or max_calls <= 0:
+    57	            raise ValueError('absolute journal path and positive integer limits required')
+    58	        self.lock, self.prepare = threading.Lock(), prepare
+    59	        self.conn = sqlite3.connect(path, check_same_thread=False)
+    60	        self.conn.executescript('''
+    61	            create table if not exists settings (id integer primary key check(id=1), cap integer, max_calls integer, halted text);
+    62	            create table if not exists attempts (
+    63	              id integer primary key, provider text, request_sha256 text, request_json text,
+    64	              reserved integer, charged integer, state text, response_json text, error text,
+    65	              seconds real, completed_order integer);
+    66	        ''')
+    67	        row = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    68	        if row is None:
+    69	            self.conn.execute('insert into settings values (1,?,?,NULL)', (cap_microdollars, max_calls))
+    70	        elif row[:2] != (cap_microdollars, max_calls):
+    71	            raise BudgetError('journal limits changed')
+    72	        if self.conn.execute("select 1 from attempts where state!='complete' limit 1").fetchone():
+    73	            self.conn.execute("update settings set halted='unresolved prior attempt' where id=1")
+    74	        self.conn.commit()
+    75	
+    76	    def stop(self, reason):
+    77	        with self.lock:
+    78	            self.conn.execute('update settings set halted=coalesce(halted,?) where id=1', (reason,))
+    79	            self.conn.commit()
+    80	
+    81	    def summary(self):
+    82	        with self.lock:
+    83	            self.conn.row_factory = sqlite3.Row
+    84	            attempts = [dict(r) for r in self.conn.execute('select id,provider,request_sha256,reserved,charged,state,error,seconds,completed_order from attempts order by id')]
+    85	            halted = self.conn.execute('select halted from settings').fetchone()[0]
+    86	            self.conn.row_factory = None
+    87	        return {'attempts': attempts, 'halted': halted,
+    88	                'held_microdollars': sum(r['charged'] if r['charged'] is not None else r['reserved'] for r in attempts)}
+    89	
+    90	    def __call__(self, *args):
+    91	        provider, request = args if len(args) == 2 else ('jev', args[0])
+    92	        reserved, max_input, max_output = envelope(provider, request)
+    93	        text, sha = model.request_identity(request)
+    94	        with self.lock:
+    95	            cap, max_calls, halted = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    96	            count, held = self.conn.execute('select count(*),coalesce(sum(coalesce(charged,reserved)),0) from attempts').fetchone()
+    97	            if halted or count >= max_calls or held + reserved > cap:
+    98	                raise BudgetError('admission closed or study limit reached')
+    99	            cur = self.conn.execute("insert into attempts(provider,request_sha256,request_json,reserved,state) values (?,?,?,?,'reserved')", (provider, sha, text, reserved))
+   100	            ident = cur.lastrowid
+   101	            self.conn.commit()
+   102	        start = time.perf_counter()
+   103	        encoded = None
+   104	        dispatched = False
+   105	        try:
+   106	            # Preparation is local only. Cancellation and dispatch then share one
+   107	            # decision point; work committed here is in flight, even before socket I/O.
+   108	            send = self.prepare(provider, request)
+   109	            with self.lock:
+   110	                if self.conn.execute('select halted from settings').fetchone()[0]:
+   111	                    raise BudgetError('cancelled before dispatch')
+   112	                self.conn.execute("update attempts set state='dispatched' where id=?", (ident,))
+   113	                self.conn.commit()
+   114	                dispatched = True
+   115	            response = send()
+   116	            encoded = json.dumps(response, ensure_ascii=False)
+   117	            cost = charge(provider, response, max_input, max_output)
+   118	            if cost > reserved:
+   119	                raise BudgetError('usage exceeds reserved cost')
+   120	        except BaseException as exc:
+   121	            # No raw exception text: HTTP/SDK exceptions can contain credentials or headers.
+   122	            with self.lock:
+   123	                self.conn.execute('update attempts set state=?,charged=?,response_json=?,error=?,seconds=? where id=?',
+   124	                                  ('unknown' if dispatched else 'not_sent', None if dispatched else 0,
+   125	                                   encoded, type(exc).__name__, time.perf_counter()-start, ident))
+   126	                self.conn.execute("update settings set halted=coalesce(halted,'unknown usage') where id=1")
+   127	                self.conn.commit()
+   128	            raise
+   129	        with self.lock:
+   130	            order = self.conn.execute('select coalesce(max(completed_order),0)+1 from attempts').fetchone()[0]
+   131	            self.conn.execute("update attempts set state='complete',charged=?,response_json=?,seconds=?,completed_order=? where id=?", (cost, encoded, time.perf_counter()-start, order, ident))
+   132	            self.conn.commit()
+   133	        return response
+   134	
+   135	
+   136	def single_attempt_http():
+   137	    """Explicit live opt-in. Credentials are loaded once; tests supply a fake sender."""
+   138	    keys = {'openai': model._key('openai'), 'jev': jev._key()}
+   139	    urls = {'openai': model.ENDPOINTS['openai'][0], 'jev': jev.ENDPOINT}
+   140	    if any(not isinstance(k, str) or not k for k in keys.values()):
+   141	        raise BudgetError('configured provider credential missing')
+   142	
+   143	    def prepare(provider, body):
+   144	        headers = {'Authorization': 'Bearer ' + keys[provider], 'Content-Type': 'application/json', 'Accept': 'application/json'}
+   145	        data = json.dumps(body, sort_keys=True, ensure_ascii=False).encode('utf-8')
+   146	        request = urllib.request.Request(urls[provider], data, headers)
+   147	        def send():
+   148	            try:
+   149	                with urllib.request.urlopen(request, timeout=60) as reply:
+   150	                    raw = reply.read()
+   151	            except urllib.error.HTTPError as exc:
+   152	                raise model.TransportError(f'{provider} HTTP {exc.code}; no automatic retry') from None
+   153	            if any(k.encode('utf-8') in raw for k in keys.values()):
+   154	                raise model.TransportError('credential in response; response not saved')
+   155	            return json.loads(raw)
+   156	        return send
+   157	    return prepare
+     1	"""The ingestion study's baseline, shared dispatch limit and failure boundaries."""
+     2	from concurrent.futures import ThreadPoolExecutor
+     3	import json
+     4	from pathlib import Path
+     5	import sqlite3
+     6	import sys
+     7	import threading
+     8	
+     9	import pytest
+    10	
+    11	from hivemind import config, model, replay
+    12	from hivemind.views import judging, store
+    13	from test_concurrency import responses
+    14	from test_sequential_replay import setup_run
+    15	from test_keyed_views import candidate
+    16	
+    17	ROOT = Path(__file__).resolve().parents[1]
+    18	sys.path.insert(0, str(ROOT / 'poc'))
+    19	sys.path.insert(0, str(ROOT / 'docs/research/2026-10-25-day-batch-review'))
+    20	from snapshot_proof import snapshot
+    21	from concurrency_study.budget import BudgetError, GuardedTransport
+    22	from concurrency_study.ingestion import StudyTransport, study_day
+    23	from concurrency_study.runner import DayRunner
+    24	
+    25	
+    26	def openai_request(name):
+    27	    return {'model': 'gpt-6-luna', 'messages': [{'role': 'user', 'content': name}],
+    28	            'response_format': {'json_schema': {'schema': {'type': 'object'}}}, 'max_completion_tokens': 8000}
+    29	
+    30	
+    31	def response():
+    32	    return {'choices': [{'message': {'content': '{}'}}], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 10}}
+    33	
+    34	
+    35	def test_projected_baseline_excludes_unordered_future_records(tmp_path):
+    36	    """Baseline table: sequence-zero future audit data is not historical knowledge."""
+    37	    source = store.open_db(tmp_path / 'source.sqlite')
+    38	    for ident, seq, day in [('past', 1, '2026-07-23'), ('future', 0, '2026-07-24')]:
+    39	        store.mark_step(source, ident, seq, 'merged', 'ok', '', day, day + 'T12:00:00')
+    40	    store.pool(source, 'suggested_theme', 'unplaced', {'input_id': None}, 0)
+    41	    control = snapshot(source, 21)
+    42	    assert control.execute('select count(*) from processing_steps').fetchone()[0] == 2
+    43	    projected = snapshot(source, 21, exclude_unordered=True)
+    44	    assert projected.execute('select input_id from processing_steps').fetchall()[0][0] == 'past'
+    45	    assert projected.execute('select count(*) from processing_steps').fetchone()[0] == 1
+    46	    assert projected.execute('select count(*) from review_pool_entries').fetchone()[0] == 0
+    47	
+    48	
+    49	def test_shared_transport_bounds_requests_across_stages(tmp_path):
+    50	    """Shared limit: three callers across providers cannot dispatch more than two together."""
+    51	    entered, release = threading.Event(), threading.Event()
+    52	    lock = threading.Lock()
+    53	    active = maximum = count = 0
+    54	    def prepare(provider, request):
+    55	        def send():
+    56	            nonlocal active, maximum, count
+    57	            with lock:
+    58	                active += 1; count += 1; maximum = max(maximum, active)
+    59	                if count == 2:
+    60	                    entered.set()
+    61	            try:
+    62	                assert release.wait(5)
+    63	                if provider == 'jev':
+    64	                    return {'answers': {'q': {'type': 'noul', 'noul': 0.5}}, 'usage': {'input_tokens': 1000, 'output_tokens': 10}}
+    65	                return response()
+    66	            finally:
+    67	                with lock:
+    68	                    active -= 1
+    69	        return send
+    70	    transport = StudyTransport(GuardedTransport(tmp_path / 'budget.sqlite', prepare))
+    71	    with ThreadPoolExecutor(max_workers=3) as pool:
+    72	        futures = [pool.submit(transport, 'openai', openai_request('extract')),
+    73	                   pool.submit(transport, 'openai', openai_request('judge')),
+    74	                   pool.submit(transport, {'model': 'jev-1.14.0', 'state': '', 'questions': {'q': {'type': 'noul'}}})]
+    75	        try:
+    76	            assert entered.wait(5)
+    77	            assert active == 2
+    78	        finally:
+    79	            release.set()
+    80	        for future in futures:
+    81	            future.result()
+    82	    assert maximum == 2 and count == 3
+    83	
+    84	
+    85	def test_judging_schema_failure_stops_waiting_requests_before_drain(tmp_path):
+    86	    """Judging failure row: malformed answer closes admission within the actual day judge pool."""
+    87	    second_started = threading.Event()
+    88	    first_reply_ready = threading.Event()
+    89	    lock = threading.Lock()
+    90	    calls = []
+    91	    transport = None
+    92	    def prepare(provider, request):
+    93	        def send():
+    94	            with lock:
+    95	                number = len(calls); calls.append(number)
+    96	                if number == 1:
+    97	                    second_started.set()
+    98	            if number == 0:
+    99	                assert second_started.wait(5)
+   100	                first_reply_ready.set()
+   101	            elif number == 1:
+   102	                assert first_reply_ready.wait(5)
+   103	            return response()  # JSON is valid; required judgement fields are absent.
+   104	        return send
+   105	    transport = StudyTransport(GuardedTransport(tmp_path / 'budget.sqlite', prepare))
+   106	    conn = store.open_db(tmp_path / 'views.sqlite')
+   107	    c = candidate('c1')
+   108	    for n in range(4):
+   109	        vid, eid = f'v{n+1}', f'e{n+1}'
+   110	        store.create_view(conn, view_id=vid, object_id='NVDA', object_kind='asset', kind='asset', looks_at=c['looks_at'],
+   111	                          question=f'Will scenario {n+1} occur?', due_day='2027-12-31', year='2027', rungs=c['rungs'],
+   112	                          seq=1, input_id='seed', created_at='2026-07-23T12:00:00')
+   113	        store.add_evidence(conn, evidence_id=eid, quote='The company expects production shipments in 2027.', one_line='Production expected in 2027.',
+   114	                           speaker='NVIDIA', original_who='NVIDIA', original_day='2026-07-23', tier='party_statement', event_time='', seq=1, input_id='seed')
+   115	        store.add_source(conn, eid, 'seed', 'T6', '2026-07-23', '', 1)
+   116	        store.link(conn, eid, vid, 1)
+   117	    conn.commit()
+   118	    cfg = config.load(ROOT / 'poc/config/poc-v23.json')
+   119	    with pytest.raises((BudgetError, model.SchemaError)):
+   120	        judging.round_of_judgements(model.Archive(tmp_path / 'archive.sqlite'), cfg, conn,
+   121	                                    ['v1', 'v2', 'v3', 'v4'], 2, {'input_id': 'day:2026-07-24', 'publication_day': '2026-07-24'}, transport=transport)
+   122	    assert transport.stopped.is_set()
+   123	    assert len(calls) == 2
+   124	    assert conn.execute('select count(*) from judgements').fetchone()[0] == 0
+   125	
+   126	
+   127	def test_failed_item_closes_study_before_later_handover(tmp_path):
+   128	    """Item failure row: the wrapper closes admission before normal generator cleanup."""
+   129	    args = setup_run(tmp_path)
+   130	    conn = store.open_db(args['views_path'])
+   131	    conn.execute("create trigger fail_write before insert on views begin select raise(abort,'test storage failure'); end")
+   132	    conn.commit(); conn.close()
+   133	    send, _ = responses(reverse=True)
+   134	    def prepare(provider, request):
+   135	        def complete():
+   136	            result = send(provider, request)
+   137	            result['usage'] = {'prompt_tokens': 1000, 'completion_tokens': 100}
+   138	            return result
+   139	        return complete
+   140	    transport = StudyTransport(GuardedTransport(tmp_path / 'budget.sqlite', prepare))
+   141	    runner = DayRunner(Path(args['testdb_path']), tmp_path / 'manifests', jev_workers=1)
+   142	    stopped_at_failed_yield = []
+   143	    wrapped = study_day(runner, transport)
+   144	    def observe(*a, **kw):
+   145	        for result in wrapped(*a, **kw):
+   146	            if result.failed:
+   147	                stopped_at_failed_yield.append(transport.stopped.is_set())
+   148	            yield result
+   149	    with pytest.raises(RuntimeError, match='test storage failure'):
+   150	        replay.run(**args, transport=transport, day_runner=observe)
+   151	    assert transport.stopped.is_set()
+   152	    assert stopped_at_failed_yield == [True]
+   153	    with sqlite3.connect(args['views_path']) as db:
+   154	        assert db.execute('select count(*) from handovers').fetchone()[0] == 1
+   155	        assert db.execute('select count(*) from days_completed').fetchone()[0] == 0
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '294,330p' src/hivemind/extraction.py && sed -n '245,305p' src/hivemind/views/round.py && cat poc/reports/2026-10-25-ingestion-v11/offline-check.txt" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+        labels = [vocabulary.canonical('label', r['label']) for r in rungs]
+        if labels != OBJECT_LABELS and labels != OBJECT_LABELS[::-1]:
+            return f'object view rungs must be {OBJECT_LABELS}, got {labels}'
+    return None
+
+
+def normalise_ladder(rungs, kind):
+    """Position 1 is Strongly bullish (06-views): a reversed asset ladder is turned round, label and condition together."""
+    if kind == 'asset' and len(rungs) == 5 and [vocabulary.canonical('label', r['label']) for r in rungs] == OBJECT_LABELS[::-1]:
+        return list(reversed(rungs))
+    return rungs
+
+
+# 06-views ladder rule 6: a quarterly or half-year figure is evidence, not a view. The half-year forms name a revenue
+# or sales figure (H1 收入, first-half revenue); an event scheduled in a half-year (ships in H2 2026) is not a figure.
+QUARTERLY = re.compile(r'(\bQ[1-4]\b|第[一二三四1-4]季|季度|\bquarter(?!ly report)|fiscal Q[1-4]|\b(?:[12]H|H[12])\b(?:\s+(?:FY)?\d{4})?\s*收入|上半年收入|下半年收入'
+                       r'|\b(?:[12]H|H[12])\b(?:\s+(?:FY)?\d{4})?\s+(?:revenue|sales|net sales)|\b(?:first|second)[- ]half(?:[- ]year)?\s+(?:revenue|sales|net sales)'
+                       r'|\bhalf[- ]year\s+(?:revenue|sales|net sales))', re.I)
+
+
+def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
+    """Build the setting, complete prompt and schema without making a call."""
+    setting = cfg.extraction_setting(item['category'])
+    version = setting.prompt_version.rpartition('-')[2]
+    system, user = build_prompt(item, text, shown_views, universe, version, shown_groups)
+    group_ids = [g['group_id'] for g in shown_groups]
+    return setting, system, user, schema_for(version, group_ids)
+
+
+def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
+    setting, system, user, schema = request_for(cfg, item, text, shown_views, universe, shown_groups)
+    version = setting.prompt_version.rpartition('-')[2]
+    group_ids = [g['group_id'] for g in shown_groups]
+    answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
+    evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version), shown_group_ids=group_ids)
+    return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd, new_groups)
+
+2026-07-24 | items   3 extracted   3 merged  0 skipped  0 failed  0 | evidence   7 new views  2 judged   3 changed   3 closed 0 | open views 14 | day $0.00 total $0.00 calls 12
+{"trial": "control-1", "seconds": 0.07723137497669086, "failure": null, "changed_protected": [], "conservative_cost_microdollars": 4050}
+control-1 structural errors [] events []
+2026-07-24 | items   3 extracted   3 merged  0 skipped  0 failed  0 | evidence   7 new views  2 judged   3 changed   3 closed 0 | open views 14 | day $0.00 total $0.00 calls 14
+{"trial": "concurrent-1", "seconds": 0.09177354199346155, "failure": null, "changed_protected": [], "conservative_cost_microdollars": 5316}
+concurrent-1 structural errors [] events ['prepared', 'prepared', 'reused', 'accepted', 'prepared', 'stale', 'accepted', 'stale', 'accepted']
+substituted-handover mutant caught ['accepted handover differs from the bound request answer: nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory']
+changed-config mutant refused before trial/credentials
+
+codex
+No serious bugs found in this delta.
+
+- The selected config reaches preparation, the frozen manifest, both replay modes, and accepted-request reconstruction.
+- Changed resolved paths or file bytes fail the contract check before credentials, transport, or trial creation.
+- Omitting `--config` still selects v23.
+- The offline check uses the selected config in both modes and includes a changed-bytes refusal case.
+
+Read-only review only; no edits, tests, provider calls, or subagents.
+tokens used
+36,086
+No serious bugs found in this delta.
+
+- The selected config reaches preparation, the frozen manifest, both replay modes, and accepted-request reconstruction.
+- Changed resolved paths or file bytes fail the contract check before credentials, transport, or trial creation.
+- Omitting `--config` still selects v23.
+- The offline check uses the selected config in both modes and includes a changed-bytes refusal case.
+
+Read-only review only; no edits, tests, provider calls, or subagents.

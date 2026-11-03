@@ -1,4 +1,4 @@
-# Positive-weight Idea associations — D196
+# Positive-weight Idea associations — D290
 
 The default is `poc-v32-idea` with `idea-summary-v7`. The model chooses a variable-length list and assigns positive weights totaling 100. The raw JSON has no excluded or zero-weight branch. Omitted candidates are absent from final associations, part links, bundles, related cards and score inputs. Retrieval candidates remain search trace only.
 
@@ -31,4 +31,4 @@ The page uses the first completed candidate. System prompt size decreases from 1
 
 Model choices can differ on regeneration. Saved choices and weighted arithmetic remain deterministic. The curve applies today's adopted plan to past thesis states; it is not a record of earlier allocation decisions or a calibrated probability. No extraction/grouping or source-ledger behavior changed.
 
-PRD order reviewed: universe, classification, Config, dispatch, extraction, thesis library, final verdict, pull mode, human review, system overview. Config gains an immutable Idea version; Idea association semantics change under D196. Other module contracts/examples remain unchanged. The Idea/UI specifications, current-state paragraph and default launch now agree on positive-only adoption. Historical versions and measurements remain intact.
+PRD order reviewed: universe, classification, Config, dispatch, extraction, thesis library, final verdict, pull mode, human review, system overview. Config gains an immutable Idea version; Idea association semantics change under D290. Other module contracts/examples remain unchanged. The Idea/UI specifications, current-state paragraph and default launch now agree on positive-only adoption. Historical versions and measurements remain intact.

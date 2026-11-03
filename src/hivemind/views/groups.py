@@ -42,30 +42,38 @@ def candidate_text(c):
 
 def stored_groups(conn):
     from . import store
-    return [store._group_record(r) for r in conn.execute('select * from thesis_groups order by rowid')]
+    return [store._group_record(r, conn) for r in conn.execute('select * from thesis_groups order by rowid')]
 
 
 def plan(declared, existing, candidates, new_views, tracks_a_matter, universe=None):
     """Decide, before any write, which declarations become groups, which are a stored group under another name, and
-    every membership of the theses being written.
+    every membership of the theses being written, and the names a declaration adds to the stored group it turns out to be.
 
     declared: the handover's new_groups [{id, name, scope, aliases}]; existing: stored_groups(conn); candidates: the
     handover's candidates; new_views: candidate id -> view id for the theses this write creates. Returns
-    (creations, memberships, notes): creations = [{local_id, name, scope, aliases}] in declaration order;
-    memberships = [(view_id, group_key, basis)] where group_key is a stored group_id or a local id of a creation."""
+    (creations, memberships, notes, extensions): creations = [{local_id, name, scope, aliases}] in declaration order;
+    memberships = [(view_id, group_key, basis)] where group_key is a stored group_id or a local id of a creation;
+    extensions = [(group_id, [names])], the declared names a stored group lacks (D166: the matter's other names in the press;
+    2026-11-01: in one 14-day run 23 of 35 declarations that folded into a stored group carried names it lacked, and the
+    placer never saw them)."""
     notes = []
     alias_index = {}                                  # casefolded alias -> stored group id
     for g in existing:
         for alias in g['aliases']:
             alias_index.setdefault(alias.casefold(), g['group_id'])
-    redirected, creations, created_aliases = {}, [], {}
+    redirected, creations, created_aliases, extensions = {}, [], {}, []
     founders = {ref for c in candidates if c['id'] in new_views and tracks_a_matter(c) for ref in c.get('group_refs') or []}
     for d in declared or []:
         aliases = clean_aliases(d.get('aliases'), d['name'], universe)
         same = [alias_index[a.casefold()] for a in aliases if a.casefold() in alias_index]
         if same:
             redirected[d['id']] = same[0]
-            notes.append(f'declared group {d["id"]} "{d["name"]}" is stored group {same[0]} by its names; not created')
+            known = {a.casefold() for g in existing if g['group_id'] == same[0] for a in g['aliases']} | {a.casefold() for _, names in extensions for a in names}
+            new = [a for a in aliases if a.casefold() not in known]
+            if new:
+                extensions.append((same[0], new))
+            notes.append(f'declared group {d["id"]} "{d["name"]}" is stored group {same[0]} by its names; not created'
+                         + (f'; its other names join it: {new}' if new else ''))
             continue
         if d['id'] not in founders:
             notes.append(f'declared group {d["id"]} "{d["name"]}" is cited by no written thesis that tracks a matter; not created')
@@ -101,4 +109,4 @@ def plan(declared, existing, candidates, new_views, tracks_a_matter, universe=No
         for local_id, aliases in created_aliases.items():
             for alias in hits(aliases, text):
                 add(view_id, local_id, f'alias:{alias}')
-    return creations, memberships, notes
+    return creations, memberships, notes, extensions

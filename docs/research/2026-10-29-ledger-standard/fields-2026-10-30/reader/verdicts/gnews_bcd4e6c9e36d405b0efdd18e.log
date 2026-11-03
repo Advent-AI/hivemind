@@ -1,0 +1,946 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18b48-12c3-7363-9e78-7ba5bff004b5
+--------
+user
+You are an independent reader. You are a hedge-fund analyst who covers NVIDIA and the AI-infrastructure themes around it. You did not write the extraction prompt and you have not seen any score. You may read files; do not open any file whose name contains "key", and do not open other packets.
+
+The product: every article goes through an extraction step that writes evidence records (a verbatim quote plus fields) into the analyst's ledger. Downstream, a model judges open research questions using only these records, and a matcher compares new records with old ones. The matcher and the judge read `original_who` (who originally said or did it) and `original_day` (the day it was originally said or done) to tell old news from new and to tell one source repeated by many outlets from several independent sources. So a wrong original speaker or day misleads them; a noise record wastes the judge's attention.
+
+Reference: /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html, the signed standard the product follows. Read sections 5.3, 5.4 and 5.5 before the packet. Use it for definitions:
+- who (5.4): the original claimant; whether it is their own estimate or someone else's measurement.
+- original statement day (5.4): when unknown, written as unknown, never the report day.
+- tier (5.5): the table of five rows (an upper row wins when two apply).
+
+The packet: docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_bcd4e6c9e36d405b0efdd18e.json. It holds the article text as the model saw it, its publication_day, publisher and category, and two answers, A and B, from two different versions of the extraction (the order is random). Each answer is the list of records production keeps.
+
+Read the whole article first. Then judge every record of A and then every record of B on its own, against the article. Write your verdict as JSON only (no prose before or after), in this shape:
+
+{
+ "input_id": "...",
+ "A": [
+  {"id": "e1",
+   "worth": "keep" | "marginal" | "noise",
+   "one_line_ok": true | false,
+   "one_line_problem": null | "number/unit, lost condition or hedge, forecast written as done, wrong period, lost who said it, says more than the quote",
+   "who_ok": true | false,
+   "who_note": null | "the right original speaker, as the article gives it, and why",
+   "day_ok": true | false,
+   "day_note": null | "the day the statement was first made or the action taken, as the article gives it; unknown when the article does not say",
+   "tier_ok": true | false,
+   "tier_note": null | "the right tier: fact / party_statement / third_party_view / rumour, and the row of 5.5",
+   "duplicate_of": null | "e#"}
+ ],
+ "B": [ same shape ],
+ "fields_better": "A" | "B" | "same",
+ "fields_better_reason": "one sentence"
+}
+
+Rules for you:
+- Be literal; quote the article in your notes. Judge each field against what the article says, not against the other answer.
+- speaker is who says it in this item; judge it only when it is plainly wrong. original_who and original_day are the fields that matter most.
+- A day is wrong when the record gives the report day for something said or done earlier, a day the article does not support, or leaves empty a day the article states. A month alone is not a day: an empty day is right when the article gives only a month.
+- Check every number in one_line against the quote.
+- An answer that is null was unusable; write [] for it.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 100 -B 5 '5\\.3|5\\.4|5\\.5' /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+22-  --accent:#7cc3ba; --accent-soft:#1d3532; --pending:#e0b05a; --pending-soft:#33291a;
+23-  --core:#7cc3ba; --support:#5fa29a; --optional:#8f9b97; --excluded:#68736f; --warn:#e48a7c; color-scheme:dark}
+24-*{box-sizing:border-box}
+25-html{scroll-behavior:smooth}
+26-@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+27:body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.75;margin:0;padding-inline:16px;padding-block:0 64px}
+28-.page{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px}
+29-@media (max-width:900px){.page{grid-template-columns:minmax(0,1fr);gap:0}}
+30-nav.toc{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow:auto;padding-block:28px;font-size:13.5px}
+31-nav.toc p{font-size:11.5px;letter-spacing:.12em;color:var(--muted);margin:0 0 8px}
+32-nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+33-nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:3px 10px;border-left:2px solid var(--line)}
+34-nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-left-color:var(--accent);outline:none}
+35-nav.toc .num{font-family:var(--mono);font-size:11.5px;margin-right:6px}
+36-@media (max-width:900px){nav.toc{position:static;max-height:none;padding-block:16px 0}
+37-  nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+38-main{min-width:0;padding-block:28px}
+39-header.top{display:grid;gap:14px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+40-.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--muted)}
+41-h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.35;margin:0}
+42-h1{font-size:clamp(26px,4vw,34px);font-weight:700}
+43-h2{font-size:23px;font-weight:700;margin-top:56px;padding-top:8px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+44-h2 .num{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:500}
+45-h3{font-size:17.5px;font-weight:600;margin-top:30px}
+46-p,li{max-width:68ch}
+47-p{margin:12px 0}
+48-ul,ol{padding-left:1.3em}
+49-li{margin:5px 0}
+50-a{color:var(--accent)}
+51-code,.path{font-family:var(--mono);font-size:.86em;background:var(--soft);padding:1px 5px;border-radius:4px;word-break:break-word}
+52-.src{display:inline-block;font-size:11.5px;line-height:1.5;color:var(--muted);background:var(--soft);border-radius:3px;padding:0 6px;margin-left:4px;vertical-align:1px;white-space:nowrap}
+53-.status{display:flex;gap:10px;align-items:flex-start;background:var(--pending-soft);border:1px solid var(--pending);border-radius:8px;padding:12px 16px;font-size:14.5px}
+54-.status b{color:var(--pending)}
+55-.pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;padding:1px 9px;border-radius:999px;white-space:nowrap}
+56-.pill.pending{background:var(--pending);color:var(--surface)}
+57-.meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 18px}
+58-.answer{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 20px;margin-top:22px}
+59-.answer dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 18px}
+60-.answer dt{font-family:var(--display);font-weight:700;color:var(--accent);padding:12px 0}
+61-.answer dd{margin:0;padding:12px 0;border-bottom:1px solid var(--soft)}
+62-.answer dt:nth-last-of-type(1),.answer dd:last-child{border-bottom:none}
+63-@media (max-width:560px){.answer dl{grid-template-columns:minmax(0,1fr)}.answer dt{padding-bottom:0}}
+64-.tree{font-size:14.5px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow-x:auto}
+65-.tree ul{list-style:none;margin:0;padding-left:20px;position:relative}
+66-.tree>ul{padding-left:0}
+67-.tree li{position:relative;margin:0;padding:5px 0 5px 18px;max-width:none}
+68-.tree ul ul li::before{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1.5px solid var(--line)}
+69-.tree ul ul li:last-child::before{bottom:auto;height:19px}
+70-.tree ul ul li::after{content:"";position:absolute;left:0;top:19px;width:12px;border-top:1.5px solid var(--line)}
+71-.tree .node{font-weight:700}
+72-.tree .goes{color:var(--muted)}
+73-.tree .tag{font-size:12px;color:var(--accent);margin-left:6px}
+74-.cards{display:grid;gap:14px;margin-top:18px}
+75-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+76-.card h3{margin:0 0 6px;display:flex;gap:10px;align-items:baseline;font-size:16.5px}
+77-.card h3 .n{font-family:var(--mono);font-size:13px;color:var(--pending);font-weight:500;min-width:1.6em}
+78-.card .row{display:grid;grid-template-columns:4.2em minmax(0,1fr);gap:4px 12px;margin:8px 0;font-size:14.5px}
+79-.card .row .k{color:var(--muted);font-size:13px;padding-top:2px}
+80-.card .row p{margin:0}
+81-.card .lean{color:var(--pending);font-weight:700}
+82-.table-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+83-table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.6}
+84-th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--soft)}
+85-th{font-weight:700;background:var(--soft);font-size:13px;white-space:nowrap}
+86-tr:last-child td{border-bottom:none}
+87-td.nowrap{white-space:nowrap}
+88-.wide table{min-width:860px}
+89-.mid table{min-width:640px}
+90-.w{display:inline-block;font-size:12px;font-weight:700;padding:0 8px;border-radius:4px;white-space:nowrap;border:1.5px solid transparent}
+91-.w.core{background:var(--core);color:var(--surface)}
+92-.w.sup{border-color:var(--support);color:var(--support)}
+93-.w.opt{border-color:var(--optional);color:var(--optional);border-style:dashed}
+94-.w.exc{color:var(--excluded);text-decoration:line-through}
+95-.steps{counter-reset:s;display:grid;gap:10px;margin:16px 0;padding:0;list-style:none}
+96-.steps>li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px 12px 52px;position:relative;max-width:none}
+97-.steps>li::before{content:counter(s);position:absolute;left:16px;top:12px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--surface);font-family:var(--mono);font-size:13px;display:grid;place-items:center}
+98-.steps>li b{display:block}
+99-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+100-.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+101-.tile .v{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+102-.tile .l{font-size:13px;color:var(--muted)}
+103-.num-cell{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+104-.note{border-left:3px solid var(--accent);padding:4px 14px;color:var(--muted);font-size:14.5px;margin:14px 0}
+105-.note.warn{border-left-color:var(--warn)}
+106-blockquote{margin:14px 0;padding:10px 16px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--pending);border-radius:6px;font-size:14.5px}
+107-blockquote p{margin:6px 0}
+108-.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto}
+109-.chart svg{display:block;width:100%;min-width:520px;height:auto}
+110-.chart .bar{fill:var(--accent)}
+111-.chart .bar.approx{fill:var(--support);opacity:.7}
+112-.chart text{fill:var(--muted);font-family:var(--mono);font-size:11px}
+113-.chart text.val{fill:var(--ink);font-size:12px}
+114-.chart .axis{stroke:var(--line);stroke-width:1}
+115-footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+116-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+117-.status.ok{background:var(--accent-soft);border-color:var(--accent)}
+118-.status.ok b{color:var(--accent)}
+119-.pill.ok{background:var(--accent);color:var(--surface)}
+120-</style>
+121-
+122-<div class="page">
+123-<nav class="toc" aria-label="目录">
+124-  <p>目录</p>
+125-  <ol>
+126-    <li><a href="#decisions"><span class="num">✓</span>已拍的 12 条</a></li>
+127-    <li><a href="#words"><span class="num">1</span>用词</a></li>
+--
+161-
+162-<h3>一张图：同一篇文章里每句话的去向</h3>
+163-<div class="tree" role="img" aria-label="每句话的去向">
+164-<ul><li><span class="node">一句话</span>
+165-  <ul>
+166:    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+167-    <li>分析员会记 <span class="goes">→ 留为证据</span><span class="tag">第 5 节</span>
+168-      <ul>
+169:        <li>记来源层：事实、当事人陈述、第三方观点、传闻 <span class="tag">进账本 · 第 5.5 节</span></li>
+170-        <li>分量：核心、辅助、可选 <span class="tag">只在评估时判，不进账本 · 第 6 节</span></li>
+171-        <li>归档：挂到最窄的那个已开问题 <span class="src">D207</span>；没有问题接，记 no home 扔掉，评估时逐条读 <span class="src">D209</span></li>
+172-        <li>这篇文章还提出了值得追的新问题吗？ <span class="tag">第 4 节</span>
+173-          <ul>
+174-            <li>过了测试，属于五类之一 <span class="goes">→ 候选问题；和库里已有问题是不是重复，由匹配判</span> <span class="src">D211、D190</span></li>
+175-            <li>没过 <span class="goes">→ 不开，它只是证据</span></li>
+176-          </ul>
+177-        </li>
+178-      </ul>
+179-    </li>
+180-  </ul>
+181-</li></ul>
+182-</div>
+183-
+184-<h2 id="decisions"><span class="num">已拍</span>Alex 拍板的 12 条</h2>
+185-<p>2026-10-29 Alex 签字（D243）。第 5 条他定得比我的倾向更严；其余 11 条按倾向："其他几条的意见我都ok，sign off"。下表每条写定下的是什么、落在哪一节。</p>
+186-<blockquote>
+187-<p>第 5 条，Alex 原话："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"</p>
+188-<p>整体方向，Alex 原话："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"</p>
+189-</blockquote>
+190-<div class="table-wrap mid"><table>
+191-<thead><tr><th>#</th><th>定下的</th><th>在哪一节</th></tr></thead>
+192-<tbody>
+193-<tr><td>1</td><td>分量按信息量定档：核心要碰到关键判断，并带一个量、一个确定状态或一个带期间的预测；别家公司自己的经营数字、对公司是小事的，算辅助；预测离现在越远，越可能只是辅助，由判断定。缺金额、缺日期只影响分到哪一档，不是不留的理由</td><td class="nowrap">第 6 节</td></tr>
+194-<tr><td>2</td><td>"共同量"按 D191 落实：任何一家公司之外、好几家都会受它影响的量或价格（合计支出、合约价、利率）都可以开题，开题理由叫 <code>shared_quantity</code>；期间按自然年。提示词和代码要跟着改</td><td class="nowrap">第 3 节 D 类</td></tr>
+195-<tr><td>3</td><td>生态数字（论文数、获奖、下载量、开发者人数、大会人数）可选</td><td class="nowrap">第 6 节</td></tr>
+196:<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+197:<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+198:<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+199-<tr><td>7</td><td>收购算约束性义务（写明规模、尚未完成）</td><td class="nowrap">第 3 节 C 类</td></tr>
+200-<tr><td>8</td><td>改提示词时的回归判法：全部文章各发一次和上一版比，"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；它是诊断，验收仍是三次发送</td><td class="nowrap">第 9.3 节</td></tr>
+201:<tr><td>9</td><td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+202:<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+203-<tr><td>11</td><td>金标冻结后发现错：另记一份带理由的更正，写明改前改后，不覆盖原文件；测量用更正后的版本并注明</td><td class="nowrap">第 8 节</td></tr>
+204-<tr><td>12</td><td>达标线里"垃圾"一项（每篇留下的无关陈述）用定稿金标重算，Luna 基线也重算</td><td class="nowrap">第 9.2 节</td></tr>
+205-</tbody></table></div>
+206-
+207-<h3 id="conventions">我定的记录约定</h3>
+208-<p>只定怎么记，不改变留不留、开不开。</p>
+209-<ul>
+210-<li>页面杂项（广告、相关文章预告、推荐列表、别的新闻标题）一律归第 1 版的"模板"一行，不另起名字。</li>
+211-<li>标题里的说法和正文是同一条证据，不单记<span class="src">第 1 版 §2 同一事实的复述</span>。</li>
+212-<li>分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。</li>
+213:<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+214-</ul>
+215-
+216-<h2 id="words"><span class="num">1</span>这一页用的词：一词一义</h2>
+217-<div class="table-wrap mid"><table>
+218-<thead><tr><th>词</th><th>意思</th><th>不要和它混</th></tr></thead>
+219-<tbody>
+220-<tr><td class="nowrap">陈述</td><td>原文里某一方说的一句话或一件事</td><td></td></tr>
+221-<tr><td class="nowrap">证据</td><td>被留下的陈述，带引文、摘要、说话人、原始出处、来源层</td><td>作者的观点（它本身可以是一条证据）</td></tr>
+222-<tr><td class="nowrap">问题（观点）</td><td>账本里追踪的一件事：一个问题句、一组结果档、一个到期日，写下后不改<span class="src">PRD 06</span></td><td></td></tr>
+223-<tr><td class="nowrap">候选问题</td><td>抽取这一步提议新开的问题</td><td></td></tr>
+224-<tr><td class="nowrap">标的问题、主题问题</td><td>标的：答案是一家可交易公司（或币、商品）自己的经营结果。主题：答案是世界上的一件事，影响很多公司<span class="src">PRD 06</span></td><td></td></tr>
+225-<tr><td class="nowrap">开题理由</td><td>候选问题值得开的几类理由之一，答案里写在 <code>opens_as</code><span class="src">D184；英文 admission reason</span></td><td></td></tr>
+226-<tr><td class="nowrap">结果档</td><td>一个问题事先固定、互不重叠、覆盖全部结果的结局，五档或是非两档<span class="src">PRD 06；英文 rung</span></td><td>分量</td></tr>
+227-<tr><td class="nowrap">来源层</td><td>事实、当事人陈述、第三方观点、传闻<span class="src">PRD 06；英文 evidence tier</span></td><td>分量</td></tr>
+228-<tr><td class="nowrap">分量</td><td>一条证据对判断有多重要：核心、辅助、可选、不收<span class="src">第 6 节；D243</span>。Alex 说的"档位低一点"指它</td><td>结果档、来源层</td></tr>
+229-<tr><td class="nowrap">研究用途</td><td>判断这一步引用一条证据去支持一个具体结论时，它撑得住多强：直接可用、有条件可用、线索、不可用<span class="src">D221，第 7 节</span></td><td>分量</td></tr>
+230-<tr><td class="nowrap">七类驱动</td><td>一条陈述为什么对公司业务重要的七条路径<span class="src">D208</span>。需求：客户要买多少，如订单、客户支出、贷款需求、客流。供给与投入：能做出多少、成本多少，如产能、原料和零部件价格、燃料、矿石品位。竞争与份额：对手的产品、价格、开店、赢单。定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户。产品周期：发布、出货、试验、获批、延期。政策：法规、许可、关税、利率、监管决定。资本与义务：融资、担保、承诺、投资、收购</td><td>问题类型</td></tr>
+231-<tr><td class="nowrap">市场预期与估值</td><td>市场已经定价了什么：估值倍数、市值、目标价、股价反应。观点的立场要和它比<span class="src">AGENTS §8</span>。对一个业务量的一致预期（收入、EPS）是那个业务量的证据，不归这里</td><td>七类驱动</td></tr>
+232-<tr><td class="nowrap">研究组</td><td>几个问题共同在追的一件正在进行的事<span class="src">D165</span></td><td>问题</td></tr>
+233-</tbody></table></div>
+234-
+235-<h2 id="ledger"><span class="num">2</span>账本里记三种东西</h2>
+236-<ol class="steps">
+237-<li><b>证据</b>一条记录一个陈述，一件事用几句话说仍是一条<span class="src">第 1 版 §2；Alex 判 11</span>。记逐字引文、能单独读懂的一句话摘要、说话人、原始说话人和原始日期（不知道就写不知道，不填报道日<span class="src">D220</span>）、来源层。同一条证据可以挂到几个问题上，推力写在挂接上<span class="src">PRD 06</span>。每一条进来的证据都单独存下；和已有证据的关系（同一说法、修订）由匹配标出，作为意见，两条都留着<span class="src">D202、D204</span>。</li>
+238-<li><b>问题</b>问题句、结果档、到期日写下不改；当前判断随证据更新，到期定格<span class="src">PRD 06</span>。问题分标的和主题，按开题理由分五类（第 3 节）。问题从三处来：文章里的候选问题；用户的备忘录<span class="src">PRD 06 State</span>："A thesis from the user's memo is not yet judged until evidence first links to it"；分析员开始覆盖一家公司时种下的驱动问题<span class="src">D208，设计未建</span>。</li>
+239-<li><b>研究组</b>一件正在进行的事（一个产品换代及其部署、一笔融资或收购、一个政策过程、一轮投资或需求周期），把几个问题组织在一起，常常跨公司。它不是问题，也不代替开题判断。公司自己的报表行（收入、毛利率、费用、税率、资本开支）不带研究组，除非这一行本身就在追这样一件事；它也可以加入别的问题建的组<span class="src">D165</span>。</li>
+240-</ol>
+241-<p><b>不进账本的：</b>归档找不到家的证据，记 <code>no home</code> 扔掉<span class="src">D209</span>。评估时逐条读被扔的，分四种：抽取的垃圾；库里缺这个问题（覆盖缺口）；问题在却没挂上（归档错）；该开没开（开题错）。各归各的环节<span class="src">第 1 版 §7</span>。存储的表结构归 PRD 06 管。</p>
+242-
+243-<h2 id="types"><span class="num">3</span>问题的五类：账本的几大类型</h2>
+244-<p>开题理由是 D184 定的四类，D236 把主驱动量扩到产品节点，所以写成五类。判两件事，互不顶替：这是谁的问题（标的还是主题）；为什么值得开（开题理由）。</p>
+245-<div class="table-wrap wide"><table>
+246-<thead><tr><th>类</th><th>开题理由</th><th>标的或主题</th><th>问什么</th><th>量还是事件</th><th>期间和到期</th><th>核对材料 <code>settled_by</code></th><th>出处</th></tr></thead>
+247-<tbody>
+248-<tr><td class="nowrap"><b>A</b> 主驱动量</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那个年度量，不管公司指不指引：撑起业务的分部收入、毛利率、资本开支；跨行业如银行的净利息收入、零售商的同店销售、公用事业的费率基数、航空公司的燃油成本（当它是争论焦点时）。不是每一行报表数</td><td>量，五档</td><td>公司财年的今年或明年；到期日是这个数的发布日</td><td>公布这个数的公开材料，通常是年报</td><td>D184：<code>settled_by</code> 是 "the public material that resolves it"；PRD 06 梯子第 5 条</td></tr>
+249-<tr><td class="nowrap"><b>B</b> 主产品节点</td><td><code>main_driver</code></td><td>标的</td><td>承载公司价值的那一代产品哪天发布或开始出货</td><td>事件，五档，或是非两档<span class="src">PRD 06 梯子第 1 条</span></td><td>能判出结果的那天</td><td>公司公告、发货确认</td><td>D236</td></tr>
+250-<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+251-<tr><td class="nowrap"><b>D</b> 共同量</td><td><code>shared_quantity</code><span class="src">D191、D243 第 2 条</span>；现行提示词和代码还叫 <code>industry_aggregate</code>，按这一页改</td><td>主题</td><td>任何一家公司之外、好几家都会受它影响的量或价格：几家公司的合计（云厂商资本开支）、价格（内存合约价、油价）、利率。同一总量的另一种人群、另一种说法是这个量的证据</td><td>量，五档</td><td>自然年的今年或明年。同一个量、同一年只有一个问题，由代码按"主题＋量＋期间"判<span class="src">D197</span>；量的类别是 <code>other</code> 的不算</td><td>几家公司年报、统计发布、官方决定</td><td>D184、D191、D197、D243；PRD 06</td></tr>
+252-<tr><td class="nowrap"><b>E</b> 政策阶段</td><td><code>policy_stage</code></td><td>问的是一家公司的收入、利润、份额或产品进度，算标的，即使由政策驱动；问的是世界上的事（许可制度、利率、合计支出），算主题。D184 采纳的 role-v12 原文："A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it"</td><td>一个政策或监管过程到了哪一步，写明谁说了算</td><td>事件，五档或两档</td><td>能判出那一步的那天。文章没写日期的待决监管事项，用本财年末（role-v12 原文："A pending regulatory decision may lack a date; use the current fiscal year-end as its due date"）；这个日期是研究员定的检查日，要标明<span class="src">评审 §1 第 1 条</span></td><td>官方决定、公报</td><td>D184</td></tr>
+253-</tbody></table></div>
+254-
+255-<p>例子（跨行业）：</p>
+256-<ul>
+257-<li><b>A：</b>NVIDIA FY2027 数据中心收入；一家地区银行 FY2026 净利息收入；一家公用事业公司 2027 年费率基数。</li>
+258-<li><b>B：</b>下一代机架系统能否在 2027 年底前开始出货；一家车企的新平台能否在 2026 年内开始交付。</li>
+259-<li><b>C：</b>NVIDIA 为云客户产能兜底的义务在 FY2027 年报达到多少；一家保险公司是否在 2027 年中前为合资公司 5 亿美元债务签署担保。</li>
+260-<li><b>D：</b>五家最大云厂商 2026 年合计资本开支；2027 年 DRAM 合约价相对 2026 年的变化、美联储 2026 年最后一次会议后的利率上限。</li>
+261-<li><b>E：</b>中国是否在 2027-01-31 前正式批准本国公司进口 H200；美国是否在某日前对某类芯片实行出口许可。这两题问的是许可这件世界上的事，所以是主题，role-v12 原文的例子就是 "licensing"。一个监管决定对一家公司收入或产品进度的影响，问成那家公司的量或产品节点时，是标的问题（同一句原文）。</li>
+262-</ul>
+263-
+264-<h3>五类之外的东西去哪</h3>
+265-<ul>
+266-<li><b>七类驱动不是问题类型。</b>它们是一条陈述为什么重要的理由，用来判分量和归档。D208 设计的"每家公司种下的驱动问题"由分析员开始覆盖时写好，不从文章里开；还没建。</li>
+267-<li><b>别家公司自己的量</b>（对手的份额、客户的资本开支）：D187 定了"任何公司自己的量是那家公司的问题，私营公司也算"，但还没实现，要先在覆盖名单里加私营公司这一类。D155 定了"公司清单可以作为初始参考，但清单外不能忽略"。现行代码在匹配时跳过名单外的对象<span class="src">PRD 06 Step 4</span>。所以抽取照常可以提这样的问题，它要过第 4 节的测试；名单外的现在会被匹配跳过，这不算抽取错。</li>
+268-<li><b>宏观量</b>（利率、通胀）：按 D 类共同量开题<span class="src">D243 第 2 条</span>。只来自一篇纯宏观文章时，只有主题在名单上才开<span class="src">D191 第 3 条</span>。宏观对每家公司的正负，在判断那家公司时读主题块决定<span class="src">D191 第 1 条、D195</span>。</li>
+269-<li><b>开题理由是封闭的</b><span class="src">D184</span>：一件事属不属于五类之一，按上表逐条看，比如一个监管决定看它是不是 E 类。哪一类都不属于的不开；它是不是证据、挂到哪，照第 5 节和归档规则。</li>
+270-</ul>
+271-
+272-<h3>问题怎么写：PRD 06 的梯子规则，不重写</h3>
+273-<ul>
+274-<li>一个问题只问一个量的一个期间，或一件事；能各自朝相反方向走的部分要分开<span class="src">PRD 06 梯子第 3 条</span>，分开的每一题都要过第 4 节的测试。</li>
+275-<li>写成问句，不写成断言<span class="src">PRD 06 Rationale</span>。</li>
+276-<li>结果档可核对、不重叠、不留缝，到期恰好一档成立；中间一档写明和什么比；"小幅""部分"这种不能核对的说法不用，部分状态写成单独一档<span class="src">PRD 06 梯子第 2 条</span>。标的问题的档描述业务结果；主题问题的档只写结局，不写好坏<span class="src">PRD 06、D186</span>。</li>
+277-<li>到期日：量是它的发布日；事件是能判出结果的那天。公司的量用公司财年，别的用自然年，只开今年和明年<span class="src">PRD 06 梯子第 5 条；约束性义务例外，D185</span>。</li>
+278-</ul>
+279-
+280-<h2 id="opening"><span class="num">4</span>开题标准</h2>
+281-<blockquote><p><b>一个问题值得单独追，要同时满足三件事：它的答案可能改变仓位；能在一个日期用公开材料判出落在哪一档；库里没有问题在问同一件事。</b>开多少个是判断的结果，不是目标<span class="src">第 1 版 §6；评审 §1</span>。</p>
+282-<p>另有一条前提：新问题要有独立的投资判断；一个新产品、一个新数字、一个更窄的范围，单凭这些不开<span class="src">D201</span>。</p></blockquote>
+283-
+284-<h3>四个测试<span class="src">第 1 版 §6</span></h3>
+285-<ol class="steps">
+286-<li><b>值得追</b>写得出"这个结果会改变哪项收入、利润、现金或信用风险、竞争位置"吗？写不出就留作证据，不开题。"数字很大"不算理由。</li>
+287-<li><b>独立意义</b>能写出两个情景吗：其他问题的答案不变，只有这一题相反，而对业务的判断确实不同？写不出就优先作为证据<span class="src">评审 §1 第 3、8 条</span>。评审里的一个判例：NVIDIA FY2027 总收入题判为数据中心收入题的证据，理由是"该段明确说主要增长来自数据中心，未提出独立的其他业务争论"。这是对那一段材料的判断，别的材料要逐个判。</li>
+288-<li><b>能核对</b>有一个日期和一份公开材料能把答案放进事先固定的档吗？没有就重写问题。到期没有材料记"未能判定"，不算错。</li>
+289-<li><b>不是重复</b>和已有问题比，只是预测值、措辞、来源、方向或同一总量的另一种口径不同，最终核对的是同一个结果吗？是就是同一题。抽取看不到库<span class="src">D211</span>，这一条在抽取时只对同一篇文章里提出的几个问题判；和库里的比由匹配做。</li>
+290-</ol>
+291-<p>另外三条写法检查<span class="src">评审 §1 第 1、5、6 条</span>。没过的问题不能照原样开，要重写；重写不了就不开，材料作证据。</p>
+292-<ul>
+293-<li><b>原文支持：</b>主体、量或事件、时间依据都能在原文找到。原文没给日期、而规则允许研究员定检查日的，用那个日期并标明：没写日期的待决监管事项用本财年末（第 3 节 E 类）；还没签的约束性义务用文章后 18 个月以内能核对签约的那天<span class="src">D185、D210</span>。不把"拟议""预计"写成"已签""已完成"。</li>
+294-<li><b>口径完整：</b>算谁、不算谁、算什么写清楚；支出、融资、担保、订单、收入不混。</li>
+295-<li><b>时间正确：</b>原文支持这个期间，不把几年的平均写成今年。</li>
+296-</ul>
+297-
+298-<h3>不开的<span class="src">第 1 版 §6 的清单</span></h3>
+299-<div class="table-wrap mid"><table>
+300-<thead><tr><th>不开</th><th>出处</th><th>它变成什么</th></tr></thead>
+301-<tbody>
+302-<tr><td>季度数字和季度指引</td><td>第 1 版 §6；PRD 06 梯子第 6 条</td><td>证据</td></tr>
+303-<tr><td>同一段指引里的每一行（"费用率、税率是模型输入，不是争论"）</td><td>第 1 版 §6</td><td>证据</td></tr>
+304-<tr><td>没日期的"护城河""战略"</td><td>第 1 版 §6</td><td>证据</td></tr>
+305-<tr><td>高管任免、股东投票、回购授权；章程</td><td>第 1 版 §6；章程出自 D239 选定的 role-v29 原文（"executive appointments, shareholder votes or bylaws"）</td><td>证据或不留</td></tr>
+306-<tr><td>例行诉讼程序</td><td>第 1 版 §6</td><td>证据</td></tr>
+307-<tr><td>客户的部署计划（"它是供应商需求和产品问题的证据，除非改变供应商自己的现金或信用风险"）</td><td>第 1 版 §6</td><td>证据；改变公司自己的现金或信用风险时按 C 类判</td></tr>
+308-<tr><td>以约束性义务为理由开：公司自己借钱、自己的租约、已完成或没写规模的投资。它们不是约束性义务；对别的问题仍可以是证据，或按别的开题理由判</td><td>D236、D238</td><td>证据</td></tr>
+309-<tr><td>把远期年度预测改装成事件</td><td>第 1 版 §6</td><td>证据</td></tr>
+310-<tr><td>后年及以后的年度量（约束性义务除外）</td><td>PRD 06 梯子第 5 条；D185</td><td>证据</td></tr>
+311-<tr><td>同一个量的另一个估计、另一种口径、另一个来源</td><td>第 1 版 §6 测试 4</td><td>那个已开问题的证据，由匹配并入</td></tr>
+312-</tbody></table></div>
+313-
+--
+349-</ul>
+350-
+351-<h3>5.2 不完整也是证据</h3>
+352-<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+353-
+354:<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+355-<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+356-<div class="table-wrap wide"><table>
+357-<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+358-<tbody>
+359-<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+360-<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+361-<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+362-<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+363-<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+364-<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+365-<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+366-<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+367-<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+368-<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+369-</tbody></table></div>
+370-<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+371-<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+372-
+373:<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+374-<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+375-<div class="table-wrap mid"><table>
+376-<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+377-<tbody>
+378-<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+379-<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+380-<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+381-<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+382-<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+383-<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+384-</tbody></table></div>
+385-<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+386-<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+387-
+388:<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+389-<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+390-<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+391-<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+392-<div class="table-wrap mid"><table>
+393-<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+394-<tbody>
+395-<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+396-<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+397-<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+398-<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+399-<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+400-</tbody></table></div>
+401-<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+402-
+403-<h2 id="weight"><span class="num">6</span>分量</h2>
+404-<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+405-<div class="table-wrap wide"><table>
+406-<thead><tr><th>等级</th><th>什么样</th><th>例子</th></tr></thead>
+407-<tbody>
+408-<tr><td><span class="w core">核心</span></td><td>碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字</td><td>分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持</td></tr>
+409-<tr><td><span class="w sup">辅助</span></td><td>支持或反驳上面的判断，或给出可检验的估值假设；碰到关键判断但没有能定位答案的信息；别家公司自己的经营数字（收入、利润率、积压订单）；对公司规模来说是小事的；离现在越远、判断下来只是辅助的预测</td><td>对手自己模拟的 2.4 倍性能比较；公司取消软件订阅费；三条开放模型政策表态；Sharon 六年 72 MW 合同；FY2028 EPS 一致预期；12.76 × 25 的条件估值；一家银行选用对手系统（没写金额）；伙伴把公司模型集成进政府系统（没写金额）；内存厂公布的季度收入和利润率；客户公布的订单积压；客户园区"规划最多 17 万颗 GPU"</td></tr>
+410-<tr><td><span class="w opt">可选</span></td><td>帮助理解市场预期，省略不损害论证；留不留都不扣分</td><td>财报后股价反应；在研公司的估值倍数、市值、孤零零的目标价；生态数字；重提的过去实际数；新加坡案件<span class="src">D231、D243 第 3、4、6 条</span></td></tr>
+411:<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+412-</tbody></table></div>
+413-
+414-<h3>判法</h3>
+415-<ol class="steps">
+416:<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+417-<li><b>是可选的那几样吗？</b>在研公司的估值倍数、市值、孤零零的目标价，财报后股价反应，生态数字，重提的过去实际数，新加坡案件，归可选。带推导的条件估值例外，是辅助<span class="src">第 1 版 §10.1</span>。</li>
+418-<li><b>核心还是辅助</b>碰到关键判断、带着能定位答案的信息、对公司不是小事、不是别家公司自己的经营数字，四条都满足是核心；其余是辅助。别家公司直接说出关键投入或需求的状况（短缺到哪年、明年花多少），按关键判断算。预测离现在越远，越可能只是辅助，这由判断定：FY2028 EPS 一致预期是辅助，Alex 说"太久远了"；内存厂说短缺 2027 年最严重、持续到 2030 是核心，它覆盖今明两年。</li>
+419-</ol>
+420-<p><b>"确定状态"</b>：已经签了、宣布了、开始了、批准了、取消了、推迟到某个日期了、定下了裁决日；没有量的"在谈""在考虑""可能""在探索""打算"不算。确定状态以陈述当天为时间，不要求生效日。<b>"带期间的预测"</b>：分析师预计今年余下收入增长 82%；内存厂说短缺持续到 2030 年。确定不确定看说法本身的内容；靠不靠得住另记在来源层。</p>
+421-<p><b>Alex 拍过的分量</b><span class="src">D215；gold-check.md，D229</span>：收入增速核心；内存短缺核心；AMD 跑分辅助；三条政策辅助；云厂商支出核心；Omniverse 辅助；Sharon "辅助属于供给需求"；商谈最多 6000 亿支持 OpenAI 核心（在谈的金额）；投资 SB Energy 15 亿核心；Broadcom AI 半导体收入 +143%、Google Cloud 三个数辅助（别家公司的经营数字）；FY2028 EPS 辅助（远期）；逐案审核、有拒绝辅助（没有量和确定结果）。</p>
+422-<p><b>分量只在评估时判。</b>分量只在金标和测量里判，不进账本，不进抽取的输出<span class="src">D240</span>；账本只存来源层。抽取的模型决定留不留、怎么写，以及提哪些候选问题<span class="src">第 1 版 §1</span>。</p>
+423-<p>仿真里剩下的分歧几乎都在核心和辅助这条线上："对公司规模来说是不是小事"从一句话里常常看不出来（第 12 节，第三轮）。所以核心和辅助分开报，评估时允许读者间合理的不同判<span class="src">D226、D228</span>。</p>
+424-
+425-<h2 id="views"><span class="num">7</span>研究观点标准</h2>
+426-<p>判断这一步归 PRD 06、D198、D201 管；这里只列和抽取共用的。</p>
+427-<ul>
+428-<li><b>观点是什么：</b>一个关于业务和世界的、有论证的看法；立场来自论证和市场已经定价的东西相比；报表行是它的证据，不是它的定义<span class="src">AGENTS §8</span>。</li>
+429-<li><b>判断读什么：</b>一个问题的判断看到的，是它仍然有效的证据里的两部分：新到的（在它倒数第五次判断之后挂上的；判断不满五次时全部显示）和依据（最近十次判断里被引用过的）。其余仍在账本里有效，请求里写明还有多少条没显示；答案只能引用和推动显示了的<span class="src">D198；从 judging-v5 起，v4 的配置照旧读全部有效证据</span>。依赖问题的结论和理由、标的问题的主题块也读<span class="src">PRD 06、D195</span>。主题结论变了，同一轮里排队重判符合条件的标的问题；主题的结论不作为证据引用<span class="src">D195</span>。</li>
+430-<li><b>研究的交付物是论证：</b>保留不可改的来源记录，和一份有版本的研究论证，写明支持和反对的来源、是否独立、变化和局限<span class="src">D201</span>。</li>
+431-<li><b>研究用途：</b>评估判断时，读者按四级看它引用的每条证据对那个具体结论撑得住多强：直接可用、有条件可用、线索、不可用；同一条证据对不同结论可以不同<span class="src">D221</span>。这是评估的读法，不是判断这一步要输出或存下的字段（D221："not a numerical confidence score or a new storage layer"）。用途和分量不同：分量问"这条多重要"，用途问"拿它证明这个结论够不够"。</li>
+432-<li><b>事实和推断分开：</b>来源没说的结论可以作为分析员推断写出，但要标明<span class="src">D218</span>。只有事实能确定落在哪一档<span class="src">PRD 06</span>。</li>
+433-<li><b>重复不是新证据，模型意见一致不是互相印证</b><span class="src">AGENTS §8</span>。</li>
+434-</ul>
+435-
+436-<h2 id="golden"><span class="num">8</span>金标：改提示词的测试标准</h2>
+437-<p>按这一页从原文逐篇写的参照，用来量提示词改动。Alex 的要求是"以上有你自己trace 过的golden set 来做为改prompt测试标准"<span class="src">D241</span>。定稿文件：<span class="path">docs/research/2026-10-29-ledger-standard/golden-v3/golden-v3-signed.json</span>，sha256 <code>78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3</code><span class="src">D243</span>。</p>
+438-<div class="tiles">
+439-<div class="tile"><div class="v">118</div><div class="l">篇测试文章：那一周 98 篇，留出 20 篇</div></div>
+440-<div class="tile"><div class="v">348</div><div class="l">条要收或可以收的证据，一件事一条</div></div>
+441-<div class="tile"><div class="v">738</div><div class="l">句不收，各写理由；另有 24 句可选</div></div>
+442-<div class="tile"><div class="v">1110</div><div class="l">段原文片段，代码核过都在原文里</div></div>
+443-<div class="tile"><div class="v">28 · 42</div><div class="l">个必须开、可以开的问题；240 个不该开</div></div>
+444-</div>
+445-
+446-<h3>每一条记什么</h3>
+447-<ul>
+448:<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+449:<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+450-<li><b>问题：</b>必须开的（类、开题理由、标的或主题、要点、<code>settled_by</code>）；可以开的（另一种合理写法）；不该开的（第 4 节哪一行或哪个测试）。</li>
+451-<li><b>没判清的地方：</b>两种读法都写出来。</li>
+452-</ul>
+453-
+454-<h3>分量的分布（定稿）</h3>
+455-<div class="table-wrap mid"><table>
+456-<thead><tr><th>那一组</th><th class="num-cell">核心</th><th class="num-cell">辅助</th><th class="num-cell">可选</th><th class="num-cell">要收或可收</th><th class="num-cell">不收</th><th class="num-cell">原列不收、现为可选</th></tr></thead>
+457-<tbody>
+458-<tr><td>那一周 98 篇</td><td class="num-cell">80</td><td class="num-cell">152</td><td class="num-cell">63</td><td class="num-cell">295</td><td class="num-cell">621</td><td class="num-cell">22</td></tr>
+459-<tr><td>留出 20 篇</td><td class="num-cell">6</td><td class="num-cell">29</td><td class="num-cell">18</td><td class="num-cell">53</td><td class="num-cell">117</td><td class="num-cell">2</td></tr>
+460-</tbody></table></div>
+461-<p>参考答案第 2 版那一周是核心 47、辅助 69、可选 48。辅助多出来的，主要是有名有姓、没写规模的动作（伙伴集成、客户采用、合作）：第 2 版标成"什么都不留"，现在按 D240 收为辅助。</p>
+462-
+463-<h3>怎么写成、怎么核的</h3>
+464-<ol class="steps">
+465-<li><b>六个起草者分批写</b>Claude opus 各写 20 篇左右，只读标准和原文；参考答案第 2 版只当起点，每条重判。</li>
+466-<li><b>合并时统一写法</b><span class="path">merge.py</span> 统一各批的写法，每处写理由（<span class="path">merge-log.txt</span>）：旧事重提 49 条逐条判；估值倍数和别家公司股价按现行规则处理；中国是否批准 H200 进口改为主题问题。</li>
+467-<li><b>逐条读改动</b>Claude 读了每批相对参考答案第 2 版新增、删掉、改档的条目：新增约 124 条，改档约 37 条；旧条目没对上的 10 条逐条查过，都在，只是引文片段不同或按旧事重提处理。</li>
+468-<li><b>两轮独立盲读</b>Codex 读者只读这份标准和原文，不看金标。读者多留的逐条对原文判：金标漏了的补上，其余写明不补的理由。补进来的 49 条，"谁"和"意思"对着原文补齐（<span class="path">additions-fields.json</span>）。</li>
+469-<li><b>按签字定稿</b><span class="path">finalize.py</span> 按 D243 给每一条定分量，39 处改动逐条写理由（<span class="path">finalize-log.txt</span>）：32 条移出要收的一栏，其中 24 条是常识性的主张和背景（第 5 条），1 条是只有形容的引语（第 10 条），7 条和起草者写了理由的不收句是同一句；另有 7 句不收句和要收的条目重复，删掉。这 19 处"同一句话既留又不留"，是盲读后补条目时没和不收的句子对照造成的。此外，不收的句子里 24 句按第 3、4、6 条改为可选。</li>
+470-</ol>
+471-<div class="table-wrap mid"><table>
+472-<thead><tr><th>盲读</th><th class="num-cell">金标条目</th><th class="num-cell">读者也留了</th><th class="num-cell">分量相同</th><th class="num-cell">读者多留</th><th class="num-cell">补进金标</th></tr></thead>
+473-<tbody>
+474-<tr><td>第一轮：随机 15 篇，补之前</td><td class="num-cell">34</td><td class="num-cell">33</td><td class="num-cell">26</td><td class="num-cell">19</td><td class="num-cell">8</td></tr>
+475-<tr><td>第一轮：补之后</td><td class="num-cell">42</td><td class="num-cell">41</td><td class="num-cell">32</td><td class="num-cell">11</td><td class="num-cell"></td></tr>
+476-<tr><td>第二轮：其余 103 篇，补之前</td><td class="num-cell">229</td><td class="num-cell">194</td><td class="num-cell">162</td><td class="num-cell">144</td><td class="num-cell">40</td></tr>
+477-<tr><td>第二轮：补之后</td><td class="num-cell">262</td><td class="num-cell">227</td><td class="num-cell">193</td><td class="num-cell"></td><td class="num-cell"></td></tr>
+478-</tbody></table></div>
+479-<p>结论：起草稿大约漏了两成，集中在有名有姓、没写规模的采用和合作，和一些带期间的判断。补完以后，独立读者能找到的金标条目约九成。读者多留的 163 条里，48 条是金标漏了、已补；其余 115 条按标准不补：同一件事金标已有、新加坡案件、产品细节、泛泛看法、旧事重提、合作方自己的事、和公司市场无关、只描述长期状况。剩下的不一致集中在核心和辅助的界线（第 1 条）和"背景还是主张"（第 5 条），两条都已由 Alex 拍定。记录在 <span class="path">golden-v3/spotcheck.md</span>、<span class="path">pass2-decisions.json</span>。</p>
+480-
+481-<h3>用它之前要知道的</h3>
+482-<ul>
+483-<li><b>它是模型写的。</b>Claude 起草和裁定、Codex 盲查；按 AGENTS §7 这样标明。Alex 抽查之前，它不是 Alex 的判断。</li>
+484-<li><b>留出集要换。</b>之前的提示词循环发过这 20 篇，答案读过一部分。按第 1 版 §11，"看过模型答案的文章只做开发集"，所以第一次改提示词之前，要另取一批没人看过答案的文章，从原文写参照，同样盲查、定稿、记 sha256。</li>
+485-<li><b>发现错了怎么办。</b>不改这个文件；另记一份更正，每条写理由和改前改后，测量用更正后的版本并注明<span class="src">D243 第 11 条</span>。</li>
+486-<li><b>按金标打分的程序还没写。</b>代码只核结构和计数；意思由没写这次改动的读者判（第 9.2 节）。</li>
+487-</ul>
+488-
+489-<h2 id="method"><span class="num">9</span>改提示词、测量、迭代</h2>
+490-<p class="note">签字以后的第一件事：把现行提示词（role-v29）和这一页逐句对一遍，列出不一致的地方，再按 9.3 一类一类改。一般的规则全文在 <span class="path">AGENTS.md</span> §6（写提示词）和 §7（测量和迭代），这里只写到这一步怎么用，出处标在后面。</p>
+491-
+492-<h3>9.1 改提示词</h3>
+493-<ul>
+494-<li><b>每一句都对得上这一页。</b>提示词里每一句关于留、不留、分量、开题的话，在这一页找得到出处；找不到的，是给 Alex 的提议，不是改动<span class="src">AGENTS §6</span>。</li>
+495-<li><b>写"不留"之前先核它删不掉要留的。</b>分析员会记的陈述，缺金额、缺日期本身不是不留的理由；分量另判，可能低一点<span class="src">D240</span>。Alex 的原话："我不是和你说过不要这么死板吗？……你应该把它记录下来，只是可能档位低一点"。</li>
+496-<li><b>通用的对冲基金大脑。</b>每一句、每个例子对银行、药企、零售、芯片读起来一样；例子跨行业，不点名覆盖的公司，不取自测试文章<span class="src">D237；AGENTS §6</span>。</li>
+497-<li><b>不靠加长。</b>读整个请求，就像模型读到的那样（系统提示、schema、内容）；列出矛盾、为别的情况写的规则、逼出缺陷的说法；删、并、拆。缺一句才加，别处删掉同样多；报改前改后的字数和 token<span class="src">AGENTS §6</span>。</li>
+498-<li><b>分类写成封闭集合。</b>每类两三个跨行业的例子，加走法（从第一段读到最后一段）和停止点（"一页有八条就是八条"）<span class="src">AGENTS §6</span>。例子就是指令：和 schema、读答案的代码不一致的例子删掉。</li>
+499-<li><b>发之前先免费核一遍。</b>写一份照提示词作答的假答案，过一遍全部代码检查；契约句逐条对金标该收和该拒的例子读一遍；确认发出去的字节和生产一样；<span class="path">scripts/preflight.py</span> 把存下的答案重放一遍<span class="src">AGENTS §5、§6</span>。</li>
+500-</ul>
+501-
+502-<h3>9.2 测量</h3>
+503-<ul>
+504-<li><b>一把尺子。</b>这一页 → 定稿金标 → 下面的达标线。另一把尺子在用，比如旧参考答案、评审打分表、提示词自己的类别，就是缺陷，先修掉再测<span class="src">D241；AGENTS §7</span>。</li>
+505-<li><b>不在还在改的尺子上给自己打分。</b>金标先给 Alex 看、冻结，再开始改提示词；意思由没写这次改动的读者按金标判；代码只核结构和计数<span class="src">AGENTS §7</span>。</li>
+506-<li><b>被扔的逐条读。</b>按四种归因计数（第 2 节），从最大的一类修起<span class="src">D209</span>。</li>
+507-<li><b>总数只看三次发送。</b>一次发送只能说明机制；直接读（每篇发一次，每个答案和原文并排读，D238）用来找机制，它的数是一次发送的数，要这样标明。回归先报，每个数都报<span class="src">AGENTS §7</span>。</li>
+508-</ul>
+509-<p>达标线是第 1 版 §11，逐字照抄在下面的引线内：</p>
+510-<blockquote>
+511-<p><b>单位</b>：一篇原文里的一个研究事项（可由多条证据表达）。参照在任何发送之前写好并冻结（sha256），从原文写，不看模型答案；看过模型答案的文章只做开发集，留出集另取没看过的文章。</p>
+512-<p><b>每个参照项记四件事</b>（gold v5 §二）：选了没有（kept / omitted，拆几条合几条只算一次）；原意（correct / partial / wrong / absent）；可核查（引文和上下文够不够）；记录问题（原始日期、期间、归属、确定性、错来源、重复、推断未标明，各标 material / record_only）。</p>
+513-<p><b>分开报，不合成总分</b>：核心 N 项里 correct / partial / wrong / absent 各多少；辅助同样；误收率 = 留下的"不收"项 ÷ 评过的"不收"项；多留的垃圾按条数（我读，代码核结构）；每个 material 问题单列。分母为零报 not_exercised。三次独立发送逐次报，不投票。</p>
+514-<p><b>达标线（提案）</b>：</p>
+515-<ul>
+516-<li>核心：每一次发送都 kept 且 correct，不带 material 记录问题（v18 验收用的就是"六篇五发每条都在"）。</li>
+517-<li>辅助：三次里至少两次 kept，correct 或 partial。</li>
+518-<li>不收：模板 0/3 留下（新加坡案件按 D231 改为可选）。</li>
+519-<li>垃圾：每篇留下的无关陈述不多于 Luna 对照组的中位数（基线，不是目标）。</li>
+520-<li>候选：§6 例子里该开的一个问题在每次发送都提出，且 settled_by 写得出；不该开的（部署计划、季度指引、同段每行）0 次。</li>
+521-</ul>
+522-<p>不达标就读原始答案找机制，再改一处；不在读过的文章上调。</p>
+523-<p><b>结构由代码查</b>（免费）：schema 通过、引文逐字在原文里、每条一个陈述、候选的 due 在发布日之后。结构错不算内容错，分开报。</p>
+524-</blockquote>
+525-<p>引文检查接受的写法：只在标点、引号、大小写上和原文不同，或在一句之内省略一段，存原文<span class="src">D236</span>。</p>
+526-<p>之后的决定对它的影响：参考答案第 2 版里"整篇什么都不留"的标注不再当目标<span class="src">D240</span>；"垃圾"一项用定稿金标重算，Luna 基线也重算<span class="src">D243 第 12 条</span>；第 1 版说的"§6 例子里该开的一个问题"是 AI Compute Partnership 的义务金额题；合理的不同判和不同措辞可以接受，可选细节和标签不同不变成硬性的过或不过<span class="src">D226、D228</span>。</p>
+527-
+528-<h3>9.3 迭代：一类一类改</h3>
+529-<p>Alex："你一类一类改，快速迭代然后测regression"。每一轮是下面六步：</p>
+530-<ol class="steps">
+531-<li><b>挑最大的一类</b>把漏收、误收和被扔的按机制归类计数，从最大的一类开始；报这一类占多少<span class="src">AGENTS §1</span>。</li>
+532-<li><b>找到是哪一句</b>读这一类的原始答案，和原文并排（改之前一共至少读过十个原始答案）；对模型做出的选择，接着那次对话问它"哪一句让你这样判"；先看请求里有没有它需要的、schema 写不写得出<span class="src">AGENTS §1、§6</span>。</li>
+533-<li><b>只改一处</b>一次改一句或一组说同一件事的话，别处删掉同样多；新的话对得上这一页<span class="src">AGENTS §6</span>。</li>
+534-<li><b>全部文章各发一次，和上一版比</b>改一句会改变每一次请求，所以要发的是全部文章。"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；单次发送本身每版有 0–4 条这样的意外丢失<span class="src">D243 第 8 条；surprise.py</span>。每个信号读原始答案、问模型自己的理由，追到是不是这次改的那一句造成的。这是诊断。出错的那几篇只用来找机制；接不接受，看全部文章三次发送、和新对照一起报的结果<span class="src">AGENTS §7</span>。</li>
+535-<li><b>记一行</b>假设、改动、数字（回归先报）、留不留；没用的改动和自己的错也记<span class="src">AGENTS §7</span>。</li>
+536-<li><b>一批改完再验收</b>在最终配置上三次发送，按 9.2 由不是作者的读者评，结果给 Alex<span class="src">第 1 版 §11</span>。</li>
+537-</ol>
+538-<p class="note warn"><b>尺子有疑问就停。</b>改的时候发现金标和这一页说法不同、两份标准打架、或读者对"什么是对的"有分歧，就停下来先和 Alex 定尺子，不在有疑问的尺子上接着调<span class="src">D241；AGENTS §7</span>。</p>
+539-
+540-<h2 id="rulings"><span class="num">10</span>Alex 已经拍过的判例</h2>
+541-<p>第 1 版 §8 的全部，加之后的。</p>
+542-<div class="table-wrap wide"><table>
+543-<thead><tr><th>日期</th><th>判例</th><th>原话或答案</th></tr></thead>
+544-<tbody>
+545-<tr><td class="nowrap">10-22</td><td class="nowrap">讲话方式</td><td>"explain and answer like I'm 16 and in human understandable language"</td></tr>
+546-<tr><td class="nowrap">AGENTS §8</td><td class="nowrap">观点是什么</td><td>A thesis is an argued view about the business and the world; its stance comes from the argument weighed against what is priced. Financial-statement lines are its evidence, never its definition.</td></tr>
+547-<tr><td class="nowrap">10-26 D191</td><td class="nowrap">共同量、主题</td><td>决定文字："<code>industry_aggregate</code> is renamed <code>shared_quantity</code>: a quantity or price outside any one company that several move on"，Alex："好"；纯宏观文章只在主题在名单上时开，Alex："是"；主题对公司一对全部，Alex："我觉得这个 1 to all mapping 比较 make sense"</td></tr>
+548-<tr><td class="nowrap">10-26 D187</td><td class="nowrap">别家公司的量</td><td>选 C（"可以"）：任何公司自己的量是那家公司的问题，私营公司也算；记录，未实现</td></tr>
+549-<tr><td class="nowrap">10-27</td><td class="nowrap">这一步的标准</td><td>"做一个 hedge fund analyst 的专业视角去看怎么做这一步的标准"；"什么叫重要陈述，你也没给例子"</td></tr>
+--
+580-<tr><td>B4</td><td>开题测试三套，提示词和代码都没用</td><td>第 1 版 §6 四个测试加评审三条写法检查（第 4 节）；测试 4 和库比的部分归匹配</td><td>第 1 版 §6；评审 §1；D211</td></tr>
+581-<tr><td>B5</td><td>PRD 05 还写着 <code>folds_into</code>、第 5 块</td><td>抽取不看库；PRD 05 过时段落签字后改指这一页</td><td>D211</td></tr>
+582-<tr><td>B6</td><td>没家的证据扔不扔</td><td>产品里扔，评估读被扔的、分四种归因；两者不冲突</td><td>D209；第 1 版 §7</td></tr>
+583-<tr><td>B7</td><td>归档规则三个版本</td><td>以 D207 为准；归档提示里点名 NVIDIA 的那句按 D237 改成通用（后续一步）</td><td>D207、D237</td></tr>
+584-<tr><td>B8</td><td>分量几级、"档位"一词两义</td><td>四级；"档位"在这一页叫分量，问题的叫结果档</td><td>第 1 版 §10.3；D243 第 1 条</td></tr>
+585:<tr><td>B9</td><td>几套"不要"的类</td><td>抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数</td><td>第 1 版 §2、§4；D221；D240；D243 第 12 条</td></tr>
+586-<tr><td>B10</td><td>股价、目标价、重述、新加坡各处判得不同</td><td>财报后股价反应可选（第 1 版 §10.2）；在研公司的估值倍数、市值、孤零零的目标价可选；重提的过去实际数可选；新加坡可选</td><td>第 1 版 §10.2；D231；D243 第 4、6 条</td></tr>
+587-<tr><td>B11</td><td>主题怎么连到公司</td><td>一对全部的主题块；文章明写的依赖照记；D208 的通道未建</td><td>D191、D195</td></tr>
+588-<tr><td>B12</td><td>研究组、驱动层</td><td>研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+589:<tr><td>B13</td><td>PRD 06 的重复和替代说法早于 D202、D204</td><td>这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新</td><td>D202、D204</td></tr>
+590-<tr><td>B14</td><td>组成部分算不算同一题</td><td>同一总量的另一种人群或口径是同一题；有自己驱动、答案能分开走的是另一题，要过独立意义测试</td><td>D190；第 1 版 §6</td></tr>
+591-<tr><td>B15</td><td>标的五档必须叫"非常看多……"（代码），还是写业务结果（D186）</td><td>这一页按 D186 写；代码是另一模块，D186 未实现照旧记</td><td>D186</td></tr>
+592-<tr><td>B16</td><td>转述的公告算事实还是当事人陈述</td><td>事实（role-v29 原文："an announcement or completed deal the item reports is a fact even when the reporter names no source"）；混合的一条按主要说法定层</td><td>PRD 06；D238、D239；D243 第 9 条</td></tr>
+593-<tr><td>B17</td><td>代码按自然年拒公司明年的财年量</td><td>已修：年限按公司财年数，测试 <span class="path">tests/test_fiscal_year_horizon.py</span></td><td>PRD 06 梯子第 5 条；D243</td></tr>
+594:<tr><td>B18</td><td>"线索""背景"一词多义</td><td>"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行</td><td>D221</td></tr>
+595-<tr><td>B19</td><td>谁把候选并进已开问题</td><td>匹配和碰撞裁决；共同量由代码</td><td>D190、D197、D211</td></tr>
+596-<tr><td>B20</td><td>AGENTS §8 指向两套标准，D229 又说第 1 版是唯一尺子</td><td>这一页签字后取代第 1 版，AGENTS §8 指向这一页；对两套既有标准（PRD 06 证据层次、90 题评审）的指向保留，它们是这一页的出处</td><td>D228、D229、D243</td></tr>
+597-<tr><td>B21</td><td>PRD 06 State 写判断要 "reconsider all evidence still in force"，D198 之后只显示新到的和依据</td><td>按 D198（在后）；PRD 06 签字后更新</td><td>D198</td></tr>
+598-</tbody></table></div>
+599-
+600-<h2 id="checks"><span class="num">12</span>校验记录和出处</h2>
+601-<h3>三轮独立读者仿真</h3>
+602-<p>每一轮把标准和一组事先定死的案例交给互相看不到答案的读者：作者先写好自己的答案并记 sha256；Claude 的不同模型和 Codex 各读一份。读者只读标准和案例，不读决策、金标、提示词。几方不一致的案例，读原因，追到标准里的一句话，改那一句；下一轮换没见过的读者，加没见过的案例。共 192 个陈述、40 个问题；陈述里 152 个来自测试文章，40 个来自银行、药企、零售、航空、公用事业、矿业、保险等其他行业。</p>
+603-<div class="table-wrap mid"><table>
+604-<thead><tr><th>第三轮，一对读者</th><th class="num-cell">新案例：留不留</th><th class="num-cell">新案例：连分量</th><th class="num-cell">难案例复核：留不留</th><th class="num-cell">新问题</th></tr></thead>
+605-<tbody>
+606-<tr><td>作者–Codex</td><td class="num-cell">96%</td><td class="num-cell">87%</td><td class="num-cell">84%</td><td class="num-cell">5/8</td></tr>
+607-<tr><td>作者–Claude sonnet</td><td class="num-cell">94%</td><td class="num-cell">83%</td><td class="num-cell">91%</td><td class="num-cell">6/8</td></tr>
+608-<tr><td>作者–Claude fable</td><td class="num-cell">93%</td><td class="num-cell">81%</td><td class="num-cell">89%</td><td class="num-cell">6/8</td></tr>
+609-<tr><td>Codex–sonnet</td><td class="num-cell">94%</td><td class="num-cell">83%</td><td class="num-cell">86%</td><td class="num-cell">7/8</td></tr>
+610-<tr><td>Codex–fable</td><td class="num-cell">93%</td><td class="num-cell">83%</td><td class="num-cell">84%</td><td class="num-cell">7/8</td></tr>
+611-<tr><td>sonnet–fable</td><td class="num-cell">98%</td><td class="num-cell">89%</td><td class="num-cell">95%</td><td class="num-cell">8/8</td></tr>
+612-</tbody></table></div>
+613-<p>新案例上留不留的一致率从第二轮的 80–94% 升到 93–98%，连分量从 72–87% 升到 81–89%。剩下的分歧几乎都在核心和辅助的界线，由 D243 第 1 条定下判法。三位读者判对、作者判错的，记作作者的错：最大客户带来的收入和中国销售占比不该开题（独立意义测试），还有两处陈述。记录在 <span class="path">simulation-log.md</span>。</p>
+614-
+615-<h3>十一轮漂移检查</h3>
+616-<p>Codex 只读，逐条对照签过的第 1 版、全部决策、PRD 06，找"作者自己加的规则"、和决策矛盾的地方、引错的原话。每一轮的发现都改掉并记下处理。第一轮查出 18 处自己加的规则和 9 处和决策矛盾，比如"名单外公司的量不开题"违反 D155、D187，"抽取要和库里比重复"违反 D211，把达标线缩短，把"在谈的金额"排除出核心。最后三轮只剩措辞层面的问题；第十一轮的发现在 2.14 版改掉，没有再复查。</p>
+617-<div class="chart" role="img" aria-label="每一轮漂移检查的发现数：36、约20、约10、6、8、7、7、6、5、6、5">
+618-<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg">
+619-<line class="axis" x1="28" y1="170" x2="548" y2="170"/>
+620-<g>
+621-<rect class="bar" x="36" y="44" width="34" height="126"/><text class="val" x="53" y="38" text-anchor="middle">36</text><text x="53" y="186" text-anchor="middle">2.3</text>
+622-<rect class="bar approx" x="82" y="100" width="34" height="70"/><text class="val" x="99" y="94" text-anchor="middle">约20</text><text x="99" y="186" text-anchor="middle">2.4</text>
+623-<rect class="bar approx" x="128" y="135" width="34" height="35"/><text class="val" x="145" y="129" text-anchor="middle">约10</text><text x="145" y="186" text-anchor="middle">2.5</text>
+624-<rect class="bar" x="174" y="149" width="34" height="21"/><text class="val" x="191" y="143" text-anchor="middle">6</text><text x="191" y="186" text-anchor="middle">2.6</text>
+625-<rect class="bar" x="220" y="142" width="34" height="28"/><text class="val" x="237" y="136" text-anchor="middle">8</text><text x="237" y="186" text-anchor="middle">2.7</text>
+626:<rect class="bar" x="266" y="145.5" width="34" height="24.5"/><text class="val" x="283" y="139" text-anchor="middle">7</text><text x="283" y="186" text-anchor="middle">2.8</text>
+627:<rect class="bar" x="312" y="145.5" width="34" height="24.5"/><text class="val" x="329" y="139" text-anchor="middle">7</text><text x="329" y="186" text-anchor="middle">2.9</text>
+628-<rect class="bar" x="358" y="149" width="34" height="21"/><text class="val" x="375" y="143" text-anchor="middle">6</text><text x="375" y="186" text-anchor="middle">2.10</text>
+629-<rect class="bar" x="404" y="152.5" width="34" height="17.5"/><text class="val" x="421" y="146" text-anchor="middle">5</text><text x="421" y="186" text-anchor="middle">2.11</text>
+630-<rect class="bar" x="450" y="149" width="34" height="21"/><text class="val" x="467" y="143" text-anchor="middle">6</text><text x="467" y="186" text-anchor="middle">2.12</text>
+631-<rect class="bar" x="496" y="152.5" width="34" height="17.5"/><text class="val" x="513" y="146" text-anchor="middle">5</text><text x="513" y="186" text-anchor="middle">2.13</text>
+632-</g>
+633-<text x="290" y="204" text-anchor="middle">被检查的版本；颜色浅的两根是约数</text>
+634-</svg>
+635-</div>
+636-
+637-<h3>出处</h3>
+638-<p>PRD 06（Two thesis kinds、Ladder、Four evidence tiers、State、Succession）；PRD 05；第 1 版标准（D229）；<span class="path">research_notes/对冲基金论点粒度与金标/codex-challenger.md</span> §1 八条和 §6、<span class="path">industry-debate-standards.md</span>（主分支）；决定 D155、D165、D184、D185、D186、D187、D190、D191、D195、D197、D198、D199、D201、D202、D204、D207、D208、D209、D210、D211、D215、D216、D218、D220、D221、D226、D228、D229、D231、D233、D236、D237、D238、D240、D241、D242。</p>
+639-
+640-<h3>文件</h3>
+641-<ul>
+642-<li>这一页：<span class="path">docs/prd/05-extraction-standard.html</span>。改它之前先在 <span class="path">docs/DECISIONS.md</span> 记下 Alex 的原话；改完跑一次只读的漂移检查。</li>
+643-<li>起草过程和证据：<span class="path">docs/research/2026-10-29-ledger-standard/</span>：<span class="path">standard-v2.md</span> 到 <span class="path">standard-v2.14.md</span>、<span class="path">simulation-log.md</span>、<span class="path">review-drift-v2.*.md</span>、<span class="path">inventory-2026-10-29.md</span>、<span class="path">golden-v3/</span>。</li>
+644-<li>定稿金标：<span class="path">golden-v3/golden-v3-signed.json</span>（sha256 见第 8 节），由 <span class="path">golden-v3/finalize.py</span> 从起草稿定稿。</li>
+645-<li>第 1 版：<span class="path">docs/research/2026-10-29-analyst-standard/standard.md</span>（D229），已由这一页取代，留作出处。</li>
+646-</ul>
+647-
+648-<footer>Hivemind · 抽取与开题标准 · 第 3 版 · 2026-10-29 Alex 签字（D243）。页首的 standard-version 是规则的版本号：改任何一条规则都要升它，金标随之重定，打分程序遇到版本对不上就拒绝打分（D244）。</footer>
+649-</main>
+650-</div>
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '325,405p' /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+<thead><tr><th>内容</th><th>谁</th></tr></thead>
+<tbody>
+<tr><td>测试 1–3、同一篇文章里的测试 4、属于哪一类、问题怎么写</td><td>抽取的模型（判断）</td></tr>
+<tr><td>结果档形状、期间是真日期、到期在文章之后、季度数、年限、约束性义务 18 个月、<code>settled_by</code> 不为空</td><td>代码：只查形状，不判重要性<span class="src">D154、D155、D184</span></td></tr>
+<tr><td>和库里的同一题、续期、另一题</td><td>匹配（Jev）和碰撞裁决<span class="src">D190</span>；共同量由代码<span class="src">D197</span></td></tr>
+</tbody></table></div>
+<p class="note">年限按公司财年数：2026 年 7 月时 NVIDIA 在 FY2027（2027 年 1 月结束），所以 FY2028 是明年。代码原来按自然年算，把 FY2028 当成后年拒掉；在 v29 答案的 40 个带年份的候选里拒错了 2 个。已修，测试是 <span class="path">tests/test_fiscal_year_horizon.py</span><span class="src">D243</span>。</p>
+
+<h2 id="evidence"><span class="num">5</span>证据标准</h2>
+<h3>5.1 留的规则和四类</h3>
+<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+<p><b>整体倾向谨慎，对增量敏感。</b>杂音很大，不是什么都要抽，不是什么都算线索。判一句话之前先问：这是新信息吗？它让哪个问题的答案变了？一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏；重复常识、描述长期状况、泛泛的看法，是杂音<span class="src">D243</span>。</p>
+<p>从第一段读到最后一段，分析员会记的都留。一页有八条就是八条，不挑<span class="src">D199</span>。它们通常是下面四类之一；四类描述的是会记的陈述长什么样，不是"属于四类就一定留"，留不留由上面的规则判。</p>
+<ol class="steps">
+<li><b>公司自己的数字、指引或决定</b><span class="src">第 1 版 §2</span>"同店销售本季增长 4.2%"；"管理层把全年收入指引定在 120–130 亿美元"；"董事会批准 100 亿美元回购"；"公司取消软件订阅费，生产使用免费"<span class="src">Alex 判 8，Omniverse</span>。</li>
+<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+<li><b>具名一方的主张或估计</b><span class="src">第 1 版 §2</span>"CFO 说十年前建的工厂仍满负荷"；"分析师把明年 EPS 预期上调到 4.10 美元"；"做空机构指控公司虚增应收 20 亿美元"；"内存厂说 2027 年短缺最严重，持续到 2030"。</li>
+<li><b>政策或监管的决定或步骤</b><span class="src">第 1 版 §2</span>"监管机构批准该药第二个适应症"；"政府要求该产品出口须申请许可"；"25 家公司联名反对过早限制开放权重模型"；"财长说将调查某国公司是否窃取知识产权"。</li>
+</ol>
+<p><b>典型的主张和背景</b><span class="src">D243 第 5 条</span>：Alex 的原话是"这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"。常识，就是跟这家公司的分析员读这篇之前就已经知道的：谁领先、谁在竞争、需求强、供给紧、融资难这类说法，和对已知状况的重述。这类陈述没有数字和具体的叙事就不收。不是常识的，是新信息，比如一份新报告的判断、一个新的市场数据、刚发生的事的细节，照上面的规则判，分析员会记就留。</p>
+<ul>
+<li><b>常识，不收：</b>"博通 CEO 说能从英伟达抢份额"；"Blackwell 和 Rubin 仍然供不应求"；"融资会是扩大算力最大的障碍"；"内存厂避开了以往的产能过剩"；"博通预计明年随着新客户推出定制芯片大幅增长"。</li>
+<li><b>新信息，收：</b>一位科技公司高管对媒体说"中国国产 AI 芯片厂商已经全部卖光，客户在考虑性能更低的芯片"；"旧型号 GPU 的租金在涨"；研究机构说"这让 Rubin Ultra 暂时没有成熟的扩展方案，给对手留出了空间"；"华为现在占中国 AI 芯片市场约一半，这个市场约 500 亿美元"。</li>
+<li><b>有数字也要过上面的规则：</b>作者说"英特尔多年领先，占 CPU 市场 59%"，和英伟达的问题关系不大，分析员不会记。</li>
+</ul>
+
+<h3>5.2 不完整也是证据</h3>
+<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+
+<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+<div class="table-wrap wide"><table>
+<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+<tbody>
+<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+</tbody></table></div>
+<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+
+<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+<tbody>
+<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+</tbody></table></div>
+<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+
+<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+<tbody>
+<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+</tbody></table></div>
+<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+
+<h2 id="weight"><span class="num">6</span>分量</h2>
+<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+<div class="table-wrap wide"><table>
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; p=\"/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_bcd4e6c9e36d405b0efdd18e.json\"; d=json.load(open(p)); print(json.dumps({k:v for k,v in d.items() if k not in (\"A\",\"B\",\"answers\")},ensure_ascii=False,indent=2))'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 1267ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-Cka0sxOO' (errno=Operation not permitted)
+2026-10-30 13:28:49.225 xcodebuild[29967:17152663]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:28:49.350 xcodebuild[29967:17152662] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-FeWf9j09' (errno=Operation not permitted)
+2026-10-30 13:28:49.678 xcodebuild[29971:17152676]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:28:49.809 xcodebuild[29971:17152675] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+{
+  "input_id": "gnews:bcd4e6c9e36d405b0efdd18e",
+  "title": "Apple eyes Nvidia NVLink to power its new custom M8 Ultra AI servers — historically bitter rivals reportedly team up for 2029 data center push",
+  "publication_day": "2026-09-17",
+  "publisher": "tomshardware.com",
+  "publisher_type": "media",
+  "category": "T7",
+  "text": "Apple eyes Nvidia NVLink to power its new custom M8 Ultra AI servers — historically bitter rivals reportedly team up for 2029 data center push\nBy Anton Shilov\nTime to bury the hatchet?\nApple is reportedly developing AI servers based on its own M-series processors and is evaluating NVLink Fusion technology for interconnects, according to The Information . The machines are expected to use M8 Ultra processors and arrive in 2029, the report claims.\nFor now, the usage of the NVLink Fusion platform is not formalized and has not been confirmed by either Apple or Nvidia — but an Apple decision to use it instead of competing solutions may have significantly broader market implications than just Apple using Nvidia hardware.\nApple is reportedly considering at least two server configurations: a smaller machine equipped with two M8 Ultra processors and a higher-end version featuring four M8 Ultra system-on-chips. Although Apple has its own UltraFusion technology for stitching two high-end SoCs together seamlessly, it looks like the company does not have a proper solution for scale-up and scale-out connectivity of its processors, which is where Nvidia's NVLink Fusion comes into play. Apparently, Apple wants to use NVLink infrastructure, which includes not only an interconnection protocol, but also switches, chiplets that add NVLink connectivity, and a software stack, for its servers. The project was reportedly initiated around a year ago and was backed by John Ternus while he headed Apple's hardware engineering organization.\nApple already builds custom servers for Private Cloud Compute, which handle AI workloads too demanding for local execution on iPhones and Macs, The Information claims. Most of these machines use Apple's internally developed connectivity technologies, which are reportedly too slow and costly for large-scale commercial deployments, which is why Apple is looking elsewhere.\nMore than NVLink?\nThe Information specifically mentions Apple's need for connectivity technology suitable for large-scale deployments, although it does not explain exactly what this means architecturally. If the publication is referring to connecting multiple servers into larger clusters, this would normally be the job of scale-out technologies such as Ethernet or InfiniBand, rather than a scale-up fabric such as NVLink. Nvidia originally developed its NVLink fabric technology to scale-up performance of its accelerators, so the technology is optimized for accelerator-to-accelerator connectivity and enables a rack of Nvidia GPUs to function as a tightly coupled compute domain. There is a different implementation called NVLink-C2C, which is a coherent chip-to-chip interface for connecting CPUs to accelerators and CPUs to CPUs\nMeanwhile, modern Apple M Pro and M Ultra processors are system-in-packages consisting of a CPU chiplet and a GPU/neural engine chiplet, which are stitched together using TSMC's SoIC-mH technology. If Apple continues to use this architecture (very likely), an M8 Ultra processor can be considered as a CPU and an accelerator. However, this raises the question of how Apple intends to connect M8 Ultra processors to NVLink and which components of the SiP would participate in the NVLink domain. One possibility is that Apple could expose the accelerator portion of M8 Ultra to NVLink through an NVLink Fusion chiplet, which effectively means it will treat it as an accelerator for a scale-up domain. Another possibility is that Apple is developing a different accelerator architecture for its servers, perhaps by simply placing the GPU/NPU chiplet onto a separate substrate/interposer and equipping it with its own memory, though there is currently no evidence that confirms such a design for a chip that is years away.\nAnother thing to keep in mind is that Apple is a member of the UALink Consortium, an organization overseeing development of industry-standard UALink accelerator-to-accelerator interconnections that supports up to 1,024 accelerators. While for now there is a limited choice of UALink switches, by 2029, there will be industry-standard switches offering different performance and capabilities, which makes the choice of NVLink as a scale-up fabric even stranger.\nOne possible explanation is that Apple is interested in considerably more than NVLink itself. NVLink Fusion is part of Nvidia's rack-scale and data center infrastructure architecture, which can combine NVLink scale-up connectivity with Nvidia's Spectrum-X Ethernet or Quantum-X InfiniBand scale-out networks, including switches equipped with co-packaged optics. Thus, Apple could potentially adopt Nvidia technology for both scale-up and scale-out connectivity instead of developing an entire data center networking stack of its own. This is merely speculation for now, but such an approach would effectively mean that Apple is building AI servers around significant portions of Nvidia's data center architecture while retaining its own processors and not using Nvidia accelerators. If this happens, this will be a testament that Nvidia is now setting de facto standards for AI data centers, no matter which AI accelerators and CPUs are used.\nBurying the hatchet?\nWithout a doubt, Nvidia is a leading supplier of data center hardware, so it is logical for Apple to work with the company if the two companies are indeed working together on Apple's data center platform.\nApple and Nvidia are not exactly good partners. The feud between the two companies began in the early 2000s, when Steve Jobs accused Nvidia of infringing on Pixar's patents on which Nvidia responded that it owned more graphics IP than Pixar and therefore could sue the company. Later on, Apple and Nvidia had disagreements over GPU design decisions that the latter supplied to the former. However, then came 'Bumpgate' as Nvidia supplied Apple and other PC makers defective GPUs in 2007 – 2008, did not acknowledge the problem, and then resisted fully compensating Apple and other PC makers for their repair costs, which is when the relationship between the companies got especially dire. Apple continued to use Nvidia GPUs till 2014 or 2015, at which point it switched to AMD's Radeon , and then abandoned discrete third-party GPUs altogether.\nMore recently, Apple started to use Nvidia's hardware again. The latest Siri AI is primarily powered by Apple Foundation Models developed in collaboration with Google using Gemini technology. Server-side inference runs through Apple's Private Cloud Compute architecture, and many of the workloads are hosted on Nvidia Blackwell GPUs in Google Cloud. Yet, using Nvidia hardware in the cloud and adopting the company's technologies for your own platforms is a completely different thing.\nThis does not make sense to me. Apple could just buy a startup that makes UAlink switches or just partner with well established vendors. This shows how Apple likes non-standard technologies.\nDoes anyone know who it's for? Maybe just eating their own dogfood for internal AI products?\nI'm assuming eating their own dog food. 2029/2030 seems really late to the game to jump back into the OSX Server domain. Feels like they would have started it back up 4 or 5 years ago now if they were trying to capture the AI compute market dollars."
+}
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_bcd4e6c9e36d405b0efdd18e.json' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+{
+ "input_id": "gnews:bcd4e6c9e36d405b0efdd18e",
+ "title": "Apple eyes Nvidia NVLink to power its new custom M8 Ultra AI servers — historically bitter rivals reportedly team up for 2029 data center push",
+ "publication_day": "2026-09-17",
+ "publisher": "tomshardware.com",
+ "publisher_type": "media",
+ "category": "T7",
+ "text": "Apple eyes Nvidia NVLink to power its new custom M8 Ultra AI servers — historically bitter rivals reportedly team up for 2029 data center push\nBy Anton Shilov\nTime to bury the hatchet?\nApple is reportedly developing AI servers based on its own M-series processors and is evaluating NVLink Fusion technology for interconnects, according to The Information . The machines are expected to use M8 Ultra processors and arrive in 2029, the report claims.\nFor now, the usage of the NVLink Fusion platform is not formalized and has not been confirmed by either Apple or Nvidia — but an Apple decision to use it instead of competing solutions may have significantly broader market implications than just Apple using Nvidia hardware.\nApple is reportedly considering at least two server configurations: a smaller machine equipped with two M8 Ultra processors and a higher-end version featuring four M8 Ultra system-on-chips. Although Apple has its own UltraFusion technology for stitching two high-end SoCs together seamlessly, it looks like the company does not have a proper solution for scale-up and scale-out connectivity of its processors, which is where Nvidia's NVLink Fusion comes into play. Apparently, Apple wants to use NVLink infrastructure, which includes not only an interconnection protocol, but also switches, chiplets that add NVLink connectivity, and a software stack, for its servers. The project was reportedly initiated around a year ago and was backed by John Ternus while he headed Apple's hardware engineering organization.\nApple already builds custom servers for Private Cloud Compute, which handle AI workloads too demanding for local execution on iPhones and Macs, The Information claims. Most of these machines use Apple's internally developed connectivity technologies, which are reportedly too slow and costly for large-scale commercial deployments, which is why Apple is looking elsewhere.\nMore than NVLink?\nThe Information specifically mentions Apple's need for connectivity technology suitable for large-scale deployments, although it does not explain exactly what this means architecturally. If the publication is referring to connecting multiple servers into larger clusters, this would normally be the job of scale-out technologies such as Ethernet or InfiniBand, rather than a scale-up fabric such as NVLink. Nvidia originally developed its NVLink fabric technology to scale-up performance of its accelerators, so the technology is optimized for accelerator-to-accelerator connectivity and enables a rack of Nvidia GPUs to function as a tightly coupled compute domain. There is a different implementation called NVLink-C2C, which is a coherent chip-to-chip interface for connecting CPUs to accelerators and CPUs to CPUs\nMeanwhile, modern Apple M Pro and M Ultra processors are system-in-packages consisting of a CPU chiplet and a GPU/neural engine chiplet, which are stitched together using TSMC's SoIC-mH technology. If Apple continues to use this architecture (very likely), an M8 Ultra processor can be considered as a CPU and an accelerator. However, this raises the question of how Apple intends to connect M8 Ultra processors to NVLink and which components of the SiP would participate in the NVLink domain. One possibility is that Apple could expose the accelerator portion of M8 Ultra to NVLink through an NVLink Fusion chiplet, which effectively means it will treat it as an accelerator for a scale-up domain. Another possibility is that Apple is developing a different accelerator architecture for its servers, perhaps by simply placing the GPU/NPU chiplet onto a separate substrate/interposer and equipping it with its own memory, though there is currently no evidence that confirms such a design for a chip that is years away.\nAnother thing to keep in mind is that Apple is a member of the UALink Consortium, an organization overseeing development of industry-standard UALink accelerator-to-accelerator interconnections that supports up to 1,024 accelerators. While for now there is a limited choice of UALink switches, by 2029, there will be industry-standard switches offering different performance and capabilities, which makes the choice of NVLink as a scale-up fabric even stranger.\nOne possible explanation is that Apple is interested in considerably more than NVLink itself. NVLink Fusion is part of Nvidia's rack-scale and data center infrastructure architecture, which can combine NVLink scale-up connectivity with Nvidia's Spectrum-X Ethernet or Quantum-X InfiniBand scale-out networks, including switches equipped with co-packaged optics. Thus, Apple could potentially adopt Nvidia technology for both scale-up and scale-out connectivity instead of developing an entire data center networking stack of its own. This is merely speculation for now, but such an approach would effectively mean that Apple is building AI servers around significant portions of Nvidia's data center architecture while retaining its own processors and not using Nvidia accelerators. If this happens, this will be a testament that Nvidia is now setting de facto standards for AI data centers, no matter which AI accelerators and CPUs are used.\nBurying the hatchet?\nWithout a doubt, Nvidia is a leading supplier of data center hardware, so it is logical for Apple to work with the company if the two companies are indeed working together on Apple's data center platform.\nApple and Nvidia are not exactly good partners. The feud between the two companies began in the early 2000s, when Steve Jobs accused Nvidia of infringing on Pixar's patents on which Nvidia responded that it owned more graphics IP than Pixar and therefore could sue the company. Later on, Apple and Nvidia had disagreements over GPU design decisions that the latter supplied to the former. However, then came 'Bumpgate' as Nvidia supplied Apple and other PC makers defective GPUs in 2007 – 2008, did not acknowledge the problem, and then resisted fully compensating Apple and other PC makers for their repair costs, which is when the relationship between the companies got especially dire. Apple continued to use Nvidia GPUs till 2014 or 2015, at which point it switched to AMD's Radeon , and then abandoned discrete third-party GPUs altogether.\nMore recently, Apple started to use Nvidia's hardware again. The latest Siri AI is primarily powered by Apple Foundation Models developed in collaboration with Google using Gemini technology. Server-side inference runs through Apple's Private Cloud Compute architecture, and many of the workloads are hosted on Nvidia Blackwell GPUs in Google Cloud. Yet, using Nvidia hardware in the cloud and adopting the company's technologies for your own platforms is a completely different thing.\nThis does not make sense to me. Apple could just buy a startup that makes UAlink switches or just partner with well established vendors. This shows how Apple likes non-standard technologies.\nDoes anyone know who it's for? Maybe just eating their own dogfood for internal AI products?\nI'm assuming eating their own dog food. 2029/2030 seems really late to the game to jump back into the OSX Server domain. Feels like they would have started it back up 4 or 5 years ago now if they were trying to capture the AI compute market dollars.",
+ "answers": {
+  "A": [
+   {
+    "id": "e1",
+    "quote": "Apple is reportedly developing AI servers based on its own M-series processors and is evaluating NVLink Fusion technology for interconnects, according to The Information . The machines are expected to use M8 Ultra processors and arrive in 2029, the report claims.\nFor now, the usage of the NVLink Fusion platform is not formalized and has not been confirmed by either Apple or Nvidia",
+    "one_line": "The Information reportedly said Apple was evaluating Nvidia NVLink Fusion for AI servers using M8 Ultra processors, expected in 2029; neither company had confirmed or formalized the plan.",
+    "speaker": "Tom's Hardware, relaying The Information",
+    "original_who": "The Information",
+    "original_day": "",
+    "tier": "rumour"
+   },
+   {
+    "id": "e2",
+    "quote": "Apple is reportedly considering at least two server configurations: a smaller machine equipped with two M8 Ultra processors and a higher-end version featuring four M8 Ultra system-on-chips.",
+    "one_line": "The Information reportedly said Apple was considering AI server configurations with either two or four M8 Ultra processors.",
+    "speaker": "Tom's Hardware, relaying The Information",
+    "original_who": "The Information",
+    "original_day": "",
+    "tier": "rumour"
+   },
+   {
+    "id": "e3",
+    "quote": "The project was reportedly initiated around a year ago and was backed by John Ternus while he headed Apple's hardware engineering organization.",
+    "one_line": "The Information reportedly said Apple's server project began around 2025 and was backed by John Ternus while he led hardware engineering.",
+    "speaker": "Tom's Hardware, relaying The Information",
+    "original_who": "The Information",
+    "original_day": "",
+    "tier": "rumour"
+   },
+   {
+    "id": "e4",
+    "quote": "Server-side inference runs through Apple's Private Cloud Compute architecture, and many of the workloads are hosted on Nvidia Blackwell GPUs in Google Cloud.",
+    "one_line": "Tom's Hardware reported that many of Apple's Private Cloud Compute server-side inference workloads run on Nvidia Blackwell GPUs hosted in Google Cloud.",
+    "speaker": "Tom's Hardware",
+    "original_who": "Tom's Hardware",
+    "original_day": "2026-09-17",
+    "tier": "third_party_view"
+   }
+  ],
+  "B": [
+   {
+    "id": "e1",
+    "quote": "Apple is reportedly developing AI servers based on its own M-series processors and is evaluating NVLink Fusion technology for interconnects, according to The Information . The machines are expected to use M8 Ultra processors and arrive in 2029, the report claims. For now, the usage of the NVLink Fusion platform is not formalized and has not been confirmed by either Apple or Nvidia",
+    "one_line": "The Information reportedly said Apple was evaluating Nvidia NVLink Fusion for AI servers using M8 Ultra processors, expected in 2029; neither company had confirmed or formalized the use.",
+    "speaker": "Tom's Hardware",
+    "original_who": "The Information",
+    "original_day": "",
+    "tier": "rumour"
+   },
+   {
+    "id": "e2",
+    "quote": "The latest Siri AI is primarily powered by Apple Foundation Models developed in collaboration with Google using Gemini technology. Server-side inference runs through Apple's Private Cloud Compute architecture, and many of the workloads are hosted on Nvidia Blackwell GPUs in Google Cloud.",
+    "one_line": "Tom's Hardware reported that many of the server-side inference workloads for Apple's latest Siri AI run on Nvidia Blackwell GPUs hosted in Google Cloud.",
+    "speaker": "Tom's Hardware",
+    "original_who": "Tom's Hardware",
+    "original_day": "2026-09-17",
+    "tier": "fact"
+   }
+  ]
+ }
+}
+
+codex
+{
+  "input_id": "gnews:bcd4e6c9e36d405b0efdd18e",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no day when that use began.",
+      "tier_ok": false,
+      "tier_note": "rumour, row 5: the article states that workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no source for that factual claim.",
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no day when that use began.",
+      "tier_ok": false,
+      "tier_note": "rumour, row 5: the article states that workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no source for that factual claim.",
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both answers give the unsupported report day and an incorrect tier for the Blackwell hosting claim, while their other fields are supported by the article."
+}
+tokens used
+25,846
+{
+  "input_id": "gnews:bcd4e6c9e36d405b0efdd18e",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "marginal",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no day when that use began.",
+      "tier_ok": false,
+      "tier_note": "rumour, row 5: the article states that workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no source for that factual claim.",
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": false,
+      "day_note": "Unknown. The article says workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no day when that use began.",
+      "tier_ok": false,
+      "tier_note": "rumour, row 5: the article states that workloads “are hosted on Nvidia Blackwell GPUs in Google Cloud” but gives no source for that factual claim.",
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both answers give the unsupported report day and an incorrect tier for the Blackwell hosting claim, while their other fields are supported by the article."
+}

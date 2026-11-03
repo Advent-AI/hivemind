@@ -1,4 +1,4 @@
-# D258: each adopted thesis offers only its own two endpoints
+# D335: each adopted thesis offers only its own two endpoints
 
 Alex's Idea "I think Nvidia datacenter revenue will outperform next quarter; geopolitics alleviation will be a tailwind"
 returned `502: SchemaError: $.composite.v10.kind: 'driver' not in ['excluded']`. The service was running; the final
@@ -11,8 +11,8 @@ replayed through the current binder at no cost. Two answers are refused, both fo
 `raises_outcome_position` is not one of that thesis's two supplied endpoints (v10 → `2` on 2026-10-30; v3 and v9 →
 `2` on 2026-10-26). Each of those theses has endpoints 1 and 5.
 
-**Mechanism.** D188 made the final call copy the position of one of the two supplied endpoint conditions, and v5/v6
-enforced that per thesis: one keyed property per thesis, each with an enum of exactly its endpoints. D196 changed the
+**Mechanism.** D282 made the final call copy the position of one of the two supplied endpoint conditions, and v5/v6
+enforced that per thesis: one keyed property per thesis, each with an enum of exactly its endpoints. D290 changed the
 answer to a variable-length array. The array item cannot vary by thesis, so `positive_schema` offers `1`–`5` to
 every thesis, while the binder converts the answer into the v6 keyed shape and re-checks it against `endpoint_schema`,
 which keeps the per-thesis enum. The request allows a value the check refuses (AGENTS §6). The error text is
@@ -82,10 +82,10 @@ names rung numbers), and a prompt sentence would only lower its frequency.
 
 ## Prior decisions
 
-D188 ("representatives copy the explicit position of one supplied endpoint"; "Code validates the partition,
-identities, endpoint enum"), D194 (endpoint fields unchanged), D196 ("Code checks IDs, uniqueness, endpoint validity,
-positive weights and a 100 total"). None bounds a per-thesis enum; D188's v5/v6 had one. This restores that guarantee
-inside D196's array.
+D282 ("representatives copy the explicit position of one supplied endpoint"; "Code validates the partition,
+identities, endpoint enum"), D288 (endpoint fields unchanged), D290 ("Code checks IDs, uniqueness, endpoint validity,
+positive weights and a 100 total"). None bounds a per-thesis enum; D282's v5/v6 had one. This restores that guarantee
+inside D290's array.
 
 ## Second defect on the same path: two-rung display scores
 

@@ -82,11 +82,11 @@ The [design record](../../docs/poc/thesis-ui.md) contains data and state tables.
 
 ## Idea confidence
 
-The default API response supplies the adopted plan described below. The explicit trial is retained for reproducing D185's earlier experiment.
+The default API response supplies the adopted plan described below. The explicit trial is retained for reproducing D279's earlier experiment.
 
 ### Historical composite trial
 
-Build the reviewed D185 example into the standalone page explicitly:
+Build the reviewed D279 example into the standalone page explicitly:
 
 ```sh
 python3 scripts/mock_build.py --composite-trials poc/config/idea-composite-trial-2026-10-26.json
@@ -110,23 +110,23 @@ The page's `components/idea-composer.js` owns the bottom-centred input and circu
 
 The completed Idea call also passes `reveal: true` to `showGraph`. `components/tree-reveal.js` fades in the Idea, then reveals the thesis column from top to bottom. Each connection draws while the camera moves directly to its target; it does not revisit the Idea between targets. It returns to the default view once at the end. The flag is consumed once, so replay does not restart it. Manual controls cancel the sequence; reduced motion shows the final tree immediately. `node poc/ui/verify-reveal.mjs` creates a browser fixture for ordering, partial lines, vertical camera movement, final return, cancellation, replacement and teardown checks.
 
-Workspace navigation follows the [D225 retention contract](../../docs/research/2026-10-26-idea-tab-retention.md). `node poc/ui/verify-navigation.mjs` builds a stored-response browser check for pending/completed/error navigation, retained date/range/camera and new-query replacement. Its HTTP fixture never delegates to the real service; the page also uses the static server as its fallback API address.
+Workspace navigation follows the [D318 retention contract](../../docs/research/2026-10-26-idea-tab-retention.md). `node poc/ui/verify-navigation.mjs` builds a stored-response browser check for pending/completed/error navigation, retained date/range/camera and new-query replacement. Its HTTP fixture never delegates to the real service; the page also uses the static server as its fallback API address.
 
 ## Trigger
 
-`createTriggerCard({condition, confidence, onChange})` returns `{element, setConfidence, close, destroy}`. The condition is `{operator: '>', threshold: 70}` by default; confidence is a 0–100 number or `null`. The host persists each emitted condition. Comparison uses the displayed whole percentage. To connect it to an Idea graph, pass `trigger: {condition, getConfidence, onChange}` alongside `leadingCard` in `showGraph`. The page supplies it for completed Ideas and resets it on a new query. It sits to the left under [D228](../../docs/research/2026-10-27-trigger-left.md) and appears after the thesis scan, before Action under [D229](../../docs/research/2026-10-27-trigger-last.md). D230 makes its connector a plain line; its comparison dropdown retains the normal indicator. See [D226](../../docs/research/2026-10-26-trigger-card.md) for the controls.
+`createTriggerCard({condition, confidence, onChange})` returns `{element, setConfidence, close, destroy}`. The condition is `{operator: '>', threshold: 70}` by default; confidence is a 0–100 number or `null`. The host persists each emitted condition. Comparison uses the displayed whole percentage. To connect it to an Idea graph, pass `trigger: {condition, getConfidence, onChange}` alongside `leadingCard` in `showGraph`. The page supplies it for completed Ideas and resets it on a new query. It sits to the left under [D321](../../docs/research/2026-10-27-trigger-left.md) and appears after the thesis scan, before Action under [D322](../../docs/research/2026-10-27-trigger-last.md). D323 makes its connector a plain line; its comparison dropdown retains the normal indicator. See [D319](../../docs/research/2026-10-26-trigger-card.md) for the controls.
 
 `node poc/ui/verify-trigger.mjs` reuses the isolated navigation fixture to check controls, scroll containment, replay, retained settings, query reset and teardown. Opening `poc/ui/dist/trigger-check.html` makes no model call; use its Run Trigger checks button to exercise the stored response.
 
-The Trigger metric uses the shared select with AI confidence as its sole option (D231). It adds no condition field or new score source. Both metric and comparison menus close on pause and release their document listeners on teardown.
+The Trigger metric uses the shared select with AI confidence as its sole option (D324). It adds no condition field or new score source. Both metric and comparison menus close on pause and release their document listeners on teardown.
 
-The slider keeps a round threshold handle (D233). Its fill ends at that handle, accounting for the native thumb's inset. A separate vertical marker reads the supplied current metric value; `Current value: xx` is anchored beneath it. Editing the threshold moves only the round handle. Replay updates the fixed marker and its readout. Existing drag, wheel and keyboard input events still own threshold changes.
+The slider keeps a round threshold handle (D326). Its fill ends at that handle, accounting for the native thumb's inset. A separate vertical marker reads the supplied current metric value; `Current value: xx` is anchored beneath it. Editing the threshold moves only the round handle. Replay updates the fixed marker and its readout. Existing drag, wheel and keyboard input events still own threshold changes.
 
 ## Action preview
 
 Action is an editable frontend preview. It makes no wallet connection or order request. Its Monitoring label is presentation state, not a running trading service.
 
-`createActionCard({market, settings, onChange})` returns `{element, close, destroy}`. Pass it as `action` alongside `trigger` in an Idea graph. The host retains `{allocation: 5, range: '1Y'}` per query. Its single-option product, order, venue and example-wallet selects make no requests. The component validates its market input; unavailable data produces a visible empty state. [D235](../../docs/research/2026-10-27-action-card.md) owns the contract.
+`createActionCard({market, settings, onChange})` returns `{element, close, destroy}`. Pass it as `action` alongside `trigger` in an Idea graph. The host retains `{allocation: 5, range: '1Y'}` per query. Its single-option product, order, venue and example-wallet selects make no requests. The component validates its market input; unavailable data produces a visible empty state. [D328](../../docs/research/2026-10-27-action-card.md) owns the contract.
 
 The portable build embeds `poc/ui/data/nvda-2026-10-27.json`, a real TrueNorth price snapshot with source and timestamp in the chart’s accessible description. `--market-data` selects another explicitly captured snapshot; building validates it without network calls. `node poc/ui/verify-action.mjs` creates a browser fixture for all four chart ranges, allocation editing, navigation/replay retention, reset and teardown. It uses the isolated local response fixture and cannot call the model service.
 

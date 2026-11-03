@@ -1,0 +1,17 @@
+**The arm is not ready to send:** the structured citation path does not work for these cold-start cases, and the required preflight remains unverified.
+
+For example, if the NN answer cites `item:e2` as supporting evidence in an argument, the checker recognizes it as same-article material but rejects the argument because there is no existing question ID.
+
+1. **Same-article citations need a decision before sending.** All three histories have empty question lists. The schema puts structured evidence citations inside an argument requiring a question ID, while the checker rejects every argument whose question ID is absent from that empty list. Putting `item:e2` in `same_claim_as` also fails because that field accepts historical IDs only. The model can mention a source or ID in free text, but that does not establish a valid structured citation. An in-memory check reproduced both rejections. See the [schema](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-27-stage34-gold/run.py:50) and [answer checker](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-2026-10-29.py:120).
+
+2. **Preflight is not confirmed.** The [design](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-scope-arm-design-v3-2026-10-29.md:27) requires it before sending, but the sender does not run or verify it, and I found no result for this arm. I did not run it in this read-only review because it creates temporary database copies. It remains a required pre-send step.
+
+The other checks passed:
+
+- The offline preparation verifier rebuilt the exact targets from stored data: NN `e1` at sequence 7, NVIDIA `e1` at sequence 1, and Corning `e3` at sequence 6. Their before-sequence catalogs and expanded history were empty.
+- All six provider-specific control/scope pairs differ only by the added `research_scope` field naming NVDA. The constructed payloads do not include old answers, case labels, or scoring references.
+- Both providers receive the same messages and schema, with medium reasoning/effort and a 6,000-token output limit. The settings are comparable, though the providers implement them independently.
+- The 12 requests and dependency hashes match the frozen reconstruction. The reservation covers all 36 attempts and totals **$0.2072178** against the unchanged **$0.60** cap; it is an estimate, not a provider-enforced spending limit.
+- In-memory checks rejected reordered wire data and altered reservation bounds. A fake scheduler completed 36 jobs on success and stopped scheduling after missing usage, with eight already in flight. Transport errors also trigger the stop condition. The code uses exclusive attempt records and does not automatically retry.
+
+No files were edited and no network or model calls were made. The two test cases remain source-authored research references, not human gold.

@@ -1,0 +1,21 @@
+Read-only audit of a reshaped extraction role text against the signed standard. Scope: docs/research/2026-10-31-reference-context/role-v67-draft.txt,
+read as the model reads it: the system text, followed by a user message that carries an [Open questions as of <day>] block (one line per open
+question: id, kind, object, due day, question; "None yet." on the first day) and the item. Two evidence fields are added to the schema:
+new_in_it (string) and moves (string); links (array of ids) exists already. Compare with the current role src/hivemind/prompts/role-v53.txt:
+the first two sections and the candidate-opening paragraph are rewritten, the rest is verbatim.
+
+Ruler: docs/prd/05-extraction-standard.html version 5 (§5.1 the keep rule and the four kinds as description, §5.2, §5.3 rows and boundaries,
+§6, §3–§4 opening tests, D248 boundaries in the "已拍" block), D240, D243, D250 in docs/DECISIONS.md, AGENTS.md §6 (a prompt carries the
+standard, no new rules; general hedge-fund brain, no company-specific wording; examples from varied industries).
+
+Check, sentence by sentence:
+1. Every keep/drop sentence traces to a line of the standard; list any with no source or wider/narrower than its source.
+2. Anything that could drop what the standard keeps (core §6, guidance and in-force forecasts, policy steps, competitor comparisons,
+   partner adoption that is a new step, other companies' actions with a path, conditional valuations, the news behind a move, a
+   statement that moves a customer's or supplier's question not open and too small to open) or keep what it rejects.
+3. The procedure: does "write new_in_it and moves, keep only when both" match §5.1's test ("分析员会不会记，因为它让某个问题的答案更可能
+   或更不可能；先问是不是新信息") and §5.1's note that the four kinds do not keep? Any way the model could read a sentence as a global keep
+   rule (the failure of earlier versions: an exception on one row read as "keep")?
+4. Company-specific or industry-specific wording; examples that name a covered company.
+5. Contradictions inside the text, or with the schema fields named.
+Rank by seriousness, quote words, propose the smallest fix, say plainly when a sentence is fine and when nothing serious remains.

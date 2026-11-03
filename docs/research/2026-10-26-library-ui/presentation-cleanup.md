@@ -1,4 +1,4 @@
-# D182: frontend presentation cleanup
+# D276: frontend presentation cleanup
 
 Alex asked to remove four illustrated elements: the connection status and Refresh area, the Research library eyebrow, the As of date control, and the repeated count/date row above the cards. He also required sentence-case interface labels and vertical bars between metadata fields throughout the frontend.
 
@@ -35,6 +35,6 @@ The current component templates contain three all-capital navigation/eyebrow lab
 | Library filtering without result row | Existing invalid/empty/replacement lifecycle fixture uses sidebar count, not removed output |
 | Sentence case | Inspect current component/template literals and rendered sidebar; keep source text and identifiers unchanged |
 
-D130 owns shared components; D138 owns Idea links; D181 owns current-library reads. D182 changes presentation only. The rule lives in the Thesis UI document, with an AGENTS pointer. Verify the UI suite, existing mutations, lint, format and real browser. Refresh module reasoning for presentation impact and run docs/check.py last. No model calls or database changes are required.
+D130 owns shared components; D138 owns Idea links; D275 owns current-library reads. D276 changes presentation only. The rule lives in the Thesis UI document, with an AGENTS pointer. Verify the UI suite, existing mutations, lint, format and real browser. Refresh module reasoning for presentation impact and run docs/check.py last. No model calls or database changes are required.
 
 Alex also requested “Show more” for the pagination action. Census found two corresponding labels: library theses and detail evidence. Both use “Show more”.

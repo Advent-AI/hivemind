@@ -1,12 +1,12 @@
-> D186 historical implementation contract. D188 extends the final assessment with the default composite plan; see [the current contract](default-composite.md).
+> D280 historical implementation contract. D282 extends the final assessment with the default composite plan; see [the current contract](default-composite.md).
 
-# D186 implementation contract
+# D280 implementation contract
 
 A completed Idea card opens analysis on click or Enter/Space. The summary in its JSON response reads like a portfolio manager's short assessment of the idea. For example, an annual revenue outlook can inform an earnings-beat idea without proving next quarter beats expectations.
 
 ## Final design and prior decisions
 
-D135/D145's decomposition and mapping requests remain unchanged. D184's detail drawer and D185's explicit composite trial remain. D186 adds an optional, versioned `idea_summary` setting after code validates the mapping and evaluates the claim. It receives selected theses' dated conditions and reasons, mapped coverage and the validated claim result. Its strict JSON allows only `summary`. That replaces `reading.summary`; it cannot return IDs, weights or scores. Default `poc-v26-idea` uses the same model/provider with 800 output tokens. Old configs retain two calls. The extra serial call is the stated cost of isolating the tasks; it does not meet the old whole-flow latency target by itself.
+D135/D145's decomposition and mapping requests remain unchanged. D278's detail drawer and D279's explicit composite trial remain. D280 adds an optional, versioned `idea_summary` setting after code validates the mapping and evaluates the claim. It receives selected theses' dated conditions and reasons, mapped coverage and the validated claim result. Its strict JSON allows only `summary`. That replaces `reading.summary`; it cannot return IDs, weights or scores. Default `poc-v26-idea` uses the same model/provider with 800 output tokens. Old configs retain two calls. The extra serial call is the stated cost of isolating the tasks; it does not meet the old whole-flow latency target by itself.
 
 ## State × event
 

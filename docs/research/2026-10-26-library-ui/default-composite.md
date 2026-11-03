@@ -1,14 +1,14 @@
-# D188: default composite score on Idea cards
+# D282: default composite score on Idea cards
 
 Alex requested that the composite chart become a default Idea-card requirement. The two stored Idea mappings have identical dates: one has a matching manual trial, one does not. The existing writer compares exact idea text and date against a single build-time configuration. The API returns no composite plan. The current three-thesis example has usable histories but no matching configuration. This is a missing general response contract, not missing chart data.
 
 ## Decision and scope
 
-Retain D185's equal-weight mean of distinct signed drivers and its current-basket historical interpretation. Retain D186's separation from matching: the existing final assessment call now returns summary plus a composite plan; the original decomposition/mapping requests and selected IDs stay unchanged. No fourth call, ledger writes, new research groups, ingestion change or manual query registry.
+Retain D279's equal-weight mean of distinct signed drivers and its current-basket historical interpretation. Retain D280's separation from matching: the existing final assessment call now returns summary plus a composite plan; the original decomposition/mapping requests and selected IDs stay unchanged. No fourth call, ledger writes, new research groups, ingestion change or manual query registry.
 
 The model selects one representative per underlying economic driver, from the chosen theses only. Revenue forecasts at total/segment/product levels for one demand channel must not multiply its weight; repeated capex estimates/financing for the same demand backdrop do not become independent drivers. Select by relevance and coverage, not the currently favourable score. It may exclude an irrelevant, overlapping, temporally unhelpful or directionally ambiguous thesis, with a reason. Every chosen thesis must occur exactly once as representative or exclusion. The model identifies whether the first or last rung of each representative supports the user's claim. Full ordered ladder conditions make this meaningful without relying on numeric UI orientation. No free-form weights; all available representatives weigh equally.
 
-Code validates the partition, identities, endpoint enum and text before returning versioned `reading.composite`. Code supplies the date and immutable question, not the model. The frontend converts the endpoint to its existing displayed-score orientation and computes the same D185 historical mean. For binary ladders the two ends map to +2/-2 support. Missing assessments do not become zero. Empty plans show axes with no line and an unavailable score. No coverage needs no model call. Legacy responses remain readable; explicit historical manual trials remain a compatibility path, not the default.
+Code validates the partition, identities, endpoint enum and text before returning versioned `reading.composite`. Code supplies the date and immutable question, not the model. The frontend converts the endpoint to its existing displayed-score orientation and computes the same D279 historical mean. For binary ladders the two ends map to +2/-2 support. Missing assessments do not become zero. Empty plans show axes with no line and an unavailable score. No coverage needs no model call. Legacy responses remain readable; explicit historical manual trials remain a compatibility path, not the default.
 
 ## State × event
 

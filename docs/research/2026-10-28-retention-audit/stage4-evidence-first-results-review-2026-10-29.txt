@@ -1,0 +1,30 @@
+**The reported counts are correct, but the report misses two material source-quality problems.** For example, five answers turn the article’s publication date into an established statement or event date.
+
+I read all 12 answers, checked their raw responses and request identities, and compared the source with the stored original page. No files were edited or provider requests sent.
+
+1. **The input includes unrelated “Featured” articles as same-article evidence.**  
+   In the [source database](/Users/lchingen/hivemind/poc/data/items-nvda-2026-07-01-10-27.sqlite), row `input_id=gnews:8f5a03f1dde395491fc3814b`, `text_page` lines 67–75 identify the OpenAI, Meta and Microsoft passages as **Featured teasers after the article**. The cleaned text removes that boundary. Extraction call 4 then makes them `e6/e7/e8`, and all 12 requests receive them as `other_source_records`.
+
+   This reaches an accepted answer: [control Haiku 2, line 54](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-evidence-first-arm-2026-10-29/science-control-haiku-2.json:54) calls them “Other items in the article.” The report should disclose this inherited contamination: **four unrelated teaser paragraphs, three extracted records, present in all 12 inputs**. Their text exists on the page, but that does not establish the claimed article identity or publication date. I found no evidence that they caused the five relation failures.
+
+2. **Five answers repeat an unsupported July 1 statement/event date; two pass structural checks.**  
+   The [request payload, line 8](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-evidence-first-arm-2026-10-29/science-control-haiku-request.json:8) supplies `original_day` and `event_time` as July 1. The original page establishes July 1 as publication day and June 30 as the beta announcement day. It does **not** establish a separate July 1 integration statement.
+
+   This appears in control Luna 2 and evidence Luna 1–3, plus evidence Haiku 2. The accepted examples are [control Luna 2, line 48](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-evidence-first-arm-2026-10-29/science-control-luna-2.json:48) and [evidence Haiku 2, line 50](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-evidence-first-arm-2026-10-29/science-evidence-haiku-2.json:50). This is inherited unsupported precision, not a demonstrated new-schema regression. Nor does the evidence justify automatically replacing every date with June 30.
+
+The remaining checks support the report, with these limits:
+
+| Group | Completed | Structurally accepted | Rejected samples |
+|---|---:|---:|---|
+| Control Haiku | 3 | 3 | None |
+| Evidence Haiku | 3 | 3 | None |
+| Control Luna | 3 | 1 | 1, 3 |
+| Evidence Luna | 3 | 0 | 1, 2, 3 |
+
+**Run and cause:** There are exactly 12 attempt files and matching raw responses; 48 planned calls were unsent. All five failures contain only `same_claim_as: not a historical evidence id item:e1`. The inherited [stop override, lines 57–61](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29.py:57) stops on unusable answers. The summary’s [`stopped_on_usage_or_transport_anomaly`, line 246](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-evidence-first-arm-2026-10-29/run-v5-summary.json:246) is therefore misleadingly named: no transport or usage anomaly is recorded.
+
+**Claim identity:** `e1` and incoming `e5` share the broad integration claim and attributed origin, Anthropic. They are not interchangeable complete statements. `e1` describes the workbench’s introduction and capabilities; `e5` adds BioNeMo Agent Toolkit and three named models. The report correctly distinguishes broader/detail from identity. The five refusals prove an illegal reference, not that all five semantic comparisons were wholly wrong. Same origin also means these are not independent corroboration.
+
+**Quotes and inference:** All four emitted quotations—across the three evidence Haiku answers—match their identified sources exactly. They support the integration description. They do not establish the analytical conclusion that it cannot move NVIDIA estimates or risk. Those conclusions remain unvalidated judgements; science has no user-approved economic gold. All 12 answers express the integration, choose `background_only`, and avoid asserting confirmed NVIDIA revenue. None proposes a new question, so the intended new-question improvement remains untested.
+
+**Boundaries and cost:** The source was previously extracted, but the prior stage-four run left its science calls unsent. The report’s qualified holdout description is supported. Sharon’s user judgement was not tested here. Token totals match exactly: Haiku **32,526 / 6,737**, Luna **18,489 / 4,171** input/output. At the saved configured rates, ignoring Luna’s **13,346 cached input tokens**, the estimate is **$0.0105555**, correctly rounded to **$0.01056**; it is not a verified bill.

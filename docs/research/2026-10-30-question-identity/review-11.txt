@@ -1,0 +1,11 @@
+**仍有两项严重问题：逐候选核对还可能漏掉候选，而且同篇文章里的续期关系被排除在验收之外。** 例如，改变已有问题后，归档可能让一个原先没进入匹配的候选进入匹配；如果金标只收原账本里的候选，这个新结果就没人核对。
+
+1. **严重：金标的候选范围可能漏掉新臂出现的候选。** [计划第 122、125 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:122)把五个账本里已有的候选当作完整范围；但[第 151 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:151)也承认，问题变化后归档要重新发送。代码先按归档结果丢弃没有落点的证据，再移除失去全部证据的候选，之后才保存交接记录、进入匹配（[extraction.py 第 608 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:608)、[第 746 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:746)、[round.py 第 119 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/views/round.py:119)）。因此，固定抽取答案里一个原先被归档移除的候选，可能因新臂的已有问题不同而留下并开题，却不在原账本金标里。应从**归档前的固定抽取候选**建立核对范围，并把归档移除也记为实际结局；这检查的是两臂之间的变化，不扩大到共同丢失证据的 D212 审计。
+
+2. **严重：同篇候选的续期关系被记下，却不参与验收。** [计划第 119–120 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:119)明确说同篇两年的候选都按新开处理，只记录缺失的续期关系；这与[第 108 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:108)“每个候选的完整结局都核对”的说法不一致。v38 的 `v8` 和 `v9` 来自同一文章，分别问 2026 和 2027 年云厂商资本开支；只读查询显示两题都存在，但续期表没有 `v9 → v8`。现行 [PRD 06 第 133–136 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/06-views.md:133)要求同一关注点的连续期间组成链。这不是少开了一题，但关系仍错；计划需要把它作为明确的剩余错误纳入结局核对，不能称为完整闭集。
+
+已核实的主要部分：两本账本的候选、合并和续期总数与[普查输出](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/census/admission-census.txt:1)一致；v38 的 `v1` 和 `v3` 确有 20 条共同证据。裁决类别仍由[脚本解析理由文字](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/census/admission_census.py:25)，计划已标明需用结构化答案重数。担保与融资的例子确实同时出现在[签字标准](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:318)和[裁决提示词](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/collision-v1.txt:1)；计划现在正确地把它是否造成拆题、以及它与 D210 的边界是否冲突，留作待确认问题。
+
+H1–H7 的倾向已把主要标准边界标成选择；H7 保留两条证据，符合 [D204](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2611)。第 4 轮指出的必开续期、值得开与否、续期证据和未来到期测试，计划都有了对应检查；上面两项是完整覆盖仍有的缺口。第 11b 节只记录了简短的“A”，我无法独立核实每个回答所对应的完整提问；也没有逐一核实所有存档裁决和费用估计。
+
+**仍有严重问题：有。**

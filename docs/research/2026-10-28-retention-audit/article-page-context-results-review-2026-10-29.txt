@@ -1,0 +1,28 @@
+**Both tables and the main counts are correct. The report’s main omission is unsupported dates in the saved evidence.** For example, one answer dates the “last quarterly conference call” to May 2026, although neither source text supplies that month.
+
+I read all 36 samples’ full evidence quotes against both SQLite texts and independently replayed the native schema and sift checks. No files were changed and no model calls were made.
+
+The table cells reproduce exactly; each sequence below is samples 1, 2, 3:
+
+| Reported measure | Model | Clean text | Full page |
+|---|---|---:|---:|
+| Science: evidence from other articles | Haiku | 1, 1, 1 | 0, 0, 0 |
+| Science: evidence from other articles | Luna | 3, 3, 3 | 0, 0, 0 |
+| Stock commentary: surviving evidence records | Haiku | 6, 6, 6 | 5, 7, 5 |
+| Stock commentary: surviving evidence records | Luna | 0, 0, 0 | 0, 0, 0 |
+
+- **82%/41%:** The **12/12 present, 0/12 complete** result holds. Both source versions say: “That sounds like further revenue growth ahead, and that's exactly what Wall Street analysts are projecting as well. For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.” Every sample omits the first sentence from its evidence quotes. Haiku names revenue in clean sample 3 and all three page samples. Luna names it in none; clean sample 1 and page samples 2–3 explicitly claim the measure is unspecified.
+
+- **FY qualification:** All three Haiku page summaries incorrectly replace “the rest of this year” with “the current fiscal year.” Additionally, all three clean samples put `FY2027` in the percentage record’s `event_time`; page samples 1 and 3 do likewise. That additional field-level qualification is absent from the report. [Example](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-page-context-2026-10-29/revenue-clean-haiku-3.json:218)
+
+- **EPS:** All 12 samples retain the $12.76 FY2028 analyst forecast and its full supporting sentence, including “ending January 2028.” The two rejected FY2028 **candidates** do not remove the EPS **evidence**. However, five Haiku samples invent `2026-07-06` as the original analyst statement date. Thus “12/12 retained” is correct; “12/12 fully correct records” would not be.
+
+- **Other sources:** None of the six science-page samples contains evidence from another article—not just the named OpenAI, Meta and Microsoft stories. I also checked the Marc Booker feature and the remaining page sections. All 12 science samples retain the BioNeMo integration statement.
+
+- **Stock classification:** The counts are surviving records, correctly labelled as such. They should not become counts of pure stock-price comments: every Haiku sample includes market capitalisation, and page sample 3 additionally quotes “Nvidia's earnings reports have been stellar, with massive growth in revenue and net income.” That is general business commentary requiring its own classification. The clean-sample-2 “share-price move, so rejected” contradiction is real. [Page sample 3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-page-context-2026-10-29/holdout-page-haiku-3.json:124)
+
+- **Time widget:** The reported absence of $216.20, $5.08T and 74.67% holds. Reading the complete surviving quotes also found no extracted widget, navigation, advertisement or recommendation content in the revenue or stock-page samples. This does not establish absence of subtler influence.
+
+**The omitted date problems warrant reporting.** Across nine Haiku samples, 23 evidence records assign the article publication date to an original speaker whose statement date is unstated or earlier: 10 science records and 13 revenue records. There are also two unsupported precise dates: May 2026 for the conference call, and March 31 for a stock-history period stated only as “March 2026.” [Conference-call date](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-page-context-2026-10-29/revenue-page-haiku-2.json:197) · [March 31](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/article-page-context-2026-10-29/holdout-page-haiku-3.json:135)
+
+The remaining arithmetic checks out: **36 completed/schema-valid answers; 179 raw → 177 surviving evidence records; 16 → 14 candidates**. The extraction-only weekly replay reproduces **98 inputs, 841 → 831 evidence records**. Using the experiment’s recorded rates without cache discounts gives **$0.0468978**, with **$0.45045** reserved; this verifies the calculation, not public pricing or the bill. All frozen request, source, design, script and code hashes match.

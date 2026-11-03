@@ -5,7 +5,7 @@ import { graphOf } from '../src/idea/idea.js';
 import { revealSequence } from '../src/components/tree-reveal.js';
 import { layoutGraph } from '../src/model/graph.js';
 
-test('D223: the stored graph reveals each root and its children before the next root', () => {
+test('D317: the stored graph reveals each root and its children before the next root', () => {
   const card = JSON.parse(
     fs.readFileSync(new URL('./fixtures/idea-card-v3.json', import.meta.url)),
   );
@@ -25,7 +25,7 @@ test('D223: the stored graph reveals each root and its children before the next 
   console.log(`Checked ${edges.length} stored connections in reveal order.`);
 });
 
-test('D227/D228: the default thesis column reveals top to bottom after the Idea', () => {
+test('D320/D321: the default thesis column reveals top to bottom after the Idea', () => {
   const card = JSON.parse(
     fs.readFileSync(new URL('./fixtures/idea-composite-default.json', import.meta.url)),
   );

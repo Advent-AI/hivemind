@@ -1,0 +1,6 @@
+No serious findings. The revised design closes both prior findings without introducing a serious contradiction.
+
+- [Baseline](docs/research/2026-10-25-ingestion-smoke/plan.md:15): excludes all unordered `seq=0` audit rows and rejects later-dated records. It clearly defines the result as an ordered-state projection.
+- [Failure handling](docs/research/2026-10-25-ingestion-smoke/plan.md:21): validates answers before releasing the call slot, so a malformed judge response stops queued calls before executor cleanup. Existing product correction rules remain intact.
+
+This closes the design review; implementation still needs the specified offline proofs. No edits or provider calls.

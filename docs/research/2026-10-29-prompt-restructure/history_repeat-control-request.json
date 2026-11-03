@@ -1,0 +1,135 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 6000,
+  "system": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the deliverable. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Keep conditions and periods exactly as the texts state them. Comparison opinions are hints with scores; the texts decide. Answer in the JSON schema only.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"one_line\": \"James Royal said the Wall Street Journal reported NVIDIA was working on a $350 billion deal to finance OpenAI's purchases of NVIDIA chips.\", \"quote\": \"Nvidia is also working on a $350 billion deal to finance Nvidia chips for OpenAI, per the Journal.\", \"speaker\": \"James Royal, MarketWise, relaying Wall Street Journal reporting\", \"original_who\": \"Wall Street Journal\", \"original_day\": \"\", \"tier\": \"third_party_view\", \"event_time\": \"\", \"publisher\": \"marketwise.com\", \"publisher_type\": \"analyst\", \"publication_day\": \"2026-07-28\", \"category\": \"T8\", \"title\": \"Here's How Nvidia Is Rapidly Becoming the 'Central Bank of AI'\"}, \"linked_questions\": [{\"view_id\": \"v27\", \"looks_at\": \"NVIDIA binding financing commitment for OpenAI's processor purchases\", \"question\": \"By December 31, 2026, will NVIDIA have entered into a binding agreement to finance OpenAI's purchases of NVIDIA processors for the proposed Ohio data center project?\", \"due_day\": \"2026-12-31\", \"rungs\": [{\"label\": \"Yes\", \"condition\": \"NVIDIA has entered into a binding agreement to finance OpenAI's processor purchases for the project by December 31, 2026.\"}, {\"label\": \"No\", \"condition\": \"NVIDIA has not entered into such a binding agreement by December 31, 2026.\"}], \"latest_judgement\": {\"rung\": 1, \"reasons\": \"I lean toward NVIDIA entering a binding agreement by the deadline, but this is a forecast, not an established outcome. The strongest directional evidence is the report of preliminary discussions about financing roughly $350 billion of OpenAI processor purchases, together with NVIDIA's reported statement that it is in talks about a guarantee covering the Ohio project's chips. Those discussions could still change or collapse. Huang's reported characterization of discussions as centered on a non-binding memorandum of understanding weighs against treating a binding commitment as already secured. The deadline has not arrived, and no supplied fact establishes that a binding agreement has been entered into.\", \"day\": \"2026-07-27\"}, \"argument\": null, \"piece_ids\": [\"e717\", \"e718\", \"e719\", \"e721\", \"e722\", \"e723\", \"e724\", \"e737\", \"e744\", \"e761\", \"e762\", \"e763\", \"e764\", \"e765\", \"e766\", \"e767\"]}], \"stored_pieces\": [{\"id\": \"e717\", \"tier\": \"third_party_view\", \"speaker\": \"Khac Phu Nguyen, GuruFocus\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"The article reports that NVIDIA is discussing financing approximately $350 billion of OpenAI's NVIDIA-processor purchases for the project, with preliminary negotiations that could change or collapse.\", \"quote\": \"The chipmaker is separately discussing financing approximately $350 billion of OpenAI's purchases of NVIDIA processors for the project, although the negotiations remain preliminary and could change or collapse.\", \"sources\": [[\"gnews:e7777109769b68857021b63b\", \"2026-07-27\"], [\"gnews:6ea61aa936b9cea298c8cebb\", \"2026-07-27\"], [\"gnews:04f9b244186ad52647b6931e\", \"2026-07-27\"], [\"gnews:3561dee8ab82ef4e42d8e315\", \"2026-07-27\"], [\"gnews:377f0fcaa28d89d1ed338a3b\", \"2026-07-27\"], [\"gnews:9e7560cfe0a707f9c14c7071\", \"2026-07-27\"], [\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"], [\"gnews:cf24fe6341ca980677ca786e\", \"2026-07-27\"], [\"gnews:cf24fe6341ca980677ca786e\", \"2026-07-27\"], [\"gnews:52059ca6cf757271948579f5\", \"2026-07-28\"]], \"replaced\": []}, {\"id\": \"e718\", \"tier\": \"party_statement\", \"speaker\": \"Khac Phu Nguyen, GuruFocus, reporting Jensen Huang's remarks\", \"original_who\": \"Jensen Huang\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"The article reports that CEO Jensen Huang rejected circular-demand claims and said NVIDIA's investments are only a small portion of the capital customers need to raise.\", \"quote\": \"Chief Executive Officer Jensen Huang has rejected claims that NVIDIA's agreements create circular demand, arguing that the company's investments represent only a small portion of the money its customers ultimately need to raise.\", \"sources\": [[\"gnews:e7777109769b68857021b63b\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e719\", \"tier\": \"party_statement\", \"speaker\": \"NVIDIA, as reported by Al Jazeera\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"Al Jazeera reported that NVIDIA said it was also in talks about a guarantee covering the chips for OpenAI’s planned Ohio data centre, valued at $350 billion.\", \"quote\": \"However, Jensen Huang-led Nvidia said it is also in talks for that as well.\", \"sources\": [[\"gnews:abf7551608c81d3cf4fe39b7\", \"2026-07-27\"], [\"gnews:04f9b244186ad52647b6931e\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e721\", \"tier\": \"third_party_view\", \"speaker\": \"Zev Fima, CNBC\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"CNBC columnist Zev Fima said on July 27, 2026, that potential Nvidia financial support for OpenAI’s SoftBank project could increase concerns about interconnected financial obligations.\", \"quote\": \"No matter how you slice it, if Nvidia lends financial support to OpenAI on this SoftBank project, we will be left with two of the AI boom's most important companies tying themselves even closer together. This makes worries about a domino effect, should one party fail to meet its financial obligation\", \"sources\": [[\"gnews:4ce7b426f466da78af06cadc\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e722\", \"tier\": \"third_party_view\", \"speaker\": \"Joe Tenebruso\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"Joe Tenebruso argued that the potential financing deals were making investors increasingly uncomfortable.\", \"quote\": \"News of these potential financing deals is making investors increasingly uncomfortable.\", \"sources\": [[\"gnews:6ea61aa936b9cea298c8cebb\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e723\", \"tier\": \"third_party_view\", \"speaker\": \"Joe Tenebruso\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"Joe Tenebruso argued that customer financing arrangements can initially boost a supplier's sales but increase its exposure to customers over time.\", \"quote\": \"At first, these arrangements can boost the supplier's sales. But over time, the supplier becomes increasingly tied to its customers' fate.\", \"sources\": [[\"gnews:6ea61aa936b9cea298c8cebb\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e724\", \"tier\": \"third_party_view\", \"speaker\": \"Joe Tenebruso\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"Joe Tenebruso said OpenAI remained deeply unprofitable and competition among AI model developers was intensifying, raising concern about NVIDIA's exposure to its customers' fortunes.\", \"quote\": \"Despite its stunning growth, OpenAI remains deeply unprofitable. And competition among AI model developers intensifies by the day.\", \"sources\": [[\"gnews:6ea61aa936b9cea298c8cebb\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e737\", \"tier\": \"rumour\", \"speaker\": \"The Jerusalem Post\", \"original_who\": \"An unspecified report\", \"original_day\": \"2026-07-27\", \"event_time\": \"2028\", \"one_line\": \"The Jerusalem Post reported on July 27, 2026, citing an unspecified report, that the southern Ohio project's first phase was expected to be completed in 2028 with approximately 800 megawatts of capacity.\", \"quote\": \"According to the report, the first phase of the project is expected to be completed in 2028 and will provide approximately 800 megawatts.\", \"sources\": [[\"gnews:04f9b244186ad52647b6931e\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e744\", \"tier\": \"third_party_view\", \"speaker\": \"David Moadel, 24/7 Wall St.\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"David Moadel argued that increased seller financing of AI customers could make the independence of reported revenue questionable.\", \"quote\": \"The bear case centers on structure. If more of the AI buildout depends on the seller financing the buyer, the market has a fair reason to question how much of the reported revenue is truly independent.\", \"sources\": [[\"gnews:77407f8ee20f4ae125475c46\", \"2026-07-27\"], [\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e761\", \"tier\": \"rumour\", \"speaker\": \"24/7 Wall St. author Rich Duprey, attributing the report to The Wall Street Journal\", \"original_who\": \"The Wall Street Journal\", \"original_day\": \"2026-07-27\", \"event_time\": \"\", \"one_line\": \"The Wall Street Journal reportedly said NVIDIA was in talks to support up to $600 billion of OpenAI-related financing; the article does not give the report’s publication date.\", \"quote\": \"According to The Wall Street Journal , Nvidia is in talks to support as much as $600 billion of OpenAI -related financing.\", \"sources\": [[\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e762\", \"tier\": \"third_party_view\", \"speaker\": \"24/7 Wall St. author Rich Duprey\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"Last year, relative to 2026-07-27\", \"one_line\": \"The author said reports from last year suggested NVIDIA was considering an OpenAI infrastructure financing package approaching $100 billion.\", \"quote\": \"Last year, reports suggested Nvidia was considering a financing package approaching $100 billion for OpenAI’s infrastructure ambitions.\", \"sources\": [[\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e763\", \"tier\": \"party_statement\", \"speaker\": \"NVIDIA CEO Jensen Huang, as retold by 24/7 Wall St. author Rich Duprey\", \"original_who\": \"Jensen Huang\", \"original_day\": \"2026-07-27\", \"event_time\": \"Later than the reports described as occurring last year; exact date not stated\", \"one_line\": \"The author reported that NVIDIA CEO Jensen Huang said earlier media accounts overstated the discussions, which he described as concerning a non-binding memorandum of understanding rather than NVIDIA funding the whole project.\", \"quote\": \"Nvidia CEO Jensen Huang later indicated media reports overstated the scope of the discussions, explaining the conversations centered around a non-binding memorandum of understanding rather than Nvidia funding the entire project outright.\", \"sources\": [[\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": [\"e689\", \"e720\"]}, {\"id\": \"e764\", \"tier\": \"third_party_view\", \"speaker\": \"24/7 Wall St. author Rich Duprey\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"As of 2026-07-27\", \"one_line\": \"The author said neither NVIDIA nor OpenAI had confirmed the latest reports about the proposed financing.\", \"quote\": \"That history matters because none of the latest reports have been confirmed by Nvidia or OpenAI.\", \"sources\": [[\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e765\", \"tier\": \"third_party_view\", \"speaker\": \"24/7 Wall St. author Rich Duprey, summarizing critics’ arguments\", \"original_who\": \"Critics, not individually identified\", \"original_day\": \"2026-07-27\", \"event_time\": \"As of 2026-07-27\", \"one_line\": \"The author said critics argue NVIDIA helps customers obtain financing that returns to NVIDIA through GPU purchases, describing this as circular financing.\", \"quote\": \"Critics have increasingly argued Nvidia is participating in “circular financing” arrangements , where it helps customers obtain financing that ultimately flows back to Nvidia through GPU purchases.\", \"sources\": [[\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e766\", \"tier\": \"third_party_view\", \"speaker\": \"24/7 Wall St. author Rich Duprey\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"The author advised treating the reported $600 billion financing discussions cautiously until NVIDIA or OpenAI confirms them.\", \"quote\": \"In short, investors should treat the reported $600 billion financing discussions with caution until Nvidia or OpenAI confirms the details.\", \"sources\": [[\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": []}, {\"id\": \"e767\", \"tier\": \"third_party_view\", \"speaker\": \"24/7 Wall St. author Rich Duprey\", \"original_who\": \"\", \"original_day\": \"2026-07-27\", \"event_time\": \"2026-07-27\", \"one_line\": \"The author argued that NVIDIA’s role in financing AI infrastructure could support customer relationships and future GPU demand while raising scrutiny about whether demand depends on capital availability.\", \"quote\": \"That strategy could deepen customer relationships and protect future GPU demand, but it also invites greater scrutiny over whether demand is being driven by end-market economics or increasingly by the availability of capital.\", \"sources\": [[\"gnews:6825341a116bd4528557ba9d\", \"2026-07-27\"]], \"replaced\": []}], \"catalog\": [{\"view_id\": \"v1\", \"looks_at\": \"NVIDIA guarantee to repurchase participating cloud providers' unsold GPU capacity\"}, {\"view_id\": \"v2\", \"looks_at\": \"Whether China permits commercial purchases of Nvidia H200 chips\"}, {\"view_id\": \"v3\", \"looks_at\": \"Combined data-center capital expenditures of the four largest AI hyperscalers in calendar 2026\"}, {\"view_id\": \"v4\", \"looks_at\": \"Combined data-center capital expenditures of the four largest AI hyperscalers in calendar 2027\"}, {\"view_id\": \"v5\", \"looks_at\": \"NVDA stand-alone CPU sales in FY2027\"}, {\"view_id\": \"v6\", \"looks_at\": \"NVIDIA Data Center segment revenue for FY2027\"}, {\"view_id\": \"v7\", \"looks_at\": \"NVIDIA AI Aerial RAN performance\"}, {\"view_id\": \"v8\", \"looks_at\": \"NVIDIA-Nokia AI-RAN collaboration\"}, {\"view_id\": \"v9\", \"looks_at\": \"NVIDIA automotive revenue growth\"}, {\"view_id\": \"v10\", \"looks_at\": \"NVIDIA binding equity investment in Firmus\"}, {\"view_id\": \"v11\", \"looks_at\": \"NVIDIA total revenue for FY2027\"}, {\"view_id\": \"v12\", \"looks_at\": \"NVIDIA equity investment in Gradium’s seed round\"}, {\"view_id\": \"v13\", \"looks_at\": \"French competition authority antitrust investigation into NVIDIA\"}, {\"view_id\": \"v14\", \"looks_at\": \"NVIDIA gross margin for FY2027\"}, {\"view_id\": \"v15\", \"looks_at\": \"NVIDIA binding investment in Marvell\"}, {\"view_id\": \"v16\", \"looks_at\": \"NVIDIA binding equity investment in Fireworks’ 2026 financing round\"}, {\"view_id\": \"v17\", \"looks_at\": \"NVIDIA Data Center networking revenue for FY2027\"}, {\"view_id\": \"v18\", \"looks_at\": \"NVIDIA binding commitment to acquire long-haul dark fiber capacity\"}, {\"view_id\": \"v19\", \"looks_at\": \"NVIDIA Fort Worth AI factory construction completion\"}, {\"view_id\": \"v20\", \"looks_at\": \"NVIDIA binding guarantee covering neocloud customers' nonpayment\"}, {\"view_id\": \"v21\", \"looks_at\": \"Remote Access Security Act (RASA) Senate action\"}, {\"view_id\": \"v22\", \"looks_at\": \"NVIDIA revenue growth in FY2027\"}, {\"view_id\": \"v23\", \"looks_at\": \"NVIDIA binding investment in NAVER\"}, {\"view_id\": \"v24\", \"looks_at\": \"Whether the Trump administration imposes restrictions on Chinese AI models\"}, {\"view_id\": \"v25\", \"looks_at\": \"NVIDIA binding guarantee for OpenAI data-center lease and debt financing\"}, {\"view_id\": \"v26\", \"looks_at\": \"NVIDIA binding equity investment in Safe Superintelligence Inc.\"}, {\"view_id\": \"v27\", \"looks_at\": \"NVIDIA binding financing commitment for OpenAI's processor purchases\"}], \"comparison_opinion\": {\"questions\": {\"v27\": [\"lead\", 0.39]}, \"pieces\": {\"e717\": [\"same_statement\", 0.94], \"e718\": [\"different\", 0.93], \"e719\": [\"same_statement\", 0.51], \"e721\": [\"different\", 0.92], \"e722\": [\"different\", 0.95], \"e723\": [\"different\", 1.0], \"e724\": [\"different\", 1.0], \"e737\": [\"different\", 1.0], \"e744\": [\"different\", 0.95], \"e761\": [\"different\", 0.94], \"e762\": [\"different\", 0.87], \"e763\": [\"supersedes\", 0.73], \"e764\": [\"different\", 0.89], \"e765\": [\"different\", 0.94], \"e766\": [\"different\", 0.99], \"e767\": [\"different\", 0.95]}}}"
+    }
+  ],
+  "output_config": {
+    "effort": "medium",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  }
+}

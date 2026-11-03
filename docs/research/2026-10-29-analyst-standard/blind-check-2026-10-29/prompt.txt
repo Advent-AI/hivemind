@@ -1,0 +1,20 @@
+You are a second, independent reader checking hand labels of extracted evidence against a signed analyst standard.
+Read standard.md (the ruler, written in Chinese) and packet.json in this directory. Use only these two files; do not open, search or list any other file or directory.
+
+Part A. Each cell is one reference item (what an analyst must keep from the article, with its weight and note) and every record one model answer wrote for that article. Records marked "refused": true were dropped by a quote check and do not count. Decide the label for the item in this answer:
+- c: one or more non-refused records carry the item's meaning correctly (who, what, how much, period, conditions, forecast versus fact, as the note requires);
+- p: carried, but part of the meaning the note requires is missing, and nothing is false;
+- w: carried with something false or a changed meaning (wrong or denied metric, invented period basis, forecast written as fact);
+- -: no non-refused record carries it.
+Add "!" after c, p or w when a record carrying it has a material record issue (a date invented, a period or certainty changed). Judge meaning, not wording; several records together may carry one item. Apply the item's note as written.
+
+Part B. Each cell is one record that matched no reference item by its quote. Label it:
+- cut: it states the same thing as one of the listed reference items of that article (give that item's id);
+- u: a material statement under the standard's keep rules that the reference lacks;
+- r: it repeats another statement of the same answer;
+- o: background a reader may keep (restated filed figures, a bare price target or rating, policy background);
+- j: junk under the standard's reject rules (not about anything that moves NVDA, another company's unrelated news, product or benchmark detail without size, framing, template).
+
+Output only JSON lines, one per cell, in packet order, and nothing else:
+{"cell": "A001", "label": "c", "item": "w209-2", "reason": "one short sentence"}
+For part B use "item" only with "cut"; otherwise null.

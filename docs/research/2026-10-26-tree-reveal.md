@@ -1,12 +1,12 @@
-# D223 · Animated Idea tree reveal
+# D317 · Animated Idea tree reveal
 
-On a completed Idea request, show the Idea first, trace each connection from source to target and reveal the reached thesis. Keep the response's displayed root order, including impact-weight ordering. A root's related children follow that root before moving to the next. The camera now scans directly down the thesis column under [D227](2026-10-27-reveal-scan.md), without revisiting sources. End at the existing 100% view centred on the whole tree, then reveal the left-side Trigger and its connector last under [D229](2026-10-27-trigger-last.md).
+On a completed Idea request, show the Idea first, trace each connection from source to target and reveal the reached thesis. Keep the response's displayed root order, including impact-weight ordering. A root's related children follow that root before moving to the next. The camera now scans directly down the thesis column under [D320](2026-10-27-reveal-scan.md), without revisiting sources. End at the existing 100% view centred on the whole tree, then reveal the left-side Trigger and its connector last under [D322](2026-10-27-trigger-last.md).
 
 ## Ownership and sequence
 
 The canvas still owns layout, connections, pan and zoom. A cancellable reveal controller owns its temporary opacity, stroke offsets, timing and camera interpolation. Bootstrap requests a reveal once on the completed graph; the flag is not retained in replay or dataset state. No API, scoring or model changes.
 
-Timings: 360ms Idea entrance; 650ms line drawing while the camera moves to the next target; 280ms target entrance; 140ms pause; 650ms return to the default view. D227 removes the per-connection source visit. These are design timings, not measured performance. There is no per-thesis count limit. Reduced-motion preference shows the finished graph immediately.
+Timings: 360ms Idea entrance; 650ms line drawing while the camera moves to the next target; 280ms target entrance; 140ms pause; 650ms return to the default view. D320 removes the per-connection source visit. These are design timings, not measured performance. There is no per-thesis count limit. Reduced-motion preference shows the finished graph immediately.
 
 ## State × event
 
@@ -33,11 +33,11 @@ Timings: 360ms Idea entrance; 650ms line drawing while the camera moves to the n
 | Camera pose | Canvas getters/setters; reveal and manual controls | Following changes continuously; completion restores native zoom and balanced tree margins |
 | Run cancellation signal | Controller → frame promises | Cancelling one run cannot move/reveal a replacement graph |
 
-D187 owns request progress; D213 owns card width; D220 owns the launcher; D221/D222 own the final camera view. The reveal changes none of those contracts. Self-review: suppress the existing automatic card fade during the reveal, suppress unarrived arrowheads, keep unrevealed cards inert, and separate the reveal option from the graph retained by date replay.
+D281 owns request progress; D307 owns card width; D314 owns the launcher; D315/D316 own the final camera view. The reveal changes none of those contracts. Self-review: suppress the existing automatic card fade during the reveal, suppress unarrived arrowheads, keep unrevealed cards inert, and separate the reveal option from the graph retained by date replay.
 
 Verify stored-edge order in the frontend suite and with a mutation returning the original breadth-first edge list. Use real-browser checkpoints for entrance, partial path, target arrival, camera following, final pose, cancellation, replacement, empty result and reduced motion. Reuse cached responses; no model call is needed.
 
-## D223 verification before D227/D228
+## D317 verification before D320/D321
 
 - 48 frontend tests pass. The new stored-data test checks all 13 connections, including each root's related children. All 14 scratch-copy mutation checks reject their defects, including a breadth-first reveal-order mutant.
 - The real-browser fixture passes the complete sequence, partial line frames, camera following, final 100% scale, cancellation through Fit, graph replacement, canvas destruction and an empty result. A separate early-visible-target mutant fails with `Target appeared before its line arrived`; the unmodified control passes.

@@ -34,6 +34,10 @@ Open <http://127.0.0.1:8000/poc/mock/index.html> for the app, or <http://127.0.0
 
 The design page also opens directly from disk. **New** shows the rebuild and **Old** the historical comparison. Select a module to read its flow, examples and linked PRD. The bundled PRDs keep these links usable without a server.
 
+## The extraction standard and the frozen production prompt
+
+The extraction step is measured against one frozen ruler (AGENTS §7.1, D261, D262): the standard [`docs/prd/05-extraction-standard.html`](docs/prd/05-extraction-standard.html) (version 3, signed by Alex, D243, with D250's boundaries), the golden set `docs/research/2026-10-29-ledger-standard/golden-v5/`, the seed questions `poc/seeds/nvda-2026-07-01-v2.json` and the judgement gold `docs/research/2026-11-01-e2e-loop/judgement-gold/`; `tests/test_frozen_rulers.py` fails the suite when any of them changes. The production extraction prompt is frozen at `poc/config/poc-v108.json` (D274): extraction v74i on the one-decider architecture (D264) at low reasoning, pinned by `tests/test_frozen_extraction_prompt.py`; a change is a new version that only Alex opens. The measurements behind it are in [`docs/research/2026-11-01-e2e-loop/`](docs/research/2026-11-01-e2e-loop/) (`design-v78-fields.md` §11–§13, `log.md`).
+
 ## How it works
 
 ```text
@@ -43,8 +47,11 @@ Upstream (outside this system): obtain information and classify it
   ↓
 Dispatch: validate each item, assign a sequence number and route it
   ↓
-Extraction (read-only): read the whole item with the existing theses;
-  return evidence with sources and complete candidate theses
+Extraction (read-only): read the whole item, without the library's theses;
+  return evidence with sources, candidate questions and research groups
+  ↓
+Placement: file each statement under the narrowest open question;
+  a statement no question takes is dropped, and evaluation reads the drops
   ↓
 Thesis library: search and match each candidate;
   merge it, continue a previous period, open a new thesis, or skip it.
@@ -55,7 +62,7 @@ Thesis library: search and match each candidate;
 
 A thesis has a question, an outcome ladder and a due date, fixed when it is created. An asset thesis concerns a company, cryptocurrency or commodity; its five rungs run from strongly bullish to strongly bearish. A theme thesis concerns macroeconomics, policy or an industry; its rungs name outcomes without judging them as good or bad. A yes/no question has two rungs.
 
-The thesis has one current state: a rung on its ladder. A dependency means one thesis reads another's conclusion when judged. Succession records which period follows which. Research groups collect related business questions and are enabled in the default pipeline. Their [contract](docs/prd/06-views.md#research-groups-associate-during-extraction) is separate from dependency and identity matching.
+The thesis has one current state: a rung on its ladder. A dependency means one thesis reads another's conclusion when judged. Succession records which period follows which. A research group collects the questions that track one ongoing matter; extraction declares it (D165), and it is distinct from a dependency or duplicate identity.
 
 Other modules:
 
@@ -73,13 +80,13 @@ The foundational design was frozen on October 22, 2026, except for pull mode and
 |---|---|
 | Research universe | First version frozen; specific themes remain a draft |
 | Upstream classification, Config, dispatch | First versions frozen |
-| Extraction | Foundation frozen; English prompts v10 in the default pipeline; groups declared during extraction (D165, D166) |
-| Thesis library and matching records | Foundation frozen; matching on Jev by default (D169) with the D168 rules; listed open questions pending |
+| Extraction | Foundation frozen. On this branch the request is role-v51 (D246): no thesis or group shown (D211), a separate placement call under the one-home rule (D207, D209). The step's standard is the signed page above (D243); measured against it, and read beyond it, on 2026-10-30 (open defects in the current state) |
+| Thesis library and matching records | Foundation frozen; matching on Jev (D169) with the collision judge (D190); listed open questions pending |
 | Human review pool | Intake frozen; output not yet designed |
 | Final verdict | Earlier draft; freezing the state on the due date is decided |
 | Pull mode | Earlier draft; day-end/scheduled work and due-date freezing are decided |
 
-Changes to frozen modules require a recorded decision. [Decisions](docs/DECISIONS.md) contains the history; [Current state](docs/CURRENT_STATE.md) identifies active work. Historical records and original source material retain their original language. Maintained documentation and new product text use English under D163.
+Changes to frozen modules require a recorded decision. [Decisions](docs/DECISIONS.md) contains the history; decision numbers are per branch until a merge (D227). Historical records and original source material retain their original language. Maintained documentation and new product text use English under D163; pages written for Alex's review are in plain Chinese.
 
 ## Local requirements and data
 
@@ -91,7 +98,7 @@ The default backend reads these local files:
 |---|---|
 | Collected thesis ledger | `poc/data/english-v23-jev-2026-10-25/views.sqlite` |
 | Source items | `poc/data/items-window-tags2-2026-10-24.sqlite` |
-| Replay configuration | `poc/config/poc-v23.json`: extraction v10 and Jev matching |
+| Replay configuration | `poc/config/poc-v108.json`: the frozen production extraction prompt (D274) and Jev matching |
 | Idea configuration | `poc/config/poc-v33-idea.json`: two discovery calls and a final adoption/weighting call |
 | Derived service index and Idea archive | `poc/data/service-english/` by default; overridable per run |
 
@@ -150,7 +157,7 @@ Inspect changed refusals before continuing. For an authorized replay, use a new 
 python3 "$repo/scripts/replay.py" --help
 ```
 
-The default replay configuration is `poc-v23`; experimental admission and concurrency configurations are not the default. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
+The default replay configuration is `poc-v108`, the frozen production extraction prompt (D274; `tests/test_frozen_extraction_prompt.py` pins it). The replay runs the parallel day by default (D183); `--workers 1` runs the serial path. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
 
 ## Build and check
 
@@ -169,30 +176,22 @@ python3 docs/check.py
 
 Install pytest in your Python environment to run the Python tests. `mock_build.py` reads the local databases and embeds the dated market snapshot into `poc/mock/index.html`; it makes no model calls. `npm --prefix poc/ui run build` builds component assets only. The [frontend guide](poc/ui/README.md) covers custom data paths and browser fixtures. Run the reasoning refresh below before the final documentation check.
 
+The tests make no model calls: `tests/conftest.py` refuses every credential read. `docs/check.py` checks generated blocks, glossary controls, classification simulation and page rendering, and rebuilds the PRD bundle. A pass does not replace the reasoning review in [the PRD index](docs/prd/README.md) or establish product acceptance.
+
 ## Repository map
 
 | Path | Purpose |
 |---|---|
+| `AGENTS.md` | Working rules: diagnosing, design, code, tests, verification, writing prompts, measuring and iterating; `CLAUDE.md` points to it |
+| `docs/prd/05-extraction-standard.html` | The extraction step's standard and golden set (signed, D243) |
+| `docs/research/2026-10-29-ledger-standard/` | Its drafts, simulations, drift reviews and golden set |
+| `docs/research/2026-10-29-analyst-standard/` | The first version (D229, superseded) and the prompt loop's log |
 | `src/hivemind/`, `scripts/`, `poc/` | Implementation, entry points and the POC corpus, configurations and universe |
-| `poc/eval/gold/`, `poc/reports/` | Golds read from the texts, and the measured reports behind the build log |
-| `docs/research/2026-10-25-english/` | The English library build log (one row per measured step) and the data manifest |
+| `poc/eval/gold/`, `poc/reports/` | Earlier golds and the measured reports behind the build log |
 | `docs/system-design.html`, `docs/system-design/new-*.js` | Maintained design page and its source data |
-| `docs/system-design/old-*.js` | Historical system comparison |
 | `docs/prd/` | One specification per module and an index |
 | `docs/DECISIONS.md` | Recorded decisions |
 | `docs/CURRENT_STATE.md` | Status, known defects and next task |
-| `docs/views-rebuild-log.md` | Historical thesis-library design discussion |
 | `docs/check.py` | Mechanical design checks and PRD bundle refresh |
-| `docs/archive/` | Frozen design snapshots; intermediate snapshots remain in Git history |
+| `docs/archive/` | Frozen design snapshots |
 | `reports/`, `research_notes/` | Research and reviews behind the design |
-| `AGENTS.md` | Working rules; `CLAUDE.md` points to it |
-
-## After changing the design
-
-Read every module in the order and with the questions in [the PRD index](docs/prd/README.md). Reconcile the page, specifications and decisions, then run:
-
-```sh
-python3 docs/check.py
-```
-
-The script checks generated blocks, glossary controls, classification simulation and page rendering, and rebuilds the PRD bundle. A pass does not replace the reasoning review or establish product acceptance.
