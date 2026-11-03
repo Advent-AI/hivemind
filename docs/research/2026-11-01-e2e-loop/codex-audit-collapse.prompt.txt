@@ -1,0 +1,34 @@
+Independent, read-only review, round 3. Do not edit files, do not run paid model calls, do not propose changing the frozen ruler (standard
+docs/prd/05-extraction-standard.html v3 with D250; gold docs/research/2026-10-29-ledger-standard/golden-v5/; seeds poc/seeds/nvda-2026-07-01-v2.json).
+
+SITUATION
+The extraction step sends one request per news item (system role + category block + open questions with takes lines + the item + a closing check;
+JSON schema answer with evidence items). Candidate configuration poc/config/poc-v108.json (extraction v74i: prompts src/hivemind/prompts/role-v74i.txt,
+review-v74i.txt, categories-v74i.json; code src/hivemind/extraction.py, src/hivemind/placement.py; settings per source category in the config:
+model, reasoning_effort, max_output_tokens). Tonight's versions v74b..v74i were each sent three times on 50 stored articles
+(docs/research/2026-11-01-e2e-loop/proof-v10[1-8]-*.txt; saved answers docs/research/2026-11-01-e2e-loop/sends/poc-v10[1-8]-*.json, answers[input_id] =
+three answers). Overall v74i beats the default, but the owner points at one article where a core matter regressed: "Nvidia GPU Debt Backstop
+Unleashes the AI Project Trinity" (input_id gnews:085b1e1a1543437edb9756d6, category T8, 26,588 characters, gold: 17 kept items, 22 not-kept).
+
+THE OBSERVATION TO EXPLAIN
+Across versions, the three sends of that article write very different numbers of evidence items: v74i [17, 6, 16], v74h [13, 4, 7], v74g [9, 3, 8],
+v74d [9, 7, 13]. The short sends cover only the middle section about the backstop programme (all filed under one question, v9) and skip the opening
+market judgement ("the general market is still materially lower on shipment volumes and revenue estimates for Nvidia in the 2nd half", a gold core
+matter), the capex forecasts and the scenario analysis. The core matter's presence across versions therefore swings with how many items a send writes.
+The T8 setting is reasoning_effort "low" and max_output_tokens 8000.
+
+WHAT TO FIND
+1. The cause of the short sends. Check, with evidence from the stored data and the code: (a) whether output budget can bind (reasoning tokens count
+   against max_output_tokens in this transport? see src/hivemind/model.py; do any stored archives record finish_reason or usage for extraction calls?
+   docs/research/2026-11-01-e2e-loop/arms/r7-combined-v94/d*/archive.sqlite has model_calls with request_json/answer_json and maybe usage columns);
+   (b) whether it is a long-item phenomenon: per-send written counts against article length across all saved answers (compute it; the item texts are
+   in poc/data/items-nvda-2026-07-01-10-27.sqlite via hivemind.testdb.feed); (c) whether the request itself invites topic focus (role, check, category
+   block for T8, the open questions shown, the takes lines) — quote the sentences.
+2. A structural way to make the walk over a long item complete and stable, within: one product, general hedge-fund analyst prompt (no company- or
+   bench-specific wording), no new rule the standard does not hold, code owns identity never importance. Consider and weigh: reasoning effort or output
+   budget per category or by length; splitting a long item into sections sent separately with the same prompt and merging (what identity rule merges
+   duplicates; cost); asking for the walk in the answer shape (e.g. an index of sections) and its known cost (an earlier per-paragraph account, v17,
+   tripled minutiae and cost: see docs/DECISIONS.md D199); anything else. For each: expected effect on completeness, noise, cost, and what it could break.
+3. Rank by expected effect on the observed instability, and name the cheapest decisive test for the top one (which articles, how many sends).
+
+OUTPUT: concise, numbered, cite file:line and stored evidence; English; no file edits. Out of scope: judging, matching, UI, seeds content.

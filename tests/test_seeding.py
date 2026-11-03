@@ -36,7 +36,7 @@ def test_a_seed_is_shown_like_an_open_question_and_takes_its_measure(tmp_path):
     shown = store.views_for_prompt(conn, ['NVDA'], themes=True)
     assert [v['view_id'] for v in shown] == ['v1', 'v2', 'v3', 'v6', 'v7', 'v8', 'v10', 'v4', 'v5', 'v9']   # the company's own, then the themes (views_for_prompt)
     view = dict(shown[1], key=store.view_key(conn, 'v2'), groups=[])
-    assert placement.takes(view).startswith('takes: segment_revenue figures, guidance, estimates and revisions for Data Center over 2026-02-01..2027-01-31')
+    assert placement.takes(view).startswith("takes: segment_revenue figures, guidance, estimates and revisions for Data Center (this question's period is 2026-02-01..2027-01-31")   # D268
     candidate = {'object': 'NVDA', 'measure': 'total_revenue', 'scope': '', 'period_start': '2026-02-01', 'period_end': '2027-01-31', 'basis': 'GAAP', 'unit': 'USD', 'event_type': 'n/a',
                  'scope_source': 'none', 'key_version': 2}                                     # the key the pipeline writes for an article-born candidate
     assert store.exact_key_views(conn, candidate) == ['v1']                                  # an article-born FY2027 revenue candidate merges into the seed (D190)
@@ -79,4 +79,5 @@ def test_second_seed_file_traces_every_watch_seed_to_the_universe_and_seeds_whol
     assert len(seeding.seed_views(conn, SEED_V2, created_at='2026-07-01T00:00:00Z')) == len(seed['questions'])
     candidate = {'object': 'NVDA', 'measure': 'product_revenue', 'scope': 'Vera', 'period_start': '2026-02-01', 'period_end': '2027-01-31', 'basis': 'GAAP',
                  'unit': 'USD', 'event_type': 'n/a', 'scope_source': 'watch', 'key_version': 2}
-    assert store.exact_key_views(conn, candidate) == ['v20']
+    vera_seed = next(q['view_id'] for q in seed['questions'] if q['key']['measure'] == 'product_revenue' and q['key'].get('scope') == 'Vera')
+    assert store.exact_key_views(conn, candidate) == [vera_seed]       # the id follows the file (2026-11-01: v20 became v19 when the rack-price seed was removed)

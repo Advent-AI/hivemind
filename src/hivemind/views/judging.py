@@ -11,7 +11,11 @@ view and answers, in theme_pushes, which way each theme it weighed pushes it; th
 in a round, and a theme judgement that says changed queues every open asset thesis with evidence in force, once. The
 round's queue is derived from the ledger (the day's changed views, the dependants of views judged at this sequence number
 with a changed conclusion, and the asset theses a changed theme queues), so a resumed round recovers what an earlier
-commit had queued."""
+commit had queued.
+
+judging-v6 and later judge against a reference (D260): the rung is the forecast the evidence in force makes most likely, judged
+against what the market expects (consensus, guidance, the stated plan); the answer states the reference and the outcome the
+evidence implies, both stored beside the rung, and an empty one is refused."""
 import dataclasses
 import json
 import re
@@ -24,6 +28,7 @@ LEGACY_PUSHES = list(vocabulary.LEGACY['push'])
 ENGLISH_FROM = 3                  # the first judging prompt version written in English
 THEME_BLOCK_FROM = 4              # the first judging prompt version with the theme block
 EVIDENCE_IN_VIEW_FROM = 5         # the first judging prompt version that reads the evidence in view, not everything in force (D198)
+STANCE_FROM = 6                   # the first judging prompt version that judges against a reference and states the implied outcome (D260)
 READINGS = 5                      # a piece is shown in the thesis's first five judgements after it arrives
 BASIS = 10                        # and while one of the last ten judgements cited it
 THEME_REASONS_CHARS = 300
@@ -44,6 +49,10 @@ def has_theme_block(prompt_version):
 
 def has_evidence_in_view(prompt_version):
     return version_number(prompt_version) >= EVIDENCE_IN_VIEW_FROM
+
+
+def has_stance(prompt_version):
+    return version_number(prompt_version) >= STANCE_FROM
 
 
 def evidence_in_view(conn, view_id, prompt_version):
@@ -78,6 +87,9 @@ def schema_for(prompt_version):
         schema['required'].append('theme_pushes')
         schema['properties']['theme_pushes'] = {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['view_id', 'push'],
                                                                            'properties': {'view_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}}
+    if has_stance(prompt_version):
+        schema['required'][1:1] = STANCE_FIELDS           # after rung: the reference and the implied outcome are written before the reasons
+        schema['properties'].update({field: {'type': 'string'} for field in STANCE_FIELDS})
     return schema
 
 
@@ -100,6 +112,7 @@ def themes_in_force(conn, view_id, prompt_version):
     return out
 
 
+STANCE_FIELDS = ['reference', 'implied_outcome']   # D260: what the market expects, and the figure or date the evidence implies
 SCHEMA = schema_for('judging-v1')          # the shape of the answers stored under judging-v1 and v2
 
 
@@ -270,6 +283,10 @@ def check_answer(conn, view_id, data, prompt_version='judging-v1', request_text=
     for push in data['pushes']:
         if push['evidence_id'] not in allowed:
             errors.append(bad_push(push['evidence_id']))
+    if has_stance(prompt_version):
+        for field in STANCE_FIELDS:
+            if not str(data.get(field) or '').strip():
+                errors.append(f'{field} is empty: state what the market expects and the figure or date the evidence implies')
     last = store.current_state(conn, view_id)
     if last is None and not data['changed']:
         errors.append('first judgement must say changed')
@@ -284,13 +301,14 @@ def _record(conn, cfg, view_id, seq, item, answer):
                                 reasons=data['reasons'], cited_evidence_json=json.dumps(data['cites']), cited_views_json=json.dumps(data['cites_views']),
                                 pushes_json=json.dumps(data['pushes'], ensure_ascii=False), changed=1 if data['changed'] else 0,
                                 theme_pushes_json=json.dumps(data.get('theme_pushes', []), ensure_ascii=False),
+                                reference=data.get('reference'), implied_outcome=data.get('implied_outcome'),
                                 why_changed=data['why_changed'], config_checksum=cfg.checksum, call_id=answer.call_id,
                                 request_sha256=answer.request_sha256, publication_day=item['publication_day'])
     conn.commit()
     return {'view_id': view_id, 'judgement_id': judgement_id, 'rung': data['rung'], 'changed': data['changed'], 'cost': answer.cost_usd, 'cached': answer.cached}
 
 
-JUDGE_WORKERS = 6
+JUDGE_WORKERS = 32     # a day's round is up to 40 judgements of about 16 s each in two dependency levels (themes, then assets); 32 at a time makes a round about two calls long (2026-11-02)
 
 
 def upstream(conn, view_id):

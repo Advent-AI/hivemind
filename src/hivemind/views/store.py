@@ -15,7 +15,7 @@ TABLES = {
     'rungs': 'view_id text, position integer, label text, condition text, lo real, hi real',
     'view_keys': 'view_id text primary key, measure text, scope text, scope_key text, period_start text, period_end text, basis text, unit text, event_type text, seq integer, scope_source text, key_version integer',
     'view_switches': 'id integer primary key autoincrement, view_id text, open integer, reason text, by_whom text, after_seq integer',
-    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text, theme_pushes_json text',
+    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text, theme_pushes_json text, reference text, implied_outcome text',
     'evidence': 'evidence_id text primary key, quote text, one_line text, speaker text, original_who text, original_day text, tier text, event_time text, created_seq integer, created_from_input text',
     'evidence_sources': 'id integer primary key autoincrement, evidence_id text, input_id text, category text, publication_day text, location text, seq integer',
     'evidence_links': 'id integer primary key autoincrement, evidence_id text, view_id text, seq integer',
@@ -34,6 +34,8 @@ TABLES = {
     # D149 research groups: an ongoing business subject several distinct theses belong to; membership is decided by extraction and written with the thesis
     'thesis_groups': 'group_id text primary key, name text, scope text, aliases text, created_seq integer, created_from_input text',
     'thesis_group_members': 'id integer primary key autoincrement, group_id text, view_id text, seq integer, input_id text, basis text',
+    # D166 (2026-11-01): the names a later declaration gives a stored group, appended once each; a group's aliases are its creation's plus these
+    'thesis_group_aliases': 'id integer primary key autoincrement, group_id text, alias text, seq integer, input_id text',
 }
 
 INDEXES = [
@@ -120,7 +122,7 @@ def ensure_key_columns(conn):
 
 def ensure_group_tables(conn):
     """A ledger written before research groups (D165) gains the group tables at its first write; nothing else changes."""
-    for name in ('thesis_groups', 'thesis_group_members'):
+    for name in ('thesis_groups', 'thesis_group_members', 'thesis_group_aliases'):
         conn.execute(f'create table if not exists {name} ({TABLES[name]})')
         conn.execute(f"create trigger if not exists {name}_no_update before update on {name} begin select raise(abort, 'append-only'); end")
         conn.execute(f"create trigger if not exists {name}_no_delete before delete on {name} begin select raise(abort, 'append-only'); end")
@@ -142,8 +144,12 @@ def ensure_writable_columns(conn):
     for field in ('lo', 'hi'):
         if field not in columns:
             conn.execute(f'alter table rungs add column {field} real')
-    if 'theme_pushes_json' not in {r[1] for r in conn.execute('pragma table_info(judgements)')}:
+    judgement_columns = {r[1] for r in conn.execute('pragma table_info(judgements)')}
+    if 'theme_pushes_json' not in judgement_columns:
         conn.execute('alter table judgements add column theme_pushes_json text')     # D195: judgements written before the theme block read as []
+    for field in ('reference', 'implied_outcome'):
+        if field not in judgement_columns:
+            conn.execute(f'alter table judgements add column {field} text')        # D260: judgements written before the stance fields read as null
 
 
 def view_key(conn, view_id):
@@ -233,6 +239,13 @@ def dependencies_of(conn, view_id):
     return out
 
 
+def direct_parents(conn, view_id, seq=None):
+    """The views this view depends on directly (a driver's root, D208; the seeds' depends_on), written at or before `seq` when given.
+    The filing reads it to keep a statement under the narrower of two linked questions (D207's narrowest rule, extraction.file_reading)."""
+    rows = conn.execute("select depends_on from dependencies where view_id=? and depends_on != '' and (? is null or seq <= ?) order by dependency_id", (view_id, seq, seq))
+    return list(dict.fromkeys(r[0] for r in rows))
+
+
 def dependants_of(conn, view_id):
     direct = [r['view_id'] for r in conn.execute('select view_id from dependencies where depends_on=?', (view_id,))]
     resolved = [r['view_id'] for r in conn.execute(
@@ -256,21 +269,26 @@ def would_cycle(conn, view_id, depends_on):
     return False
 
 
-def views_open_at_day_start(conn, object_ids, day):
-    """D251: the questions open at the start of `day`, as every item of that day sees them: views created at or before the seq of the
-    last completed day before `day` whose last switch at that seq is open, the objects' own and every theme, in creation order; empty
-    before the first completed day. Question, looks_at, kind, object and due day only."""
+def day_start_seq(conn, day):
+    """D251: the sequence number the start of `day` stands at: the seq of the last completed day before it, or 0 before the first
+    completed day, where the seed questions live (D253: seeds are created at seq 0, before any item)."""
     row = conn.execute('select max(seq) from days_completed where day < ?', (day,)).fetchone()
-    if row is None or row[0] is None:
-        return []
-    seq = row[0]
+    return row[0] if row is not None and row[0] is not None else 0
+
+
+def views_open_at_day_start(conn, object_ids, day):
+    """D251: the questions open at the start of `day`, as every item of that day sees them: views created at or before the day's start
+    seq (day_start_seq) whose last switch at that seq is open, the objects' own and every theme, in creation order; before the first
+    completed day that is the seeds. Each row carries `snapshot_seq`, the seq its groups and aliases are read at (groups_of_view_at),
+    so the list is the same for every item of the day whatever the day's items write. Question, looks_at, kind, object and due day only."""
+    seq = day_start_seq(conn, day)
     out = []
     for v in conn.execute('select view_id, object_id, object_kind, kind, looks_at, question, due_day, year, created_seq from views where created_seq <= ? order by created_seq', (seq,)):
         if v['kind'] != 'theme' and v['object_id'] not in object_ids:
             continue
         switch = conn.execute('select open from view_switches where view_id=? and after_seq <= ? order by id desc limit 1', (v['view_id'], seq)).fetchone()
         if switch and switch['open']:
-            out.append(dict(v))
+            out.append(dict(v, snapshot_seq=seq))
     return out
 
 
@@ -468,6 +486,22 @@ def add_group(conn, *, group_id, name, scope, seq, input_id, object_ids=(), alia
     conn.execute('insert into groups_fts (group_id, text) values (?, ?)', (group_id, f'{" ".join(object_ids)} {name} {scope} {" ".join(aliases)}'))
 
 
+def add_group_aliases(conn, group_id, aliases, seq, input_id):
+    """The names a later declaration gives a stored group (D166: a declaration whose names hit a stored group is that group, so its
+    other names are the matter's too). Each name is appended once, case-insensitively, and joins the group's search text.
+    Returns the names added."""
+    known = {a.casefold() for a in group(conn, group_id)['aliases']}
+    added = []
+    for alias in aliases:
+        if alias.casefold() in known:
+            continue
+        insert(conn, 'thesis_group_aliases', group_id=group_id, alias=alias, seq=seq, input_id=input_id)
+        known.add(alias.casefold()); added.append(alias)
+    if added:
+        conn.execute('insert into groups_fts (group_id, text) values (?, ?)', (group_id, ' '.join(added)))
+    return added
+
+
 def add_member(conn, group_id, view_id, seq, input_id, basis='model'):
     """basis: 'model' when the model cited the group, 'alias:<name>' when the thesis's own text carries the group's name."""
     if conn.execute('select 1 from thesis_group_members where group_id=? and view_id=?', (group_id, view_id)).fetchone():
@@ -476,21 +510,39 @@ def add_member(conn, group_id, view_id, seq, input_id, basis='model'):
     return True
 
 
-def _group_record(row):
-    """A thesis_groups row with its aliases as a list (stored as JSON text)."""
+def _group_record(row, conn=None):
+    """A thesis_groups row with its aliases as a list: the creation's (stored as JSON text) and, given the connection, the names
+    later declarations added (thesis_group_aliases; a ledger written before that table has none)."""
     record = dict(row)
     stored = record.get('aliases')
     record['aliases'] = json.loads(stored or '[]') if isinstance(stored, str) else list(stored or [])
+    if conn is not None:
+        try:
+            record['aliases'] += [r[0] for r in conn.execute('select alias from thesis_group_aliases where group_id=? order by id', (record['group_id'],))]
+        except sqlite3.OperationalError:
+            pass
     return record
 
 
 def group(conn, group_id):
     row = conn.execute('select * from thesis_groups where group_id=?', (group_id,)).fetchone()
-    return _group_record(row) if row else None
+    return _group_record(row, conn) if row else None
 
 
 def groups_of_view(conn, view_id):
-    return [_group_record(r) for r in conn.execute('select g.* from thesis_group_members m join thesis_groups g on g.group_id=m.group_id where m.view_id=? order by m.id', (view_id,))]
+    return [_group_record(r, conn) for r in conn.execute('select g.* from thesis_group_members m join thesis_groups g on g.group_id=m.group_id where m.view_id=? order by m.id', (view_id,))]
+
+
+def groups_of_view_at(conn, view_id, seq):
+    """The view's groups as they stood at `seq`: memberships written at or before it, each group with its creation aliases and the
+    aliases later declarations added at or before it (D257). The day-start snapshot (D251) reads groups here so that a takes line
+    is the same for every item of the day whatever that day's items merge."""
+    records = []
+    for row in conn.execute('select g.* from thesis_group_members m join thesis_groups g on g.group_id=m.group_id where m.view_id=? and m.seq <= ? order by m.id', (view_id, seq)):
+        record = _group_record(row)
+        record['aliases'] += [r[0] for r in conn.execute('select alias from thesis_group_aliases where group_id=? and seq <= ? order by id', (record['group_id'], seq))]
+        records.append(record)
+    return records
 
 
 def members_of_group(conn, group_id):
@@ -506,7 +558,7 @@ def groups_for_prompt(conn, object_ids, text, top_n=10):
         for row in conn.execute("""select distinct g.* from thesis_groups g join thesis_group_members m on m.group_id=g.group_id
                                    join views v on v.view_id=m.view_id where v.object_id=? order by g.created_seq""", (object_id,)):
             if row['group_id'] not in found:
-                found[row['group_id']] = _group_record(row); order.append(row['group_id'])
+                found[row['group_id']] = _group_record(row, conn); order.append(row['group_id'])
     words = [w for w in re.findall(r'[A-Za-z0-9][A-Za-z0-9.&-]+', f'{" ".join(object_ids)} {text or ""}') if len(w) >= 3]
     if words:
         query = ' OR '.join('"' + w.replace('"', '') + '"' for w in dict.fromkeys(words[:24]))

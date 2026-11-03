@@ -125,7 +125,7 @@ def build_request(setting, system, user, schema, schema_name, provider):
     return request
 
 
-def openai_transport(provider, request, timeout=600):
+def openai_transport(provider, request, timeout=180):   # the slowest honest answers take about 40 s (judge) to 60 s; a call past 180 s is a stalled server and is retried (2026-11-02)
     url, _ = ENDPOINTS[provider]
     body = json.dumps(request).encode('utf-8')
     headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}

@@ -1,0 +1,23 @@
+3 articles, 25 both matters; config poc-v111; 3 sends each
+Traceback (most recent call last):
+  File "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/harness/resend_targets.py", line 169, in <module>
+    main()
+  File "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/harness/resend_targets.py", line 113, in main
+    a = by_id[iid]; item = items[iid]; answers = replay[iid] if futures is None else [f.result() for f in futures]; saved[iid] = answers
+  File "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/harness/resend_targets.py", line 113, in <listcomp>
+    a = by_id[iid]; item = items[iid]; answers = replay[iid] if futures is None else [f.result() for f in futures]; saved[iid] = answers
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/_base.py", line 458, in result
+    return self.__get_result()
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/_base.py", line 403, in __get_result
+    raise self._exception
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-11-01-e2e-loop/harness/resend_targets.py", line 72, in send
+    return json.loads(model.openai_transport(cfg.provider, body, timeout=args.timeout)['choices'][0]['message']['content'])
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)

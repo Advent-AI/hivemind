@@ -75,3 +75,19 @@ def test_v20_extraction_places_and_drops_the_unfiled_with_its_reason_and_v19_doe
     archive = model.Archive(str(tmp_path / 'archive-v35.sqlite'))        # v19 and v20 extraction requests are the same bytes; a shared archive would serve the stored answer
     handover = extraction.extract(archive, V35, ITEM, TEXT, extraction.shown_views(conn, V35, ITEM, ['NVDA']), UNI, transport=transport)
     assert calls == ['extraction'] and handover.evidence == [] and [d[0] for d in handover.dropped] == ['e1', 'e2']   # v19: no placer, the unlinked pieces drop as before
+
+
+def test_d259_a_file_takes_the_evidence_that_bears_on_its_answer_not_only_its_own_figures():
+    """D259 (Alex, 2026-11-02: 先放宽 takes，辅助是中间地带，给点 leeway): a figure question's takes line carries the standard's 5.1 test
+    (what makes the figure more or less likely: demand, supply, competition, pricing, D250 item 2's four paths; the first proof showed the word
+    'decisions' filed hires, an R&D centre and game launches under revenue and margin questions) and no longer requires a size, the
+    gate that contradicted the system prompt's 'even when it gives no exact amount'; an event file takes the event's variants and
+    stopgaps or its counterparties' plans; a policy file takes enforcement, evasion and the affected parties' plans."""
+    figure = placement.takes({'view_id': 'v1', 'kind': 'asset', 'key': {'measure': 'total_revenue', 'scope': 'FY2027 total revenue', 'period_start': '2026-02-01', 'period_end': '2027-01-31'}})
+    assert figure.startswith("takes: total_revenue figures, guidance, estimates and revisions for FY2027 total revenue (this question's period is 2026-02-01..2027-01-31; "
+                             'an estimate for another period or population of the same quantity is filed here when no open question covers it), ')   # D268
+    assert 'what makes that figure more or less likely: the demand, supply, competition and pricing behind it' in figure and 'stated with a size' not in figure and 'decisions' not in figure
+    assert 'variants and stopgaps' in placement.takes({'view_id': 'v2', 'key': {'measure': 'event', 'event_type': 'shipment', 'scope': 'Rubin Ultra'}})
+    assert "counterparties' own plans, financing and demand" in placement.takes({'view_id': 'v3', 'key': {'measure': 'event', 'event_type': 'signing', 'scope': 'Ohio lease guarantee'}})
+    policy = placement.takes({'view_id': 'v4', 'key': {'measure': 'policy_event', 'scope': 'H200 import authorization'}})
+    assert 'its enforcement and evasion' in policy and "the affected parties' own plans and statements about it" in policy

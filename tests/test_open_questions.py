@@ -95,7 +95,11 @@ def test_v71_files_a_statement_linked_to_a_shown_question_without_the_placer_and
     assert all(set(e) >= {'new_in_it', 'moves'} for e in handover.evidence)                          # the two fields travel in the handover
 
 
-def test_the_review_check_closes_versions_59_to_66_only():
+def test_the_review_check_closes_versions_59_to_66_and_72_only():
     """D251: the end-of-request check closes with the review versions and v71 carries its own in the role text; v66 (R3,
-    research/2026-10-31-reference-context/design-r3-review.md) is v65's check with one boundary added, so it ends the request too."""
-    assert [extraction.reviews(f'v{n}') for n in (58, 59, 65, 66, 67, 71)] == [False, True, True, True, False, False]
+    research/2026-10-31-reference-context/design-r3-review.md) is v65's check with one boundary added, so it ends the request too;
+    v72 (design-v72.md) is v66's text under the one-decider architecture and ends with v66's check as review-v72.txt; v73 (D265, the
+    first change on the v72 base) ends with review-v73.txt, the check with three boundary examples; v74 (D266) with review-v74.txt, row 1
+    naming the dated retelling; v75 (D268) with review-v75.txt, the six fixes of the first prompt audit; v76..v80 were retired unadopted (D274)
+    and do not exist."""
+    assert [extraction.reviews(f'v{n}') for n in (58, 59, 65, 66, 67, 71, 72, 73, 74, 75, 76, 77, 78)] == [False, True, True, True, False, False, True, True, True, True, False, False, False]

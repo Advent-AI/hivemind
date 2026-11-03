@@ -1,0 +1,35 @@
+preflight over docs/research/2026-11-01-e2e-loop/arms/r4-identity/d1/archive.sqlite and 1 views databases: d1
+
+== A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side): judged 0, refused/dropped 0 (n/a)
+
+   extraction archive rows 243: replayed 243, earlier refused 0, source not rebuildable 0, unidentifiable 0
+   extraction answers 243: evidence produced 1023 kept 1005; candidates produced 66 kept 62
+
+== B. current extraction checks before placement, using the supplied universe: judged 1089, refused/dropped 22 (2%)
+      14  quote not in item
+          e.g. gnews:d1364ee37c17c361ae74f563 e4: quote not in item
+          e.g. gnews:cfa20b22ec2a161c6fd85d8e e1: quote not in item
+       4  same quote as #; merged
+          e.g. gnews:86c243945145ed901feb26cf e7: same quote as e6; merged
+          e.g. gnews:86c243945145ed901feb26cf e8: same quote as e6; merged
+       2  candidate without surviving evidence
+          e.g. gnews:1e7a9c953f3ad70093b67ae4 c1: candidate without surviving evidence
+          e.g. gnews:2f953a56cd06571ab0afc348 c2: candidate without surviving evidence
+       1  year 2030 is beyond next year: not opened (06-views 不开)
+          e.g. gnews:dadd84590540a466aea01b3c c1: year 2030 is beyond next year: not opened (06-views 不开)
+       1  candidate admission: binding obligation due beyond 18 months (DATE > DATE)
+          e.g. gnews:f83ae0a4f01c18d48f20a629 c1: candidate admission: binding obligation due beyond 18 months (2028-02-29 > 2028-
+
+== C. matching code checks over stored records (database state is the final one, not the state at the time): judged 135, refused/dropped 1 (1%)
+       1  candidate #: # already has a successor
+          e.g. d1 gnews:f83ae0a4f01c18d48f20a629: candidate c2: v18 already has a successor
+       ledger d1: judged 135, skipped 9 {'request not in this archive': 9}
+
+== D. schema enum values named in the prompts: judged 798, missing 3
+    role-v55.txt lacks the enum value 'party_statement'
+    role-v55.txt lacks the enum value 'third_party_view'
+    role-v55.txt lacks the enum value 'rumour'
+
+== E. keyed views in views.sqlite: open views 46, keyed 46, duplicate keys 0 groups, review pool 0 candidates outside the watch list
+
+preflight done

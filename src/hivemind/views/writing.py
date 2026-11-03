@@ -159,8 +159,8 @@ def _write(conn, universe, seq, item, handover, checked, second_pass):
     #     declarations, the stored groups' names and each new thesis's own text; a merged candidate adds nothing
     from .. import extraction as _extraction
     from . import groups as _groups
-    creations, memberships, group_notes = _groups.plan(getattr(handover, 'new_groups', None) or [], _groups.stored_groups(conn), order, new_views,
-                                                        _extraction.tracks_a_matter, universe)
+    creations, memberships, group_notes, extensions = _groups.plan(getattr(handover, 'new_groups', None) or [], _groups.stored_groups(conn), order, new_views,
+                                                                    _extraction.tracks_a_matter, universe)
     notes.extend(group_notes)
     group_ids = {}
     for creation in creations:
@@ -170,6 +170,8 @@ def _write(conn, universe, seq, item, handover, checked, second_pass):
                         object_ids=objects, aliases=creation['aliases'])
     for view_id, key, basis in memberships:
         store.add_member(conn, group_ids.get(key, key), view_id, seq, item['input_id'], basis)
+    for group_id, names in extensions:            # D166: a declaration that is a stored group under other names gives it those names
+        store.add_group_aliases(conn, group_id, names, seq, item['input_id'])
     # 2. dependencies of the new views (candidate ids resolve to the views just created)
     dependencies_written = set()
     for c in order:

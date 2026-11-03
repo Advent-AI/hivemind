@@ -4,6 +4,8 @@
 
 ## 清单（`poc/seeds/nvda-2026-07-01-v2.json`，sha256 cad1c4409ad99978…，23 道，as_of 2026-07-01）
 
+**2026-11-01 改动**：v7（Rubin NVL72 机架价格）删掉——写法和窗口内 7 月 6 日的文章对得太齐，是 look-ahead（Alex："不能 forward looking"）；文件现在 22 道，下表 v8–v23 的编号在文件里是 v7–v22，sha256 以文件为准。
+
 | id | 题 | 来源 |
 |---|---|---|
 | v1–v3 | FY2027 总收入、数据中心收入、非 GAAP 毛利率 | 参照清单 NVDA/total_revenue、segment_revenue、gross_margin |

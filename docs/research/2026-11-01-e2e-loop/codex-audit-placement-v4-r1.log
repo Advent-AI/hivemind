@@ -1,0 +1,503 @@
+2026-11-01T13:02:44.649584Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a19734-7415-7d03-a861-b1cc646ff144
+--------
+user
+Read-only review of one prompt rewrite. Scope: the placement step only (src/hivemind/placement.py and its prompt files). Out of scope, write nothing about them: the extraction prompts, the judge, the UI, the service, cost.
+
+What changed: src/hivemind/prompts/placement-narrow-v4.txt replaces placement-narrow-v2.txt (both in the repo; read both). The change's reason, written before this review: one full placement request, read as the model reads it, holds two rulebooks that contradict each other. The v2 system prompt says a company-wide figure question "takes only the company's own reported figures, guidance, estimates of that figure and management's statements about it", while the code-written takes line of the same question (placement.py, function takes) says "figures, guidance, estimates and revisions for <scope> over <period>, and the direct drivers of that figure stated with a size". v2 also says filing under none is "a valid answer, not a failure", and the model's own account read the takes line's period as a precondition (an estimate with no period stated was filed under none although the matching question was open). v4 keeps one rule: the takes line is the rule for what belongs in a file; the system prompt only says how to apply it. Three v2 sentences were cut, one (product generations) moved to the takes line's ownership, and one sentence was added about the period.
+
+Governing texts, in this order of authority: docs/DECISIONS.md entries D207 (placement, one home, narrowest question, no sink), D209 (evidence is what bears on an open question; dropped with reason), D240 (a missing amount, date or scale is never on its own a reason to drop a statement; weight is judged apart), D248 (one bet = one question); the extraction standard page docs/prd/05-extraction-standard.html section 5 (placement) where it exists; AGENTS.md section 6 (writing prompts: the prompt carries the standard, not new rules; a prompt serves every company; never grow a prompt to fix quality; an example is an instruction).
+
+A sample of what the model reads: the system prompt is messages[0]; the user message lists open questions, each as "- vN (object, due day): question" followed by its takes line, then the statements as "- eN [tier] who: X | one-line summary | quote: ...". The takes lines are written by placement.py takes(); read that function, it is part of the request.
+
+Report, in this order, each with the exact sentence quoted and the governing line it conflicts with or lacks:
+1. Any sentence in v4 that states a rule no governing text holds (an unsourced rule).
+2. Any sentence in v4 that contradicts a takes line placement.py writes, or that a careful reader could read two ways.
+3. Whether v4 reopens the sink D207 closed (statements about a company's general business filed under its total-revenue or segment question because nothing narrower exists): quote the sentence that would allow it, or say that none does and which sentence prevents it.
+4. Any wording that fits one company or one industry rather than any covered company.
+5. The period sentence ("The period in a takes line tells apart questions ... when no open question covers that period"): is it sourced by D240, does it conflict with D248 or D207, and what does it make the model do with a figure for an earlier fiscal year when only a later year's question is open?
+Severity for each: serious (changes what gets filed against a governing text) or wording. No rewrites of the prompt; findings only, each with its quote.
+
+codex
+I’ll review the placement prompt and its generated takes lines against the named decisions and placement standard, then report findings in your requested order.
+exec
+/opt/homebrew/bin/zsh -lc "cat src/hivemind/prompts/placement-narrow-v4.txt && cat src/hivemind/prompts/placement-narrow-v2.txt && rg -n -A 100 '"'^def takes'"\\(' src/hivemind/placement.py" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+You are a senior hedge-fund analyst filing statements into a library of open questions about the company and its world. Each open question is a bet with a file, and its 'takes' line is the one rule for what belongs in that file. For each statement, return the ids of the questions it is filed under, or an empty list.
+File a statement under the narrowest question whose takes line covers it, and under that one only; never add a broader question beside it. A statement a takes line covers belongs in the file whoever says it (the company, a named analyst or bank, a customer, a competitor, a reporter) and even when it gives no period, basis or exact amount: the file holds what an analyst reads before judging the bet, and the weight is judged later, not here. The period in a takes line tells apart questions about the same quantity for different periods; it does not bar a figure or driver from an earlier or later period when no open question covers that period. News about a customer, supplier, competitor, product, policy or deal goes under the question that names that matter (an event, a policy process, a theme). A statement that no takes line covers is filed under none, however important it sounds: opening a new question is not this step's job. A rumour is filed exactly as a confirmed statement is.
+You are a senior hedge-fund analyst filing statements into a library of open questions about the company and its world. For each statement, return the ids of the questions it is filed under, or an empty list. Read each question's 'takes' line: it says what that question collects. A statement filed under no question is a valid answer, not a failure: never file a statement under a question it does not bear on because no better question exists.
+File each statement under the narrowest question whose answer it makes more or less likely and that the rules below allow to take it, and under that one only; never add a broader question beside it; when no question qualifies, file it under none. A question about a product generation may take the steps, dates, delays, cancellations and configuration or design changes of that generation when they bear on its answer, and named customers' statements about receiving it. A company-wide figure question (total revenue, segment revenue, gross margin, operating margin, profit, capex) takes only the company's own reported figures, guidance, estimates of that figure and management's statements about it. A question about a share, a price or an input may take figures, estimates and named parties' actions about that share, price or input when the question's market and period cover them. News about a customer, supplier, competitor, product, policy or deal is filed under the question that names that matter (an event, a policy process, a theme), or under none when no question names it. A rumour is filed exactly as a confirmed statement is.
+28:def takes(view):
+29-    """What a question collects, from its key and its research group: the one sentence the placer reads beside the question."""
+30-    key = view.get('key') or {}
+31-    measure, scope = key.get('measure') or '', key.get('scope') or view.get('looks_at') or view.get('object_id')
+32-    tail = f"; statements about {matter(view)} belong here under any of those names" if matter(view) else ''
+33-    if measure == 'policy_event':
+34-        return (f"takes: the decisions, drafts, approvals, denials and deadlines of this process, and any statement of whether and how much "
+35-                f"the permitted or restricted activity is actually happening: {scope}{tail}")
+36-    if measure == 'event':
+37-        if key.get('event_type') in ('launch', 'shipment', 'deployment'):
+38-            return f"takes: steps, dates, delays, confirmations and denials of this event, and named customers' statements about receiving it: {scope}{tail}"
+39-        return f"takes: the terms, amounts, counterparties, agreements and approvals of this obligation or deal, and its steps, confirmations and denials: {scope}{tail}"
+40-    population = ", including estimates for another population or wording of the same aggregate" if view.get('kind') == 'theme' else ''
+41-    measure_name = f"{measure} " if measure and measure != 'other' else ''   # 'other' is the key's catch-all, not a word for the reader
+42-    return (f"takes: {measure_name}figures, guidance, estimates and revisions for {scope} over {key.get('period_start')}..{key.get('period_end')}{population}, "
+43-            f"and the direct drivers of that figure stated with a size{tail}")
+44-
+45-
+46-def build_request(statements, shown, item=None):
+47-    head = f"[Item] {item.get('publisher') or ''}, {item.get('publication_day') or ''}: {item.get('title') or ''}\n\n" if item else ''
+48-    lines = [f"  - {v['view_id']} ({v['object_id']}, due {v['due_day']}): {v['question']}\n      {takes(v)}" for v in shown]
+49-    return (head + '[Open questions]\n' + '\n'.join(lines) + '\n\n[Statements]\n'
+50-            + '\n'.join(f"  - {e['id']} [{e.get('tier')}] who: {e.get('original_who') or e.get('speaker') or ''} | {e.get('one_line')} | quote: {(e.get('quote') or '')[:240]}" for e in statements)
+51-            + '\n\nReturn one placement per statement id, in order.')
+52-
+53-
+54-def place(archive, cfg, statements, shown, *, item=None, transport=None, prompt=None):
+55-    """Returns (placed, unfiled, answer): every statement with its links decided; the extraction's candidate links kept; the
+56-    caller drops the unfiled.
+57-    prompt names the placement prompt file; the configuration's is the default."""
+58-    if not statements:
+59-        return [], [], None
+60-    with open(config.prompt_path((prompt or cfg.placement.prompt_version) + '.txt'), encoding='utf-8') as handle:
+61-        system = handle.read()
+62-    user = build_request(statements, shown, item=item)
+63-    answer = model.call(archive, cfg, cfg.placement, system, user, SCHEMA, 'placement', 'place', transport=transport)
+64-    allowed = {v['view_id'] for v in shown}
+65-    decided = {}
+66-    for p in answer.data['placements']:
+67-        decided.setdefault(p['id'], [l for l in p['links'] if l in allowed])
+68-    placed, unfiled = [], []
+69-    for e in statements:
+70-        links = list(dict.fromkeys([l for l in e.get('links', []) if CANDIDATE_ID.match(l)] + decided.get(e['id'], [])))
+71-        (placed if links else unfiled).append(dict(e, links=links))
+72-    return placed, unfiled, answer
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D207|D209|D240|D248' docs/DECISIONS.md && rg -n '5\\. |5\\.1|挂|归档|问题|期间|时间|金额|范围' docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+2630:## D207 · 2026-10-28 · Statements are filed by a separate placement call under the one-home rule; an unfiled statement is kept (extraction v20, `poc-v36`)
+2643:## D209 · 2026-10-28 · A statement no open question takes is dropped at extraction; evaluation reads the dropped record, not a side list
+2645:- Alex, on the `unplaced_statements` table D207 had added: "If you think about yourself as a hedge fund analyst, if it doesn't matter, just
+2824:Alex directs that the thesis-library evidence standard and prior hedge-fund analyst ledger review must both be applied, allows reasonable ambiguity, and asks to stop and leave a complete retrospective and current state. Both worktrees’ `AGENTS.md` §8 now point to the sources and require judging source, investment use and question admission separately. The eight-question research review is context, not a replacement for Alex’s decisions, adopted PRDs or frozen gold. Existing routing rules, including D209, remain unchanged. Gold examples inform judgment; optional details or differing labels do not become a rigid pass/fail. The [handoff](research/2026-10-29-claim-use/handoff-2026-10-29.md) preserves the failures, evidence, experiment limitations, active worktree and next task. No further experiment, product change, default switch, commit, push or deployment.
+2901:## D240 · 2026-10-29 · A named party's action without an amount is kept; a reject rule never removes what the standard keeps
+2922:- Decided: `docs/prd/05-extraction-standard.html` (version 2.15) is the extraction step's PRD and the one source of the draft standard; its rules are those of `standard-v2.14.md`, which it supersedes, and it adds the golden set's results (§8) and how a prompt change is written, measured and iterated (§9, pointing to AGENTS.md). Its status is unchanged by this decision: a draft until Alex decides its twelve proposals; until then the signed standard (D229) is the only ruler and no prompt changes (D241). AGENTS.md §8 points to the page; §6 (writing prompts) and §7 (measuring and iterating, split into the ruler, reading results and iterating) carry the principles that were missed in earlier rounds, each with Alex's words or the incident behind it; outdated statements were removed (the design-phase "no product code" rule, a function that no longer exists, the old glossary section name). Two principles quote Alex's words from earlier the same day, recorded here as their source: on iterating, "你一类一类改，快速迭代然后测regression"; on self-graded measurement, "你的这个垃圾代码和尺子根本就是fucking cancer 我根本无法相信你的评价". The same AGENTS.md is in both worktrees. The README of each branch describes that branch. A read-only Codex review checked the rewrite against the old file and the decisions, and the page against v2.14 (`review-agents-rewrite.md`, `review-page-v2.15.md`); its confirmed findings were fixed, among them a D240 rule written stronger than Alex's words, a calibration step he never asked for, and 49 golden entries without speaker or meaning, now filled from the text.
+2953:## D248 · 2026-10-30 · What counts as one question and one piece of evidence: seven boundaries, chosen one by one
+2971:- Decided (the method, written at AGENTS §6): from role-v59 the extraction request ends with a check that reads the evidence list back by standard 5.1 (`prompts/review-v<N>.txt`, `extraction.REVIEW_FROM`) and names no empty-answer condition; the role text of role-v59 to role-v63 is role-v53's. Every line of the check cites the standard (§5.1, §5.3, §6, D238, D243, D240); six read-only Codex rounds (`research/2026-10-30-noise/codex-review-*`); examples from other industries.
+2984:- The ruler (Alex: "你要修正尺子"): the standard page goes to version 5 with these rules, then a read-only drift review; the gold's evidence part is re-derived for version 5 (version 4 changed no evidence entry, `gold-v4-evidence-check.md`) by two independent readers with every disagreement decided against the article, written as a new frozen file with every change listed (before, after, reason), the version-3 file untouched (D243 item 11); the opening part of the gold is not re-derived here and the scorer reports no question score until it is. The scorer refuses a gold whose evidence part was made for another version of the page: `final_scores.py` had bypassed `score_gold.py`'s version check and scored rounds since D248 on the version-3 gold, which is the false measurement Alex names.
+2990:- Decided: when (and only when) the architecture is adopted after the measurement in design.md, the open-question list an extraction request shows is a snapshot frozen once per day; every article of that day sees the same list; the archive key is (item, snapshot hash); a day in flight never re-sends an item because the ledger moved. This narrows D211 ("the request depends on the item alone") to "depends on the item and the day's snapshot". Not decided: whether other companies' questions are shown, whether the one-home rule (D207) moves into the extraction prompt, what happens to a failed candidate's evidence; the measurement's predictions P1–P6 are frozen in design.md (sha256 in `predictions.sha256`).
+129:    <li><a href="#types"><span class="num">3</span>问题的五类</a></li>
+154:  <dd>一个在追这家公司的分析员读到会记进本周笔记的陈述，就留；留下以后另判分量<span class="src">第 1 版 §2、§4</span>。整体倾向谨慎：杂音很大，不是什么都要抽，不是什么都算线索；但新信息带来的增量要敏感，不能漏<span class="src">D243</span>。预测、传闻、反证、远期、条件情景都可以是证据，不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也照留，分量可以低一点<span class="src">D240</span>。泛泛的主张和背景是常识，没有数字和具体的叙事就不收<span class="src">D243</span>。</dd>
+156:  <dd>一个问题值得单独追，当它的答案可能改变仓位、能在一个日期用公开材料核对、而且库里没有问题在问同一件事<span class="src">第 1 版 §6</span>。</dd>
+158:  <dd>一个观点是关于业务和世界的、有论证的看法，它的立场来自论证和市场已经定价的东西相比<span class="src">AGENTS §8</span>。问题当前落在哪一档，由判断这一步按 PRD 06 和 D198 读证据推出。</dd>
+166:    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"按 5.1 判"的，按第 5.1 节判，留下的走下面；写着"要留"或"按本来分量"的照办；写着"可选"的归可选；其余不留</span></li>
+171:        <li>归档：挂到最窄的那个已开问题 <span class="src">D207</span>；没有问题接，记 no home 扔掉，评估时逐条读 <span class="src">D209</span></li>
+172:        <li>这篇文章还提出了值得追的新问题吗？ <span class="tag">第 4 节</span>
+174:            <li>过了测试，属于五类之一 <span class="goes">→ 候选问题；和库里已有问题是不是重复，由匹配判</span> <span class="src">D211、D190</span></li>
+193:<tr><td>1</td><td>分量按信息量定档：核心要碰到关键判断，并带一个量、一个确定状态或一个带期间的预测；别家公司自己的经营数字、对公司是小事的，算辅助；预测离现在越远，越可能只是辅助，由判断定。缺金额、缺日期只影响分到哪一档，不是不留的理由</td><td class="nowrap">第 6 节</td></tr>
+194:<tr><td>2</td><td>"共同量"按 D191 落实：任何一家公司之外、好几家都会受它影响的量或价格（合计支出、合约价、利率）都可以开题，开题理由叫 <code>shared_quantity</code>；期间按自然年。提示词和代码要跟着改</td><td class="nowrap">第 3 节 D 类</td></tr>
+197:<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+213:<tr><td>1</td><td>同一个计划的几种说法，最后核对同一个数的，是一题；各自会变、会分别盯的数才分开；属于已按金额开题的计划的一笔交易并进去</td><td class="nowrap">第 4 节</td></tr>
+217:<tr><td>5</td><td>事件和政策题里模型写的期间起点，不拿来挡合并</td><td class="nowrap">第 4 节</td></tr>
+223:<p>v63 留下、金标判不收的 117 条交给没写金标也没写提示词的读者盲判，混着它分不出的对照：对照上读者和金标一致 93–95%，这 117 条上只有 70%。模型偏偏在标准没说清的地方留东西。五处各给了倾向，Alex 原话："五处都按你的倾向定，计数单位也改; 你要修正尺子；你已经多次因为尺子标准问题陷入假的测量"。</p>
+228:<tr><td>2</td><td>别家公司的事，说不出它通过需求、供给、竞争、定价这类路径动了在研公司哪个问题的，不收；只因同一篇文章、同一场活动或同一个生态挨着的，不收</td><td class="nowrap">5.3</td></tr>
+229:<tr><td>3</td><td>公司自己、伙伴或第三方发布的对比是产品细节，不收；只有对手拿来和本公司产品比的按 5.1 判（判例 4 不变）；同一句里伙伴、客户采用或集成的动作不因这一条删，照旧按 5.1 判</td><td class="nowrap">5.3</td></tr>
+230:<tr><td>4</td><td>具名分析师对一件已记下的事的解读，没有新事实或推算的，不收；有新事实或推算的按 5.1 判；条件估值不变</td><td class="nowrap">5.3</td></tr>
+240:<li>分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。</li>
+241:<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+250:<tr><td class="nowrap">问题（观点）</td><td>账本里追踪的一件事：一个问题句、一组结果档、一个到期日，写下后不改<span class="src">PRD 06</span></td><td></td></tr>
+251:<tr><td class="nowrap">候选问题</td><td>抽取这一步提议新开的问题</td><td></td></tr>
+252:<tr><td class="nowrap">标的问题、主题问题</td><td>标的：答案是一家可交易公司（或币、商品）自己的经营结果。主题：答案是世界上的一件事，影响很多公司<span class="src">PRD 06</span></td><td></td></tr>
+253:<tr><td class="nowrap">开题理由</td><td>候选问题值得开的几类理由之一，答案里写在 <code>opens_as</code><span class="src">D184；英文 admission reason</span></td><td></td></tr>
+254:<tr><td class="nowrap">结果档</td><td>一个问题事先固定、互不重叠、覆盖全部结果的结局，五档或是非两档<span class="src">PRD 06；英文 rung</span></td><td>分量</td></tr>
+258:<tr><td class="nowrap">七类驱动</td><td>一条陈述为什么对公司业务重要的七条路径<span class="src">D208</span>。需求：客户要买多少，如订单、客户支出、贷款需求、客流。供给与投入：能做出多少、成本多少，如产能、原料和零部件价格、燃料、矿石品位。竞争与份额：对手的产品、价格、开店、赢单。定价与装机：公司能收多少价、存量多大，如售价、费率、利差、装机量、存量客户。产品周期：发布、出货、试验、获批、延期。政策：法规、许可、关税、利率、监管决定。资本与义务：融资、担保、承诺、投资、收购</td><td>问题类型</td></tr>
+260:<tr><td class="nowrap">研究组</td><td>几个问题共同在追的一件正在进行的事<span class="src">D165</span></td><td>问题</td></tr>
+265:<li><b>证据</b>一条记录一个陈述，一件事用几句话说仍是一条<span class="src">第 1 版 §2；Alex 判 11</span>。记逐字引文、能单独读懂的一句话摘要、说话人、原始说话人和原始日期（不知道就写不知道，不填报道日<span class="src">D220</span>）、来源层。同一条证据可以挂到几个问题上，推力写在挂接上<span class="src">PRD 06</span>。每一条进来的证据都单独存下；和已有证据的关系（同一说法、修订）由匹配标出，作为意见，两条都留着<span class="src">D202、D204</span>。原始说话人、原始日期、数字都相同的几条（说话人或日期不知道的不算相同），由代码认作同一条：判断时只给看一次，写明几家报道，每条仍照存<span class="src">D248 第 7 条；改 D204 的"两条都给判断看"</span>。这条在打开之前要先在同一说法的金标上量两件事（金标按这条规则实际会合的组取，对着原文读）：它会不会藏掉不同或更丰富的说法（比如多一句限定），它依赖的原始说话人、原始日期两个字段准不准；量完之前，照 D204 两条都给判断看。</li>
+266:<li><b>问题</b>问题句、结果档、到期日写下不改；当前判断随证据更新，到期定格<span class="src">PRD 06</span>。问题分标的和主题，按开题理由分五类（第 3 节）。问题从三处来：文章里的候选问题；用户的备忘录<span class="src">PRD 06 State</span>："A thesis from the user's memo is not yet judged until evidence first links to it"；分析员开始覆盖一家公司时种下的驱动问题<span class="src">D208，设计未建</span>。</li>
+267:<li><b>研究组</b>一件正在进行的事（一个产品换代及其部署、一笔融资或收购、一个政策过程、一轮投资或需求周期），把几个问题组织在一起，常常跨公司。它不是问题，也不代替开题判断。公司自己的报表行（收入、毛利率、费用、税率、资本开支）不带研究组，除非这一行本身就在追这样一件事；它也可以加入别的问题建的组<span class="src">D165</span>。</li>
+269:<p><b>不进账本的：</b>归档找不到家的证据，记 <code>no home</code> 扔掉<span class="src">D209</span>。评估时逐条读被扔的，分四种：抽取的垃圾；库里缺这个问题（覆盖缺口）；问题在却没挂上（归档错）；该开没开（开题错）。各归各的环节<span class="src">第 1 版 §7</span>。存储的表结构归 PRD 06 管。</p>
+271:<h2 id="types"><span class="num">3</span>问题的五类：账本的几大类型</h2>
+272:<p>开题理由是 D184 定的四类，D236 把主驱动量扩到产品节点，所以写成五类。判两件事，互不顶替：这是谁的问题（标的还是主题）；为什么值得开（开题理由）。</p>
+274:<thead><tr><th>类</th><th>开题理由</th><th>标的或主题</th><th>问什么</th><th>量还是事件</th><th>期间和到期</th><th>核对材料 <code>settled_by</code></th><th>出处</th></tr></thead>
+278:<tr><td class="nowrap"><b>C</b> 约束性义务</td><td><code>binding_obligation</code></td><td>标的</td><td>公司以自己名义承担的：为别人的债务、租约或收入担保或提供信用支持；借钱给别人；承诺购买（向别人买产能或服务也算）；为客户的产能或收入兜底；或写明规模、尚未完成的入股或收购<span class="src">D236；收购按 D243 第 7 条</span>。规模要大到能改变公司的收入、利润、现金或信用风险才开；够不上的单笔入股、收购、租约、授信不开题，陈述留不留照第 5 节判<span class="src">D248 第 6 条</span>。不算：自己借钱、自己的租约、已完成或没写规模的投资。D239 选定的 role-v29 原文："Its own borrowing, its own leases and a completed or unsized investment are not obligations"；D238 的记录写作 "the company's own borrowing and leases and a completed or unsized stake do not"</td><td>还没签：是非两档。已经承担（一笔或一个计划）：金额，五档</td><td>检查日最多在文章后 18 个月<span class="src">D185</span>；已承担的按下一份年报</td><td>签约公告、年报承诺附注</td><td>D184、D185、D210、D236、D238、D243</td></tr>
+279:<tr><td class="nowrap"><b>D</b> 共同量</td><td><code>shared_quantity</code><span class="src">D191、D243 第 2 条</span>；现行提示词和代码还叫 <code>industry_aggregate</code>，按这一页改</td><td>主题</td><td>任何一家公司之外、好几家都会受它影响的量或价格：几家公司的合计（云厂商资本开支）、价格（内存合约价、油价）、利率。同一总量的另一种人群、另一种说法是这个量的证据</td><td>量，五档</td><td>自然年的今年或明年。同一个量、同一年只有一个问题，由代码按"主题＋量＋期间"判<span class="src">D197</span>；量的类别是 <code>other</code> 的不算</td><td>几家公司年报、统计发布、官方决定</td><td>D184、D191、D197、D243；PRD 06</td></tr>
+289:<li><b>E：</b>中国是否在 2027-01-31 前正式批准本国公司进口 H200；美国是否在某日前对某类芯片实行出口许可。这两题问的是许可这件世界上的事，所以是主题，role-v12 原文的例子就是 "licensing"。一个监管决定对一家公司收入或产品进度的影响，问成那家公司的量或产品节点时，是标的问题（同一句原文）。</li>
+294:<li><b>七类驱动不是问题类型。</b>它们是一条陈述为什么重要的理由，用来判分量和归档。D208 设计的"每家公司种下的驱动问题"由分析员开始覆盖时写好，不从文章里开；还没建。</li>
+295:<li><b>别家公司自己的量</b>（对手的份额、客户的资本开支）：D187 定了"任何公司自己的量是那家公司的问题，私营公司也算"，但还没实现，要先在覆盖名单里加私营公司这一类。D155 定了"公司清单可以作为初始参考，但清单外不能忽略"。现行代码在匹配时跳过名单外的对象<span class="src">PRD 06 Step 4</span>。所以抽取照常可以提这样的问题，它要过第 4 节的测试；名单外的现在会被匹配跳过，这不算抽取错。</li>
+297:<li><b>开题理由是封闭的</b><span class="src">D184</span>：一件事属不属于五类之一，按上表逐条看，比如一个监管决定看它是不是 E 类。哪一类都不属于的不开；它是不是证据、挂到哪，照第 5 节和归档规则。</li>
+300:<h3>问题怎么写：PRD 06 的梯子规则，不重写</h3>
+302:<li>一个问题只问一个量的一个期间，或一件事；能各自朝相反方向走、而且分析员会分别下注的部分要分开<span class="src">PRD 06 梯子第 3 条；"分别下注"是 D248 加的，PRD 06 签字后更新</span>，分开的每一题都要过第 4 节的测试。</li>
+304:<li>结果档可核对、不重叠、不留缝，到期恰好一档成立；中间一档写明和什么比；"小幅""部分"这种不能核对的说法不用，部分状态写成单独一档<span class="src">PRD 06 梯子第 2 条</span>。标的问题的档描述业务结果；主题问题的档只写结局，不写好坏<span class="src">PRD 06、D186</span>。</li>
+309:<blockquote><p><b>一个问题值得单独追，要同时满足三件事：它的答案可能改变仓位；能在一个日期用公开材料判出落在哪一档；库里没有问题在问同一件事。</b>开多少个是判断的结果，不是目标<span class="src">第 1 版 §6；评审 §1</span>。</p>
+311:<p>另有一条前提：新问题要有独立的投资判断；一个新产品、一个新数字、一个更窄的范围，单凭这些不开<span class="src">D201</span>。</p></blockquote>
+316:<li><b>独立意义</b>能写出两个情景吗：其他问题的答案不变，只有这一题相反，而对业务的判断确实不同？写不出就优先作为证据<span class="src">评审 §1 第 3、8 条</span>。评审里的一个判例：NVIDIA FY2027 总收入题判为数据中心收入题的证据，理由是"该段明确说主要增长来自数据中心，未提出独立的其他业务争论"。这是对那一段材料的判断，别的材料要逐个判。</li>
+317:<li><b>能核对</b>有一个日期和一份公开材料能把答案放进事先固定的档吗？没有就重写问题。到期没有材料记"未能判定"，不算错。</li>
+318:<li><b>不是重复</b>和已有问题比，只是预测值、措辞、来源、方向或同一总量的另一种口径不同，最终核对的是同一个结果吗？是就是同一题。抽取看不到库<span class="src">D211</span>，这一条在抽取时只对同一篇文章里提出的几个问题判；和库里的比由匹配做。</li>
+320:<p>另外三条写法检查<span class="src">评审 §1 第 1、5、6 条</span>。没过的问题不能照原样开，要重写；重写不了就不开，材料作证据。</p>
+322:<li><b>原文支持：</b>主体、量或事件、时间依据都能在原文找到。原文没给日期、而规则允许研究员定检查日的，用那个日期并标明：没写日期的待决监管事项用本财年末（第 3 节 E 类）；还没签的约束性义务用文章后 18 个月以内能核对签约的那天<span class="src">D185、D210</span>。不把"拟议""预计"写成"已签""已完成"。</li>
+324:<li><b>时间正确：</b>原文支持这个期间，不把几年的平均写成今年。</li>
+336:<tr><td>客户的部署计划（"它是供应商需求和产品问题的证据，除非改变供应商自己的现金或信用风险"）</td><td>第 1 版 §6</td><td>证据；改变公司自己的现金或信用风险时按 C 类判</td></tr>
+337:<tr><td>以约束性义务为理由开：公司自己借钱、自己的租约、已完成或没写规模的投资。它们不是约束性义务；对别的问题仍可以是证据，或按别的开题理由判</td><td>D236、D238</td><td>证据</td></tr>
+340:<tr><td>同一个量的另一个估计、另一种口径、另一个来源</td><td>第 1 版 §6 测试 4</td><td>那个已开问题的证据，由匹配并入</td></tr>
+346:<li><b>同一题：</b>同一个结果能同时判两个问题。另一个估计、来源、措辞、方向<span class="src">第 1 版 §6 测试 4</span>；同一总量的另一种人群或代用口径（D190 碰撞裁决提示 collision-v1："another population or proxy of one aggregate"；D197 引的 role-v12 原文："another population or another wording of the same aggregate is evidence to the shown aggregate thesis"）。候选并进已开问题，用它的结果档和到期日<span class="src">PRD 06</span>。只有以共同量理由开题、带量的候选由代码自动判，其余是匹配和碰撞裁决的判断。</li>
+351:<li><b>身份：</b>事件和政策题里模型写的期间起点，不拿来挡合并；对象、事件、截止日照旧核对<span class="src">D248 第 5 条</span>。</li>
+352:<li><b>续期：</b>同一个量或同一串事件的下一个期间<span class="src">PRD 06 Succession、D190</span>。</li>
+354:<li><b>约束性义务：</b>"一笔或一个计划"一题<span class="src">D210</span>；一笔交易是不是某个已按金额开题的计划的一部分，由匹配判，是就并入<span class="src">D248 第 1 条</span>。还没签的单笔交易是"签不签"的是非题，照旧可以开，不并进计划的金额题<span class="src">D210；PRD 06；D248 未改</span>。</li>
+355:<li><b>共同量：</b>以共同量理由开题、带量的候选（量的类别是 <code>other</code> 的不算），由代码按"主题＋量＋期间"判同一题；政策阶段和别的事件保留按事件判的身份；不带这个开题理由的主题量由模型判<span class="src">D197</span>。</li>
+362:<tr><td>测试 1–3、同一篇文章里的测试 4、属于哪一类、问题怎么写</td><td>抽取的模型（判断）</td></tr>
+363:<tr><td>结果档形状、期间是真日期、到期在文章之后、季度数、年限、约束性义务 18 个月、<code>settled_by</code> 不为空</td><td>代码：只查形状，不判重要性<span class="src">D154、D155、D184</span></td></tr>
+369:<h3>5.1 留的规则和四类</h3>
+370:<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+371:<p><b>整体倾向谨慎，对增量敏感。</b>杂音很大，不是什么都要抽，不是什么都算线索。判一句话之前先问：这是新信息吗？它让哪个问题的答案变了？一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏；重复常识、描述长期状况、泛泛的看法，是杂音<span class="src">D243</span>。增量和杂音的具体界线按 5.3 各行和边界一起判<span class="src">D250</span>。</p>
+375:<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+383:<li><b>有数字也要过上面的规则：</b>作者说"英特尔多年领先，占 CPU 市场 59%"，和英伟达的问题关系不大，分析员不会记。</li>
+387:<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。不留清单只按 5.3 各行和边界删，不能用来删掉标准要留的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+394:<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）；公司自己、伙伴或第三方发布的对比（"比闭源模型便宜 10 倍"、"同样功率多放 40% GPU"、第三方测试）是产品细节，不收；同一句里伙伴、客户采用或集成的动作不因这一条删，照旧按 5.1 判<span class="src">D250 第 3 条</span></td></tr>
+395:<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+396:<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span>；具名分析师对一件已记下的事的解读（"推迟会给对手留出窗口"），没有新事实或推算的，不收，有新事实或推算的按 5.1 判<span class="src">D250 第 4 条</span></td></tr>
+397:<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span>；只描述一个现成安排（合作、客户在用、已有部署）、没有新动作的，是背景，不收，文中没写日期也一样<span class="src">D250 第 1 条</span></td></tr>
+398:<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+405:<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判：要说得出它通过需求、供给、竞争、定价这类路径动了在研公司的哪个问题；只因同一篇文章、同一场活动或同一个生态挨着、说不出这条路径的，不收<span class="src">D250 第 2 条</span>。</p>
+406:<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+415:<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+416:<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+421:<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+434:<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+439:<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+443:<tr><td><span class="w core">核心</span></td><td>碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字</td><td>分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持</td></tr>
+444:<tr><td><span class="w sup">辅助</span></td><td>支持或反驳上面的判断，或给出可检验的估值假设；碰到关键判断但没有能定位答案的信息；别家公司自己的经营数字（收入、利润率、积压订单）；对公司规模来说是小事的；离现在越远、判断下来只是辅助的预测</td><td>对手自己模拟的 2.4 倍性能比较；公司取消软件订阅费；三条开放模型政策表态；Sharon 六年 72 MW 合同；FY2028 EPS 一致预期；12.76 × 25 的条件估值；一家银行选用对手系统（没写金额）；伙伴把公司模型集成进政府系统（没写金额）；内存厂公布的季度收入和利润率；客户公布的订单积压；客户园区"规划最多 17 万颗 GPU"</td></tr>
+451:<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"按 5.1 判"的（对手比较、伙伴或客户的采用或集成、股价反应背后的新闻、官员宣布的政策步骤、带来新事实或推算的解读）按 5.1 判，留下的按下面两步定分量；写着"要留"或"按本来分量"的（条件估值、重提的指引和仍然有效的预测、计划）照办；写着可选的归可选；其余不收。</li>
+455:<p><b>"确定状态"</b>：已经签了、宣布了、开始了、批准了、取消了、推迟到某个日期了、定下了裁决日；没有量的"在谈""在考虑""可能""在探索""打算"不算。确定状态以陈述当天为时间，不要求生效日。<b>"带期间的预测"</b>：分析师预计今年余下收入增长 82%；内存厂说短缺持续到 2030 年。确定不确定看说法本身的内容；靠不靠得住另记在来源层。</p>
+456:<p><b>Alex 拍过的分量</b><span class="src">D215；gold-check.md，D229</span>：收入增速核心；内存短缺核心；AMD 跑分辅助；三条政策辅助；云厂商支出核心；Omniverse 辅助；Sharon "辅助属于供给需求"；商谈最多 6000 亿支持 OpenAI 核心（在谈的金额）；投资 SB Energy 15 亿核心；Broadcom AI 半导体收入 +143%、Google Cloud 三个数辅助（别家公司的经营数字）；FY2028 EPS 辅助（远期）；逐案审核、有拒绝辅助（没有量和确定结果）。</p>
+457:<p><b>分量只在评估时判。</b>分量只在金标和测量里判，不进账本，不进抽取的输出<span class="src">D240</span>；账本只存来源层。抽取的模型决定留不留、怎么写，以及提哪些候选问题<span class="src">第 1 版 §1</span>。</p>
+464:<li><b>判断读什么：</b>一个问题的判断看到的，是它仍然有效的证据里的两部分：新到的（在它倒数第五次判断之后挂上的；判断不满五次时全部显示）和依据（最近十次判断里被引用过的）。其余仍在账本里有效，请求里写明还有多少条没显示；答案只能引用和推动显示了的<span class="src">D198；从 judging-v5 起，v4 的配置照旧读全部有效证据</span>。依赖问题的结论和理由、标的问题的主题块也读<span class="src">PRD 06、D195</span>。主题结论变了，同一轮里排队重判符合条件的标的问题；主题的结论不作为证据引用<span class="src">D195</span>。</li>
+473:<p class="note">第 5 版金标（2026-10-31 冻结）：<span class="path">docs/research/2026-10-29-ledger-standard/golden-v5/golden-v5-dev.json</span>（sha256 <code>6f9476bb6a81ea590af273a71565e7c3c0f49908d26274b8482d52cfdee31a21</code>）和 <span class="path">golden-v5-test.json</span>（sha256 <code>af2145cdc60c34ec1ded0bebcb809800e187d616992ea325919c3ad771da61e3</code>）。重判了 537 条（全部要收、可收的证据，引 D238、别家公司、5.1 判断或新加坡案件的不收句，和盲读认为该留的 35 句）：Codex 和 Claude 两位读者各自盲读，96 条进裁定，62 处改动逐条写改前、改后、两位读者的判法和理由（<span class="path">golden-v5/corrections-v5.json</span>）。开发集：核心 86（不变）、辅助 151（原 181）、可选 72；不收 770、可选 31。测试集：核心 9、辅助 37（原 42）、可选 1。两篇以中东冲突主题为对象的文章，读者被告知按在研公司读，是说明写错，那几条不改。下面的数字是第 3 版的历史记录。</p>
+480:<div class="tile"><div class="v">28 · 42</div><div class="l">个必须开、可以开的问题；240 个不该开</div></div>
+485:<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+486:<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+487:<li><b>问题：</b>必须开的（类、开题理由、标的或主题、要点、<code>settled_by</code>）；可以开的（另一种合理写法）；不该开的（第 4 节哪一行或哪个测试）。</li>
+503:<li><b>合并时统一写法</b><span class="path">merge.py</span> 统一各批的写法，每处写理由（<span class="path">merge-log.txt</span>）：旧事重提 49 条逐条判；估值倍数和别家公司股价按现行规则处理；中国是否批准 H200 进口改为主题问题。</li>
+516:<p>结论：起草稿大约漏了两成，集中在有名有姓、没写规模的采用和合作，和一些带期间的判断。补完以后，独立读者能找到的金标条目约九成。读者多留的 163 条里，48 条是金标漏了、已补；其余 115 条按标准不补：同一件事金标已有、新加坡案件、产品细节、泛泛看法、旧事重提、合作方自己的事、和公司市场无关、只描述长期状况。剩下的不一致集中在核心和辅助的界线（第 1 条）和"背景还是主张"（第 5 条），两条都已由 Alex 拍定。记录在 <span class="path">golden-v3/spotcheck.md</span>、<span class="path">pass2-decisions.json</span>。</p>
+532:<li><b>写"不留"之前先核它删不掉要留的。</b>分析员会记的陈述，缺金额、缺日期本身不是不留的理由；分量另判，可能低一点<span class="src">D240</span>。Alex 的原话："我不是和你说过不要这么死板吗？……你应该把它记录下来，只是可能档位低一点"。</li>
+550:<p><b>每个参照项记四件事</b>（gold v5 §二）：选了没有（kept / omitted，拆几条合几条只算一次）；原意（correct / partial / wrong / absent）；可核查（引文和上下文够不够）；记录问题（原始日期、期间、归属、确定性、错来源、重复、推断未标明，各标 material / record_only）。</p>
+551:<p><b>分开报，不合成总分</b>：核心 N 项里 correct / partial / wrong / absent 各多少；辅助同样；误收率 = 留下的"不收"项 ÷ 评过的"不收"项；多留的垃圾按条数（我读，代码核结构）；每个 material 问题单列。分母为零报 not_exercised。三次独立发送逐次报，不投票。</p>
+554:<li>核心：每一次发送都 kept 且 correct，不带 material 记录问题（v18 验收用的就是"六篇五发每条都在"）。</li>
+558:<li>候选：§6 例子里该开的一个问题在每次发送都提出，且 settled_by 写得出；不该开的（部署计划、季度指引、同段每行）0 次。</li>
+564:<p>之后的决定对它的影响：参考答案第 2 版里"整篇什么都不留"的标注不再当目标<span class="src">D240</span>；"垃圾"一项用定稿金标重算，Luna 基线也重算<span class="src">D243 第 12 条</span>；第 1 版说的"§6 例子里该开的一个问题"是 AI Compute Partnership 的义务金额题；合理的不同判和不同措辞可以接受，可选细节和标签不同不变成硬性的过或不过<span class="src">D226、D228</span>。</p>
+586:<tr><td class="nowrap">10-26 D187</td><td class="nowrap">别家公司的量</td><td>选 C（"可以"）：任何公司自己的量是那家公司的问题，私营公司也算；记录，未实现</td></tr>
+592:<tr><td class="nowrap">10-29 D215</td><td class="nowrap">十一题</td><td>1 A（收入增速 核心）；2 C→D216 "2028 EPS 预测可以留下来啊，我的意思是因为太久远了，现在才2026"；3 A（内存短缺 核心）；4 B（AMD 跑分 辅助）；5 C（新加坡案件 不留，D231 改为可选）；6 B（三条政策 辅助）；7 A（云厂商支出 核心）；8 B（Omniverse 辅助）；9 "辅助属于供给需求"（Sharon）；10 "属于产品进度问题"（NVL72x2）；11 "一条吧都属于财务"（Google Cloud 三个数一条）</td></tr>
+603:<tr><td class="nowrap">10-29 D238</td><td class="nowrap">直接读</td><td>"你根本不要再给我跑什么三轮了。每一篇的问题明显地出错的你不要再用工具尺子了，你直接下去看"</td></tr>
+604:<tr><td class="nowrap">10-29 D240</td><td class="nowrap">不完整的证据</td><td>"我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点"</td></tr>
+616:<tr><td>B1</td><td>共同量的名字和定义：D191 改名并扩到价格；v16 起提示词和代码用 <code>industry_aggregate</code>、几家公司合计、一个日历年</td><td>按 D191 落实为 <code>shared_quantity</code>，期间仍用自然年；提示词和代码要跟着改</td><td>D191、D243；PRD 06</td></tr>
+622:<tr><td>B7</td><td>归档规则三个版本</td><td>以 D207 为准；归档提示里点名 NVIDIA 的那句按 D237 改成通用（后续一步）</td><td>D207、D237</td></tr>
+623:<tr><td>B8</td><td>分量几级、"档位"一词两义</td><td>四级；"档位"在这一页叫分量，问题的叫结果档</td><td>第 1 版 §10.3；D243 第 1 条</td></tr>
+627:<tr><td>B12</td><td>研究组、驱动层</td><td>研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+634:<tr><td>B19</td><td>谁把候选并进已开问题</td><td>匹配和碰撞裁决；共同量由代码</td><td>D190、D197、D211</td></tr>
+641:<p>每一轮把标准和一组事先定死的案例交给互相看不到答案的读者：作者先写好自己的答案并记 sha256；Claude 的不同模型和 Codex 各读一份。读者只读标准和案例，不读决策、金标、提示词。几方不一致的案例，读原因，追到标准里的一句话，改那一句；下一轮换没见过的读者，加没见过的案例。共 192 个陈述、40 个问题；陈述里 152 个来自测试文章，40 个来自银行、药企、零售、航空、公用事业、矿业、保险等其他行业。</p>
+643:<thead><tr><th>第三轮，一对读者</th><th class="num-cell">新案例：留不留</th><th class="num-cell">新案例：连分量</th><th class="num-cell">难案例复核：留不留</th><th class="num-cell">新问题</th></tr></thead>
+655:<p>Codex 只读，逐条对照签过的第 1 版、全部决策、PRD 06，找"作者自己加的规则"、和决策矛盾的地方、引错的原话。每一轮的发现都改掉并记下处理。第一轮查出 18 处自己加的规则和 9 处和决策矛盾，比如"名单外公司的量不开题"违反 D155、D187，"抽取要和库里比重复"违反 D211，把达标线缩短，把"在谈的金额"排除出核心。最后三轮只剩措辞层面的问题；第十一轮的发现在 2.14 版改掉，没有再复查。</p>
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '2630,2657p;2901,2915p;2953,2968p' docs/DECISIONS.md && sed -n '365,390p;415,424p' docs/prd/05-extraction-standard.html && sed -n '1,30p' src/hivemind/placement.py && git status --short && cat docs/CURRENT_STATE.md | head -70" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 1833ms:
+## D207 · 2026-10-28 · Statements are filed by a separate placement call under the one-home rule; an unfiled statement is kept (extraction v20, `poc-v36`)
+
+- Alex, on the root cause ("你还是没有根因的去解决这个问题 … 要么挂不到，要么挂多"; "跑那个归档实验"; "你看着结果来做"; "一样的标准开始测"). The mechanism ([routing-analysis.md](research/2026-10-28-extraction-quality/routing-analysis.md)): the in-call link decision was a coin flip (36% right on the gold, 46–78 pieces kept from the same bytes) and the gate at once (an unlinked statement was dropped: 60% of all statements, ~15–30% of them material); the link rule routed demand news to the company-wide quantities (six root theses held 66% of all links; v2's pieces 86% double-linked, 26% cited); the thesis list had no driver layer.
+- Decided, three parts measured one at a time on the frozen gold (three draws each, 8 threads, $0.04–0.05 an arm) and on the first week's 255 in-call pieces: (1) `placement.py`: one call per item with the title line, the statements and the open questions, each with a code-written 'takes' line (key, event type, research-group names; aggregates admit other populations); the sift keeps statements without a link (`keep_unlinked`); the placer's links replace the extraction's, candidate links survive; a statement filed nowhere is stored in `unplaced_statements` with the handover. (2) The rule is the placement prompt: `placement-narrow-v1` — one home, the narrowest question; company-wide figure questions take only their own figures, guidance and management statements. (3) D42's "evidence is linked at extraction" becomes: the extraction's links are its first opinion; placement decides. Gated on the prompt version (`PLACEMENT_FROM = 20`); `cfg.placement` is required from v20.
+- Measured: core statements filed right 6/6/5 → 9/9/9 (with six seeded driver questions shown) and 9/10/9 under the old rule; wrong links 9 → 3; links to the two sinks 63/60/44 → 6/1/5; junk placed 53/48/32 → 39/27/35; every decisive matter statement (the Kyber/Rubin Ultra rack delay cluster, the AI Compute Partnership participants, Goldman's capex estimate) placed; one week through the whole path (`english-v36-nvda-1w-2026-10-28`, $0.22 against $0.22) kept 580 statements the old path dropped. Arms retired by measurement: the extraction's links shown as a hint (junk and sink links returned), group aliases alone (the groups lack the press names). Tests `tests/test_placement.py`, suite 222.
+- Not built here: re-placement of unplaced statements when a thesis opens later (the cold-start class, 12% of gold cells); the driver layer (D208).
+
+## D208 · 2026-10-28 · The thesis tree: root quantities, a seeded driver layer per company, shared macro themes with declared channels (design, not built)
+
+- Alex: "可以，但是不能因为有了这层我们的抽取就是非常的模版化缺少了hedge fund analyst 的灵魂"; on macro: "算是个global factor to all, 但影响正反面不一定". Measured before the decision (routing-analysis.md §11): with six analyst-seeded driver questions shown to the narrow placer, recall equals the old rule's (core 9/9/9), the sinks stay empty (6/1/5) and the neocloud, competitor-share and memory-cost statements land in their drivers (every landing read).
+- Decided as design: (1) every company's library has the same skeleton — root quantities (its reported lines), a driver layer of seven fixed classes (demand, supply/inputs, competition/share, pricing/installed base, product cycle, policy, capital/obligations), and shared themes; the instances are the analyst's, written once at coverage start (the universe watch list completed), keys by code, each driver declaring the root it feeds through `dependencies`. (2) The template routes; it never gates: material statements are found as before, new questions open from articles as before, the judgement writes the argument. Two counts guard this: candidates outside the template must not fall; every driver's junk and citation share is counted like v2's. (3) Macro factors are shared theme theses judged once on their own (T11) evidence; direction per company is a declared dependency with a channel sentence the judge reads; macro evidence is filed only under the macro theme. Root judgements read driver and theme conclusions, not their evidence (the D195 theme block extended).
+- To build, in this order, each with the same gold and a one-week whole-path run: bootstrap seeding with dependencies, the judge's "drivers in force" block, re-placement of unplaced statements; then the macro themes with channels.
+
+## D209 · 2026-10-28 · A statement no open question takes is dropped at extraction; evaluation reads the dropped record, not a side list
+
+- Alex, on the `unplaced_statements` table D207 had added: "If you think about yourself as a hedge fund analyst, if it doesn't matter, just
+  fucking throw it away. That's the original design. Why are you keeping it on the side? It breaks the entire design. … But if there are
+  false positives that got thrown away in this side list, you got to pick it up. Again, that's the way to do proper evaluation. So don't
+  do something that is like halfway done and just to cherry pick and get the result in numbers."
+- Decided: the placer's unfiled statements go to the handover's `dropped` list with the reason `no home`, like every other drop; the
+  `unplaced` field, the `unplaced_statements` table and `store.add_unplaced` are removed; no re-placement mechanism is built. The
+  dropped record (every drop with its reason, already in every handover) is where evaluation reads what was thrown away.
+- Evaluation done the same evening on the acceptance week's 630 drops, read one by one
+  ([thrown-away-read.md](research/2026-10-28-extraction-quality/results/thrown-away-read.md)): 393 junk (62%), 236 material; of the
+  material, 87% had no standing question to go to (the AI Compute Partnership question alone 96: identical request bytes proposed it in
+  1, 2 and 0 candidates across three runs), 2% were statements of the article that opened the question (the placer never sees the
+  item's candidates), 4% the placer left out with the home shown (two self-admitted mistakes, three where the stopgap rack NVL72x2 was
+  not recognised as the Kyber/Rubin Ultra matter), 7% marginal.
+## D240 · 2026-10-29 · A named party's action without an amount is kept; a reject rule never removes what the standard keeps
+
+- Alex, on role-v30–v32 rejecting a partner's integration of the company's software without business scale (the Palantir pages):
+  "我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点，我们是聊过这个事情的你难道没看文档吗".
+- What the documents already said: standard.md §2 keeps kind 2, "客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作" (a name is enough), and
+  "预测、传闻、反证、远期、条件情景都是证据。它们的层级和确定性另记"; AGENTS §8: indirect or incomplete information is evidence, and
+  incompleteness alone does not establish that it lacks research value. Its weight (core, supporting, optional) is judged apart from
+  keeping it, at evaluation; the extraction keeps it and records its source tier.
+- Decided: role-v34 removes the v30–v32 rejection, keeping v33's kind (2) wording (a counterparty's reported figure, the standard's own
+  example). The reference v2 entries that keep nothing on pages whose statements are a named party's action (the Palantir partnership
+  pages among them) are wrong under §2; the count of records on "nothing-to-keep" articles is no longer read as a target, only the
+  reference's core and supporting statements are a regression alarm. The frozen reference file is not edited.
+
+## D241 · 2026-10-29 · One unified definition of the ledger's types, question opening and evidence levels, with a traced golden set, before more prompt work
+
+## D248 · 2026-10-30 · What counts as one question and one piece of evidence: seven boundaries, chosen one by one
+
+- Alex, on the census of duplicate and trivial questions: "我们的标准要收口"; then "你要不要深度的写好plan, 怎么测量，golden 是怎么，我们来解决这个问题；整体不能regress，你要秉持我们过往工程的原则，以及作为一个hedge fund analyst 到底怎么判断合并，去重，这个标准很重要，不能观点爆炸"; then, not following the plan's table, "我没理解每个难点，我需要一个一个和你过，你讲人话给我例子". Each boundary was put to him with an example and two options; his replies are quoted per row. Plan, census and review rounds: [question-identity plan](research/2026-10-30-question-identity/plan.md) §0–§4, §11b, §12.
+- The class ($0, `census/`): the sealed three-month run opened 69 questions in 59 days; Claude's reading of the first 50 (not reviewed by Alex) marks 12 duplicates and 10 that should not have opened, 5 borderline. Matching merged 39 of 122 candidates; the candidates opened new fall in three verdict classes (parsed from the decisions' reason text, not yet verified case by case): the collision judge's "distinct question in one matter", "same question" verdicts the code still opened (two traced to a model-written period start), and twins never compared.
+- The principle, Alex after the seven answers: "我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则" (written into AGENTS §8, "A senior analyst's granularity").
+- Decided (the general rule under all seven: two questions are one when the same outcome settles both; they are kept apart only when their answers can move apart and an analyst would bet on each separately):
+  1. **One plan, several wordings** (H1, "A"): wordings of one plan whose final check is the same number are one question; two numbers that move on their own and are watched separately stay apart; a single deal under a plan already opened by amount merges into it. Not put to Alex: a not-yet-signed deal's yes/no signing question (D210; PRD 06 keeps number and event questions apart) stays as it is and does not merge into a plan's amount question (the Ohio lease guarantee and the cloud-customer total in v38 both stay). Narrows the standard §4 "another quantity in the same deal (a guarantee beside a financing)" sentence taken from D190; consistent with D210.
+  2. **One event, several deadlines** (H2, "A"): while the earlier-deadline question is open, a later deadline is its evidence, not a new question; when the earlier one falls due unresolved and the matter is still live, the system opens the next-deadline successor with the merged evidence, without waiting for a new article (new work for pull mode, D14, D54).
+  3. **One product generation, several milestones** (H3, "A"): one question per generation, asked at the step that brings revenue (shipments begin); sampling and launch are its evidence; only milestones an analyst bets on separately (a drug's phase-3 data and its approval) are separate questions.
+  4. **A company's own quantity by fiscal and by calendar year** (H4, "A"): only the fiscal year opens (PRD 06 ladder rule 5); a calendar-year estimate is evidence to the fiscal question, weighed lower when the years differ much.
+  5. **A model-written period start** (H5, "A"): for event and policy questions it no longer blocks a merge; object, event and due day are still checked.
+  6. **Small matters opened as questions** (H6, "A， A"): a deal, product or project (the question was put about small deals and products) opens a question only when its scale can change the company's revenue, profit, cash or credit risk; otherwise no question opens, and whether its statement is kept follows the evidence rule (standard §5). Done in this round together with the merge changes, each measured as its own arm, then together on the holdout. Narrows the standard §3 class C ("a sized, not yet completed stake or acquisition").
+  7. **The same statement carried by several outlets** (H7, "A"): code treats pieces with the same known original speaker, original day and figures as one (an unknown speaker or day never matches: 297 of the sealed run's 4,298 pieces have both unknown); the judge sees it once with the outlet count; every piece is still stored. Changes D204's "both shown to the judge" for this case, and is a chosen exception to AGENTS §3 "equal values alone never establish identity"; the risk put to him with the question (a qualification such as "excluding China sales" hidden; D204's 8 of 40 wrong merges) is measured on the G3 gold before it is switched on, as is the accuracy of the original-speaker and original-day fields it relies on.
+- Next, in this order: the signed standard page (§3 class C, §4 "same question, succession or another question") carries these rules, then a read-only Codex drift review; then the plan's step 1 (structured census, the fixed-extraction replay harness, gold G1–G3, the September holdout week on Alex's go).
+
+## D249 · 2026-10-30 · A test the model applies to each statement is a check at the end of the same request; role-v63 (`poc-v79`) measured, the default stays role-v53
+</tbody></table></div>
+<p class="note">年限按公司财年数：2026 年 7 月时 NVIDIA 在 FY2027（2027 年 1 月结束），所以 FY2028 是明年。代码原来按自然年算，把 FY2028 当成后年拒掉；在 v29 答案的 40 个带年份的候选里拒错了 2 个。已修，测试是 <span class="path">tests/test_fiscal_year_horizon.py</span><span class="src">D243</span>。</p>
+
+<h2 id="evidence"><span class="num">5</span>证据标准</h2>
+<h3>5.1 留的规则和四类</h3>
+<blockquote><p><b>一个在追这家公司的分析员，读到会在本周笔记里写下来，因为它让某个问题的答案更可能或更不可能。</b>问题不限于库里已有的，也不限于本公司：客户、供应商、竞争者、监管、宏观都算<span class="src">第 1 版 §2；D208 七类驱动</span>。</p></blockquote>
+<p><b>整体倾向谨慎，对增量敏感。</b>杂音很大，不是什么都要抽，不是什么都算线索。判一句话之前先问：这是新信息吗？它让哪个问题的答案变了？一件新发生的事、一个新数字、一个新的具体判断，是增量，不能漏；重复常识、描述长期状况、泛泛的看法，是杂音<span class="src">D243</span>。增量和杂音的具体界线按 5.3 各行和边界一起判<span class="src">D250</span>。</p>
+<p>从第一段读到最后一段，分析员会记的（按本节和 5.3 各行边界一起判）都留。一页有八条就是八条，不挑<span class="src">D199</span>。它们通常是下面四类之一；四类描述的是会记的陈述长什么样，不是"属于四类就一定留"，留不留由上面的规则判；具体不留的行和边界见 5.3。</p>
+<ol class="steps">
+<li><b>公司自己的数字、指引或决定</b><span class="src">第 1 版 §2</span>"同店销售本季增长 4.2%"；"管理层把全年收入指引定在 120–130 亿美元"；"董事会批准 100 亿美元回购"；"公司取消软件订阅费，生产使用免费"<span class="src">Alex 判 8，Omniverse</span>。</li>
+<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+<li><b>具名一方的主张或估计</b><span class="src">第 1 版 §2</span>"CFO 说十年前建的工厂仍满负荷"；"分析师把明年 EPS 预期上调到 4.10 美元"；"做空机构指控公司虚增应收 20 亿美元"；"内存厂说 2027 年短缺最严重，持续到 2030"。</li>
+<li><b>政策或监管的决定或步骤</b><span class="src">第 1 版 §2</span>"监管机构批准该药第二个适应症"；"政府要求该产品出口须申请许可"；"25 家公司联名反对过早限制开放权重模型"；"财长说将调查某国公司是否窃取知识产权"。</li>
+</ol>
+<p><b>典型的主张和背景</b><span class="src">D243 第 5 条</span>：Alex 的原话是"这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"。常识，就是跟这家公司的分析员读这篇之前就已经知道的：谁领先、谁在竞争、需求强、供给紧、融资难这类说法，和对已知状况的重述。这类陈述没有数字和具体的叙事就不收。不是常识的，是新信息，比如一份新报告的判断、一个新的市场数据、刚发生的事的细节，照上面的规则判，分析员会记就留。</p>
+<ul>
+<li><b>常识，不收：</b>"博通 CEO 说能从英伟达抢份额"；"Blackwell 和 Rubin 仍然供不应求"；"融资会是扩大算力最大的障碍"；"内存厂避开了以往的产能过剩"；"博通预计明年随着新客户推出定制芯片大幅增长"。</li>
+<li><b>新信息，收：</b>一位科技公司高管对媒体说"中国国产 AI 芯片厂商已经全部卖光，客户在考虑性能更低的芯片"；"旧型号 GPU 的租金在涨"；研究机构说"这让 Rubin Ultra 暂时没有成熟的扩展方案，给对手留出了空间"；"华为现在占中国 AI 芯片市场约一半，这个市场约 500 亿美元"。</li>
+<li><b>有数字也要过上面的规则：</b>作者说"英特尔多年领先，占 CPU 市场 59%"，和英伟达的问题关系不大，分析员不会记。</li>
+</ul>
+
+<h3>5.2 不完整也是证据</h3>
+<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。不留清单只按 5.3 各行和边界删，不能用来删掉标准要留的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+
+<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+</tbody></table></div>
+<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+
+<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+"""Placement (D207, 2026-10-28; docs/research/2026-10-28-extraction-quality/routing-analysis.md): from extraction v20 the statements an
+item yields are filed by a separate call that reads only the item's title line, the statements and the open questions, each question
+with a 'takes' line written by code from its key and its research group. The rule is the placement prompt the configuration names:
+`placement-narrow-v1` (one home, the narrowest question that names the matter; a company-wide figure question takes only its own
+figures and guidance) or `placement-v1` (the old link rule, kept for comparison). A statement the placer files nowhere is dropped with the reason 'no home'
+(D209: evidence is what bears on an open question; the handover's dropped record is where evaluation reads what was thrown away);
+a link the extraction gave to one of its own candidates (c1 …) is kept as it is, the placer decides only the links to existing theses. Measured on the frozen gold over three draws: core statements filed right
+55% → 82%, wrong links 9 → 3, links to the two revenue sinks 63/60/44 → 6/1/5."""
+import re
+
+from . import config, model
+
+SCHEMA = {'type': 'object', 'additionalProperties': False, 'required': ['placements'],
+          'properties': {'placements': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['id', 'links'],
+                                                                     'properties': {'id': {'type': 'string'}, 'links': {'type': 'array', 'items': {'type': 'string'}}}}}}}
+CANDIDATE_ID = re.compile(r'^c\d+$')
+
+
+def matter(view):
+    """The research group(s) the thesis belongs to: the matter's other names in the press and what is happening (D149 aliases)."""
+    parts = []
+    for g in view.get('groups') or []:
+        names = [a for a in (g.get('aliases') or []) if a and a != g.get('name')]
+        parts.append(f"the matter '{g['name']}'" + (f" (also called {', '.join(names[:6])})" if names else '') + f": {g['scope']}")
+    return '; '.join(parts)
+
+
+def takes(view):
+    """What a question collects, from its key and its research group: the one sentence the placer reads beside the question."""
+    key = view.get('key') or {}
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-ZyQnDmSH' (errno=Operation not permitted)
+2026-11-01 21:02:54.496 xcodebuild[35956:21322381]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-01 21:02:54.704 xcodebuild[35956:21322380] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-bvhiZZiw' (errno=Operation not permitted)
+2026-11-01 21:02:55.093 xcodebuild[35958:21322395]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-01 21:02:55.203 xcodebuild[35958:21322394] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+ M docs/CURRENT_STATE.md
+ M docs/research/2026-10-31-reference-context/design-seed-v2.md
+ M poc/seeds/nvda-2026-07-01-v2.json
+ M src/hivemind/placement.py
+ M tests/test_seeding.py
+?? docs/research/2026-10-31-reference-context/probes/place-d1-e10-guided_up_tp_$190_bi.txt
+?? docs/research/2026-10-31-reference-context/probes/place-d1-e3-nearly_$20_billion_o.txt
+?? docs/research/2026-10-31-reference-context/probes/place-d1-e8-compute_revenue_is_e.txt
+?? docs/research/2026-11-01-e2e-loop/
+?? poc/config/poc-v85.json
+?? poc/config/poc-v86.json
+?? src/hivemind/prompts/placement-narrow-v3.txt
+?? src/hivemind/prompts/placement-narrow-v4.txt
+# Current state
+
+As of October 30, 2026, the close-out of the extraction-quality phase; decisions through D246. Governing design: `docs/system-design.html` and `docs/prd/`; the extraction step's standard is [`prd/05-extraction-standard.html`](prd/05-extraction-standard.html) (D243). Every status paragraph of the phase, with its numbers, is in [the snapshot before this close-out](research/2026-10-29-ledger-standard/current-state.before-closeout-2026-10-30.md); earlier snapshots are linked there. They are records, not work orders.
+
+## What runs, and which code is the latest
+
+- **Latest pipeline code:** this branch, `fix/extraction-quality-2026-10-28`, stacked on `feat/thesis-admission-v12` and `feat/parallel-day`; all three pushed, none merged into `main`. `main` has the newer service, UI and Idea code (3 commits this branch lacks) and still replays `poc-v23` (extraction v10).
+- **Default configuration:** `poc/config/poc-v69.json` (D247): extraction role-v53 on `gpt-6-luna` (role-v51's text; `speaker`, `original_who` and `original_day` defined in the schema), the request showing no thesis and no group (D211); the placement call files each statement under the narrowest open question, and a statement no open question takes is dropped as `no home` (D207, D209); Jev matching with the collision judge (D190); judging with the theme block and the evidence in view (D195, D198). `scripts/replay.py`, the default-entry test and the README name it.
+- **No long run is live** in any worktree; the three-month run is sealed through 2026-08-28 (D206) and the service serves that sealed ledger.
+- **Moving the run to another machine (2026-11-01):** what is in Git, what is not (the corpus database, the end-to-end run folders, the answer stores), the sizes, the backup archive with its hash, and the portable launcher `research/2026-10-31-reference-context/run_seedv2.sh` for the three seed-v2 draws are in [`research/2026-10-31-reference-context/handoff-move-2026-11-01.md`](research/2026-10-31-reference-context/handoff-move-2026-11-01.md).
+- Tests: full suite 241 passed; `docs/check.py` passes. The close-out code review (a blind reviewer, 13 findings) is answered below.
+
+## The phase, 2026-10-28 to 2026-10-30
+
+The three-month run was stopped on evidence bloat (D206). The extraction step was then rebuilt and measured alone, through its own harness:
+
+1. Placement and drops (D207–D209): a separate placement call files statements; a statement no question takes is dropped with its reason and evaluation reads the drops.
+2. The request no longer depends on the ledger (D211): the read is prepared early and filed at the item's turn.
+3. One ruler (D229, D241, D243): the extraction standard signed by Alex, a golden set of 118 development articles and a frozen test set of 30, the scorer reading only the frozen gold (D244).
+4. The prompt is a general hedge-fund brain (D237) and was iterated class by class on the direct read (D238): role-v29 (D239), role-v42 (D245, gold-rejected statements kept −26% at equal core), role-v51 (D246, must-not questions on small products 20 → 0 over 15 draws).
+5. A quality read beyond the ruler (2026-10-30, [results](research/2026-10-29-ledger-standard/quality-2026-10-30/results.md)): four independent model readers read 24 random articles as analysts. The logs are [the loop log](research/2026-10-29-ledger-standard/loop-log.md) (rows 1–23) and [the direct-read log](research/2026-10-29-analyst-standard/loop-2026-10-29/log.md).
+
+Where role-v51 stands (development set, three draws): core kept 77–81 of 86 per draw and the same in every draw (89% of core statements); supporting at least two draws 154 of 181; statements per draw 534 (role-v23: 833); numbers in the summary lines faithful (no invented figure in 2,065); about $0.0011 and 12.5 s per article.
+
+## Open defects, to fix next
+
+Each has its census; the extraction ones are classes for the loop of AGENTS §7.3 (one class at a time, the whole bench, read every regression).
+
+Extraction (step 1), role-v51:
+
+1. **Record fields when an article retells an earlier announcement**: role-v53 adopted (D247) ([loop log](research/2026-10-29-ledger-standard/loop-log.md) rows 26–30, [folder](research/2026-10-29-ledger-standard/fields-2026-10-30/)). Mechanism (five probes): the prompt's one clause "for a retelling, the original speaker and statement day" was read as "a statement the item explicitly attributes", so an action the item narrates got the outlet as speaker and the report day as its day, while the true day went to `event_time`, which no step reads. role-v52 (`poc-v68`) wrote the three fields' definitions into the role text: fields fixed, but about 7 to 15 more gold-rejected statements kept per draw (two runs). role-v53 (`poc-v69`) keeps role-v51's text and carries the same definitions as schema field descriptions (`extraction.FIELD_NOTES`, from version 53): in the simultaneous run U, outlet-as-speaker and report-day signals over 148 articles × 3 draws 166 → 35, verified field errors on a fresh blind read of 24 articles 18/96 → 11/94 records, gold-rejected kept −6.7 per draw, core and supporting within noise (the two largest core "losses" are the same matter quoted by another sentence). Left over: a column restating two companies' reported figures still credited to its author; unnamed executives tiered as third-party views (the tier table says rumour); days weaker than role-v52 (13 against 3 signals).
+2. **Summary lines** lose a condition or say more than the quote in 11 of 102 (the Groq "acquisition" in quotation marks written as an acquisition; a deal's "backstop" link left in a neighbouring record); one event is split into several records in 9 (one Reuters rumour as three records).
+3. **Noise, then placement recall.** Measured end to end 2026-10-31 (`research/2026-10-31-reference-context/e2e_compare.py`, three draws, 118 gold articles): the extraction's gold-rejected statements are mostly removed by the placement step, so about 20 noise pieces an estimate, of some 137 reaching judgement, remain per draw; the extraction-layer noise arms (role-v54…v70) are closed, default role-v53. The live defect is the placement step's recall: it drops a third of the core matters (26 of 86 a draw with ten seeds, 21 with `placement-narrow-v2`) because no open question takes them, and the ten hand-written seeds cover a third of the drivers; the fix is D208's seeded layer, generated from the watch list, with Alex's three calls in One next task. The extraction-layer record, for reference: measured on a fixed ruler. The ruler (D250): standard version 5 (four evidence boundaries and the counting unit, Alex's leans), gold `golden-v5/` re-derived by two blind readers with 62 recorded changes, and `final_scores.py` now refuses a gold whose evidence part was made for another version (it had scored every round since D248 on the version-3 gold). On that ruler, development set, three draws, versions sent together, blind-corrected: role-v63 against role-v53 (run Y3) gold-rejected kept per draw 108.7 → 83.0, core every draw 70 → 72, supporting at least two draws 128 → 128 (counting aid); role-v64 against v63 (Y4) 86.7 → 73.7, core 73 → 71, supporting 126 → 122; role-v65 against v64 (Y5) 73.0 → 59.3, core 71 → 71, supporting 120 → 123. Mechanism left: in the one-call check, an exception written on one row is read as a keep rule over the others (v63's closing list; v65's adoption exception over D250 item 1), so the 45 entries D250 moved out of the kept column are still kept 27 times per draw; a draft (not audited, not sent, `research/2026-10-30-noise/drafts/review-v66-draft.txt`; the number 66 later went to R3's role-v66, a different text, see One next task) scopes the adoption exception to a new step. Sealed on 2026-10-31 at the tag `extraction-noise-sealed-2026-10-31`; what can be resumed and reused (ruler, gold and its sha256, prompt versions, local answer stores with their sha256, tools and their use, open work, recovery commands) is in `research/2026-10-30-noise/SEALED-2026-10-31.md`. Loop log rows 34–53, `research/2026-10-30-noise/ruler-check-2026-10-31.md`.
+4. **Questions**, read from the candidates themselves: DRAM contract prices (development) and the $12.9B Hugging Face acquisition (test) are opened in no draw, though the Hugging Face statement is kept in every draw; the OpenAI Ohio lease guarantee is never its own yes/no question, only covered by the wider lease-guarantee amount question; data-centre revenue for FY2028 is asked as total revenue growth (2 of 3 draws); per page the opening varies (the credit-support question on one page in 2 of 3 draws, carried by other pages in every draw). Must-not: the lidar-legislation policy question in 1 of 3 draws (role-v42: 11 of 15); one Nigeria production question in one draw.
+5. **Whole statements lost:** 28 quotes refused by the quote check in three draws, every one read: 14 stitch parts of different sentences (the Palantir–Nemotron statement, the China H200 permission), 9 change a word or two at an edge ("the company" written as "Nvidia", "As a result" as "So"; among them the core "Nvidia provides a take-or-pay commitment" and "Vera CPU expected to bring $20 billion"), 2 are titles not in the body, 1 skips words with an ellipsis, 1 writes "85 percent" as "85%", 1 is a real misquote rightly refused. One whole-page empty answer on a page with 3 core entries (Micron, draw 1).
+6. **The test set is small:** 9 core entries and 3 must-open questions; it shows no overfitting and little more.
+
+Readers' doubts about the standard itself (for Alex; nothing changed): unsized named actions keep every small press release (D240); the optional Singapore case lets eleven asset records through (D231); the tier table has no row for an official's allegation, a company forecasting its own industry, or a research firm reporting a non-public action; a repeated old figure is kept at full weight each time (D243 #6) while a repeat is not new evidence (AGENTS §8). A fourth doubt, that "unknown" loses the "said by the report day" bound, is answered: every record keeps its item's publication day.
+
+Downstream and product:
+
+7. **Nothing downstream has run with role-v42 or role-v51** (no archive in any worktree names `poc-v39` or later). The last whole-path run is one week with role-v22 (`english-v38-nvda-1w-2026-10-28`, D211, $0.23): every story of the week had a page, 4 of 17 pages were duplicates by wording, and the placer left about 60 statements out when near-identical pages competed. Judging was halted by evidence bloat in the three-month run (D206) and has not run at scale since.
+8. **Not built:** argument records (steps 5 and 6: a versioned current argument per question for the judge to read); pull mode and the final verdict (how a question is settled at its due day) are earlier drafts.
+9. **Not merged:** three stacked branches; the UI serves the sealed ledger through 2026-08-28.
+10. **One company:** the prompt is written as a general hedge-fund brain and measured on NVIDIA articles only.
+
+Earlier open defects, unchanged:
+
+- Shared by both matching engines (log row 49): the same figure stated in another document is often judged new (2–3 of 30 sampled new decisions); one matter can end up in several groups (the capex matter holds two groups in the Jev arm, three in the control); a decision naming a candidate of the same answer breaks a chain or duplicates a thesis (7 decisions over all ledgers, all generative); an empty `original_who` on both sides reads as the same party in the writer's rule; two names for the same population are sometimes kept apart (2 merge misses of 9 with Jev).
+- Aggregate theses multiply under the `ai-capex` theme: the Jev arm holds nine 2026 aggregate-spending theses, each a different population under the gold's rule. Whether such variants deserve separate theses is the analyst's judgement, not an identity defect; it is recorded for a product decision.
+- The classification simulation keeps the limits in [the preserved defect list](research/2026-10-25-english/classification-existing-defects.txt); a passing simulation is not classification acceptance.
+- Corpus: 97 official notices with 56 body and filename collisions need the recorded re-fetch before a rebuilt corpus is relied on.
+- The older intermittent search-test failure is untraced; the Docker external-connectivity restriction needs a current check before a container model run.
+- Parallel day: the spend cap is checked per committed item, so in-flight early requests can pass it by at most the worker count's calls; the cap counts archived calls, not a retried attempt whose reply was lost (as for the OpenAI client). Re-prepared requests cost about 24% more per day.
+- Not yet done: the service and UI switch to the English ledger (a new search index), `matching-v4` for dependencies in the generative matcher.
+
+Pull mode and the final verdict remain earlier drafts to redesign together. The decided rule freezes the current state and reasons at the due date and closes the thesis. Upstream supply and human-review handling remain deferred.
+
+## Adopted implementation
+
+- D155: reference lists no longer veto candidates; full-match period handling, exact scopes, event identity, same-answer coalescing, old-key trust and atomic write and resume.
+- D159: an item's accepted extraction answers the request built after every earlier item finished writing.
+- D172, D181, D183: the parallel day (`hivemind.parallel_day`), the replay's default (`scripts/replay.py --workers 1` runs serially): later items' extraction requests are prepared early and prepared again right after any commit that changes them; each item accepts only a byte-identical request at its turn; matching questions within an item run concurrently and apply in order; one writer.
+- D163–D166: the English runtime (`vocabulary.py`, canonical values with legacy conversion on read), the fresh English library, research groups declared during extraction with aliases and decided by names in code (`views/groups.py`).
+- D167–D169: no hard-coded identity; the measure vocabulary gains `market_size` and `project_cost`; the Jev engine (`views/jev_matching.py`, client `jev.py`) with the PRD's replacement definition, the shared succession rule and an answer for "the same quantity, another period"; a repeat may name the piece shown for the same evidence under another thesis.
+- Idea service: the adopted two-call contract `poc-v9` / `idea-v7`, reasoning `none` (D135/D145); limits in the [Idea specification](poc/idea-card.md). The service still reads the sealed Chinese ledger with its search index.
+- UI and service: shared thesis schema and adapter, cards, history chart, evidence, drawer and graph routing; historical reads, search, numeric claim evaluation and thesis bundles over HTTP and MCP ([service specification](poc/service.md)).
+- D207–D211: extraction reads, then files (`extraction.read_item`, `extraction.file_reading`); under a ledger-blind version the request depends on the item alone, so the parallel day prepares the read early and files it at the item's turn; the placement call files statements, and a statement filed nowhere is dropped as `no home` (the `unplaced_statements` table is retired). After placement the sift's candidate rule runs again (`extraction.candidates_with_evidence`): a candidate left with none of its evidence is dropped, so no thesis opens without evidence (close-out review; 0 of 222 candidates under poc-v67, 25 of 5,805 over all stored loop answers).
+- D236: a quote that differs from the source only by punctuation, quotation marks, footnote markers or case, or leaves out one run of words inside one sentence, is stored as the exact source passage (`extraction.repair_quote`); anything else is refused.
+- The year rule reads the universe's year forms (`universe.parse_year`, so FY29 is FY2029) and counts a fiscal year in the company's own fiscal years (`universe.fiscal_year_of`, shared with the fiscal note; NVIDIA's FY2028 in July 2026 is next year); an event question that names its quarter is not a quarterly number.
+
+codex
+The rewrite has three serious findings: it makes the code-written filing rules authoritative even where they admit material D207 excludes, adds an unsupported cross-period rule, and gives conflicting directions for news about named matters.
+
+For example, a supplier’s quantified capacity increase could be filed under a total-revenue question as a “direct driver,” even though D207 restricts that question to the company’s own figures, guidance and management statements.
+
+1. **Unsourced rules**
+
+   - **Serious:** “The period in a takes line tells apart questions about the same quantity for different periods; it does not bar a figure or driver from an earlier or later period when no open question covers that period.” D240 says missing information alone is not a reason to discard meaningful evidence; it does not establish that a figure for a *known different period* belongs under the only open question. D248 explicitly permits a calendar-year estimate as evidence for a fiscal-year question, but does not state this general rule for all earlier and later periods. [D240 and D248](docs/DECISIONS.md).
+   - **Serious:** “News about a customer, supplier, competitor, product, policy or deal goes under the question that names that matter (an event, a policy process, a theme).” D209 requires a statement to bear on an open question, and D207 chooses the narrowest qualifying question. Naming the matter alone is not the stated test; this sentence can direct filing even when that question’s takes line does not cover the news. [D207 and D209](docs/DECISIONS.md).
+
+2. **Conflicts with takes lines or ambiguous wording**
+
+   - **Serious:** “Each open question is a bet with a file, and its 'takes' line is the one rule for what belongs in that file.” The code writes “figures, guidance, estimates and revisions for … over …, and the direct drivers of that figure stated with a size.” For a company-wide figure, D207 instead says “company-wide figure questions take only their own figures, guidance and management statements.” Making the broader takes line authoritative permits sized drivers that D207’s restriction does not. See [placement.py](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/placement.py:42) and [D207](docs/DECISIONS.md).
+   - **Serious:** “News about a customer, supplier, competitor, product, policy or deal goes under the question that names that matter (an event, a policy process, a theme).” A reader can treat this as an instruction to file **any** such news under a question naming the matter, even if its takes line covers only particular events or figures. That conflicts with “A statement that no takes line covers is filed under none” and with the generated takes lines’ limits.
+   - **Serious:** “A statement a takes line covers belongs in the file whoever says it … and even when it gives no period, basis or exact amount.” The condition “a takes line covers” can be read as requiring a match to the generated “over [period]” text before the missing-period exception applies, or as allowing a missing period in that matching decision. The latter follows D240; the former can drop a relevant statement solely because its period is absent. Also, “no … exact amount” is unclear beside the takes line’s requirement that a driver be “stated with a size”: an approximate size and no size at all are different cases. [D240](docs/DECISIONS.md).
+   - **Wording:** “when no open question covers that period” could mean no question about **the same quantity** covers it, or no open question of any kind covers it. The sentence does not specify which.
+
+3. **The revenue sink**
+
+   **Serious: it reopens a limited version of the sink.** The enabling sentence is: “Each open question is a bet with a file, and its 'takes' line is the one rule for what belongs in that file.” The takes line then admits “the direct drivers of that figure stated with a size,” including a quantified business development that is not the company’s own figure, guidance or management statement.
+
+   “File a statement under the narrowest question whose takes line covers it” does not prevent this when the revenue or segment question is the only question whose takes line covers the sized driver. It does not make *all* general business news eligible: the code’s “direct” and “stated with a size” limits still apply. D207’s narrower company-wide figure rule is the governing restriction. [D207](docs/DECISIONS.md).
+
+4. **Company or industry specificity**
+
+   **No finding.** None of the v4 sentences names a particular company, product or industry; the examples of speakers and business relationships are general.
+
+5. **The period sentence**
+
+   **Serious.** “The period in a takes line tells apart questions about the same quantity for different periods; it does not bar a figure or driver from an earlier or later period when no open question covers that period.”
+
+   - **D240:** It is not sourced by D240’s missing-information rule. A known earlier fiscal year is different from an unstated period.
+   - **D248:** It does not necessarily conflict with the rule that separate outcomes can be separate questions: one period’s evidence can bear on another question. But D248’s explicit cross-period permission concerns a calendar-year estimate filed under the fiscal-year question; it does not authorize every earlier or later period.
+   - **D207:** It overrides the generated takes line’s “over [period]” boundary without requiring the earlier figure to bear on the later question. For a company-wide figure, D207 also limits the kind of material the file takes.
+   - **Earlier fiscal year, only later year open:** The prompt tells the model that the earlier year **does not bar filing**. Read with the instruction that a statement covered by the takes line belongs in the file, it can file the earlier-year figure under the later-year question even when the figure does not make that later answer more or less likely. The sentence does not independently require the model to establish that connection.
+
+The quoted prompt is [placement-narrow-v4.txt](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/placement-narrow-v4.txt); the decisions are in [DECISIONS.md](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md).
+tokens used
+43,866
+The rewrite has three serious findings: it makes the code-written filing rules authoritative even where they admit material D207 excludes, adds an unsupported cross-period rule, and gives conflicting directions for news about named matters.
+
+For example, a supplier’s quantified capacity increase could be filed under a total-revenue question as a “direct driver,” even though D207 restricts that question to the company’s own figures, guidance and management statements.
+
+1. **Unsourced rules**
+
+   - **Serious:** “The period in a takes line tells apart questions about the same quantity for different periods; it does not bar a figure or driver from an earlier or later period when no open question covers that period.” D240 says missing information alone is not a reason to discard meaningful evidence; it does not establish that a figure for a *known different period* belongs under the only open question. D248 explicitly permits a calendar-year estimate as evidence for a fiscal-year question, but does not state this general rule for all earlier and later periods. [D240 and D248](docs/DECISIONS.md).
+   - **Serious:** “News about a customer, supplier, competitor, product, policy or deal goes under the question that names that matter (an event, a policy process, a theme).” D209 requires a statement to bear on an open question, and D207 chooses the narrowest qualifying question. Naming the matter alone is not the stated test; this sentence can direct filing even when that question’s takes line does not cover the news. [D207 and D209](docs/DECISIONS.md).
+
+2. **Conflicts with takes lines or ambiguous wording**
+
+   - **Serious:** “Each open question is a bet with a file, and its 'takes' line is the one rule for what belongs in that file.” The code writes “figures, guidance, estimates and revisions for … over …, and the direct drivers of that figure stated with a size.” For a company-wide figure, D207 instead says “company-wide figure questions take only their own figures, guidance and management statements.” Making the broader takes line authoritative permits sized drivers that D207’s restriction does not. See [placement.py](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/placement.py:42) and [D207](docs/DECISIONS.md).
+   - **Serious:** “News about a customer, supplier, competitor, product, policy or deal goes under the question that names that matter (an event, a policy process, a theme).” A reader can treat this as an instruction to file **any** such news under a question naming the matter, even if its takes line covers only particular events or figures. That conflicts with “A statement that no takes line covers is filed under none” and with the generated takes lines’ limits.
+   - **Serious:** “A statement a takes line covers belongs in the file whoever says it … and even when it gives no period, basis or exact amount.” The condition “a takes line covers” can be read as requiring a match to the generated “over [period]” text before the missing-period exception applies, or as allowing a missing period in that matching decision. The latter follows D240; the former can drop a relevant statement solely because its period is absent. Also, “no … exact amount” is unclear beside the takes line’s requirement that a driver be “stated with a size”: an approximate size and no size at all are different cases. [D240](docs/DECISIONS.md).
+   - **Wording:** “when no open question covers that period” could mean no question about **the same quantity** covers it, or no open question of any kind covers it. The sentence does not specify which.
+
+3. **The revenue sink**
+
+   **Serious: it reopens a limited version of the sink.** The enabling sentence is: “Each open question is a bet with a file, and its 'takes' line is the one rule for what belongs in that file.” The takes line then admits “the direct drivers of that figure stated with a size,” including a quantified business development that is not the company’s own figure, guidance or management statement.
+
+   “File a statement under the narrowest question whose takes line covers it” does not prevent this when the revenue or segment question is the only question whose takes line covers the sized driver. It does not make *all* general business news eligible: the code’s “direct” and “stated with a size” limits still apply. D207’s narrower company-wide figure rule is the governing restriction. [D207](docs/DECISIONS.md).
+
+4. **Company or industry specificity**
+
+   **No finding.** None of the v4 sentences names a particular company, product or industry; the examples of speakers and business relationships are general.
+
+5. **The period sentence**
+
+   **Serious.** “The period in a takes line tells apart questions about the same quantity for different periods; it does not bar a figure or driver from an earlier or later period when no open question covers that period.”
+
+   - **D240:** It is not sourced by D240’s missing-information rule. A known earlier fiscal year is different from an unstated period.
+   - **D248:** It does not necessarily conflict with the rule that separate outcomes can be separate questions: one period’s evidence can bear on another question. But D248’s explicit cross-period permission concerns a calendar-year estimate filed under the fiscal-year question; it does not authorize every earlier or later period.
+   - **D207:** It overrides the generated takes line’s “over [period]” boundary without requiring the earlier figure to bear on the later question. For a company-wide figure, D207 also limits the kind of material the file takes.
+   - **Earlier fiscal year, only later year open:** The prompt tells the model that the earlier year **does not bar filing**. Read with the instruction that a statement covered by the takes line belongs in the file, it can file the earlier-year figure under the later-year question even when the figure does not make that later answer more or less likely. The sentence does not independently require the model to establish that connection.
+
+The quoted prompt is [placement-narrow-v4.txt](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/placement-narrow-v4.txt); the decisions are in [DECISIONS.md](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md).

@@ -92,6 +92,13 @@ def piece_question(text):
             'instructions': 'How does the INCOMING PIECE relate to the STORED PIECE below, already under the same thesis? Use only the supplied text. STORED PIECE:\n' + text}
 
 
+def event_home(conn, view_id, key, c):
+    """D248 item 2 (R2-a): an open event question of the same object takes the same event under another deadline; the deadline is
+    evidence, and the successor opens only once the question has closed (can_succeed)."""
+    return bool(key) and key.get('measure') in identity.EVENT_MEASURES and store.is_open(conn, view_id) \
+        and (store.view(conn, view_id) or {}).get('object_id') == c.get('object') and not identity.conflicts(key, c, merging=False)
+
+
 def can_succeed(conn, view_id, key, c):
     """06-views succession: the candidate asks the same object's quantity (no typed field conflicts: measure, event type, a stated
     basis or unit, a code-owned scope) for a later period that does not overlap, and the thesis has no successor yet."""
@@ -288,13 +295,30 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
                            reverse=True)
             for _, v in other:
                 key = store.view_key(conn, v) if c.get('measure') else None
+                if event_home(conn, v, key, c):
+                    outcome, target = 'merge', v
+                    break
                 if can_succeed(conn, v, key, c):
                     outcome, target = 'succession', v
                     break
         if outcome == 'new':
+            # D258 (R2-e, D248 items 1 and 6): a candidate that asks about a component, instance or subset of an open question is filed
+            # under it; the part is evidence of the card, not a card of its own. The typed fields still decide (a signing question never
+            # merges into an amount), and the collision judge below may keep a component apart under its rule.
+            parts = sorted(((answers[f'rel__{v}']['probabilities']['part_of'], v) for v in listed
+                            if answers[f'rel__{v}']['choice'] == 'part_of' and answers[f'rel__{v}']['probabilities']['part_of'] >= THRESHOLD),
+                           reverse=True)
+            for _, v in parts:
+                key = store.view_key(conn, v) if c.get('measure') else None
+                if key and identity.conflicts(key, c, merging=False):
+                    continue
+                if store.is_open(conn, v):
+                    outcome, target = 'merge', v
+                    break
+        if outcome == 'new':
             successor_of = succession_target(conn, c, listed)
             if successor_of:
-                outcome, target = 'succession', successor_of
+                outcome, target = ('merge' if event_home(conn, successor_of, store.view_key(conn, successor_of), c) else 'succession'), successor_of
         peers = collision_peers(conn, c, listed) if getattr(cfg, 'collision', None) else []
         judged = ''
         if peers:

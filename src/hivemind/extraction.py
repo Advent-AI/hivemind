@@ -7,10 +7,11 @@ Prompt versions 1–5 ask and answer in Chinese; version 6 and later ask and ans
 the request text and the retry note follow the version; every answer is read in the canonical vocabulary."""
 import dataclasses
 import datetime
+import difflib
 import json
 import re
 
-from . import config, model, vocabulary
+from . import config, model, placement, vocabulary
 from .universe import parse_year
 
 TIERS = vocabulary.TIERS
@@ -30,6 +31,12 @@ REVIEW_UNTIL = 66    # D251/design-v71-production.md: the end-of-request check c
                      # boundary, research/2026-10-31-reference-context/design-r3-review.md); from v71 the role text carries its own
 OPEN_QUESTIONS_FROM = 71          # D251 (2026-10-31): from v71 the request shows the questions open at the start of the item's day (a daily snapshot), one line each;
                                   # a statement may link to them, and a linked statement is filed without the placement call; the role is role-v68a's text
+MOVES_FIELDS_VERSIONS = (71,)     # D252: the new_in_it and moves fields before the quote are v71's alone; v72 keeps the answer shape of v53..v66 (design-v72.md)
+ONE_DECIDER_FROM = 72             # D256 (Alex, 2026-11-02; research/2026-11-01-e2e-loop/design-v72.md): from v72 the request's open questions carry their takes lines
+                                  # (placement.takes) and the links field its definition (placement.FILING_RULE); the extraction's links file each statement, no placement
+                                  # call is made, and a statement linked to no shown question and no kept candidate is dropped as 'no home' (D209)
+PLACEMENT_UNTIL = 71              # the separate placement call (D207) files statements from v20 through v71; from v72 the extraction files them
+REVIEW_VERSIONS_ALSO = (72, 73, 74, 75)   # v72 ends with review-v72.txt, v66's check: its role text is v66's with the open-questions paragraph; v73 with review-v73.txt (D265, the boundaries' examples)
 REVIEW_FROM = 59     # AGENTS §6 (2026-10-30): from role-v59 the request ends with a check that reads the evidence list back by standard 5.1 (prompts/review-v<N>.txt) and names no empty-answer condition
 SHARED_QUANTITY_VERSIONS = (13, 14, 15)    # D191: the schemas of role-v13..v15 name shared_quantity in place of industry_aggregate (role-v15's text already
                                            # says industry_aggregate; its schema stays so stored requests stay byte-identical); every later version names the four reasons above
@@ -79,8 +86,18 @@ TIER_NOTE = ('Take the first row that applies. (1) The item credits the claim to
              'else with no source: rumour. A record that mixes a fact with a plan or a rumour takes the tier of its main claim.')
 
 
+# Extraction v74i, the frozen production prompt (D274; design-v78-fields.md §12-§13): a text variant of v74 whose numeric takes lines name only their
+# quantity, scope and period, and whose links field states the four paths, the other-period allowance and the company-wide revenue question as the
+# home of indirect evidence once (placement.FILING_RULE_ROOT_FALLBACK).
+PATHS_ONCE_VARIANTS = ('v74i',)
+
+
 def version_number(version):
-    return int(str(version or '').lstrip('v') or 0)
+    """The number of a prompt version ('v53', 'v53b' → 53). The behaviour flags above read the number; a letter suffix names a text
+    variant with the same behaviour and its own prompt files (role-v53b.txt, categories-v53b.json; D255 arm, 2026-11-01); a variant listed in
+    PATHS_ONCE_VARIANTS (v74i) also reads its own code-written takes lines and links description."""
+    digits = re.match(r'\d+', str(version or '').lstrip('v'))
+    return int(digits.group()) if digits else 0
 
 
 def is_english(version):
@@ -106,10 +123,22 @@ def open_questions(version):
 
 def reviews(version):
     """Versions whose request ends with the separate review check (prompts/review-v<N>.txt)."""
-    return REVIEW_FROM <= version_number(version) <= REVIEW_UNTIL
+    number = version_number(version)
+    return REVIEW_FROM <= number <= REVIEW_UNTIL or number in REVIEW_VERSIONS_ALSO
 
 
 def places(version):
+    """Versions whose statements a separate placement call files (D207): v20 through v71."""
+    return PLACEMENT_FROM <= version_number(version) <= PLACEMENT_UNTIL
+
+
+def one_decider(version):
+    """From v72 the extraction files its statements itself: its links are the filing, and no placement call is made (D256)."""
+    return version_number(version) >= ONE_DECIDER_FROM
+
+
+def keeps_unlinked(version):
+    """From v20 the sift keeps a statement without a link: for the placer, or from v72 for the handover, which drops it as 'no home'."""
     return version_number(version) >= PLACEMENT_FROM
 
 
@@ -120,10 +149,30 @@ def shown_views(conn, cfg, item, objects):
     from .views import store
     if open_questions(version):       # D251: the questions open at the start of the item's day, the same list for every item of that day
         views = store.views_open_at_day_start(conn, objects, item['publication_day'])
+        groups_of = lambda v: store.groups_of_view_at(conn, v['view_id'], v['snapshot_seq'])    # the groups and aliases as they stood at the day's start
+        parents_of = lambda v: store.direct_parents(conn, v['view_id'], v['snapshot_seq'])
     else:
         views = store.views_for_prompt(conn, objects, themes=shows_themes(version))
-    return [dict(v, key=store.view_key(conn, v['view_id']) or {}, groups=[{'name': g['name'], 'scope': g['scope'], 'aliases': g.get('aliases') or []} for g in store.groups_of_view(conn, v['view_id'])])
-            for v in views]       # the key and the groups feed the placer's 'takes' line
+        groups_of = lambda v: store.groups_of_view(conn, v['view_id'])
+        parents_of = lambda v: store.direct_parents(conn, v['view_id'])
+    return [dict(v, key=store.view_key(conn, v['view_id']) or {}, groups=[{'name': g['name'], 'scope': g['scope'], 'aliases': g.get('aliases') or []} for g in groups_of(v)],
+                 parents=parents_of(v))
+            for v in views]       # the key and the groups feed the 'takes' line (the placer's, and from v72 the extraction's); the parents feed the narrowest rule
+
+
+def narrowest_links(links, parents):
+    """D207's one rule the filing enforces in code (2026-11-02, D265): a statement linked to a question and to a question that question
+    depends on (a driver and its root, transitively) keeps the narrower one only. `parents` maps a view id to the ids it depends on."""
+    def ancestors(view_id, seen):
+        for parent in parents.get(view_id, ()):
+            if parent not in seen:
+                seen.add(parent)
+                ancestors(parent, seen)
+        return seen
+    broader = set()
+    for link in links:
+        broader |= ancestors(link, set())
+    return [l for l in links if l not in broader]
 
 
 def has_groups(version):
@@ -324,8 +373,10 @@ def schema_for(version, shown_group_ids=(), shown_view_ids=(), mandatory=()):
                                 blind=number >= LEDGER_BLIND_FROM)
         if number >= FIELD_NOTES_FROM:
             base = with_field_notes(base, field_notes(number))
-        if number >= OPEN_QUESTIONS_FROM:
+        if number in MOVES_FIELDS_VERSIONS:
             base = with_extra_fields(base, FIELD_NOTES_V71)
+        if number >= ONE_DECIDER_FROM:           # D256: the links field carries the filing rule, the takes lines' one rule, beside the field
+            base = with_field_notes(base, {'links': placement.FILING_RULE_ROOT_FALLBACK if version in PATHS_ONCE_VARIANTS else placement.FILING_RULE})
         return accounted_schema(base, mandatory) if accounts(version) else base
     if number >= GROUPS_FROM:
         return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
@@ -399,10 +450,12 @@ def _runs(needle, tokens):
     return [i for i in range(len(tokens) - len(needle) + 1) if tokens[i] == needle[0] and tokens[i:i + len(needle)] == needle]
 
 
-def repair_quote(quote, text):
-    """The source passage a refused quote stands for (D236), or None. Accepted: the quote's words equal one passage's words
+def repair_quote(quote, text, subject_names=()):
+    """The source passage a refused quote stands for (D236, D266), or None. Accepted: the quote's words equal one passage's words
     (punctuation, quotation marks, footnote markers and case aside), or equal them with one run left out that lies inside one
-    sentence and is shorter than the quote."""
+    sentence and is shorter than the quote; or (D266) differ from them by a word or two that is a function word, a pronoun, a generic
+    word for the company or one of `subject_names` (the subject company's own name), never a number or any other word; or copy one
+    passage exactly and run on past its sentence end."""
     if len(normalise(quote)) < 8:
         return None
     spans = _quote_tokens(text)
@@ -424,9 +477,88 @@ def repair_quote(quote, text):
                     if best is None or tail_start - gap_start < best[0]:
                         best = (tail_start - gap_start, gap_start - split, tail_start + len(tail) - 1)
                     break
-    if best is None:
+    if best is not None:
+        return _source_passage(text, spans[best[1]][1], spans[best[2]][2])
+    near = _near_run(quote_tokens, source_tokens, subject_names)   # D266: a function word or the company's own name changed, added or dropped
+    if near is not None:
+        return _source_passage(text, spans[near[0]][1], spans[near[1]][2])
+    prefix = _exact_prefix(quote_tokens, source_tokens, spans, text)   # D266: a quote that runs on past the passage it copied keeps that passage
+    if prefix is not None:
+        return _source_passage(text, spans[prefix[0]][1], spans[prefix[1]][2])
+    return None
+
+
+# D266 (2026-11-02, Alex: the quote refusals of core statements are an important class, fix it quickly): the stored quote is still the exact
+# source passage; what widens is which model quotes are matched to one. A quote of at least NEAR_MIN_TOKENS words whose words differ from one
+# source window's by at most NEAR_EDITS(n) word edits, every edited word a function word, a pronoun, a generic word for the company or the
+# subject company's own name ("the company's" written as the name; "While" as "As"), is that window; a quote that copies one passage
+# exactly and then runs on into other text keeps the copied passage when it is at least NEAR_MIN_TOKENS words and ends at a sentence end.
+# A changed month, party, product or number, a paraphrase, and two names swapped are refused as before (D236's tests hold).
+NEAR_MIN_TOKENS = 8
+HARMLESS_TOKENS = frozenset('''the a an this that these those it its it's he she they their his her hers we our ours my your you
+    as while although though meanwhile however but and or so because since then also too for of to in on at by with from into over under
+    about example instance first all additionally moreover further furthermore still yet now here there is are was were be been being
+    has have had do does did will would could should might can that's which who whom whose what when where said says say
+    company company's firm firm's chipmaker chipmaker's giant giant's maker maker's group group's'''.split())     # not "may": a month
+
+
+def NEAR_EDITS(length):
+    return 2 if length <= 30 else 3
+
+
+def _harmless(subject_names):
+    names = set()
+    for name in subject_names:
+        for token, _, _ in _quote_tokens(name):
+            names.add(token)
+            names.add(token + "'s")
+    return HARMLESS_TOKENS | names
+
+
+def _edited_tokens(quote_tokens, window):
+    """(number of word edits, the words involved on both sides) between the quote and one source window, by the aligned difference."""
+    edits, involved = 0, []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, quote_tokens, window, autojunk=False).get_opcodes():
+        if tag == 'equal':
+            continue
+        edits += max(i2 - i1, j2 - j1)
+        involved += quote_tokens[i1:i2] + window[j1:j2]
+    return edits, involved
+
+
+def _near_run(quote_tokens, source_tokens, subject_names=()):
+    """(first, last) source token indexes of a window the quote matches within NEAR_EDITS word edits that all fall on harmless words,
+    anchored on the quote's first or last three words appearing exactly; None otherwise."""
+    n = len(quote_tokens)
+    if n < NEAR_MIN_TOKENS:
         return None
-    return _source_passage(text, spans[best[1]][1], spans[best[2]][2])
+    limit = NEAR_EDITS(n)
+    harmless = _harmless(subject_names)
+    anchors = set()
+    for position in _runs(quote_tokens[:3], source_tokens):
+        anchors.update(range(position - limit, position + limit + 1))
+    for position in _runs(quote_tokens[-3:], source_tokens):
+        anchors.update(range(position + 3 - n - limit, position + 3 - n + limit + 1))
+    best = None
+    for start in sorted(a for a in anchors if a >= 0):
+        window = source_tokens[start:start + n]             # the same length: words substituted, none added or dropped (a dropped last word
+        if len(window) != n:                                # would otherwise match a passage cut short)
+            continue
+        edits, involved = _edited_tokens(quote_tokens, window)
+        if 0 < edits <= limit and all(t in harmless for t in involved) and (best is None or edits < best[0]):
+            best = (edits, start, start + n - 1)
+    return best[1:] if best else None
+
+
+def _exact_prefix(quote_tokens, source_tokens, spans, text):
+    """(first, last) source token indexes of the longest prefix of the quote, at least NEAR_MIN_TOKENS words, that occurs exactly in
+    the source and ends at a sentence end there; None otherwise."""
+    for length in range(len(quote_tokens) - 1, NEAR_MIN_TOKENS - 1, -1):
+        for position in _runs(quote_tokens[:length], source_tokens):
+            end = spans[position + length - 1][2]
+            if end >= len(text) or _SENTENCE_END.match(text[end:end + 4]) or _CLOSING.fullmatch(text[end:end + 2] or '') and text[end:end + 1] in '.!?':
+                return position, position + length - 1
+    return None
 
 
 def item_header(item, category):
@@ -523,7 +655,10 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
                      'propose important questions outside the list as usual, with their actual scope:\n' + '\n'.join(watched))
     blind = ledger_blind(version)
     if open_questions(version):     # D251: the day's snapshot, one line per question; the role text says how to link
-        lines = [f'  - {v["view_id"]} ({v["kind"]} {v["object_id"]}, due {v["due_day"]}): {v["question"]}' for v in shown_views]
+        if one_decider(version):    # v72: each question with its takes line, the lines the placer read (one writer, placement.question_lines)
+            lines = placement.question_lines(shown_views, paths_once=version in PATHS_ONCE_VARIANTS)
+        else:
+            lines = [f'  - {v["view_id"]} ({v["kind"]} {v["object_id"]}, due {v["due_day"]}): {v["question"]}' for v in shown_views]
         parts.append(f'[Open questions at the start of {item["publication_day"]}]\n' + ('\n'.join(lines) if lines else '  None yet.'))
     elif blind:
         pass                        # v22: the request shows no thesis; the placement call reads the open theses, matching folds a candidate into one
@@ -647,24 +782,29 @@ def read_item(archive, cfg, item, text, shown_views, universe, *, shown_groups=(
         raise ValueError(f'extraction {setting.prompt_version} files statements by a placement call, but the configuration has no placement setting')
     answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
     evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, shown_ids, universe, english=is_english(version),
-                                                                  shown_group_ids=group_ids, version=version, keep_unlinked=places(version))
+                                                                  shown_group_ids=group_ids, version=version, keep_unlinked=keeps_unlinked(version))
     return Reading(evidence, candidates, dropped, new_groups, answer, version)
 
 
 def file_reading(reading, archive, cfg, item, shown_views, *, transport=None):
-    """The handover: from v20 the placement call files the read statements under the open theses shown now (D207); earlier versions
-    hand the read over as it is. A statement no open question takes is dropped as 'no home' (D209), like every other drop: a
-    candidate left with none of its evidence is dropped too, and a statement whose only link was such a candidate has no home."""
+    """The handover: from v20 the placement call files the read statements under the open theses shown now (D207); from v72 the
+    extraction's own links are the filing and no placement call is made (D256); earlier versions hand the read over as it is. A
+    statement no open question takes is dropped as 'no home' (D209), like every other drop: a candidate left with none of its evidence
+    is dropped too, and a statement whose only link was such a candidate has no home."""
     evidence, candidates, dropped, answer = reading.evidence, reading.candidates, list(reading.dropped), reading.answer
     cost, cached = answer.cost_usd, answer.cached
-    if places(reading.version):
-        from . import placement
+    if places(reading.version) or one_decider(reading.version):
         shown_ids = {v['view_id'] for v in shown_views} if open_questions(reading.version) else set()
         linked = [e for e in evidence if any(l in shown_ids for l in e['links'])]        # D251: a statement the extraction linked to an open question is filed there
         to_place = [e for e in evidence if e not in linked]
-        placed, unfiled, placed_answer = placement.place(archive, cfg, to_place, shown_views, transport=transport, item=item)
+        if places(reading.version):
+            placed, unfiled, placed_answer = placement.place(archive, cfg, to_place, shown_views, transport=transport, item=item)
+        else:                       # v72: the extraction's links are the filing; the loop below drops a statement linked to nothing as 'no home'
+            placed, unfiled, placed_answer = to_place, [], None
         evidence = [e for e in evidence if e in linked or any(p['id'] == e['id'] for p in placed)]
         evidence = [next((p for p in placed if p['id'] == e['id']), e) for e in evidence]
+        parents = {v['view_id']: v.get('parents') or [] for v in shown_views}
+        evidence = [dict(e, links=narrowest_links(e['links'], parents)) for e in evidence]     # D207 in code: the narrower of a driver and its root
         dropped.extend((e['id'], 'no home') for e in unfiled)
         if placed_answer is not None:
             cost += placed_answer.cost_usd
@@ -874,7 +1014,9 @@ def sift(data, item, text, shown_ids, universe=None, english=False, keep_unlinke
     for e in data.get('evidence', []):
         quote = normalise(e['quote'])
         if len(quote) < 8 or quote not in body:
-            repaired = repair_quote(e['quote'], text)
+            subject_names = [universe.companies[o['value']]['name'] for o in item.get('object_identifiers') or []
+                             if universe is not None and o['value'] in getattr(universe, 'companies', {})]
+            repaired = repair_quote(e['quote'], text, subject_names)
             if repaired is None or normalise(repaired) not in body:
                 dropped.append((e['id'], 'quote not in item'))
                 continue

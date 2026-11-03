@@ -1,0 +1,62 @@
+Independent, read-only review, round 2. Do not edit any file, do not run paid model calls, do not propose changing the frozen ruler (the standard
+docs/prd/05-extraction-standard.html version 3 with D250, the gold docs/research/2026-10-29-ledger-standard/golden-v5/).
+
+CONTEXT
+Your round-1 review (docs/research/2026-11-01-e2e-loop/codex-audit-noise-v94-r1.md) found that the extraction request of poc-v94 never defined a
+related party's "step", that the role's keep rule contradicted the closing check, that filing was used as the evidence test, and that examples were
+all quantified. Those fixes were built as extraction v74d (the new default, config poc/config/poc-v103.json; prompt files
+src/hivemind/prompts/role-v74d.txt, review-v74d.txt, categories-v74d.json; behaviour of v74 in src/hivemind/extraction.py: no classification fields,
+the closing check appended, takes lines written by code: search "takes" and "more or less likely"; schema field descriptions: search "narrowest open
+question"). They were measured on 50 stored articles, three sends each, against the old default's three stored draws: gold matters reaching
+132 -> 146, gold not-kept statements reaching 95 -> 89 (71 -> 56 once records whose long quote also carries a kept matter are set apart). Record:
+docs/research/2026-11-01-e2e-loop/design-v78-fields.md sections 11-12; decision D271 in docs/DECISIONS.md.
+
+The owner says the direction is right and asks: what is still not written right, and how should the request's structure be further optimized?
+
+READ
+1. The whole request as the model reads it. Print one stored-like request with:
+   python3 - <<'PY'
+   import sys, shutil, tempfile; sys.path.insert(0, 'src'); sys.path.insert(0, 'tests')
+   from hivemind import config, extraction, universe, testdb
+   from hivemind.views import store
+   cfg = config.load('poc/config/poc-v103.json'); uni = universe.load('poc/universe.json')
+   items = {it['input_id']: it for it in testdb.feed(testdb.open_db('poc/data/items-nvda-2026-07-01-10-27.sqlite'), '2026-07-01', '2026-07-14')}
+   d = tempfile.mkdtemp(); shutil.copy('docs/research/2026-11-01-e2e-loop/arms/r7-combined-v94/d1/views.sqlite', d + '/v.sqlite'); led = store.open_db(d + '/v.sqlite')
+   it = next(i for i in items.values() if 'GPU Debt Backstop' in (i.get('title') or ''))
+   objs = [o['value'] for o in it.get('object_identifiers') or [] if uni.has(o['value'])]
+   s, system, user, schema = extraction.request_for(cfg, it, it['text'], extraction.shown_views(led, cfg, it, objs), uni)
+   print(system); print(user); import json; print(json.dumps(schema['properties']['evidence'], indent=1))
+   PY
+   (If the read-only sandbox blocks the temp copy, read the files named above directly.)
+2. The residual failures, per article and per gold matter, in docs/research/2026-11-01-e2e-loop/proof-v103-a-mixed11.txt, proof-v103-b-supporting29.txt,
+   proof-v103-c-noise10.txt. Lines "core|supp stored raw X reached Y -> new raw X' reached Y'": new raw 0 = never written in three sends; raw > 0 and
+   reached 0 = written but filed under no question (dropped as no home). Lines "noise written xN reached xM [gold row] quote" are gold not-kept statements
+   that reached the ledger. The saved answers are in docs/research/2026-11-01-e2e-loop/sends/poc-v103-*.json (answers[input_id] = three answers).
+   The article texts: poc/data/items-nvda-2026-07-01-10-27.sqlite (table items or as testdb.feed reads it).
+3. The model's own accounts: probe-v101-omitted.txt, probe-v80-common-knowledge.txt, probe-v79-newness.txt, probe-v75-residue.txt (same folder).
+4. The governing rules for prompts: AGENTS.md section 6 (the prompt carries the standard, not new rules; general hedge-fund analyst, no company- or
+   bench-specific wording, examples from varied domains, none from a test article; a classification is a closed set with examples; never grow a prompt
+   to fix quality: cut as much as you add; a field's definition sits in the schema beside the field; one owner per rule) and section 8.
+
+WHAT TO FIND
+A. What is still written wrong in role-v74d / review-v74d / categories-v74d / the takes lines / the schema descriptions. For each: the exact sentence
+   with file and line, the residual failure class it produces (count it from the proof files, give two stored examples with article and quote), the
+   standard's line on that case, verdict (contradiction / missing / abstract / duplicate owner / misread / not the prompt), and a replacement sentence.
+   Check in particular:
+   - The role's reject list ("The list: reject these") and the closing check ("These are not kept") are two lists of the same rule in different words:
+     list every pair that says the same thing differently and every case where they disagree.
+   - Residual noise classes: arrangements in place the text does not mark as old (e.g. a manufacturer "is establishing" a plant announced earlier),
+     journalist framing ("revenue is skyrocketing"), a rival's long-standing share figure ("has led for years and holds more than 59%", which is the
+     standard's own counter-example in 5.1), emissions / power-plan figures with no path, a long quote that spans a kept and a not-kept sentence.
+   - Residual misses: the gold core and supporting matters with new raw 0 in all three sends, and those written but filed nowhere (no home): which
+     sentence of the request leads to each, or whether the question they need is not open.
+   - Where links go: whether the takes lines' identical tail ("and what makes that figure more or less likely: the demand, supply, competition and
+     pricing behind it") still makes the data-center revenue question the catch-all.
+B. Structure. Propose the request's structure as it should be, given everything above: which instruction lives in which place (system role, category
+   block, open-questions takes lines, closing check, schema field descriptions), what is merged, what is cut, the order the model meets them, and the
+   character count before and after. Respect: one call, no second model call, no cap on statements, no new rule the standard does not hold, code owns
+   identity never importance. Say what each structural change should do to noise and to recall and which kept matters it could lose.
+C. Rank everything by expected effect on the residual failures counted in the proof files, most first.
+
+OUTPUT (write to the -o file; English; concise, numbered, cite file:line; no file edits).
+Out of scope: judging, matching, UI, the seed questions' content, cost.

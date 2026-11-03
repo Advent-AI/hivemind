@@ -48,5 +48,6 @@ def test_the_judge_keeps_a_distinct_component_apart(tmp_path):
 
 
 def test_without_a_collision_setting_jev_decides_alone(tmp_path):
+    """D258 (R2-e): Jev's `part_of` files the candidate under the open question; before D258 it fell through to a new question."""
     decision = run(tmp_path, JEV_ONLY, 'same_question')
-    assert decision['outcome'] == 'new' and 'collision' not in decision['reason']
+    assert (decision['outcome'], decision['target_view_id']) == ('merge', 'v1') and 'collision' not in decision['reason']
