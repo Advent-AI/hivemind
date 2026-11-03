@@ -201,7 +201,7 @@ def history(conn, view_id, from_day=None, to_day=None):
     previous = None
     for row in conn.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
         entry = {'day': row['publication_day'], 'seq': row['seq'], 'position': row['rung'], 'changed': bool(row['changed']), 'moved_from': previous if previous is not None and previous != row['rung'] else None,
-                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _json(row['cited_evidence_json']), 'pushes': _json(row['pushes_json']),
+                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _unique(_json(row['cited_evidence_json'])), 'pushes': _json(row['pushes_json']),
                  'theme_pushes': _json(row['theme_pushes_json'] if 'theme_pushes_json' in row.keys() else None), 'round': row['input_id']}
         previous = row['rung']
         if from_day <= row['publication_day'] <= to_day:
@@ -226,6 +226,17 @@ def history(conn, view_id, from_day=None, to_day=None):
 
 class LedgerError(ValueError):
     """A ledger record the service cannot read (corrupt JSON): refused, never read as empty."""
+
+
+def _unique(ids):
+    """A judgement's cites as the UI contract reads them: each id once, first occurrence kept. The writer stores the set from
+    2026-10-28; the sealed ledger sealed-2026-10-28-v34-nvda-3m-through-0828 holds one judgement (v2, id 736) that cites an id twice."""
+    seen, out = set(), []
+    for value in ids:
+        if value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
 
 
 def _json(text):
@@ -263,7 +274,7 @@ def changes(conn, since_day, to_day=None):
         previous[row['view_id']] = row['rung']
         if not row['changed'] or not (since_day < row['publication_day'] <= to_day):
             continue
-        cited = [piece for piece in (evidence_record(conn, e, row['publication_day']) for e in _json(row['cited_evidence_json'])) if piece]
+        cited = [piece for piece in (evidence_record(conn, e, row['publication_day']) for e in _unique(_json(row['cited_evidence_json']))) if piece]
         out.append({'view_id': row['view_id'], 'day': row['publication_day'], 'from_position': before, 'to_position': row['rung'],
                     'position_moved': before is not None and before != row['rung'], 'why_changed': row['why_changed'], 'cited': cited})
     return out

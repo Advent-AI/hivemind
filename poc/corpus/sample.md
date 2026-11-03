@@ -1,329 +1,597 @@
 # 随机 30 条新闻（种子 20261023）
 
-## 2026-09-16 · cnbc.com · title · gnews:eafcd22ba240b66c565e3fd5
-
-**Here are Wednesday's biggest analyst calls: Nvidia, SpaceX, Tesla, Apple, Chevron, Cava, Micron & more**
-
-Here are Wednesday's biggest analyst calls: Nvidia, SpaceX, Tesla, Apple, Chevron, Cava, Micron & more
-
----
-
-## 2026-10-16 · britannica.com · title · gnews:1e78d9f2e2118ef5dc980619
-
-**CoreWeave | AI cloud computing company**
-
-CoreWeave | AI cloud computing company
-
----
-
-## 2026-07-26 · eteknix.com · stub · gnews:4171cf2f75fc1862c16d7838
-
-**AMD Zen 7 Expected to Be the Final CPU Generation for the AM5 Socket**
-
-Checking your browser
-Checking your browser
-This takes a moment...
-JavaScript is required to view this site.
-
----
-
-## 2026-09-11 · thesouthfirst.com · title · gnews:3a3b1907ee151187fb595680
-
-**Casino Capitalism: Inside the financial architecture powering the AI boom**
-
-Casino Capitalism: Inside the financial architecture powering the AI boom
-
----
-
-## 2026-10-21 · jambase.com · title · gnews:6219245f1f805abebea1dabe
-
-**Taylor Swift Debuts ‘The Fate Of Ophelia’ At 1st Band Performance Since Eras Tour**
-
-Taylor Swift Debuts ‘The Fate Of Ophelia’ At 1st Band Performance Since Eras Tour
-
----
-
-## 2026-09-25 · seekingalpha.com · title · gnews:5e30dfc09135bff6b7f21acb
-
-**Bill Ackman: ‘The Fed might have just made a mistake. Am I right or am I wrong?’**
-
-Bill Ackman: ‘The Fed might have just made a mistake. Am I right or am I wrong?’
-
----
-
-## 2026-08-20 · finance.yahoo.com · title · gnews:9b6ad9f505f49eb11987cdb2
-
-**US Stock Market Today: S&P 500 Futures Tick Higher As Long Term Rate Questions Linger**
-
-US Stock Market Today: S&P 500 Futures Tick Higher As Long Term Rate Questions Linger
-
----
-
-## 2026-10-13 · itbrief.co.uk · title · gnews:fb7d5e17d8df798daf0a1b07
-
-**Navyra launches Ale to cut repeated AI inference work**
-
-Navyra launches Ale to cut repeated AI inference work
-
----
-
-## 2026-08-21 · tomshardware.com · title · gnews:712b112d8d16a9c0b0ad1c3f
-
-**Nvidia denies report it will ship Groq-based LPUs to China by year-end — says there is 'no China-specific LPU product in our roadmap'**
-
-Nvidia denies report it will ship Groq-based LPUs to China by year-end — says there is 'no China-specific LPU product in our roadmap'
-
----
-
-## 2026-09-21 · foxnews.com · title · gnews:7a1edc243de1984b258ca752
-
-**NFL Week 2 Sunday takeaways: Packers are Jekyll and Hyde, Bengals have a defense, Chargers' season is over**
-
-NFL Week 2 Sunday takeaways: Packers are Jekyll and Hyde, Bengals have a defense, Chargers' season is over
-
----
-
-## 2026-08-27 · finance.biggo.com · title · gnews:3fa29e3153eb5eaeffe11f63
-
-**Nikkei rebounds, closes 273 yen higher as U.S. tech gains provide tailwind but upside remains capped**
-
-Nikkei rebounds, closes 273 yen higher as U.S. tech gains provide tailwind but upside remains capped
-
----
-
-## 2026-09-25 · binance.com · title · gnews:7a78df2890d66a0c6e3f3465
-
-**PPI, CPI, and the Fed: Why Inflation Data Triggers Volatility in Crypto Markets**
-
-PPI, CPI, and the Fed: Why Inflation Data Triggers Volatility in Crypto Markets
-
----
-
-## 2026-09-27 · reuters.com · title · gnews:458d5f4c985059d47621b0a3
-
-**COMMENTARY: Where will Fed tightening hit hardest in Asia?**
-
-COMMENTARY: Where will Fed tightening hit hardest in Asia?
-
----
-
-## 2026-08-14 · cryptobriefing.com · full · gnews:09aa87f38be329a13a6971d6
-
-**Broadcom shares fall nearly 7% to intraday low amid AI revenue concerns**
-
-PNG
-
-
-
----
-
-## 2026-10-21 · tomshardware.com · title · gnews:d7b2d63a62bfa074a1f5dc80
-
-**Jensen Huang Nvidia GTC keynote disrupted by Greenpeace protest over chips in Russian drones — 'What are you doing about that?' heckler demands before being thrown out**
-
-Jensen Huang Nvidia GTC keynote disrupted by Greenpeace protest over chips in Russian drones — 'What are you doing about that?' heckler demands before being thrown out
-
----
-
-## 2026-09-22 · barchart.com · title · gnews:e9393b63dea984ed13b393f3
-
-**Intel vs. TSMC: One Chip Stock Controls 72.5% of the Foundry Market. The Other Is Mounting a Comeback.**
-
-Intel vs. TSMC: One Chip Stock Controls 72.5% of the Foundry Market. The Other Is Mounting a Comeback.
-
----
-
-## 2026-07-25 · cnbc.com · full · gnews:7cfba917f3742f912269c148
-
-**Nvidia locks down memory supply from SK Hynix as part of $500 billion AI deal**
-
-Nvidia locks down memory from SK Hynix as part of $500 billion AI deal
-Skip Navigation
-Markets
-Pre-Markets
-U.S. Markets
-Europe Markets
-China Markets
-Asia Markets
-World Markets
-Currencies
-Prediction Markets
-Cryptocurrency
-Futures & Commodities
-Bonds
-Funds & ETFs
-Business
-Economy
+## 2026-10-25 · finance.yahoo.com · full · gnews:e321fc53e3a0777d22d8e600
+
+**AI Debt Has Exploded 4X To Nearly $500 Billion: What It Means For NVDA, ORCL And CRWV, According To IO Fund**
+
+AI Debt Has Exploded 4X To Nearly $500 Billion: What It Means For NVDA, ORCL And CRWV, According To IO Fund
+Oops, something went wrong
+Skip to navigation Skip to main content Skip to right column
+Home
+News
 Finance
-Health & Science
-Media
-Real Estate
-Energy
-Climate
-Transportation
-Investigations
-Industrials
-Retail
-Wealth
 Sports
-Life
-Small Business
-Investing
-Personal Finance
-Fintech
-Financial Advisors
-Options Action
-ETF Street
-Buffett Archive
-Earnings
-Trader Talk
+More
+News
+US
+Politics
+World
 Tech
+Science
+Originals
+Weather
+Newsletters
+Finance
+My portfolio
+News
+Markets
+Research
+Community
+Personal finance
+Videos
+Sports
+Fantasy Football 2026
+NFL
+College football
+NBA
+MLB
+NHL
+College basketball
+Soccer
+Fantasy
+Sports Betting
+NFL Odds
+Yahoo Sports AM
+Shopping
+Style
+Beauty
+Health
+Home and garden
+Tech
+Gift ideas
+Stores
+Shopping guides
+Deals
+Toys and games
+Shopping lists
+General
+Entertainment
+Celebrity
+TV
+Movies
+Music
+How to Watch
+Videos
+Nonfict
+
+---
+
+## 2026-10-09 · gurufocus.com · full · gnews:1bd72dcb484cbf78aac63a62
+
+**Arista Stocks Rise 2% as Ethernet Enters Nvidia's Stronghold**
+
+Arista Stocks Rise 2% as Ethernet Enters Nvidia's Stronghold
+Oops, something went wrong
+Skip to navigation Skip to main content Skip to right column
+Home
+News
+Finance
+Sports
+More
+News
+US
+Politics
+World
+Tech
+Science
+Originals
+Weather
+Newsletters
+Finance
+My portfolio
+News
+Markets
+Research
+Community
+Personal finance
+Videos
+Sports
+Fantasy Football 2026
+NFL
+College football
+NBA
+MLB
+NHL
+College basketball
+Soccer
+Fantasy
+Sports Betting
+NFL Odds
+Yahoo Sports AM
+Shopping
+Style
+Beauty
+Health
+Home and garden
+Tech
+Gift ideas
+Stores
+Shopping guides
+Deals
+Toys and games
+Shopping lists
+General
+Entertainment
+Celebrity
+TV
+Movies
+Music
+How to Watch
+Videos
+Nonfiction Hotlist
+Games
+Life
+Health
+Parenting
+Pets
+Ho
+
+---
+
+## 2026-08-20 · indiantelevision.com · shell · gnews:ed1a798761cacbcfa7d25835
+
+**OpenAI deepens Samsung ties with next-generation AI chip collaboration**
+
+1% Club launches AI CFO to offer personalised financial guidance to users - Indian Television Dot Com
+Television
+TV Shows
+Animation
+Awards
+Thriller
+Talent
+Reality
+Mythological
+Documentary
+Crime
+Comedy
+Drama Series
+Factual
+Fiction
+Food
+TV Channels
+English Entertainment
+Factual
+GECs
+Kids
+Movie Channels
+Music and Youth
+News Broadcasting
+People
+Regional
+Specialised and Niche
+Sports
+Terrestrial
+Viewership
+Production House
+Documentary
+Fiction
+Film Production
+Non-Fiction
+Online Content
+Post Production
+TV Commercial
+DPO
+Cable TV
+DAS
+Local Cable Operators
+Multi System Operators
+People
+DTH
+DTH Operator
+DTH Services
+People
+iWorld
+Broadband
+Music
+E-Commerce
+Gaming
+IPTV
+Over The Top Services
+Pay-Per-View
+
+---
+
+## 2026-09-25 · blogs.oracle.com · title · gnews:1e0456220c32c03d98f271dd
+
+**Oracle Integration at Oracle AI World 2026: The agent brings the intelligence. Oracle Integration brings the enterprise**
+
+Oracle Integration at Oracle AI World 2026: The agent brings the intelligence. Oracle Integration brings the enterprise
+
+---
+
+## 2026-07-08 · barchart.com · title · gnews:9d8b4e639d620e714f3e5db6
+
+**Memory Prices Heat Finally Reaches Nvidia. Here’s How Jensen Huang Is Dealing With It.**
+
+Memory Prices Heat Finally Reaches Nvidia. Here’s How Jensen Huang Is Dealing With It.
+
+---
+
+## 2026-09-20 · benzinga.com · provider_summary · truenorth:story:story_01a0be79-92a7-7990-80b7-3172206d85fc
+
+**iPhone 18 Pro Hits Stores, Samsung Retakes Smartphone Throne and More: This Week in Appleverse**
+
+iPhone 18 Pro Hits Stores, Samsung Retakes Smartphone Throne and More: This Week in Appleverse
+
+[provider summary, not the article]
+Apple launched the iPhone 18 Pro and Pro Max at higher price points, its first major product release under new CEO John Ternus. Bank of America analyst Wamsi Mohan reiterated a Buy rating with a $370 price forecast, citing carrier incentives up to $1200 and a strong upgrade cycle. Apple is reportedly working on an AI server using planned M8 Ultra chips and considering Nvidia's NVLink Fusion technology. Samsung reclaimed the top global smartphone shipment position with 23% share despite a 7% market decline. Elon Musk's xAI and X Corp dropped Apple from their anti
+
+---
+
+## 2026-10-19 · theguardian.com · title · gnews:175e0532f2544baad70ed60b
+
+**China’s economy grows faster than forecast after AI boom boosts exports**
+
+China’s economy grows faster than forecast after AI boom boosts exports
+
+---
+
+## 2026-08-28 · shattered.io · shell · gnews:4d8c2941eec687b3e7f5fa2c
+
+**Xbox Project Helix: Dev Kits Land in 2027 [2026]**
+
+10 Things Crypto Is Actually Useful For
+SHA
+TERED
+☰
+Search shattered.io Search
+Latest news
+SIEM Tools: Sentinel, Splunk and 4 Rivals Compared [2026] 1 min ago
+Agricultural Spray Drones Treat 16.4M Acres, Up 59% [2026] 3 min ago
+PHP2Shell: 5 Facts on the CVSS 9.2 PHP Flaw [2026] 17 min ago
+Home
+Gaming
+Hardware & Chips
+AI & Machine Learning
 Cybersecurity
-AI
-Enterprise
-Internet
-Media
-Mobile
-Social Media
-CNBC Disruptor 50
-Tech Guide
-Politics & Policy
-White House
-Policy
-Defense
-Congress
-Expanding Op
+Cryptocurrency
+Cloud Computing
+Esports
+Cryptography
+Coding & Dev Tools
+Provably Fair
+Casino
+Privacy
+Contact
+Language
+English
+Deutsch
+Deutsch (AT)
+Français
+Italiano
+Dansk
+Svenska
+Suomi
+Norsk
+Português
+Gaming Hardware & Chips AI & Machine Learning Cybersecurity Cryptocurrency Cloud Computing Esports Cryptography Coding & Dev Tools Provably Fair 
 
 ---
 
-## 2026-07-26 · seekingalpha.com · title · gnews:fd801a22339953dcb225930f
+## 2026-09-04 · techtimes.com · title · gnews:4ce8a40dada0c9651da891fb
 
-**The Next Fed Rate Hike May Be Coming Soon**
+**Qualcomm Dragonwing Q-2390 and IQ-2390 Bring Local AI to Industrial IoT at IFA**
 
-The Next Fed Rate Hike May Be Coming Soon
-
----
-
-## 2026-08-10 · startupfortune.com · full · gnews:e5368669d061d274b22f0209
-
-**JPMorgan Raises S&P 500 Target to 8,000 Saying AI Spending Is Finally Paying Off**
-
-ÿØÿÛ
+Qualcomm Dragonwing Q-2390 and IQ-2390 Bring Local AI to Industrial IoT at IFA
 
 ---
 
-## 2026-09-18 · postindependent.com · title · gnews:2402c288ca93d655ebc62475
+## 2026-10-22 · finance.yahoo.com · title · gnews:68a8c4684c6a497865807847
 
-**Colorado housing market faces falling buyer demand as mortgage rates hit two-year high**
+**TSMC Explores Rare Earth Alternatives To Protect Chip Production From China Controls**
 
-Colorado housing market faces falling buyer demand as mortgage rates hit two-year high
-
----
-
-## 2026-08-27 · finance.yahoo.com · title · gnews:fa3aad30c18ed2063aeb835c
-
-**Prediction: Micron Could Be the Most Important AI Stock After Nvidia**
-
-Prediction: Micron Could Be the Most Important AI Stock After Nvidia
+TSMC Explores Rare Earth Alternatives To Protect Chip Production From China Controls
 
 ---
 
-## 2026-10-18 · reuters.com · title · gnews:98f4178edae0cb4861930ef7
+## 2026-10-18 · app.dealroom.co · title · gnews:014daa402c7a7d60a28ccae0
 
-**Putin says Russia is building non-negotiable 'security zone' in Ukraine along border**
+**Taiwan to criminalise AI chip smuggling to China, plans $4B US supply hub**
 
-Putin says Russia is building non-negotiable 'security zone' in Ukraine along border
-
----
-
-## 2026-09-04 · finance.yahoo.com · title · gnews:9ca06bfd5dfb3d978fffbd04
-
-**McDonald's Trades at 19.15X P/E: Is This a Discounted Opportunity?**
-
-McDonald's Trades at 19.15X P/E: Is This a Discounted Opportunity?
+Taiwan to criminalise AI chip smuggling to China, plans $4B US supply hub
 
 ---
 
-## 2026-08-30 · hellomagazine.com · title · gnews:3692b094a1bac93c9b31acd7
+## 2026-09-20 · finance.biggo.com · title · gnews:b037576897154b864af7eed9
 
-**Taylor Swift's ex Harry Styles pokes fun at her MSG wedding after being unable to attend**
+**Semiconductor Rally Continues as Philadelphia Index Surges 2.78% Despite U.S. 10-Year Yield Reclaiming 5%**
 
-Taylor Swift's ex Harry Styles pokes fun at her MSG wedding after being unable to attend
-
----
-
-## 2026-09-14 · investing.com · title · gnews:7c9f8500fb7557666ee5ac6b
-
-**Anthropic wants AI to slow down. Its $517 billion spending plan says otherwise**
-
-Anthropic wants AI to slow down. Its $517 billion spending plan says otherwise
+Semiconductor Rally Continues as Philadelphia Index Surges 2.78% Despite U.S. 10-Year Yield Reclaiming 5%
 
 ---
 
-## 2026-09-26 · bbc.com · title · gnews:8c792392ceccf1444c8a1429
+## 2026-08-17 · tradingkey.com · title · gnews:427db304e8b066061e9dd4c7
 
-**Trump rejects Iran deal to reopen Strait of Hormuz in seven days**
+**【US Pre-Market】Memory Chip Stocks Rally as SanDisk Surges Over 5%, Micron and Western Digital Gain Over 3%**
 
-Trump rejects Iran deal to reopen Strait of Hormuz in seven days
+【US Pre-Market】Memory Chip Stocks Rally as SanDisk Surges Over 5%, Micron and Western Digital Gain Over 3%
 
 ---
 
-## 2026-10-22 · tikr.com · full · gnews:f6d1f3c915d537f3980e01e3
+## 2026-10-02 · 247wallst.com · none · gnews:47ae2b80d403110e44e60369
 
-**Pichai Says Google Cloud Is Giving Up Revenue to Feed AI Research. Here’s What That Means for Alphabet Stock**
+**OpenAI’s Future IPO Keeps Me Buying Microsoft**
 
-Stock Market Research & Investor Analysis Tools - TIKR | TIKR.com
-Product
-Pricing
-Company
-Resources
-Blog
-Sign In Free Sign Up Free Sign Up
-EN
-Join thousands of investors worldwide who use TIKR to supercharge their investment analysis.
-Sign Up for FREE No credit card required
-Analyze Stocks Quicker with TIKR
-Company
+OpenAI’s Future IPO Keeps Me Buying Microsoft
+
+---
+
+## 2026-09-24 · 247wallst.com · none · gnews:7783f9804013c3dbe7f4f1fb
+
+**Prediction: The Biggest Opportunity in AI Hardware May Still Be NVIDIA**
+
+Prediction: The Biggest Opportunity in AI Hardware May Still Be NVIDIA
+
+---
+
+## 2026-08-04 · sports.yahoo.com · title · gnews:5ce892c046b68a7d5a14bbe1
+
+**Bengals Training Camp Reveals Major Offensive Changes Under Zac Taylor**
+
+Bengals Training Camp Reveals Major Offensive Changes Under Zac Taylor
+
+---
+
+## 2026-08-29 · tech-insider.org · full · gnews:a525fd5cdbeb08376a892618
+
+**Nvidia RTX 5090 Tops $5,000 as GPU Prices Jump 39% [2026] - https://tech-insider.org/**
+
+Tech Insider: AI, Cybersecurity, Hardware & Tech News
+Tech Insider: AI, Cybersecurity, Hardware & Tech News
+Skip to content
+Search Tech Insider Search
+Latest news
+OLED Monitor Burn-In: Prevent It in 13 Steps, 35 Min [2026] 40 min ago
+Meta Delays Commercial Terms to Nov. 20 [2026] 1 h ago
+SUSE AI Factory Adds NVIDIA OpenShell, 3 Chip Layers [2026] 1 h ago
+Hardware
+Gaming
+AI & ML
+Cybersecurity
+Software
+Cloud
+Startups
+Editions
+English
+English (Australia)
+English (Canada)
+English (Ireland)
+Italiano
+Deutsch
+Nederlands
+Svenska
+Français
+Suomi
+Español
+Tech Insider
+Hardware
+Gaming
+AI & ML
+Cybersecurity
+Software
+Cloud
+Startups
+Tech Insider
+Menu
+Hardware Gaming AI & Machine Learning Cybersecurity Softw
+
+---
+
+## 2026-07-29 · zacks.com · full · truenorth:story:story_019fb228-87cd-79f2-af6d-ddf65c6eb91c
+
+**SK Hynix Misses Estimates Despite Profit Surge: ETFs in Focus**
+
+SK Hynix Misses Estimates Despite Profit Surge: ETFs in Focus - July 29, 2026 - Zacks.com
+Skip to main content
+X
+We use cookies to understand how you use our site and to improve your experience.
+This includes personalizing content and advertising.
+By pressing "Accept All" or closing out of this banner, you consent to the use of all cookies and similar technologies and the sharing of information they collect with third parties.
+You can reject marketing cookies by pressing "Deny Optional," but we still use essential, performance, and functional cookies.
+In addition, whether you "Accept All," Deny Optional," click the X or otherwise continue to use the site, you accept our Privacy Policy and Te
+
+---
+
+## 2026-09-07 · fool.com · full · gnews:f2246fe2a0760553c84b6ea2
+
+**Not Nvidia. Not Micron. This Is My Top AI Infrastructure Stock to Buy Right Now (Hint: It Can Double Within 3 Years)**
+
+Not Nvidia. Not Micron. This Is My Top AI Infrastructure Stock to Buy Right Now (Hint: It Can Double Within 3 Years) | The Motley Fool
+Accessibility Help
+▲ S&P 500 + ---% | ▲ Stock Advisor + ---% Join The Motley Fool
+Search for a company
+Search for a company
+Member Login
+Top 10 Stocks to Buy Now ›
+Top 10 Stocks to Buy Now ›
+Our Services
+Stock Market News
+How to Invest
+Retirement
+Personal Finance
 About Us
-Help Desk
-Pricing
-Careers
-Blog
-Contact Us
-Editorial Guidelines
-Product
-Value Stocks Quickly and Accurately
-Monitor Your Portfolio
-Instantly Analyze Companies with In-Depth Metrics
-Find the Best Stocks to Buy
-Follow Investment Moves of Top Investors
-Analyze Stocks
+More
+Accessibility Help
+Our Services
+All Services
+Stock Advisor
+Epic
+Epic Plus
+Fool Portfolios
+Fool One
 Compare
-Bloomberg Morningstar Sentieo Google Finance TradingView Factset Finviz YCharts MarketBeat Benzinga Gu
+All Podcasts
+Hidden Gems Investing Podcast
+Rule Breaker Investing Podcast
+Fool Community Foundation
+About Us
+Investing Philosophy
+Contact Us
+Motley Fool Money
+Reviews
+Newsroom
+Our 
 
 ---
 
-## 2026-10-11 · unc.edu · title · gnews:94dd27bcad9e2146dfe2a8a4
+## 2026-10-21 · reuters.com · title · gnews:1a9c2c421764f9d1c8091c35
 
-**Is the U.S. headed for a recession?**
+**Trump says companies should pay 'dividend' to communities to make data centers popular**
 
-Is the U.S. headed for a recession?
-
----
-
-## 2026-08-06 · bloomberg.com · title · gnews:6b826cb6122e63961a10e6ea
-
-**Fed’s Musalem Calls for Meaningful Restraint on Inflation**
-
-Fed’s Musalem Calls for Meaningful Restraint on Inflation
+Trump says companies should pay 'dividend' to communities to make data centers popular
 
 ---
 
-## 2026-10-12 · 247wallst.com · full · gnews:8c0b1bda7dd8bff0d434f9d5
+## 2026-08-26 · sdxcentral.com · title · gnews:843db08aa7ac789e617a54fa
 
-**The Bloom Energy Bull Case Just Got a Lot More Interesting**
+**AMD brings UCIe connectivity to Versal adaptive chips**
 
-ÿØÿà
+AMD brings UCIe connectivity to Versal adaptive chips
+
+---
+
+## 2026-10-05 · zacks.com · full · gnews:c65c53ccf606bf231dedf47b
+
+**Nvidia (NVDA) Outperforms Broader Market: What You Need to Know**
+
+Nvidia (NVDA) Outperforms Broader Market: What You Need to Know
+Oops, something went wrong
+Skip to navigation Skip to main content Skip to right column
+Home
+News
+Finance
+Sports
+More
+News
+US
+Politics
+World
+Tech
+Science
+Originals
+Weather
+Newsletters
+Finance
+My portfolio
+News
+Markets
+Research
+Community
+Personal finance
+Videos
+Sports
+Fantasy Football 2026
+NFL
+College football
+NBA
+MLB
+NHL
+College basketball
+Soccer
+Fantasy
+Sports Betting
+NFL Odds
+Yahoo Sports AM
+Shopping
+Style
+Beauty
+Health
+Home and garden
+Tech
+Gift ideas
+Stores
+Shopping guides
+Deals
+Toys and games
+Shopping lists
+General
+Entertainment
+Celebrity
+TV
+Movies
+Music
+How to Watch
+Videos
+Nonfiction Hotlist
+Games
+Life
+Health
+Parenting
+Pets
+
+---
+
+## 2026-08-03 · finance.yahoo.com · title · gnews:eb2d565d6f32b8ef3126c013
+
+**Some Investors Are Panicking About Memory Stocks. Micron Shareholders Should Keep a Cool Head.**
+
+Some Investors Are Panicking About Memory Stocks. Micron Shareholders Should Keep a Cool Head.
+
+---
+
+## 2026-10-19 · fxstreet.com · title · gnews:8c594618085522adb520e658
+
+**Breaking: Canada headline CPI came in at 3.1% YoY in September**
+
+Breaking: Canada headline CPI came in at 3.1% YoY in September
+
+---
+
+## 2026-07-31 · beincrypto.com · title · gnews:5e1548e8539a9aa9cc2e9ecf
+
+**Starbucks Stock to $120? Cramer Says Turnaround Is Accelerating**
+
+Starbucks Stock to $120? Cramer Says Turnaround Is Accelerating
+
+---
+
+## 2026-08-07 · thestreet.com · title · gnews:63c20f9b8fe3beb7cf5bcda0
+
+**Nvidia-backed company nearly doubles valuation in new funding round**
+
+Nvidia-backed company nearly doubles valuation in new funding round
+
+---
+
+## 2026-08-17 · ebc.com · title · gnews:a0fff83fddfe94524f93f38f
+
+**Anthropic IPO: Revenue Surged More Than 14-Fold. Could It Be Worth $2 Trillion?**
+
+Anthropic IPO: Revenue Surged More Than 14-Fold. Could It Be Worth $2 Trillion?
+
+---
+
+## 2026-10-21 · ng.investing.com · title · gnews:3f51791131e97be43dae4286
+
+**Oracle launches AI agent studio for industry applications By Investing.com**
+
+Oracle launches AI agent studio for industry applications By Investing.com
+
+---
+
+## 2026-08-17 · fool.com · title · gnews:397e30bf7ef75285e2011317
+
+**Why This Memory Chip Boom May Have More Staying Power Than History Suggests**
+
+Why This Memory Chip Boom May Have More Staying Power Than History Suggests
+
+---
+
+## 2026-08-07 · blogs.oracle.com · title · gnews:5e22520dcfa5206f6f831ba7
+
+**Oracle Fusion Cloud CX 26C Innovation: Customer Signals Connect to Enterprise Execution**
+
+Oracle Fusion Cloud CX 26C Innovation: Customer Signals Connect to Enterprise Execution
 
 ---
 

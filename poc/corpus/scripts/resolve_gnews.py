@@ -22,7 +22,7 @@ from common import RAW, USER_AGENT, WINDOW_START, WINDOW_END, read_json, days_be
 
 GNEWS = os.path.join(RAW, 'gnews')
 RESOLVED = os.path.join(GNEWS, 'resolved.jsonl')
-WORKERS = 2
+WORKERS = 6
 PAUSE = 2.5
 ENDPOINT = 'https://news.google.com/_/DotsSplashUi/data/batchexecute'
 
@@ -69,11 +69,18 @@ def resolve(link):
     match = re.search(r'https?://(?:[^"\\]|\\.)+', region)
     if not match:
         return None, 'no url in answer'
+    return decode_url(match.group(0)), 'ok'
+
+
+def decode_url(raw):
+    """The URL out of Google's JSON string: cut at the first escaped quote (the pattern above also swallows the escaped quote
+    that closes the string and what follows it: 32,011 of 34,430 links stored before 2026-10-27 ended in '",1]' or carried
+    a second URL), then decode the escapes (\\u003d is =)."""
+    raw = raw.split('\\"', 1)[0]
     try:
-        url = json.loads('"' + match.group(0) + '"')
+        return json.loads('"' + raw + '"')
     except json.JSONDecodeError:
-        url = match.group(0)
-    return url, 'ok'
+        return raw
 
 
 def suspicious(url):

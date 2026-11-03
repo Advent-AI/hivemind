@@ -25,7 +25,7 @@ import time
 import urllib.parse
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import (RAW, fetch, decode, article_paragraphs, page_text, title_of, published_day_of, is_truncated,
+from common import (clean_resolved_url, RAW, fetch, decode, article_paragraphs, page_text, title_of, published_day_of, is_truncated,
                     is_block_page, sha256_text, read_json, now_iso, log, main_guard)  # noqa: E402
 
 GDELT = os.path.join(RAW, 'gdelt')
@@ -61,18 +61,42 @@ def listed_urls():
                             continue
                         add(row.get('url'), dict(row, source='gdelt'))
     if os.path.isdir(TRUENORTH_NEWS):
+        import assemble   # the one owner of which TrueNorth stories are items (truenorth_story_topics)
         for name in sorted(os.listdir(TRUENORTH_NEWS)):
-            story = (read_json(os.path.join(TRUENORTH_NEWS, name), {}) or {}).get('story') or {}
-            add(story.get('source_url'), {'url': story.get('source_url'), 'title': story.get('title'), 'source': 'truenorth'})
+            record = read_json(os.path.join(TRUENORTH_NEWS, name), {}) or {}
+            story = record.get('story') or {}
+            if story and assemble.truenorth_story_topics(record):
+                add(story.get('source_url'), {'url': story.get('source_url'), 'title': story.get('title'), 'source': 'truenorth'})
     if os.path.exists(RESOLVED):
+        topics = {t for t in os.environ.get('HIVEMIND_TOPICS', '').split(',') if t}      # a backfill limited to some topics
+        full_already = {record['url'] for record in index_records() if record.get('coverage') == 'full'}
         with open(RESOLVED, encoding='utf-8') as handle:
             for line in handle:
                 try:
                     row = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                add(row.get('url'), {'url': row.get('url'), 'title': row.get('title'), 'source': 'gnews', 'day': row.get('day')})
+                if topics and (row.get('topic') or 'nvda') not in topics:
+                    continue
+                stored = (row.get('url') or '').strip()
+                url = clean_resolved_url(stored)
+                # a link stored with Google's JSON tail (resolve_gnews.decode_url) is fetched under its clean form unless the
+                # server already served the whole page under the stored one
+                if url != stored and stored in full_already:
+                    url = stored
+                add(url, {'url': url, 'title': row.get('title'), 'source': 'gnews', 'day': row.get('day')})
     return seen
+
+
+def index_records():
+    if not os.path.exists(INDEX):
+        return
+    with open(INDEX, encoding='utf-8') as handle:
+        for line in handle:
+            try:
+                yield json.loads(line)
+            except json.JSONDecodeError:
+                continue
 
 
 def index_state():

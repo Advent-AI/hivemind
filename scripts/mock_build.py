@@ -18,7 +18,7 @@ from hivemind.views import store  # noqa: E402
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data', type=Path, help='explicit legacy JSON export; otherwise read the current ledger')
-    parser.add_argument('--ledger', type=Path, default=ROOT / 'poc/data/english-v29-nvda-3m-2026-10-27/snapshots/2026-10-27T0736/views.sqlite')
+    parser.add_argument('--ledger', type=Path, default=ROOT / 'poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite')
     parser.add_argument('--items', type=Path, default=ROOT / 'poc/data/items-nvda-2026-07-01-10-27.sqlite')
     parser.add_argument('--out', type=Path, default=ROOT / 'poc/mock/index.html')
     parser.add_argument('--composite-trials', type=Path, help='explicit JSON trial baskets for the Idea score preview')

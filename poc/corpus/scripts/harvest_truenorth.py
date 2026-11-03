@@ -1,24 +1,30 @@
 """Harvest NVDA material from the TrueNorth data service: news stories (90 days), earnings-call transcripts,
-and the full text of filings. Read-only. Needs TRUENORTH_MCP_TOKEN in the environment (run through
+and the full text of filings. `--events` harvests the story index by topic instead (Alex, 2026-10-27: NVIDIA,
+geopolitics and the chip supply chain): every topic in topics.json with a `truenorth` key names its selectors
+(canonical asset ids and text queries) and the window is WINDOW_START..today. Read-only. Needs TRUENORTH_MCP_TOKEN in the environment (run through
 ../tn-hivemind/scripts/with_credentials.py --only TRUENORTH_MCP_TOKEN). Uses the old repository's read-only client.
 
 Writes raw/truenorth/news/<story_id>.json, raw/truenorth/transcripts/<date>.json, raw/truenorth/filings/<accession>.json
 and raw/truenorth/manifest.json. Re-running skips what exists.
 """
+import datetime
 import os
 import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'tn-hivemind', 'src')))
-from common import RAW, log, write_json, read_json, now_iso, main_guard, BOOTSTRAP_START  # noqa: E402
+from common import RAW, log, write_json, read_json, now_iso, main_guard, BOOTSTRAP_START, WINDOW_START  # noqa: E402
 from tn_hivemind.models.truenorth import TrueNorthMCP, tool_payload, MCPError  # noqa: E402
 
 SYMBOL = 'NVDA'
 ASSET = 'stock_nvda'
 OUT = os.path.join(RAW, 'truenorth')
 EVENT_TYPES = ('earnings', 'capital_markets', 'mna', 'market_move', 'product_launch', 'regulatory_policy',
-               'legal_regulatory', 'institutional_adoption', 'other')
+               'legal_regulatory', 'institutional_adoption', 'other',
+               # seen in the index on 2026-10-27 (geopolitics and supply-chain probes)
+               'geopolitical_event', 'guidance', 'exchange_listing', 'sec_filing')
+PAGE = 100     # event_v2's largest page; the index has no offset, so a selector over the cap is sliced by event type and sort
 
 
 def call(client, name, arguments, pause=1.0):
@@ -56,6 +62,82 @@ def harvest_news(client, manifest):
             write_json(path, entry)
     manifest['news'] = {'stories': len(stories), 'searches': searches, 'retrieved_at': now_iso()}
     log(f'news stories saved: {len(stories)}')
+
+
+def topic_selectors():
+    """(topic id, event_v2 selector) for every topic that names TrueNorth selectors in topics.json."""
+    topics = read_json(os.path.join(os.path.dirname(__file__), 'topics.json'))['topics']
+    selectors = []
+    for topic in topics:
+        spec = topic.get('truenorth') or {}
+        for address in spec.get('token_addresses', []):
+            selectors.append((topic['id'], {'token_address': address}))
+        for query in spec.get('queries', []):
+            selectors.append((topic['id'], {'query': query}))
+    return selectors
+
+
+def window_days(today):
+    """event_v2 takes a recency window, not a date range: the days from WINDOW_START to today, inclusive."""
+    start = datetime.date.fromisoformat(WINDOW_START)
+    return f'{(today - start).days + 1}d'
+
+
+def search_events(client, selector, time_window):
+    """Every story the index returns for one selector: one call when the total fits a page, otherwise the page of each
+    event type under both sort orders (the index returns at most PAGE stories per call and has no offset).
+    Returns {story_id: story} and the number of calls."""
+    base = dict(selector, time_window=time_window, limit=PAGE, include_full_summary=True)
+    stories, calls = {}, 0
+
+    def take(arguments):
+        nonlocal calls
+        payload = call(client, 'event_v2', arguments)
+        calls += 1
+        results = payload.get('results') or []
+        for story in results:
+            if story.get('story_id'):
+                stories.setdefault(story['story_id'], story)
+        return len(results), payload.get('total_results') or 0
+
+    returned, total = take(dict(base, sort_by='time'))
+    if total > returned:
+        take(dict(base, sort_by='relevance'))
+        for event_type in EVENT_TYPES:
+            returned, total = take(dict(base, sort_by='time', event_type=event_type))
+            if total > returned:
+                take(dict(base, sort_by='relevance', event_type=event_type))
+    return stories, calls
+
+
+def harvest_topic_events(client, manifest, today=None):
+    """The story index by topic over the window. A story found by several selectors is one file carrying every topic
+    and selector that found it; a file the NVDA harvest wrote earlier gains the topics it is found under now."""
+    today = today or datetime.date.today()
+    time_window = window_days(today)
+    summary = {'window': f'{WINDOW_START}..{today.isoformat()}', 'time_window': time_window, 'selectors': [], 'retrieved_at': now_iso()}
+    new_files, touched = 0, set()
+    for topic_id, selector in topic_selectors():
+        stories, calls = search_events(client, selector, time_window)
+        log(f'event_v2 {topic_id} {selector}: {len(stories)} stories in {calls} calls')
+        summary['selectors'].append({'topic': topic_id, **selector, 'stories': len(stories), 'calls': calls})
+        for story_id, story in stories.items():
+            path = os.path.join(OUT, 'news', story_id + '.json')
+            record = read_json(path) or {'story': story, 'retrieved_at': now_iso()}
+            record.setdefault('topics', ['nvda'] if 'selectors' not in record and os.path.exists(path) else [])
+            record.setdefault('selectors', [])
+            if topic_id not in record['topics']:
+                record['topics'].append(topic_id)
+            found_by = {'topic': topic_id, **selector}
+            if found_by not in record['selectors']:
+                record['selectors'].append(found_by)
+            new_files += not os.path.exists(path)
+            touched.add(story_id)
+            write_json(path, record)
+    summary['stories_touched'] = len(touched)
+    summary['stories_new'] = new_files
+    manifest['events'] = summary
+    log(f'topic events: {len(touched)} stories touched, {new_files} new files')
 
 
 def harvest_transcripts(client, manifest):
@@ -128,6 +210,8 @@ def run():
     manifest = read_json(os.path.join(OUT, 'manifest.json'), {})
     if '--peers' in sys.argv:
         harvest_peer_transcripts(client, manifest)
+    elif '--events' in sys.argv:
+        harvest_topic_events(client, manifest)
     else:
         harvest_news(client, manifest)
         harvest_transcripts(client, manifest)

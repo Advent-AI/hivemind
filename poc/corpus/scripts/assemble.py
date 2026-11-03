@@ -22,7 +22,7 @@ import sys
 import urllib.parse
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import (ROOT, RAW, WINDOW_START, WINDOW_END, read_json, sha256_text, now_iso, new_york_day, decode,
+from common import (ROOT, RAW, WINDOW_START, WINDOW_END, read_json, sha256_text, now_iso, new_york_day, decode, clean_resolved_url,
                     published_day_of, is_block_page, log, main_guard)  # noqa: E402
 
 DB = os.path.join(ROOT, 'items.sqlite')
@@ -389,35 +389,75 @@ def transcript_items():
     return rows
 
 
+TRUENORTH_ADDRESS_TOPICS = {}
+for _topic in TOPICS.values():
+    for _address in (_topic.get('truenorth') or {}).get('token_addresses', []):
+        TRUENORTH_ADDRESS_TOPICS.setdefault(_address, []).append(_topic['id'])
+
+
+def truenorth_story_topics(record):
+    """The topics a TrueNorth story enters the corpus under, by identity only: the topics whose asset selector found it
+    (its `selectors` with a token_address) and the topics whose token_addresses the story itself carries. A record of
+    the first NVDA harvest (no selectors, no topics) was found by stock_nvda. Text-query selectors only find candidates
+    (topics.json, truenorth): a story found only by a query and carrying no listed asset id has no topics."""
+    selectors = record.get('selectors') or []
+    topics = [] if selectors or 'topics' in record else ['nvda']
+    for selector in selectors:
+        if 'token_address' in selector and selector['topic'] not in topics:
+            topics.append(selector['topic'])
+    for address in record['story'].get('token_addresses') or []:
+        for topic_id in TRUENORTH_ADDRESS_TOPICS.get(address, []):
+            if topic_id not in topics:
+                topics.append(topic_id)
+    return topics
+
+
+def truenorth_story_row(record, pages):
+    """One TrueNorth story as an item, or None when its day is outside the window. The item is the original article
+    when its page was fetched; otherwise only the provider's own summary exists, which is kept for the review and never
+    fed. Its topics come from identity (truenorth_story_topics) and label topic, tier and objects the way a Google News
+    listing's topics do; a story with no identity-based topic is not an item."""
+    story = record['story']
+    moment = datetime.datetime.fromtimestamp(int(story.get('published_at') or 0) / 1000, tz=datetime.timezone.utc)
+    listing_day = new_york_day(moment)
+    url = (story.get('source_url') or '').strip()
+    domain = domain_of(url) or (story.get('publisher') or '').lower()
+    page = pages.get(url, {})
+    title = story.get('title') or ''
+    text, cut, coverage = page_texts(page, url)
+    publisher, kind, identified = page_author(domain, title, text)
+    page_day = page.get('page_day') or ''
+    if not page.get('file'):
+        text = title + '\n\n[provider summary, not the article]\n' + (story.get('summary') or story.get('preview') or '')
+        coverage = 'provider_summary'
+    day = earlier(listing_day, page_day) or listing_day
+    if not (WINDOW_START <= day <= WINDOW_END):
+        return None
+    topics = truenorth_story_topics(record)
+    if not topics:
+        return None
+    tiers = [TOPICS.get(t, {}).get('tier', 'core') for t in topics]
+    tier = 'core' if 'core' in tiers else tiers[0]
+    return item(
+        input_id=f'truenorth:story:{story["story_id"]}', klass='新闻', category=news_category(kind), channel='TrueNorth event index',
+        source_uri=url, publisher=publisher or story.get('publisher'), publisher_type=kind, published_at=moment.isoformat(timespec='seconds'),
+        publication_day=day, day_source='page' if page_day and page_day < listing_day else 'listing', listing_day=listing_day, page_day=page_day,
+        document_format='article', title=title, text=text, text_article=cut, coverage=coverage, source='truenorth',
+        topic=','.join(topics), tier=tier, object_identifiers=json.dumps(objects_for_topic(topics)),
+        retrieved_at=page.get('fetched_at') or record.get('retrieved_at'),
+        extra=json.dumps({'event_type': story.get('event_type'), 'event_count': story.get('event_count'), 'rank': story.get('final_rank_score'),
+                          'provider_summary': story.get('summary') or story.get('preview'), 'author_unidentified': not identified,
+                          'selectors': record.get('selectors')}))
+
+
 def truenorth_story_items(pages):
-    """TrueNorth's clustered stories: the item is the original article when its page was fetched; otherwise only the
-    provider's own summary exists, which is kept for the review and never fed."""
+    """TrueNorth's clustered stories (raw/truenorth/news), one item each; see truenorth_story_row."""
     rows = []
     folder = os.path.join(RAW, 'truenorth', 'news')
     for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
-        record = read_json(os.path.join(folder, name))
-        story = record['story']
-        moment = datetime.datetime.fromtimestamp(int(story.get('published_at') or 0) / 1000, tz=datetime.timezone.utc)
-        listing_day = new_york_day(moment)
-        url = (story.get('source_url') or '').strip()
-        domain = domain_of(url) or (story.get('publisher') or '').lower()
-        page = pages.get(url, {})
-        title = story.get('title') or ''
-        text, cut, coverage = page_texts(page, url)
-        publisher, kind, identified = page_author(domain, title, text)
-        page_day = page.get('page_day') or ''
-        if not page.get('file'):
-            text = title + '\n\n[provider summary, not the article]\n' + (story.get('summary') or story.get('preview') or '')
-            coverage = 'provider_summary'
-        day = earlier(listing_day, page_day) or listing_day
-        rows.append(item(
-            input_id=f'truenorth:story:{story["story_id"]}', klass='新闻', category=news_category(kind), channel='TrueNorth event index',
-            source_uri=url, publisher=publisher or story.get('publisher'), publisher_type=kind, published_at=moment.isoformat(timespec='seconds'),
-            publication_day=day, day_source='page' if page_day and page_day < listing_day else 'listing', listing_day=listing_day, page_day=page_day,
-            document_format='article', title=title, text=text, text_article=cut, coverage=coverage, source='truenorth',
-            retrieved_at=page.get('fetched_at') or record.get('retrieved_at'),
-            extra=json.dumps({'event_type': story.get('event_type'), 'event_count': story.get('event_count'), 'rank': story.get('final_rank_score'),
-                              'provider_summary': story.get('summary') or story.get('preview'), 'author_unidentified': not identified})))
+        row = truenorth_story_row(read_json(os.path.join(folder, name)), pages)
+        if row is not None:
+            rows.append(row)
     return rows
 
 
@@ -601,8 +641,11 @@ def gnews_items(pages):
                 by_link[row['google_link']] = row   # the newest line per Google link wins (re-resolved URLs)
     by_url = collections.OrderedDict()
     for row in by_link.values():
-        entry = by_url.setdefault(row['url'].strip(), {'rows': [], 'topics': [], 'queries': []})
+        # the link as stored, and as it should have been (common.clean_resolved_url): the page was fetched under the stored one
+        entry = by_url.setdefault(clean_resolved_url(row['url'].strip()), {'rows': [], 'topics': [], 'queries': [], 'stored_urls': []})
         entry['rows'].append(row)
+        if row['url'].strip() not in entry['stored_urls']:
+            entry['stored_urls'].append(row['url'].strip())
         topic = row.get('topic') or 'nvda'
         if topic not in entry['topics']:
             entry['topics'].append(topic)
@@ -612,7 +655,7 @@ def gnews_items(pages):
     for url, entry in by_url.items():
         first = entry['rows'][0]
         listing_day = earlier(*[rfc_day(r.get('published') or '') or r.get('day') or '' for r in entry['rows']])
-        page = pages.get(url, {})
+        page = pages.get(url) or next((pages[u] for u in entry['stored_urls'] if u in pages), {})
         page_day = page.get('page_day') or ''
         day = earlier(listing_day, page_day)
         if not (WINDOW_START <= day <= WINDOW_END):
@@ -642,6 +685,26 @@ def gnews_items(pages):
 def rows_same_document(row, original):
     """Two company or official rows at one URL are the same document only when their text is the same."""
     return row['content_sha256'] == original['content_sha256']
+
+
+def mark_shells(rows):
+    """A news page whose whole text is identical to another page's at a different URL of the same site is the site's shell
+    (an archive page, a consent wall, a JavaScript notice) served instead of the article, not the article: coverage 'shell',
+    not fed. Counted 2026-10-27 on the window corpus: 38 groups, 284 rows fed as originals, the largest a 111-page archive
+    page of one outlet served for cut links."""
+    by_text = collections.defaultdict(list)
+    for row in rows:
+        if row['klass'] == '新闻' and row.get('coverage') == 'full' and row.get('content_sha256'):
+            by_text[(domain_of(row['source_uri']), row['content_sha256'])].append(row)
+    shells = 0
+    for group in by_text.values():
+        if len({canonical_url(r['source_uri']) for r in group}) < 2:
+            continue
+        for row in group:
+            row['coverage'] = 'shell'
+            row['feed'] = 0
+            shells += 1
+    return rows, shells
 
 
 def mark_copies(rows):
@@ -688,6 +751,8 @@ def run():
     pages = pages_index()
     rows = (edgar_items() + edgar_peer_items() + transcript_items() + truenorth_story_items(pages) + official_items()
             + nvidianews_items() + nvblog_items() + extra_items() + gdelt_items(pages) + gnews_items(pages))
+    rows, shells = mark_shells(rows)
+    log('shell pages (identical text at different URLs of one site), not fed:', shells)
     rows = mark_copies(rows)
     if os.path.exists(DB):
         os.remove(DB)

@@ -18,7 +18,7 @@ from hivemind import bundle, search as search_module, service  # noqa: E402
 from hivemind.views import store  # noqa: E402
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'english-v29-nvda-3m-2026-10-27', 'snapshots', '2026-10-27T0736', 'views.sqlite'))
+parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
 parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
 parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
 parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'))

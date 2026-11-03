@@ -40,7 +40,9 @@ def page_date(markup):
 def run():
     os.makedirs(OUT, exist_ok=True)
     manifest = read_json(os.path.join(OUT, 'manifest.json'), {'releases': [], 'outside_window': []})
-    have = {r['url'] for r in manifest['releases']} | {r['url'] for r in manifest['outside_window']}
+    # a page recorded as outside an earlier window is visited again when the current window covers its date (a backfill)
+    manifest['outside_window'] = [p for p in manifest['outside_window'] if not (WINDOW_START <= (p.get('date') or '') <= WINDOW_END)]
+    have = {p['url'] for p in manifest['releases']} | {p['url'] for p in manifest['outside_window']}
     entries = sitemap_entries()
     # The sitemap's lastmod is not the publish date (a first pass with a 30-day margin found 36 releases where the
     # listing shows several a day), so every /news/ URL is visited once and dated from its own page.

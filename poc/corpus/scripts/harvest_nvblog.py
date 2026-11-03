@@ -56,6 +56,8 @@ def published_day(markup):
 def run():
     os.makedirs(OUT, exist_ok=True)
     manifest = read_json(os.path.join(OUT, 'manifest.json'), {'posts': [], 'outside_window': []})
+    # a page recorded as outside an earlier window is visited again when the current window covers its date (a backfill)
+    manifest['outside_window'] = [p for p in manifest['outside_window'] if not (WINDOW_START <= (p.get('date') or '') <= WINDOW_END)]
     have = {p['url'] for p in manifest['posts']} | {p['url'] for p in manifest['outside_window']}
     margin = (datetime.date.fromisoformat(WINDOW_START) - datetime.timedelta(days=10)).isoformat()
     candidates = [(mod, url) for mod, url in entries() if not mod or mod >= margin]

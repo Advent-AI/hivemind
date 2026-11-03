@@ -58,7 +58,7 @@ def view_bundle(views_db, item_of, view_id, as_of=None):
         if as_of is not None and j['publication_day'] > as_of:
             continue
         judgements.append({'id': str(j['judgement_id']), 'day': j['publication_day'], 'seq': j['seq'], 'rung': j['rung'], 'changed': bool(j['changed']),
-                           'why_changed': j['why_changed'], 'reasons': j['reasons'], 'cited': json.loads(j['cited_evidence_json'] or '[]'),
+                           'why_changed': j['why_changed'], 'reasons': j['reasons'], 'cited': list(dict.fromkeys(json.loads(j['cited_evidence_json'] or '[]'))),   # each id once (UI contract uniqueItems); the sealed 2026-10-28 ledger holds one judgement citing an id twice
                            'cited_views': json.loads(j['cited_views_json'] or '[]'), 'pushes': json.loads(j['pushes_json'] or '[]'),
                            'from_item': j['input_id']})
     evidence = []
