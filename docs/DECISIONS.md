@@ -3680,3 +3680,29 @@ D348 completion: [27-response result](research/2026-10-27-source-reference-trial
   file of the `main` checkout with its file list and the tracked-file patch): the checkout's experiment outputs (about 2,600 files,
   1.6 GB, mostly run databases), the source-track runner code (`src/hivemind/source_reading.py` and its test, used only by those
   runners), the study scripts never committed, and the checkout's superseded copies of files the merge brought.
+
+## D354 · 2026-11-03 · Steps 3 and 4 (opening and matching questions, judging them) are frozen as `poc-v108` runs them, after three draws on the frozen extraction
+
+- Alex, after the extraction was frozen (D274): "now that the extraction stage is done and frozen, we freeze that as well"; on the plan to
+  run the whole line on the frozen extraction and freeze steps 3 and 4 if their numbers did not get worse: "好你跑"; then "那你跑了吧，我们赶紧确认step 3,4 可以freeze".
+- The run (`research/2026-11-01-e2e-loop/log.md` row 29): `poc-v108` with the 22 frozen seeds over 2026-07-01..07-14, three draws at once
+  from a pinned worktree, predictions and freeze conditions written before the send (`predictions-r9-frozen-v108.md`, sha256 beside it).
+  All four conditions hold: every draw finished with no halted day; must-open questions 28/28 in every draw; the judgement agrees with the
+  frozen gold on 15/17, 15/17 and 16/17 judged questions (control `poc-v94`: 16/18, 16/19, 16/18) and no question that agreed in all three
+  control draws disagrees in all three new ones; core matters reaching judgement average 77.7 (control 74.3) and estimated noise reaching
+  judgement 49.5 (bound 51).
+- Frozen: the collision judge's prompt `collision-v2`, the judge's prompt `judging-v7`, the matching prompt the configuration names
+  (`matching-v3`), the judge's answer schema and the three questions the Jev matcher is asked; `tests/test_frozen_questions_and_judgement.py`
+  pins them (a one-character change to a prompt or to a matcher question fails it, both mutants checked). The configuration itself is
+  pinned by `tests/test_frozen_extraction_prompt.py`. A change is a new version only Alex opens.
+- Known defects, recorded and not fixed: (1) the collision judge splits one bet on a fine detail: the seed H200 question and an identical
+  candidate were judged distinct ("any" against "public" authorization) in one draw; ten re-sends of the stored request gave the same
+  question 8 times, so about one encounter in five opens a duplicate; (2) the frozen extraction proposed the lidar-legislation question the
+  gold rules out in one draw of three; (3) the operating-margin question (gold q10) had one or two pieces in each control draw and none in
+  any new draw, so it was never judged; (4) the root-revenue fallback of the frozen extraction raised the total-revenue question's share of
+  all links from 9–12% to 23–24%, and the narrower questions lose the evidence that answers them: Broadcom's AI-chip revenue ($10.8bn in Q2,
+  $16.0bn guided for Q3), the gold's basis for custom-chip spending (q16), was filed under that question in two of three control draws and in
+  none of the frozen ones (it went to the total-revenue, data-center and accelerator-share questions), and the judge then chose below $40bn
+  three times against the gold's $60–85bn; defect (3) is the same class. Over 14 days the judge requests stayed under 18,500 tokens, but a longer window is where evidence bloat
+  appeared before (the three-month run stopped and sealed at 2026-08-28). (5) `scripts/preflight.py` cannot judge the one-decider
+  architecture (D264): it does not rebuild the questions open at the time, so every stored link reads as "links to nothing shown".
