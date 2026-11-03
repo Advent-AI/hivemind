@@ -386,6 +386,11 @@ Verify at the point the change touches, at the sharpest level that shows it work
   evidence rule took four full runs and a one-sentence fix was given two more: "你跑这么多次真的有意义吗"; "我感觉你在为了跑而跑").
   Several fixes on one base are each proved on stored data in minutes and then run together once (Alex, 2026-11-02:
   "快速验证。不要drift,不要跑超级繁琐的全方位验证，先poc 改，能work,有结论，全部改动放到一起再跑完整"; D266).
+  A hypothesis is first validated the simplest way, on a few stored cases and a few cents, and is shown to work at a
+  high level before any full analysis or stability test is built (Alex, 2026-11-04: "don't overspend resources on wasting time. We
+  need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we dive into do the
+  full analysis stability test. This is a principle you should remember"); an agreed recommendation is first challenged by an
+  independent reader on the concrete evidence behind it ("why you give recommendations for this. What did you see exactly?").
 - **A failed arm is diagnosed before the next one.** When an arm fixes its class and regresses another, write the root cause
   first: the process error (what grew, what the small sample did not guard) and the mechanism, traced to the raw answers and
   the model's account, never a guess stated as the cause. A small sample guards every class the change can move, not only

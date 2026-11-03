@@ -1,6 +1,6 @@
 import { element, esc, SEP, ICON } from './dom.js';
 import { longDay } from '../model/dates.js';
-import { lastOf, score, rungLabel, statusAt, snapshotThesis } from '../model/thesis.js';
+import { lastOf, score, rungLabel, statusAt, closingAt, snapshotThesis } from '../model/thesis.js';
 import { ladderChart, bindHistoryChart } from './thesis-chart.js';
 import { badgeHtml } from './primitives.js';
 import { assessmentHtml, assessmentText, evidenceHtml } from './evidence.js';
@@ -153,7 +153,8 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
   }
   function renderPanel() {
     const v = detail.thesis,
-      latest = lastOf(v.judgements);
+      latest = lastOf(v.judgements),
+      closing = closingAt(v, detail.day);
     const citations = latest ? new Set(latest.cited) : new Set();
     const keyEvidence = v.evidence
       .filter((e) => citations.has(e.id))
@@ -162,7 +163,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
     setHTML(
       find('sheetBody'),
       `
-    <div class="detail-hero"><h2 class="panel__title" id="detailTitle">${esc(v.question)}</h2><div class="detail-meta">${latest ? badgeHtml(v, latest) : '<span class="chip">Not assessed yet</span>'}<span class="detail-meta-item">${SEP}<span>${latest ? `Last updated: ${esc(longDay(latest.day))}` : `Opens ${esc(longDay(v.created_day))}`}</span></span><span class="detail-meta-item">${SEP}<span>Due: ${esc(longDay(v.due_day))}</span></span></div></div>
+    <div class="detail-hero"><h2 class="panel__title" id="detailTitle">${esc(v.question)}</h2><div class="detail-meta">${latest ? badgeHtml(v, latest) : `<span class="chip">${closing ? 'No data to verify' : 'Not assessed yet'}</span>`}<span class="detail-meta-item">${SEP}<span>${latest ? `Last updated: ${esc(longDay(latest.day))}` : `Opens ${esc(longDay(v.created_day))}`}</span></span><span class="detail-meta-item">${SEP}<span>Due: ${esc(longDay(v.due_day))}</span></span></div></div>
     <nav class="detail-tabs" role="tablist" aria-label="Thesis details">${[
       ['overview', 'Overview'],
       ['evidence', 'Evidence'],
@@ -181,7 +182,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
           : '<p class="detail-copy">There is no assessment for this thesis at the selected date.</p>'
       }
       ${relationsHtml(v, data, detail.day)}
-      <details class="detail-disclosure"><summary>About this thesis</summary><dl class="detail-definitions">${identityHtml(v)}<dt>First seen</dt><dd>${esc(longDay(v.created_day))}</dd><dt>Original source</dt><dd>${esc(v.created_from.title)}</dd><dt>Status</dt><dd><span class="chip chip--line">${statusAt(v, detail.day)}</span></dd></dl></details>
+      <details class="detail-disclosure"><summary>About this thesis</summary><dl class="detail-definitions">${identityHtml(v)}<dt>First seen</dt><dd>${esc(longDay(v.created_day))}</dd><dt>Original source</dt><dd>${esc(v.created_from.title)}</dd><dt>Status</dt><dd><span class="chip chip--line">${statusAt(v, detail.day)}</span></dd>${closing ? `<dt>Closing record</dt><dd>${esc(closing)}</dd>` : ''}</dl></details>
     </section><section id="panel-evidence" role="tabpanel" aria-labelledby="tab-evidence" hidden></section><section id="panel-history" role="tabpanel" aria-labelledby="tab-history" hidden></section></div>`,
     );
     all('[data-thesis]').forEach(

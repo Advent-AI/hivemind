@@ -1,40 +1,32 @@
 # Pull mode
 
-> Status: scheduling and due-date freezing are decided (D54); remaining design is deferred. English edition: October 25, 2026 (D163).
-> The earlier draft predates D41. Its verification conditions, premises, fallback reviews, driver merging/splitting and waiting requirements no longer apply.
+> Status: decided and built (D54, D356). English edition: November 4, 2026.
 > Design page: `docs/system-design.html` → New → Pull mode. Recorded decisions take precedence.
 
 ## Purpose
 
-The only time-driven module: run at day-end or scheduled intervals to review and update theses, and freeze and close those that are due.
+The only time-driven module. The incoming stream handles one item at a time and never reads the calendar; pull mode owns what depends on the date.
 
-## Decided behaviour
+## What it does
 
-- The incoming stream handles items without reading the calendar; pull mode owns time-driven work.
-- Run at day-end or at scheduled intervals for an overall review and update.
-- Freeze due theses at their current rung, without a separate result. Decisive information enters normally as evidence; freezing does not wait for it.
-- Dependencies read the closing state and reasons. Further tracking uses a new successor thesis under the library's rules.
-- Supply “now” externally: real time in production, replay time in tests. The system has no internal clock.
-- Upstream delivery is distinct and must not be called pull mode.
+- At the end of each day, with the day passed in (real time in production, the replayed day in tests), it closes every open question whose due day has come, at the rung it stands on. See [Closing at the due day](07-final-verdict.md).
+- It does not re-judge open questions without new evidence (D356), and it does not wait for the day's items (D54).
+- Due days are set when a question is opened, on or after the day its result is published (D356). A question whose result is still unknown on its due day closes at its state like any other.
+- Upstream delivery is a separate thing and is not pull mode.
 
 ## Example
 
-Suppose NVDA FY2027 China revenue is due on the annual earnings date, illustrated as February 25, 2027. Published results show an 85% decline versus FY2026. The library rejudges it to “down at least 80%”. Day-end pull freezes that state and closes the thesis. Dependencies read the closing conclusion. An FY2028 successor continues tracking.
+"What will Nvidia's total revenue be in FY2027?" is due on February 28, 2027, after the annual results are published. The results arrive as evidence and move the question's state before that day. At the end of February 28, pull mode freezes the question at its rung and closes it; questions that depend on it read the closed conclusion. An FY2028 successor question continues the tracking.
 
-## Open questions
+## Not built
 
-- Detailed day-end/scheduled execution and what the overall review does.
-- Whether final verdict is separate. Claude proposed integrating it here because rejudgement already reads all evidence still in force; this is unapproved. Keep its Config settings meanwhile.
-- The library's two proposals: unavailable answers/pending publication, and daily duplicate checks.
-- Whether to fetch exact settlement numbers such as prices/XBRL, from the team's library or original source, and whether those enter through dispatch.
-
-## Earlier draft: no longer used
-
-The former design sent due theses to a final verdict after all pre-deadline publications were processed; reviewed weakened premises after seven days; and periodically merged/split drivers. D38/D41 removed those concepts; D54 removed the extra wait.
+- Fetching settlement figures (prices, filings) from a source, and whether they would enter through dispatch.
+- Claude's earlier daily duplicate check among open questions: not decided (D356; library PRD, proposals).
 
 ## Related decisions
 
-- D12/D13: the stream does not read the calendar. D14: design the two modes separately.
-- D29: earlier expiry final verdict, superseded by D54.
-- D31: externally supplied “now”; the premise-lag fallback is obsolete.
-- D54: scheduled overall review and due-date freezing without waiting.
+- D12, D13: the stream does not read the calendar. D14: the two modes are designed apart.
+- D31: the day is passed in.
+- D54: freezing at the due day; nothing waits.
+- D356: what pull mode does and does not do.
+- Code: `src/hivemind/pull.py` (`end_of_day`), called by `src/hivemind/replay.py` at the end of each replayed day.

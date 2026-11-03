@@ -12,15 +12,15 @@ Each module has one Markdown specification. Select a module on `docs/system-desi
 | 05-extraction.md | Extraction (read-only) | Foundation frozen; groups declared during extraction in the default pipeline (D165); category prompts still need validation |
 | 05-extraction-standard.html | Extraction standard: ledger records, question types and opening, evidence and weight, golden set, prompt measurement | Signed (D243), open it in a browser; the one measuring standard for extraction, replacing `docs/research/2026-10-29-analyst-standard/standard.md` (D229) |
 | 06-views.md | Thesis library and matching records | Foundation frozen; group handoff and storage in the default pipeline (D165); other open items are in the PRD |
-| 07-final-verdict.md | Final verdict | Earlier draft, to be reconsidered with pull mode; due-date freezing is decided |
-| 08-pull-mode.md | Pull mode | Earlier draft; day-end/scheduled work and due-date freezing are decided |
+| 07-final-verdict.md | Closing at the due day (the final verdict retired, D356) | Decided and built (D54, D356) |
+| 08-pull-mode.md | Pull mode | Decided and built (D54, D356) |
 | 09-review-pool.md | Human review pool | First version frozen; intake defined, output deferred |
 
 ## Maintenance rules
 
 Authority: Alex's instructions, then `docs/DECISIONS.md`, then the PRDs and design page. If a PRD contradicts a decision, correct the PRD.
 
-After **every change**, reason through every module in this order: research universe → classification → Config → dispatch → extraction → thesis library → final verdict → pull mode → human review pool → system overview. Compare each with the decisions and ask:
+After **every change**, reason through every module in this order: research universe → classification → Config → dispatch → extraction → thesis library → closing at the due day → pull mode → human review pool → system overview. Compare each with the decisions and ask:
 
 1. Does this change affect the module?
 2. Do its page and PRD describe the same behaviour?

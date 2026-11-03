@@ -269,7 +269,7 @@ A thesis | Open or closed? (This is the only lifecycle switch)
 └─ Closed → No updates or rejudgement (Retain its closing state: the last rung if judged, otherwise not yet judged. Keep it searchable in the library.)
 ```
 
-- Pull mode closes it when due. The current rung and reasons become its frozen final conclusion. To keep tracking, create a successor. Pull mode runs at day-end or scheduled intervals; the incoming stream does not manage time. Remaining pull-mode design is deferred.
+- Pull mode closes it when due. The current rung and reasons become its frozen final conclusion. To keep tracking, create a successor. Pull mode runs at the end of each day; the incoming stream does not manage time (D356).
 - People may manually close or reopen a thesis, for example after a delisting. Append a record naming the person and the sequence after which it applies. The matching rule of one open thesis per focus does not restrict manual reopening. People also maintain the research universe.
 <!-- /generated: lifecycle -->
 
@@ -329,8 +329,7 @@ Choose storage location and database during implementation.
 |---|---|
 | Extraction | Receive sourced evidence, candidates, associations and necessary group definitions. Supply open subject theses and their dependencies: question, focus, due date and links, without states/evidence, plus available groups under this contract. |
 | Config | Read matching/rejudgement settings and search count; record the version with every call. |
-| Pull mode | Receive day-end/scheduled updates and due-date freezing/closure; remaining design is deferred. |
-| Final verdict | Whether it remains separate is deferred; due-date freezing is decided. |
+| Pull mode | At the end of each day, close the questions that are due at the rung they stand on, with a closing record (D54, D356). |
 | Human review pool | Send proposed out-of-universe themes and repeated failures. Resolvable out-of-universe assets receive only processing-log entries. |
 | Matching labels | Supply every comparison record; receive human labels and, later, a smaller model. |
 
@@ -355,16 +354,14 @@ Choose storage location and database during implementation.
 <!-- generated: open -->
 - Search method and ranking remain open: semantic, keyword or both. Test on stored information during implementation. Start with top 10 and adjust during experiments.
 - Labelling details remain open: who, how many, which interface, model evaluation and training, handover to a smaller model, and checks for omitted or mislinked extraction evidence.
-- Design pull mode later: day-end/scheduled execution, overall review, and whether final verdict remains a separate step.
 <!-- /generated: open -->
 
 ## Proposals awaiting Alex's decision
 
-Other proposals were resolved individually. The due-date proposal became state freezing. These two remain for pull-mode design and must be decided before implementation.
+Other proposals were resolved individually. The due-date proposal became state freezing, and D356 settled the questions whose answer is unavailable or not yet published (they close at their state like any other). This one remains and is not built until it is decided.
 
 <!-- generated: proposed -->
-1. Proposal for later pull-mode design: besides due-date freezing, distinguish an unavailable answer (quantity no longer disclosed or event ceases to exist; dependants lack that input) and pending publication (period ended but the number is not yet released).
-2. Proposal for later pull-mode design: daily pairwise duplicate checks among open theses of a subject; merge the later thesis into the earlier, move links and dependencies, check cycles and rejudge. Add separate duplicate-check settings to Config.
+1. Proposal, not decided (D356): daily pairwise duplicate checks among open theses of a subject; merge the later thesis into the earlier, move links and dependencies, check cycles and rejudge. Add separate duplicate-check settings to Config.
 <!-- /generated: proposed -->
 
 ## Related decisions
