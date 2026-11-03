@@ -48,25 +48,17 @@ def test_legacy_and_english_extraction_answers_sift_to_the_same_canonical_handov
     assert [r['label'] for r in kept[0]['rungs']] == vocabulary.ASSET_LABELS
 
 
-def test_english_extraction_version_has_english_schema_and_request():
-    schema = extraction.schema_for('v6')
+def test_the_extraction_schema_and_request_are_english():
+    schema = extraction.schema_for('v74i')
     candidate_schema = schema['properties']['candidates']['items']['properties']
     assert candidate_schema['kind']['enum'] == vocabulary.KINDS
     assert schema['properties']['evidence']['items']['properties']['tier']['enum'] == vocabulary.TIERS
     assert 'measure' in candidate_schema and 'lo' in candidate_schema['rungs']['items']['properties']
-    assert extraction.schema_for('v5')['properties']['candidates']['items']['properties']['kind']['enum'] == ['对象观点', '主题观点']
-    shown = [{'view_id': 'v1', 'object_id': 'NVDA', 'looks_at': 'FY2027 total revenue', 'due_day': '2027-02-25', 'question': 'Can demand lift FY2027 revenue above $300 billion?',
-              'depends_on': ['v2', '（等 v3 这条链上 FY2027 年的那条）'], 'dependencies': [{'view_id': 'v2'}, {'view_id': None, 'wait_chain_view_id': 'v3', 'wait_year': 'FY2027'}]}]
-    system, user = extraction.build_prompt(ITEM, 'Data center revenue guidance is above $300 billion.', shown, UNIVERSE, 'v6')
-    assert system.startswith('You are a senior hedge-fund analyst')
+    system, user = extraction.build_prompt(ITEM, 'Data center revenue guidance is above $300 billion.', [], UNIVERSE, 'v74i')
     before_item = user.split('[Item]')[0]
-    assert not extraction.re.search('[一-龥]', before_item), before_item
-    assert 'depends on: v2, (waiting for the FY2027 thesis on chain v3)' in user
+    assert not extraction.re.search('[一-龥]', system + before_item), before_item
     assert "NVDA's fiscal year ends in month 1" in user and 'this year is FY2027' in user
     assert 'ai-capex: AI capital spending' in user
-    # the Chinese builder of version 5 prints the stored dependency text unchanged
-    _, user_zh = extraction.build_prompt(ITEM, 'x', shown, UNIVERSE, 'v5')
-    assert '依赖：v2、（等 v3 这条链上 FY2027 年的那条）' in user_zh
 
 
 def test_half_year_figures_are_evidence_in_both_languages_and_a_half_year_event_is_not():
@@ -151,24 +143,24 @@ def test_merge_into_a_candidate_of_the_same_answer_opens_a_new_view_instead_of_r
     assert any('into candidate c1 is not a destination' in n for n in checked.notes)
 
 
-def test_judging_english_version_schema_and_pushes_stored_canonical(tmp_path):
-    assert judging.schema_for('judging-v3')['properties']['pushes']['items']['properties']['push']['enum'] == vocabulary.PUSHES
-    assert judging.schema_for('judging-v2')['properties']['pushes']['items']['properties']['push']['enum'] == ['推向第一格', '推向最后一格', '不推']
+def test_the_judging_schema_and_request_are_english_and_pushes_are_stored_canonical(tmp_path):
+    assert judging.schema_for('judging-v7')['properties']['pushes']['items']['properties']['push']['enum'] == vocabulary.PUSHES
     conn = store.open_db(str(tmp_path / 'views.sqlite'))
     first = extraction.Handover([EVIDENCE[0]], [candidate('c1')], [], 0, '', False, 0.0)
     vid = writing.write(conn, UNIVERSE, 1, ITEM, first, matching.Checked({'c1': ('new', None, [])}, {}, [], {}), {}).new_views['c1']
-    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v17.json'))
-    answer = types.SimpleNamespace(data={'rung': 2, 'reasons': 'guidance', 'cites': ['e1'], 'cites_views': [], 'pushes': [{'evidence_id': 'e1', 'push': '推向第一格'}],
-                                         'changed': True, 'why_changed': 'first'}, call_id=0, request_sha256='x', cached=False, cost_usd=0.0)
-    system, user = judging.build_prompt(conn, vid, 'judging-v3')
-    assert '[Evidence in force under this thesis, 1 items]' in user and 'this is the first judgement, so changed must be true' in user
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v108.json'))
+    answer = types.SimpleNamespace(data={'rung': 2, 'reference': 'consensus', 'implied_outcome': 'above consensus', 'reasons': 'guidance', 'cites': ['e1'],
+                                         'cites_views': [], 'pushes': [{'evidence_id': 'e1', 'push': '推向第一格'}], 'changed': True, 'why_changed': 'first'},
+                                   call_id=0, request_sha256='x', cached=False, cost_usd=0.0)
+    system, user = judging.build_prompt(conn, vid, 'judging-v7')
+    assert '[Evidence in view under this thesis, 1 items]' in user and 'this is the first judgement, so changed must be true' in user
     assert 'Thesis ' + vid + ' (NVDA, asset, focus' in user and '[Previous conclusion' in user
     judging._record(conn, cfg, vid, 1, ITEM, answer)
     stored = conn.execute('select pushes_json from judgements where view_id=?', (vid,)).fetchone()[0]
-    assert '"toward_first"' in stored and '推向' not in stored
-    _, user = judging.build_prompt(conn, vid, 'judging-v3')
+    assert '"toward_first"' in stored and '推向' not in stored            # an answer is stored in the canonical vocabulary
+    _, user = judging.build_prompt(conn, vid, 'judging-v7')
     assert '[Previous conclusion, for comparison only] rung 2; reasons: guidance' in user
-    assert judging.retry_note('judging-v3', ['x']).startswith('\n\nThe code returned the previous answer because: x')
+    assert judging.retry_note(['x']).startswith('\n\nThe code returned the previous answer because: x')
 
 
 def test_year_forms_full_match_and_one_canonical_spelling():
@@ -185,10 +177,8 @@ def test_year_forms_full_match_and_one_canonical_spelling():
     assert UNIVERSE.fiscal_period('MSFT', '2026') == ('2025-07-01', '2026-06-30')
     msft = candidate('c1', object='MSFT', measure='capex', scope='', year='2026', period_start='2026-01-01', period_end='2026-12-31',
                      looks_at='Calendar-year 2026 capital expenditures', question='How much?', evidence_ids=['e1'])
-    _, kept_en, _ = extraction.sift({'candidates': [msft], 'evidence': [EVIDENCE[0]]}, dict(ITEM, object_identifiers=[{'value': 'MSFT'}]), TEXT, set(), UNIVERSE, english=True)
-    _, kept_zh, _ = extraction.sift({'candidates': [msft], 'evidence': [EVIDENCE[0]]}, dict(ITEM, object_identifiers=[{'value': 'MSFT'}]), TEXT, set(), UNIVERSE)
-    assert (kept_en[0]['period_start'], kept_en[0]['period_end']) == ('2026-01-01', '2026-12-31')
-    assert (kept_zh[0]['period_start'], kept_zh[0]['period_end']) == ('2025-07-01', '2026-06-30')
+    _, kept, _ = extraction.sift({'candidates': [msft], 'evidence': [EVIDENCE[0]]}, dict(ITEM, object_identifiers=[{'value': 'MSFT'}]), TEXT, set(), UNIVERSE)
+    assert (kept[0]['period_start'], kept[0]['period_end']) == ('2026-01-01', '2026-12-31')
     for text in ('calendar year 2026', 'calendar 2026', 'CY2026', '2026自然年', '2026 calendar year'):
         assert UNIVERSE.fiscal_period('NVDA', text) == ('2026-01-01', '2026-12-31'), text
         assert UNIVERSE.canonical_year('NVDA', text) == '2026', text
@@ -222,7 +212,7 @@ def test_waiting_dependency_resolves_across_year_spellings(tmp_path):
 
 def test_a_numeric_successor_is_stored_in_the_predecessor_direction(tmp_path):
     """06-views: a successor keeps the predecessor's direction. The first real succession (2027 hyperscaler capex after 2026,
-    poc-v21 seed) came low-to-high where its predecessor ran high-to-low; the writer reverses it, matching no longer refuses."""
+    the discarded seed of the week build) came low-to-high where its predecessor ran high-to-low; the writer reverses it, matching no longer refuses."""
     conn = store.open_db(str(tmp_path / 'views.sqlite'))
     high_first = [{'label': 'At least $750 billion', 'condition': '≥ 750', 'lo': 750e9, 'hi': None}, {'label': '$700–750 billion', 'condition': '700–750', 'lo': 700e9, 'hi': 750e9},
                   {'label': '$650–700 billion', 'condition': '650–700', 'lo': 650e9, 'hi': 700e9}, {'label': '$600–650 billion', 'condition': '600–650', 'lo': 600e9, 'hi': 650e9},
@@ -284,21 +274,15 @@ def test_preflight_parsers_read_both_request_languages():
     assert preflight.MATCH_SHOWN.findall('· v3（开着，NVDA）：q\n· v4 (open, NVDA): q') == ['v3', 'v4']
 
 
-def test_poc_v17_names_english_prompts_that_carry_every_schema_value():
-    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v17.json'))
-    assert extraction.is_english(cfg.extraction['T7'].prompt_version.rpartition('-')[2]) and matching.is_english(cfg.matching.prompt_version)
-    assert judging.is_english(cfg.rejudging.prompt_version) and cfg.idea.prompt_version == 'idea-v11'
-    role = open(config.prompt_path('role-v6.txt'), encoding='utf-8').read()
+def test_the_production_prompts_carry_every_schema_value_and_no_chinese():
+    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v108.json'))
+    role = open(config.prompt_path('role-v74i.txt'), encoding='utf-8').read()
     assert all(value in role for value in vocabulary.TIERS + vocabulary.KINDS + vocabulary.ASSET_LABELS)
-    for name in ('matching-v2.txt', 'matching-v3.txt'):
-        match = open(config.prompt_path(name), encoding='utf-8').read()
-        assert all(value in match for value in vocabulary.CANDIDATE_OUTCOMES + vocabulary.EVIDENCE_OUTCOMES + vocabulary.DIRECTIONS), name
-    v18 = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v18.json'))
-    assert v18.matching.prompt_version == 'matching-v3' and matching.is_english(v18.matching.prompt_version)
-    assert 'one decision per listed pair' in open(config.prompt_path('matching-v3.txt'), encoding='utf-8').read()
-    judge = open(config.prompt_path('judging-v3.txt'), encoding='utf-8').read()
+    match = open(config.prompt_path(cfg.matching.prompt_version + '.txt'), encoding='utf-8').read()
+    assert all(value in match for value in vocabulary.CANDIDATE_OUTCOMES + vocabulary.EVIDENCE_OUTCOMES + vocabulary.DIRECTIONS)
+    judge = open(config.prompt_path(cfg.rejudging.prompt_version + '.txt'), encoding='utf-8').read()
     assert all(value in judge for value in vocabulary.PUSHES)
-    for name in ('role-v6.txt', 'categories-v6.json', 'matching-v2.txt', 'judging-v3.txt', 'idea-v11.txt'):
+    for name in ('role-v74i.txt', 'categories-v74i.json', 'review-v74i.txt', cfg.matching.prompt_version + '.txt', cfg.rejudging.prompt_version + '.txt'):
         assert not extraction.re.search('[一-龥]', open(config.prompt_path(name), encoding='utf-8').read()), name
 
 

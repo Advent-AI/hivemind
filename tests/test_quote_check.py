@@ -25,19 +25,19 @@ def answer(quote):
 
 
 def test_a_quote_that_differs_only_in_punctuation_spacing_is_in_the_item():
-    evidence, _, dropped = extraction.sift(answer(QUOTE), ITEM, PAGE, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer(QUOTE), ITEM, PAGE, {'v7'})
     assert [e['id'] for e in evidence] == ['e1'], dropped
 
 
 def test_typographic_quotes_and_dashes_read_as_their_plain_forms():
     page = "Intrator said, “pricing for prior generation SKUs is at or above where it was years ago” — on the call."
     quote = 'Intrator said, "pricing for prior generation SKUs is at or above where it was years ago" - on the call.'
-    evidence, _, dropped = extraction.sift(answer(quote), ITEM, page, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer(quote), ITEM, page, {'v7'})
     assert [e['id'] for e in evidence] == ['e1'], dropped
 
 
 def test_a_quote_with_other_words_is_still_refused():
-    evidence, _, dropped = extraction.sift(answer(QUOTE.replace('in June', 'in May')), ITEM, PAGE, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer(QUOTE.replace('in June', 'in May')), ITEM, PAGE, {'v7'})
     assert evidence == [] and dropped == [('e1', 'quote not in item')]
 
 
@@ -50,31 +50,31 @@ DENIAL_PAGE = ('An Nvidia representative responded with a short statement to Tom
 
 def test_a_quote_with_one_run_left_out_inside_a_sentence_is_kept_as_the_source_text():
     quote = 'An Nvidia representative responded to Tom\'s Hardware : "Our roadmap is intact."'
-    evidence, _, dropped = extraction.sift(answer(quote), ITEM, DENIAL_PAGE, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer(quote), ITEM, DENIAL_PAGE, {'v7'})
     assert [e['quote'] for e in evidence] == ['An Nvidia representative responded with a short statement to Tom\'s Hardware : "Our roadmap is intact."'], dropped
 
 
 def test_a_quote_without_its_quotation_marks_or_footnote_is_kept_as_the_source_text():
     page = 'Kress said losing that market, which NVIDIA sizes at “close to about $50 billion in the future,” would be material [3] .'
     quote = 'losing that market, which NVIDIA sizes at close to about $50 billion in the future, would be material'
-    evidence, _, dropped = extraction.sift(answer(quote), ITEM, page, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer(quote), ITEM, page, {'v7'})
     assert [e['quote'] for e in evidence] == ['losing that market, which NVIDIA sizes at “close to about $50 billion in the future,” would be material'], dropped
 
 
 def test_a_left_out_run_that_crosses_a_sentence_end_is_refused():
     quote = 'An Nvidia representative responded with a short statement to Tom\'s Hardware : the company meant.'
-    evidence, _, dropped = extraction.sift(answer(quote), ITEM, DENIAL_PAGE, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer(quote), ITEM, DENIAL_PAGE, {'v7'})
     assert evidence == [] and dropped == [('e1', 'quote not in item')]
 
 
 def test_a_quote_naming_another_party_is_refused():
     page = 'Unlike Hesai, Huawei challenged both rulings in court and lost both cases.'
-    evidence, _, dropped = extraction.sift(answer('Unlike Huawei, Hesai challenged both rulings in court and lost both cases.'), ITEM, page, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer('Unlike Huawei, Hesai challenged both rulings in court and lost both cases.'), ITEM, page, {'v7'})
     assert evidence == [] and dropped == [('e1', 'quote not in item')]
 
 
 def test_a_left_out_run_longer_than_the_quote_is_refused():
     page = 'Nvidia said on a long call with many analysts and reporters present in the room that demand is strong.'
-    evidence, _, dropped = extraction.sift(answer('Nvidia said demand is strong.'), ITEM, page, {'v7'}, english=True)
+    evidence, _, dropped = extraction.sift(answer('Nvidia said demand is strong.'), ITEM, page, {'v7'})
     assert evidence == [] and dropped == [('e1', 'quote not in item')]
 

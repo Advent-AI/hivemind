@@ -1,5 +1,6 @@
 """Log row 34: the matching step answered by Jev. Real ledgers on temporary paths; a scripted Jev transport; the answer in
 the matching schema goes through matching.check and writing.write unchanged."""
+import dataclasses
 import json
 import os
 import sys
@@ -13,7 +14,7 @@ sys.path.insert(0, os.path.join(ROOT, 'src'))
 from hivemind import config, jev, model  # noqa: E402
 from hivemind.views import jev_matching, matching, store, writing  # noqa: E402
 
-CFG = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v22.json'))
+CFG = dataclasses.replace(config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v108.json')), collision=None)   # Jev alone, without the collision judge (D190)
 
 
 def scripted(script):

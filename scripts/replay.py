@@ -6,8 +6,8 @@
 
 The ledger and the archive are named on every run (a new run gets a new dated folder; an existing ledger resumes after
 its last completed day). Defaults: the item window poc/data/items-window-tags2-2026-10-24.sqlite, config
-poc/config/poc-v108.json (D274: the frozen production extraction prompt, v74i; before it poc-v103, D272, and poc-v94, D267: extraction v74 on the one-decider architecture of v72, D264: the request shows the day's open questions with their takes lines and the
-extraction files each statement by its links, no placement call, a statement linked to nothing dropped as no home; Jev matching with the
+poc/config/poc-v108.json (D274: the frozen production extraction prompt, v74i, the only version the code builds, D359; the one-decider
+architecture, D264: the request shows the day's open questions with their takes lines and the extraction files each statement by its links, no placement call, a statement linked to nothing dropped as no home; Jev matching with the
 collision judge collision-v2; judging-v7; a statement under a driver and its root keeps the driver; a quote a word or two off the source is stored as the source passage), universe poc/universe.json. The log goes to stdout and
 replay.log beside the ledger. Each day runs with hivemind.parallel_day by default (D183): up to `--workers` (16)
 extraction requests prepared early and validated against the committed ledger at each item's turn, `--jev-workers`

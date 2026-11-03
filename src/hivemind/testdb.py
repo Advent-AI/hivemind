@@ -22,9 +22,14 @@ def feed(conn, from_day, until_day):
         "order by publication_day, case klass when '公司材料' then 0 when '官方材料' then 1 else 2 end, "
         "coalesce(published_at, ''), rowid", (from_day, until_day))
     for row in rows:
-        item = dict(row)
-        item['object_identifiers'] = json.loads(item.get('object_identifiers') or '[]')
-        yield item
+        yield item_of(row)
+
+
+def item_of(row):
+    """A stored row as the item the pipeline reads: its object identifiers parsed."""
+    item = dict(row)
+    item['object_identifiers'] = json.loads(item.get('object_identifiers') or '[]')
+    return item
 
 
 def count(conn, from_day, until_day):

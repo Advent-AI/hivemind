@@ -3778,3 +3778,52 @@ D348 completion: [27-response result](research/2026-10-27-source-reference-trial
 - Not done in this slice: the code paths that only retired prompt versions take (version gates in `extraction.py` and `views/judging.py`)
   and the tests that load old configurations to reach them (22 test files). Removing them is a refactor of its own, proved against the
   frozen request bytes (`tests/test_frozen_extraction_prompt.py`); it waits for Alex to take it up.
+
+## D358 · 2026-10-28 (carried 2026-11-04) · The three-month run stops at 2026-08-28 and is sealed; evidence bloat is the next problem to solve
+
+Recorded on 2026-10-28 as D206 of `feat/thesis-admission-v12` in that worktree's uncommitted decision log, and never merged; carried into
+`main` on 2026-11-04 when the worktree was removed (D359), its text unchanged below. Its D206 is a different decision on `main`.
+Its quality review is carried as `docs/research/2026-10-28-quality-review/` (documents and scripts; the comparison databases stay in
+the backup). The writer fix it names was not carried: `main` reads cited ids as a set where it serves them (`bundle.library`,
+`service`), which covers the same defect. The succession gap it records was not checked against today's code.
+
+- Alex, 16:30: "你先停止吧，把这个db 封存，替换成最新的FE可以读取然后把这个 bloating evidence 的问题给记录下来，很严重，需要解决". Earlier (16:12): "证据膨胀是一个问题，我们之后要想办法deal".
+- The run (`english-v34-nvda-3m-2026-10-28`, poc-v34, the D202–D205 writer) completed 59 days, 2026-07-01 to 08-28: 1,232 items, 69 theses, 7,091 calls, $5.80. It is sealed read-only as `poc/data/sealed-2026-10-28-v34-nvda-3m-through-0828/` (SQLite online backups, SHA256SUMS, logs and scripts; the run folder is left resumable). The front end reads it from 16:35: the served defaults switched in the five places the README names (main checkout), `poc/mock/index.html` rebuilt, the API restarted in `service-3m-2026-10-28/` (`/days` 2026-07-01..08-28, 69 theses).
+- Why it stops: evidence bloat. The Data Center revenue thesis (v10) carried 1,768 linked pieces by 08-27 and FY2027 revenue (v2) 1,733; v10's judging request was 292 KB with 698 evidence ids shown; the model mislabels one id among dozens of pushes about every other attempt, the code refuses the answer, two refusals halt the day. Today: 14 judge answers refused by code, 10 on v10/v2/v13, two days halted on v10 alone in 16:05–16:21. Of 25 pieces linked to v2, 10 bear on the question (Claude's reading); the judge ever cited 23–27% of what is linked. The census, the one-case traces and the rule candidates are in `docs/research/2026-10-28-quality-review/report.md` §2 D (and A–C, measured first); the step is Alex's to pick.
+- Found while switching the front end: one judgement (v2, id 736) cited an id twice and the UI contract (`thesis-ui/2`, uniqueItems) refused the dataset. The writer now stores each cited id once (`judging._record`, test `test_a_judgement_stores_each_cited_id_once`, red on the old writer); the two readers of sealed ledgers (`bundle.library`, `service` thesis bundles, main checkout) read the set, since a sealed ledger does not change.
+- The other halts of the day, each resumed by the run's `watch.sh` and recorded in the cost ledger: the judging output cap (D205), the Mac sleeping, three transport errors, one "database is locked" (a reader held the ledger over the 5 s busy timeout), one hung call (55 min at 0% CPU under the VPN; a stall detector was added to the watcher).
+- Amendment, 17:05. Alex, on seeing an empty thesis in the front end ("why is this here? there is no evidence and why is this a thesis"; then "你直接把它移除，这是我们自己的失误"): v68, "What stand-alone CPU revenue will NVIDIA report for calendar 2027?", opened on the run's last day by the succession rule (D168: same quantity, next period, after v24) from one statement ("$20 billion in 2026 and more than $40 billion in 2027"); the writer linked that statement to v7 and v24 (as a repeat of the $20 billion piece) and not to the successor it opened, so v68 stood with no evidence and, judging running only on arrivals, no judgement. Class: 1 of 69 theses with no evidence; 1 of 2 successions (v9 after v8 has 59 pieces). The sealed folder stays untouched; the front end, the API and the page build now read `poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite`, the same ledger with v68's rows removed (views, view_keys, rungs, successions, view_switches, views_fts; the append-only triggers dropped in that copy only; its README lists this). The writer gap (a succession's opening evidence is not linked to the successor) is an open defect in `writing.py` for the next slice.
+
+## D359 · 2026-11-04 · The code builds only the frozen prompts (extraction v74i, judging-v7); old worktrees removed; the preflight reads the one-decider requests
+
+- Alex, on Claude's list of the two open cleanup items (the old worktrees, and the code paths only retired prompt versions take, with the
+  cost that old versions could then no longer be re-run, only read from their stored results): "你看完你告诉我呀", then "ok".
+- **Worktrees.** Removed: `fix/thesis-admission-v11` (its 102 MB of data were five SQLite files whose contents equal `main`'s; only the
+  header counters differed), `cleanup/sequential-requests` (685 MB, 244 files byte-identical to `main`'s `poc/data`), `feat/parallel-day`
+  (two text changes `main` already holds, 94 MB of the 2026-10-25/26 test outputs) and `feat/thesis-admission-v12` (a writer fix `main`
+  covers where it reads, the sealed-run decision carried as D358, its quality review carried to `docs/research/2026-10-28-quality-review/`).
+  What was kept from each is in `/Users/lchingen/hivemind-backups/old-worktrees-2026-11-04/` (README there); the branches stay. Kept:
+  `fix/extraction-quality-2026-10-28`, whose ignored folders hold the stored end-to-end runs (679 MB; v91, v92, v94, v95), the results
+  any later comparison reads.
+- **One path in the code.** `extraction.py` builds the v74i request only: the Chinese builder, the per-version schemas, field notes,
+  paragraph accounts, the placement call's paths and every version gate are gone; `SUPPORTED_VERSIONS = ('v74i',)` and a configuration
+  naming another version is refused before any request (`require_supported`). The answer checks are unchanged except what only retired
+  versions used: a bare year is a calendar year, an unlinked statement stays for the handover's 'no home' drop, the admission check reads
+  `settled_by` and the obligation horizon, a candidate cites only groups its answer declares. `placement.py` keeps the takes lines, the
+  v74i filing rule and the candidate-id pattern; the separate placement call is gone. `views/judging.py` builds judging-v7 only (theme
+  block, evidence in view, the reference) and refuses another version. The parallel runner and the stream no longer pass the never-shown
+  groups. Matching, the Idea API and the store are unchanged.
+- **Proof, at no cost.** The three draws of the frozen v108 run (D354) replayed through the code from their stored answers, every paid call
+  refused: before the change and after it, all 3,031 requests built byte for byte the same (key order included), no request the archive
+  could not answer, and all 23 tables of each replayed ledger equal to the stored ledger. Suite: 260 tests pass (289 before; the tests of
+  retired versions left with them, the rest now run on `poc-v108`); the frozen-file tests, the UI tests and `docs/check.py` pass.
+- **The preflight reads the one-decider requests** (D354's defect 4): it recovers the question ids a stored request showed from its
+  [Open questions] block and replays the answer against them, reads items as the feed does (`testdb.item_of`), counts a row of a retired
+  version or configuration as not replayed, and defaults to draw 1 of the frozen run. On it: 243 of 243 extraction answers replayed (was
+  229, with 14 failing on unparsed item fields), 726 statements and candidates judged, 12 refused.
+- **Files retired** (Git keeps them): 41 configurations and 80 prompt files that no code, test, script or UI file loads, among them the
+  stored controls `poc-v94`, `poc-v95` and `poc-v103` (D274 kept them; their stored runs remain, they can no longer be re-run, and D274's
+  one-line return to `poc-v103` now needs a decision and code). Kept: `poc-v108`, the Idea API's configurations and the files its tests
+  and scripts load, and `poc-v22` (read by `scripts/recall_oracle.py`). The backup manifest of D274's retired variants is restored beside
+  its archive, since a report links it.
+- A new version of either prompt is a new decision with its own code path, measured against v74i and judging-v7 (D274, D354).

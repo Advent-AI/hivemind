@@ -1,6 +1,6 @@
 # Current state
 
-As of November 4, 2026; decisions through D357. The POC build began October 23. The foundation remains frozen; pull mode and closing at the due day are decided and built (D54, D356); later recorded decisions authorize specific changes. [Decisions](DECISIONS.md) govern the [design page](system-design.html) and [module PRDs](prd/README.md).
+As of November 4, 2026; decisions through D359. The POC build began October 23. The foundation remains frozen; pull mode and closing at the due day are decided and built (D54, D356); later recorded decisions authorize specific changes. [Decisions](DECISIONS.md) govern the [design page](system-design.html) and [module PRDs](prd/README.md).
 
 ## Repository (2026-11-03)
 
@@ -11,6 +11,7 @@ As of November 4, 2026; decisions through D357. The POC build began October 23. 
 - **Replay default:** `poc/config/poc-v108.json`, the frozen production extraction prompt (D274): extraction v74i on the one-decider architecture (D264, the request shows the day-start open questions with their takes lines and the extraction files each statement), Jev matching with the collision judge, judging-v7 (D263). `tests/test_frozen_extraction_prompt.py` pins it; a change is a new version only Alex opens. This supersedes the `poc-v23` replay default named below; the service's ledger and Idea configuration are unchanged by the merge.
 - **The ruler is frozen** (AGENTS §7.1, D261, D262): extraction standard v3 with golden-v5, seeds v2, the judgement gold; `tests/test_frozen_rulers.py`.
 - **Measured** (`research/2026-11-01-e2e-loop/design-v78-fields.md` §12–§13): on 50 stored articles, three sends each, v74i against the previous default v74d: core matters 59 → 70, supporting 87 → 117, noise 89 → 81. Reasoning effort raises recall and noise together; a long-item core loss at low reasoning is documented.
+- **One path in the code (D359):** the code builds only extraction v74i and judging-v7 and refuses a configuration that names another version; older versions survive as stored runs (the extraction-quality worktree) and in Git. `scripts/preflight.py` replays the frozen run's answers against the questions each request showed.
 - **Steps 3 and 4 frozen (D354):** opening and matching questions, and judging them, as `poc-v108` runs them; `tests/test_frozen_questions_and_judgement.py` pins the collision judge, the judge, the matching prompt, the judge's schema and the Jev questions. Accepted on three draws over 2026-07-01..07-14 against `poc-v94` (`research/2026-11-01-e2e-loop/log.md` row 29, run folder `poc/data/e2e-r9-frozen-v108-2026-11-03/`): judgement agrees with the frozen gold on 15/17, 15/17, 16/17; must-open 28/28 each draw; core matters reaching judgement 74.3 → 77.7. Known defects in D354: a duplicate question about one encounter in five, a ruled-out question opened in one draw of three, the operating-margin question left without evidence, the total-revenue question holding about a quarter of all links, and `scripts/preflight.py` unable to judge the one-decider architecture.
 - **Open proposals, each a new version only Alex opens:** medium reasoning for items of 15,000 characters or more (D273 amended); driver questions for indirect evidence (a new ruler version). No run unless he asks.
 - The branch's full state page at the merge is preserved: [current-state-extraction-branch-2026-11-03.md](research/2026-11-01-e2e-loop/current-state-extraction-branch-2026-11-03.md).
@@ -47,9 +48,8 @@ Of the frozen steps (D354 holds each with its census):
 1. **Competitor and customer news is filed under the company's revenue questions** instead of the share, capital-spending or custom-chip question it informs (D355; filing is otherwise about 85% right). Share facts are often not written at all, an extraction recall miss (D355). The total-revenue question holds about a quarter of all links (D354).
 2. **One bet opened twice** about one encounter in five: the collision judge splits a seed question from an identical candidate on a fine detail.
 3. **A question the standard rules out** (the lidar legislation) was proposed by the extraction and opened in one draw of three.
-4. **`scripts/preflight.py` cannot judge the one-decider architecture** (D264): it does not rebuild the questions open at the time.
-5. **Measured on one company and one 14-day window**, with the judgement scored at the window end only; `poc-v108` has not run over a longer window.
-6. **Not built:** argument records (a versioned current argument per question for the judge to read).
+4. **Measured on one company and one 14-day window**, with the judgement scored at the window end only; `poc-v108` has not run over a longer window.
+5. **Not built:** argument records (a versioned current argument per question for the judge to read).
 
 The extraction phase's open-defect list before the end-to-end loop (role-v51, 2026-10-30) is preserved in the branch's state page at the merge, [current-state-extraction-branch-2026-11-03.md](research/2026-11-01-e2e-loop/current-state-extraction-branch-2026-11-03.md); the readers' doubts about the frozen standard listed there remain for Alex, nothing changed.
 
@@ -66,7 +66,7 @@ Pull mode and closing at the due day are decided and built (D54, D356). Upstream
 
 ## One next task
 
-Steps 1–5 are decided: extraction, question opening and matching, and judging are frozen (D274, D354); closing at the due day is pull mode's and is built (D356). The next event is the first real due day, 2026-12-31 ("Will Nvidia begin shipping its Rubin generation by December 31, 2026?"), which gives the first closing to read against a published result. Until then, the open items are Alex's to take up: the known defects of D354 and D355, argument records, and the code paths of retired prompt versions (D357). No paid run is authorized by this update.
+Steps 1–5 are decided: extraction, question opening and matching, and judging are frozen (D274, D354); closing at the due day is pull mode's and is built (D356). The next event is the first real due day, 2026-12-31 ("Will Nvidia begin shipping its Rubin generation by December 31, 2026?"), which gives the first closing to read against a published result. Until then, the open items are Alex's to take up: the known defects of D354 and D355, argument records. No paid run is authorized by this update.
 
 ## Documentation maintenance
 

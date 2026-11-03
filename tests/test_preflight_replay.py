@@ -1,6 +1,7 @@
 """AGENTS §5 preflight: every archived extraction answer is replayed through the current checks with the configuration it was
-sent under, after its stored request is rebuilt from the source (a changed source is refused); a long source is checked against
-the part production sends, and a request this preflight cannot rebuild is counted and named, not fatal (2026-10-30 review)."""
+sent under and the questions its stored request showed, after the request is checked against the source (a changed source is
+refused); a long source is checked against the part production sends, and a row of a retired version or configuration is counted
+and named, not fatal (2026-10-30 review; D354's defect that the preflight could not read the one-decider requests)."""
 import importlib.util
 import json
 import sqlite3
@@ -16,13 +17,17 @@ preflight = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(preflight)
 
 
-def archive_one(tmp_path, text='The company announced a financing arrangement on July 2, 2026.', config_name='poc-v38'):
+SHOWN = [{'view_id': 'v1', 'object_id': 'NVDA', 'due_day': '2027-01-31', 'question': 'What will NVIDIA report as FY2027 revenue?',
+          'key': {'measure': 'total_revenue', 'scope': 'total', 'period_start': '2026-02-01', 'period_end': '2027-01-31'}, 'groups': []}]
+
+
+def archive_one(tmp_path, text='The company announced a financing arrangement on July 2, 2026.', config_name='poc-v108', shown=()):
     cfg = config.load(str(ROOT / f'poc/config/{config_name}.json'))
     uni = universe.load(str(ROOT / 'poc/universe.json'))
     item = {'input_id': 'gnews:test-preflight', 'category': 'T7', 'publisher': 'example.com',
             'publisher_type': 'media', 'publication_day': '2026-07-02', 'title': 'Cloud financing', 'text': text,
             'object_identifiers': [{'kind': 'ticker', 'value': 'NVDA'}]}
-    setting, system, user, schema = extraction.request_for(cfg, item, item['text'], [], uni)
+    setting, system, user, schema = extraction.request_for(cfg, item, item['text'], list(shown), uni)
     request = model.build_request(setting, system, user, schema, 'extraction', cfg.provider)
     encoded, sha = model.request_identity(request)
     answer = {'candidates': [], 'new_groups': [], 'evidence': [{'id': 'e1', 'quote': item['text'][:60],
@@ -46,10 +51,18 @@ def archived_answer(tmp_path):
     return archive_one(tmp_path)
 
 
-def test_v22_replay_keeps_unlinked_until_placement(archived_answer, capsys):
+def test_the_replay_keeps_an_unlinked_statement_for_the_handover(archived_answer, capsys):
     archive, items, uni = archived_answer
     assert preflight.part_b(archive, items, uni) == 1
     assert 'evidence produced 1 kept 1' in capsys.readouterr().out
+
+
+def test_the_replay_reads_the_questions_the_stored_request_showed(tmp_path):
+    archive, items, uni = archive_one(tmp_path, shown=SHOWN)
+    request_json = archive.execute("select request_json from model_calls").fetchone()[0]
+    item = dict(items.execute('select * from items').fetchone(), object_identifiers=[])
+    cfg = config.load(str(ROOT / 'poc/config/poc-v108.json'))
+    assert preflight._preflight_extract_inputs(json.loads(request_json), item, cfg) == ('v74i', ['v1'])
 
 
 def test_replay_refuses_changed_original_text(archived_answer):
@@ -67,8 +80,10 @@ def test_a_source_longer_than_the_request_limit_is_checked_against_the_part_prod
     assert 'unidentifiable 0' in capsys.readouterr().out
 
 
-def test_a_request_the_preflight_cannot_rebuild_is_counted_not_fatal(tmp_path, capsys):
-    archive, items, uni = archive_one(tmp_path, config_name='poc-v16')          # extraction v5, a Chinese request
+def test_a_row_of_a_retired_configuration_is_counted_not_fatal(tmp_path, capsys):
+    archive, items, uni = archive_one(tmp_path)
+    archive.execute("update model_calls set config_version='poc-v16-retired'")
+    archive.commit()
     assert preflight.part_b(archive, items, uni) == 0
-    assert 'not replayed, source not rebuildable for extraction v5: 1' in capsys.readouterr().out
+    assert 'not replayed: poc-v16-retired (configuration retired): 1' in capsys.readouterr().out
 

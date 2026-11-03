@@ -1,7 +1,8 @@
-"""D149 research groups in the default pipeline (docs/poc/grouping-improvement-plan.md Steps C/D as built, D164): extraction
-cites a shown group or declares a new one for every candidate; the code checks the references; the writer creates a
-group when the first written thesis cites it and records memberships in the same transaction; matching only shows
-groups. Real ledgers on temporary paths; the universe file the pipeline reads; a scripted model."""
+"""D149 research groups in the default pipeline (docs/poc/grouping-improvement-plan.md Steps C/D as built, D164, D211): the extraction
+request shows no stored group, so a candidate declares its matter's group with local ids and aliases; the code checks the references;
+the writer creates a group when the first written thesis cites it, folds a declaration whose names hit a stored group into that group
+(D166) and records memberships in the same transaction; matching only shows groups. Real ledgers on temporary paths; the universe file
+the pipeline reads; a scripted model."""
 import json
 import os
 import sys
@@ -10,9 +11,9 @@ from test_keyed_views import EVIDENCE, ITEM, TEXT, UNIVERSE, candidate
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import config, dispatch, extraction, model  # noqa: E402
+from hivemind import extraction, model, placement, replay  # noqa: E402
 from hivemind.views import matching, store, writing  # noqa: E402
-from hivemind.views import round as rounds  # noqa: E402
+from test_sequential_replay import setup_run, v108_send  # noqa: E402
 
 NEW_GROUPS = [{'id': 'n1', 'name': 'Rubin platform ramp', 'scope': 'Vera Rubin production, shipments and first customer deployments in 2026–2027'},
               {'id': 'n2', 'name': 'Unused subject', 'scope': 'declared but cited by no candidate'}]
@@ -23,25 +24,25 @@ def grouped(cid, refs, **over):
     return candidate(cid, group_refs=refs, **over)
 
 
-def test_schema_v7_admits_only_shown_or_local_group_ids():
-    schema = extraction.schema_for('v7', ['g1', 'g7'])
+def test_the_schema_admits_only_local_group_ids_with_their_aliases():
+    schema = extraction.schema_for('v74i')
     def raw(c):
         return {k: v for k, v in c.items() if k not in ('key_version', 'scope_source')}      # fields the sift adds, not the model
-    ok = {'evidence': [], 'new_groups': NEW_GROUPS[:1], 'candidates': [raw(grouped('c1', ['g7', 'n1']))]}
+    ok = {'evidence': [], 'new_groups': [dict(NEW_GROUPS[0], aliases=['Rubin'])], 'candidates': [raw(grouped('c1', ['n1'], opens_as='main_driver', settled_by='the annual report'))]}
     assert model.check_schema(ok, schema) == []
-    bad = {'evidence': [], 'new_groups': [], 'candidates': [raw(grouped('c1', ['g2']))]}
+    bad = {'evidence': [], 'new_groups': [], 'candidates': [raw(grouped('c1', ['g2'], opens_as='main_driver', settled_by='the annual report'))]}
     assert any('group_refs' in e for e in model.check_schema(bad, schema))
-    assert 'group_refs' not in extraction.schema_for('v6')['properties']['candidates']['items']['properties']
+    assert 'aliases' in schema['properties']['new_groups']['items']['required']
 
 
 def test_sift_keeps_well_referenced_candidates_and_only_cited_declarations():
     data = {'new_groups': NEW_GROUPS, 'evidence': [EVIDENCE[0], dict(EVIDENCE[0], id='e2', links=['c2']), dict(EVIDENCE[0], id='e3', links=['c3']), dict(EVIDENCE[0], id='e4', links=['c4'])],
             'candidates': [grouped('c1', ['n1']), grouped('c2', [], measure='total_revenue', scope='', evidence_ids=['e2']),
-                           grouped('c3', ['g9'], measure='capex', scope='', evidence_ids=['e3']), grouped('c4', ['g1', 'n1'], measure='gross_margin', scope='', evidence_ids=['e4'])]}
-    evidence, kept, dropped, new_groups = extraction.sift_with_groups(data, ITEM, TEXT, set(), UNIVERSE, english=True, shown_group_ids=['g1'])
-    assert [c['id'] for c in kept] == ['c1', 'c2', 'c4']            # empty group_refs is allowed: a company's own financial line carries no group
+                           grouped('c3', ['g9'], measure='capex', scope='', evidence_ids=['e3']), grouped('c4', ['n1', 'n1'], measure='gross_margin', scope='', evidence_ids=['e4'])]}
+    evidence, kept, dropped, new_groups = extraction.sift_with_groups(data, ITEM, TEXT, set(), UNIVERSE)
+    assert [c['id'] for c in kept] == ['c1', 'c2']            # empty group_refs is allowed: a company's own financial line carries no group
     reasons = dict(dropped)
-    assert "cites a group neither shown nor declared: ['g9']" in reasons['c3']
+    assert "cites a group not declared in this answer: ['g9']" in reasons['c3'] and 'repeats a group' in reasons['c4']
     assert new_groups == KEPT_GROUPS                         # n2 was declared and never cited
 
 
@@ -67,41 +68,30 @@ def test_writer_creates_a_group_once_and_records_memberships_in_the_same_write(t
     shown = store.groups_for_prompt(conn, ['NVDA'], 'Rubin shipments start')
     assert [g['group_id'] for g in shown] == ['g1'] and len(shown[0]['members']) == 3 and shown[0]['members'][0]['object_id'] == 'NVDA'
     assert 'research group: g1 "Rubin platform ramp"' in matching.describe_view(conn, dc, english=True)
-    system, user = extraction.build_prompt(ITEM, TEXT, store.views_for_prompt(conn, ['NVDA']), UNIVERSE, 'v7', shown)
-    assert '[Research groups] Cite one of these ids' in user and 'g1 "Rubin platform ramp": Vera Rubin production' in user
-    assert 'Research groups' in system and 'group_refs' in system
-    _, user6 = extraction.build_prompt(ITEM, TEXT, [], UNIVERSE, 'v6')
-    assert '[Research groups]' not in user6
+    _, user = extraction.build_prompt(ITEM, TEXT, [], UNIVERSE, 'v74i')      # D211: the stored group is not shown; the standing instruction is
+    assert extraction.GROUPS_INSTRUCTION in user and 'Rubin platform ramp' not in user
 
 
-def test_round_runs_the_grouped_contract_end_to_end_with_a_scripted_model(tmp_path):
-    cfg = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v20.json'))
-    archive = model.Archive(str(tmp_path / 'archive.sqlite'))
-    conn = store.open_db(str(tmp_path / 'views.sqlite'))
-    item = dict(ITEM, text=TEXT, publisher='NVIDIA', published_at='2026-05-20T12:00:00Z', source_uri='https://example.test/call')
-    raw = {k: v for k, v in grouped('c1', ['n1'], measure='event', scope='Vera Rubin', event_type='shipment', looks_at='Vera Rubin production shipments',
-                                     rungs=[{'label': 'Yes', 'condition': 'shipped', 'lo': None, 'hi': None}, {'label': 'No', 'condition': 'not shipped', 'lo': None, 'hi': None}], due_day='2026-12-31', year='2026').items()
-           if k not in ('key_version', 'scope_source')}
-    seen = {}
+def test_the_replay_runs_the_grouped_contract_end_to_end(tmp_path):
+    """The production path: the request shows the standing instruction and admits local ids only; the first declaration creates the
+    group, the second item's declaration of the same names folds into it, and the handover keeps the cited declaration."""
+    args, sent = setup_run(tmp_path), []
+    send = v108_send()
 
-    def transport(provider, request):
-        name = request['response_format']['json_schema']['name']
-        seen[name] = request
-        if name == 'extraction':
-            data = {'candidates': [raw], 'evidence': EVIDENCE[:1], 'new_groups': NEW_GROUPS}
-        else:
-            data = {'candidates': [{'id': 'c1', 'outcome': 'new', 'target_view_id': '', 'reason': 'new', 'dependencies': []}], 'evidence': []}
-        return {'choices': [{'message': {'content': json.dumps(data)}}]}
-
-    route = dispatch.route(conn, item, UNIVERSE)
-    result = rounds.run(conn, archive, cfg, UNIVERSE, item, route.sequence_no, transport=transport)
-    assert result.failed == '' and result.new_views == 1
-    assert '[Research groups] None yet' in seen['extraction']['messages'][1]['content']
-    assert seen['extraction']['response_format']['json_schema']['schema']['properties']['candidates']['items']['properties']['group_refs']['items']['pattern'] == '^(?:n[1-9][0-9]*)$'
-    assert [dict(r) for r in conn.execute('select group_id, name from thesis_groups')] == [{'group_id': 'g1', 'name': 'Rubin platform ramp'}]
-    assert store.members_of_group(conn, 'g1') == ['v1']
-    saved = json.loads(conn.execute('select handover_json from handovers').fetchone()[0])
-    assert saved['new_groups'] == KEPT_GROUPS and saved['candidates'][0]['group_refs'] == ['n1']
+    def recording(*parameters):
+        if len(parameters) == 2:
+            sent.append(parameters[1])
+        return send(*parameters)
+    result = replay.run(**args, transport=recording)
+    assert result['failed'] == 0 and result['new_views'] == 2
+    request = next(r for r in sent if r['response_format']['json_schema']['name'] == 'extraction')
+    assert '[Research groups] None yet' in request['messages'][1]['content']
+    assert request['response_format']['json_schema']['schema']['properties']['candidates']['items']['properties']['group_refs']['items']['pattern'] == '^(?:n[1-9][0-9]*)$'
+    conn = store.open_db(args['views_path'])
+    assert [dict(r) for r in conn.execute('select group_id, name from thesis_groups')] == [{'group_id': 'g1', 'name': 'Rubin rollout'}]
+    assert sorted(store.members_of_group(conn, 'g1')) == ['v1', 'v2']
+    saved = json.loads(conn.execute('select handover_json from handovers order by id limit 1').fetchone()[0])
+    assert saved['new_groups'][0]['name'] == 'Rubin rollout' and saved['candidates'][0]['group_refs'] == ['n1']
 
 
 def test_a_company_financial_line_cannot_found_a_group_but_may_join_one(tmp_path):
@@ -170,9 +160,9 @@ def test_aliases_decide_group_identity_and_membership(tmp_path):
     third = extraction.Handover([dict(EVIDENCE[0], id='e4', links=['c4'])], [other], [], 0, '', False, 0.0, [])
     written3 = writing.write(conn, UNIVERSE, 3, dict(ITEM, object_identifiers=[{'value': 'AMZN'}]), third, matching.Checked({'c4': ('new', None, [])}, {}, [], {}), {})
     assert conn.execute('select count(*) from thesis_group_members where view_id=?', (written3.new_views['c4'],)).fetchone()[0] == 0
-    # the English request names the aliases next to each group
+    # the request names a question's group with its aliases in the question's takes line
     shown = store.groups_for_prompt(conn, ['NVDA'], 'Rubin')
     assert isinstance(shown[0]['aliases'], list) and store.group(conn, 'g1')['aliases'][1] == 'Vera Rubin'      # aliases read back as a list, never as JSON text
-    _, user = extraction.build_prompt(ITEM, TEXT, [], UNIVERSE, 'v9', shown)
-    assert '(also: Vera Rubin, Rubin, Blackwell, Vera, SK Telecom AI factory deployment, SK Telecom)' in user     # D166 (2026-11-01, D257): the SK Telecom declaration's other names joined g1
-    assert 'aliases' in extraction.schema_for('v9', ['g1'])['properties']['new_groups']['items']['required']
+    view_id = written.new_views['c1']
+    view = dict(store.view(conn, view_id), key=store.view_key(conn, view_id) or {}, groups=store.groups_of_view(conn, view_id))
+    assert '(also called Vera Rubin, Rubin, Blackwell, Vera, SK Telecom AI factory deployment, SK Telecom)' in placement.takes(view)   # D166 (2026-11-01, D257): the SK Telecom declaration's other names joined g1

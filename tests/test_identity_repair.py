@@ -122,20 +122,24 @@ def test_conflict_rolls_back_entire_write_and_free_scope_remains_free(tmp_path):
 def test_writer_failure_resumes_from_same_handover_without_partial_rows(tmp_path):
     """B state table: a storage failure retains the handover, retries the same sequence, then skips a resend."""
     root = Path(__file__).resolve().parents[1]
-    cfg = config.load(root / 'poc/config/poc-v17.json')
+    cfg = config.load(root / 'poc/config/poc-v108.json')
     archive = model.Archive(str(tmp_path / 'archive.sqlite'))
     conn = store.open_db(str(tmp_path / 'views.sqlite'))
     item = dict(ITEM, text=TEXT, publisher='NVIDIA', published_at='2026-05-20T12:00:00Z', source_uri='https://example.test/earnings')
-    raw_candidate = {k: v for k, v in candidate('c1').items() if k not in ('key_version', 'scope_source')}
+    raw_candidate = dict({k: v for k, v in candidate('c1').items() if k not in ('key_version', 'scope_source')},
+                         opens_as='main_driver', settled_by='the FY2027 annual report', group_refs=[])
     calls = []
 
-    def transport(provider, request):
+    def transport(*parameters):
+        request = parameters[-1]
+        if len(parameters) == 1:                   # Jev: nothing shown is the same question
+            calls.append('jev')
+            return {'answers': {qid: {'type': 'choice', 'choice': 'different', 'confidence': 1.0,
+                                      'probabilities': {label: float(label == 'different') for label in question['criteria']}}
+                                for qid, question in request['questions'].items()}, 'usage': {}}
         name = request['response_format']['json_schema']['name']
         calls.append(name)
-        if name == 'extraction':
-            data = {'candidates': [raw_candidate], 'evidence': EVIDENCE[:1]}
-        else:
-            data = {'candidates': [{'id': 'c1', 'outcome': 'new', 'target_view_id': '', 'reason': 'new', 'dependencies': []}], 'evidence': []}
+        data = {'candidates': [raw_candidate], 'evidence': EVIDENCE[:1], 'new_groups': []} if name == 'extraction' else {'relations': []}
         return {'choices': [{'message': {'content': json.dumps(data)}}]}
 
     route = dispatch.route(conn, item, UNIVERSE)
@@ -163,7 +167,7 @@ def test_failed_replay_day_is_not_completed_and_can_resume(tmp_path):
                   json.dumps([{'value': 'NVDA'}]), 1, None, '新闻'))
     conn.commit()
     args = dict(testdb_path=str(path), views_path=str(tmp_path / 'views.sqlite'), archive=model.Archive(str(tmp_path / 'archive.sqlite')),
-                cfg=config.load(root / 'poc/config/poc-v16.json'), universe=UNIVERSE,
+                cfg=config.load(root / 'poc/config/poc-v108.json'), universe=UNIVERSE,
                 from_day='2026-05-20', until_day='2026-05-20', log=lambda *args: None)
 
     def unavailable(*args):
@@ -173,7 +177,7 @@ def test_failed_replay_day_is_not_completed_and_can_resume(tmp_path):
         replay.run(**args, transport=unavailable)
     ledger = store.open_db(args['views_path'])
     assert store.last_completed_day(ledger) is None
-    result = replay.run(**args, transport=lambda *args: {'choices': [{'message': {'content': '{"candidates":[],"evidence":[]}'}}]})
+    result = replay.run(**args, transport=lambda *args: {'choices': [{'message': {'content': '{"candidates":[],"evidence":[],"new_groups":[]}'}}]})
     assert result['failed'] == 0 and store.last_completed_day(ledger) == '2026-05-20'
     assert ledger.execute('select count(distinct sequence_no) from processing_steps where input_id=?', ('news:one',)).fetchone()[0] == 1
 

@@ -73,11 +73,9 @@ def test_a_view_revises_only_the_same_party_s_earlier_view(tmp_path):
     assert conn2.execute('select count(*) from revisions').fetchone()[0] == 0 and any("another party's third party view" in n for n in written.notes)
 
 
-def test_measure_vocabulary_is_version_gated():
-    v9 = extraction.schema_for('v9')['properties']['candidates']['items']['properties']['measure']['enum']
-    v10 = extraction.schema_for('v10')['properties']['candidates']['items']['properties']['measure']['enum']
-    assert 'market_size' not in v9 and 'project_cost' not in v9
-    assert 'market_size' in v10 and 'project_cost' in v10 and set(v9) < set(v10)
+def test_the_measure_vocabulary_names_a_market_size_and_a_project_cost_apart_from_spending():
+    measures = extraction.schema_for('v74i')['properties']['candidates']['items']['properties']['measure']['enum']   # D167
+    assert {'market_size', 'project_cost', 'spend_total'} <= set(measures)
 
 
 def test_the_relation_question_carries_both_sides_defining_quotes(tmp_path):

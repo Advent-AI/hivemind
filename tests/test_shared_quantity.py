@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(ROOT, 'src'))
 from hivemind import config, extraction, model  # noqa: E402
 from hivemind.views import identity, jev_matching, matching, store, writing  # noqa: E402
 
-CFG = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v29.json'))
+CFG = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v108.json'))
 USD = [dict(r, label=l) for r, l in zip(RUNGS, ['$800bn or more', '$700–800bn', '$600–700bn', '$500–600bn', 'below $500bn'])]
 
 

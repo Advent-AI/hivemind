@@ -2,6 +2,7 @@
 ledger committed before its item (and, where the parallel runner reported which request it accepted, that same
 request), and two ledgers hold the same product state."""
 import json
+import types
 from pathlib import Path
 import sqlite3
 import sys
@@ -46,8 +47,8 @@ def accepted_requests(events):
 
 
 def handover_errors(conn, items, cfg, uni, first, answer_for, accepted=None):
-    """Rebuild each accepted request from its committed prefix; `answer_for(key)` returns the archived answer JSON or
-    None. Returns the problems found and the rebuilt request per input."""
+    """Rebuild each accepted request from its committed prefix, and its handover from the bound answer through the same checks and
+    filing; `answer_for(key)` returns the archived answer JSON or None. Returns the problems found and the rebuilt request per input."""
     by_id = {i['input_id']: i for i in items}
     errors, keys = [], {}
     for hand in conn.execute('select * from handovers where seq>=? order by seq', (first,)):
@@ -55,9 +56,8 @@ def handover_errors(conn, items, cfg, uni, first, answer_for, accepted=None):
         before = snapshot(conn, hand['seq'], exclude_unordered=True)
         try:
             objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
-            shown = store.views_for_prompt(before, objects)
-            groups = store.groups_for_prompt(before, objects, item.get('title') or '')
-            key = extraction_key(cfg, item, item['text'], shown, uni, groups)
+            shown = extraction.shown_views(before, cfg, item, objects)
+            key = extraction_key(cfg, item, item['text'], shown, uni)
         finally:
             before.close()
         keys[item['input_id']] = key
@@ -68,13 +68,10 @@ def handover_errors(conn, items, cfg, uni, first, answer_for, accepted=None):
             errors.append('accepted handover has no exact current-prefix request: ' + item['input_id'])
             continue
         version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
-        evidence, candidates, dropped, new_groups = extraction.sift_with_groups(
-            json.loads(answer), item, item['text'], {v['view_id'] for v in shown}, uni,
-            english=extraction.is_english(version), shown_group_ids=[g['group_id'] for g in groups])
-        expected = {'evidence': evidence, 'candidates': candidates, 'dropped': dropped, 'new_groups': new_groups}
-        if extraction.places(version):           # v20: the handover's evidence is the placement call's, which this proof does not rebuild
-            errors.append('proof does not rebuild a v20 handover (placement call): ' + item['input_id'])
-            continue
+        bound = types.SimpleNamespace(call_id=0, request_sha256=key, cached=True, cost_usd=0.0)
+        reading = extraction.Reading(*extraction.sift_with_groups(json.loads(answer), item, item['text'], {v['view_id'] for v in shown}, uni), bound, version)
+        handover = extraction.file_reading(reading, item, shown)
+        expected = {'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped, 'new_groups': handover.new_groups}
         stored = json.loads(hand['handover_json'])
         if json.loads(json.dumps(expected)) != {k: stored.get(k) for k in expected}:
             errors.append('accepted handover differs from its bound answer: ' + item['input_id'])
