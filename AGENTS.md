@@ -11,9 +11,10 @@ rule at its decision; it becomes a new rule only when no rule covers that decisi
 - **The ruler is frozen** (§7.1, "The frozen ruler"; D261, D262): every measurement uses it as it is, and no file of
   it changes. Read that bullet before any gold, score, judge, prompt or acceptance work.
 - **The extraction production prompt is frozen** (D274; Alex, 2026-11-03: "感觉已经瓶颈了，上一个版本是不是freeze作为我们的抽取生产提示词吧"):
-  `poc/config/poc-v108.json`, extraction v74i at low reasoning (role-v74i, review-v74i, categories-v74i, `placement.takes(paths_once=True)`,
+  `poc/config/poc-v108.json`, extraction v74i at low reasoning (role-v74i, review-v74i, categories-v74i, `placement.takes`,
   `placement.FILING_RULE_ROOT_FALLBACK`). No piece of it is edited; a change is a new version that only his decision opens, measured against it.
-  `tests/test_frozen_extraction_prompt.py` fails the suite when any piece moves.
+  `tests/test_frozen_extraction_prompt.py` fails the suite when any piece moves. The code builds no other extraction or judging version and
+  refuses a configuration that names one (D359); an older version's results are read from its stored runs.
 - `docs/CURRENT_STATE.md`: status, open defects and the one next task. Each branch keeps its own.
 - `docs/DECISIONS.md`: recorded decisions. At the 2026-11-03 merge of `fix/extraction-quality-2026-10-28` into `main` the branch kept its numbers (D171–D274) and `main`'s D181–D241, D258 and D259 were renumbered D275–D336, in order (the mapping heads that section of the file).
 - Worktrees: `/Users/lchingen/hivemind` is `main` (service, UI, pipeline). `/Users/lchingen/hivemind-extraction-quality-2026-10-28`

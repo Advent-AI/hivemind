@@ -1,6 +1,7 @@
 """D190: when a candidate's list holds an open thesis of the same object and measure (a collision), the generative model answers the
 analyst's question (collision-v1) and its verdict on those theses replaces Jev's, which reads wording and calls a population variant
 'part of'. Without a collision setting the Jev verdict stands. Real ledger on a temporary path; scripted Jev and model transports."""
+import dataclasses
 import json
 import os
 import sys
@@ -12,8 +13,8 @@ sys.path.insert(0, os.path.join(ROOT, 'src'))
 from hivemind import config, model  # noqa: E402
 from hivemind.views import jev_matching, matching  # noqa: E402
 
-CFG = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v26.json'))
-JEV_ONLY = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v25.json'))
+CFG = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v108.json'))
+JEV_ONLY = dataclasses.replace(CFG, collision=None)
 
 
 def llm(relation):
@@ -33,8 +34,8 @@ def run(tmp_path, cfg, relation):
     return answer.data['candidates'][0]
 
 
-def test_config_v26_carries_the_collision_setting():
-    assert CFG.collision.prompt_version == 'collision-v1' and CFG.collision.model == 'gpt-6-luna' and JEV_ONLY.collision is None
+def test_the_production_configuration_carries_the_collision_setting():
+    assert CFG.collision.prompt_version == 'collision-v2' and CFG.collision.model == 'gpt-6-luna' and JEV_ONLY.collision is None
 
 
 def test_the_judge_merges_a_population_variant_jev_called_part_of(tmp_path):

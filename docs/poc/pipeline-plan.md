@@ -14,6 +14,8 @@ Earlier in the phase, D162's [two-step extraction comparison](../../poc/reports/
 
 ## Placement and the thesis tree (D206–D208, October 28)
 
+History: the placement call and the configurations below were retired with every extraction version other than v74i (D359).
+
 From D207 to D210 the default configuration was `poc/config/poc-v36.json`. Extraction v20 shows every open theme thesis to every item (D206) and files statements by a separate placement call: the sift keeps a statement for the placer, and the placement call (`hivemind/placement.py`) files each statement under the open questions, reading the item's title line, the statements and each question's code-written 'takes' line (key, event type, research-group names). The rule is the placement prompt the configuration names, `placement-narrow-v1`: one home, the narrowest question that names the matter; company-wide figure questions take only their own figures and guidance. A statement filed nowhere was first stored in `unplaced_statements`; since D209 it is dropped with the reason `no home`, and evaluation reads the drops. The extraction's own links are its first opinion; links to its candidates survive, the placer decides the rest. Matching, the writer and judging are unchanged.
 
 Measured on a frozen gold of 26 statements over three draws and on the first week's 255 in-call pieces ([routing-analysis](../research/2026-10-28-extraction-quality/routing-analysis.md)): core statements filed right 55% → 82%, wrong links 9 → 3, links to the two revenue sinks 63/60/44 → 6/1/5, junk placed down a third, every decisive matter statement placed; one week through the whole path costs the same ($0.22).

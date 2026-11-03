@@ -110,8 +110,7 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
             handover = extraction.Handover(saved['evidence'], saved['candidates'], saved['dropped'], 0, '', True, 0.0, saved.get('new_groups') or [])
     if handover is None:
         try:
-            shown_groups = store.groups_for_prompt(conn, objects, item.get('title') or '')
-            handover = (extractor or extraction.extract)(archive, cfg, item, item['text'], shown, universe, shown_groups=shown_groups, transport=transport)
+            handover = (extractor or extraction.extract)(archive, cfg, item, item['text'], shown, universe, transport=transport)
         except Exception as error:
             return _fail(conn, item, seq, result, 'extracted', 'extraction_failed', 'extraction: ' + repr(error), type(error).__name__)
         result.cost += handover.cost_usd

@@ -12,7 +12,7 @@ CASES = json.loads((ROOT / 'tests/fixtures/fiscal-year-horizon-2026-07.json').re
 def year_refusals(case):
     answer = {'evidence': [], 'candidates': [case['candidate']], 'new_groups': []}
     item = {'input_id': case['input_id'], 'publication_day': case['publication_day']}
-    _, _, dropped = extraction.sift(answer, item, '', set(), universe.load(ROOT / 'poc/universe.json'), english=True)
+    _, _, dropped = extraction.sift(answer, item, '', set(), universe.load(ROOT / 'poc/universe.json'))
     return [reason for _, reason in dropped if 'beyond next year' in reason]
 
 

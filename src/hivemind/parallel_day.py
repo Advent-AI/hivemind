@@ -44,8 +44,8 @@ def item_key(item):
     return model.request_identity(item)[1]
 
 
-def extraction_key(cfg, item, text, shown, universe, groups):
-    setting, system, user, schema = extraction.request_for(cfg, item, text, shown, universe, groups)
+def extraction_key(cfg, item, text, shown, universe):
+    setting, system, user, schema = extraction.request_for(cfg, item, text, shown, universe)
     return model.request_identity(model.build_request(setting, system, user, schema, 'extraction', cfg.provider))[1]
 
 
@@ -100,13 +100,12 @@ class ParallelDay:
         def current_request(item):
             objects = [o['value'] for o in item.get('object_identifiers') or [] if frozen_universe.has(o['value'])]
             shown = copy.deepcopy(extraction.shown_views(conn, frozen_cfg, item, objects))
-            groups = copy.deepcopy(store.groups_for_prompt(conn, objects, item.get('title') or ''))
             owned_item = copy.deepcopy(item)
-            return owned_item, shown, groups, extraction_key(frozen_cfg, owned_item, owned_item['text'], shown, frozen_universe, groups)
+            return owned_item, shown, extraction_key(frozen_cfg, owned_item, owned_item['text'], shown, frozen_universe)
 
-        def submit(item, owned_item, shown, groups, key):
+        def submit(item, owned_item, shown, key):
             future = pool.submit(extraction.read_item, archive, frozen_cfg, owned_item, owned_item['text'], shown,
-                                 frozen_universe, shown_groups=groups, transport=transport)      # the read; filing waits for the turn
+                                 frozen_universe, transport=transport)      # the read; filing waits for the turn
             pending[item['input_id']] = (key, item_key(owned_item), future, item)
             prepared_futures.append((item['input_id'], future))
             self._event(item['input_id'], 'prepared', request=key)
@@ -123,13 +122,13 @@ class ParallelDay:
         def refresh():
             """Re-prepare, right after a commit, every waiting request that commit changed; the turn still validates."""
             for input_id, (key, _, future, item) in list(pending.items()):
-                owned_item, shown, groups, current = current_request(item)
+                owned_item, shown, current = current_request(item)
                 if current != key:
                     future.cancel()
                     self._event(input_id, 'stale', before=key, request=current)
-                    submit(item, owned_item, shown, groups, current)
+                    submit(item, owned_item, shown, current)
 
-        def accepted_extraction(current_archive, current_cfg, item, text, shown, current_universe, *, shown_groups=(), transport=None):
+        def accepted_extraction(current_archive, current_cfg, item, text, shown, current_universe, *, transport=None):
             prior_key, source_key, future, _ = pending[item['input_id']]
             def validate_inputs():
                 if (environment_key(current_cfg, current_universe) != metadata['environment']
@@ -138,21 +137,20 @@ class ParallelDay:
                 if item_key(item) != source_key or text != item['text']:
                     raise ValueError('source changed after preparation')
             validate_inputs()
-            current_key = extraction_key(current_cfg, item, text, shown, current_universe, shown_groups)
+            current_key = extraction_key(current_cfg, item, text, shown, current_universe)
             if current_key == prior_key:
                 reading = future.result()
                 validate_inputs()
                 if reading.answer.request_sha256 != current_key:
                     raise ValueError('prepared extraction does not match its validated request')
                 self._event(item['input_id'], 'reused', request=current_key)
-                return extraction.file_reading(reading, current_archive, current_cfg, item, shown, transport=transport)   # filed under the theses open now
+                return extraction.file_reading(reading, item, shown)   # filed under the questions open now
             future.cancel()
             self._event(item['input_id'], 'stale', before=prior_key, request=current_key)
-            reading = extraction.read_item(current_archive, current_cfg, item, text, shown, current_universe,
-                                      shown_groups=shown_groups, transport=transport)
+            reading = extraction.read_item(current_archive, current_cfg, item, text, shown, current_universe, transport=transport)
             validate_inputs()
             self._event(item['input_id'], 'reextracted', request=current_key)
-            return extraction.file_reading(reading, current_archive, current_cfg, item, shown, transport=transport)
+            return extraction.file_reading(reading, item, shown)
 
         try:
             fill()

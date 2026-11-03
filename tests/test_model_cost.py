@@ -9,7 +9,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
 from hivemind import config, model  # noqa: E402
 
-CFG = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v29.json'))
+CFG = config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v108.json'))
 SCHEMA = {'type': 'object', 'additionalProperties': False, 'required': ['ok'], 'properties': {'ok': {'type': 'boolean'}}}
 
 

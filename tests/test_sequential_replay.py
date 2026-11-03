@@ -1,12 +1,15 @@
-"""D159: the next extraction reads the committed predecessor, including after a failed run."""
+"""The replay of the production configuration (poc-v108) over two recorded items of one day, with only the providers faked: a failed
+item stops the day and a resume keeps the sequence (D159), and a ledger an older parallel run left unfinished is refused."""
 import json
+import re
 import shutil
 import sqlite3
+import threading
 from pathlib import Path
 
 import pytest
 
-from hivemind import config, model, replay, universe
+from hivemind import config, model, replay, universe, vocabulary
 from hivemind.views import store
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,63 +28,80 @@ def setup_run(tmp_path):
                        [item[k] for k in columns])
     return dict(testdb_path=str(path), views_path=str(tmp_path / 'views.sqlite'),
                 archive=model.Archive(str(tmp_path / 'archive.sqlite')),
-                cfg=config.load(ROOT / 'poc/config/poc-v16.json'), universe=universe.load(ROOT / 'poc/universe.json'),
+                cfg=config.load(ROOT / 'poc/config/poc-v108.json'), universe=universe.load(ROOT / 'poc/universe.json'),
                 from_day='2026-02-25', until_day='2026-02-25', log=lambda *args: None)
 
 
-def transport_for(args, calls, *, fail_first=False):
-    def send(provider, request):
-        name = request['response_format']['json_schema']['name']
+def v108_send(calls=None, *, require_overlap=False, fail_first=False, fail_current_second=False, fail_stale_second=False, fail_judging=False):
+    """Fake OpenAI and Jev providers for poc-v108 over the two recorded Rubin cases. `calls` records (stage, second, current) per
+    model request: second says the request is the second item's, current that it shows the question v1. With `require_overlap` the
+    first extraction answers only after the second was sent."""
+    later, lock = threading.Event(), threading.Lock()
+    calls = [] if calls is None else calls
+
+    def send(*parameters):
+        request = parameters[-1]
+        if len(parameters) == 1:  # Jev uses its typed endpoint
+            result = {}
+            for qid, question in request['questions'].items():
+                if question['type'] == 'noul':
+                    result[qid] = {'type': 'noul', 'noul': 0.9}
+                else:
+                    labels = question['criteria']
+                    result[qid] = {'type': 'choice', 'choice': 'different', 'confidence': 1.0,
+                                   'probabilities': {label: float(label == 'different') for label in labels}}
+            return {'answers': result, 'usage': {}}
         text = request['messages'][1]['content']
-        second = name in ('extraction', 'matching') and CASES[1]['item']['input_id'] in text
-        calls.append((name, second))
-        if name == 'extraction':
-            if fail_first and not second:
-                raise model.TransportError('offline')
+        stage = request['response_format']['json_schema']['name']
+        second = CASES[1]['item']['input_id'] in text
+        current = '  - v1 (' in text
+        with lock:
+            calls.append((stage, second, current))
+        if stage == 'extraction':
             if second:
-                # The connection sees committed data, not the writer's uncommitted transaction.
-                with sqlite3.connect(args['views_path']) as db:
-                    rows = db.execute('select question from views').fetchall()
-                assert rows == [(CASES[0]['candidate']['question'],)]
-                assert CASES[0]['candidate']['question'] in text
-                data = {'candidates': [], 'evidence': [dict(CASES[1]['evidence'], links=['v1'])]}
+                later.set()
+                if current and fail_current_second:
+                    raise model.TransportError('second current request unavailable')
+                if not current and fail_stale_second:
+                    raise model.TransportError('unused speculative request unavailable')
             else:
-                data = {'candidates': [CASES[0]['candidate']], 'evidence': [CASES[0]['evidence']]}
-        elif name == 'matching':
-            data = ({'candidates': [], 'evidence': [{'id': 'e1', 'view_id': 'v1', 'outcome': '新证据',
-                      'target_evidence_id': '', 'said_day': '', 'reason': 'The filing supplies another statement.'}]}
-                    if second else {'candidates': [{'id': 'c1', 'outcome': '新观点', 'target_view_id': '',
-                      'reason': 'No earlier view.', 'dependencies': []}], 'evidence': []})
-        else:
-            assert name == 'judgement'
-            data = {'rung': 1, 'reasons': 'Both statements expect production shipments.', 'cites': ['e1', 'e2'],
-                    'cites_views': [], 'pushes': [], 'changed': True, 'why_changed': 'First judgement.'}
-        return {'choices': [{'message': {'content': json.dumps(data)}}]}
+                if require_overlap:
+                    assert later.wait(5), 'later extraction did not overlap the first'
+                if fail_first:
+                    raise model.TransportError('first request unavailable')
+            case = CASES[int(second)]
+            raw = vocabulary.extraction_answer({'candidates': [case['candidate']], 'evidence': [case['evidence']]})
+            raw['candidates'][0].update(opens_as='main_driver', settled_by='the FY2027 annual report')
+            if second and current:
+                raw['candidates'], raw['new_groups'] = [], []
+                raw['evidence'][0]['links'] = ['v1']
+            else:
+                raw['candidates'][0]['group_refs'] = ['n1']
+                raw['new_groups'] = [{'id': 'n1', 'name': 'Rubin rollout', 'scope': 'Rubin production and deployment', 'aliases': ['Rubin']}]
+            return {'choices': [{'message': {'content': json.dumps(raw)}}]}
+        if stage == 'collision':                       # D190: the judge answers no verdict here, so Jev's decision stands
+            return {'choices': [{'message': {'content': json.dumps({'relations': []})}}]}
+        assert stage == 'judgement'
+        if fail_judging:
+            raise model.TransportError('judging unavailable')
+        result = {'rung': 1, 'reference': 'consensus expects production this year', 'implied_outcome': 'production shipments in the year',
+                  'reasons': 'Both original sources expect production.', 'cites': list(dict.fromkeys(re.findall(r'^- (e\d+) \[', text, re.M))),
+                  'cites_views': [], 'pushes': [], 'changed': True, 'why_changed': 'First judgement.', 'theme_pushes': []}
+        return {'choices': [{'message': {'content': json.dumps(result)}}]}
+
     return send
 
 
-def test_next_extraction_reads_committed_prior_view(tmp_path):
-    """D159 normal same-day row: two real statements pass the public replay entry point."""
-    args, calls = setup_run(tmp_path), []
-    result = replay.run(**args, transport=transport_for(args, calls))
-    assert calls == [('extraction', False), ('matching', False), ('extraction', True),
-                     ('matching', True), ('judgement', False)]
-    assert (result['extracted'], result['new_views'], result['evidence'], result['judged']) == (2, 1, 2, 1)
-    db = store.open_db(args['views_path'])
-    assert store.last_completed_day(db) == '2026-02-25'
-    assert len(store.evidence_in_force(db, 'v1')) == 2
-
-
 def test_failure_stops_later_extraction_and_resume_keeps_sequence(tmp_path):
-    """D159 refused/crash row: failure cannot launch later extraction; normal resume uses the original IDs."""
+    """D159 refused/crash row: a failed item stops the day before any later extraction; the resume uses the original ids."""
     args, calls = setup_run(tmp_path), []
     with pytest.raises(RuntimeError, match='remains resumable'):
-        replay.run(**args, transport=transport_for(args, calls, fail_first=True))
-    assert calls == [('extraction', False)]
+        replay.run(**args, transport=v108_send(calls, fail_first=True))
+    assert calls == [('extraction', False, False)]
     db = store.open_db(args['views_path'])
     assert store.last_completed_day(db) is None
-    result = replay.run(**args, transport=transport_for(args, calls))
-    assert result['new_views'] == 1
+    result = replay.run(**args, transport=v108_send(calls))
+    assert result['new_views'] == 2 and store.last_completed_day(db) == '2026-02-25'
     assert [(r['input_id'], r['sequence_no']) for r in db.execute(
         "select input_id, sequence_no from processing_steps where step='extracted' and result='ok' order by id"
     )] == [(case['item']['input_id'], n) for n, case in enumerate(CASES, 1)]
@@ -98,6 +118,6 @@ def test_old_parallel_handover_refuses_without_new_calls_or_processing(tmp_path)
     assert len(pending) == 5
     calls = []
     with pytest.raises(replay.StaleHandoverError) as caught:
-        replay.run(**args, transport=transport_for(args, calls))
+        replay.run(**args, transport=v108_send(calls))
     assert all(ident in str(caught.value) for ident in pending)
     assert not calls and db.execute('select count(*) from processing_steps').fetchone()[0] == before

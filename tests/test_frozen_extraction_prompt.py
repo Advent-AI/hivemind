@@ -35,9 +35,9 @@ def test_the_frozen_prompt_files_and_configuration_are_unchanged():
 
 def test_the_code_written_parts_of_the_frozen_request_are_unchanged():
     assert sha(placement.FILING_RULE_ROOT_FALLBACK.encode()) == FILING_RULE_SHA
-    assert sha(json.dumps([placement.takes(v, True) for v in VIEWS]).encode()) == TAKES_SHA
+    assert sha(json.dumps([placement.takes(v) for v in VIEWS]).encode()) == TAKES_SHA
     assert sha(json.dumps(extraction.schema_for('v74i', shown_view_ids=('v1',))).encode()) == SCHEMA_SHA
-    assert extraction.PATHS_ONCE_VARIANTS == ('v74i',)
+    assert extraction.SUPPORTED_VERSIONS == ('v74i',)
 
 
 def test_the_replay_default_is_the_frozen_configuration():
