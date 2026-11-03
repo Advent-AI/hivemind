@@ -33,7 +33,7 @@ Scope: the current frontend only. Backend work, model prompts, data snapshots, p
 
 ## Checks and prior decisions
 
-D237 requires transactional Action input and immediate unfocused wheel updates. D239 requires a pulsing black Monitoring dot with reduced-motion support. D240 requires 1Y by default. D225 retains navigation state. D230 keeps Trigger edges arrowless. These do not change.
+D330 requires transactional Action input and immediate unfocused wheel updates. D332 requires a pulsing black Monitoring dot with reduced-motion support. D333 requires 1Y by default. D318 retains navigation state. D323 keeps Trigger edges arrowless. These do not change.
 
 Before editing, save a source/page snapshot and record built JS/CSS sizes. Compare complete Action DOM and computed percentage-control styles in a stored-response browser fixture before and after. Run existing Action, Trigger, navigation and reveal checks plus the full frontend suite, lint, formatting and mutation checks. Run the full Python suite once for the final repository check; no model calls or backend edits.
 

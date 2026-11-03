@@ -6,16 +6,16 @@ This is documentation maintenance. No product behaviour, provider, prompt, budge
 
 ## Findings and scope
 
-The cause is accumulated documentation drift after D165–D241: summaries kept earlier defaults, while detailed decisions and implementation moved forward. The audit covered the root and frontend READMEs, current state, pipeline/service/Idea guides, all ten PRDs and their design-page data. Historical experiments were read as history, not used as current instructions.
+The cause is accumulated documentation drift after D165–D334: summaries kept earlier defaults, while detailed decisions and implementation moved forward. The audit covered the root and frontend READMEs, current state, pipeline/service/Idea guides, all ten PRDs and their design-page data. Historical experiments were read as history, not used as current instructions.
 
 | Description counted before editing | Locations | Correction and evidence |
 |---|---|---|
 | Grouping described as unavailable or an isolated implementation | One README claim; one page-data sentence mirrored in the library PRD and generated bundle | Grouping is integrated under D165/D169. Retain D147 as history; point to the current pipeline guide. Regenerate the PRD block from page data. |
 | Idea API described with an old default | One `poc-v9` reference in the pipeline guide | `scripts/hivemind_api.py` selects `poc-v32-idea.json`; the config names `idea-v7` and `idea-summary-v7`. |
-| Current and historical Idea contracts mixed | Service introduction; Idea flow diagram, composite response row, confidence paragraph and historical latency paragraph | The default has two discovery calls and a final positive-weight adoption call. Old exclusions/two-call results remain labelled historical under D196. |
-| Status cutoff older than the decisions it describes | One header says D234 while the page reaches D241 | Replace the status chronology with current behaviour, measured evidence, open defects and one next task. Preserve the prior text in the linked snapshot. |
+| Current and historical Idea contracts mixed | Service introduction; Idea flow diagram, composite response row, confidence paragraph and historical latency paragraph | The default has two discovery calls and a final positive-weight adoption call. Old exclusions/two-call results remain labelled historical under D290. |
+| Status cutoff older than the decisions it describes | One header says D327 while the page reaches D334 | Replace the status chronology with current behaviour, measured evidence, open defects and one next task. Preserve the prior text in the linked snapshot. |
 | Service paths and startup assumptions | Two root README references to `poc/data/service/`; one MCP description implying HTTP by default | Read defaults from both CLI parsers and Compose. Document `service-english`, local data requirements, MCP stdio default and fresh run directories with their own PID. |
-| New UI features missing from the entry guide | Root README lacked the current workspace, confidence, Trigger and Action overview | Summarize D196/D197/D225/D234/D235–D241 and link to their owning specifications. Keep Action's preview boundary explicit. |
+| New UI features missing from the entry guide | Root README lacked the current workspace, confidence, Trigger and Action overview | Summarize D290/D291/D318/D327/D328–D334 and link to their owning specifications. Keep Action's preview boundary explicit. |
 
 The grouping claim's three copies are one source sentence plus its generated readers, not three independent rules. The page data remains the source. No hand-edited generated block or new contract is introduced.
 

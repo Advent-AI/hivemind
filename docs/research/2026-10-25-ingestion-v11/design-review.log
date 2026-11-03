@@ -1,0 +1,1529 @@
+OpenAI Codex v0.162.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a173ae-1ce4-7262-9f9a-eb430b7d424e
+--------
+user
+Read-only review. Scope ONLY /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md and the proposed explicit-config-path delta in poc/concurrency_study/ingestion.py. Read existing D174 plan, ingestion.py and D176/D177 decisions for context. Out of scope: UI, default adoption, other modules or pre-existing issues unrelated to this tiny resume experiment. Check whether the fixed same-config serial/concurrent comparison and its coverage criteria, paid cap, and config manifest behavior contradict current contracts or cannot be implemented. Report serious issues with concrete citations, or none. Do not edit files or call providers. Do not launch subagents.
+
+codex
+I’ll review the plan and proposed explicit config-path change without editing files or calling providers. I’ll check whether the two runs stay comparable and follow the existing contracts.
+
+exec
+/opt/homebrew/bin/zsh -lc "pwd && rg --files -g AGENTS.md -g '*plan.md' -g ingestion.py -g DECISIONS.md -g CURRENT_STATE.md -g README.md /Users/lchingen/hivemind/docs /Users/lchingen/hivemind/poc" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind
+/Users/lchingen/hivemind/docs/DECISIONS.md
+/Users/lchingen/hivemind/docs/prd/README.md
+/Users/lchingen/hivemind/docs/CURRENT_STATE.md
+/Users/lchingen/hivemind/docs/archive/2026-10-22-v15/DECISIONS.md
+/Users/lchingen/hivemind/docs/archive/2026-10-22-v15/prd/README.md
+/Users/lchingen/hivemind/docs/archive/2026-10-22-v15/CURRENT_STATE.md
+/Users/lchingen/hivemind/docs/archive/2026-10-16-v1/DECISIONS.md
+/Users/lchingen/hivemind/docs/archive/2026-10-16-v1/prd/README.md
+/Users/lchingen/hivemind/docs/archive/2026-10-16-v1/CURRENT_STATE.md
+/Users/lchingen/hivemind/docs/poc/pipeline-plan.md
+/Users/lchingen/hivemind/docs/poc/keyed-views-plan.md
+/Users/lchingen/hivemind/docs/poc/corpus-plan.md
+/Users/lchingen/hivemind/docs/poc/grouping-improvement-plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-smoke/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-24-main-thesis-basis/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-basis/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-subject-names/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-24-ingestion-groups/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-consistency/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-grouping-consistency/continuation-plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/extraction-membership-plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/required-choices-plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/flat-reference-plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-direct-subjects/retained-membership-plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-retrieval-poc/rerank-grouping-plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-english/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-24-hierarchy-poc/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-threads/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-day-batch-review/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-24-main-thesis-replay/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-api-smoke/plan.md
+/Users/lchingen/hivemind/poc/concurrency_study/ingestion.py
+/Users/lchingen/hivemind/poc/ui/README.md
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/poc/concurrency_study/ingestion.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Resume the small ordered-concurrency comparison
+     2	
+     3	Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+     4	
+     5	Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+     6	
+     7	## Fixed measurement and stop rules
+     8	
+     9	Run control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3; inspect each before starting the next. Each uses a fresh archive and separate baseline copy through `replay.run`, including daily judging and completion. The old product remains sequential by default. Both arms share the two-request outbound limit; only the experimental arm adds two-worker speculative extraction and independent Jev matching.
+    10	
+    11	This is a new isolated journal with the same **$1.50 conservative ceiling and 144 physical-request maximum** as D174, not an increased cap or a reuse of its halted journal. Do not retry transport failures or launch the next trial on failure. Preserve unknown usage. No heavy task runs beside paid calls.
+    12	
+    13	Score information coverage, direct attachment and faithful source status under D176/D177. Inspect the full raw answers and final links against the source, not only the counts or an automatic label:
+    14	
+    15	- SK: retain the material proposed first-factory deployment, 2027 timing and explicitly stated platform facts under a directly relevant question. Do not turn announced capacity into delivered capacity or orders.
+    16	- NAVER: retain the GAK Sejong expansion's 200 MW target and 2028 timing as a plan. In this baseline no existing question directly covers it. Do not substitute Rubin production or generic NVIDIA revenue for this deployment.
+    17	- Keep the two customer projects distinct. Group membership may include an applicable broader rollout group; a shared group alone is not a duplicate thesis or wrong identity. Do not force customer-specific group counts or names.
+    18	- On the follow-up, use the existing appropriate questions for repeated project statements; a retelling is not independent corroboration. Missing a nonessential sentence is not failure. Report any new material fact separately.
+    19	- Read every additional proposed/written question, evidence link, source quote, group membership and judgement for unsupported assertions, lost material information or duplicate counting. A different but valid business question is not wrong merely because it differs from gold wording.
+    20	
+    21	Compare all three controls to each other before interpreting differences between modes. Report every sample, accepted/reused/stale extraction count, physical calls, cost and end-to-end wall time. Report paired control/concurrent ratios and their median, without claiming whole-day 10x from three related documents. Saved response replay proves implementation, not fresh model agreement.
+    22	
+    23	Stop before further paid trials if the first control fails coverage, if any trial introduces material unsupported/wrong/duplicate information, or if the structural audit fails. Preserve that result and report it; do not tune another arm in this experiment. A successful first control is read before launching concurrent-1.
+    24	
+    25	## Addition to the state × event table
+    26	
+    27	| State | Event | Required behavior |
+    28	|---|---|---|
+    29	| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+    30	| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+    31	| Prepared | Different path or changed content | Refuse before credentials, archive, trial directory or provider calls |
+    32	| Trial finished | Manual source assessment fails | Record failure and stop the study; no next trial |
+    33	| Trial finished | Assessment passes | Next named trial may be started explicitly |
+    34	
+    35	The earlier success, refusal, partial failure, cancellation, changed input, restart and day-completion rows remain D174's; no additional writer or runtime mode is introduced.
+    36	
+    37	## Value × reader and new path × checks
+    38	
+    39	| Value | Writer → readers | Check |
+    40	|---|---|---|
+    41	| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+    42	| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+    43	| Assessment | Source review → permission to start next named trial | Explicit per-trial reasons; no row-count substitute |
+    44	
+    45	Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+    46	
+    47	Prior decisions: D149/D166 keep association during extraction; D159/D172 keep accepted requests bound to the committed prefix; D173 is ordinary API concurrency, not the asynchronous Batch API; D174 is stopped; D176/D177 define source coverage without mandatory cards in every context. This experiment does not change them or promote v11.
+
+ succeeded in 0ms:
+     1	"""Selected whole-document ingestion through the product's ordered replay path."""
+     2	import argparse
+     3	import contextlib
+     4	import dataclasses
+     5	import json
+     6	from pathlib import Path
+     7	import shutil
+     8	import signal
+     9	import sqlite3
+    10	import sys
+    11	import threading
+    12	import time
+    13	
+    14	ROOT = Path(__file__).resolve().parents[2]
+    15	sys.path.insert(0, str(ROOT / 'src'))
+    16	sys.path.insert(0, str(ROOT / 'poc'))
+    17	sys.path.insert(0, str(ROOT / 'docs/research/2026-10-25-day-batch-review'))
+    18	from snapshot_proof import snapshot
+    19	from hivemind import config, extraction, jev, model, replay, testdb, universe
+    20	from hivemind.views import round as rounds, store
+    21	from concurrency_study.budget import GuardedTransport, single_attempt_http
+    22	from concurrency_study.runner import DayRunner, digest, extraction_key
+    23	
+    24	DAY = '2026-07-24'
+    25	FIRST = 21
+    26	INPUTS = (
+    27	    'nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory',
+    28	    'nvidianews:naver-nvidia-and-brookfield-to-expand-koreas-national-ai-factory-infrastructure-buildout',
+    29	    'nvblog:ai-summit-korea-partners-and-nvidia',
+    30	)
+    31	ORDER = ('control-1', 'concurrent-1', 'concurrent-2', 'control-2', 'control-3', 'concurrent-3')
+    32	
+    33	
+    34	def readonly(path):
+    35	    conn = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro', uri=True)
+    36	    conn.row_factory = sqlite3.Row
+    37	    return contextlib.closing(conn)
+    38	
+    39	
+    40	def protected_changes(directory):
+    41	    expected = json.loads((directory / 'protected-before.json').read_text())
+    42	    return [name for name, sha in expected.items() if not Path(name).is_file() or digest(Path(name)) != sha]
+    43	
+    44	
+    45	def baseline_problems(conn):
+    46	    problems = []
+    47	    for table in store.TABLES:
+    48	        fields = [r[1] for r in conn.execute(f'pragma table_info({table})')]
+    49	        seq = next((f for f in ('created_seq', 'after_seq', 'seq', 'sequence_no') if f in fields), None)
+    50	        if seq and conn.execute(f'select count(*) from {table} where {seq}=0 or {seq}>=?', (FIRST,)).fetchone()[0]:
+    51	            problems.append(f'{table}: unordered or future sequence')
+    52	        for date in ('publication_day', 'day'):
+    53	            if date in fields and conn.execute(f'select count(*) from {table} where {date}>=?', (DAY,)).fetchone()[0]:
+    54	                problems.append(f'{table}: future date')
+    55	    return problems
+    56	
+    57	
+    58	def configuration():
+    59	    return config.load(ROOT / 'poc/config/poc-v23.json'), universe.load(ROOT / 'poc/universe.json')
+    60	
+    61	
+    62	def contract(directory):
+    63	    directory = Path(directory).resolve()
+    64	    cfg, uni = configuration()
+    65	    paths = [directory / 'items.sqlite', directory / 'ordered-baseline.sqlite',
+    66	             ROOT / 'poc/config/poc-v23.json', ROOT / 'poc/universe.json', Path(__file__),
+    67	             ROOT / 'poc/concurrency_study/budget.py', ROOT / 'poc/concurrency_study/runner.py',
+    68	             ROOT / 'docs/research/2026-10-25-day-batch-review/snapshot_proof.py']
+    69	    paths += sorted((ROOT / 'src/hivemind').rglob('*.py')) + sorted((ROOT / 'src/hivemind/prompts').glob('*'))
+    70	    return {'day': DAY, 'first_sequence': FIRST, 'inputs': list(INPUTS), 'trial_order': list(ORDER),
+    71	            'config': dataclasses.asdict(cfg), 'universe': vars(uni),
+    72	            'sha256': {str(p): digest(p) for p in paths if p.is_file()},
+    73	            'max_calls': 144, 'cap_microdollars': 1500000, 'outbound_workers': 2}
+    74	
+    75	
+    76	def prepare(directory):
+    77	    directory = Path(directory).resolve()
+    78	    path = directory / 'ordered-baseline.sqlite'
+    79	    if path.exists() or (directory / 'study.json').exists():
+    80	        raise ValueError('study already prepared; preserve it')
+    81	    if protected_changes(directory):
+    82	        raise ValueError('protected inputs changed')
+    83	    with readonly(directory / 'inputs/views.sqlite') as source:
+    84	        projected = snapshot(source, FIRST, exclude_unordered=True)
+    85	        try:
+    86	            problems = baseline_problems(projected)
+    87	            if problems:
+    88	                raise ValueError('; '.join(problems))
+    89	            projected.commit()
+    90	            with sqlite3.connect(path) as dest:
+    91	                projected.backup(dest)
+    92	        finally:
+    93	            projected.close()
+    94	    with readonly(directory / 'items.sqlite') as conn:
+    95	        items = list(testdb.feed(conn, DAY, DAY))
+    96	    if [i['input_id'] for i in items] != list(INPUTS):
+    97	        raise ValueError('selected input order differs')
+    98	    with readonly(directory / 'inputs/items.sqlite') as original:
+    99	        for item in items:
+   100	            row = dict(original.execute('select * from items where input_id=?', (item['input_id'],)).fetchone())
+   101	            row['object_identifiers'] = json.loads(row['object_identifiers'])
+   102	            if row != item:
+   103	                raise ValueError('selected input changed')
+   104	    with (directory / 'study.json').open('x') as handle:
+   105	        json.dump(contract(directory), handle, indent=2, ensure_ascii=False)
+   106	
+   107	
+   108	class StudyTransport:
+   109	    """Shared across extraction, matching and judging; validate before freeing a slot."""
+   110	
+   111	    def __init__(self, guard, workers=2):
+   112	        self.guard = guard
+   113	        self.slots = threading.BoundedSemaphore(workers)
+   114	        self.stopped = threading.Event()
+   115	
+   116	    def stop(self, reason):
+   117	        self.guard.stop(reason)
+   118	        self.stopped.set()
+   119	
+   120	    def __call__(self, *args):
+   121	        with self.slots:
+   122	            try:
+   123	                response = self.guard(*args)
+   124	                request = args[-1]
+   125	                if len(args) == 2:
+   126	                    value = json.loads(response['choices'][0]['message']['content'])
+   127	                    errors = model.check_schema(value, request['response_format']['json_schema']['schema'])
+   128	                else:
+   129	                    errors = jev.validate(response.get('answers'), request['questions'])
+   130	                if errors:
+   131	                    raise model.SchemaError('; '.join(errors[:5]))
+   132	                return response
+   133	            except BaseException:
+   134	                self.stop('terminal worker failure or cancellation')
+   135	                raise
+   136	
+   137	
+   138	def study_day(runner, transport):
+   139	    def run(*args, **kwargs):
+   140	        iterator = runner(*args, **kwargs)
+   141	        try:
+   142	            for result in iterator:
+   143	                if result.failed:
+   144	                    transport.stop('authoritative item failed')
+   145	                yield result
+   146	        except BaseException:
+   147	            transport.stop('day cancelled or failed')
+   148	            raise
+   149	        finally:
+   150	            iterator.close()
+   151	    return run
+   152	
+   153	
+   154	def audit(directory, trial, cfg, uni):
+   155	    """Read actual product records and rebuild the accepted requests; never call a model."""
+   156	    folder = directory / trial
+   157	    errors, requests = [], []
+   158	    with readonly(directory / 'ordered-baseline.sqlite') as baseline, readonly(folder / 'views.sqlite') as conn, readonly(folder / 'archive.sqlite') as archive, readonly(directory / 'items.sqlite') as source:
+   159	        items = {i['input_id']: i for i in testdb.feed(source, DAY, DAY)}
+   160	        for table in store.TABLES:
+   161	            old = [tuple(r) for r in baseline.execute(f'select * from {table} order by rowid')]
+   162	            prefix = [tuple(r) for r in conn.execute(f'select * from {table} order by rowid limit ?', (len(old),))]
+   163	            if old != prefix:
+   164	                errors.append(f'baseline changed: {table}')
+   165	        hands = list(conn.execute('select * from handovers where seq>=? order by seq', (FIRST,)))
+   166	        if [(r['input_id'], r['seq']) for r in hands] != [(i, FIRST + n) for n, i in enumerate(INPUTS)]:
+   167	            errors.append('handover order/count differs')
+   168	        for hand in hands:
+   169	            item = items[hand['input_id']]
+   170	            before = snapshot(conn, hand['seq'], exclude_unordered=True)
+   171	            try:
+   172	                objects = [o['value'] for o in item['object_identifiers'] if uni.has(o['value'])]
+   173	                shown = store.views_for_prompt(before, objects)
+   174	                groups = store.groups_for_prompt(before, objects, item.get('title') or '')
+   175	                key = extraction_key(cfg, item, item['text'], shown, uni, groups)
+   176	            finally:
+   177	                before.close()
+   178	            accepted = archive.execute("select call_id,request_json,answer_json from model_calls where request_sha256=? and purpose='extract'", (key,)).fetchone()
+   179	            if not accepted:
+   180	                errors.append('accepted request not rebuilt: ' + item['input_id'])
+   181	            else:
+   182	                if model.request_identity(json.loads(accepted['request_json']))[1] != key:
+   183	                    errors.append('archived request hash differs from body')
+   184	                version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
+   185	                evidence, candidates, dropped, new_groups = extraction.sift_with_groups(
+   186	                    json.loads(accepted['answer_json']), item, item['text'], {v['view_id'] for v in shown}, uni,
+   187	                    english=extraction.is_english(version), shown_group_ids=[g['group_id'] for g in groups])
+   188	                expected_hand = {'evidence': evidence, 'candidates': candidates, 'dropped': dropped, 'new_groups': new_groups}
+   189	                if json.loads(json.dumps(expected_hand)) != json.loads(hand['handover_json']):
+   190	                    errors.append('accepted handover differs from the bound request answer: ' + item['input_id'])
+   191	            requests.append({'input_id': item['input_id'], 'seq': hand['seq'], 'request_sha256': key,
+   192	                             'call_id': accepted['call_id'] if accepted else None})
+   193	            for evidence in json.loads(hand['handover_json'])['evidence']:
+   194	                if extraction.normalise(evidence['quote']) not in extraction.normalise(item['text']):
+   195	                    errors.append('quote missing from selected whole item')
+   196	        for record in conn.execute('select * from match_records where seq>=?', (FIRST,)):
+   197	            if json.loads(record['checks_json'])['refusals']:
+   198	                errors.append('matching refusal')
+   199	            for call in json.loads(record['shown_json']).get('requests', []):
+   200	                if not archive.execute('select 1 from model_calls where call_id=? and request_sha256=?', (call['call_id'], call['request_sha256'])).fetchone():
+   201	                    errors.append('matching request trace missing')
+   202	        changed = rounds.changed_views_of_day(conn, DAY)
+   203	        expected = {v for v in changed if store.is_open(conn, v) and store.evidence_in_force(conn, v)}
+   204	        judgments = list(conn.execute('select * from judgements where seq>=?', (FIRST,)))
+   205	        if sorted(r['view_id'] for r in judgments) != sorted(expected):
+   206	            errors.append('daily judgement population differs')
+   207	        if any(r['seq'] != FIRST + len(INPUTS) - 1 or r['input_id'] != 'day:' + DAY or r['publication_day'] != DAY for r in judgments):
+   208	            errors.append('daily judgement ordering differs')
+   209	        if store.last_completed_day(conn) != DAY:
+   210	            errors.append('day not completed')
+   211	        missing = conn.execute('select count(*) from thesis_group_members m left join views v using(view_id) left join thesis_groups g using(group_id) where v.view_id is null or g.group_id is null').fetchone()[0]
+   212	        if missing:
+   213	            errors.append('dangling group membership')
+   214	        views = [dict(r) for r in conn.execute('select * from views order by rowid')]
+   215	        groups = [dict(r) for r in conn.execute('select * from thesis_groups order by rowid')]
+   216	        members = [dict(r) for r in conn.execute('select * from thesis_group_members order by rowid')]
+   217	        evidence = [dict(r) for r in conn.execute('select * from evidence order by rowid')]
+   218	        links = [dict(r) for r in conn.execute('select * from evidence_links order by rowid')]
+   219	        sources = [dict(r) for r in conn.execute('select * from evidence_sources order by rowid')]
+   220	        return {'errors': errors, 'accepted_requests': requests, 'views': views, 'groups': groups, 'members': members,
+   221	                'evidence': evidence, 'links': links, 'sources': sources, 'judgements': [dict(r) for r in judgments],
+   222	                'baseline_dependencies': baseline.execute('select count(*) from dependencies').fetchone()[0]}
+   223	
+   224	
+   225	def run_trial(directory, trial, *, live=False, transport=None):
+   226	    directory = Path(directory).resolve()
+   227	    if trial not in ORDER or contract(directory) != json.loads((directory / 'study.json').read_text()):
+   228	        raise ValueError('unknown trial or changed study contract')
+   229	    previous = ORDER[:ORDER.index(trial)]
+   230	    for name in previous:
+   231	        saved = json.loads((directory / name / 'result.json').read_text())
+   232	        if saved['failure'] or saved['audit']['errors']:
+   233	            raise ValueError('prior trial failed')
+   234	    if protected_changes(directory):
+   235	        raise ValueError('protected database changed')
+   236	    folder = directory / trial
+   237	    if folder.exists():
+   238	        raise ValueError('trial already started; preserve it')
+   239	    cfg, uni = configuration()
+   240	    if transport is None:
+   241	        if not live:
+   242	            raise ValueError('explicit offline transport or --live required')
+   243	        transport = StudyTransport(GuardedTransport(directory / 'budget.sqlite', single_attempt_http(), max_calls=144))
+   244	    folder.mkdir()
+   245	    shutil.copyfile(directory / 'ordered-baseline.sqlite', folder / 'views.sqlite')
+   246	    archive = model.Archive(folder / 'archive.sqlite')
+   247	    runner = DayRunner(directory / 'items.sqlite', folder / 'manifests') if trial.startswith('concurrent') else None
+   248	    before = transport.guard.summary()
+   249	    old_handlers = {}
+   250	    if live:
+   251	        def cancel(signum, frame):
+   252	            transport.stop('cancelled')
+   253	            raise KeyboardInterrupt
+   254	        for sig in (signal.SIGINT, signal.SIGTERM):
+   255	            old_handlers[sig] = signal.signal(sig, cancel)
+   256	    failed, result, inspected = None, None, None
+   257	    started = time.perf_counter()
+   258	    try:
+   259	        result = replay.run(testdb_path=str(directory / 'items.sqlite'), views_path=str(folder / 'views.sqlite'), archive=archive,
+   260	                            cfg=cfg, universe=uni, from_day=DAY, until_day=DAY, transport=transport,
+   261	                            day_runner=study_day(runner, transport) if runner else None, log=lambda msg: print(msg, flush=True))
+   262	        inspected = audit(directory, trial, cfg, uni)
+   263	        if inspected['errors']:
+   264	            raise ValueError('structural audit failed: ' + '; '.join(inspected['errors']))
+   265	    except BaseException as exc:
+   266	        transport.stop('trial failed')
+   267	        failed = {'type': type(exc).__name__, 'message': str(exc)[:500]}
+   268	        raise
+   269	    finally:
+   270	        elapsed = time.perf_counter() - started
+   271	        for sig, handler in old_handlers.items():
+   272	            signal.signal(sig, handler)
+   273	        archive.conn.close()
+   274	        after = transport.guard.summary()
+   275	        report = {'trial': trial, 'seconds': elapsed, 'failure': failed, 'result': result, 'audit': inspected,
+   276	                  'events': runner.events if runner else [], 'changed_protected': protected_changes(directory),
+   277	                  'new_attempts': after['attempts'][len(before['attempts']):],
+   278	                  'conservative_cost_microdollars': after['held_microdollars'] - before['held_microdollars']}
+   279	        (folder / 'result.json').write_text(json.dumps(report, indent=2, ensure_ascii=False))
+   280	        print(json.dumps({k: report[k] for k in ('trial', 'seconds', 'failure', 'changed_protected', 'conservative_cost_microdollars')}), flush=True)
+   281	        if report['changed_protected'] and not failed:
+   282	            raise ValueError('protected database changed')
+   283	
+   284	
+   285	if __name__ == '__main__':
+   286	    parser = argparse.ArgumentParser(description=__doc__)
+   287	    parser.add_argument('--directory', type=Path, required=True)
+   288	    parser.add_argument('--prepare', action='store_true')
+   289	    parser.add_argument('--trial', choices=ORDER)
+   290	    parser.add_argument('--live', action='store_true')
+   291	    args = parser.parse_args()
+   292	    if args.prepare:
+   293	        prepare(args.directory.resolve())
+   294	    elif args.trial:
+   295	        run_trial(args.directory, args.trial, live=args.live)
+   296	    else:
+   297	        parser.error('choose --prepare or --trial')
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 45 -B 8 '"'^## .*D17[467]|D174|D176|D177'"' /Users/lchingen/hivemind/docs/DECISIONS.md && git -C /Users/lchingen/hivemind diff -- poc/concurrency_study/ingestion.py docs/research/2026-10-25-ingestion-v11/plan.md && rg --files -g AGENTS.md /Users/lchingen /Users 2>/dev/null" in /Users/lchingen/hivemind
+ exited 2 in 8559ms:
+2374-
+2375-## D173 · 2026-10-25 · Isolated provider smoke before a larger concurrency test
+2376-
+2377-- Alex approved proceeding with a small test and required preserving the working database: “don't contaminate the current working db ... check the batch API usage correctly ... small scale test before moving forward”. All existing databases remain read-only; no merge or production activation is authorized.
+2378-- The [registered smoke](research/2026-10-25-api-smoke/plan.md) repeats two unchanged extraction requests and two unchanged Jev requests, with three fresh samples of two serial controls and one two-worker arm. Maximum 36 requests; conservative $1.50 reservation ceiling; no automatic retries. This is ordinary API concurrency, not OpenAI's asynchronous Batch API, and is not end-to-end or 10x acceptance.
+2379-- The isolated transport reserves money before dispatch, retains unknown usage after failures, and closes admission on any worker failure or cancellation. A synchronized dispatch decision separates work not yet committed to sending from in-flight work. The provider endpoints, pinned models, response shapes and price envelopes were checked against the official documentation. Existing prompts, product behavior, golds and default transports remain unchanged.
+2380-- Result: [36-request smoke](../poc/reports/2026-10-25-api-smoke/results.md) completed with valid responses, no retries, and all 122 pre-existing database files unchanged. Median two-request speed ratios were 1.08x extraction and 1.77x Jev. Fresh extraction varied between controls; one of 27 Jev categorical comparisons differed. This passes API integration, not semantic or 10x acceptance. A small end-to-end comparison remains next; no production promotion.
+2381-
+2382:## D174 · 2026-10-25 · Three-document end-to-end concurrency diagnostic
+2383-
+2384-- Alex asked to keep going. The [registered comparison](research/2026-10-25-ingestion-smoke/plan.md) uses the whole SK, NAVER and follow-up documents from July 24 against the ordered pre-July-24 baseline. It runs through the product's replay path on separate scratch ledgers, with fresh archives, three serial controls and three concurrent trials; the first control is read before the next trial. This is diagnostic, not production acceptance.
+2385-- The study shares at most two provider requests across all stages. It keeps the $1.50 total conservative ceiling and a 144-call ceiling, stops on failure, and does not alter production prompts, grouping rules, default transports or source/gold databases. Reservation now uses the existing request's actual output cap while retaining the full model input bound and conservative published rates.
+2386-- Before paid calls, the snapshot was corrected for this study to explicitly omit unordered sequence-zero audit rows; the source records are retained untouched. The audit rebuilds each accepted request from its committed prefix and rechecks that exact archived answer into the saved handover. Worker-side schema checks close admission before releasing a slot, including during daily judging. Free full-path controls and a substituted-handover mutant pass/fail as intended; 156 tests passed. Read-only design and code follow-up reviews found no serious issue.
+2387-- The first live serial control completed structurally but failed the NAVER-project check. The model expressed the 2028 expansion as capacity, which the numeric horizon refused; the older library expressed it as an event and accepted it. Evidence and its group disappeared with the candidate. The [result and census](../poc/reports/2026-10-25-ingestion-smoke/results.md) record the trace. No concurrent live trial followed; the journal is closed. Eligibility and the gold remain unchanged pending a product decision. This is not a concurrency acceptance failure or a measured speed regression.
+2388-
+2389-## D175 · 2026-10-25 · Publish sequential cleanup separately from experiments
+2390-
+2391-- Alex asked to commit and push fixes/cleanup that relate to the current sequential version. The pure request-construction cleanup was isolated in a separate worktree and pushed as `07aaff0` on `cleanup/sequential-requests`. It centralizes existing request and hash construction without changing payloads or processing behavior; all 3,595 archived request identities and 123 sequential product/corpus tests pass.
+2392-- The branch contains no concurrent runner, parallel matching, experimental transport or project-eligibility change. It is pushed, not merged into `main`. Experimental work remains local in the original worktree.
+2393-
+2394:## D176 · 2026-10-25 · Judge business-question coverage, not mandatory project cards
+2395-
+2396:- After the D174 result, Alex asked for the hedge-fund-analyst interpretation and then a systematic clean solution. The clarified criterion is whether material source information informs an appropriate, testable business question, retaining attribution and distinguishing plans from orders or realized revenue. A named project does not automatically require its own thesis or group.
+2397:- The earlier D174 mandatory-project-card interpretation is not itself sufficient to establish an extraction defect. Preserve that experiment and its original criterion; review evidence coverage, unsupported implications, wrong links and duplicate questions before changing the gold.
+2398-- The [admission proposal](research/2026-10-25-thesis-admission/proposal.md) identifies the numeric-card recipe and overloaded measure/horizon decision, and proposes a minimal instruction-only causal comparison before any new schema. This records the investigation scope, not approval of the proposed schema, a wider numeric horizon, a production prompt change or another paid run.
+2399-
+2400:## D177 · 2026-10-25 · Modify and test NAVER admission on one frozen context
+2401-
+2402-- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
+2403-- The treatment removes mandatory numeric-card instructions, asks first for a material uncovered business question, and distinguishes an announced milestone's quantitative completion criterion from an annual forecast. It names no NAVER-specific facts. The system message shrinks by 172 characters; non-system request content is identical.
+2404-- Six isolated single-item rounds use the exact pre-NAVER state from the failed serial control, with a new $0.60/36-call ceiling and no network retries. Their scope ends after matching/writing; daily judging and wider extraction quality are not tested. The existing working databases remain read-only. No schema or general horizon-policy change is authorized by this experiment.
+2405-
+2406-- Result: [six fresh samples](../poc/reports/2026-10-25-naver-admission/results.md) retained appropriate project coverage in 3/3 treatments versus 2/3 controls. The other control attached platform-use evidence to Rubin production instead; the two passing controls also proposed discarded annual-capacity questions. Treatment preserved plan attribution and the 200 MW / 2028 milestone without that extra question. Twelve physical requests used $0.009831 at Standard list prices and $0.031480 conservative accounting; all 124 protected databases were unchanged. This supports the candidate on this source only; the default remains v23, with no schema or horizon-policy change.
+2407-- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-zbevtBBK' (errno=Operation not permitted)
+2026-10-25 23:29:29.691 xcodebuild[96957:8797154]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:29:29.814 xcodebuild[96957:8797153] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-INzHIpCX' (errno=Operation not permitted)
+2026-10-25 23:29:30.153 xcodebuild[96959:8797164]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:29:30.267 xcodebuild[96959:8797163] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+/Users/lchingen/pitch-deck/AGENTS.md
+/Users/lchingen/hivemind-admission-v11-2026-10-25/AGENTS.md
+/Users/lchingen/hivemind-sequential-cleanup-2026-10-25/AGENTS.md
+/Users/lchingen/truenorth-web/AGENTS.md
+/Users/lchingen/tn-hivemind/AGENTS.md
+/Users/lchingen/fund-arb-bot/AGENTS.md
+/Users/lchingen/hummingbird/AGENTS.md
+/Users/lchingen/tn-hivemind/context/vault/AGENTS.md
+/Users/lchingen/tn-financial-data/AGENTS.md
+/Users/lchingen/hivemind/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/tiers-bench/AGENTS.md
+/Users/lchingen/tn-mono/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/tiers-mac/AGENTS.md
+/Users/lchingen/fund-arb-bot/AGENTS.md
+/Users/lchingen/tn-financial-data/AGENTS.md
+/Users/lchingen/tn-mono/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono/AGENTS.md
+/Users/lchingen/tn-desk/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/h093-mac/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/h093-bench/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/fa-judge/AGENTS.md
+/Users/lchingen/tn/tn-gen-ui-proto-all/frontend/node_modules/recharts/AGENTS.md
+/Users/lchingen/tn/tn-gen-ui-proto-all/frontend/node_modules/recharts/AGENTS.md
+/Users/lchingen/pitch-deck/AGENTS.md
+/Users/lchingen/hummingbird/AGENTS.md
+/Users/lchingen/hivemind/AGENTS.md
+/Users/lchingen/tn-polaris/AGENTS.md
+/Users/lchingen/design-system/AGENTS.md
+/Users/lchingen/tn-polaris/AGENTS.md
+/Users/lchingen/design-system/AGENTS.md
+/Users/lchingen/hermes/AGENTS.md
+/Users/lchingen/hermes/AGENTS.md
+/Users/lchingen/Documents/Alex-brain/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/AGENTS.md
+/Users/lchingen/truenorth-web/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/AGENTS.md
+/Users/lchingen/hivemind-admission-v11-2026-10-25/AGENTS.md
+/Users/lchingen/tn-hivemind/AGENTS.md
+/Users/lchingen/tn-hivemind/context/vault/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/Documents/Alex-brain/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-exitcode/AGENTS.md
+/Users/lchingen/hivemind-sequential-cleanup-2026-10-25/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d1-tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/tiers-bench/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-review3/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/tiers-mac/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-int/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/h093-mac/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-analysis-code/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w1-release/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/h093-bench/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-main/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-api/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/AGENTS.md
+/Users/lchingen/tn-desk-worktrees/fa-judge/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tools-catalog/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-price-harness/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-h093-pod/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-merge-upstream/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-cli/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/memory-admin-security/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-build-toolshape/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w2-rail/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d3-tn-api/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-identity/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-routines-pod/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-d2-deploy/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-tiers-w3-api/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/agents/__inventory__/default/prompt-backup-20260519-145634/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/agents/default/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/services/tn-claw/agents/desk/AGENTS.md
+/Users/lchingen/tn-mono-worktrees/desk-webtools-codex/AGENTS.md
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D174|D176|D177' /Users/lchingen/hivemind/docs/DECISIONS.md; nl -ba /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-smoke/plan.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2382:## D174 · 2026-10-25 · Three-document end-to-end concurrency diagnostic
+2394:## D176 · 2026-10-25 · Judge business-question coverage, not mandatory project cards
+2396:- After the D174 result, Alex asked for the hedge-fund-analyst interpretation and then a systematic clean solution. The clarified criterion is whether material source information informs an appropriate, testable business question, retaining attribution and distinguishing plans from orders or realized revenue. A named project does not automatically require its own thesis or group.
+2397:- The earlier D174 mandatory-project-card interpretation is not itself sufficient to establish an extraction defect. Preserve that experiment and its original criterion; review evidence coverage, unsupported implications, wrong links and duplicate questions before changing the gold.
+2400:## D177 · 2026-10-25 · Modify and test NAVER admission on one frozen context
+     1	# Three-document ingestion comparison
+     2	
+     3	Alex asked to continue after the isolated API smoke (D173). This next slice runs the product's replay entry point on independent scratch ledgers. It does not enable production concurrency, change a prompt, change a gold, or implement the asynchronous OpenAI Batch API.
+     4	
+     5	## Source and fixed comparison
+     6	
+     7	Use the complete stored July 24 documents, unchanged:
+     8	
+     9	1. `nvidianews:sk-group-and-nvidia-expand-strategic-partnership-across-ai-factories-and-next-generation-memory`
+    10	2. `nvidianews:naver-nvidia-and-brookfield-to-expand-koreas-national-ai-factory-infrastructure-buildout`
+    11	3. `nvblog:ai-summit-korea-partners-and-nvidia`
+    12	
+    13	The baseline is the historical Jev ledger strictly before sequence 21, the start of July 24. It contains no July 24 writes. The new source database contains only the three selected whole rows, preserving their metadata and order. This is a selected-subset stress test, not a replay of the entire day. The old Rubin test fixture contains excerpts and is not used as live source material. Source navigation/footer text is preserved too; no new cleaning rule is introduced.
+    14	
+    15	The snapshot call explicitly excludes sequence-zero rows: those audit records have no order within the dispatch sequence. Census of both stored ledgers found 31 sequence-zero processing records each, all dated July 24 or later, plus 6/13 sequence-zero review-pool records without a recoverable originating input/date. The study's baseline omits these unordered audit rows rather than guessing their time. It is a projection of ordered product state, not a complete export of historical audit records. The baseline check also refuses any dated processing/evidence/judgement/day-completion record on or after July 24. Earlier positive-sequence product state is preserved. Prior snapshot diagnostics keep their default behavior; this new option is explicit for the study.
+    16	
+    17	Run the unchanged `poc-v23` configuration through `replay.run`. Three fresh serial controls and three fresh concurrent trials, with their own empty archives and copies of one baseline, provide three paired samples and a serial-versus-serial variation check. Fixed order: control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3. Read the first serial result before starting a concurrent trial. Each trial is launched explicitly; a failure does not automatically retry or start the next trial. Maximum 144 physical API calls and $1.50 total conservative cost, shared across all trials. This is a fresh budget, not a continuation of the API smoke's spending. No cap increases.
+    18	
+    19	Both modes share a maximum of two in-flight provider calls, including daily judging. The serial control still uses the original item-by-item path and the original dependency-ordered day judging. The concurrent arm additionally uses D172's two extraction workers and two Jev workers. A semaphore in the study transport limits outbound calls; it does not change prompts, item order, matching, writer or judging rules. Network/unknown-usage failure closes admission. Known model refusals follow the existing product retry rules; every physical attempt counts. An authoritative failed item closes admission before the concurrent generator is drained.
+    20	
+    21	After accounting durably records a response and before the study transport releases its semaphore slot, it validates the raw JSON/schema or Jev answer map with the existing validators. Malformed JSON, schema refusal or invalid Jev structure closes admission in that worker, covering day-judging workers as well as ingestion. Other slot waiters must recheck admission and cannot send. A valid-schema answer that fails a later product reference check still follows that product's existing correction rules; the study transport does not invent a semantic validator. Cancellation signals close admission before unwinding executors. Tests cover both an authoritative failed item and a schema failure within the actual daily-judging executor.
+    22	
+    23	The budget reservation will use the request's actual validated output limit instead of reserving the model's maximum 128K output for every request. Keep the full 922K input bound and the same worst-case published Standard rates. For 16K output this reserves $0.520300, not $0.70; for 128K it reserves $0.612700. This does not raise the cap or infer tokens from text length. See the official source links in the D173 plan. Budget admission remains a refusal, never permission to overspend.
+    24	
+    25	## Measure and calibration
+    26	
+    27	The governing semantics come from D159/D172 and the existing Claude-authored `week-benchmark-v23-2026-10-25.json`. Its SK and NAVER candidates are distinct new events; their project groups are separate; Rubin association is optional for these deployments. Read the saved source statements: SK's first factory is planned for 2027 and uses Vera Rubin; NAVER's GAK Sejong expansion targets 200 MW by 2028 and also describes Rubin. The follow-up reports the same announced projects. Do not compare fresh candidate/group IDs literally with the gold's IDs, or classify every unlabelled new candidate as correct.
+    28	
+    29	Report, for every trial:
+    30	
+    31	- The two project questions and their source evidence; separate identity and customer-specific group membership. Additional well-sourced questions are not a failure merely because counts differ. Manually map the small result to the source and existing gold; record the mapping and reasons. A wrong/missing required project is reported separately from optional grouping variation.
+    32	- Whether the follow-up cites existing project questions, repeats an earlier statement or creates a duplicate. A repeated statement adds a source; it is not independent confirmation. Do not require the model to extract every sentence of the blog.
+    33	- Every accepted extraction's complete request hash rebuilt from its actual committed prefix, including schema and group context. Find that exact call's archived body/answer, re-run the existing extraction checks, and require the resulting handover to equal the saved handover. Existence of a matching request alone is insufficient. Every accepted input, dispatch sequence and write sequence must agree.
+    34	- Source quotation validation, existence/order of destinations, preservation of baseline questions/ladders, new group/member records, and daily judgement followed by day completion. Each changed eligible thesis is judged at most once at that sequence; cited evidence belongs to it.
+    35	- End-to-end elapsed time, physical calls, accepted/reused/stale requests, and conservative and Standard list-price cost. Include discarded speculative calls. A failed or unexercised case does not count as a pass. This small dependent workload cannot establish whole-day 10x acceleration.
+    36	
+    37	If the first control misses a required project, stop before further paid trials and examine its raw output, checks and final writes. If any structural check fails, stop. Read each trial before the next. The six-trial set is a diagnostic comparison, not registered production acceptance or a new gold standard. Production remains unapproved.
+    38	
+    39	## State × event
+    40	
+    41	| State | Event | Transition and write |
+    42	|---|---|---|
+    43	| Unprepared | Existing output folder / changed source | Refuse overwriting or mixing experiments |
+    44	| Prepared | New explicit trial | Copy the same baseline into a new trial directory; empty archive; record config/runtime/source/baseline hashes |
+    45	| Trial waiting | Caller resubmits started trial | Refuse; preserve its data, no automatic resume |
+    46	| Waiting for outbound slot | Slot opens | Guard checks budget and cancellation before reserving/dispatching |
+    47	| Request dispatched | Known response | Journal usage, archive, and continue normal schema/content checks |
+    48	| Request dispatched | Transport failure or unknown usage | Retain reservation, close admission, drain existing calls, fail trial |
+    49	| Accounted response | Invalid raw JSON/schema/Jev shape in any worker | Close admission before releasing the slot or draining any parent executor; raw response and known cost remain in the guard journal |
+    50	| Speculation ready | Earlier committed prefix changes | Existing D172 rule recomputes; both calls are counted |
+    51	| Authoritative item fails | Later preparation is pending | Close admission before generator cleanup; cancel pending and drain dispatched calls; no later authoritative write |
+    52	| Judging | Independent/dependent views | Existing topology; shared outbound limit; no next day/trial automatically |
+    53	| Trial finished | Structural and manual review pass | Record results; next named trial may be started explicitly |
+    54	| Trial finished | Structural failure / missing required control result | Preserve result and stop the comparison |
+    55	| Any end | Protected originals changed | Report changed paths; no claim of database isolation |
+    56	| Any active state | Cancellation signal | Close admission before raising cancellation; queued slot waiters never dispatch; drain committed requests |
+    57	
+    58	## Value × reader and new path × checks
+    59	
+    60	| Value | Writer and readers | Check |
+    61	|---|---|---|
+    62	| Three complete item rows | Prepared from read-only source → replay | Full row/text identity; fixed order; only selected IDs |
+    63	| Historical baseline | Existing snapshot function → every trial writer | No sequence >=21; identical baseline digest; never write the original |
+    64	| Exact request/context | Existing extraction builder → workers and acceptance audit | Rebuild against each committed prefix, schema included |
+    65	| Reservation | POC guard → every provider stage | Actual request output cap plus full model input bound; tests cover maximum and small caps; same total cap |
+    66	| Semaphore | Study transport → all provider threads | Real temp journals + fake provider prove <=2 dispatched calls; cancelled waiters never send |
+    67	| Failed item | Product result → study day wrapper → guard | Close admission before drain; fake held preparation proves no later dispatch |
+    68	| Failed judge worker | Raw response → shared study transport → guard | Actual judging executor with more jobs than slots; malformed first response prevents queued sends |
+    69	| Judgements/completion | Existing product code → structural audit | Current day/sequence; evidence ownership; no completion before successful judging |
+    70	| Gold correspondence | Manual source review → report | Stable meaning, not numeric IDs, names or equal counts |
+    71	
+    72	The only reusable change is tighter reservation based on the request's existing output cap, in the POC budget owner. Other code stays in the study harness. The source corpus, golds, default transport and production runtime are out of scope. Read-only review checks these tables before implementation; offline controls precede any live trial.
+
+exec
+/opt/homebrew/bin/zsh -lc 'rg --files -g AGENTS.md /Users/lchingen/hivemind; nl -ba /Users/lchingen/hivemind/AGENTS.md | head -n 25' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind/AGENTS.md
+     1	# Hivemind rebuild: working instructions
+     2	
+     3	This repository, `hivemind`, rebuilds Hivemind from the old repository `../tn-hivemind`, one piece at a time. The rules below are that repository's
+     4	principles and 54 lessons, merged and cut down to the practices that hold whatever the new code's structure turns out
+     5	to be. Rules that assumed the old architecture are left out; an architectural rule enters this file only once the new
+     6	design has decided it. The incidents behind these rules are history in `../tn-hivemind/docs/LESSONS.md`: read it for
+     7	the reason behind a rule, never as a rule.
+     8	
+     9	## How these rules work
+    10	
+    11	The old repository added one lesson per incident, and the same failures repeated, because a lesson was a sentence read
+    12	once and applied fix by fix; none sat at the decision to act. Here each rule sits at the decision it governs (diagnose,
+    13	design, code, test, verify) and, where it can, names what must be written down before that decision is taken. A rule
+    14	that code can enforce becomes a check, and this file names the check. A new lesson amends the rule at its decision; it
+    15	becomes a new rule only when no rule covers that decision.
+    16	
+    17	## Authority and scope
+    18	
+    19	- Alex's messages win, then recorded decisions (`docs/DECISIONS.md`), then the governing design documents. Build what
+    20	  the governing document specifies. A finding that argues for something else is reported with its evidence and
+    21	  recorded as a decision before any work departs from the document.
+    22	- Do what was asked. A review or census is a set of findings, not a work order: the mechanisms it names go to Alex as a
+    23	  short list with one structural rule each, and one is built when Alex picks it. Never start what only Alex can launch.
+    24	  Bring Alex only the choices that change what the system does, each with its options and a lean; settle wording,
+    25	  placement and where a rule is written yourself, and say so in the report.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/poc/concurrency_study/ingestion.py | sed -n '210,400p'; git -C /Users/lchingen/hivemind diff -- poc/concurrency_study/ingestion.py docs/research/2026-10-25-ingestion-v11/plan.md" in /Users/lchingen/hivemind
+ succeeded in 1496ms:
+   210	            errors.append('day not completed')
+   211	        missing = conn.execute('select count(*) from thesis_group_members m left join views v using(view_id) left join thesis_groups g using(group_id) where v.view_id is null or g.group_id is null').fetchone()[0]
+   212	        if missing:
+   213	            errors.append('dangling group membership')
+   214	        views = [dict(r) for r in conn.execute('select * from views order by rowid')]
+   215	        groups = [dict(r) for r in conn.execute('select * from thesis_groups order by rowid')]
+   216	        members = [dict(r) for r in conn.execute('select * from thesis_group_members order by rowid')]
+   217	        evidence = [dict(r) for r in conn.execute('select * from evidence order by rowid')]
+   218	        links = [dict(r) for r in conn.execute('select * from evidence_links order by rowid')]
+   219	        sources = [dict(r) for r in conn.execute('select * from evidence_sources order by rowid')]
+   220	        return {'errors': errors, 'accepted_requests': requests, 'views': views, 'groups': groups, 'members': members,
+   221	                'evidence': evidence, 'links': links, 'sources': sources, 'judgements': [dict(r) for r in judgments],
+   222	                'baseline_dependencies': baseline.execute('select count(*) from dependencies').fetchone()[0]}
+   223	
+   224	
+   225	def run_trial(directory, trial, *, live=False, transport=None):
+   226	    directory = Path(directory).resolve()
+   227	    if trial not in ORDER or contract(directory) != json.loads((directory / 'study.json').read_text()):
+   228	        raise ValueError('unknown trial or changed study contract')
+   229	    previous = ORDER[:ORDER.index(trial)]
+   230	    for name in previous:
+   231	        saved = json.loads((directory / name / 'result.json').read_text())
+   232	        if saved['failure'] or saved['audit']['errors']:
+   233	            raise ValueError('prior trial failed')
+   234	    if protected_changes(directory):
+   235	        raise ValueError('protected database changed')
+   236	    folder = directory / trial
+   237	    if folder.exists():
+   238	        raise ValueError('trial already started; preserve it')
+   239	    cfg, uni = configuration()
+   240	    if transport is None:
+   241	        if not live:
+   242	            raise ValueError('explicit offline transport or --live required')
+   243	        transport = StudyTransport(GuardedTransport(directory / 'budget.sqlite', single_attempt_http(), max_calls=144))
+   244	    folder.mkdir()
+   245	    shutil.copyfile(directory / 'ordered-baseline.sqlite', folder / 'views.sqlite')
+   246	    archive = model.Archive(folder / 'archive.sqlite')
+   247	    runner = DayRunner(directory / 'items.sqlite', folder / 'manifests') if trial.startswith('concurrent') else None
+   248	    before = transport.guard.summary()
+   249	    old_handlers = {}
+   250	    if live:
+   251	        def cancel(signum, frame):
+   252	            transport.stop('cancelled')
+   253	            raise KeyboardInterrupt
+   254	        for sig in (signal.SIGINT, signal.SIGTERM):
+   255	            old_handlers[sig] = signal.signal(sig, cancel)
+   256	    failed, result, inspected = None, None, None
+   257	    started = time.perf_counter()
+   258	    try:
+   259	        result = replay.run(testdb_path=str(directory / 'items.sqlite'), views_path=str(folder / 'views.sqlite'), archive=archive,
+   260	                            cfg=cfg, universe=uni, from_day=DAY, until_day=DAY, transport=transport,
+   261	                            day_runner=study_day(runner, transport) if runner else None, log=lambda msg: print(msg, flush=True))
+   262	        inspected = audit(directory, trial, cfg, uni)
+   263	        if inspected['errors']:
+   264	            raise ValueError('structural audit failed: ' + '; '.join(inspected['errors']))
+   265	    except BaseException as exc:
+   266	        transport.stop('trial failed')
+   267	        failed = {'type': type(exc).__name__, 'message': str(exc)[:500]}
+   268	        raise
+   269	    finally:
+   270	        elapsed = time.perf_counter() - started
+   271	        for sig, handler in old_handlers.items():
+   272	            signal.signal(sig, handler)
+   273	        archive.conn.close()
+   274	        after = transport.guard.summary()
+   275	        report = {'trial': trial, 'seconds': elapsed, 'failure': failed, 'result': result, 'audit': inspected,
+   276	                  'events': runner.events if runner else [], 'changed_protected': protected_changes(directory),
+   277	                  'new_attempts': after['attempts'][len(before['attempts']):],
+   278	                  'conservative_cost_microdollars': after['held_microdollars'] - before['held_microdollars']}
+   279	        (folder / 'result.json').write_text(json.dumps(report, indent=2, ensure_ascii=False))
+   280	        print(json.dumps({k: report[k] for k in ('trial', 'seconds', 'failure', 'changed_protected', 'conservative_cost_microdollars')}), flush=True)
+   281	        if report['changed_protected'] and not failed:
+   282	            raise ValueError('protected database changed')
+   283	
+   284	
+   285	if __name__ == '__main__':
+   286	    parser = argparse.ArgumentParser(description=__doc__)
+   287	    parser.add_argument('--directory', type=Path, required=True)
+   288	    parser.add_argument('--prepare', action='store_true')
+   289	    parser.add_argument('--trial', choices=ORDER)
+   290	    parser.add_argument('--live', action='store_true')
+   291	    args = parser.parse_args()
+   292	    if args.prepare:
+   293	        prepare(args.directory.resolve())
+   294	    elif args.trial:
+   295	        run_trial(args.directory, args.trial, live=args.live)
+   296	    else:
+   297	        parser.error('choose --prepare or --trial')
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-SCm6gC29' (errno=Operation not permitted)
+2026-10-25 23:29:41.221 xcodebuild[96997:8797621]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:29:41.418 xcodebuild[96997:8797620] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-euF6qsLW' (errno=Operation not permitted)
+2026-10-25 23:29:41.802 xcodebuild[97026:8797929]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-25 23:29:41.926 xcodebuild[97026:8797928] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/docs/DECISIONS.md | sed -n '2370,2445p'; rg -n 'v11|config' /Users/lchingen/hivemind/poc/config/*v11* /Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/* 2>/dev/null" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  2370	- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
+  2371	- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
+  2372	- The [first implementation slice](research/2026-10-25-day-batch-review/implementation.md) covers offline coordinator, independent Jev calls and failure/restart verification on temporary storage. No paid call, new spending cap or default activation is authorized by this slice. The current per-item spend check is not safe reservation accounting for concurrent paid calls; resolve it before a live comparison.
+  2373	- Offline slice result: [ordered-concurrency POC](../poc/reports/2026-10-25-concurrency-poc/results.md). Shared request identity prevents conflicting concurrent answers under one archive ID. Bounded Jev submission cancels pending work on failure; the daily cost log includes discarded speculative work. Default replay remains serial. 143 tests pass; five intended mutants fail; 3,595 historical request hashes are unchanged. Final focused review finds no serious issue. Live accounting, fresh controls and speed measurement remain outstanding; no paid ingestion calls were made.
+  2374	
+  2375	## D173 · 2026-10-25 · Isolated provider smoke before a larger concurrency test
+  2376	
+  2377	- Alex approved proceeding with a small test and required preserving the working database: “don't contaminate the current working db ... check the batch API usage correctly ... small scale test before moving forward”. All existing databases remain read-only; no merge or production activation is authorized.
+  2378	- The [registered smoke](research/2026-10-25-api-smoke/plan.md) repeats two unchanged extraction requests and two unchanged Jev requests, with three fresh samples of two serial controls and one two-worker arm. Maximum 36 requests; conservative $1.50 reservation ceiling; no automatic retries. This is ordinary API concurrency, not OpenAI's asynchronous Batch API, and is not end-to-end or 10x acceptance.
+  2379	- The isolated transport reserves money before dispatch, retains unknown usage after failures, and closes admission on any worker failure or cancellation. A synchronized dispatch decision separates work not yet committed to sending from in-flight work. The provider endpoints, pinned models, response shapes and price envelopes were checked against the official documentation. Existing prompts, product behavior, golds and default transports remain unchanged.
+  2380	- Result: [36-request smoke](../poc/reports/2026-10-25-api-smoke/results.md) completed with valid responses, no retries, and all 122 pre-existing database files unchanged. Median two-request speed ratios were 1.08x extraction and 1.77x Jev. Fresh extraction varied between controls; one of 27 Jev categorical comparisons differed. This passes API integration, not semantic or 10x acceptance. A small end-to-end comparison remains next; no production promotion.
+  2381	
+  2382	## D174 · 2026-10-25 · Three-document end-to-end concurrency diagnostic
+  2383	
+  2384	- Alex asked to keep going. The [registered comparison](research/2026-10-25-ingestion-smoke/plan.md) uses the whole SK, NAVER and follow-up documents from July 24 against the ordered pre-July-24 baseline. It runs through the product's replay path on separate scratch ledgers, with fresh archives, three serial controls and three concurrent trials; the first control is read before the next trial. This is diagnostic, not production acceptance.
+  2385	- The study shares at most two provider requests across all stages. It keeps the $1.50 total conservative ceiling and a 144-call ceiling, stops on failure, and does not alter production prompts, grouping rules, default transports or source/gold databases. Reservation now uses the existing request's actual output cap while retaining the full model input bound and conservative published rates.
+  2386	- Before paid calls, the snapshot was corrected for this study to explicitly omit unordered sequence-zero audit rows; the source records are retained untouched. The audit rebuilds each accepted request from its committed prefix and rechecks that exact archived answer into the saved handover. Worker-side schema checks close admission before releasing a slot, including during daily judging. Free full-path controls and a substituted-handover mutant pass/fail as intended; 156 tests passed. Read-only design and code follow-up reviews found no serious issue.
+  2387	- The first live serial control completed structurally but failed the NAVER-project check. The model expressed the 2028 expansion as capacity, which the numeric horizon refused; the older library expressed it as an event and accepted it. Evidence and its group disappeared with the candidate. The [result and census](../poc/reports/2026-10-25-ingestion-smoke/results.md) record the trace. No concurrent live trial followed; the journal is closed. Eligibility and the gold remain unchanged pending a product decision. This is not a concurrency acceptance failure or a measured speed regression.
+  2388	
+  2389	## D175 · 2026-10-25 · Publish sequential cleanup separately from experiments
+  2390	
+  2391	- Alex asked to commit and push fixes/cleanup that relate to the current sequential version. The pure request-construction cleanup was isolated in a separate worktree and pushed as `07aaff0` on `cleanup/sequential-requests`. It centralizes existing request and hash construction without changing payloads or processing behavior; all 3,595 archived request identities and 123 sequential product/corpus tests pass.
+  2392	- The branch contains no concurrent runner, parallel matching, experimental transport or project-eligibility change. It is pushed, not merged into `main`. Experimental work remains local in the original worktree.
+  2393	
+  2394	## D176 · 2026-10-25 · Judge business-question coverage, not mandatory project cards
+  2395	
+  2396	- After the D174 result, Alex asked for the hedge-fund-analyst interpretation and then a systematic clean solution. The clarified criterion is whether material source information informs an appropriate, testable business question, retaining attribution and distinguishing plans from orders or realized revenue. A named project does not automatically require its own thesis or group.
+  2397	- The earlier D174 mandatory-project-card interpretation is not itself sufficient to establish an extraction defect. Preserve that experiment and its original criterion; review evidence coverage, unsupported implications, wrong links and duplicate questions before changing the gold.
+  2398	- The [admission proposal](research/2026-10-25-thesis-admission/proposal.md) identifies the numeric-card recipe and overloaded measure/horizon decision, and proposes a minimal instruction-only causal comparison before any new schema. This records the investigation scope, not approval of the proposed schema, a wider numeric horizon, a production prompt change or another paid run.
+  2399	
+  2400	## D177 · 2026-10-25 · Modify and test NAVER admission on one frozen context
+  2401	
+  2402	- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
+  2403	- The treatment removes mandatory numeric-card instructions, asks first for a material uncovered business question, and distinguishes an announced milestone's quantitative completion criterion from an annual forecast. It names no NAVER-specific facts. The system message shrinks by 172 characters; non-system request content is identical.
+  2404	- Six isolated single-item rounds use the exact pre-NAVER state from the failed serial control, with a new $0.60/36-call ceiling and no network retries. Their scope ends after matching/writing; daily judging and wider extraction quality are not tested. The existing working databases remain read-only. No schema or general horizon-policy change is authorized by this experiment.
+  2405	
+  2406	- Result: [six fresh samples](../poc/reports/2026-10-25-naver-admission/results.md) retained appropriate project coverage in 3/3 treatments versus 2/3 controls. The other control attached platform-use evidence to Rubin production instead; the two passing controls also proposed discarded annual-capacity questions. Treatment preserved plan attribution and the 200 MW / 2028 milestone without that extra question. Twelve physical requests used $0.009831 at Standard list prices and $0.031480 conservative accounting; all 124 protected databases were unchanged. This supports the candidate on this source only; the default remains v23, with no schema or horizon-policy change.
+  2407	- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
+  2408	
+  2409	## D178 · 2026-10-25 · Resume the isolated acceleration POC with the tested T6 role
+  2410	
+  2411	- Alex asked to push the change and return to the acceleration POC. The prompt candidate is already pushed as `8848660`; it remains inactive by default. The [resumed comparison](research/2026-10-25-ingestion-v11/plan.md) uses the identical `poc-v24-admission-test` configuration in both modes, the same three complete source items and ordered baseline, and fresh scratch ledgers and archives.
+  2412	- Keep D174's two-request outbound limit, $1.50 conservative ceiling and 144-call maximum. No provider/model, production schema, horizon, grouping or writer changes. Add only an explicit study `--config` path whose path/content are frozen before any live call. The prior stopped journal is not resumed.
+  2413	- Read each trial before the next. Apply D176/D177's material coverage, direct attachment and faithful status criterion, preserving D174's original result. A failed control, structural error, unsupported material assertion or duplicate counting stops the comparison. Six small trials can measure this workload, not establish general 10x acceleration or production readiness.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:3:Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:5:Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:29:| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:30:| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:41:| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:42:| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:45:Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:47:Prior decisions: D149/D166 keep association during extraction; D159/D172 keep accepted requests bound to the committed prefix; D173 is ordinary API concurrency, not the asynchronous Batch API; D174 is stopped; D176/D177 define source coverage without mandatory cards in every context. This experiment does not change them or promote v11.
+/Users/lchingen/hivemind/poc/config/poc-v11.json:2:  "version": "poc-v11",
+/Users/lchingen/hivemind/poc/config/poc-v11.json:3:  "_note": "poc-v11: poc-v9 with prompt idea-v8 (tuning log iteration 10): no per-part reason, each candidate written once, a two-sentence summary.",
+/Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md:9:The treatment uses `role-proposed.txt` as version 11, with category content copied unchanged and a test-only Config selecting T6-v11. Control uses the existing v23 Config. The complete request must differ only in the system message. Both use the same `gpt-6-luna` model, reasoning, output limit, user message and JSON schema.
+/Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md:30:Report each of the six samples and control-versus-control variation. Treatment 3/3 success with failing controls supports this case only. If controls also succeed, say that the prior failure was not consistently reproduced. If treatment fails, preserve the result and do not tune another arm. This does not establish broad extraction quality or authorize promotion of T6-v11 as the default.
+/Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md:37:| Prepared | Input/baseline/config/runtime changed | Refuse before any provider call |
+/Users/lchingen/hivemind/docs/research/2026-10-25-naver-admission/plan.md:50:| Role-v11 text | New version → T6 test Config → extraction builder | User message, schema and model settings unchanged; prompt size audited |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:13:Read-only review. Scope ONLY /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md and the proposed explicit-config-path delta in poc/concurrency_study/ingestion.py. Read existing D174 plan, ingestion.py and D176/D177 decisions for context. Out of scope: UI, default adoption, other modules or pre-existing issues unrelated to this tiny resume experiment. Check whether the fixed same-config serial/concurrent comparison and its coverage criteria, paid cap, and config manifest behavior contradict current contracts or cannot be implemented. Report serious issues with concrete citations, or none. Do not edit files or call providers. Do not launch subagents.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:16:I’ll review the plan and proposed explicit config-path change without editing files or calling providers. I’ll check whether the two runs stay comparable and follow the existing contracts.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:38:/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:60:/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md' in /Users/lchingen/hivemind
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:66:     3	Alex asked to push the prompt change and return to the acceleration POC. The prompt candidate was pushed as `8848660`. This experiment uses that same T6-v11 configuration in **both** the serial and concurrent arms; it does not compare old serial instructions with new concurrent instructions. The original D174 experiment remains stopped and untouched.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:68:     5	Use the same three complete July 24 items and the same ordered pre-sequence-21 baseline described in [D174's plan](../2026-10-25-ingestion-smoke/plan.md). That plan owns the runtime, source projection, ordering, failure and isolation contracts. The sole harness addition is an explicit `--config` path, defaulting to the old v23 path. The chosen path and its content join the frozen manifest. No provider, schema, grouping or writer change.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:92:    29	| Before preparation | Explicit config supplied | Read that file; freeze absolute path, bytes and resolved settings alongside source/runtime hashes |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:93:    30	| Prepared | Same explicit config | Both modes use those settings in every stage and accepted-request reconstruction |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:104:    41	| Explicit config path and bytes | CLI → preparation, run, audit | Absolute path; same manifest at every trial; default still resolves v23 |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:105:    42	| v11 T6 role | Versioned config → normal request builder | Same role in both modes; categories/schema unchanged; captured accepted requests contain the selected role |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:108:    45	Before paying: read-only review of this delta, free preflight on copied stored inputs, two full-path fake-provider controls using the selected config, a wrong-config mutant that refuses before credentials, the touched suites, then the full suite once. Preserve existing tests and D174 artifacts. Current preflight refusals must equal their stored-data control. No new prompt wording is tested by first paying; D177 already tested this candidate.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:110:    47	Prior decisions: D149/D166 keep association during extraction; D159/D172 keep accepted requests bound to the committed prefix; D173 is ordinary API concurrency, not the asynchronous Batch API; D174 is stopped; D176/D177 define source coverage without mandatory cards in every context. This experiment does not change them or promote v11.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:131:    19	from hivemind import config, extraction, jev, model, replay, testdb, universe
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:170:    58	def configuration():
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:171:    59	    return config.load(ROOT / 'poc/config/poc-v23.json'), universe.load(ROOT / 'poc/universe.json')
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:176:    64	    cfg, uni = configuration()
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:178:    66	             ROOT / 'poc/config/poc-v23.json', ROOT / 'poc/universe.json', Path(__file__),
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:183:    71	            'config': dataclasses.asdict(cfg), 'universe': vars(uni),
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:351:   239	    cfg, uni = configuration()
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:412:/opt/homebrew/bin/zsh -lc "rg -n -A 45 -B 8 '"'^## .*D17[467]|D174|D176|D177'"' /Users/lchingen/hivemind/docs/DECISIONS.md && git -C /Users/lchingen/hivemind diff -- poc/concurrency_study/ingestion.py docs/research/2026-10-25-ingestion-v11/plan.md && rg --files -g AGENTS.md /Users/lchingen /Users 2>/dev/null" in /Users/lchingen/hivemind
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:442:2402-- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:447:2407-- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:457:/Users/lchingen/hivemind-admission-v11-2026-10-25/AGENTS.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:520:/Users/lchingen/hivemind-admission-v11-2026-10-25/AGENTS.md
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:749:    17	Run the unchanged `poc-v23` configuration through `replay.run`. Three fresh serial controls and three fresh concurrent trials, with their own empty archives and copies of one baseline, provide three paired samples and a serial-versus-serial variation check. Fixed order: control-1, concurrent-1, concurrent-2, control-2, control-3, concurrent-3. Read the first serial result before starting a concurrent trial. Each trial is launched explicitly; a failure does not automatically retry or start the next trial. Maximum 144 physical API calls and $1.50 total conservative cost, shared across all trials. This is a fresh budget, not a continuation of the API smoke's spending. No cap increases.
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:776:    44	| Prepared | New explicit trial | Copy the same baseline into a new trial directory; empty archive; record config/runtime/source/baseline hashes |
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:837:/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/poc/concurrency_study/ingestion.py | sed -n '210,400p'; git -C /Users/lchingen/hivemind diff -- poc/concurrency_study/ingestion.py docs/research/2026-10-25-ingestion-v11/plan.md" in /Users/lchingen/hivemind
+/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/design-review.log:868:   239	    cfg, uni = configuration()
+
+codex
+The plan keeps both arms on the same configuration and follows D176/D177’s coverage rule. For example, NAVER’s planned expansion must reach a relevant business question, but it need not get a separate card or group. I’m checking whether the config can be passed consistently through preparation, execution and audit.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/src/hivemind/config.py | sed -n '1,225p'; nl -ba /Users/lchingen/hivemind/poc/concurrency_study/budget.py | sed -n '1,125p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Config (docs/prd/03-config.md): a versioned file of the settings a person chooses, with a checksum written into
+     2	every model call's record. A version that references a missing setting is refused whole."""
+     3	import dataclasses
+     4	import hashlib
+     5	import json
+     6	import os
+     7	
+     8	PROMPTS = os.path.join(os.path.dirname(__file__), 'prompts')
+     9	
+    10	
+    11	class ConfigError(ValueError):
+    12	    pass
+    13	
+    14	
+    15	def prompt_path(name):
+    16	    """The file of a prompt the config names, for example role-v1.txt or matching-v1.txt."""
+    17	    return os.path.join(PROMPTS, name)
+    18	
+    19	
+    20	def _prompt_files(extraction, matching, rejudging, idea=None):
+    21	    """03-config: a version that names a prompt that does not exist is refused whole. An extraction setting's
+    22	    prompt_version is '<category>-<v>': block 2 and 4 come from categories-<v>.json (the category's entry) and the
+    23	    role from role-<v>.txt; matching, re-judging and the idea reading name their file without the extension."""
+    24	    for category, setting in extraction.items():
+    25	        prefix, _, version = setting.prompt_version.rpartition('-')
+    26	        if prefix != category or not version:
+    27	            raise ConfigError(f'extraction.{category}: prompt_version {setting.prompt_version!r} must be {category}-<version>')
+    28	        categories_file = prompt_path(f'categories-{version}.json')
+    29	        if not os.path.exists(categories_file) or not os.path.exists(prompt_path(f'role-{version}.txt')):
+    30	            raise ConfigError(f'extraction.{category}: prompts for version {version!r} do not exist')
+    31	        with open(categories_file, encoding='utf-8') as handle:
+    32	            if category not in json.load(handle):
+    33	                raise ConfigError(f'extraction.{category}: categories-{version}.json has no entry for {category}')
+    34	    for setting in (matching, rejudging, idea):
+    35	        if setting is not None and not os.path.exists(prompt_path(setting.prompt_version + '.txt')):
+    36	            raise ConfigError(f'{setting.name}: prompt {setting.prompt_version}.txt does not exist')
+    37	
+    38	
+    39	@dataclasses.dataclass(frozen=True)
+    40	class Setting:
+    41	    name: str
+    42	    model: str
+    43	    prompt_version: str
+    44	    temperature: float
+    45	    reasoning_effort: str
+    46	    max_output_tokens: int
+    47	    engine: str = 'llm'       # matching only: 'llm' (the generative call) or 'jev' (TypeSafe Jev, views/jev_matching.py)
+    48	
+    49	
+    50	ENGINES = ('llm', 'jev')
+    51	
+    52	
+    53	@dataclasses.dataclass(frozen=True)
+    54	class Config:
+    55	    version: str
+    56	    checksum: str
+    57	    provider: str
+    58	    search_top_n: int
+    59	    extraction: dict          # category -> Setting
+    60	    matching: Setting
+    61	    rejudging: Setting
+    62	    final_verdict: Setting
+    63	    idea: Setting = None      # the service's reading of a user's idea (docs/poc/idea-card.md); absent in pipeline-only configs
+    64	
+    65	    def extraction_setting(self, category):
+    66	        setting = self.extraction.get(category)
+    67	        if setting is None:
+    68	            raise ConfigError(f'no extraction setting for category {category} in config {self.version}')
+    69	        return setting
+    70	
+    71	
+    72	REQUIRED = ('model', 'prompt_version', 'temperature', 'reasoning_effort', 'max_output_tokens')
+    73	
+    74	
+    75	def _setting(name, raw):
+    76	    if not isinstance(raw, dict):
+    77	        raise ConfigError(f'setting {name} is missing')
+    78	    missing = [key for key in REQUIRED if key not in raw]
+    79	    if missing:
+    80	        raise ConfigError(f'setting {name} lacks {missing}')
+    81	    engine = str(raw.get('engine', 'llm'))
+    82	    if engine not in ENGINES:
+    83	        raise ConfigError(f'setting {name}: engine {engine!r} is not one of {ENGINES}')
+    84	    return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
+    85	                   temperature=float(raw['temperature']), reasoning_effort=str(raw['reasoning_effort']),
+    86	                   max_output_tokens=int(raw['max_output_tokens']), engine=engine)
+    87	
+    88	
+    89	def load(path):
+    90	    with open(path, encoding='utf-8') as handle:
+    91	        text = handle.read()
+    92	    raw = json.loads(text)
+    93	    for key in ('version', 'provider', 'search_top_n', 'extraction', 'matching', 'rejudging', 'final_verdict'):
+    94	        if key not in raw:
+    95	            raise ConfigError(f'config lacks {key}')
+    96	    canonical = json.dumps({k: v for k, v in raw.items() if not k.startswith('_')}, sort_keys=True, ensure_ascii=False)
+    97	    checksum = hashlib.sha256(canonical.encode('utf-8')).hexdigest()[:16]
+    98	    extraction = {category: _setting(f'extraction.{category}', setting) for category, setting in raw['extraction'].items()}
+    99	    matching, rejudging = _setting('matching', raw['matching']), _setting('rejudging', raw['rejudging'])
+   100	    idea = _setting('idea', raw['idea']) if 'idea' in raw else None
+   101	    _prompt_files(extraction, matching, rejudging, idea)       # final_verdict is kept in the file but no POC step calls it
+   102	    return Config(version=str(raw['version']), checksum=checksum, provider=str(raw['provider']),
+   103	                  search_top_n=int(raw['search_top_n']), extraction=extraction,
+   104	                  matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea)
+     1	"""Conservative admission and single-attempt HTTP for the isolated API study."""
+     2	import json
+     3	from pathlib import Path
+     4	import sqlite3
+     5	import threading
+     6	import time
+     7	import urllib.error
+     8	import urllib.request
+     9	
+    10	from hivemind import jev, model
+    11	
+    12	
+    13	class BudgetError(RuntimeError):
+    14	    pass
+    15	
+    16	
+    17	def envelope(provider, request):
+    18	    """Reserve documented maximum usage, without guessing tokens from characters."""
+    19	    if provider == 'openai' and request.get('model') == 'gpt-6-luna':
+    20	        allowed = {'model', 'messages', 'response_format', 'reasoning_effort', 'max_completion_tokens'}
+    21	        if set(request) - allowed:
+    22	            raise BudgetError('unreviewed OpenAI request fields')
+    23	        cap = request.get('max_completion_tokens')
+    24	        if type(cap) is not int or not 1 <= cap <= 128000:
+    25	            raise BudgetError('unreviewed OpenAI output limit')
+    26	        # Full documented input bound and the requested output bound, including
+    27	        # highest reviewed Standard rates and the 10% regional premium.
+    28	        reserved = (922000 * 550 + cap * 825 + 999) // 1000
+    29	        return reserved, 922000, cap
+    30	    if provider == 'jev' and request.get('model') == 'jev-1.14.0':
+    31	        if set(request) != {'model', 'state', 'questions'} or not request['questions']:
+    32	            raise BudgetError('unreviewed Jev request shape')
+    33	        tokens = 65536 * (len(request['questions']) + 1)
+    34	        return (tokens * 42 + 999) // 1000, tokens, None
+    35	    raise BudgetError('unreviewed provider or model')
+    36	
+    37	
+    38	def charge(provider, response, max_input, max_output):
+    39	    usage = response.get('usage', {}) if isinstance(response, dict) else {}
+    40	    names = ('prompt_tokens', 'completion_tokens') if provider == 'openai' else ('input_tokens', 'output_tokens')
+    41	    counts = [usage.get(k) for k in names]
+    42	    if any(type(n) is not int or n < 0 for n in counts) or counts[0] > max_input or (max_output is not None and counts[1] > max_output):
+    43	        raise BudgetError('missing, invalid or above-envelope usage')
+    44	    a, b = counts
+    45	    # Integer microdollars, rounded up. OpenAI uses the highest reviewed Standard rate,
+    46	    # not an estimate of a discount or the provider's eventual bill.
+    47	    cost = (a * 550 + b * 825 + 999) // 1000 if provider == 'openai' else (a * 42 + 999) // 1000
+    48	    return cost
+    49	
+    50	
+    51	class GuardedTransport:
+    52	    """One coordinator's journal; unresolved work survives crashes and closes admission."""
+    53	
+    54	    def __init__(self, path, prepare, *, cap_microdollars=1500000, max_calls=36):
+    55	        path = Path(path)
+    56	        if not path.is_absolute() or type(cap_microdollars) is not int or cap_microdollars <= 0 or type(max_calls) is not int or max_calls <= 0:
+    57	            raise ValueError('absolute journal path and positive integer limits required')
+    58	        self.lock, self.prepare = threading.Lock(), prepare
+    59	        self.conn = sqlite3.connect(path, check_same_thread=False)
+    60	        self.conn.executescript('''
+    61	            create table if not exists settings (id integer primary key check(id=1), cap integer, max_calls integer, halted text);
+    62	            create table if not exists attempts (
+    63	              id integer primary key, provider text, request_sha256 text, request_json text,
+    64	              reserved integer, charged integer, state text, response_json text, error text,
+    65	              seconds real, completed_order integer);
+    66	        ''')
+    67	        row = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    68	        if row is None:
+    69	            self.conn.execute('insert into settings values (1,?,?,NULL)', (cap_microdollars, max_calls))
+    70	        elif row[:2] != (cap_microdollars, max_calls):
+    71	            raise BudgetError('journal limits changed')
+    72	        if self.conn.execute("select 1 from attempts where state!='complete' limit 1").fetchone():
+    73	            self.conn.execute("update settings set halted='unresolved prior attempt' where id=1")
+    74	        self.conn.commit()
+    75	
+    76	    def stop(self, reason):
+    77	        with self.lock:
+    78	            self.conn.execute('update settings set halted=coalesce(halted,?) where id=1', (reason,))
+    79	            self.conn.commit()
+    80	
+    81	    def summary(self):
+    82	        with self.lock:
+    83	            self.conn.row_factory = sqlite3.Row
+    84	            attempts = [dict(r) for r in self.conn.execute('select id,provider,request_sha256,reserved,charged,state,error,seconds,completed_order from attempts order by id')]
+    85	            halted = self.conn.execute('select halted from settings').fetchone()[0]
+    86	            self.conn.row_factory = None
+    87	        return {'attempts': attempts, 'halted': halted,
+    88	                'held_microdollars': sum(r['charged'] if r['charged'] is not None else r['reserved'] for r in attempts)}
+    89	
+    90	    def __call__(self, *args):
+    91	        provider, request = args if len(args) == 2 else ('jev', args[0])
+    92	        reserved, max_input, max_output = envelope(provider, request)
+    93	        text, sha = model.request_identity(request)
+    94	        with self.lock:
+    95	            cap, max_calls, halted = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+    96	            count, held = self.conn.execute('select count(*),coalesce(sum(coalesce(charged,reserved)),0) from attempts').fetchone()
+    97	            if halted or count >= max_calls or held + reserved > cap:
+    98	                raise BudgetError('admission closed or study limit reached')
+    99	            cur = self.conn.execute("insert into attempts(provider,request_sha256,request_json,reserved,state) values (?,?,?,?,'reserved')", (provider, sha, text, reserved))
+   100	            ident = cur.lastrowid
+   101	            self.conn.commit()
+   102	        start = time.perf_counter()
+   103	        encoded = None
+   104	        dispatched = False
+   105	        try:
+   106	            # Preparation is local only. Cancellation and dispatch then share one
+   107	            # decision point; work committed here is in flight, even before socket I/O.
+   108	            send = self.prepare(provider, request)
+   109	            with self.lock:
+   110	                if self.conn.execute('select halted from settings').fetchone()[0]:
+   111	                    raise BudgetError('cancelled before dispatch')
+   112	                self.conn.execute("update attempts set state='dispatched' where id=?", (ident,))
+   113	                self.conn.commit()
+   114	                dispatched = True
+   115	            response = send()
+   116	            encoded = json.dumps(response, ensure_ascii=False)
+   117	            cost = charge(provider, response, max_input, max_output)
+   118	            if cost > reserved:
+   119	                raise BudgetError('usage exceeds reserved cost')
+   120	        except BaseException as exc:
+   121	            # No raw exception text: HTTP/SDK exceptions can contain credentials or headers.
+   122	            with self.lock:
+   123	                self.conn.execute('update attempts set state=?,charged=?,response_json=?,error=?,seconds=? where id=?',
+   124	                                  ('unknown' if dispatched else 'not_sent', None if dispatched else 0,
+   125	                                   encoded, type(exc).__name__, time.perf_counter()-start, ident))
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/poc/config/poc-v24-admission-test.json; nl -ba /Users/lchingen/hivemind/poc/config/poc-v23.json; rg -n 'def load|prompt_version|class Config|def extraction_setting' /Users/lchingen/hivemind/src/hivemind/config.py; rg -n 'cap_microdollars|max_calls|def __init__|def single_attempt_http' /Users/lchingen/hivemind/poc/concurrency_study/budget.py; rg -n 'configuration\\(|contract\\(|prepare\\(|run_trial\\(' /Users/lchingen/hivemind/poc/concurrency_study/ingestion.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	{
+     2	 "version": "poc-v24-admission-test",
+     3	 "_note": "NAVER-only instruction counterfactual: T6 role v11; schema, model, limits, matching and writer unchanged. Not adopted as default.",
+     4	 "provider": "openai",
+     5	 "search_top_n": 10,
+     6	 "extraction": {
+     7	  "T1": {
+     8	   "model": "gpt-6-luna",
+     9	   "prompt_version": "T1-v10",
+    10	   "temperature": 0.2,
+    11	   "reasoning_effort": "low",
+    12	   "max_output_tokens": 16000
+    13	  },
+    14	  "T2": {
+    15	   "model": "gpt-6-luna",
+    16	   "prompt_version": "T2-v10",
+    17	   "temperature": 0.2,
+    18	   "reasoning_effort": "low",
+    19	   "max_output_tokens": 16000
+    20	  },
+    21	  "T3": {
+    22	   "model": "gpt-6-luna",
+    23	   "prompt_version": "T3-v10",
+    24	   "temperature": 0.2,
+    25	   "reasoning_effort": "low",
+    26	   "max_output_tokens": 12000
+    27	  },
+    28	  "T4": {
+    29	   "model": "gpt-6-luna",
+    30	   "prompt_version": "T4-v10",
+    31	   "temperature": 0.2,
+    32	   "reasoning_effort": "low",
+    33	   "max_output_tokens": 16000
+    34	  },
+    35	  "T5": {
+    36	   "model": "gpt-6-luna",
+    37	   "prompt_version": "T5-v10",
+    38	   "temperature": 0.2,
+    39	   "reasoning_effort": "low",
+    40	   "max_output_tokens": 12000
+    41	  },
+    42	  "T6": {
+    43	   "model": "gpt-6-luna",
+    44	   "prompt_version": "T6-v11",
+    45	   "temperature": 0.2,
+    46	   "reasoning_effort": "low",
+    47	   "max_output_tokens": 12000
+    48	  },
+    49	  "T7": {
+    50	   "model": "gpt-6-luna",
+    51	   "prompt_version": "T7-v10",
+    52	   "temperature": 0.2,
+    53	   "reasoning_effort": "low",
+    54	   "max_output_tokens": 8000
+    55	  },
+    56	  "T8": {
+    57	   "model": "gpt-6-luna",
+    58	   "prompt_version": "T8-v10",
+    59	   "temperature": 0.2,
+    60	   "reasoning_effort": "low",
+    61	   "max_output_tokens": 8000
+    62	  },
+    63	  "T10": {
+    64	   "model": "gpt-6-luna",
+    65	   "prompt_version": "T10-v10",
+    66	   "temperature": 0.2,
+    67	   "reasoning_effort": "low",
+    68	   "max_output_tokens": 12000
+    69	  },
+    70	  "T11": {
+    71	   "model": "gpt-6-luna",
+    72	   "prompt_version": "T11-v10",
+    73	   "temperature": 0.2,
+    74	   "reasoning_effort": "low",
+    75	   "max_output_tokens": 12000
+    76	  }
+    77	 },
+    78	 "matching": {
+    79	  "model": "jev-1.14.0",
+    80	  "prompt_version": "matching-v3",
+    81	  "temperature": 0.1,
+    82	  "reasoning_effort": "medium",
+    83	  "max_output_tokens": 12000,
+    84	  "engine": "jev"
+    85	 },
+    86	 "rejudging": {
+    87	  "model": "gpt-6-luna",
+    88	  "prompt_version": "judging-v3",
+    89	  "temperature": 0.0,
+    90	  "reasoning_effort": "medium",
+    91	  "max_output_tokens": 8000
+    92	 },
+    93	 "final_verdict": {
+    94	  "model": "gpt-6-luna",
+    95	  "prompt_version": "verdict-v0",
+    96	  "temperature": 0.0,
+    97	  "reasoning_effort": "medium",
+    98	  "max_output_tokens": 8000
+    99	 },
+   100	 "idea": {
+   101	  "model": "gpt-6-luna",
+   102	  "prompt_version": "idea-v11",
+   103	  "temperature": 0.1,
+   104	  "reasoning_effort": "none",
+   105	  "max_output_tokens": 4000
+   106	 }
+   107	}
+     1	{
+     2	 "version": "poc-v23",
+     3	 "_note": "D167 (2026-10-25): extraction v10 (measure vocabulary with market_size and project_cost), the writer's replacement rule by tier and date, matching engine jev; the two poc-v23 configs differ only in the matching engine, so the August comparison is fair. Otherwise poc-v22.",
+     4	 "provider": "openai",
+     5	 "search_top_n": 10,
+     6	 "extraction": {
+     7	  "T1": {
+     8	   "model": "gpt-6-luna",
+     9	   "prompt_version": "T1-v10",
+    10	   "temperature": 0.2,
+    11	   "reasoning_effort": "low",
+    12	   "max_output_tokens": 16000
+    13	  },
+    14	  "T2": {
+    15	   "model": "gpt-6-luna",
+    16	   "prompt_version": "T2-v10",
+    17	   "temperature": 0.2,
+    18	   "reasoning_effort": "low",
+    19	   "max_output_tokens": 16000
+    20	  },
+    21	  "T3": {
+    22	   "model": "gpt-6-luna",
+    23	   "prompt_version": "T3-v10",
+    24	   "temperature": 0.2,
+    25	   "reasoning_effort": "low",
+    26	   "max_output_tokens": 12000
+    27	  },
+    28	  "T4": {
+    29	   "model": "gpt-6-luna",
+    30	   "prompt_version": "T4-v10",
+    31	   "temperature": 0.2,
+    32	   "reasoning_effort": "low",
+    33	   "max_output_tokens": 16000
+    34	  },
+    35	  "T5": {
+    36	   "model": "gpt-6-luna",
+    37	   "prompt_version": "T5-v10",
+    38	   "temperature": 0.2,
+    39	   "reasoning_effort": "low",
+    40	   "max_output_tokens": 12000
+    41	  },
+    42	  "T6": {
+    43	   "model": "gpt-6-luna",
+    44	   "prompt_version": "T6-v10",
+    45	   "temperature": 0.2,
+    46	   "reasoning_effort": "low",
+    47	   "max_output_tokens": 12000
+    48	  },
+    49	  "T7": {
+    50	   "model": "gpt-6-luna",
+    51	   "prompt_version": "T7-v10",
+    52	   "temperature": 0.2,
+    53	   "reasoning_effort": "low",
+    54	   "max_output_tokens": 8000
+    55	  },
+    56	  "T8": {
+    57	   "model": "gpt-6-luna",
+    58	   "prompt_version": "T8-v10",
+    59	   "temperature": 0.2,
+    60	   "reasoning_effort": "low",
+    61	   "max_output_tokens": 8000
+    62	  },
+    63	  "T10": {
+    64	   "model": "gpt-6-luna",
+    65	   "prompt_version": "T10-v10",
+    66	   "temperature": 0.2,
+    67	   "reasoning_effort": "low",
+    68	   "max_output_tokens": 12000
+    69	  },
+    70	  "T11": {
+    71	   "model": "gpt-6-luna",
+    72	   "prompt_version": "T11-v10",
+    73	   "temperature": 0.2,
+    74	   "reasoning_effort": "low",
+    75	   "max_output_tokens": 12000
+    76	  }
+    77	 },
+    78	 "matching": {
+    79	  "model": "jev-1.14.0",
+    80	  "prompt_version": "matching-v3",
+    81	  "temperature": 0.1,
+    82	  "reasoning_effort": "medium",
+    83	  "max_output_tokens": 12000,
+    84	  "engine": "jev"
+    85	 },
+    86	 "rejudging": {
+    87	  "model": "gpt-6-luna",
+    88	  "prompt_version": "judging-v3",
+    89	  "temperature": 0.0,
+    90	  "reasoning_effort": "medium",
+    91	  "max_output_tokens": 8000
+    92	 },
+    93	 "final_verdict": {
+    94	  "model": "gpt-6-luna",
+    95	  "prompt_version": "verdict-v0",
+    96	  "temperature": 0.0,
+    97	  "reasoning_effort": "medium",
+    98	  "max_output_tokens": 8000
+    99	 },
+   100	 "idea": {
+   101	  "model": "gpt-6-luna",
+   102	  "prompt_version": "idea-v11",
+   103	  "temperature": 0.1,
+   104	  "reasoning_effort": "none",
+   105	  "max_output_tokens": 4000
+   106	 }
+   107	}
+11:class ConfigError(ValueError):
+22:    prompt_version is '<category>-<v>': block 2 and 4 come from categories-<v>.json (the category's entry) and the
+25:        prefix, _, version = setting.prompt_version.rpartition('-')
+27:            raise ConfigError(f'extraction.{category}: prompt_version {setting.prompt_version!r} must be {category}-<version>')
+35:        if setting is not None and not os.path.exists(prompt_path(setting.prompt_version + '.txt')):
+36:            raise ConfigError(f'{setting.name}: prompt {setting.prompt_version}.txt does not exist')
+43:    prompt_version: str
+54:class Config:
+65:    def extraction_setting(self, category):
+72:REQUIRED = ('model', 'prompt_version', 'temperature', 'reasoning_effort', 'max_output_tokens')
+84:    return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
+89:def load(path):
+54:    def __init__(self, path, prepare, *, cap_microdollars=1500000, max_calls=36):
+56:        if not path.is_absolute() or type(cap_microdollars) is not int or cap_microdollars <= 0 or type(max_calls) is not int or max_calls <= 0:
+61:            create table if not exists settings (id integer primary key check(id=1), cap integer, max_calls integer, halted text);
+67:        row = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+69:            self.conn.execute('insert into settings values (1,?,?,NULL)', (cap_microdollars, max_calls))
+70:        elif row[:2] != (cap_microdollars, max_calls):
+95:            cap, max_calls, halted = self.conn.execute('select cap,max_calls,halted from settings').fetchone()
+97:            if halted or count >= max_calls or held + reserved > cap:
+136:def single_attempt_http():
+58:def configuration():
+62:def contract(directory):
+64:    cfg, uni = configuration()
+76:def prepare(directory):
+105:        json.dump(contract(directory), handle, indent=2, ensure_ascii=False)
+225:def run_trial(directory, trial, *, live=False, transport=None):
+227:    if trial not in ORDER or contract(directory) != json.loads((directory / 'study.json').read_text()):
+239:    cfg, uni = configuration()
+293:        prepare(args.directory.resolve())
+295:        run_trial(args.directory, args.trial, live=args.live)
+
+codex
+No serious issues found in the proposed plan or explicit-config-path design.
+
+- Both arms use the same configuration, preserving a fair comparison. [Plan:3](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:3)
+- Coverage follows D176/D177. For example, NAVER’s planned 200 MW expansion must inform a relevant question without becoming delivered capacity or requiring a separate group. [Plan:13](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:13), [D176](/Users/lchingen/hivemind/docs/DECISIONS.md:2394)
+- The fresh journal retains D174’s $1.50 ceiling, 144-request maximum and failure stops. [Plan:11](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:11)
+- Freezing the selected path, file content and resolved settings is implementable within the existing contract check before transport or trial creation. [Plan:29](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:29), [ingestion.py:225](/Users/lchingen/hivemind/poc/concurrency_study/ingestion.py:225)
+
+This reviews the proposed change; the current code still hardcodes v23. No files edited or providers called.
+tokens used
+35,509
+No serious issues found in the proposed plan or explicit-config-path design.
+
+- Both arms use the same configuration, preserving a fair comparison. [Plan:3](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:3)
+- Coverage follows D176/D177. For example, NAVER’s planned 200 MW expansion must inform a relevant question without becoming delivered capacity or requiring a separate group. [Plan:13](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:13), [D176](/Users/lchingen/hivemind/docs/DECISIONS.md:2394)
+- The fresh journal retains D174’s $1.50 ceiling, 144-request maximum and failure stops. [Plan:11](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:11)
+- Freezing the selected path, file content and resolved settings is implementable within the existing contract check before transport or trial creation. [Plan:29](/Users/lchingen/hivemind/docs/research/2026-10-25-ingestion-v11/plan.md:29), [ingestion.py:225](/Users/lchingen/hivemind/poc/concurrency_study/ingestion.py:225)
+
+This reviews the proposed change; the current code still hardcodes v23. No files edited or providers called.

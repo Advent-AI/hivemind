@@ -1,4 +1,4 @@
-# D184 Idea analysis detail
+# D278 Idea analysis detail
 
 The clipped text on an Idea card is the second model call's `reading.summary`. View analysis now opens a sliding detail panel with the entire summary, all per-part explanations and direct/driver/context choices, search queries and candidate titles, excluded choices when present, and the structured service response. It uses only the existing response, not a new model-generated explanation. No internal model reasoning stream is returned by this API.
 

@@ -1,0 +1,25 @@
+Found one restart defect, two test gaps, and one stale documentation statement. **No checked P1 defect** in extraction-request identity, commit order, matching-result order, or thread ownership.
+
+1. **P2 — A capped day cannot reliably resume with the same arguments.** [parallel_day.py:86](/Users/lchingen/hivemind-parallel-day-2026-10-26/src/hivemind/parallel_day.py:86)  
+   With items A/B/C and `--max-items-per-day 2`, let A finish and B fail. Restarting skips A, then selects B/C because the limit counts remaining work. The manifest expects only B, so it rejects the restart. C also receives a committed dispatch record before rejection.  
+   **Checked:** reproduced through `replay.run` using real in-memory SQLite and memory-only manifest I/O. The unchanged restart raised `parallel-day manifest input order or content changed`.  
+   **Fix:** use the saved manifest’s remaining population on resume; apply the item limit only when first selecting the day. Add this three-item restart test.
+
+2. **P2 — Ledger-equivalence checks omit product state that changes behavior.** [e2e.py:36](/Users/lchingen/hivemind-parallel-day-2026-10-26/poc/concurrency_study/e2e.py:36)  
+   The 12-table comparison used by the multi-day study omits eight stored tables, including `replacements`, `view_keys`, `view_switches`, and `dependency_resolutions`. A wrong replacement written at the end of the run can therefore pass equality while changing which evidence remains active.  
+   **Checked:** copied the recorded serial ledger into memory and added an incorrect `e9 → e211` replacement. Active evidence under `v1` fell from seven pieces to six; `logical_rows` still reported no differences.  
+   **Fix:** share a complete product-state comparator across the study harnesses and tests, with explicit normalization of incidental metadata. Add a replacement-table mutant.
+
+3. **P2 — The D183 entry-point test does not exercise the default Jev configuration.** [test_concurrency.py:238](/Users/lchingen/hivemind-parallel-day-2026-10-26/tests/test_concurrency.py:238)  
+   The CLI test explicitly selects `poc-v16.json`, which uses the non-Jev matcher. The separate Jev integration test supplies two workers directly. Consequently, a regression in the CLI’s Jev default of eight workers is outside both tests’ coverage.  
+   **Checked:** inspected every `run_path` entry-point test and exercised CLI construction separately: current defaults correctly select 16/8 workers, legacy configuration selects 16/1, and `--workers 1` creates no parallel runner.  
+   **Fix:** add a CLI case leaving `--config`, `--workers`, and `--jev-workers` unset, with multiple independent Jev jobs and fake provider responses.
+
+4. **P3 — Current-state documentation contradicts D183.** [CURRENT_STATE.md:19](/Users/lchingen/hivemind-parallel-day-2026-10-26/docs/CURRENT_STATE.md:19)  
+   “Adopted implementation” still says parallel execution is opt-in and serial remains the default. A reader following that section gets the wrong expectation for an unqualified CLI run.  
+   **Checked:** compared it with D183, the CLI, and the same document’s parallel-day section.  
+   **Fix:** retire the obsolete default statement and reference D183.
+
+Validation: 12 focused pytest cases passed; all 18 scoped Python files parsed. Independently compared all 20 stored ledger tables from the fifteen-day serial/parallel runs: they agree after excluding call/trace metadata and timestamps. The full suite was not run under the read-only filesystem restriction.
+
+No additional checked provider/retry/spend-cap findings beyond the accepted limits. Both newly added prompt files have configuration references. No files were changed.

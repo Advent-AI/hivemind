@@ -8,7 +8,7 @@ const card = JSON.parse(
   fs.readFileSync(new URL('./fixtures/idea-card-empty.json', import.meta.url), 'utf8'),
 );
 
-test('D187: each real stage appends one node, with only the latest marked current', () => {
+test('D281: each real stage appends one node, with only the latest marked current', () => {
   let stages = [];
   for (const stage of ['search', 'decompose', 'retrieve', 'map', 'summarize', 'cards']) {
     stages = advanceIdeaProgress(stages, stage);
@@ -34,7 +34,7 @@ function stream(bytes, size = 17) {
   );
 }
 
-test('D187: streamed stages survive split UTF-8 and preserve the stored final response', async () => {
+test('D281: streamed stages survive split UTF-8 and preserve the stored final response', async () => {
   const progress = [];
   const events = [
     { type: 'progress', stage: 'search' },
@@ -46,7 +46,7 @@ test('D187: streamed stages survive split UTF-8 and preserve the stored final re
   assert.deepEqual(progress, ['search', 'decompose']);
 });
 
-test('D187: a failed or interrupted stream never becomes a completed card', async () => {
+test('D281: a failed or interrupted stream never becomes a completed card', async () => {
   const encode = (value) => new TextEncoder().encode(value);
   await assert.rejects(
     readIdeaEvents(
@@ -65,7 +65,7 @@ test('D187: a failed or interrupted stream never becomes a completed card', asyn
   );
 });
 
-test('D187: the same client negotiates progress and accepts a legacy JSON response', async (t) => {
+test('D281: the same client negotiates progress and accepts a legacy JSON response', async (t) => {
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     assert.equal(options.headers.Accept, 'application/x-ndjson');
     return new Response(JSON.stringify(card), { headers: { 'Content-Type': 'application/json' } });

@@ -1,4 +1,4 @@
-# Idea progress timeline — D187
+# Idea progress timeline — D281
 
 The pending header no longer contains Reading. The card lists actual task stages vertically, links completed nodes, and glimmers only the current node. New stages append on arrival. Reduced-motion settings disable animations. Completed cards retain the existing click-to-open analysis behaviour.
 

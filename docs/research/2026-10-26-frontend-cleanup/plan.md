@@ -1,4 +1,4 @@
-# Frontend cleanup · D218
+# Frontend cleanup · D312
 
 The scope is the existing frontend and its portable page. Keep the current product behaviour, API formats, confidence arithmetic and historical compatibility. Do not refactor ingestion, model calls or backend concurrency. Alex requested committing and pushing this work.
 
@@ -36,7 +36,7 @@ Baseline: 47 frontend tests, lint and formatting pass; build is 159,137 JavaScri
 
 ## Prior decisions and review
 
-D130 owns reusable components and instance isolation. D181 preserves dated library and source semantics. D197–D217 define current confidence, weight, spacing and detail layout. D214 requires keyboard tabs and reopening on Overview. D217 removes Search trace only from the UI. No decision or accepted format is being retired.
+D130 owns reusable components and instance isolation. D275 preserves dated library and source semantics. D291–D311 define current confidence, weight, spacing and detail layout. D308 requires keyboard tabs and reopening on Overview. D311 removes Search trace only from the UI. No decision or accepted format is being retired.
 
 Read-only self-review of these rows: tab code must not absorb content rendering, dropdown handling, motion or focus trapping. Keep those drawer-specific callbacks. Dead-code removal must not remove legacy composite validation or exported package APIs. No serious design issue remains with that boundary.
 
@@ -52,7 +52,7 @@ Read-only self-review of these rows: tab code must not absorb content rendering,
 
 ## Reasoning refresh
 
-Reviewed the affected frontend contract against D130, D181 and D197–D217, then checked the module order in the PRD index. Universe, classification, Config, dispatch, extraction, stored thesis identity, final verdict, pull mode and human-review intake are unchanged by this cleanup. The system's confidence definition is unchanged. No page/PRD data needs regeneration for a new behaviour.
+Reviewed the affected frontend contract against D130, D275 and D291–D311, then checked the module order in the PRD index. Universe, classification, Config, dispatch, extraction, stored thesis identity, final verdict, pull mode and human-review intake are unchanged by this cleanup. The system's confidence definition is unchanged. No page/PRD data needs regeneration for a new behaviour.
 
 Two stale frontend descriptions were corrected: the README still described a removed confidence-help tooltip, and the component ownership table still described Search trace as a visible section. Both now describe the final Theses / Trace / Response arrangement. The current-state paragraph now describes the final interface instead of replaying each superseded layout revision.
 

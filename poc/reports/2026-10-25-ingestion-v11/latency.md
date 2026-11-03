@@ -2,7 +2,7 @@
 
 The completed concurrent trial did not demonstrate useful scheduling speedup for its accepted extraction work. Both later-item preparations became stale and were re-extracted in sequence. Each matching phase had only one Jev request. Most of the observed 60.65 → 43.03 second difference comes from a smaller judgment workload, not demonstrated parallelization.
 
-This is a read-only analysis of saved calls, with no new API requests or runtime changes. profile_calls.py (local artifact: `profile_calls.py`) produces latency-profile.json (local artifact: `latency-profile.json`). A request hash can recur across trials, so each archive row is joined only to journal attempt IDs belonging to that trial; usage is cross-checked. Mixing trials would produce false durations.
+This is a read-only analysis of saved calls, with no new API requests or runtime changes. [profile_calls.py](profile_calls.py) produces [latency-profile.json](latency-profile.json). A request hash can recur across trials, so each archive row is joined only to journal attempt IDs belonging to that trial; usage is cross-checked. Mixing trials would produce false durations.
 
 ## Account for the elapsed time
 

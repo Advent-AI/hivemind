@@ -1,0 +1,50 @@
+**The decision not to adopt this prompt change is supported, but the report overstates one count and misses several source and reasoning problems.** For example, one NN answer reports a **US$80–90 million target**, then says there is “no size in dollars.”
+
+I read all 32 raw answers, their input source text, and the registered v4 design and inherited criteria. The decoded raw responses match the saved parsed answers.
+
+1. **Haiku’s “3/3 explicit credit-provider assertions” is too strong.**  
+   [Control sample 1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/nvidia-control-haiku-1.json:53) says “gives NVIDIA credit support for buyers.” That is ambiguous, potentially reversing the provider and recipient. Control samples 2 and 3 clearly assign the support to NVIDIA. The defensible count is **two clear assertions plus one ambiguous answer**, rather than three clear assertions.
+
+   Treatment [sample 2](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/nvidia-separate-haiku-2.json:53) explicitly says NVIDIA provides support; [sample 3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/nvidia-separate-haiku-3.json:53) says it puts NVIDIA’s credit behind the clouds. Uncertainty about the **size or consequences** does not qualify these assertions about **who provides support**. Treatment sample 1 withholds a proposal but still uses NVIDIA credit support as an example. It is not a demonstrated correction.
+
+   Luna’s **0/3 → 0/3 explicit provider assertions** is accurate under that narrow definition. Treatment sample 2 explicitly says credit support “may expose NVIDIA”; sample 1 combines “introduces an unquantified exposure” with a statement that the risk is unproven. Neither warrants being counted as an unequivocal provider assertion—or as fully resolved attribution.
+
+2. **The Corning result misses an unsupported requirement for accepting supply evidence.**  
+   [Control Haiku sample 1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/corning-control-haiku-1.json:54) says the Corning facilities and Wistron operations need NVIDIA’s own disclosure or a dated filing before they can inform an NVDA argument. The registered criteria do not require that. The supplied article supports reporting these developments with their source limitations.
+
+   The report correctly counts all eight answers as retaining Corning’s **possible future doubling**, without turning it into NVIDIA’s realised revenue. But that does not establish sound treatment of the accompanying supply evidence.
+
+   There is also repeated date imprecision. [Control sample 2](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/corning-control-haiku-2.json:50) calls the project reports “undated”; [control sample 3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/corning-control-haiku-3.json:50) and [treatment sample 1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/corning-separate-haiku-1.json:50) similarly blur missing precision into missing dates. The article dates the partnership to **earlier in 2026** and gives the forecast horizon as **“over the coming years.”** The completion date and definition of “size” are unknown; the chronology is not wholly absent.
+
+3. **The NN numeric contradiction should be reported.**  
+   [Control Haiku sample 1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/nn-control-haiku-1.json:50) includes the US$80–90 million 2026 target, then says there is “no size in dollars.” That needs the missing qualifier—such as no capex or realised revenue—to be defensible.
+
+   [Control sample 3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/nn-control-haiku-3.json:54) calls the expansion “sizeless” despite acknowledging both 47 machines and the business target. A target is not a result, but it is quantitative evidence. These are reasoning inconsistencies, not errors in copying the numbers.
+
+4. **The NN source error is established, and the proposed mechanism needs correction.**  
+   [Treatment Luna sample 2](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/nn-separate-luna-2.json:52) wrongly uses different claims to justify a distinct original source. The expansion, presales (`item:e2`), and business target (`item:e3`) all trace to NN in the input. Other sibling records have different attributions, so “all siblings come from NN” would also be too broad.
+
+   [Treatment Luna sample 3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29/nn-separate-luna-3.json:57) has both errors the report identifies: invalid historical IDs and different claims labelled as the same claim. Its prose correctly recognises that the presales and target are not independent confirmations.
+
+   However, **none of the 32 requests contained historical pieces or catalog questions**. Those arrays were empty. The report’s explanation that historical material was supplied alongside same-article material is therefore misleading. These answers do not test updating existing arguments or comparing populated histories.
+
+The remaining counts and operational claims check out:
+
+| Check | Verified result |
+|---|---|
+| Completed / unsent | **32 / 28**; 32 raw responses and 32 attempt records |
+| Stop cause | NN treatment Luna sample 3 failed the historical-ID check; seven remaining completions followed |
+| Structural acceptance | **31/32**; the rejected response was complete, with valid usage and no transport error |
+| NVIDIA revenue streams | Product revenue plus cloud-revenue share present in **12/12** |
+| NVIDIA new-question actions | Haiku **3/3 → 2/3**; Luna **2/3 → 3/3** |
+| NN identity, 47 machines, rack use | Present in **12/12**; all `background_only` |
+| Corning forecast | Each model **3/3 control, 1/1 treatment** |
+| Sharon / science | **Zero answers** for either case |
+
+The summary field `stopped_on_usage_or_transport_anomaly` is misleadingly named: this stop was structural.
+
+**Usage and arithmetic are correct at the configured rates.** At $0.10/million input tokens and $0.50/million output tokens, Haiku’s 72,801/20,197 costs **$0.0173786** and Luna’s 40,931/12,839 costs **$0.0105126**: total **$0.0278912**. This includes reported reasoning tokens and does not deduct Luna’s 29,318 cached input tokens. The reservation totals **$0.3808386**. These validate the stated calculation, not an independently verified invoice.
+
+**There is no measured holdout result.** V4 registered the science case before sending, but it never ran. All completed answers concern three development articles; Corning has only one treatment answer per model. The report’s refusal to claim overall improvement or product acceptance is appropriate.
+
+No files were edited and no providers were called.

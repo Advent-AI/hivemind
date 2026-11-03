@@ -32,12 +32,12 @@ Source: `gnews:77407f8ee20f4ae125475c46`, first matching phase. Each sample runs
 | Serial 3 | 3.959 | 1 |
 | Parallel 3 | 1.185 | 5 |
 
-Medians: **3.959 → 1.185 seconds**, ratio **3.340×**. Thirty fresh Jev calls cost an estimated **$0.005448** at the repository's list price. See live summary (local artifact: `../2026-10-25-within-item-parallel/summary.json`) and its per-sample archives.
+Medians: **3.959 → 1.185 seconds**, ratio **3.340×**. Thirty fresh Jev calls cost an estimated **$0.005448** at the repository's list price. See [live summary](../2026-10-25-within-item-parallel/summary.json) and its per-sample archives.
 
 One of the six resulting evidence decisions varied: `e1 → v3` was a repeat in all three serial samples and parallel sample 2, but new in parallel samples 1 and 3. The **original provider responses**, for the identical request hash, already differ: the repeat probability ranges from 0.46 to 0.53 around the unchanged 0.50 threshold. The other five decisions agree across all six samples. This is not completion-order corruption in our result application. These samples do not establish whether service load influences the provider's answer; no threshold, prompt or identity rule was changed to hide the variation.
 
 ## Budget and scope
 
-The initial study's unknown-use request still holds its $0.517 reservation. Fixture completion and the live comparison use only the remainder of the original cap. Combined totals: **140 of 144 allowed attempts**, conservative known charges **$0.088577**, unknown reservation **$0.517**, total held **$0.605577 of $1.50**. No cap was raised, reservation erased, provider switched or working library rewritten. Final isolation/accounting (local artifact: `final-isolation-and-budget.json`).
+The initial study's unknown-use request still holds its $0.517 reservation. Fixture completion and the live comparison use only the remainder of the original cap. Combined totals: **140 of 144 allowed attempts**, conservative known charges **$0.088577**, unknown reservation **$0.517**, total held **$0.605577 of $1.50**. No cap was raised, reservation erased, provider switched or working library rewritten. [Final isolation/accounting](final-isolation-and-budget.json).
 
 The delivered result is the working parallel implementation, full-day deterministic storage equivalence and real within-item parallel API throughput. A fresh full-day end-to-end speed comparison remains necessary before claiming a whole-pipeline speedup or promoting the mode. Existing extraction findings do not become a new work order in this slice.

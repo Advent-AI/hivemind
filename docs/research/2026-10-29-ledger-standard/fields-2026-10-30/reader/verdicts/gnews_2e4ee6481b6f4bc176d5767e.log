@@ -1,0 +1,569 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18b46-d52a-7100-9495-a73b0584f72b
+--------
+user
+You are an independent reader. You are a hedge-fund analyst who covers NVIDIA and the AI-infrastructure themes around it. You did not write the extraction prompt and you have not seen any score. You may read files; do not open any file whose name contains "key", and do not open other packets.
+
+The product: every article goes through an extraction step that writes evidence records (a verbatim quote plus fields) into the analyst's ledger. Downstream, a model judges open research questions using only these records, and a matcher compares new records with old ones. The matcher and the judge read `original_who` (who originally said or did it) and `original_day` (the day it was originally said or done) to tell old news from new and to tell one source repeated by many outlets from several independent sources. So a wrong original speaker or day misleads them; a noise record wastes the judge's attention.
+
+Reference: /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html, the signed standard the product follows. Read sections 5.3, 5.4 and 5.5 before the packet. Use it for definitions:
+- who (5.4): the original claimant; whether it is their own estimate or someone else's measurement.
+- original statement day (5.4): when unknown, written as unknown, never the report day.
+- tier (5.5): the table of five rows (an upper row wins when two apply).
+
+The packet: docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_2e4ee6481b6f4bc176d5767e.json. It holds the article text as the model saw it, its publication_day, publisher and category, and two answers, A and B, from two different versions of the extraction (the order is random). Each answer is the list of records production keeps.
+
+Read the whole article first. Then judge every record of A and then every record of B on its own, against the article. Write your verdict as JSON only (no prose before or after), in this shape:
+
+{
+ "input_id": "...",
+ "A": [
+  {"id": "e1",
+   "worth": "keep" | "marginal" | "noise",
+   "one_line_ok": true | false,
+   "one_line_problem": null | "number/unit, lost condition or hedge, forecast written as done, wrong period, lost who said it, says more than the quote",
+   "who_ok": true | false,
+   "who_note": null | "the right original speaker, as the article gives it, and why",
+   "day_ok": true | false,
+   "day_note": null | "the day the statement was first made or the action taken, as the article gives it; unknown when the article does not say",
+   "tier_ok": true | false,
+   "tier_note": null | "the right tier: fact / party_statement / third_party_view / rumour, and the row of 5.5",
+   "duplicate_of": null | "e#"}
+ ],
+ "B": [ same shape ],
+ "fields_better": "A" | "B" | "same",
+ "fields_better_reason": "one sentence"
+}
+
+Rules for you:
+- Be literal; quote the article in your notes. Judge each field against what the article says, not against the other answer.
+- speaker is who says it in this item; judge it only when it is plainly wrong. original_who and original_day are the fields that matter most.
+- A day is wrong when the record gives the report day for something said or done earlier, a day the article does not support, or leaves empty a day the article states. A month alone is not a day: an empty day is right when the article gives only a month.
+- Check every number in one_line against the quote.
+- An answer that is null was unusable; write [] for it.
+
+codex
+I’ll read the signed definitions first, then the full article and each record in the specified packet.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 14 '5\\.3|5\\.4|5\\.5' /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+13-  --body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+14-  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+15-}
+16-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+17-  --bg:#111615; --surface:#182020; --ink:#e4ebe8; --muted:#9aa8a3; --line:#2b3634; --soft:#1f2928;
+18-  --accent:#7cc3ba; --accent-soft:#1d3532; --pending:#e0b05a; --pending-soft:#33291a;
+19-  --core:#7cc3ba; --support:#5fa29a; --optional:#8f9b97; --excluded:#68736f; --warn:#e48a7c; color-scheme:dark}}
+20-:root[data-theme="dark"]{
+21-  --bg:#111615; --surface:#182020; --ink:#e4ebe8; --muted:#9aa8a3; --line:#2b3634; --soft:#1f2928;
+22-  --accent:#7cc3ba; --accent-soft:#1d3532; --pending:#e0b05a; --pending-soft:#33291a;
+23-  --core:#7cc3ba; --support:#5fa29a; --optional:#8f9b97; --excluded:#68736f; --warn:#e48a7c; color-scheme:dark}
+24-*{box-sizing:border-box}
+25-html{scroll-behavior:smooth}
+26-@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+27:body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.75;margin:0;padding-inline:16px;padding-block:0 64px}
+28-.page{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px}
+29-@media (max-width:900px){.page{grid-template-columns:minmax(0,1fr);gap:0}}
+30-nav.toc{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow:auto;padding-block:28px;font-size:13.5px}
+31-nav.toc p{font-size:11.5px;letter-spacing:.12em;color:var(--muted);margin:0 0 8px}
+32-nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+33-nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:3px 10px;border-left:2px solid var(--line)}
+34-nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-left-color:var(--accent);outline:none}
+35-nav.toc .num{font-family:var(--mono);font-size:11.5px;margin-right:6px}
+36-@media (max-width:900px){nav.toc{position:static;max-height:none;padding-block:16px 0}
+37-  nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+38-main{min-width:0;padding-block:28px}
+39-header.top{display:grid;gap:14px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+40-.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--muted)}
+41-h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.35;margin:0}
+--
+152-<dl>
+153-  <dt>证据</dt>
+154-  <dd>一个在追这家公司的分析员读到会记进本周笔记的陈述，就留；留下以后另判分量<span class="src">第 1 版 §2、§4</span>。整体倾向谨慎：杂音很大，不是什么都要抽，不是什么都算线索；但新信息带来的增量要敏感，不能漏<span class="src">D243</span>。预测、传闻、反证、远期、条件情景都可以是证据，不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也照留，分量可以低一点<span class="src">D240</span>。泛泛的主张和背景是常识，没有数字和具体的叙事就不收<span class="src">D243</span>。</dd>
+155-  <dt>开题</dt>
+156-  <dd>一个问题值得单独追，当它的答案可能改变仓位、能在一个日期用公开材料核对、而且库里没有问题在问同一件事<span class="src">第 1 版 §6</span>。</dd>
+157-  <dt>研究观点</dt>
+158-  <dd>一个观点是关于业务和世界的、有论证的看法，它的立场来自论证和市场已经定价的东西相比<span class="src">AGENTS §8</span>。问题当前落在哪一档，由判断这一步按 PRD 06 和 D198 读证据推出。</dd>
+159-</dl>
+160-</section>
+161-
+162-<h3>一张图：同一篇文章里每句话的去向</h3>
+163-<div class="tree" role="img" aria-label="每句话的去向">
+164-<ul><li><span class="node">一句话</span>
+165-  <ul>
+166:    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+167-    <li>分析员会记 <span class="goes">→ 留为证据</span><span class="tag">第 5 节</span>
+168-      <ul>
+169:        <li>记来源层：事实、当事人陈述、第三方观点、传闻 <span class="tag">进账本 · 第 5.5 节</span></li>
+170-        <li>分量：核心、辅助、可选 <span class="tag">只在评估时判，不进账本 · 第 6 节</span></li>
+171-        <li>归档：挂到最窄的那个已开问题 <span class="src">D207</span>；没有问题接，记 no home 扔掉，评估时逐条读 <span class="src">D209</span></li>
+172-        <li>这篇文章还提出了值得追的新问题吗？ <span class="tag">第 4 节</span>
+173-          <ul>
+174-            <li>过了测试，属于五类之一 <span class="goes">→ 候选问题；和库里已有问题是不是重复，由匹配判</span> <span class="src">D211、D190</span></li>
+175-            <li>没过 <span class="goes">→ 不开，它只是证据</span></li>
+176-          </ul>
+177-        </li>
+178-      </ul>
+179-    </li>
+180-  </ul>
+181-</li></ul>
+182-</div>
+183-
+184-<h2 id="decisions"><span class="num">已拍</span>Alex 拍板的 12 条</h2>
+185-<p>2026-10-29 Alex 签字（D243）。第 5 条他定得比我的倾向更严；其余 11 条按倾向："其他几条的意见我都ok，sign off"。下表每条写定下的是什么、落在哪一节。</p>
+186-<blockquote>
+187-<p>第 5 条，Alex 原话："这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"</p>
+188-<p>整体方向，Alex 原话："不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"</p>
+189-</blockquote>
+190-<div class="table-wrap mid"><table>
+191-<thead><tr><th>#</th><th>定下的</th><th>在哪一节</th></tr></thead>
+192-<tbody>
+193-<tr><td>1</td><td>分量按信息量定档：核心要碰到关键判断，并带一个量、一个确定状态或一个带期间的预测；别家公司自己的经营数字、对公司是小事的，算辅助；预测离现在越远，越可能只是辅助，由判断定。缺金额、缺日期只影响分到哪一档，不是不留的理由</td><td class="nowrap">第 6 节</td></tr>
+194-<tr><td>2</td><td>"共同量"按 D191 落实：任何一家公司之外、好几家都会受它影响的量或价格（合计支出、合约价、利率）都可以开题，开题理由叫 <code>shared_quantity</code>；期间按自然年。提示词和代码要跟着改</td><td class="nowrap">第 3 节 D 类</td></tr>
+195-<tr><td>3</td><td>生态数字（论文数、获奖、下载量、开发者人数、大会人数）可选</td><td class="nowrap">第 6 节</td></tr>
+196:<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+197:<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+198:<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+199-<tr><td>7</td><td>收购算约束性义务（写明规模、尚未完成）</td><td class="nowrap">第 3 节 C 类</td></tr>
+200-<tr><td>8</td><td>改提示词时的回归判法：全部文章各发一次和上一版比，"别的版本都留住、只有这一版丢了"的核心或辅助才算回归信号；它是诊断，验收仍是三次发送</td><td class="nowrap">第 9.3 节</td></tr>
+201:<tr><td>9</td><td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+202:<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+203-<tr><td>11</td><td>金标冻结后发现错：另记一份带理由的更正，写明改前改后，不覆盖原文件；测量用更正后的版本并注明</td><td class="nowrap">第 8 节</td></tr>
+204-<tr><td>12</td><td>达标线里"垃圾"一项（每篇留下的无关陈述）用定稿金标重算，Luna 基线也重算</td><td class="nowrap">第 9.2 节</td></tr>
+205-</tbody></table></div>
+206-
+207-<h3 id="conventions">我定的记录约定</h3>
+208-<p>只定怎么记，不改变留不留、开不开。</p>
+209-<ul>
+210-<li>页面杂项（广告、相关文章预告、推荐列表、别的新闻标题）一律归第 1 版的"模板"一行，不另起名字。</li>
+211-<li>标题里的说法和正文是同一条证据，不单记<span class="src">第 1 版 §2 同一事实的复述</span>。</li>
+212-<li>分四类时看"谁在说谁"（第 5.1 节）。四类只是金标里的标签，不进账本，不影响留不留。</li>
+213:<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+214-</ul>
+215-
+216-<h2 id="words"><span class="num">1</span>这一页用的词：一词一义</h2>
+217-<div class="table-wrap mid"><table>
+218-<thead><tr><th>词</th><th>意思</th><th>不要和它混</th></tr></thead>
+219-<tbody>
+220-<tr><td class="nowrap">陈述</td><td>原文里某一方说的一句话或一件事</td><td></td></tr>
+221-<tr><td class="nowrap">证据</td><td>被留下的陈述，带引文、摘要、说话人、原始出处、来源层</td><td>作者的观点（它本身可以是一条证据）</td></tr>
+222-<tr><td class="nowrap">问题（观点）</td><td>账本里追踪的一件事：一个问题句、一组结果档、一个到期日，写下后不改<span class="src">PRD 06</span></td><td></td></tr>
+223-<tr><td class="nowrap">候选问题</td><td>抽取这一步提议新开的问题</td><td></td></tr>
+224-<tr><td class="nowrap">标的问题、主题问题</td><td>标的：答案是一家可交易公司（或币、商品）自己的经营结果。主题：答案是世界上的一件事，影响很多公司<span class="src">PRD 06</span></td><td></td></tr>
+225-<tr><td class="nowrap">开题理由</td><td>候选问题值得开的几类理由之一，答案里写在 <code>opens_as</code><span class="src">D184；英文 admission reason</span></td><td></td></tr>
+226-<tr><td class="nowrap">结果档</td><td>一个问题事先固定、互不重叠、覆盖全部结果的结局，五档或是非两档<span class="src">PRD 06；英文 rung</span></td><td>分量</td></tr>
+227-<tr><td class="nowrap">来源层</td><td>事实、当事人陈述、第三方观点、传闻<span class="src">PRD 06；英文 evidence tier</span></td><td>分量</td></tr>
+--
+340-<li><b>客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作，以及它们公布的数字</b><span class="src">第 1 版 §2：三者有一个就够</span>第 1 版的例子"Google Cloud 季度收入 248 亿美元，增长 82%，积压超过 5000 亿美元"<span class="src">Alex 判 11</span>；"最大客户说明年订单砍五分之一"；"主要供应商说 2027 年产能翻倍"；"对手在欧洲降价 15%"；"一家银行选用竞争对手的系统"；"一家软件公司把本公司的模型集成进政府系统"。后两条有名字、没金额，也留<span class="src">D240</span>。</li>
+341-<li><b>具名一方的主张或估计</b><span class="src">第 1 版 §2</span>"CFO 说十年前建的工厂仍满负荷"；"分析师把明年 EPS 预期上调到 4.10 美元"；"做空机构指控公司虚增应收 20 亿美元"；"内存厂说 2027 年短缺最严重，持续到 2030"。</li>
+342-<li><b>政策或监管的决定或步骤</b><span class="src">第 1 版 §2</span>"监管机构批准该药第二个适应症"；"政府要求该产品出口须申请许可"；"25 家公司联名反对过早限制开放权重模型"；"财长说将调查某国公司是否窃取知识产权"。</li>
+343-</ol>
+344-<p><b>典型的主张和背景</b><span class="src">D243 第 5 条</span>：Alex 的原话是"这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"。常识，就是跟这家公司的分析员读这篇之前就已经知道的：谁领先、谁在竞争、需求强、供给紧、融资难这类说法，和对已知状况的重述。这类陈述没有数字和具体的叙事就不收。不是常识的，是新信息，比如一份新报告的判断、一个新的市场数据、刚发生的事的细节，照上面的规则判，分析员会记就留。</p>
+345-<ul>
+346-<li><b>常识，不收：</b>"博通 CEO 说能从英伟达抢份额"；"Blackwell 和 Rubin 仍然供不应求"；"融资会是扩大算力最大的障碍"；"内存厂避开了以往的产能过剩"；"博通预计明年随着新客户推出定制芯片大幅增长"。</li>
+347-<li><b>新信息，收：</b>一位科技公司高管对媒体说"中国国产 AI 芯片厂商已经全部卖光，客户在考虑性能更低的芯片"；"旧型号 GPU 的租金在涨"；研究机构说"这让 Rubin Ultra 暂时没有成熟的扩展方案，给对手留出了空间"；"华为现在占中国 AI 芯片市场约一半，这个市场约 500 亿美元"。</li>
+348-<li><b>有数字也要过上面的规则：</b>作者说"英特尔多年领先，占 CPU 市场 59%"，和英伟达的问题关系不大，分析员不会记。</li>
+349-</ul>
+350-
+351-<h3>5.2 不完整也是证据</h3>
+352-<p>预测、传闻、反证、远期、条件情景都是证据；它们的层级和确定性另记。不因为"还没发生""不是官方""离现在远""和我们方向相反"就不留；一个真实的反例可能比十个顺风数字更重要<span class="src">第 1 版 §2</span>。有名有姓的动作缺金额、缺日期也是证据，分量可以低一点<span class="src">D240</span>。下面的不留清单不能用来删掉分析员会记的陈述："a reject rule never removes what the standard keeps"<span class="src">D240</span>。</p>
+353-
+354:<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+355-<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+356-<div class="table-wrap wide"><table>
+357-<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+358-<tbody>
+359-<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+360-<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+361-<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+362-<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+363-<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+364-<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+365-<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+366-<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+367-<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+368-<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+369-</tbody></table></div>
+370-<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+371-<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+372-
+373:<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+374-<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+375-<div class="table-wrap mid"><table>
+376-<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+377-<tbody>
+378-<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+379-<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+380-<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+381-<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+382-<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+383-<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+384-</tbody></table></div>
+385-<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+386-<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+387-
+388:<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+389-<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+390-<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+391-<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+392-<div class="table-wrap mid"><table>
+393-<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+394-<tbody>
+395-<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+396-<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+397-<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+398-<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+399-<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+400-</tbody></table></div>
+401-<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+402-
+403-<h2 id="weight"><span class="num">6</span>分量</h2>
+404-<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+405-<div class="table-wrap wide"><table>
+406-<thead><tr><th>等级</th><th>什么样</th><th>例子</th></tr></thead>
+407-<tbody>
+408-<tr><td><span class="w core">核心</span></td><td>碰到关键判断，并且带着能定位答案的信息。关键判断：收入、利润、融资或信用风险、需求、关键产品进度、关键投入的供给和价格；相对在研公司判，包括它的约束性义务和它承载价值的那一代产品及其配置、过渡方案。能定位答案的信息：一个量（金额、比例、数量；在谈的金额也算，"在谈"写进意思里）、一个确定状态，或一个带期间的预测。对公司不是小事，也不是别家公司自己的经营数字</td><td>分析师预计今年余下收入增长 82%、2027 年 41%；云巨头 2026 年合计支出 6500 亿美元；内存厂说短缺持续到 2030；为客户 1050 亿美元租约担保；公司宣布为云客户产能兜底的新计划（确定状态，没给金额）；银行指引全年净利息收入降 3–5%；监管机构批准主力药或定下裁决日；主要供应商宣布 9 月起涨价 8%；交易对手披露公司 34 亿美元的采购承诺；据报道在谈最多 6000 亿美元的支持</td></tr>
+409-<tr><td><span class="w sup">辅助</span></td><td>支持或反驳上面的判断，或给出可检验的估值假设；碰到关键判断但没有能定位答案的信息；别家公司自己的经营数字（收入、利润率、积压订单）；对公司规模来说是小事的；离现在越远、判断下来只是辅助的预测</td><td>对手自己模拟的 2.4 倍性能比较；公司取消软件订阅费；三条开放模型政策表态；Sharon 六年 72 MW 合同；FY2028 EPS 一致预期；12.76 × 25 的条件估值；一家银行选用对手系统（没写金额）；伙伴把公司模型集成进政府系统（没写金额）；内存厂公布的季度收入和利润率；客户公布的订单积压；客户园区"规划最多 17 万颗 GPU"</td></tr>
+410-<tr><td><span class="w opt">可选</span></td><td>帮助理解市场预期，省略不损害论证；留不留都不扣分</td><td>财报后股价反应；在研公司的估值倍数、市值、孤零零的目标价；生态数字；重提的过去实际数；新加坡案件<span class="src">D231、D243 第 3、4、6 条</span></td></tr>
+411:<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+412-</tbody></table></div>
+413-
+414-<h3>判法</h3>
+415-<ol class="steps">
+416:<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+417-<li><b>是可选的那几样吗？</b>在研公司的估值倍数、市值、孤零零的目标价，财报后股价反应，生态数字，重提的过去实际数，新加坡案件，归可选。带推导的条件估值例外，是辅助<span class="src">第 1 版 §10.1</span>。</li>
+418-<li><b>核心还是辅助</b>碰到关键判断、带着能定位答案的信息、对公司不是小事、不是别家公司自己的经营数字，四条都满足是核心；其余是辅助。别家公司直接说出关键投入或需求的状况（短缺到哪年、明年花多少），按关键判断算。预测离现在越远，越可能只是辅助，这由判断定：FY2028 EPS 一致预期是辅助，Alex 说"太久远了"；内存厂说短缺 2027 年最严重、持续到 2030 是核心，它覆盖今明两年。</li>
+419-</ol>
+420-<p><b>"确定状态"</b>：已经签了、宣布了、开始了、批准了、取消了、推迟到某个日期了、定下了裁决日；没有量的"在谈""在考虑""可能""在探索""打算"不算。确定状态以陈述当天为时间，不要求生效日。<b>"带期间的预测"</b>：分析师预计今年余下收入增长 82%；内存厂说短缺持续到 2030 年。确定不确定看说法本身的内容；靠不靠得住另记在来源层。</p>
+421-<p><b>Alex 拍过的分量</b><span class="src">D215；gold-check.md，D229</span>：收入增速核心；内存短缺核心；AMD 跑分辅助；三条政策辅助；云厂商支出核心；Omniverse 辅助；Sharon "辅助属于供给需求"；商谈最多 6000 亿支持 OpenAI 核心（在谈的金额）；投资 SB Energy 15 亿核心；Broadcom AI 半导体收入 +143%、Google Cloud 三个数辅助（别家公司的经营数字）；FY2028 EPS 辅助（远期）；逐案审核、有拒绝辅助（没有量和确定结果）。</p>
+422-<p><b>分量只在评估时判。</b>分量只在金标和测量里判，不进账本，不进抽取的输出<span class="src">D240</span>；账本只存来源层。抽取的模型决定留不留、怎么写，以及提哪些候选问题<span class="src">第 1 版 §1</span>。</p>
+423-<p>仿真里剩下的分歧几乎都在核心和辅助这条线上："对公司规模来说是不是小事"从一句话里常常看不出来（第 12 节，第三轮）。所以核心和辅助分开报，评估时允许读者间合理的不同判<span class="src">D226、D228</span>。</p>
+424-
+425-<h2 id="views"><span class="num">7</span>研究观点标准</h2>
+426-<p>判断这一步归 PRD 06、D198、D201 管；这里只列和抽取共用的。</p>
+427-<ul>
+428-<li><b>观点是什么：</b>一个关于业务和世界的、有论证的看法；立场来自论证和市场已经定价的东西相比；报表行是它的证据，不是它的定义<span class="src">AGENTS §8</span>。</li>
+429-<li><b>判断读什么：</b>一个问题的判断看到的，是它仍然有效的证据里的两部分：新到的（在它倒数第五次判断之后挂上的；判断不满五次时全部显示）和依据（最近十次判断里被引用过的）。其余仍在账本里有效，请求里写明还有多少条没显示；答案只能引用和推动显示了的<span class="src">D198；从 judging-v5 起，v4 的配置照旧读全部有效证据</span>。依赖问题的结论和理由、标的问题的主题块也读<span class="src">PRD 06、D195</span>。主题结论变了，同一轮里排队重判符合条件的标的问题；主题的结论不作为证据引用<span class="src">D195</span>。</li>
+430-<li><b>研究的交付物是论证：</b>保留不可改的来源记录，和一份有版本的研究论证，写明支持和反对的来源、是否独立、变化和局限<span class="src">D201</span>。</li>
+--
+434-</ul>
+435-
+436-<h2 id="golden"><span class="num">8</span>金标：改提示词的测试标准</h2>
+437-<p>按这一页从原文逐篇写的参照，用来量提示词改动。Alex 的要求是"以上有你自己trace 过的golden set 来做为改prompt测试标准"<span class="src">D241</span>。定稿文件：<span class="path">docs/research/2026-10-29-ledger-standard/golden-v3/golden-v3-signed.json</span>，sha256 <code>78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3</code><span class="src">D243</span>。</p>
+438-<div class="tiles">
+439-<div class="tile"><div class="v">118</div><div class="l">篇测试文章：那一周 98 篇，留出 20 篇</div></div>
+440-<div class="tile"><div class="v">348</div><div class="l">条要收或可以收的证据，一件事一条</div></div>
+441-<div class="tile"><div class="v">738</div><div class="l">句不收，各写理由；另有 24 句可选</div></div>
+442-<div class="tile"><div class="v">1110</div><div class="l">段原文片段，代码核过都在原文里</div></div>
+443-<div class="tile"><div class="v">28 · 42</div><div class="l">个必须开、可以开的问题；240 个不该开</div></div>
+444-</div>
+445-
+446-<h3>每一条记什么</h3>
+447-<ul>
+448:<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+449:<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+450-<li><b>问题：</b>必须开的（类、开题理由、标的或主题、要点、<code>settled_by</code>）；可以开的（另一种合理写法）；不该开的（第 4 节哪一行或哪个测试）。</li>
+451-<li><b>没判清的地方：</b>两种读法都写出来。</li>
+452-</ul>
+453-
+454-<h3>分量的分布（定稿）</h3>
+455-<div class="table-wrap mid"><table>
+456-<thead><tr><th>那一组</th><th class="num-cell">核心</th><th class="num-cell">辅助</th><th class="num-cell">可选</th><th class="num-cell">要收或可收</th><th class="num-cell">不收</th><th class="num-cell">原列不收、现为可选</th></tr></thead>
+457-<tbody>
+458-<tr><td>那一周 98 篇</td><td class="num-cell">80</td><td class="num-cell">152</td><td class="num-cell">63</td><td class="num-cell">295</td><td class="num-cell">621</td><td class="num-cell">22</td></tr>
+459-<tr><td>留出 20 篇</td><td class="num-cell">6</td><td class="num-cell">29</td><td class="num-cell">18</td><td class="num-cell">53</td><td class="num-cell">117</td><td class="num-cell">2</td></tr>
+460-</tbody></table></div>
+461-<p>参考答案第 2 版那一周是核心 47、辅助 69、可选 48。辅助多出来的，主要是有名有姓、没写规模的动作（伙伴集成、客户采用、合作）：第 2 版标成"什么都不留"，现在按 D240 收为辅助。</p>
+462-
+463-<h3>怎么写成、怎么核的</h3>
+--
+571-
+572-<h2 id="conflicts"><span class="num">11</span>在用的标准之间的冲突，怎么摆平</h2>
+573-<p>编号对应盘点报告 <span class="path">inventory-2026-10-29.md</span> 的 B1–B20，B21 是后来加的。"按已拍的"是已有决定，只是没落实或没写全；文首 12 条的决定记在 D243；"我定"只限措辞和记录约定。</p>
+574-<div class="table-wrap wide"><table>
+575-<thead><tr><th>#</th><th>冲突</th><th>处理</th><th>依据</th></tr></thead>
+576-<tbody>
+577-<tr><td>B1</td><td>共同量的名字和定义：D191 改名并扩到价格；v16 起提示词和代码用 <code>industry_aggregate</code>、几家公司合计、一个日历年</td><td>按 D191 落实为 <code>shared_quantity</code>，期间仍用自然年；提示词和代码要跟着改</td><td>D191、D243；PRD 06</td></tr>
+578-<tr><td>B2</td><td>主驱动量含不含产品节点</td><td>含，写成 A、B 两类</td><td>D236（在 D184 之后）</td></tr>
+579-<tr><td>B3</td><td>约束性义务：一笔或一个计划一题（D210），还是一组入股是一个判断（D201 规则 G）</td><td>按 D210 "一笔或一个计划"；一笔交易属不属于已开的计划，由匹配判</td><td>D210、D236、D238</td></tr>
+580-<tr><td>B4</td><td>开题测试三套，提示词和代码都没用</td><td>第 1 版 §6 四个测试加评审三条写法检查（第 4 节）；测试 4 和库比的部分归匹配</td><td>第 1 版 §6；评审 §1；D211</td></tr>
+581-<tr><td>B5</td><td>PRD 05 还写着 <code>folds_into</code>、第 5 块</td><td>抽取不看库；PRD 05 过时段落签字后改指这一页</td><td>D211</td></tr>
+582-<tr><td>B6</td><td>没家的证据扔不扔</td><td>产品里扔，评估读被扔的、分四种归因；两者不冲突</td><td>D209；第 1 版 §7</td></tr>
+583-<tr><td>B7</td><td>归档规则三个版本</td><td>以 D207 为准；归档提示里点名 NVIDIA 的那句按 D237 改成通用（后续一步）</td><td>D207、D237</td></tr>
+584-<tr><td>B8</td><td>分量几级、"档位"一词两义</td><td>四级；"档位"在这一页叫分量，问题的叫结果档</td><td>第 1 版 §10.3；D243 第 1 条</td></tr>
+585:<tr><td>B9</td><td>几套"不要"的类</td><td>抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数</td><td>第 1 版 §2、§4；D221；D240；D243 第 12 条</td></tr>
+586-<tr><td>B10</td><td>股价、目标价、重述、新加坡各处判得不同</td><td>财报后股价反应可选（第 1 版 §10.2）；在研公司的估值倍数、市值、孤零零的目标价可选；重提的过去实际数可选；新加坡可选</td><td>第 1 版 §10.2；D231；D243 第 4、6 条</td></tr>
+587-<tr><td>B11</td><td>主题怎么连到公司</td><td>一对全部的主题块；文章明写的依赖照记；D208 的通道未建</td><td>D191、D195</td></tr>
+588-<tr><td>B12</td><td>研究组、驱动层</td><td>研究组不是问题，不代替开题判断；七类驱动是重要性的理由；词汇表只禁 "thesis driver"</td><td>D165、D208；评审 §6</td></tr>
+589:<tr><td>B13</td><td>PRD 06 的重复和替代说法早于 D202、D204</td><td>这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新</td><td>D202、D204</td></tr>
+590-<tr><td>B14</td><td>组成部分算不算同一题</td><td>同一总量的另一种人群或口径是同一题；有自己驱动、答案能分开走的是另一题，要过独立意义测试</td><td>D190；第 1 版 §6</td></tr>
+591-<tr><td>B15</td><td>标的五档必须叫"非常看多……"（代码），还是写业务结果（D186）</td><td>这一页按 D186 写；代码是另一模块，D186 未实现照旧记</td><td>D186</td></tr>
+592-<tr><td>B16</td><td>转述的公告算事实还是当事人陈述</td><td>事实（role-v29 原文："an announcement or completed deal the item reports is a fact even when the reporter names no source"）；混合的一条按主要说法定层</td><td>PRD 06；D238、D239；D243 第 9 条</td></tr>
+593-<tr><td>B17</td><td>代码按自然年拒公司明年的财年量</td><td>已修：年限按公司财年数，测试 <span class="path">tests/test_fiscal_year_horizon.py</span></td><td>PRD 06 梯子第 5 条；D243</td></tr>
+594:<tr><td>B18</td><td>"线索""背景"一词多义</td><td>"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行</td><td>D221</td></tr>
+595-<tr><td>B19</td><td>谁把候选并进已开问题</td><td>匹配和碰撞裁决；共同量由代码</td><td>D190、D197、D211</td></tr>
+596-<tr><td>B20</td><td>AGENTS §8 指向两套标准，D229 又说第 1 版是唯一尺子</td><td>这一页签字后取代第 1 版，AGENTS §8 指向这一页；对两套既有标准（PRD 06 证据层次、90 题评审）的指向保留，它们是这一页的出处</td><td>D228、D229、D243</td></tr>
+597-<tr><td>B21</td><td>PRD 06 State 写判断要 "reconsider all evidence still in force"，D198 之后只显示新到的和依据</td><td>按 D198（在后）；PRD 06 签字后更新</td><td>D198</td></tr>
+598-</tbody></table></div>
+599-
+600-<h2 id="checks"><span class="num">12</span>校验记录和出处</h2>
+601-<h3>三轮独立读者仿真</h3>
+602-<p>每一轮把标准和一组事先定死的案例交给互相看不到答案的读者：作者先写好自己的答案并记 sha256；Claude 的不同模型和 Codex 各读一份。读者只读标准和案例，不读决策、金标、提示词。几方不一致的案例，读原因，追到标准里的一句话，改那一句；下一轮换没见过的读者，加没见过的案例。共 192 个陈述、40 个问题；陈述里 152 个来自测试文章，40 个来自银行、药企、零售、航空、公用事业、矿业、保险等其他行业。</p>
+603-<div class="table-wrap mid"><table>
+604-<thead><tr><th>第三轮，一对读者</th><th class="num-cell">新案例：留不留</th><th class="num-cell">新案例：连分量</th><th class="num-cell">难案例复核：留不留</th><th class="num-cell">新问题</th></tr></thead>
+605-<tbody>
+606-<tr><td>作者–Codex</td><td class="num-cell">96%</td><td class="num-cell">87%</td><td class="num-cell">84%</td><td class="num-cell">5/8</td></tr>
+607-<tr><td>作者–Claude sonnet</td><td class="num-cell">94%</td><td class="num-cell">83%</td><td class="num-cell">91%</td><td class="num-cell">6/8</td></tr>
+608-<tr><td>作者–Claude fable</td><td class="num-cell">93%</td><td class="num-cell">81%</td><td class="num-cell">89%</td><td class="num-cell">6/8</td></tr>
+--
+612-</tbody></table></div>
+613-<p>新案例上留不留的一致率从第二轮的 80–94% 升到 93–98%，连分量从 72–87% 升到 81–89%。剩下的分歧几乎都在核心和辅助的界线，由 D243 第 1 条定下判法。三位读者判对、作者判错的，记作作者的错：最大客户带来的收入和中国销售占比不该开题（独立意义测试），还有两处陈述。记录在 <span class="path">simulation-log.md</span>。</p>
+614-
+615-<h3>十一轮漂移检查</h3>
+616-<p>Codex 只读，逐条对照签过的第 1 版、全部决策、PRD 06，找"作者自己加的规则"、和决策矛盾的地方、引错的原话。每一轮的发现都改掉并记下处理。第一轮查出 18 处自己加的规则和 9 处和决策矛盾，比如"名单外公司的量不开题"违反 D155、D187，"抽取要和库里比重复"违反 D211，把达标线缩短，把"在谈的金额"排除出核心。最后三轮只剩措辞层面的问题；第十一轮的发现在 2.14 版改掉，没有再复查。</p>
+617-<div class="chart" role="img" aria-label="每一轮漂移检查的发现数：36、约20、约10、6、8、7、7、6、5、6、5">
+618-<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg">
+619-<line class="axis" x1="28" y1="170" x2="548" y2="170"/>
+620-<g>
+621-<rect class="bar" x="36" y="44" width="34" height="126"/><text class="val" x="53" y="38" text-anchor="middle">36</text><text x="53" y="186" text-anchor="middle">2.3</text>
+622-<rect class="bar approx" x="82" y="100" width="34" height="70"/><text class="val" x="99" y="94" text-anchor="middle">约20</text><text x="99" y="186" text-anchor="middle">2.4</text>
+623-<rect class="bar approx" x="128" y="135" width="34" height="35"/><text class="val" x="145" y="129" text-anchor="middle">约10</text><text x="145" y="186" text-anchor="middle">2.5</text>
+624-<rect class="bar" x="174" y="149" width="34" height="21"/><text class="val" x="191" y="143" text-anchor="middle">6</text><text x="191" y="186" text-anchor="middle">2.6</text>
+625-<rect class="bar" x="220" y="142" width="34" height="28"/><text class="val" x="237" y="136" text-anchor="middle">8</text><text x="237" y="186" text-anchor="middle">2.7</text>
+626:<rect class="bar" x="266" y="145.5" width="34" height="24.5"/><text class="val" x="283" y="139" text-anchor="middle">7</text><text x="283" y="186" text-anchor="middle">2.8</text>
+627:<rect class="bar" x="312" y="145.5" width="34" height="24.5"/><text class="val" x="329" y="139" text-anchor="middle">7</text><text x="329" y="186" text-anchor="middle">2.9</text>
+628-<rect class="bar" x="358" y="149" width="34" height="21"/><text class="val" x="375" y="143" text-anchor="middle">6</text><text x="375" y="186" text-anchor="middle">2.10</text>
+629-<rect class="bar" x="404" y="152.5" width="34" height="17.5"/><text class="val" x="421" y="146" text-anchor="middle">5</text><text x="421" y="186" text-anchor="middle">2.11</text>
+630-<rect class="bar" x="450" y="149" width="34" height="21"/><text class="val" x="467" y="143" text-anchor="middle">6</text><text x="467" y="186" text-anchor="middle">2.12</text>
+631-<rect class="bar" x="496" y="152.5" width="34" height="17.5"/><text class="val" x="513" y="146" text-anchor="middle">5</text><text x="513" y="186" text-anchor="middle">2.13</text>
+632-</g>
+633-<text x="290" y="204" text-anchor="middle">被检查的版本；颜色浅的两根是约数</text>
+634-</svg>
+635-</div>
+636-
+637-<h3>出处</h3>
+638-<p>PRD 06（Two thesis kinds、Ladder、Four evidence tiers、State、Succession）；PRD 05；第 1 版标准（D229）；<span class="path">research_notes/对冲基金论点粒度与金标/codex-challenger.md</span> §1 八条和 §6、<span class="path">industry-debate-standards.md</span>（主分支）；决定 D155、D165、D184、D185、D186、D187、D190、D191、D195、D197、D198、D199、D201、D202、D204、D207、D208、D209、D210、D211、D215、D216、D218、D220、D221、D226、D228、D229、D231、D233、D236、D237、D238、D240、D241、D242。</p>
+639-
+640-<h3>文件</h3>
+641-<ul>
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '354,403p' /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+<div class="table-wrap wide"><table>
+<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+<tbody>
+<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+</tbody></table></div>
+<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+
+<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+<tbody>
+<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+</tbody></table></div>
+<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+
+<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+<tbody>
+<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+</tbody></table></div>
+<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+
+<h2 id="weight"><span class="num">6</span>分量</h2>
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; p=\"/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_2e4ee6481b6f4bc176d5767e.json\"; d=json.load(open(p)); print(json.dumps({k:v for k,v in d.items() if k not in (\"A\",\"B\",\"answers\")},ensure_ascii=False,indent=2)); print(\"TOP LEVEL FIELDS:\",list(d))'" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 1264ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-LukAHxyK' (errno=Operation not permitted)
+2026-10-30 13:27:30.364 xcodebuild[25598:17136104]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:27:30.480 xcodebuild[25598:17136103] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-IE0hM6RO' (errno=Operation not permitted)
+2026-10-30 13:27:30.808 xcodebuild[25600:17136112]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-10-30 13:27:30.927 xcodebuild[25600:17136111] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+{
+  "input_id": "gnews:2e4ee6481b6f4bc176d5767e",
+  "title": "Trump bought Apple, Nvidia and other tech giants before tariff reversal fueled rebound",
+  "publication_day": "2026-07-02",
+  "publisher": "cnbc.com",
+  "publisher_type": "media",
+  "category": "T7",
+  "text": "President Donald Trump made 327 stock purchases on April 8, 2025, according to a CNBC analysis of newly released financial disclosures, as markets reeled from his sweeping “liberation day” tariff plan.\nThe next day, Trump posted that it was a “GREAT TIME TO BUY!!!” before announcing a partial tariff retreat that helped send the S&P 500 up roughly 9.5% in one of its best days on record.\nTrump’s April 8 buying spree focused heavily on mega-cap tech stocks, including Apple, Alphabet, Amazon, Microsoft and Nvidia, which rebounded sharply after his tariff reversal.\nWhile investors and businesses spent the early days of April 2025 fretting over the future of global trade and the economy, President Donald Trump was busy buying into the stock market sell-off he created.\nTrump made 327 stock purchases on April 8, 2025, according to a CNBC analysis of the president's annual financial disclosure for 2025 that includes trades, income and liabilities and was released on Tuesday. That made April 8 his 11th busiest day for stock buying last year, more than five times the daily average of roughly 62 for the calendar year, according to the CNBC analysis.\nHis flurry of buying came on the tail end of a steep four-day spiral that was sparked by the unveiling of his plan for broad and high tariffs . CNBC's analysis shows Trump's purchasing focused on the mega-cap technology stocks that were hit hard after he released the policy on April 2, which he dubbed \"liberation day.\"\nThe episode captures a central theme running through Trump's second term: A president with vast power to move markets is also a president with a vast personal stake in them — with more personal investment at stake than any of his predecessors.\nOn April 8, the broad S&P 500 index finished that session below the 5,000 mark and within inches of the threshold for a bear market, a term used to describe a 20% drawdown from a recent high. Over the four-day run alone, the closely followed stock market benchmark tumbled more than 12%.\nThe next morning, minutes after the opening bell on April 9, Trump helped the market abruptly turn around.\nTrump posted on Truth Social, the social media platform he owns, that \"THIS IS A GREAT TIME TO BUY!!!\" Later that day, Trump announced he was walking back some of the market-roiling tariffs he had announced a week prior.\nThe S&P 500 climbed around 9.5% in that session, marking one of its best days on record. The benchmark has cumulatively surged around 50% since April 8, 2025.\nThe White House, when asked to comment on the timing of Trump's April 8, 2025 trades, spoke more generally about the president's assets.\n\"As President Trump said, he has a lot of assets because he was a massively successful businessman prior to becoming President, which was why he was elected to office in the first place,\" White House spokesperson Anna Kelly told CNBC. \"All of the President's assets are in held in fully discretionary accounts managed by independent third-party financial institutions. There are no conflicts of interest.\"\nTrump on Wednesday told reporters his trades are managed by outside parties.\n\"I don't get involved in my personal — we have funds that run my money,\" Trump told reporters.\nTrump's buying spree on April 8 centered on some of the largest public companies in the world.\nHe bought between $100,001 and $250,000 in shares of Apple , Alphabet , Amazon , Microsoft and Nvidia each that day, the disclosures show.\nAll five stocks are members of the Magnificent Seven , a group of mega-cap technology stocks that has been credited with propelling the market to record highs over recent years. All five also saw big rebounds after Trump's tariff policy change, with investors breathing a sigh of relief that the companies' costs wouldn't immediately jump.\nApple, for instance, dropped 5% on April 8, its fourth-straight negative day. The iPhone maker surged more than 15% in the next session, which would go down as its best trading day since 1998.\nNvidia, meanwhile, shed more than 1% of its value on April 8. The chipmaker jumped nearly 19% the next day, meaning it gained almost one-fifth of its market value in one session.\nThe April stock trades are just one part of a 927-page disclosure that shows $2.24 billion in revenue in 2025, according to a CNBC analysis, including hundreds of millions of dollars from crypto, more than $290 million from major golf and club properties and over $86 million in legal settlements . Trump also continues to collect income from branded merchandise and has accepted numerous gifts, such as sports tickets .\nWhen it comes to early April 2025's market volatility, everyday investors took note of how Trump influenced stocks well before this week's releases.\nOn forums such as the Reddit WallStreetBets page, some users applauded their decisions at the time to buy in before Trump encouraged investors to. But several others took a more critical stance, instead likening his actions to market manipulation.\n\"Can you imagine the insider trading?,\" one user wrote . \"Like if you are inside the white house and don't come out of this a brazillionai[r]e you are literally the dumbest person on the planet.\"\n— CNBC's Nick Wells and Deena Zaidi contributed to this report."
+}
+TOP LEVEL FIELDS: ['input_id', 'title', 'publication_day', 'publisher', 'publisher_type', 'category', 'text', 'answers']
+
+exec
+/opt/homebrew/bin/zsh -lc "/usr/bin/ruby -rjson -e 'd=JSON.parse(File.read(ARGV[0])); puts JSON.pretty_generate(d.fetch(\"answers\"))' /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader/packets/gnews_2e4ee6481b6f4bc176d5767e.json" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 1292ms:
+{
+  "A": [
+    {
+      "id": "e1",
+      "quote": "the unveiling of his plan for broad and high tariffs",
+      "one_line": "President Donald Trump unveiled a plan for broad and high tariffs on April 2, 2025.",
+      "speaker": "CNBC",
+      "original_who": "President Donald Trump",
+      "original_day": "2025-04-02",
+      "tier": "fact"
+    },
+    {
+      "id": "e2",
+      "quote": "Trump announced he was walking back some of the market-roiling tariffs he had announced a week prior.",
+      "one_line": "President Donald Trump announced a partial retreat from some of the tariffs he had announced the prior week on April 9, 2025.",
+      "speaker": "CNBC",
+      "original_who": "President Donald Trump",
+      "original_day": "2025-04-09",
+      "tier": "fact"
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "quote": "Later that day, Trump announced he was walking back some of the market-roiling tariffs he had announced a week prior.",
+      "one_line": "President Donald Trump announced a partial retreat from tariffs on April 9, 2025; the report does not specify which tariffs or their scale.",
+      "speaker": "CNBC, reporting on Trump's announcement",
+      "original_who": "Donald Trump",
+      "original_day": "2025-04-09",
+      "tier": "fact"
+    }
+  ]
+}
+
+codex
+{
+  "input_id": "gnews:2e4ee6481b6f4bc176d5767e",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "noise",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both answers identify Trump and April 9, 2025 for the reported tariff retreat, and the additional record in A also gives a supported original actor, day and tier."
+}
+tokens used
+50,502
+{
+  "input_id": "gnews:2e4ee6481b6f4bc176d5767e",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "noise",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "same",
+  "fields_better_reason": "Both answers identify Trump and April 9, 2025 for the reported tariff retreat, and the additional record in A also gives a supported original actor, day and tier."
+}

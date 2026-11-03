@@ -25,7 +25,7 @@ Controls 1 and 2 retained a valid project milestone but also proposed an annual 
 
 All treatments retained the 200 MW target, 2028 deadline and source evidence under one valid project milestone. Each created a project group and membership separate from SK's project and Rubin production, without relying on a required name or group count. Treatment 3 also retained the funding statement as conditional: NAVER still needed to finalize financing, and NVIDIA's planned investment remained subject to closing conditions. No treatment asserted a completed order, delivery or revenue.
 
-The assessment is an assistant's reading of the source and all six raw answers, not an independent judge or a statistical reliability estimate. Its labels and reasons are in assessments.json (local artifact: `../../../docs/research/2026-10-25-naver-admission/assessments.json`); samples.json (local artifact: `samples.json`) retains the raw outputs, accepted handovers and resulting records. summary.json (local artifact: `summary.json`) is generated from the preserved run and those explicit labels by summarize.py (local artifact: `../../../docs/research/2026-10-25-naver-admission/summarize.py`).
+The assessment is an assistant's reading of the source and all six raw answers, not an independent judge or a statistical reliability estimate. Its labels and reasons are in [assessments.json](../../../docs/research/2026-10-25-naver-admission/assessments.json); [samples.json](samples.json) retains the raw outputs, accepted handovers and resulting records. [summary.json](summary.json) is generated from the preserved run and those explicit labels by [summarize.py](../../../docs/research/2026-10-25-naver-admission/summarize.py).
 
 ## Execution and isolation
 

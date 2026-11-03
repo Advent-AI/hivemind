@@ -1,0 +1,20 @@
+**I would not start paid sends yet: three defects remain.** The known control failure can stop the experiment before its matching treatment samples finish.
+
+1. **Expected control failures abort the comparison.** The [design requires fresh controls to reproduce the defect](< /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-empty-history-design-2026-10-29.md:26>), but the [inherited stop rule](</Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29.py:58>) stops on every unusable answer. Using the stored `science-control-luna-1` answer in a real-thread-pool simulation produced **31 sends, 17 unsent, only one science treatment response, and no NN responses**. Completion depends on response timing.  
+   **Required rule:** distinguish the expected control defect from errors that stop dispatch.
+
+2. **Non-object answers crash the completion step and lose the parsed failure record.** The [wrapper](</Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-empty-history-arm-2026-10-29.py:92>) completes every non-null answer, although the underlying checker already rejects non-objects. For both providers, `[]`, a string, and an integer raise uncaught `TypeError`. Worker simulation preserved `.raw.json`, but omitted the result `.json` and reported `usage: null` despite supplied usage. Existing controls miss this path.  
+   **Required rule:** complete only objects; preserve the original parser’s failure result otherwise.
+
+3. **The promised case order is not frozen.** [Verification compares dictionaries](</Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-empty-history-arm-2026-10-29.py:120>), while the [worker dispatches their iteration order](</Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-send-v5-2026-10-29.py:257>). Reversing only `manifest.cases` passed verification, moving NN first and Valar last. An early failure could therefore skip the priority cases.  
+   **Required rule:** freeze and verify an ordered job list.
+
+The remaining checks held:
+
+- **Census:** independently reproduced **87 without history / 95 with history / 7 failing answers**, containing nine invalid references. All 110 newer answers matched their raw provider envelopes. The seven structural replays flipped; other field values stayed unchanged. Three older structured-judgement answers are normalized for this replay, so it is not an unchanged-schema replay.
+- **Requests and output:** all 16 frozen requests verified. Only the three relation fields disappear from empty-history treatment schemas. Sharon’s populated-history requests are byte-identical across conditions for both providers. Valid treatment answers retain separate original and completed outputs.
+- **Checks and mutants:** original field/identity checks remained effective. In-memory code mutants removing completion or allowing forbidden relation fields were caught.
+- **Budget and dispatch:** reservation arithmetic matched **$0.3166821**, below $0.60 using frozen rates. Successful simulation completed 48 calls. Missing usage and HTTP errors stopped further dispatch; duplicate attempts/workers added no sends.
+- **Meaning and sources:** Valar rebuilt exactly from the archive. The reference preserves “considering 30 MW” versus “generating 100 kW.” Sharon’s user standard, science-source uncertainty, and Valar’s previously-seen, model-authored holdout status are disclosed. Semantic correctness and production repair are appropriately **not claimed as proven**.
+
+No files changed and no providers were called. Simulations used memory-only storage and fake transport.

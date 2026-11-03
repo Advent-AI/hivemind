@@ -1,0 +1,14 @@
+One serious issue: **the runtime freeze omits the code enforcing the budget and no-retry policy.**
+
+[metadata()](/Users/lchingen/hivemind/poc/naver_admission.py:51) does not hash `concurrency_study/budget.py` or `ingestion.py`, although [run()](/Users/lchingen/hivemind/poc/naver_admission.py:75) uses their transport classes. Changes after preparation therefore pass the freeze check. For example, adding retries to `single_attempt_http()` would leave the frozen manifest valid while allowing additional physical calls under one reservation.
+
+Include these runtime dependencies in the fingerprint to satisfy the plan’s “runtime changed → refuse before calls” rule.
+
+No other serious issue found within scope. Read-only checks confirmed:
+
+- The baseline exactly matches D174’s state before sequence 22.
+- The source and reconstructed control request match their originals.
+- Both schemas accept the stored answer; the unchanged horizon check still drops it.
+- Trials use separate ledgers and fresh archives; the current configured path has no retries.
+
+No provider calls or edits.

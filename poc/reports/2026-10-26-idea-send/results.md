@@ -1,4 +1,4 @@
-# D183 Idea send input and library statistics
+# D277 Idea send input and library statistics
 
 The input now contains a round arrow button. Empty or whitespace input disables it and shows grey; text enables it and shows black. Click and Enter use the same form submission. The pending request disables submission; completion, failure or cancellation restores the state from the retained text. The composer is capped at 500px (half the previous 1000px); it fits narrower screens. The library statistics use two shared `|` separators.
 

@@ -285,7 +285,7 @@ def test_d188_composite_is_bound_to_the_unchanged_selection(ledger, items, index
 
 
 def test_d196_final_associations_are_exactly_the_positive_model_selection(ledger, items, index, tmp_path):
-    """D196: omitted candidates have no association, bundle, related edge or orphan claim."""
+    """D290: omitted candidates have no association, bundle, related edge or orphan claim."""
     requests = []
     picked = []
     def transport(provider, request):
@@ -332,7 +332,7 @@ def test_d196_final_associations_are_exactly_the_positive_model_selection(ledger
 
 
 def test_d196_positive_selection_refuses_zero_duplicates_and_unknown_candidates(ledger):
-    """D196: the model returns a positive subset, not a partition containing zero-weight exclusions."""
+    """D290: the model returns a positive subset, not a partition containing zero-weight exclusions."""
     import copy
     selected = [{'view_id': ident} for ident in ('v3', 'v1', 'v9')]
     theses = idea_composite.add_ladders(ledger, selected, endpoints_only=True)
@@ -356,7 +356,7 @@ def test_d196_positive_selection_refuses_zero_duplicates_and_unknown_candidates(
 
 
 def test_d258_request_offers_each_thesis_only_its_own_endpoints(ledger, items, index, tmp_path):
-    """D258: the default service sends one item shape per candidate, pinned to its own endpoints; the same request
+    """D335: the default service sends one item shape per candidate, pinned to its own endpoints; the same request
     schema refuses a current-state position (the 2026-10-30 v10 → '2' answer), and discovery and payload are v32's."""
     def transport_for(requests, refusals):
         def transport(provider, request):
@@ -399,7 +399,7 @@ def test_d258_request_offers_each_thesis_only_its_own_endpoints(ledger, items, i
 
 
 def test_d258_adoption_binder_matches_v7_on_valid_answers_and_keeps_its_refusals(ledger):
-    """D258: for any answer v7 accepted, the v8 binder returns the same plan; duplicates, bad totals, empty text and
+    """D335: for any answer v7 accepted, the v8 binder returns the same plan; duplicates, bad totals, empty text and
     an unclear claim with drivers are still refused, and an off-endpoint position fails the sent schema."""
     import copy
     selected = [{'view_id': ident} for ident in ('v3', 'v1', 'v9')]
@@ -431,7 +431,7 @@ def test_d258_adoption_binder_matches_v7_on_valid_answers_and_keeps_its_refusals
 
 
 def test_d258_a_refused_anyof_value_names_the_closest_option():
-    """D258: the 2026-10-30 refusal named the exclusion branch ('driver' not in ['excluded']) instead of the endpoint;
+    """D335: the 2026-10-30 refusal named the exclusion branch ('driver' not in ['excluded']) instead of the endpoint;
     a value matching no option now reports the option it came closest to."""
     driver = {'type': 'object', 'additionalProperties': False, 'required': ['kind', 'end'],
               'properties': {'kind': {'type': 'string', 'enum': ['driver']}, 'end': {'type': 'string', 'enum': ['1', '5']}}}
@@ -443,7 +443,7 @@ def test_d258_a_refused_anyof_value_names_the_closest_option():
 
 
 def test_d194_weighted_call_preserves_mapping_and_caches_percentages(ledger, items, index, tmp_path):
-    """D194: three calls, the same first two requests, explicit saved weights and unchanged chosen IDs."""
+    """D288: three calls, the same first two requests, explicit saved weights and unchanged chosen IDs."""
     requests = []
 
     def transport(provider, request):
@@ -487,7 +487,7 @@ def test_d194_weighted_call_preserves_mapping_and_caches_percentages(ledger, ite
 
 
 def test_d195_weighted_mapping_keeps_the_model_selected_thesis_count(ledger, items, index, tmp_path):
-    """D195: a model-selected fourth or fifth driver is not demoted by a display quota."""
+    """D289: a model-selected fourth or fifth driver is not demoted by a display quota."""
     def transport(provider, request):
         schema = request['response_format']['json_schema']['schema']
         if schema == idea.DECOMPOSE:
@@ -513,7 +513,7 @@ def test_d195_weighted_mapping_keeps_the_model_selected_thesis_count(ledger, ite
 
 
 def test_d194_weight_contract_rejects_bad_totals_types_and_exclusion_weights(ledger):
-    """D194: a complete 100% plan or empty zero plan is accepted; invalid allocations are refused."""
+    """D288: a complete 100% plan or empty zero plan is accepted; invalid allocations are refused."""
     import copy
     selected = [{'view_id': ident} for ident in ('v3', 'v1', 'v9')]
     records = {row['view_id']: row for row in service.summaries(ledger, '2026-08-15')}
@@ -802,7 +802,7 @@ def test_http_ideas_route_as_a_user_starts_the_server(tmp_path):
 
 
 def test_d187_http_progress_arrives_before_the_model_finishes(tmp_path, monkeypatch):
-    """D187: actual stage boundaries flush immediately; the terminal payload keeps the existing shape."""
+    """D281: actual stage boundaries flush immediately; the terminal payload keeps the existing shape."""
     import importlib.util
     import threading
     spec = importlib.util.spec_from_file_location('idea_progress_api', os.path.join(ROOT, 'scripts/hivemind_api.py'))

@@ -29,7 +29,7 @@ Field and route names are compatibility identifiers; `view` in an API name means
 | `POST /ideas` | Idea, search summary, mapped parts and chosen theses, related theses, evaluation, optional bundles, days, trace and cost | Idea application/UI; see its contract |
 | Derived index | Content hashes, embedding model, vectors, token counts and build timestamps | Search only; not the thesis ledger |
 
-The service returns stored prose as stored. D181 points the read-service defaults at the collected English Jev library and its matching items database, with a separate derived-index directory. Explicit old-ledger paths remain supported. This changes neither matching semantics nor the configured Idea prompt.
+The service returns stored prose as stored. D275 points the read-service defaults at the collected English Jev library and its matching items database, with a separate derived-index directory. Explicit old-ledger paths remain supported. This changes neither matching semantics nor the configured Idea prompt.
 
 ## Numeric claim evaluation
 
@@ -78,7 +78,7 @@ The [README](../../README.md#run-the-service-for-testing) owns executable startu
 
 Verification requirements live in `tests/test_service.py`, `tests/test_search.py` and transport/bundle tests. New language behavior must retain their historical visibility, numeric, cache and failure guarantees. The [UI integration](../../poc/ui/README.md) documents the rendering boundary.
 
-## Current library envelope (D181)
+## Current library envelope (D275)
 
 `GET /library?as_of=YYYY-MM-DD` and MCP `thesis_library` return all dated theses, including closed ones, and stored research groups. They call the same read-only bundle writer as `GET /thesis-bundles` / MCP `thesis_bundles`. The complete read is pinned in SQLite read transactions. No search, model call or ledger write occurs. HTTP bundle/library requests do not open an index or model archive.
 

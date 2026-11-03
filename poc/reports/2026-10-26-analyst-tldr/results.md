@@ -1,4 +1,4 @@
-# Clickable Idea card and analyst TLDR — D186
+# Clickable Idea card and analyst TLDR — D280
 
 The default local API uses `poc-v26-idea`: the original two requests for decomposition/mapping are unchanged, followed by an isolated `idea-summary-v1` call. The final call only returns `{"summary": "..."}` and cannot change selected theses, claims or graph relations. The same model/provider and reasoning effort are retained. The card opens analysis on click, Enter or Space; the separate action button is gone. The full summary is first in the drawer.
 

@@ -1,0 +1,135 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 6000,
+  "system": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the deliverable. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Keep conditions and periods exactly as the texts state them. Comparison opinions are hints with scores; the texts decide. Answer in the JSON schema only.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"\\\"As a 175-year-old company, we're going through our fastest growth period,\\\" Weeks said. \\\"We will probably double our size over the coming years and almost all of our new hires will be in advanced manufacturing, a significant part of them right here in America.\\\"\", \"one_line\": \"Corning CEO Wendell Weeks said the company was in its fastest growth period and would probably double in size over the coming years, with almost all new hires in advanced manufacturing and a significant part in the United States.\", \"speaker\": \"Wendell Weeks, Corning Chairman, CEO and President, quoted by Fox News Digital\", \"original_who\": \"Wendell Weeks\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"Over the coming years\", \"publisher\": \"foxnews.com\", \"publisher_type\": \"media\", \"publication_day\": \"2026-07-01\", \"category\": \"T7\", \"title\": \"One of America's oldest manufacturers says AI is creating jobs — not replacing them\"}, \"source_article\": \"By Amanda Macias Fox News\\nInside Corning's North Carolina factory, workers are producing the optical fiber that has become a critical piece of the infrastructure powering the AI boom. (Footage courtesy of Corning)\\nBefore Henry Ford rolled out the Model T, before the Wright brothers took to the skies and before the Statue of Liberty welcomed millions to America's shores, Corning was already charting a course of innovation that continues today.\\nBest known to many Americans for the glass products that have been fixtures in kitchens for generations, Corning has also spent decades developing technologies that quietly transformed the modern world. From the glass used in Thomas Edison's light bulbs to the durable screens protecting billions of smartphones.\\nNearly 175 years after its founding, Corning is once again helping shape a technological revolution. As demand for artificial intelligence infrastructure surges, the New York-based manufacturer is ramping up production of optical fiber, the backbone of the high-speed networks powering AI.\\nThe company is also partnering with NVIDIA, the chipmaker at the center of the AI boom, to create 3,000 jobs in two states.\\nFor decades, Corning has been at the forefront of fiber optic innovation, developing technologies that enable faster, more reliable communications. (Courtesy of Corning)\\nAt a time when many Americans worry artificial intelligence will replace human workers, Corning Chairman, CEO and President Wendell Weeks says the opposite is happening inside one of the nation's oldest manufacturers.\\n\\\"AI is a huge job creator, and it's a huge manufacturing job creator,\\\" Weeks told Fox News Digital.\\nHe said the AI boom is driving demand for Corning's optical fiber while fueling the company's fastest period of growth in nearly two centuries.\\n\\\"As a 175-year-old company, we're going through our fastest growth period,\\\" Weeks said. \\\"We will probably double our size over the coming years and almost all of our new hires will be in advanced manufacturing, a significant part of them right here in America.\\\"\\nThat growth is already taking shape on Corning's factory floors.\\nNVIDIA CEO JENSEN HUANG: WE ARE AT THE BEGINNING OF THE AI REVOLUTION\\nA Corning employee handles optical fiber as part of the manufacturing process that supports broadband and telecommunications infrastructure. (Courtesy of Corning)\\n\\\"As the world develops and tells us what it needs, we're right there at the forefront,\\\" Emily Capek, planning supervisor at Corning’s Wilmington, North Carolina, facility told Fox News Digital.\\nShe said employees are seeing firsthand how demand for AI platforms is driving the need for Corning's products.\\n\\\"Right now, the world needs our glass optical fiber to support the AI demand we're seeing,\\\" Capek said. \\\"It's a great feeling on the factory floor.\\\"\\nHer comments reflect a much broader trend. While much of the attention surrounding AI has focused on chipmakers and software developers, companies like Corning are supplying the glass technology that connects AI systems and supports the industry's rapid expansion. That investment is already translating into the opening of new U.S. factories and creation of American jobs.\\nEarlier this year, NVIDIA partnered with Corning to build three advanced optical manufacturing facilities in North Carolina and Texas. It's expected to create more than 3,000 jobs across both states while expanding Corning's U.S. optical manufacturing capacity tenfold.\\nHaving worked with innovators such as Apple co-founder Steve Jobs during his career, Weeks said he's proud to now partner with NVIDIA CEO Jensen Huang as Corning helps build the infrastructure powering the AI revolution.\\nWhile companies like NVIDIA have become synonymous with artificial intelligence, Weeks said many people overlook the role optical fiber plays in connecting AI systems.\\n\\\"The common story is AI being powered by chips, but actually, those chips are connected by glass,\\\" Weeks said.\\nThe AI manufacturing boom isn't just fueling growth at longtime American companies like Corning. It's also attracting foreign investment into U.S. manufacturing. Wistron, a Taiwan-based electronics manufacturer, is establishing AI supercomputer manufacturing operations in Texas for NVIDIA, bringing advanced manufacturing jobs to the state.\\n\\\"Building in America is essential for speed, resilience and strategic advantage,\\\" Wistron Chairman Simon Lin told Fox News Digital.\\n\\\"Texas offers the talent, industrial strength, and strategic location to help power the next generation of AI infrastructure, while creating durable, high-value jobs at scale for the local workforce,\\\" he added.\\nAs America marks 250 years of independence, Weeks said the country's next chapter of innovation will depend not only on breakthrough ideas, but on manufacturing them at home.\\n\\\"The tools change, but the approach doesn't,\\\" Weeks said.\\nAmanda Macias covers the intersection of business, economics and politics, with a focus on how policy decisions shape markets, businesses and American workers.\\nGet the latest updates on the Trump administration and Congress, exclusive interviews and more Fox News politics content.\", \"other_source_records\": [{\"id\": \"item:e1\", \"quote\": \"As demand for artificial intelligence infrastructure surges, the New York-based manufacturer is ramping up production of optical fiber, the backbone of the high-speed networks powering AI.\", \"one_line\": \"Fox News reported on 2026-07-01 that Corning was ramping up optical-fiber production amid rising AI-infrastructure demand.\", \"speaker\": \"Fox News, reporting by Amanda Macias\", \"original_who\": \"Fox News\", \"original_day\": \"2026-07-01\", \"tier\": \"third_party_view\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e2\", \"quote\": \"The company is also partnering with NVIDIA, the chipmaker at the center of the AI boom, to create 3,000 jobs in two states.\", \"one_line\": \"Fox News reported that Corning and NVIDIA were partnering to create 3,000 jobs in two states; the report gave no completion date.\", \"speaker\": \"Fox News, reporting by Amanda Macias\", \"original_who\": \"Fox News\", \"original_day\": \"2026-07-01\", \"tier\": \"third_party_view\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e4\", \"quote\": \"\\\"Right now, the world needs our glass optical fiber to support the AI demand we're seeing,\\\" Capek said.\", \"one_line\": \"Corning planning supervisor Emily Capek said demand for Corning's glass optical fiber was supporting AI demand.\", \"speaker\": \"Emily Capek, planning supervisor at Corning’s Wilmington, North Carolina, facility, quoted by Fox News Digital\", \"original_who\": \"Emily Capek\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e5\", \"quote\": \"Earlier this year, NVIDIA partnered with Corning to build three advanced optical manufacturing facilities in North Carolina and Texas.\", \"one_line\": \"NVIDIA and Corning partnered earlier in 2026 to build three advanced optical manufacturing facilities in North Carolina and Texas.\", \"speaker\": \"Fox News, reporting by Amanda Macias\", \"original_who\": \"Fox News\", \"original_day\": \"2026-07-01\", \"tier\": \"third_party_view\", \"event_time\": \"Earlier in 2026\"}, {\"id\": \"item:e6\", \"quote\": \"It's expected to create more than 3,000 jobs across both states while expanding Corning's U.S. optical manufacturing capacity tenfold.\", \"one_line\": \"The three-facility Corning-NVIDIA project was expected to create more than 3,000 jobs across North Carolina and Texas and expand Corning's U.S. optical manufacturing capacity tenfold; the report gave no completion date.\", \"speaker\": \"Fox News, reporting by Amanda Macias\", \"original_who\": \"Fox News\", \"original_day\": \"2026-07-01\", \"tier\": \"third_party_view\", \"event_time\": \"Not specified\"}, {\"id\": \"item:e7\", \"quote\": \"Wistron, a Taiwan-based electronics manufacturer, is establishing AI supercomputer manufacturing operations in Texas for NVIDIA, bringing advanced manufacturing jobs to the state.\", \"one_line\": \"Fox News reported that Taiwan-based Wistron was establishing AI-supercomputer manufacturing operations in Texas for NVIDIA; the report did not quantify the jobs or give a date.\", \"speaker\": \"Fox News, reporting by Amanda Macias\", \"original_who\": \"Fox News\", \"original_day\": \"2026-07-01\", \"tier\": \"third_party_view\", \"event_time\": \"Not specified\"}], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}]}}"
+    }
+  ],
+  "output_config": {
+    "effort": "medium",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  }
+}

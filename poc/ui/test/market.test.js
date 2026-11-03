@@ -13,7 +13,7 @@ const stored = JSON.parse(
   fs.readFileSync(new URL('../data/nvda-2026-10-27.json', import.meta.url)),
 );
 
-test('D235: the real snapshot keeps all completed USD observations and their source cutoff', () => {
+test('D328: the real snapshot keeps all completed USD observations and their source cutoff', () => {
   const data = readMarketSnapshot(stored);
   assert.equal(data.hourly.length, 248);
   assert.equal(data.daily.length, 371);
@@ -58,7 +58,7 @@ test('D235: the real snapshot keeps all completed USD observations and their sou
   console.log('Judged 619 real price observations and 10 malformed snapshots.');
 });
 
-test('D235: ranges use the newest real observation and preserve intraday time gaps', () => {
+test('D328: ranges use the newest real observation and preserve intraday time gaps', () => {
   const data = readMarketSnapshot(stored);
   for (const range of ['1D', '1W', '1M', '1Y']) {
     const points = marketWindow(data, range);
@@ -99,7 +99,7 @@ test('D235: ranges use the newest real observation and preserve intraday time ga
   assert.throws(() => marketWindow(data, 'ALL'), TypeError);
 });
 
-test('D235: investment settings admit only the displayed tenths and four chart ranges', () => {
+test('D328: investment settings admit only the displayed tenths and four chart ranges', () => {
   assert.deepEqual(readActionSettings(), { allocation: 5, range: '1Y' });
   for (const allocation of [0, 5, 5.1, 100])
     assert.equal(readActionSettings({ allocation, range: '1M' }).allocation, allocation);
@@ -109,7 +109,7 @@ test('D235: investment settings admit only the displayed tenths and four chart r
   assert.throws(() => readActionSettings({ allocation: 5, range: '1M', execute: true }), TypeError);
 });
 
-test('D235: Action, Trigger, Idea and thesis occupy ordered separate columns', () => {
+test('D328: Action, Trigger, Idea and thesis occupy ordered separate columns', () => {
   for (const rootIds of [[], ['a'], ['a', 'b', 'c']]) {
     const graph = { rootIds, branches: [] };
     const plan = layoutGraph(graph, true, true, true);

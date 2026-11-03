@@ -65,5 +65,6 @@ def matching_answer(data):
 
 
 def judgement_answer(data):
-    """A judgement answer with canonical pushes."""
-    return dict(data, pushes=[dict(p, push=canonical('push', p.get('push'))) for p in data.get('pushes', [])])
+    """A judgement answer with canonical pushes (on evidence and on themes in force)."""
+    return dict(data, pushes=[dict(p, push=canonical('push', p.get('push'))) for p in data.get('pushes', [])],
+                theme_pushes=[dict(p, push=canonical('push', p.get('push'))) for p in data.get('theme_pushes', [])])

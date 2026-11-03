@@ -1,4 +1,4 @@
-# D185 composite score trial
+# D279 composite score trial
 
 The current NVIDIA Idea now shows a thesis-style fractional score history. Two explicitly reviewed connected representatives have equal weights: total revenue v2 and current-year top-five capex v1, both with direction +1. At August 15 the raw states are -1 and +1; contributions are -0.50 and +0.50, giving **0.00**. The current basket's history is **0 through July 28 → +0.50 on July 29 → 0 on August 10**. [Calculation records](calculation.json).
 

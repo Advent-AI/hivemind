@@ -7,10 +7,12 @@ Prompt versions 1–5 ask and answer in Chinese; version 6 and later ask and ans
 the request text and the retry note follow the version; every answer is read in the canonical vocabulary."""
 import dataclasses
 import datetime
+import difflib
 import json
 import re
 
-from . import config, model, vocabulary
+from . import config, model, placement, vocabulary
+from .universe import parse_year
 
 TIERS = vocabulary.TIERS
 LEGACY_TIERS = list(vocabulary.LEGACY['tier'])
@@ -19,14 +21,158 @@ MAX_TEXT_CHARS = 400_000
 ENGLISH_FROM = 6                  # the first extraction prompt version written in English
 GROUPS_FROM = 7                   # the first version whose candidates carry research-group membership (D149)
 ALIASES_FROM = 9                  # the first version whose declared groups carry aliases, so code decides identity and membership (D166)
+ADMISSION_FROM = 12               # the first version whose candidates state why they open (D184): one of four reasons, the settling material, the loss if folded
+# D184: the closed set of reasons a candidate thesis may open; anything else is evidence to a shown thesis
+ADMISSION_REASONS = ['main_driver', 'industry_aggregate', 'policy_stage', 'binding_obligation']
+ADMISSION_REASONS_V13 = ['main_driver', 'shared_quantity', 'policy_stage', 'binding_obligation']    # D191: a quantity or price outside any one company
+EMPTY_LINE_FROM = 16              # D199: from role-v16 the request no longer says 'return empty arrays when there is nothing to extract'; the gate rule decides
+EMPTY_LINE_DROPPED_VERSIONS = (58,)   # noise arm (2026-10-30, prompt-standard audit N9): the closing names no condition for an empty answer; the keep rule decides
+REVIEW_UNTIL = 66    # D251/design-v71-production.md: the end-of-request check closes versions 59–65, and 66 (R3, 2026-11-01: v65's check with the views row's
+                     # boundary, research/2026-10-31-reference-context/design-r3-review.md); from v71 the role text carries its own
+OPEN_QUESTIONS_FROM = 71          # D251 (2026-10-31): from v71 the request shows the questions open at the start of the item's day (a daily snapshot), one line each;
+                                  # a statement may link to them, and a linked statement is filed without the placement call; the role is role-v68a's text
+MOVES_FIELDS_VERSIONS = (71,)     # D252: the new_in_it and moves fields before the quote are v71's alone; v72 keeps the answer shape of v53..v66 (design-v72.md)
+ONE_DECIDER_FROM = 72             # D256 (Alex, 2026-11-02; research/2026-11-01-e2e-loop/design-v72.md): from v72 the request's open questions carry their takes lines
+                                  # (placement.takes) and the links field its definition (placement.FILING_RULE); the extraction's links file each statement, no placement
+                                  # call is made, and a statement linked to no shown question and no kept candidate is dropped as 'no home' (D209)
+PLACEMENT_UNTIL = 71              # the separate placement call (D207) files statements from v20 through v71; from v72 the extraction files them
+REVIEW_VERSIONS_ALSO = (72, 73, 74, 75)   # v72 ends with review-v72.txt, v66's check: its role text is v66's with the open-questions paragraph; v73 with review-v73.txt (D265, the boundaries' examples)
+REVIEW_FROM = 59     # AGENTS §6 (2026-10-30): from role-v59 the request ends with a check that reads the evidence list back by standard 5.1 (prompts/review-v<N>.txt) and names no empty-answer condition
+SHARED_QUANTITY_VERSIONS = (13, 14, 15)    # D191: the schemas of role-v13..v15 name shared_quantity in place of industry_aggregate (role-v15's text already
+                                           # says industry_aggregate; its schema stays so stored requests stay byte-identical); every later version names the four reasons above
+THEMES_SHOWN_FROM = 19            # A (2026-10-28): from v19 the request shows every open theme thesis to every item and the groups block prints only linkable member ids
+PLACEMENT_FROM = 20               # 2026-10-28 (routing-analysis.md §6): from v20 a statement without a link is kept, and a separate placement call decides the links to existing theses
+LEDGER_BLIND_FROM = 22            # D211 (2026-10-28 night): from v22 the extraction request shows no thesis and no group, so its bytes depend on the item alone; links go to the answer's
+                                  # own candidates, the placement call files statements under the open theses, matching folds a candidate into an open thesis (D190), aliases fold a declared group (D166)
+ACCOUNT_VERSIONS = (17,)          # D199/D200: v17 alone answers with an account per mandatory paragraph (statements or a skip reason); v18 was measured with the flat shape and sends it
+ACCOUNT_LIMIT = 30                # at most this many mandatory paragraphs are required per answer: a 60-paragraph page spent the whole 8,000-token cap on reasoning and returned nothing (2026-10-27 19:16); later paragraphs may still yield extra statements
+SKIP_REASONS = ['boilerplate', 'navigation', 'repeat', 'no_claim']
+MONTH_NAME = re.compile(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\b')
+MANDATORY_CHARS = 120
+BINDING_HORIZON_DAYS = 548        # D185: a binding obligation is due within 18 months of the item, and is exempt from the next-year rule on quantities
+# role-v53 (2026-10-30, record-field class): the three attribution fields carry their definitions in the schema, beside the
+# field they govern, so the role text that decides which statements to keep stays as it was (standard 5.4: the original
+# claimant; an unknown statement day is unknown, never the report day; D220, D203; 5.5: relays of one report are one source)
+FIELD_NOTES_FROM = 53
+FIELD_NOTES = {
+    'speaker': 'Who says it in this item: the outlet, the author or the person quoted.',
+    'original_who': ('The party whose statement, figure or action it is, even when the item reports it without attribution ("the insurer agreed '
+                     'to buy the broker": the insurer; "the regulator fined the bank, a newspaper reported": the regulator); the outlet or author '
+                     'only for its own estimate, analysis or unnamed-source report.'),
+    'original_day': ('The day that party made it, as an ISO day when the item gives one ("signed on 3 March 2026": 2026-03-03); empty when the '
+                     "item gives none or only a month; the publication day only when the item is that party's own release, filing, call or analysis."),
+}
+# role-v54: the role text no longer states the attribution rule, so the schema is its one owner; the wording follows the signed gold's
+# who column (the party that announced or did it, a relaying outlet named only as the relay, an unnamed source with the outlet that
+# carried it) and 5.4's statement day (never the publication day in place of an unknown day); v54–v56 alone, later versions carry v53's notes (D247)
+FIELD_NOTES_V54_VERSIONS = (54, 55, 56)
+FIELD_NOTES_V54 = {
+    'speaker': 'Who says it in this item: the outlet, the author or the person quoted.',
+    'original_who': ('The party that made the statement, took the action or produced the figure, even when the item reports it without '
+                     'attribution ("the insurer agreed to buy the broker": the insurer); an outlet that only relays it is not the original party; '
+                     'for a claim from unnamed sources, the unnamed source and the outlet that carried it; the outlet or author for its own '
+                     'estimate or analysis.'),
+    'original_day': ('The day that party made the statement or took the action, as an ISO day when the item gives one ("announced on 3 March '
+                     '2026": 2026-03-03); empty when the item gives no day or only a month, never the publication day in place of an unknown '
+                     "day. A party's own release, filing, call or analysis is dated its publication day."),
+}
+# role-v55 alone (refuted on its small sample, loop log row 32): the source tier's rule moved from the role text to the tier field
+# as standard 5.5's table, the first row that applies; later versions keep the tier rule in the role text
+TIER_NOTE_VERSIONS = (55,)
+TIER_NOTE = ('Take the first row that applies. (1) The item credits the claim to someone unnamed or calls it unconfirmed, even an '
+             'announcement or a figure: rumour. (2) An official action, a published actual figure, a completed transaction, or an '
+             'announcement the item reports, even when the reporter names no source: fact. (3) Company guidance, a management statement or '
+             "an official's remark: party_statement. (4) An analyst's, outlet's or expert's view or estimate: third_party_view. (5) Anything "
+             'else with no source: rumour. A record that mixes a fact with a plan or a rumour takes the tier of its main claim.')
+
+
+# Extraction v74i, the frozen production prompt (D274; design-v78-fields.md §12-§13): a text variant of v74 whose numeric takes lines name only their
+# quantity, scope and period, and whose links field states the four paths, the other-period allowance and the company-wide revenue question as the
+# home of indirect evidence once (placement.FILING_RULE_ROOT_FALLBACK).
+PATHS_ONCE_VARIANTS = ('v74i',)
 
 
 def version_number(version):
-    return int(str(version or '').lstrip('v') or 0)
+    """The number of a prompt version ('v53', 'v53b' → 53). The behaviour flags above read the number; a letter suffix names a text
+    variant with the same behaviour and its own prompt files (role-v53b.txt, categories-v53b.json; D255 arm, 2026-11-01); a variant listed in
+    PATHS_ONCE_VARIANTS (v74i) also reads its own code-written takes lines and links description."""
+    digits = re.match(r'\d+', str(version or '').lstrip('v'))
+    return int(digits.group()) if digits else 0
 
 
 def is_english(version):
     return version_number(version) >= ENGLISH_FROM
+
+
+def accounts(version):
+    return version_number(version) in ACCOUNT_VERSIONS
+
+
+def shows_themes(version):
+    return version_number(version) >= THEMES_SHOWN_FROM
+
+
+def ledger_blind(version):
+    return version_number(version) >= LEDGER_BLIND_FROM
+
+
+def open_questions(version):
+    """From v71 the request shows the day's open questions and a statement may link to them (D251)."""
+    return version_number(version) >= OPEN_QUESTIONS_FROM
+
+
+def reviews(version):
+    """Versions whose request ends with the separate review check (prompts/review-v<N>.txt)."""
+    number = version_number(version)
+    return REVIEW_FROM <= number <= REVIEW_UNTIL or number in REVIEW_VERSIONS_ALSO
+
+
+def places(version):
+    """Versions whose statements a separate placement call files (D207): v20 through v71."""
+    return PLACEMENT_FROM <= version_number(version) <= PLACEMENT_UNTIL
+
+
+def one_decider(version):
+    """From v72 the extraction files its statements itself: its links are the filing, and no placement call is made (D256)."""
+    return version_number(version) >= ONE_DECIDER_FROM
+
+
+def keeps_unlinked(version):
+    """From v20 the sift keeps a statement without a link: for the placer, or from v72 for the handover, which drops it as 'no home'."""
+    return version_number(version) >= PLACEMENT_FROM
+
+
+def shown_views(conn, cfg, item, objects):
+    """The theses an item's extraction request shows (05-extraction block 5): the objects' open theses and their dependencies;
+    from v19 also every open theme thesis. The one place the stream and the parallel runner take the list from."""
+    version = cfg.extraction_setting(item['category']).prompt_version.rpartition('-')[2]
+    from .views import store
+    if open_questions(version):       # D251: the questions open at the start of the item's day, the same list for every item of that day
+        views = store.views_open_at_day_start(conn, objects, item['publication_day'])
+        groups_of = lambda v: store.groups_of_view_at(conn, v['view_id'], v['snapshot_seq'])    # the groups and aliases as they stood at the day's start
+        parents_of = lambda v: store.direct_parents(conn, v['view_id'], v['snapshot_seq'])
+    else:
+        views = store.views_for_prompt(conn, objects, themes=shows_themes(version))
+        groups_of = lambda v: store.groups_of_view(conn, v['view_id'])
+        parents_of = lambda v: store.direct_parents(conn, v['view_id'])
+    return [dict(v, key=store.view_key(conn, v['view_id']) or {}, groups=[{'name': g['name'], 'scope': g['scope'], 'aliases': g.get('aliases') or []} for g in groups_of(v)],
+                 parents=parents_of(v))
+            for v in views]       # the key and the groups feed the 'takes' line (the placer's, and from v72 the extraction's); the parents feed the narrowest rule
+
+
+def narrowest_links(links, parents):
+    """D207's one rule the filing enforces in code (2026-11-02, D265): a statement linked to a question and to a question that question
+    depends on (a driver and its root, transitively) keeps the narrower one only. `parents` maps a view id to the ids it depends on."""
+    def ancestors(view_id, seen):
+        for parent in parents.get(view_id, ()):
+            if parent not in seen:
+                seen.add(parent)
+                ancestors(parent, seen)
+        return seen
+    broader = set()
+    for link in links:
+        broader |= ancestors(link, set())
+    return [l for l in links if l not in broader]
 
 
 def has_groups(version):
@@ -124,9 +270,114 @@ def grouped_schema(shown_group_ids, aliases=False, measures=MEASURES):
     return schema
 
 
-def schema_for(version, shown_group_ids=()):
+def admission_schema(shown_view_ids, shown_group_ids, measures=MEASURES_V10, reasons=ADMISSION_REASONS, blind=False):
+    """The grouped schema plus the admission fields (D184): opens_as names one of the four reasons; folds_into names the shown
+    thesis the statement would otherwise attach to, or is empty (the pattern is built from the shown ids, so an unseen thesis
+    cannot be named); lost_if_folded says what investment implication is lost if it only attached there; settled_by names the
+    public material that resolves the question."""
+    schema = grouped_schema(shown_group_ids, aliases=True, measures=measures)
+    candidate = schema['properties']['candidates']['items']
+    if blind:                                    # v22: no thesis is shown, so nothing to fold into; matching folds (D190)
+        candidate['properties'].update({'opens_as': {'type': 'string', 'enum': list(reasons)}, 'settled_by': {'type': 'string'}})
+        candidate['required'] += ['opens_as', 'settled_by']
+        return schema
+    candidate['properties'].update({
+        'opens_as': {'type': 'string', 'enum': list(reasons)},
+        'folds_into': {'type': 'string', 'pattern': '^(?:' + ''.join('|' + re.escape(v) for v in shown_view_ids) + ')$'},
+        'lost_if_folded': {'type': 'string'},
+        'settled_by': {'type': 'string'}})
+    candidate['required'] += ['opens_as', 'folds_into', 'lost_if_folded', 'settled_by']
+    return schema
+
+
+def paragraphs_of(text):
+    """The page as numbered paragraphs: one non-blank line each, ids p0001 … in page order."""
+    lines = [line.strip() for line in text[:MAX_TEXT_CHARS].split('\n') if line.strip()]
+    return [(f'p{index:04}', line) for index, line in enumerate(lines, 1)]
+
+
+def mandatory_paragraph(line):
+    """A paragraph the answer must account for: it carries a digit, a month name or MANDATORY_CHARS characters or more."""
+    return bool(re.search(r'\d', line) or MONTH_NAME.search(line) or len(line) >= MANDATORY_CHARS)
+
+
+def mandatory_ids(text):
+    ids = [pid for pid, line in paragraphs_of(text) if mandatory_paragraph(line)]
+    return ids[:ACCOUNT_LIMIT]
+
+
+def accounted_schema(base, mandatory):
+    """v17: the base answer with its evidence array replaced by an account per mandatory paragraph (statements or a skip
+    reason, an anyOf the provider enforces) and an extra array for statements from other paragraphs; the piece shape is
+    shared under $defs so the schema does not grow with the page."""
+    piece = base['properties']['evidence']['items']
+    entry = {'anyOf': [
+        {'type': 'object', 'properties': {'statements': {'type': 'array', 'minItems': 1, 'items': {'$ref': '#/$defs/piece'}}}, 'required': ['statements'], 'additionalProperties': False},
+        {'type': 'object', 'properties': {'skip': {'type': 'string', 'enum': SKIP_REASONS}}, 'required': ['skip'], 'additionalProperties': False}]}
+    paragraphs = {'type': 'object', 'properties': {pid: entry for pid in mandatory}, 'required': list(mandatory), 'additionalProperties': False}
+    properties = {'paragraphs': paragraphs, 'extra': {'type': 'array', 'items': {'$ref': '#/$defs/piece'}}}
+    properties.update({k: v for k, v in base['properties'].items() if k != 'evidence'})
+    return {'type': 'object', '$defs': {'piece': piece}, 'properties': properties, 'required': list(properties), 'additionalProperties': False}
+
+
+def flatten_account(data):
+    """A v17 answer read as the evidence list every check expects: the statements of every paragraph entry, in page
+    order, then the extra statements. Any other answer is returned as it is."""
+    if 'paragraphs' not in data:
+        return data
+    pieces = [p for entry in (data.get('paragraphs') or {}).values() for p in (entry.get('statements') or [])]
+    flat = {k: v for k, v in data.items() if k not in ('paragraphs', 'extra')}
+    flat['evidence'] = pieces + list(data.get('extra') or [])
+    return flat
+
+
+def field_notes(number):
+    """The evidence fields' descriptions a prompt version's schema carries: none before v53, FIELD_NOTES_V54 in v54–v56, FIELD_NOTES
+    in v53 and from v57, and the tier's in v55 alone."""
+    if number < FIELD_NOTES_FROM:
+        return {}
+    notes = dict(FIELD_NOTES_V54 if number in FIELD_NOTES_V54_VERSIONS else FIELD_NOTES)
+    if number in TIER_NOTE_VERSIONS:
+        notes['tier'] = TIER_NOTE
+    return notes
+
+
+# D251/D252 (2026-10-31), from v71: two fields the analyst writes before the quote (standard 5.1: is it new; which question does it move)
+FIELD_NOTES_V71 = {
+    'new_in_it': 'What is new here, in a few words (a new event, step, figure, forecast, plan, policy step or specific judgement). Not a sentence.',
+    'moves': 'The question this makes more or less likely (an open question id, your candidate id, or the question in a few words) and how, in a few words. Not a sentence.',
+}
+
+
+def with_extra_fields(schema, fields):
+    """The schema with the named string fields added first to each evidence item and required."""
+    item = schema['properties']['evidence']['items']
+    item['properties'] = {**{k: {'type': 'string', 'description': v} for k, v in fields.items()}, **item['properties']}
+    item['required'] = list(fields) + [r for r in item['required'] if r not in fields]
+    return schema
+
+
+def with_field_notes(schema, notes):
+    """The schema with the notes as the descriptions of the evidence fields they name."""
+    fields = schema['properties']['evidence']['items']['properties']
+    for name, note in notes.items():
+        fields[name] = dict(fields[name], description=note)
+    return schema
+
+
+def schema_for(version, shown_group_ids=(), shown_view_ids=(), mandatory=()):
     number = version_number(version)
     measures = MEASURES_V10 if number >= MEASURES_V10_FROM else MEASURES
+    if number >= ADMISSION_FROM:
+        base = admission_schema(shown_view_ids, shown_group_ids, measures=measures, reasons=ADMISSION_REASONS_V13 if number in SHARED_QUANTITY_VERSIONS else ADMISSION_REASONS,
+                                blind=number >= LEDGER_BLIND_FROM)
+        if number >= FIELD_NOTES_FROM:
+            base = with_field_notes(base, field_notes(number))
+        if number in MOVES_FIELDS_VERSIONS:
+            base = with_extra_fields(base, FIELD_NOTES_V71)
+        if number >= ONE_DECIDER_FROM:           # D256: the links field carries the filing rule, the takes lines' one rule, beside the field
+            base = with_field_notes(base, {'links': placement.FILING_RULE_ROOT_FALLBACK if version in PATHS_ONCE_VARIANTS else placement.FILING_RULE})
+        return accounted_schema(base, mandatory) if accounts(version) else base
     if number >= GROUPS_FROM:
         return grouped_schema(shown_group_ids, aliases=number >= ALIASES_FROM, measures=measures)
     if number >= ENGLISH_FROM:
@@ -158,8 +409,162 @@ def _categories(version):
     return json.loads(_read(f'categories-{version}.json'))
 
 
+GLYPHS = str.maketrans({'’': "'", '‘': "'", '“': '"', '”': '"', '—': '-', '–': '-'})
+
+
 def normalise(text):
-    return re.sub(r'\s+', ' ', text).strip().lower()
+    """The form in which a quote is compared with the item's text: one space between words, no space before closing
+    punctuation or after an opening bracket, plain quote and dash glyphs, lower case. The cleaned page text keeps a space
+    where an inline tag stood (" , "); the model writes the sentence with ordinary punctuation, and both are the same text."""
+    text = re.sub(r'\s+', ' ', text.translate(GLYPHS))
+    text = re.sub(r"\s+([,.;:!?')\]])", r'\1', text)
+    text = re.sub(r'([(\[])\s+', r'\1', text)
+    return text.strip().lower()
+
+
+# D236: a quote the plain check misses is still the item's text when it differs only by punctuation, quotation marks, footnote
+# markers or case, or leaves out one run of words inside one sentence; the stored quote is then the exact source passage, so a
+# stored quote is always verbatim. Any added, changed or reordered word or number, a dropped +/− on a number or a changed currency
+# is refused; a comparison sign (>, ~, ≥) is not a token, so a quote that drops one is repaired to the source text that carries it.
+QUOTE_TOKEN = re.compile(r"\[\d{1,3}\]|[-+−]?[$€£¥]?\d+(?:[.,:/]\d+)*%?|[^\W_]+(?:['./&-][^\W_]+)*|[$€£¥%]")
+_FOOTNOTE = re.compile(r'\[\d{1,3}\]$')
+_SENTENCE_END = re.compile(r"[.!?…][\"')\]”’]*\s|\n")
+_OPENING = re.compile(r"[\"'(\[“‘]+$")
+_CLOSING = re.compile(r"[.!?]?[\"')\]”’]*")
+
+
+def _quote_tokens(text):
+    """The words and numbers a quote is compared by, with their character spans in text (GLYPHS maps one character to one)."""
+    plain = text.translate(GLYPHS)
+    return [(m.group(0).lower(), m.start(), m.end()) for m in QUOTE_TOKEN.finditer(plain) if not _FOOTNOTE.match(m.group(0))]
+
+
+def _source_passage(text, start, end):
+    before = _OPENING.search(text[max(0, start - 3):start])
+    if before:
+        start -= len(before.group(0))
+    return text[start:end + len(_CLOSING.match(text, end).group(0))]
+
+
+def _runs(needle, tokens):
+    return [i for i in range(len(tokens) - len(needle) + 1) if tokens[i] == needle[0] and tokens[i:i + len(needle)] == needle]
+
+
+def repair_quote(quote, text, subject_names=()):
+    """The source passage a refused quote stands for (D236, D266), or None. Accepted: the quote's words equal one passage's words
+    (punctuation, quotation marks, footnote markers and case aside), or equal them with one run left out that lies inside one
+    sentence and is shorter than the quote; or (D266) differ from them by a word or two that is a function word, a pronoun, a generic
+    word for the company or one of `subject_names` (the subject company's own name), never a number or any other word; or copy one
+    passage exactly and run on past its sentence end."""
+    if len(normalise(quote)) < 8:
+        return None
+    spans = _quote_tokens(text)
+    source_tokens = [token for token, _, _ in spans]
+    quote_tokens = [token for token, _, _ in _quote_tokens(quote)]
+    if not quote_tokens:
+        return None
+    found = _runs(quote_tokens, source_tokens)
+    if found:
+        return _source_passage(text, spans[found[0]][1], spans[found[0] + len(quote_tokens) - 1][2])
+    best = None                                              # (left-out length, first token, last token) of the shortest gap
+    for split in range(1, len(quote_tokens)):
+        head, tail = quote_tokens[:split], quote_tokens[split:]
+        for tail_start in _runs(tail, source_tokens):
+            for gap_start in range(tail_start - 1, split - 1, -1):          # tokens gap_start..tail_start-1 are the left-out run
+                if tail_start - gap_start >= len(quote_tokens) or _SENTENCE_END.search(text[spans[gap_start - 1][2]:spans[tail_start][1]]):
+                    break
+                if source_tokens[gap_start - split:gap_start] == head:
+                    if best is None or tail_start - gap_start < best[0]:
+                        best = (tail_start - gap_start, gap_start - split, tail_start + len(tail) - 1)
+                    break
+    if best is not None:
+        return _source_passage(text, spans[best[1]][1], spans[best[2]][2])
+    near = _near_run(quote_tokens, source_tokens, subject_names)   # D266: a function word or the company's own name changed, added or dropped
+    if near is not None:
+        return _source_passage(text, spans[near[0]][1], spans[near[1]][2])
+    prefix = _exact_prefix(quote_tokens, source_tokens, spans, text)   # D266: a quote that runs on past the passage it copied keeps that passage
+    if prefix is not None:
+        return _source_passage(text, spans[prefix[0]][1], spans[prefix[1]][2])
+    return None
+
+
+# D266 (2026-11-02, Alex: the quote refusals of core statements are an important class, fix it quickly): the stored quote is still the exact
+# source passage; what widens is which model quotes are matched to one. A quote of at least NEAR_MIN_TOKENS words whose words differ from one
+# source window's by at most NEAR_EDITS(n) word edits, every edited word a function word, a pronoun, a generic word for the company or the
+# subject company's own name ("the company's" written as the name; "While" as "As"), is that window; a quote that copies one passage
+# exactly and then runs on into other text keeps the copied passage when it is at least NEAR_MIN_TOKENS words and ends at a sentence end.
+# A changed month, party, product or number, a paraphrase, and two names swapped are refused as before (D236's tests hold).
+NEAR_MIN_TOKENS = 8
+HARMLESS_TOKENS = frozenset('''the a an this that these those it its it's he she they their his her hers we our ours my your you
+    as while although though meanwhile however but and or so because since then also too for of to in on at by with from into over under
+    about example instance first all additionally moreover further furthermore still yet now here there is are was were be been being
+    has have had do does did will would could should might can that's which who whom whose what when where said says say
+    company company's firm firm's chipmaker chipmaker's giant giant's maker maker's group group's'''.split())     # not "may": a month
+
+
+def NEAR_EDITS(length):
+    return 2 if length <= 30 else 3
+
+
+def _harmless(subject_names):
+    names = set()
+    for name in subject_names:
+        for token, _, _ in _quote_tokens(name):
+            names.add(token)
+            names.add(token + "'s")
+    return HARMLESS_TOKENS | names
+
+
+def _edited_tokens(quote_tokens, window):
+    """(number of word edits, the words involved on both sides) between the quote and one source window, by the aligned difference."""
+    edits, involved = 0, []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, quote_tokens, window, autojunk=False).get_opcodes():
+        if tag == 'equal':
+            continue
+        edits += max(i2 - i1, j2 - j1)
+        involved += quote_tokens[i1:i2] + window[j1:j2]
+    return edits, involved
+
+
+def _near_run(quote_tokens, source_tokens, subject_names=()):
+    """(first, last) source token indexes of a window the quote matches within NEAR_EDITS word edits that all fall on harmless words,
+    anchored on the quote's first or last three words appearing exactly; None otherwise."""
+    n = len(quote_tokens)
+    if n < NEAR_MIN_TOKENS:
+        return None
+    limit = NEAR_EDITS(n)
+    harmless = _harmless(subject_names)
+    anchors = set()
+    for position in _runs(quote_tokens[:3], source_tokens):
+        anchors.update(range(position - limit, position + limit + 1))
+    for position in _runs(quote_tokens[-3:], source_tokens):
+        anchors.update(range(position + 3 - n - limit, position + 3 - n + limit + 1))
+    best = None
+    for start in sorted(a for a in anchors if a >= 0):
+        window = source_tokens[start:start + n]             # the same length: words substituted, none added or dropped (a dropped last word
+        if len(window) != n:                                # would otherwise match a passage cut short)
+            continue
+        edits, involved = _edited_tokens(quote_tokens, window)
+        if 0 < edits <= limit and all(t in harmless for t in involved) and (best is None or edits < best[0]):
+            best = (edits, start, start + n - 1)
+    return best[1:] if best else None
+
+
+def _exact_prefix(quote_tokens, source_tokens, spans, text):
+    """(first, last) source token indexes of the longest prefix of the quote, at least NEAR_MIN_TOKENS words, that occurs exactly in
+    the source and ends at a sentence end there; None otherwise."""
+    for length in range(len(quote_tokens) - 1, NEAR_MIN_TOKENS - 1, -1):
+        for position in _runs(quote_tokens[:length], source_tokens):
+            end = spans[position + length - 1][2]
+            if end >= len(text) or _SENTENCE_END.match(text[end:end + 4]) or _CLOSING.fullmatch(text[end:end + 2] or '') and text[end:end + 1] in '.!?':
+                return position, position + length - 1
+    return None
+
+
+def item_header(item, category):
+    """The line that opens the item in an English extraction request; preflight reads archived requests by it."""
+    return (f'[Item] id {item["input_id"]}, category {category}, author {item.get("publisher")} ({item.get("publisher_type")}), '
+            f'published {item.get("publication_day")}, title: {item.get("title") or ""}\n\n')
 
 
 def _watched_lines(objects, universe):
@@ -248,7 +653,16 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
     if watched:
         parts.append('[Research reference] Existing quantities and scopes (measure[scope](event_type)). Reuse a name only when the meaning is the same; '
                      'propose important questions outside the list as usual, with their actual scope:\n' + '\n'.join(watched))
-    if shown_views:
+    blind = ledger_blind(version)
+    if open_questions(version):     # D251: the day's snapshot, one line per question; the role text says how to link
+        if one_decider(version):    # v72: each question with its takes line, the lines the placer read (one writer, placement.question_lines)
+            lines = placement.question_lines(shown_views, paths_once=version in PATHS_ONCE_VARIANTS)
+        else:
+            lines = [f'  - {v["view_id"]} ({v["kind"]} {v["object_id"]}, due {v["due_day"]}): {v["question"]}' for v in shown_views]
+        parts.append(f'[Open questions at the start of {item["publication_day"]}]\n' + ('\n'.join(lines) if lines else '  None yet.'))
+    elif blind:
+        pass                        # v22: the request shows no thesis; the placement call reads the open theses, matching folds a candidate into one
+    elif shown_views:
         lines = []
         for v in shown_views:       # 05-extraction block 5: question, looks_at, due day and who depends on whom; no state, no evidence
             deps = dependency_text(v, english=True)
@@ -257,12 +671,29 @@ def _build_prompt_english(item, text, shown_views, universe, version, category, 
         parts.append('[Existing theses of these objects] Link evidence to them by id; write a candidate thesis only for a question they do not cover:\n' + '\n'.join(lines))
     else:
         parts.append('[Existing theses of these objects] None yet. Write every thesis that should open as a candidate.')
-    if has_groups(version):
+    if blind:
+        parts.append(groups_block(()))     # the standing instruction only: declare the matter; code folds a declared group into a stored one by its names (D166)
+    elif has_groups(version):
+        if shows_themes(version):          # a member id the answer may not link to is not printed (the link check would refuse it)
+            linkable = {v['view_id'] for v in shown_views}
+            shown_groups = [dict(g, members=[m for m in g.get('members', []) if m['view_id'] in linkable]) for g in shown_groups]
         parts.append(groups_block(shown_groups))
-    parts.append(f'[Item] id {item["input_id"]}, category {category}, author {item.get("publisher")} ({item.get("publisher_type")}), published {item.get("publication_day")}, title: {item.get("title") or ""}\n\n' + text[:MAX_TEXT_CHARS])
-    parts.append('Return evidence and candidates per the JSON schema. A candidate\'s evidence_ids are its own evidence ids; an evidence item\'s links are existing thesis ids '
-                 'or this answer\'s candidate ids (such as c1). year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). '
-                 'Return empty arrays when there is nothing to extract.')
+    if accounts(version):
+        page = '\n'.join(f'{pid} {line}' for pid, line in paragraphs_of(text))
+        parts.append(item_header(item, category) + page)
+        parts.append('[Paragraphs to account for] Every paragraph listed here gets an entry: its evidence statements, or a skip reason (boilerplate, navigation, repeat, no_claim). '
+                     'Statements from other paragraphs go in extra. ' + ', '.join(mandatory_ids(text)))
+    else:
+        parts.append(item_header(item, category) + text[:MAX_TEXT_CHARS])
+    parts.append(('Return evidence and candidates per the JSON schema. A candidate\'s evidence_ids are its own evidence ids; an evidence item\'s links are '
+                  + ('open question ids from [Open questions], this answer\'s candidate ids (such as c1), or empty. ' if open_questions(version)
+                     else 'this answer\'s candidate ids (such as c1), or empty. ' if blind else 'existing thesis ids or this answer\'s candidate ids (such as c1). ')
+                  + 'year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year). '
+                  + ('' if version_number(version) in EMPTY_LINE_DROPPED_VERSIONS or version_number(version) >= REVIEW_FROM
+                     else 'Return empty arrays only for a page with no business content.' if version_number(version) >= EMPTY_LINE_FROM
+                     else 'Return empty arrays when there is nothing to extract.')).rstrip())
+    if reviews(version):
+        parts.append(_read(f'review-{version}.txt').strip())
     return '\n\n'.join(parts)
 
 
@@ -311,14 +742,89 @@ QUARTERLY = re.compile(r'(\bQ[1-4]\b|第[一二三四1-4]季|季度|\bquarter(?!
                        r'|\bhalf[- ]year\s+(?:revenue|sales|net sales))', re.I)
 
 
-def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
+def request_for(cfg, item, text, shown_views, universe, shown_groups=()):
+    """Build the setting, complete prompt and schema without making a call."""
     setting = cfg.extraction_setting(item['category'])
     version = setting.prompt_version.rpartition('-')[2]
+    if ledger_blind(version) and not open_questions(version):     # D211: the request's bytes depend on the item alone
+        shown_views, shown_groups = [], []
+    elif open_questions(version):              # D251: the item and the day's snapshot; no groups block beyond the standing instruction
+        shown_groups = []
     system, user = build_prompt(item, text, shown_views, universe, version, shown_groups)
     group_ids = [g['group_id'] for g in shown_groups]
-    answer = model.call(archive, cfg, setting, system, user, schema_for(version, group_ids), 'extraction', 'extract', transport=transport)
-    evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, {v['view_id'] for v in shown_views}, universe, english=is_english(version), shown_group_ids=group_ids)
-    return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, answer.cached, answer.cost_usd, new_groups)
+    shown_ids = [v['view_id'] for v in shown_views]
+    if accounts(version):
+        return setting, system, user, schema_for(version, group_ids, shown_ids, mandatory_ids(text))
+    return setting, system, user, schema_for(version, group_ids, shown_ids)
+
+
+@dataclasses.dataclass
+class Reading:
+    """An item read: the extraction answer through the code checks, before placement (D211: the read never depends on the ledger
+    under a ledger-blind version, so the parallel day prepares it early and files it at the item's turn)."""
+    evidence: list
+    candidates: list
+    dropped: list
+    new_groups: list
+    answer: object
+    version: str
+
+
+def read_item(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
+    """The extraction call and the code checks on its answer. A ledger-blind version ignores shown_views and shown_groups for the
+    request (request_for drops them) and lets a statement link only to this answer's candidates."""
+    setting, system, user, schema = request_for(cfg, item, text, shown_views, universe, shown_groups)
+    version = setting.prompt_version.rpartition('-')[2]
+    blind = ledger_blind(version)
+    group_ids = [] if blind else [g['group_id'] for g in shown_groups]
+    shown_ids = {v['view_id'] for v in shown_views} if open_questions(version) or not blind else set()     # D251: a statement may link to a shown question
+    if places(version) and cfg.placement is None:            # refused before the paid call
+        raise ValueError(f'extraction {setting.prompt_version} files statements by a placement call, but the configuration has no placement setting')
+    answer = model.call(archive, cfg, setting, system, user, schema, 'extraction', 'extract', transport=transport)
+    evidence, candidates, dropped, new_groups = sift_with_groups(answer.data, item, text, shown_ids, universe, english=is_english(version),
+                                                                  shown_group_ids=group_ids, version=version, keep_unlinked=keeps_unlinked(version))
+    return Reading(evidence, candidates, dropped, new_groups, answer, version)
+
+
+def file_reading(reading, archive, cfg, item, shown_views, *, transport=None):
+    """The handover: from v20 the placement call files the read statements under the open theses shown now (D207); from v72 the
+    extraction's own links are the filing and no placement call is made (D256); earlier versions hand the read over as it is. A
+    statement no open question takes is dropped as 'no home' (D209), like every other drop: a candidate left with none of its evidence
+    is dropped too, and a statement whose only link was such a candidate has no home."""
+    evidence, candidates, dropped, answer = reading.evidence, reading.candidates, list(reading.dropped), reading.answer
+    cost, cached = answer.cost_usd, answer.cached
+    if places(reading.version) or one_decider(reading.version):
+        shown_ids = {v['view_id'] for v in shown_views} if open_questions(reading.version) else set()
+        linked = [e for e in evidence if any(l in shown_ids for l in e['links'])]        # D251: a statement the extraction linked to an open question is filed there
+        to_place = [e for e in evidence if e not in linked]
+        if places(reading.version):
+            placed, unfiled, placed_answer = placement.place(archive, cfg, to_place, shown_views, transport=transport, item=item)
+        else:                       # v72: the extraction's links are the filing; the loop below drops a statement linked to nothing as 'no home'
+            placed, unfiled, placed_answer = to_place, [], None
+        evidence = [e for e in evidence if e in linked or any(p['id'] == e['id'] for p in placed)]
+        evidence = [next((p for p in placed if p['id'] == e['id']), e) for e in evidence]
+        parents = {v['view_id']: v.get('parents') or [] for v in shown_views}
+        evidence = [dict(e, links=narrowest_links(e['links'], parents)) for e in evidence]     # D207 in code: the narrower of a driver and its root
+        dropped.extend((e['id'], 'no home') for e in unfiled)
+        if placed_answer is not None:
+            cost += placed_answer.cost_usd
+            cached = cached and placed_answer.cached
+        while True:
+            candidates = candidates_with_evidence(candidates, {e['id'] for e in evidence}, item, dropped)
+            candidate_ids = {c['id'] for c in candidates}
+            evidence = [dict(e, links=[l for l in e['links'] if not placement.CANDIDATE_ID.match(l) or l in candidate_ids]) for e in evidence]
+            homeless = [e for e in evidence if not e['links']]
+            if not homeless:
+                break
+            dropped.extend((e['id'], 'no home') for e in homeless)
+            evidence = [e for e in evidence if e['links']]
+    return Handover(evidence, candidates, dropped, answer.call_id, answer.request_sha256, cached, cost, reading.new_groups)
+
+
+def extract(archive, cfg, item, text, shown_views, universe, *, shown_groups=(), transport=None):
+    """One item through extraction: read, then file under the theses shown."""
+    reading = read_item(archive, cfg, item, text, shown_views, universe, shown_groups=shown_groups, transport=transport)
+    return file_reading(reading, archive, cfg, item, shown_views, transport=transport)
 
 
 def check_bounds(rungs):
@@ -351,9 +857,31 @@ def check_group_refs(c, shown_group_ids, declared):
     return None
 
 
-def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, shown_group_ids=()):
+def check_admission(c, shown_ids, publication_day):
+    """None when a version-12 candidate's admission fields are well formed (D184/D185), else the problem:
+    settled_by is not blank, folds_into is empty or a shown thesis, lost_if_folded is not blank when folds_into names one, and a binding
+    obligation is due within 18 months."""
+    if not str(c.get('settled_by', '')).strip():
+        return 'settled_by is empty'
+    if c.get('folds_into') and c['folds_into'] not in shown_ids:
+        return f'folds_into names a thesis not shown: {c["folds_into"]!r}'
+    if c.get('folds_into') and not str(c.get('lost_if_folded', '')).strip():      # a named thesis it could attach to needs the reason it does not
+        return 'lost_if_folded is empty although folds_into names a thesis'
+    if c['opens_as'] == 'binding_obligation':
+        limit = datetime.date.fromisoformat(publication_day) + datetime.timedelta(days=BINDING_HORIZON_DAYS)
+        try:
+            due = datetime.date.fromisoformat(c['due_day'])
+        except ValueError:                       # the schema's pattern admits 2026-06-31
+            return f'due_day is not a real date: {c["due_day"]!r}'
+        if due > limit:
+            return f'binding obligation due beyond 18 months ({c["due_day"]} > {limit.isoformat()})'
+    return None
+
+
+def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, shown_group_ids=(), version=None, keep_unlinked=False):
     """sift, plus the research-group declarations (D149): candidates with bad references are dropped; a declared group is
     kept only when a kept candidate cites it (an unused declaration is ignored, D147). Returns (evidence, candidates, dropped, new_groups)."""
+    data = flatten_account(data)
     declared = {}
     for g in data.get('new_groups', []) or []:
         if g['id'] in declared or not g['name'].strip() or not g['scope'].strip():
@@ -370,18 +898,63 @@ def sift_with_groups(data, item, text, shown_ids, universe=None, english=False, 
             dropped_refs.append((c['id'], f'candidate group: {problem}'))
             continue
         checked['candidates'].append(c)
-    evidence, candidates, dropped = sift(checked, item, text, shown_ids, universe, english=english)
+    evidence, candidates, dropped = sift(checked, item, text, shown_ids, universe, english=english, keep_unlinked=keep_unlinked)
     used = {r for c in candidates for r in c.get('group_refs', [])}
     return evidence, candidates, dropped_refs + dropped, [declared[g] for g in declared if g in used]
 
 
-def sift(data, item, text, shown_ids, universe=None, english=False):
+ISO_DAY = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+
+def statement_day(value):
+    """D203: original_day is the day the statement was made, as an ISO day, or '' when the text does not state a day. A month, a
+    range or text is not a day and becomes unknown; the quote and event_time keep the period as written."""
+    value = (value or '').strip()
+    return value if ISO_DAY.match(value) else ''
+
+
+FISCAL_FORM = re.compile(r'\bFY|fiscal|财年', re.I)
+
+
+def beyond_next_year(year, publication_day, object_name=None, universe=None, english=True):
+    """06-views ladder rule 5: only this year and next year open. A fiscal year (FY2028, FY28, fiscal year 2028, 2028财年) counts in
+    the company's own fiscal years: on 2026-07-02 NVIDIA is in FY2027 (it ends in January 2027), so FY2028 is next year. A
+    calendar year counts in calendar years, and so does a bare year under the English versions, whose request defines "2026 for a
+    calendar year". Text naming more than one year is judged by its first year, in the company's fiscal years when it names them."""
+    parsed = parse_year(year)
+    if parsed is None:
+        first = re.search(r'(\d{4})', year or '')
+        if not first:
+            return False
+        parsed = ('fiscal' if FISCAL_FORM.search(year) else 'calendar', int(first.group(1)))
+    kind, number = parsed
+    current = int(publication_day[:4])
+    if universe is not None and (kind == 'fiscal' or (kind == 'bare' and not english)):
+        current = universe.fiscal_year_of(universe.resolve(object_name) or object_name, publication_day)
+    return number > current + 1
+
+
+def candidates_with_evidence(candidates, kept_ids, item, dropped, alias=None):
+    """A candidate opens only with at least one of its evidence ids kept (an owner's memo excepted, 02-classification T8);
+    the others are dropped with their reason. Applied after the sift and again after placement drops statements (D209)."""
+    alias = alias or {}
+    kept = []
+    for c in candidates:
+        ids = list(dict.fromkeys(alias.get(i, i) for i in c['evidence_ids'] if alias.get(i, i) in kept_ids))
+        if not ids and item.get('publisher_type') != SELF_PUBLISHER_TYPE:
+            dropped.append((c['id'], 'candidate without surviving evidence'))
+            continue
+        kept.append(dict(c, evidence_ids=ids))
+    return kept
+
+
+def sift(data, item, text, shown_ids, universe=None, english=False, keep_unlinked=False):
     """05-extraction step 3, the code checks on one answer: ladders, the quarter and year rules, due days, quotes in
     the text, links to shown views or kept candidates, one piece per sentence. Returns (evidence, candidates,
     dropped); the preflight runs it over every stored answer. The answer is read in the canonical vocabulary,
     whichever prompt version wrote it; english says which version's year contract applies (a bare year is a calendar
     year under the English versions, the company's fiscal year under the Chinese ones)."""
-    data = vocabulary.extraction_answer(data)
+    data = vocabulary.extraction_answer(flatten_account(data))
     body = normalise(text)
     dropped = []
     candidates = []
@@ -392,11 +965,12 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
             dropped.append((c['id'], f'candidate ladder: {problem}'))
             continue
         c = dict(c, rungs=normalise_ladder(c['rungs'], c['kind']))
-        if QUARTERLY.search(c['looks_at'] + ' ' + c['question']) and c['kind'] == 'asset':
+        if QUARTERLY.search(c['looks_at'] + ' ' + c['question']) and c['kind'] == 'asset' \
+                and c.get('measure') not in ('event', 'policy_event'):          # a dated event that names its quarter is not a quarterly figure
             dropped.append((c['id'], 'quarterly number: evidence, not a view (06-views ladder rule 6)'))
             continue
-        year_match = re.search(r'(\d{4})', c['year'] or '')
-        if c.get('measure') not in ('event', 'policy_event') and year_match and int(year_match.group(1)) > int(item['publication_day'][:4]) + 1:
+        if c.get('measure') not in ('event', 'policy_event') and c.get('opens_as') != 'binding_obligation' \
+                and beyond_next_year(c['year'], item['publication_day'], c.get('object'), universe, english):
             dropped.append((c['id'], f'year {c["year"]} is beyond next year: not opened (06-views 不开)'))
             continue
         if not re.match(r'\d{4}-\d{2}-\d{2}$', c['due_day']):
@@ -405,6 +979,11 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
         if c['due_day'] <= item['publication_day']:
             dropped.append((c['id'], f'due_day {c["due_day"]} not after the item'))
             continue
+        if 'opens_as' in c:           # a version-12 answer (D184): the schema guarantees the fields, code checks their shape
+            problem = check_admission(c, shown_ids, item['publication_day'])
+            if problem:
+                dropped.append((c['id'], f'candidate admission: {problem}'))
+                continue
         if c.get('measure'):          # keyed candidates keep their actual scope; reference lists do not gate admission (D155)
             problem = check_bounds(c['rungs'])
             if problem:
@@ -435,10 +1014,16 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
     for e in data.get('evidence', []):
         quote = normalise(e['quote'])
         if len(quote) < 8 or quote not in body:
-            dropped.append((e['id'], 'quote not in item'))
-            continue
+            subject_names = [universe.companies[o['value']]['name'] for o in item.get('object_identifiers') or []
+                             if universe is not None and o['value'] in getattr(universe, 'companies', {})]
+            repaired = repair_quote(e['quote'], text, subject_names)
+            if repaired is None or normalise(repaired) not in body:
+                dropped.append((e['id'], 'quote not in item'))
+                continue
+            e = dict(e, quote=repaired)
+            quote = normalise(repaired)
         links = [l for l in e['links'] if l in shown_ids or l in candidate_ids]
-        if not links:
+        if not links and not keep_unlinked:
             dropped.append((e['id'], f'links to nothing shown: {e["links"]}'))
             continue
         if quote in by_quote:            # the same sentence read out twice is one piece with both links
@@ -447,18 +1032,13 @@ def sift(data, item, text, shown_ids, universe=None, english=False):
             alias[e['id']] = first['id']
             dropped.append((e['id'], f'same quote as {first["id"]}; merged'))
             continue
-        e = dict(e, links=links)
+        e = dict(e, links=links, original_day=statement_day(e.get('original_day')))
         by_quote[quote] = e
         evidence.append(e)
         kept_ids.add(e['id'])
-    final_candidates = []
-    for c in candidates:
-        ids = list(dict.fromkeys(alias.get(i, i) for i in c['evidence_ids'] if alias.get(i, i) in kept_ids))
-        if not ids and item.get('publisher_type') != SELF_PUBLISHER_TYPE:
-            dropped.append((c['id'], 'candidate without surviving evidence'))
-            continue
-        final_candidates.append(dict(c, evidence_ids=ids))
+    final_candidates = candidates_with_evidence(candidates, kept_ids, item, dropped, alias)
     for e in evidence:
         e['links'] = [l for l in e['links'] if l in shown_ids or any(c['id'] == l for c in final_candidates)]
-    evidence = [e for e in evidence if e['links']]
+    if not keep_unlinked:
+        evidence = [e for e in evidence if e['links']]
     return evidence, final_candidates, dropped

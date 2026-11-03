@@ -1,24 +1,61 @@
-"""D155: exact identity and same-answer coalescing, shared by matching and writing."""
+"""D155: exact identity and same-answer coalescing, shared by matching and writing.
+
+D197: a shared quantity (a candidate admitted as industry_aggregate / shared_quantity, a key stored with scope_source
+'shared') is one thesis per theme, measure and period; its scope (the population or wording of the aggregate) is not
+part of its identity."""
 from ..universe import scope_key
 
 KEY_VERSION = 2
+SHARED_REASONS = ('industry_aggregate', 'shared_quantity')
+EVENT_MEASURES = ('event', 'policy_event')
+
+
+def is_shared(value):
+    """A shared quantity: by its admission reason on a candidate, by its stored scope source on a key."""
+    return value.get('measure') not in (None, 'other', *EVENT_MEASURES) and (value.get('scope_source') == 'shared' or value.get('opens_as') in SHARED_REASONS)
 
 
 def automatic_key(value, object_id=None):
     """Return a complete, code-owned key, or None when identity still needs judgement."""
-    if value.get('key_version') != KEY_VERSION or value.get('scope_source') not in ('none', 'watch'):
+    if value.get('key_version') != KEY_VERSION:
         return None
     if value.get('measure') in (None, 'other'):
         return None
-    if value['measure'] in ('event', 'policy_event') and value.get('event_type') in (None, 'other', 'n/a'):
+    if is_shared(value):
+        return (object_id or value.get('object'), value['measure'], '', value.get('period_start'), value.get('period_end'),
+                value.get('basis'), value.get('unit'), value.get('event_type'))
+    if value.get('scope_source') not in ('none', 'watch'):
+        return None
+    if value['measure'] in EVENT_MEASURES and value.get('event_type') in (None, 'other', 'n/a'):
         return None
     return (object_id or value.get('object'), value['measure'], scope_key(value.get('scope', '')),
             value.get('period_start'), value.get('period_end'), value.get('basis'), value.get('unit'), value.get('event_type'))
 
 
+GENERATION_MILESTONES = ('launch', 'shipment')
+
+
+def same_generation_milestones(key, candidate):
+    """D248 item 3: a product generation's launch and its shipments are milestones of one question, asked at the step that brings
+    revenue; the judge of sameness (Jev) says whether they are the same generation, this only lifts the event-type conflict."""
+    return key.get('measure') == 'event' and key.get('event_type') in GENERATION_MILESTONES and candidate.get('event_type') in GENERATION_MILESTONES
+
+
+def one_process(key, candidate):
+    """D258 (R2-f): a policy process's steps are one process; the model's event-type word for it (licence, approval, other) is not
+    identity. One 14-day draw opened three questions on one licensing decision because that word varied."""
+    return 'policy_event' in (key.get('measure'), candidate.get('measure'))
+
+
 def conflicts(key, candidate, *, merging):
-    """Known different quantities/events cannot merge; corrected scopes/periods bind only corrected keys."""
-    if key['measure'] != candidate['measure'] or key['event_type'] != candidate.get('event_type', 'n/a'):
+    """Known different quantities/events cannot merge; corrected scopes/periods bind only corrected keys. An event's period is its
+    deadline: another deadline never conflicts (D248 item 2: while the earlier-deadline question is open, a later deadline is its
+    evidence; a closed one is succeeded by `can_succeed`, which compares the periods itself). `event` and `policy_event` are one
+    measure family (D258, R2-f): the model typed one licensing decision both ways, and the names and the judge of sameness decide."""
+    if key['measure'] != candidate['measure'] and not (key['measure'] in EVENT_MEASURES and candidate['measure'] in EVENT_MEASURES):
+        return True
+    if (key['event_type'] != candidate.get('event_type', 'n/a') and not same_generation_milestones(key, candidate)
+            and not one_process(key, candidate)):
         return True
     for field in ('basis', 'unit'):
         a, b = key[field], candidate.get(field, 'n/a')
@@ -29,6 +66,8 @@ def conflicts(key, candidate, *, merging):
     if (key.get('scope_source') in ('none', 'watch') and candidate.get('scope_source') in ('none', 'watch')
             and scope_key(key['scope']) != scope_key(candidate.get('scope', ''))):
         return True
+    if key['measure'] in EVENT_MEASURES:
+        return False
     return merging and (key['period_start'], key['period_end']) != (candidate.get('period_start'), candidate.get('period_end'))
 
 

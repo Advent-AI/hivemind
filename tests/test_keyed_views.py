@@ -194,10 +194,10 @@ def test_legacy_key_read_does_not_mutate_schema_and_distinct_event_is_refused(tm
     conn.execute("insert into view_keys (view_id, measure, scope, scope_key, period_start, period_end, basis, unit, event_type, seq) values ('v1','event','Rubin','rubin','2026-01-01','2026-12-31','n/a','n/a','shipment',1)")
     store.create_view(conn, view_id='v1', object_id='NVDA', object_kind='company', kind='asset', looks_at='Rubin 出货', question='?', due_day='2026-12-31', year='2026', rungs=rubin['rungs'], seq=1, input_id='x', created_at='2026-10-25T00:00:00')
     assert store.view_key(conn, 'v1')['scope_source'] == 'model'                       # the store alone cannot tell
-    other = extraction.Handover(EVIDENCE[:1], [candidate('c2', measure='event', scope='Blackwell+Rubin', scope_source='watch', event_type='launch', year='2026', period_start='2026-01-01', period_end='2026-12-31', due_day='2026-12-31', rungs=rubin['rungs'])], [], 0, '', False, 0.0)
+    other = extraction.Handover(EVIDENCE[:1], [candidate('c2', measure='event', scope='Blackwell+Rubin', scope_source='watch', event_type='deployment', year='2026', period_start='2026-01-01', period_end='2026-12-31', due_day='2026-12-31', rungs=rubin['rungs'])], [], 0, '', False, 0.0)
     merge = {'candidates': [{'id': 'c2', 'outcome': 'merge', 'target_view_id': 'v1', 'reason': 'rubin', 'dependencies': []}], 'evidence': []}
     checked = matching.check(conn, UNIVERSE, merge, other.candidates, other.evidence, matching.Lists({'c2': ['v1']}, {}), [])
-    assert checked.outcomes['c2'][0] == 'new' and 'refused by key' in checked.notes[0]   # the universe knows 'Rubin' is the list's spelling: the scope binds
+    assert checked.outcomes['c2'][0] == 'new' and 'refused by key' in checked.notes[0]   # a distinct event type is refused (a launch would merge: D248 item 3)
 
 
 def test_another_objects_view_is_never_the_same_view(tmp_path):

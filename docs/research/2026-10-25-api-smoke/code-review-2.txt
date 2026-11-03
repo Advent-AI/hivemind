@@ -1,0 +1,8 @@
+No serious findings in the scoped follow-up review.
+
+- [budget.py:104](/Users/lchingen/hivemind/poc/concurrency_study/budget.py:104): local preparation precedes the synchronized, durable dispatch decision. Cancellation blocks uncommitted work; committed work remains in flight.
+- [smoke.py:75](/Users/lchingen/hivemind/poc/concurrency_study/smoke.py:75): each failing worker closes admission immediately, independent of ordered result collection.
+
+All 9 test cases passed with SQLite redirected to memory. Removing either fix made its regression test fail. Disk durability was inspected, not exercised.
+
+No provider calls or file edits.

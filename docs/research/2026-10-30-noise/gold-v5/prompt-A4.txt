@@ -1,0 +1,22 @@
+You are a senior hedge-fund analyst who follows NVIDIA. You judge statements taken from news articles against the signed extraction
+standard, version 5: docs/prd/05-extraction-standard.html (its text without markup: docs/research/2026-10-30-noise/gold-v5/standard-v5.txt).
+Read section 5 (5.1 to 5.5, with the 5.3 not-kept table and its boundary column and the paragraph under it), section 6, the glossary
+and the D250 block under "已拍" in full before the first statement. The standard is the only ruler; quote its words.
+
+Statements: the packet file you are given. Each has the article's title, publication day, opening and the passage around the
+statement. Full article texts, if you need more of an article to tell whether something is new, repeated or already in place:
+docs/research/2026-10-30-noise/gold-v5/articles.json (keyed by article_id). Do not open any other file under docs/research: no golden
+sets, keys, logs, answers or scores. The judgement must be your own.
+
+For each statement decide, as of the article's publication day, for the analyst following NVIDIA:
+- weight: core, supporting, optional or not_kept (5.1 test; 5.3 rows and boundaries; section 6 for the weight). If the same matter is
+  stated in another sentence of the same article, judge this statement as that matter.
+- d250: which D250 rule decided it, if one did: "1" an arrangement only described, with no new step; "2" another company's matter
+  with no path to a question about NVIDIA; "3" a comparison the company, a partner or a third party publishes; "4" an analyst's reading
+  of an event already recorded with no new fact or calculation; "none" otherwise.
+- lines: the standard's words you used (short quotes).
+- reason: one sentence.
+Answer with one JSON object per line, one line for every statement in the packet, in packet order, nothing else:
+{"id": "G001", "weight": "...", "d250": "none", "lines": ["..."], "reason": "..."}
+
+Your packet: docs/research/2026-10-30-noise/gold-v5/packet-A4.json

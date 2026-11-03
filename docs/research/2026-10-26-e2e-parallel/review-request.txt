@@ -1,0 +1,21 @@
+Read-only code review of the parallel-day implementation in this repository (branch work tree). You may read any file; do not modify anything.
+
+Scope (review these, and only these):
+- src/hivemind/parallel_day.py (new: concurrent request preparation, eager re-preparation after each commit, validation at each item's turn, per-day manifest)
+- src/hivemind/views/jev_matching.py (parallel Jev questions within an item, bounded submission, shared futures for identical requests), src/hivemind/views/round.py, src/hivemind/replay.py (day_runner hook, day cost), src/hivemind/model.py, src/hivemind/extraction.py, src/hivemind/jev.py (request identity; network-error retries) — read `git diff da06fbd -- src scripts` for the change.
+- scripts/replay.py (--workers / --jev-workers opt-in)
+- poc/concurrency_study/budget.py, e2e.py, full_day.py (study harnesses: live budget journal, live end-to-end comparison, recorded full-day proof)
+- tests/test_concurrency.py, tests/test_jev_concurrency.py, tests/test_jev_matching.py (transport retry test), tests/test_study_budget.py, tests/test_e2e_study.py
+
+Governing documents: AGENTS.md (rules), docs/research/2026-10-25-day-batch-review/implementation.md (D172 design: state x event and value x reader tables), docs/research/2026-10-26-e2e-parallel/plan.md (D181), docs/prd/06-views.md section "Ordering, concurrency and traceability", docs/DECISIONS.md D159 and D171-D181.
+
+The contract: an item's accepted extraction must answer the exact request built from the ledger committed by the items before it (serial semantics). Early requests may be sent; only a byte-identical request at the item's turn may be accepted. Only the coordinator thread touches the ledger connection. Failure of an earlier item must accept no later handover or write. The default replay remains serial.
+
+Out of scope (not findings): extraction quality, prompt wording, matching rules and thresholds, judging semantics, the NAVER admission experiment, pull mode, UI/service, the classification simulation, older poc/reports scripts.
+
+Report, most severe first, each with file:line, a concrete failure scenario (inputs/state -> wrong output/crash) and the fix:
+1. Correctness bugs: any path where a stale or wrong answer can be accepted, order can change, a failure can be swallowed, a later item can commit after an earlier failure, a thread can touch the ledger connection, resume can diverge, the manifest can be bypassed, or budget accounting can under-count.
+2. Robustness gaps in the live path (retries, timeouts, cancellation, shutdown, partial failure).
+3. Stale code, dead code, duplication and bloat in the scoped files (name what to delete or merge).
+4. Test gaps: a behaviour the tests claim but do not exercise, a test that would pass without the code under test.
+Keep it to verified findings; say "none" for an empty category.

@@ -1,0 +1,384 @@
+OpenAI Codex v0.165.0
+--------
+workdir: /Users/lchingen/hivemind-extraction-quality-2026-10-28
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a18b61-29cb-7e91-ae30-08cd77fb8133
+--------
+user
+You are an independent reader. You are a hedge-fund analyst who covers NVIDIA and the AI-infrastructure themes around it. You did not write the extraction prompt and you have not seen any score. You may read files; do not open any file whose name contains "key", and do not open other packets.
+
+The product: every article goes through an extraction step that writes evidence records (a verbatim quote plus fields) into the analyst's ledger. Downstream, a model judges open research questions using only these records, and a matcher compares new records with old ones. The matcher and the judge read `original_who` (who originally said or did it) and `original_day` (the day it was originally said or done) to tell old news from new and to tell one source repeated by many outlets from several independent sources. So a wrong original speaker or day misleads them; a noise record wastes the judge's attention.
+
+Reference: /Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html, the signed standard the product follows. Read sections 5.3, 5.4 and 5.5 before the packet. Use it for definitions:
+- who (5.4): the original claimant; whether it is their own estimate or someone else's measurement.
+- original statement day (5.4): when unknown, written as unknown, never the report day.
+- tier (5.5): the table of five rows (an upper row wins when two apply).
+
+The packet: docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-U/packets/gnews_54aa9ce326115cedf8857512.json. It holds the article text as the model saw it, its publication_day, publisher and category, and two answers, A and B, from two different versions of the extraction (the order is random). Each answer is the list of records production keeps.
+
+Read the whole article first. Then judge every record of A and then every record of B on its own, against the article. Write your verdict as JSON only (no prose before or after), in this shape:
+
+{
+ "input_id": "...",
+ "A": [
+  {"id": "e1",
+   "worth": "keep" | "marginal" | "noise",
+   "one_line_ok": true | false,
+   "one_line_problem": null | "number/unit, lost condition or hedge, forecast written as done, wrong period, lost who said it, says more than the quote",
+   "who_ok": true | false,
+   "who_note": null | "the right original speaker, as the article gives it, and why",
+   "day_ok": true | false,
+   "day_note": null | "the day the statement was first made or the action taken, as the article gives it; unknown when the article does not say",
+   "tier_ok": true | false,
+   "tier_note": null | "the right tier: fact / party_statement / third_party_view / rumour, and the row of 5.5",
+   "duplicate_of": null | "e#"}
+ ],
+ "B": [ same shape ],
+ "fields_better": "A" | "B" | "same",
+ "fields_better_reason": "one sentence"
+}
+
+Rules for you:
+- Be literal; quote the article in your notes. Judge each field against what the article says, not against the other answer.
+- speaker is who says it in this item; judge it only when it is plainly wrong. original_who and original_day are the fields that matter most.
+- A day is wrong when the record gives the report day for something said or done earlier, a day the article does not support, or leaves empty a day the article states. A month alone is not a day: an empty day is right when the article gives only a month.
+- Check every number in one_line against the quote.
+- An answer that is null was unusable; write [] for it.
+
+2026-10-30T05:56:08.145844Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '5\\.3|5\\.4|5\\.5' docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+27:body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.75;margin:0;padding-inline:16px;padding-block:0 64px}
+166:    <li>在第 5.3 节的不留清单上 <span class="goes">→ 先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的，按第 5.1 节判，留下的走下面；写着"可选"的归可选；其余不留</span></li>
+169:        <li>记来源层：事实、当事人陈述、第三方观点、传闻 <span class="tag">进账本 · 第 5.5 节</span></li>
+196:<tr><td>4</td><td>在研公司的估值倍数、市值、孤零零的目标价可选；带推导的条件估值仍是辅助</td><td class="nowrap">第 5.3、6 节</td></tr>
+197:<tr><td>5</td><td>典型的主张和背景是常识，没有数字和具体的叙事不收；不是常识的新信息，照第 5.1 节的规则判</td><td class="nowrap">第 5.1、5.3 节</td></tr>
+198:<tr><td>6</td><td>旧事重提：重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；文字或日期看不出是旧事的不算重提</td><td class="nowrap">第 5.3、6 节</td></tr>
+201:<tr><td>9</td><td>来源层：一句话符合两行时取表里上面那行；混合的一条按主要说法定层，次要部分写进摘要</td><td class="nowrap">第 5.5 节</td></tr>
+202:<tr><td>10</td><td>只有形容的引语不收</td><td class="nowrap">第 5.3 节</td></tr>
+213:<li>金标里，不在不留清单上、按第 5.1 节判掉的句子标出来并写理由，供复核（第 5.3 节、第 8 节）。</li>
+354:<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+373:<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+388:<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+411:<tr><td><span class="w exc">不收</span></td><td>第 5.3 节的各行；与判断无关</td><td>模板；产品参数；个人仓位；空泛风险；没有数字和具体叙事的主张</td></tr>
+416:<li><b>先判留不留</b>按 5.1 判分析员会不会记，不会就不收。在 5.3 的不留清单上的，先看那一行的"边界"一列：写着"不能用这一行删掉"或"要留"的（对手比较、条件估值、股价反应背后的新闻、官员宣布的政策步骤）按下面两步定分量；写着可选的归可选；其余不收。</li>
+448:<li><b>证据：</b>原文逐字片段；属于 5.1 哪一类；定稿分量 <code>weight</code>（核心、辅助、可选）；来源层；谁；必须保住的意思（5.4 用得上的格）；判它的那一句标准；签字前的两套分量和它依赖哪几条，留作记录。</li>
+449:<li><b>不收的句子：</b>属于 5.3 哪一行，或按 5.1 的理由；<code>weight</code> 是不收或可选。可选的留不留都不扣分。</li>
+585:<tr><td>B9</td><td>几套"不要"的类</td><td>抽取只有一套：5.3 等于分量"不收"；"不可用"属于判断这一步（第 7 节）；"无关陈述"用定稿金标计数</td><td>第 1 版 §2、§4；D221；D240；D243 第 12 条</td></tr>
+589:<tr><td>B13</td><td>PRD 06 的重复和替代说法早于 D202、D204</td><td>这一页按 D202、D204 写（第 2 节、5.5）；PRD 06 签字后更新</td><td>D202、D204</td></tr>
+594:<tr><td>B18</td><td>"线索""背景"一词多义</td><td>"线索"只指研究用途的一级（第 7 节）；"背景"只指 5.3 那一行</td><td>D221</td></tr>
+626:<rect class="bar" x="266" y="145.5" width="34" height="24.5"/><text class="val" x="283" y="139" text-anchor="middle">7</text><text x="283" y="186" text-anchor="middle">2.8</text>
+627:<rect class="bar" x="312" y="145.5" width="34" height="24.5"/><text class="val" x="329" y="139" text-anchor="middle">7</text><text x="329" y="186" text-anchor="middle">2.9</text>
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '354,405p' docs/prd/05-extraction-standard.html" in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+<h3>5.3 不留的<span class="src">第 1 版 §2 的清单，加 D238、D243 的行</span></h3>
+<p>"按同一行补的例子"一列是我按同一行举的例子。</p>
+<div class="table-wrap wide"><table>
+<thead><tr><th>不留</th><th>第 1 版的例子</th><th>按同一行补的例子</th><th>边界</th></tr></thead>
+<tbody>
+<tr><td>没有业务规模的产品、游戏、驱动、跑分细节</td><td>"这张卡 415W"；"Geekbench 跑分"</td><td>接口、功率、旧型号的支持周期</td><td>对手拿它和本公司产品比的说法不能用这一行删掉，按 5.1 判（Alex 判 4：AMD 2.4 倍是辅助）；伙伴、客户采用或集成的动作不是产品细节（5.1 第 2 类）</td></tr>
+<tr><td>股价涨跌、投资人仓位、技术面</td><td>"本月跌 13%"；"Burry 做空"</td><td>期权成交、基金买卖</td><td>股价反应背后的那条新闻不能用这一行删掉，按 5.1 判；"财报后股价反应"可选<span class="src">第 1 版 §10.2</span>；在研公司的估值倍数、市值、孤零零的目标价可选<span class="src">D243 第 4 条</span>；别的股价涨跌照旧不留</td></tr>
+<tr><td>作者的一般性风险清单和没有推导的看法</td><td>"如果 AI 退潮会受伤"</td><td>"这只股票该持有"；"芯片指数是纯粹的高估"</td><td>有假设、有推导、有时点的条件估值要留<span class="src">第 1 版 §10.1</span></td></tr>
+<tr><td>记者的背景和框架</td><td>"A100 2020 年上市"；"海湾国家花了几十亿但仍依赖它"</td><td>"公司成立于 1998 年"；通用的技术讲解</td><td>没有数字和具体叙事的主张和背景不收；怎么分见 5.1<span class="src">D243 第 5 条</span></td></tr>
+<tr><td>没有数字也没有决定的政治、战略表态</td><td>"分散供应商不能减少政治依赖"</td><td>大使馆说"立场一贯"</td><td>官员宣布的政策步骤不能用这一行删掉，按 5.1 判（第 4 类）</td></tr>
+<tr><td>同一事实的复述</td><td>一篇稿子用五句话说一个部署是一条；三家媒体转同一个独家，原始出处写同一个</td><td>标题和正文说同一件事</td><td></td></tr>
+<tr><td>已知事实的重述</td><td>两个月后再说一遍 Q1 收入、指引、已公布的回购</td><td></td><td>抽取看不到库，只能从文字和日期看。重提的过去实际数可选；重提的季度指引和仍然有效的预测、计划按本来分量；看不出是旧事的不算重提<span class="src">D243 第 6 条</span></td></tr>
+<tr><td>模板</td><td>署名、作者简介、经纪商页脚、前瞻性声明、广告</td><td>页面上和本文无关的内容（相关文章预告、推荐列表、别的新闻标题）</td><td></td></tr>
+<tr><td>只有形容的引语</td><td></td><td>"a pivotal moment"；"heterogeneous inference"（role-v18 原文的例子）</td><td><span class="src">D243 第 10 条</span></td></tr>
+<tr><td>新加坡转运案件的概况和被告个人资产</td><td></td><td></td><td>可选，收不收都不扣分<span class="src">D231</span></td></tr>
+</tbody></table></div>
+<p>另外一条来自后来的决定：<b>和公司所有市场都无关的别家公司的估值、股价、交易</b>不留（D238："another company's valuation, share price or deals that touch none of the company's markets"）。别家公司的动作和经营数字不能用这一行删掉，它们留不留按 5.1 的规则判。</p>
+<p>不在清单上的句子，用 5.1 的规则逐句判（分析员会不会记）；金标里把这类判断标出来供复核。</p>
+
+<h3>5.4 一条记录必须保住的意思<span class="src">第 1 版 §3，原样</span></h3>
+<p>六格里只填这一条用得上的<span class="src">D220</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>格</th><th>要保住</th><th>丢了就错的例子</th></tr></thead>
+<tbody>
+<tr><td>谁</td><td>原始判断者；是本人估计还是别人实测</td><td>AMD 自己的模拟说成独立实测</td></tr>
+<tr><td>什么</td><td>业务、指标或动作</td><td>"收入增长 82%"丢了"收入"</td></tr>
+<tr><td>多少</td><td>金额、比例、数量</td><td>四家 7450 亿写成五家</td></tr>
+<tr><td>哪个期间</td><td>预测或事实覆盖的期间；"今年"按公司财年或自然年写都算对<span class="src">D233</span>，余下时间不改成全年</td><td>"今年余下时间"改成 FY2027 全年</td></tr>
+<tr><td>什么条件</td><td>推导的假设；计划、上限、"最多"</td><td>"最多 4 万颗"写成已部署 4 万颗</td></tr>
+<tr><td>预测还是已发生</td><td>指引、预计、商谈、传闻不等于已实现、已签约</td><td>"商谈 6000 亿"写成"已承诺"</td></tr>
+</tbody></table></div>
+<p>原始发言日不知道就写不知道，不能填报道日<span class="src">D220</span>。一条记录单独读要能懂，条件不能只放在旁边另一条里<span class="src">第 1 版 §3，引主分支 D251；两个分支的决定编号各自独立，D227</span>。不必要的：转述机构、普通发言场合、付费方案全名；漏了不扣原意分，<b>编造了仍算记录错误</b><span class="src">第 1 版 §3</span>。没有来源证实的结论，可以作为分析员的推断写出，但不能写成来源说的事实<span class="src">D218</span>。</p>
+<p>边界<span class="src">第 1 版 §2</span>：Sharon 合同是供需的辅助证据，不是担保金额的证据；NVL72x2 取消归产品进度<span class="src">Alex 判 10</span>。</p>
+
+<h3>5.5 来源层<span class="src">PRD 06 的四层；D238 采纳的 role-v29 原文</span></h3>
+<p>PRD 06 的定义：事实＝正式动作、公布的数字、完成的交易；当事人陈述＝公司指引、管理层表态、官员讲话；第三方观点＝卖方分析师、媒体分析、专家；传闻＝匿名来源的说法和没有出处的说法。层级跟着"是谁确认的"走，没有固定分数；二十家转载一个独家是一个来源。</p>
+<p>role-v29 提示词的原文（D238；Alex 在 D239 选它作为抽取请求；D245 换成的 role-v42、D246 换成的 role-v51 这一句都未改）："fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source."</p>
+<p>这两处列了四层，下表把它们排成一张。一句话同时符合两行时，取表里上面那行<span class="src">D243 第 9 条</span>。</p>
+<div class="table-wrap mid"><table>
+<thead><tr><th>说的是什么</th><th>层</th></tr></thead>
+<tbody>
+<tr><td>1. 文章说来自没具名的人，或文章自己说未经证实（即使说的是一项公告或一个数）</td><td>传闻</td></tr>
+<tr><td>2. 正式动作、公布的实际数字、完成的交易；文章报道的公告或已完成的交易（即使记者没写出处）</td><td>事实</td></tr>
+<tr><td>3. 公司的指引、管理层的表态、官员的讲话</td><td>当事人陈述</td></tr>
+<tr><td>4. 分析师、媒体、专家的看法和估计</td><td>第三方观点</td></tr>
+<tr><td>5. 以上都不是、又没有出处的说法（PRD 06："unattributed statements"）</td><td>传闻</td></tr>
+</tbody></table></div>
+<p>一条记录里既有已发生的部分、又有计划或传闻的细节，按主要说法定层，次要部分的性质写进摘要；不拆成两条，除非是两件事<span class="src">D243 第 9 条</span>。层级之间的关系：后来的确认和先前的传闻都留在账本里；匹配判断两条的关系（同一说法、修订或新的），修订的条件过了才记修订，没过就作为新的一条存下<span class="src">D202、D204</span>；判断时只有事实能确定到期落在哪一档<span class="src">PRD 06</span>。</p>
+
+<h2 id="weight"><span class="num">6</span>分量</h2>
+<p>分量问"这条对判断多重要"，分四级。按投资后果判它碰到的是什么；核心和辅助的界线按信息量定<span class="src">第 1 版 §4；D243 第 1 条</span>。缺金额、缺日期只影响分到哪一档，不是不留的理由<span class="src">D240</span>。分量不由数字多不多、是不是官方、库里有没有页、和我们方向是否相同、文章篇幅决定<span class="src">第 1 版 §4</span>；离现在远不是不留的理由<span class="src">D216</span>，它落在核心还是辅助由判断定。</p>
+<div class="table-wrap wide"><table>
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-10-29-ledger-standard/fields-2026-10-30/reader-U/packets/gnews_54aa9ce326115cedf8857512.json' in /Users/lchingen/hivemind-extraction-quality-2026-10-28
+ succeeded in 0ms:
+{
+ "input_id": "gnews:54aa9ce326115cedf8857512",
+ "title": "CAPITAL IDEAS: The lag 7 — Is Micron the new Nvidia?",
+ "publication_day": "2026-07-06",
+ "publisher": "theberkshireedge.com",
+ "publisher_type": "media",
+ "category": "T7",
+ "text": "My rule of thumb, which I borrowed from DataTrek, is that a double is a bubble. If a company’s stock price doubles within a year, there is a good chance the price has advanced much faster than the fundamentals.\nBig Tech leadership is shifting. The Magnificent 7 and Broadcom weakened in June, while the broader market held up better than expected and Micron surged.\nInvestors should respect both the opportunity and the risk. Micron’s growth, margins, and role in AI memory are impressive, but its rapid stock rise has started to look bubble-like.\nBottom line: Micron is not the new Nvidia, but it is a serious AI beneficiary. The stock may still have long-term potential, but position size and diversification matter more after such a huge run.\nTwo years ago, the darling of Wall Street was Nvidia , the technology company that sells graphics processing units (GPUs) used by artificial intelligence companies.\nThat was two years ago. As Barron’s recently referenced, Micron is the new Nvidia.\nMicron’s stock is up about 855 percent in the last 12 months, while Nvidia traded down over 15 percent from its June 2, 2026, high. In fairness, June 2026 was a harsh month for many technology stocks. Nvidia’s stock was down about five percent in June; however, Micron’s stock shook off the June swoon and was up about 19 percent.\nIt’s not just Nvidia that got smashed in June. Nearly all of the so-called Magnificent 7 stocks, plus Broadcom, are below their respective 50-day moving averages (Tesla being the exception), a sign that price weakness is becoming a trend. Those eight stocks account for about 34 percent of the S&P 500; each was down roughly three percent to 17 percent in June.\nDespite over one-third of the S&P 500’s market capitalization taking it on the chin in June, the index itself was down only about one percent and remained around its 50-day moving average. That is because the next 492 stocks were up an average of two percent.\n(To briefly address the concentration, two years ago, that was often cited as a major risk to the stock market. In November 2024, the eight largest companies at the time represented 33.5 percent of the S&P 500—nearly identical to today. I wrote then, “It is OK for the S&P 500 to have a handful of companies representing a large percentage of the index.” I don’t have any reason to feel differently today; the index is up about 25 percent since then.)\nAs you will recall, the S&P 500 is market-cap weighted, and it was down about one percent in June. In contrast, the equal-weighted S&P 500 index, often represented by the RSP ETF, was up by about 1.9 percent. The correlation between market-cap and the equal-weighted S&P 500 is at a record low.\nBased on the performance of the biggest eight stocks, it is no wonder that the S&P 500 stalled out after hitting a high on June 2. Based on the performance of the other 492 stocks, it is no wonder that the index was only down about one percent from its recent high as of the end of June, which is not a lot.\nInterestingly, the S&P 500 is up about 9.5 percent year to date, but over the same period, the forward price-to-earnings ratio has contracted nearly 10 percent. That is because earnings of the companies in that index have been incredible, with roughly an 18 percent growth rate for the first half of 2026, and Q2 expected to be above 20 percent.\nThat trend—rising stock prices and simultaneously improving valuations—is very bullish. I have doubts that the earnings growth rate can continue at that pace, but it is not impossible. I mean, it just happened, so we know it is not impossible.\nFor earnings to keep improving, we need 1) lower oil prices (which seems to be happening), 2) the AI-related infrastructure buildout to continue (I suspect it will through the next 12 months), and 3) interest rates to stay where they are, or go lower (but the futures market says they will go higher). So, two out of three ain’t bad, and it is probably enough to keep the economy from slipping into a recession and keep the stock market from crashing. But two out of three probably isn’t enough for stocks to rocket higher either.\nIt seems worth staying invested, even if the S&P pullback hits double digits in the short term. Unfortunately, that short-term pain is the entry fee for the potential of long-term rewards.\nDespite the weakness in large technology stocks, Micron has had enough positive performance to push it into the coveted trillion-dollar club. Apple was the first company to reach a $1 trillion market capitalization, and at the time, many people thought it was so outlandish a number that it would signal a market top. Apple hit $1 trillion in 2018; now there are 17 companies in the trillion-dollar club.\nIs Micron the new Nvidia?\nTwo years ago, investors kept asking if it was too late to buy Nvidia . I wrote about this on July 22, 2024. Since then, Nvidia’s stock is up about 55 percent, compared to the S&P 500’s 32 percent. Micron, though, has soared about 937 percent since then.\nMicron makes memory and storage chips that help computers, phones, cars, data centers, and AI systems store and quickly access data.\nMake no mistake about it, memory stocks are starting to feel bubble-like. Micron has been one of the best-performing stocks in the S&P 500 this year, and after its latest earnings report, the stock jumped nearly 16 percent in a single day. Other memory chip companies, such as SK Hynix and Samsung, have also experienced massive runups. When an entire corner of the market starts moving like a meme stock, investors should slow down and ask whether the story has gotten ahead of the math. My rule of thumb, which I borrowed from DataTrek , is that a double is a bubble. If a company’s stock price doubles within a year, there is a good chance the price has advanced much faster than the fundamentals.\nI invested in the Invesco AI and Next Gen Software ETF (NOT an investment recommendation), which had 27 percent of its weighting in memory stocks. Each of the memory stocks in that ETF has way more than doubled. It has been a wild ride up, but I worry that it is on the precipice of a decline. But let’s look at Micron to think about whether a decline is warranted and, if so, if it might be short term or permanent.\nIn Micron’s case, the math is stunning. For its third fiscal quarter of 2026, Micron reported revenue of $41.46 billion. One year earlier, revenue was $9.30 billion. That is roughly 346 percent revenue growth. GAAP (generally accepted accounting principles) net income was $28.24 billion, compared with $1.89 billion a year ago. Micron’s gross margin was 84.6 percent, up from 37.7 percent a year earlier, and its operating margin was 80.4 percent, up from 23.3 percent. That is actual money hitting the income statement now.\nThe new Micron is still cyclical, but investors may view the durability of its earnings more favorably because artificial intelligence needs a lot of memory.\nA graphics processor (like those designed by Nvidia) powers the AI data center, but memory is just as important. Large AI models need to move huge amounts of data quickly. If data doesn’t reach the processor fast enough, it has to wait, which can be costly.\nHigh-bandwidth memory (HBM) sits close to the AI accelerator and feeds it data at high speed. Storage also matters because training, checkpointing, data retrieval, and inference all require huge amounts of fast, reliable memory and storage infrastructure.\nThat is why Nvidia’s success is spilling over into Micron. Nvidia remains the king of AI chips. Micron’s latest revenue growth was about 346 percent, compared with Nvidia’s 85 percent. Micron’s GAAP gross margin was 84.6 percent, compared with Nvidia’s 74.9 percent. Micron’s operating margin was 80.4 percent, compared with Nvidia’s roughly 66 percent. Nvidia still earns more dollars. Micron is growing faster right now and, at least in the latest quarter, is showing even fatter margins.\nThat is why investors are watching closely.\nThe broader capital-spending backdrop supports the rally. Goldman Sachs estimates annual AI infrastructure capital expenditures could reach $765 billion in 2026 and grow to $1.6 trillion by 2031, with cumulative spending of about $7.6 trillion from 2026 through 2031. That spending includes chips, data centers, power, cooling, networking, and the other plumbing required to run AI at scale. Memory is one of those essential pieces of plumbing.\nUnfortunately, the AI boom is not just pushing up prices for the winners. It could also raise costs for everyone else. A shortage of memory might affect the prices of consumer electronics.\nApple said it can no longer absorb the surge in memory and storage costs and announced price increases for some Macs and iPads, citing higher memory costs. When Micron’s profit margins grow, it means higher costs for others. If memory companies earn more, then device makers, server makers, cloud providers, and eventually consumers could end up paying more for electronics.\nSo, is Micron the new Nvidia?\nMemory is now a key asset in the AI economy. But when a stock doubles or more, the risk goes up, even if the business is strong. However, ignoring Micron just because it has risen sharply could be the same mistake many made with Nvidia. Position size and diversification are important.\nNvidia is still the main name in AI, at least until companies like OpenAI and Anthropic go public. Micron and other memory chip makers are becoming key players in this space. I’d say Micron is not the new Nvidia, just a new opportunity (talk to your financial advisor before making any investment). But again, mind your position size and diversification: If you own the S&P 500 index, Micron already accounts for about 1.7 percent of that investment.\nAllen Harris is an owner of Berkshire Money Management in Great Barrington and Dalton, managing more than $1 billion of investments. Unless specifically identified as original research or data gathering, some or all of the data cited is attributable to third-party sources. Unless stated otherwise, any mention of specific securities or investments is for illustrative purposes only. Advisor’s clients may or may not hold the securities discussed in their portfolios. Advisor makes no representation that any of the securities discussed have been or will be profitable. Full disclosures here. Direct inquiries to Allen at [email protected] .\nThese hands-on, farm-to-table classes bring people together to cook and share a locally grown meal while learning skills and building community.\nThe Edge is free to read. But not to produce. Consider joining the other members of your community and supporting The Berkshire Edge through paid membership.",
+ "answers": {
+  "A": [
+   {
+    "id": "e1",
+    "quote": "Micron’s latest revenue growth was about 346 percent, compared with Nvidia’s 85 percent.",
+    "one_line": "The author compared latest revenue growth, reporting Nvidia at about 85% and Micron at about 346%.",
+    "speaker": "Allen Harris, the author",
+    "original_who": "Allen Harris",
+    "original_day": "2026-07-06",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e2",
+    "quote": "Micron’s GAAP gross margin was 84.6 percent, compared with Nvidia’s 74.9 percent.",
+    "one_line": "The author compared latest GAAP gross margins, reporting Nvidia at 74.9% and Micron at 84.6%.",
+    "speaker": "Allen Harris, the author",
+    "original_who": "Allen Harris",
+    "original_day": "2026-07-06",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e3",
+    "quote": "Micron’s operating margin was 80.4 percent, compared with Nvidia’s roughly 66 percent.",
+    "one_line": "The author compared latest operating margins, reporting Nvidia at roughly 66% and Micron at 80.4%.",
+    "speaker": "Allen Harris, the author",
+    "original_who": "Allen Harris",
+    "original_day": "2026-07-06",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e4",
+    "quote": "Goldman Sachs estimates annual AI infrastructure capital expenditures could reach $765 billion in 2026 and grow to $1.6 trillion by 2031, with cumulative spending of about $7.6 trillion from 2026 through 2031.",
+    "one_line": "Goldman Sachs estimated annual AI infrastructure capital expenditures could reach $765 billion in calendar 2026, grow to $1.6 trillion by 2031, and total about $7.6 trillion cumulatively from 2026 through 2031.",
+    "speaker": "Allen Harris, the author, citing Goldman Sachs",
+    "original_who": "Goldman Sachs",
+    "original_day": "",
+    "tier": "third_party_view"
+   }
+  ],
+  "B": [
+   {
+    "id": "e1",
+    "quote": "That is why Nvidia’s success is spilling over into Micron. Nvidia remains the king of AI chips. Micron’s latest revenue growth was about 346 percent, compared with Nvidia’s 85 percent. Micron’s GAAP gross margin was 84.6 percent, compared with Nvidia’s 74.9 percent. Micron’s operating margin was 80.4 percent, compared with Nvidia’s roughly 66 percent. Nvidia still earns more dollars. Micron is growing faster right now and, at least in the latest quarter, is showing even fatter margins.",
+    "one_line": "The article reports Nvidia’s latest-quarter revenue growth as 85%, GAAP gross margin as 74.9%, and operating margin as roughly 66%; it gives no quarter end date.",
+    "speaker": "Allen Harris, the article’s author",
+    "original_who": "",
+    "original_day": "",
+    "tier": "third_party_view"
+   },
+   {
+    "id": "e2",
+    "quote": "Goldman Sachs estimates annual AI infrastructure capital expenditures could reach $765 billion in 2026 and grow to $1.6 trillion by 2031, with cumulative spending of about $7.6 trillion from 2026 through 2031.",
+    "one_line": "Goldman Sachs estimates global AI infrastructure capital expenditures could reach $765 billion in calendar 2026.",
+    "speaker": "Goldman Sachs",
+    "original_who": "Goldman Sachs",
+    "original_day": "",
+    "tier": "third_party_view"
+   }
+  ]
+ }
+}
+
+codex
+{
+  "input_id": "gnews:54aa9ce326115cedf8857512",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The article says “Micron reported revenue” and gives a comparison with Nvidia’s growth; it does not identify Allen Harris as the original source of the companies’ figures.",
+      "day_ok": false,
+      "day_note": "Unknown. The article gives “latest revenue growth” but does not give the day the original figures were reported.",
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article compares reported revenue growth, not an analyst forecast.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The record compares company figures: “Micron’s GAAP gross margin” and “Nvidia’s 74.9 percent.” The article does not identify Allen Harris as their original source.",
+      "day_ok": false,
+      "day_note": "Unknown. The article gives the margins but does not say the day the original figures were reported.",
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article reports the companies’ gross margins.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The record compares company figures: “Micron’s operating margin” and “Nvidia’s roughly 66 percent.” The article does not identify Allen Harris as their original source.",
+      "day_ok": false,
+      "day_note": "Unknown. The article gives the margins but does not say the day the original figures were reported.",
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article reports the companies’ operating margins.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article reports growth and margins; it calls “Micron’s GAAP gross margin” 84.6 percent but does not explicitly say Nvidia’s 74.9 percent margin is GAAP.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "B",
+  "fields_better_reason": "B leaves the unspecified original days empty and avoids naming the article’s author as the original source of the company figures, although its first record has the wrong tier and its summaries add unsupported detail."
+}
+tokens used
+19,582
+{
+  "input_id": "gnews:54aa9ce326115cedf8857512",
+  "A": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The article says “Micron reported revenue” and gives a comparison with Nvidia’s growth; it does not identify Allen Harris as the original source of the companies’ figures.",
+      "day_ok": false,
+      "day_note": "Unknown. The article gives “latest revenue growth” but does not give the day the original figures were reported.",
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article compares reported revenue growth, not an analyst forecast.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The record compares company figures: “Micron’s GAAP gross margin” and “Nvidia’s 74.9 percent.” The article does not identify Allen Harris as their original source.",
+      "day_ok": false,
+      "day_note": "Unknown. The article gives the margins but does not say the day the original figures were reported.",
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article reports the companies’ gross margins.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e3",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": false,
+      "who_note": "The record compares company figures: “Micron’s operating margin” and “Nvidia’s roughly 66 percent.” The article does not identify Allen Harris as their original source.",
+      "day_ok": false,
+      "day_note": "Unknown. The article gives the margins but does not say the day the original figures were reported.",
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article reports the companies’ operating margins.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e4",
+      "worth": "keep",
+      "one_line_ok": true,
+      "one_line_problem": null,
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "B": [
+    {
+      "id": "e1",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": false,
+      "tier_note": "fact — row 2, published actual figures. The article reports growth and margins; it calls “Micron’s GAAP gross margin” 84.6 percent but does not explicitly say Nvidia’s 74.9 percent margin is GAAP.",
+      "duplicate_of": null
+    },
+    {
+      "id": "e2",
+      "worth": "keep",
+      "one_line_ok": false,
+      "one_line_problem": "says more than the quote",
+      "who_ok": true,
+      "who_note": null,
+      "day_ok": true,
+      "day_note": null,
+      "tier_ok": true,
+      "tier_note": null,
+      "duplicate_of": null
+    }
+  ],
+  "fields_better": "B",
+  "fields_better_reason": "B leaves the unspecified original days empty and avoids naming the article’s author as the original source of the company figures, although its first record has the wrong tier and its summaries add unsupported detail."
+}

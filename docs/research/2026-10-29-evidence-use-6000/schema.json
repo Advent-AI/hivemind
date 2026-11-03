@@ -1,0 +1,118 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": [
+        "update_existing",
+        "propose_new",
+        "background_only",
+        "unresolved"
+      ]
+    },
+    "question_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "same_claim_as": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "revises": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "opposes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "independent_sources": {
+      "type": "boolean"
+    },
+    "original_source": {
+      "type": "string"
+    },
+    "new_information": {
+      "type": "string"
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "question_id",
+          "statement",
+          "support_ids",
+          "opposing_ids",
+          "limitations",
+          "what_would_change_it"
+        ],
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "support_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposing_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "what_would_change_it": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "new_question": {
+      "type": "string"
+    },
+    "independent_judgement": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "action",
+    "question_ids",
+    "same_claim_as",
+    "revises",
+    "opposes",
+    "independent_sources",
+    "original_source",
+    "new_information",
+    "arguments",
+    "new_question",
+    "independent_judgement",
+    "reason"
+  ]
+}

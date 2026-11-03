@@ -2,12 +2,18 @@
 """Run the POC replay.
 
   python3 scripts/replay.py --from 2026-02-25 --until 2026-07-23 --views poc/data/<run>/views.sqlite \
-      --archive poc/data/<run>/archive.sqlite [--only NVDA] [--day0 2026-07-24] [--cap 3]
+      --archive poc/data/<run>/archive.sqlite [--only NVDA] [--day0 2026-07-24] [--cap 3] [--workers 1]
 
 The ledger and the archive are named on every run (a new run gets a new dated folder; an existing ledger resumes after
 its last completed day). Defaults: the item window poc/data/items-window-tags2-2026-10-24.sqlite, config
-poc/config/poc-v23.json (D169: extraction v10, Jev matching), universe poc/universe.json. The log goes to stdout and
-replay.log beside the ledger.
+poc/config/poc-v108.json (D274: the frozen production extraction prompt, v74i; before it poc-v103, D272, and poc-v94, D267: extraction v74 on the one-decider architecture of v72, D264: the request shows the day's open questions with their takes lines and the
+extraction files each statement by its links, no placement call, a statement linked to nothing dropped as no home; Jev matching with the
+collision judge collision-v2; judging-v7; a statement under a driver and its root keeps the driver; a quote a word or two off the source is stored as the source passage), universe poc/universe.json. The log goes to stdout and
+replay.log beside the ledger. Each day runs with hivemind.parallel_day by default (D183): up to `--workers` (16)
+extraction requests prepared early and validated against the committed ledger at each item's turn, `--jev-workers`
+Jev matching questions at a time (8; one at a time for another matching engine); the ledger equals the serial one for
+the same answers (D181, D182). Its per-day manifests are written beside the ledger. `--workers 1` runs the serial
+path, which sends no call on a rerun over saved answers and resumes a day a serial run left unfinished.
 """
 import argparse
 import os
@@ -16,7 +22,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
 
-from hivemind import config, model, replay, universe  # noqa: E402
+from hivemind import config, model, parallel_day, replay, universe  # noqa: E402
 
 
 def main():
@@ -27,11 +33,15 @@ def main():
     parser.add_argument('--testdb', default=os.path.join(ROOT, 'poc', 'data', 'items-window-tags2-2026-10-24.sqlite'))
     parser.add_argument('--views', required=True, help='the ledger this run writes (a new run: a new dated folder)')
     parser.add_argument('--archive', required=True, help='the model-call archive of this run')
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v23.json'))     # D169
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v108.json'))    # D274 (2026-11-03): the frozen production extraction prompt, v74i at low reasoning
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--only', default=None, help='comma-separated object ids to restrict the stream to')
     parser.add_argument('--cap', type=float, default=None, help='USD spend cap for this run')
+    parser.add_argument('--seed', default=None, help='D253: a seed file (poc/seeds/<company>-<day>.json) written into an empty ledger before the first day')
     parser.add_argument('--max-items-per-day', type=int, default=None)
+    parser.add_argument('--workers', type=int, default=16, help='extraction requests prepared at a time (D183); 1 is the serial path')
+    parser.add_argument('--jev-workers', type=int, default=None,
+                        help='Jev matching questions sent at a time when --workers > 1; default 8 for Jev, 1 for another engine')
     args = parser.parse_args()
     os.makedirs(os.path.dirname(args.views), exist_ok=True)
     log_path = os.path.join(os.path.dirname(args.views), 'replay.log')
@@ -45,10 +55,24 @@ def main():
     cfg = config.load(args.config)
     uni = universe.load(args.universe)
     archive = model.Archive(args.archive)
-    log(f'--- replay {args.from_day}..{args.until_day} config {cfg.version}/{cfg.checksum} provider {cfg.provider} universe {uni.version}')
+    day_runner = None
+    if args.workers > 1:
+        jev_workers = args.jev_workers if args.jev_workers is not None else (8 if cfg.matching.engine == 'jev' else 1)
+        day_runner = parallel_day.ParallelDay(os.path.abspath(args.testdb), os.path.join(os.path.dirname(os.path.abspath(args.views)), 'manifests'),
+                                              extraction_workers=args.workers, jev_workers=jev_workers)
+    log(f'--- replay {args.from_day}..{args.until_day} config {cfg.version}/{cfg.checksum} provider {cfg.provider} universe {uni.version}'
+        f' workers {args.workers}')
+    if args.seed:                                           # D253: seeds before the first day; a view already present is left as it is
+        from hivemind import seeding
+        from hivemind.views import store as _store
+        ledger = _store.open_db(args.views)
+        written = seeding.seed_views(ledger, args.seed, created_at=f'{args.from_day}T00:00:00Z')
+        ledger.close()
+        log(f'--- seeded {len(written)} questions from {args.seed}: {", ".join(written) or "none new"}')
     totals = replay.run(testdb_path=args.testdb, views_path=args.views, archive=archive, cfg=cfg, universe=uni,
                         from_day=args.from_day, until_day=args.until_day, day0=args.day0, spend_cap_usd=args.cap, log=log,
-                        only_objects=set(args.only.split(',')) if args.only else None, max_items_per_day=args.max_items_per_day)
+                        only_objects=set(args.only.split(',')) if args.only else None, max_items_per_day=args.max_items_per_day,
+                        day_runner=day_runner)
     log('totals:', totals)
 
 

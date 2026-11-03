@@ -1,0 +1,12 @@
+**I found no serious issue in the updated design for this six-call development comparison.** For example, a complete-looking answer that says it did not finish reading an article must be marked invalid, not scored as a successful judgment.
+
+I checked the [design](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/deepseek-judge-trial-design-2026-10-29.md), frozen request, corrected reference, [D216](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2734), prior direct-trial design, and latest reviews.
+
+- The frozen request contains six articles and nine candidates. Every candidate fragment appears in its corresponding article, and the candidates contain no user labels. The design keeps EPS in the request but out of the eight-item label score; the limited Singapore case remains in the score.
+- Each model gets three fresh samples. The design requires byte comparisons of the shared messages and schema before sending, and separates provider-specific settings. It preserves raw results, marks invalid or incomplete samples, holds unclear refusals for review, uses a 180-second timeout, and does not retry.
+- The stated reservation is approximately **$0.22745** against the $0.60 cap, using the design’s rates and token assumptions. DeepSeek’s input count is an estimate, so it is not a guaranteed spending bound; missing or excessive usage must be reported as anomalous.
+- [DeepSeek’s API documentation](https://api-docs.deepseek.com/guides/responses_api/) supports the stated message format and output schema, and documents the unsupported outer settings. Its [API reference](https://api-docs.deepseek.com/api/create-response/) maps `xhigh` to `high`. The exact request’s compatibility and actual usage remain untested.
+
+The design calls the new OpenAI controls parallel but does not explicitly state the concurrency width for all six calls. The repository instructions call for an eight-worker pool; the actual execution remains unknown.
+
+No files were edited and no model calls were launched. This review does not establish product acceptance or a default-model switch.

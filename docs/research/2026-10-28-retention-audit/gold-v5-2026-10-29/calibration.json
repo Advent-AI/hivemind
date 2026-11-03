@@ -1,0 +1,652 @@
+{
+  "author": "Codex authored semantic labels; not human gold or model performance",
+  "cases": [
+    {
+      "id": "C01",
+      "reference_id": "G01",
+      "origin": {
+        "kind": "stored_answer",
+        "path": "../article-page-context-2026-10-29/revenue-clean-haiku-3.json",
+        "evidence_id": "e2",
+        "sha256": "4304bcfdf5e0854a563c1be48f390e2bfd3b7c7609b351474faaec95b3e19cfc"
+      },
+      "records": [
+        {
+          "id": "e2",
+          "quote": "For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.",
+          "one_line": "Wall Street analysts expect Nvidia revenue growth of 82% for the rest of this year and 41% for 2027.",
+          "speaker": "Wall Street analysts (via Keithen Drury)",
+          "original_who": "Wall Street analysts",
+          "original_day": "2026-07-06",
+          "tier": "third_party_view",
+          "event_time": "FY2027",
+          "links": []
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "needs_context",
+        "issues": [
+          {
+            "kind": "original_date",
+            "field": "original_day",
+            "severity": "record_only",
+            "reason": "来源没有给出分析师最初作预测的日期；发表日不能冒充原发言日。若用于先后排序则另按实际影响升为 material。"
+          },
+          {
+            "kind": "period_conflict",
+            "field": "event_time",
+            "severity": "material",
+            "reason": "FY2027 是原文没有确立的期间口径。"
+          }
+        ],
+        "reason": "摘要保留收入、两段时间和预测属性；短引文需前一句才能识别收入。日期字段错误另列，整条记录不可直接使用。"
+      }
+    },
+    {
+      "id": "C02",
+      "reference_id": "G01",
+      "origin": {
+        "kind": "stored_answer",
+        "path": "../article-page-context-2026-10-29/revenue-clean-gpt-1.json",
+        "evidence_id": "e2",
+        "sha256": "6bc11c47f88a701def3c31316b2339585d9765994505c933e1962466b1ab68ca"
+      },
+      "records": [
+        {
+          "id": "e2",
+          "quote": "For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.",
+          "one_line": "The author said Wall Street analysts expected Nvidia growth of 82% for the rest of 2026 and 41% in 2027; the article does not specify the precise growth measure.",
+          "speaker": "Keithen Drury",
+          "original_who": "Wall Street analysts, as characterized by Keithen Drury",
+          "original_day": "",
+          "tier": "third_party_view",
+          "event_time": "2026-07-06",
+          "links": []
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "issues": [
+          {
+            "kind": "other",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "否认原文已明确的收入指标。"
+          },
+          {
+            "kind": "period_conflict",
+            "field": "event_time",
+            "severity": "material",
+            "reason": "用文章日代替两段预测期间。"
+          }
+        ],
+        "reason": "摘要声称原文没有明确增长指标；前句明说 revenue growth，构成错误陈述。"
+      }
+    },
+    {
+      "id": "C03",
+      "reference_id": "G01",
+      "origin": {
+        "kind": "stored_answer",
+        "path": "../article-page-context-2026-10-29/revenue-page-haiku-1.json",
+        "evidence_id": "e2",
+        "sha256": "fc3868b51e581e5c9985a94b299a75796d5d7f4fe4ab6db1649f5f24fbf69b47"
+      },
+      "records": [
+        {
+          "id": "e2",
+          "quote": "For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.",
+          "one_line": "Wall Street analysts project Nvidia revenue growth of 82% for the current fiscal year and 41% for 2027.",
+          "speaker": "Wall Street analysts (as reported by author)",
+          "original_who": "Wall Street analysts",
+          "original_day": "2026-07-06",
+          "tier": "third_party_view",
+          "event_time": "FY2027",
+          "links": []
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "issues": [
+          {
+            "kind": "original_date",
+            "field": "original_day",
+            "severity": "record_only",
+            "reason": "来源没有给出分析师最初作预测的日期；发表日不能冒充原发言日。若用于先后排序则另按实际影响升为 material。"
+          },
+          {
+            "kind": "period_conflict",
+            "field": "one_line,event_time",
+            "severity": "material",
+            "reason": "正文及日期字段都自行改为财年。"
+          }
+        ],
+        "reason": "识别收入正确，但把今年余下时间改成当前财年；不能视为完整正确。"
+      }
+    },
+    {
+      "id": "C04",
+      "reference_id": "G02",
+      "origin": {
+        "kind": "stored_answer",
+        "path": "../article-page-context-2026-10-29/revenue-clean-haiku-3.json",
+        "evidence_id": "e3",
+        "sha256": "4304bcfdf5e0854a563c1be48f390e2bfd3b7c7609b351474faaec95b3e19cfc"
+      },
+      "records": [
+        {
+          "id": "e3",
+          "quote": "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share.",
+          "one_line": "The average analyst projects Nvidia fiscal 2028 earnings per share of $12.76.",
+          "speaker": "Average analyst (via Keithen Drury)",
+          "original_who": "Average analyst consensus",
+          "original_day": "2026-07-06",
+          "tier": "third_party_view",
+          "event_time": "FY2028",
+          "links": [
+            "c2"
+          ]
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "sufficient",
+        "issues": [
+          {
+            "kind": "original_date",
+            "field": "original_day",
+            "severity": "record_only",
+            "reason": "来源没有给出分析师最初作预测的日期；发表日不能冒充原发言日。若用于先后排序则另按实际影响升为 material。"
+          }
+        ],
+        "reason": "预测主体、EPS、数值及 FY2028 都保留；远期不是排除理由。"
+      }
+    },
+    {
+      "id": "C05",
+      "reference_id": "G14",
+      "origin": {
+        "kind": "stored_answer",
+        "path": "../article-page-context-2026-10-29/revenue-page-haiku-1.json",
+        "evidence_id": "e4",
+        "sha256": "fc3868b51e581e5c9985a94b299a75796d5d7f4fe4ab6db1649f5f24fbf69b47"
+      },
+      "records": [
+        {
+          "id": "e4",
+          "quote": "If we use that figure and value the stock at a reasonable earnings multiple of 25, the projected share price at the end of fiscal 2028 is $319.",
+          "one_line": "Author's valuation: at a 25x multiple on $12.76 EPS, the projected share price at end of fiscal 2028 is $319.",
+          "speaker": "Keithen Drury",
+          "original_who": "Keithen Drury",
+          "original_day": "2026-07-06",
+          "tier": "third_party_view",
+          "event_time": "FY2028",
+          "links": []
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "needs_context",
+        "issues": [],
+        "reason": "明确作者、25 倍与 12.76 EPS 的条件关系；引用中的 that figure 需前段补全。"
+      }
+    },
+    {
+      "id": "C06",
+      "reference_id": "G14",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "NVIDIA 保证 FY2028 年末股价将达到 319 美元。",
+          "quote": "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share. I think that's a conservative estimate, because the analyst community has consistently underprojected Nvidia's growth.\nIf we use that figure and value the stock at a reasonable earnings multiple of 25, the projected share price at the end of fiscal 2028 is $319. As a result, I think the stock could easily reach $300 per share sometime in late 2027."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "issues": [
+          {
+            "kind": "certainty",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "假设改为保证。"
+          },
+          {
+            "kind": "attribution",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "作者改为公司。"
+          }
+        ],
+        "reason": "作者的条件估值被改为公司保证。"
+      }
+    },
+    {
+      "id": "C07",
+      "reference_id": "G11",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "Sharon AI 六年协议覆盖澳大利亚 72MW 新容量，计划最多部署 4 万颗 GB300。",
+          "quote": "In an 8-K filing dated June 12th, Sharon AI disclosed that the agreement runs for six years and covers 72 MW of new Australian data center capacity built to Nvidia's DSX AI factory design, scaling to as many as 40,000 Grace Blackwell GB300 GPUs. The Nasdaq-listed neocloud separately holds a revenue-share facility of up to $200 million with investor Digital Alpha, disclosed in its CY25 results, meaning portions of its income are now pledged in two directions. Meanwhile, Firmus is building a DSX-aligned campus in Batam, Indonesia, that’s expected to scale to 360 MW and house up to 170,000 Nvidia GPUs."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "sufficient",
+        "issues": [],
+        "reason": "协议、容量、时间和计划上限齐全；应归供需。"
+      }
+    },
+    {
+      "id": "C08",
+      "reference_id": "G11",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "Sharon AI 已完成澳大利亚 72MW、4 万颗 GB300 部署，协议六年。",
+          "quote": "In an 8-K filing dated June 12th, Sharon AI disclosed that the agreement runs for six years and covers 72 MW of new Australian data center capacity built to Nvidia's DSX AI factory design, scaling to as many as 40,000 Grace Blackwell GB300 GPUs. The Nasdaq-listed neocloud separately holds a revenue-share facility of up to $200 million with investor Digital Alpha, disclosed in its CY25 results, meaning portions of its income are now pledged in two directions. Meanwhile, Firmus is building a DSX-aligned campus in Batam, Indonesia, that’s expected to scale to 360 MW and house up to 170,000 Nvidia GPUs."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "issues": [
+          {
+            "kind": "certainty",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "计划变为已完成。"
+          }
+        ],
+        "reason": "把计划容量改成已经交付。"
+      }
+    },
+    {
+      "id": "C09",
+      "reference_id": "G13",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "Google Cloud Q2 收入 248 亿美元。",
+          "quote": "In Q2, the company’s Google Cloud business enjoyed 82% year-over-year revenue growth to $24.8 billion"
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "partial",
+        "traceability": "sufficient",
+        "issues": [],
+        "reason": "输出覆盖收入与引文中的同比增长，仍缺订单积压；按一个事项计部分，不算三次命中。"
+      }
+    },
+    {
+      "id": "C10",
+      "reference_id": "G13",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "Google Cloud Q2 收入 248 亿美元，同比增长 82%，订单积压超过 5000 亿美元。",
+          "quote": "Alphabet is getting an enormous boost from AI demand as well, but it’s not as evident amid its advertising sales. In Q2, the company’s Google Cloud business enjoyed 82% year-over-year revenue growth to $24.8 billion, and its backlog of customer orders rose to over half a trillion dollars, up from $462 billion in Q1. Google Cloud is the division where customers can pay to access Alphabet’s proprietary AI models, and its rapid sales expansion demonstrates the company is successfully capturing its share of clients in the burgeoning AI market."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "sufficient",
+        "issues": [],
+        "reason": "三个侧面齐全，计一个事项。"
+      }
+    },
+    {
+      "id": "C11",
+      "reference_id": "G15",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "作者称 NVIDIA 最近八次财报中五次之后股价立即明显下跌，尽管营收与净利增长强劲。",
+          "quote": "It can also set the company up to experience a major share price drop if it reports anything less than stellar earnings. Nvidia doesn't seem to have that problem. In fact, it almost faces the opposite issue: Over the past two years, Nvidia's earnings reports have been stellar, with massive growth in revenue and net income. Yet after five of its last eight earnings reports, the stock has seen an immediate and significant share price decline ."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "sufficient",
+        "issues": [],
+        "reason": "可选的预期背景，不是自动垃圾。"
+      }
+    },
+    {
+      "id": "C12",
+      "reference_id": "G15",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [],
+      "expected": {
+        "selection": "omitted",
+        "meaning": "absent",
+        "traceability": "absent",
+        "issues": [],
+        "reason": "省略这条可选背景不构成漏失。"
+      }
+    },
+    {
+      "id": "C13",
+      "reference_id": "G16",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [],
+      "expected": {
+        "selection": "omitted",
+        "meaning": "absent",
+        "traceability": "absent",
+        "issues": [],
+        "reason": "正确不收网站注册模板。"
+      }
+    },
+    {
+      "id": "C14",
+      "reference_id": "G16",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "Equiti Brokerage 在塞舌尔注册，注册地址为 Eden Island 的 Marina House。",
+          "quote": "Equiti Brokerage (Seychelles) Limited is a company incorporated with limited liability under the laws of the Republic of Seychelles, under registration number 8428558-1, with its registered address at First Floor, Marina House, Eden Island, Republic of Seychelles."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "sufficient",
+        "issues": [],
+        "reason": "语义可以完全正确，仍是本次研究误收；价值与真实性不能混为一栏。"
+      }
+    },
+    {
+      "id": "C15",
+      "reference_id": "G01",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的边界例，非模型实验结果。"
+      },
+      "records": [],
+      "expected": {
+        "selection": "omitted",
+        "meaning": "absent",
+        "traceability": "absent",
+        "issues": [],
+        "reason": "关键收入预期漏失，不能靠多抽背景抵消。"
+      }
+    },
+    {
+      "id": "C16",
+      "reference_id": "G09",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 依据保存原文构造的边界对照；不是新模型回答。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "NVIDIA 管理层预测云巨头支出 2026 年约 6500 亿美元，2027 年超过 1 万亿美元。",
+          "quote": "management forecast that it expects hyperscaler spending to top $1 trillion in 2027 after reaching a projected $650 billion in 2026"
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "sufficient",
+        "reason": "少了电话会场合，不改变管理层预测、客户对象、金额或期间；不扣原意。",
+        "issues": []
+      }
+    },
+    {
+      "id": "C17",
+      "reference_id": "G09",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 依据保存原文构造的边界对照；不是新模型回答。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "NVIDIA 管理层报告云巨头在 2026 年已支出 6500 亿美元、2027 年已支出超过 1 万亿美元。",
+          "quote": "management forecast that it expects hyperscaler spending to top $1 trillion in 2027 after reaching a projected $650 billion in 2026"
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "reason": "把预测变成已实现，不是可省略的细节。",
+        "issues": [
+          {
+            "kind": "certainty",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "预测改为已经发生。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "C18",
+      "reference_id": "G10",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 依据保存原文构造的边界对照；不是新模型回答。"
+      },
+      "records": [
+        {
+          "id": "free",
+          "one_line": "Omniverse 现在可免费用于开发、生产和再分发。",
+          "quote": "The platform is now free for development, production, and redistribution"
+        },
+        {
+          "id": "support",
+          "one_line": "Omniverse 企业支持仍须付费订阅。",
+          "quote": "Without a subscription, support is limited to community channels, meaning the Developer Forums and Discord."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "needs_context",
+        "reason": "经济含义保留：使用免费、企业支持付费；无需摘要复述付费方案全名，引用需原段补足企业支持条款。",
+        "issues": []
+      }
+    },
+    {
+      "id": "C19",
+      "reference_id": "G10",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 依据保存原文构造的边界对照；不是新模型回答。"
+      },
+      "records": [
+        {
+          "id": "free",
+          "one_line": "Omniverse 现在可免费用于开发、生产和再分发。",
+          "quote": "The platform is now free for development, production, and redistribution"
+        },
+        {
+          "id": "support",
+          "one_line": "Omniverse 企业支持现在也完全免费。",
+          "quote": "Without a subscription, support is limited to community channels, meaning the Developer Forums and Discord."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "reason": "收费方式被说反，不能以省略品牌名免责。",
+        "issues": [
+          {
+            "kind": "other",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "付费企业支持改为完全免费。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "C20",
+      "reference_id": "G04",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 依据保存原文构造的边界对照；不是新模型回答。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "AMD 自己估计：100kW 机柜模型中，EPYC 9965 对 Vera 吞吐量约 2.4 倍，下一代 EPYC 6 预计约 3.3 倍。",
+          "quote": "AMD estimates its EPYC 9965 (Turin) chip delivers approximately 2.4x the rack-level throughput of NVIDIA's Vera baseline in a modeled 100kW deployment, with the next-generation EPYC 6 (Venice) projected to extend that advantage to roughly 3.3x total throughput"
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "correct",
+        "traceability": "sufficient",
+        "reason": "自己估计、模拟场景、两个型号和比较量齐全；没写中间转述者 BofA 不改变原意。",
+        "issues": []
+      }
+    },
+    {
+      "id": "C21",
+      "reference_id": "G04",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 依据保存原文构造的边界对照；不是新模型回答。"
+      },
+      "records": [
+        {
+          "id": "example",
+          "one_line": "独立实测证明：100kW 机柜中，EPYC 9965 对 Vera 吞吐量为 2.4 倍，EPYC 6 为 3.3 倍。",
+          "quote": "AMD estimates its EPYC 9965 (Turin) chip delivers approximately 2.4x the rack-level throughput of NVIDIA's Vera baseline in a modeled 100kW deployment, with the next-generation EPYC 6 (Venice) projected to extend that advantage to roughly 3.3x total throughput"
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "reason": "把 AMD 模型估计写成独立实测，改变证据可信性质。",
+        "issues": [
+          {
+            "kind": "attribution",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "自身估计改为独立实测。"
+          },
+          {
+            "kind": "certainty",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "下一代预测改为已实测。"
+          }
+        ]
+      }
+    },
+    {
+      "reference_id": "G14",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的目标价时点边界例；非模型实验结果。"
+      },
+      "id": "C22",
+      "records": [
+        {
+          "id": "example",
+          "one_line": "作者以 FY2028 EPS 12.76 美元乘 25 倍，得到 319 美元的条件估值。",
+          "quote": "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share. I think that's a conservative estimate, because the analyst community has consistently underprojected Nvidia's growth.\nIf we use that figure and value the stock at a reasonable earnings multiple of 25"
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "partial",
+        "traceability": "needs_context",
+        "issues": [
+          {
+            "kind": "missing_context",
+            "field": "one_line, quote",
+            "severity": "material",
+            "reason": "盈利年度仍在，但目标价格对应的时点完全遗漏，不能判断预期持有期限。"
+          }
+        ],
+        "reason": "保留盈利年度不能替代目标价时点；摘要和引用都没保留 FY2028 年末。"
+      }
+    },
+    {
+      "reference_id": "G14",
+      "origin": {
+        "kind": "constructed_calibration",
+        "note": "Codex 按原文构造的目标价时点边界例；非模型实验结果。"
+      },
+      "id": "C23",
+      "records": [
+        {
+          "id": "example",
+          "one_line": "作者以 FY2028 EPS 12.76 美元乘 25 倍，估计 NVIDIA 当前价值为每股 319 美元。",
+          "quote": "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share. I think that's a conservative estimate, because the analyst community has consistently underprojected Nvidia's growth.\nIf we use that figure and value the stock at a reasonable earnings multiple of 25, the projected share price at the end of fiscal 2028 is $319. As a result, I think the stock could easily reach $300 per share sometime in late 2027."
+        }
+      ],
+      "expected": {
+        "selection": "kept",
+        "meaning": "wrong",
+        "traceability": "unsupported",
+        "issues": [
+          {
+            "kind": "period_conflict",
+            "field": "one_line",
+            "severity": "material",
+            "reason": "把 FY2028 年末的目标价改为当前价值。"
+          }
+        ],
+        "reason": "原文的未来时点被改成当前；正确引文不能抵消摘要的实质矛盾。"
+      }
+    }
+  ]
+}

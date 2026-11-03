@@ -1,4 +1,4 @@
-# Default Idea composite — D188
+# Default Idea composite — D282
 
 The normal Idea card now renders its composite from the API response; no exact-question configuration is required. Default API/Docker configuration is `poc-v30-idea`. The first two decomposition/mapping requests remain unchanged. The third assessment call supplies the summary, named outcome, claim direction and one required disposition per chosen thesis. Code binds immutable identities, converts the direction, and the shared UI calculator produces the history.
 

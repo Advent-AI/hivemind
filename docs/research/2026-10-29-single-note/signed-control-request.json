@@ -1,0 +1,135 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 6000,
+  "system": "Maintain research arguments about the covered businesses. Keep source records intact.\n\n1. Read source_record with the supplied source_article and other_source_records, first to last. Use this context to understand the incoming claim, not automatically as independent confirmation or separate tasks. Read all history and catalog questions. Texts decide; scores and metadata are aids.\n\n2. In new_information, state the material claim, its origin, stated time/period and what it supports. Distinguish observed/reported facts, party claims, forecasts and your inferences. Preserve meaningful quantities, conditions and partial dates; unknown is not false or zero. A publication day is not automatically a statement or event day.\nJudge use claim by claim, not by a fixed source score:\n- A reported result or signed term supports the limited fact attributed to that source, not independent verification.\n- A supplier plan or vendor benchmark can support a conditional view of supply or competition; retain its forecast or modeled nature.\n- An unspecified financing obligation or unconfirmed deployment can be a lead: identify the missing link and what would resolve it, without asserting it exists.\n- Out-of-scope material or a bare mention with no business connection supplies no research conclusion. Follow explicit scope exclusions.\nExplain how customer, supplier or competitor evidence affects the covered business; its sales need not be stated. A supplier's revenue is not the covered company's revenue; a customer's backlog is not orders for the covered company. Use supplied support; neither uncertainty nor plausibility establishes missing facts.\n\n3. Compare each historical piece. same_claim_as means the same substantive claim across wording, outlets or dates (a relayed benchmark; a repeated financing report). Preserve extra detail and qualify partial overlap. revises means the owning party later changes that claim's value or status (raised guidance; talks become a signed agreement), not a later retelling. opposes means conflicting accounts (a denial versus a delay report; independent tests versus vendor claims). Keep both sides; name what resolves the disagreement. Otherwise leave the piece alone.\nTwo outlets relaying one announcement are one source; two with their own reporting can independently support one claim. Use original_source for provenance. independent_sources concerns this incoming claim, not impartiality: true for an identified origin with its own access distinct from matched claims; false for a shared or unknown origin, explaining which. With no matched claim, true marks the first identified origin, not corroboration. A relay adds no new origin beyond the source it cites.\n\n4. Choose the action.\n- update_existing: a fact, risk/condition or counterevidence changes an existing argument (a guidance revision; a disputed launch). Prefer the question about that business issue. Rephrasing or narrowing a deal component does not create a new question. Exact numeric answers require matching entity, period and definition; other evidence may affect the argument through an explained channel without being that number.\n- propose_new: a distinct investment judgement no catalog question carries AND one admission reason: a main annual business quantity or major product milestone; a shared annual industry quantity; a policy stage with named authority; a financing, guarantee, equity or purchase obligation. In reason name the public evidence that will settle it, its period/check date, the nearest catalog question and what folding would lose. Numeric questions use this or next fiscal/calendar year; later forecasts remain evidence. Unsigned obligations need a future signing check within 18 months; obligations already taken on measure the amount at the next annual filing. An unspecified provider is not an established obligation. Missing catalog, another number or mere curiosity is insufficient.\n- background_only: no argument change is supported (an unchanged pickup; incidental context). State any limited use; background does not mean worthless.\n- unresolved: supplied text cannot settle the research action (unclear attribution; an ambiguous claim), name what prevents a decision.\n\n5. For each updated question, write the full defensible argument: lean, supporting/opposing evidence IDs, limits and what would change it. Cite the records carrying each assertion, including incoming or same-source records used. Keep other periods distinct and inferences conditional; do not invent price expectations. Use the JSON schema only.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"On August 17, 2026, NVIDIA entered into multiple residual value guaranties (collectively, the “Agreements”) with SB Energy (the “Lessor”) relating to leases for approximately 4.25 gigawatts of IT load in the aggregate at the Portsmouth Site.\", \"one_line\": \"NVIDIA entered residual value guaranties with SB Energy on August 17, 2026, covering approximately 4.25 GW of IT load.\", \"original_who\": \"NVIDIA Corporation\", \"original_day\": \"2026-08-17\", \"speaker\": \"NVIDIA Corporation\", \"tier\": \"fact\", \"event_time\": \"2026-08-17\", \"publication_day\": \"2026-08-17\", \"publisher\": \"SEC EDGAR\", \"title\": \"NVIDIA current report August 17, 2026\"}, \"source_article\": \"nvda-20260817\\n0001045810 2026-08-17 2026-08-17\\nDate of Report (Date of earliest event reported): August 17, 2026\\nItem 1.01. Entry into a Material Definitive Agreement\\nOn August 17, 2026, NVIDIA Corporation (“NVIDIA”) announced a multi-year partnership with SB Energy Corp. (collectively with its affiliates, “SB Energy”) to advance the development of the PORTS Technology Campus, a large-scale AI data center campus in Pike County, Ohio (the “Portsmouth Site”). Through the partnership and the credit support described below, NVIDIA has secured land, power, and shell capacity at the Portsmouth Site to host NVIDIA AI compute infrastructure. An affiliate of OpenAI Group PBC (such affiliate, “OpenAI”) will be the tenant.\\nResidual Value Guaranties\\nOn August 17, 2026, NVIDIA entered into multiple residual value guaranties (collectively, the “Agreements”) with SB Energy (the “Lessor”) relating to leases for approximately 4.25 gigawatts of IT load in the aggregate at the Portsmouth Site. An Agreement generally will become effective upon commencement of the applicable lease. NVIDIA also can provide credit support to secure approximately an additional 3.8 gigawatts at the Portsmouth Site, exercisable in its sole discretion.\\nNVIDIA’s aggregate payment obligation is cumulatively capped at $105 billion for its initial commitment under the Agreements. NVIDIA’s payment obligations are subject to specified conditions, including among other things, that the Lessor has satisfied applicable ready-for-service conditions under the lease for the relevant premises, expected beginning in 2028.\\nPursuant to the Agreements, OpenAI is the tenant; however, in the event of (i) OpenAI’s insolvency resulting in a default under a lease, or (ii) OpenAI’s failure to make payments under a lease (each a “Trigger Event”), NVIDIA will pay an amount generally equal to any shortfall between the guaranteed minimum value of a lease (as set forth in the Agreements) and amounts recovered through a replacement lease or sale.\\nUpon a Trigger Event, NVIDIA may elect to (i) assume the applicable lease, (ii) require the Lessor to seek to relet the applicable premises, (iii) initiate a sale process, (iv) allow the applicable lease to be terminated, or (v) defer the exercise of these remedies for up to one year while paying specified project agreement costs. NVIDIA’s obligations under an Agreement will terminate upon the earliest to occur of (i) the 20th anniversary of the commencement of the applicable lease, (ii) the termination of the applicable lease by OpenAI in accordance with its terms, (iii) OpenAI achieving a satisfactory credit rating, and (iv) other customary termination events. OpenAI has agreed to reimburse and indemnify NVIDIA for any and all amounts actually paid by NVIDIA to the Lessor under the Agreements.\\nThe foregoing description of the Agreements does not purport to be complete and is qualified in its entirety by reference to the full text of the Agreements, the form of which will be filed as an exhibit to NVIDIA’s Quarterly Report on Form 10-Q for the fiscal quarter ended July 26, 2026.\\nOpenAI, as the tenant, will utilize capacity at the Portsmouth Site supporting approximately 4.25 gigawatts of IT load to deploy NVIDIA’s full-stack DSX AI factory platform, subject to limited exceptions.\\nItem 2.03. Creation of a Direct Financial Obligation or an Obligation under an Off-Balance Sheet Arrangement of a Registrant\\nThe information set forth in Item 1.01 above is hereby incorporated by reference into this Item 2.03.\\nItem 7.01. Regulation FD\\nOn August 17, 2026, NVIDIA issued a press release announcing the partnership with SB Energy. The press release is attached as Exhibit 99.1 hereto and is incorporated herein by reference.\\nThe press release is furnished and shall not be deemed \\\"filed\\\" for purposes of Section 18 of the Securities Exchange Act of 1934, as amended, or subject to the liabilities of that Section or Sections 11 and 12(a)(2) of the Securities Act of 1933, as amended. The information in this Item 7.01 of this Current Report on Form 8-K, including Exhibit 99.1, shall not be incorporated by reference in any filing with the U.S. Securities and Exchange Commission made by NVIDIA, whether made before or after the date hereof, regardless of any general incorporation language in such filing.\\nCertain statements in this Current Report on Form 8-K, including, but not limited to, statements as to: NVIDIA’s partnership with SB Energy and the expected benefits and impacts of the partnership; the development, timing, scale, capacity, and operation of the Portsmouth Site; OpenAI’s role as the tenant and the expected deployment of NVIDIA’s DSX AI factory platform at the Portsmouth Site; the potential expansion of the Portsmouth Site and related commitments; the amount, timing, and conditions of any payments by NVIDIA under the Agreements; the expected timing of the Lessor’s satisfaction of the applicable ready-for-service conditions; and other statements that are not historical facts are forward-looking statements within the meaning of Section 27A of the Securities Act of 1933, as amended, and Section 21E of the Securities Exchange Act of 1934, as amended, which are subject to the “safe harbor” created by those sections based on management’s beliefs and assumptions and on information currently available to management and are subject to risks and uncertainties that could cause results to be materially different than expectations. Important factors that could cause actual results to differ materially include: global economic and political conditions; NVIDIA’s reliance on third parties to manufacture, assemble, package and test NVIDIA’s products; the impact of technological development and competition; development of new products and technologies or enhancements to NVIDIA’s existing products and technologies; market acceptance of NVIDIA’s products or NVIDIA’s partners’ products; design, manufacturing or software defects; changes in consumer preferences or demands; changes in industry standards and interfaces; unexpected loss of performance of NVIDIA’s products or technologies when integrated into systems; NVIDIA’s ability to realize the potential benefits of business investments or acquisitions; and changes in applicable laws and regulations, as well as other factors detailed from time to time in the most recent reports NVIDIA files with the Securities and Exchange Commission (the “SEC”) including, but not limited to, its most recent Annual Report on Form 10-K and subsequent Quarterly Reports on Form 10-Q. Copies of reports filed with the SEC are posted on NVIDIA’s website and are available from NVIDIA without charge. These forward-looking statements are not guarantees of future performance and speak only as of the date hereof, and, except as required by law, NVIDIA disclaims any obligation to update these forward-looking statements to reflect future events or circumstances.\\nPress release, issued August 17, 2026\\nDate: August 17, 2026\", \"other_source_records\": [], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}]}}"
+    }
+  ],
+  "output_config": {
+    "effort": "medium",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          }
+        },
+        "required": [
+          "original_source",
+          "new_information",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "reason",
+          "question_ids",
+          "arguments",
+          "independent_judgement",
+          "new_question",
+          "action"
+        ]
+      }
+    }
+  }
+}

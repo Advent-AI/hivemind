@@ -1,0 +1,16 @@
+**One serious mismatch remains before launch: format errors do not stop sending as the inherited design requires.** In simulation, bad JSON and schema-invalid answers each allowed all 48 calls to run.
+
+- **Requirement:** [v2 design, line 5](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-v2-2026-10-29.md:5), inherited by v3, requires stopping on format, transport or usage anomalies.
+- **Implementation:** [v5 sender, lines 135–136](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-send-v5-2026-10-29.py:135) checks only transport errors and usage. Parser failures mark answers unusable but do not stop dispatch. Reconcile this contract before launch.
+
+Everything else checked passed:
+
+- **Population:** Exactly **4 cases × 2 conditions × 2 providers × 3 sends = 48**. Kyber removed.
+- **Splits:** All eight case-condition entries are `development`; original source splits preserved correctly.
+- **Freeze and inputs:** All **16 requests and 114 dependency hashes** verified. Provider messages and serialized schemas match. Source hashes, quotes and parser IDs agree with payloads.
+- **Treatment:** Only the three recorded system-text replacements differ. System length **3,830 → 3,828 characters**; saved input-token counts decrease by one for every case/provider pair.
+- **Parser and records:** **16 positive and 48 negative controls passed.** Successful worker simulation produced 48 distinct attempt/raw/parsed sets with correct case, provider, sample and request-hash associations.
+- **Budget:** Saved reservation recomputes to **$0.3100032**, below **$0.60**, using configured rates. Five reservation mutation controls and 15 usage controls passed.
+- **Stopping:** Transport and missing-usage simulations stopped after eight initially dispatched calls, leaving 40 unsent.
+
+No edits, credential access or provider calls. Filesystem durability and detached process launch were not exercised.

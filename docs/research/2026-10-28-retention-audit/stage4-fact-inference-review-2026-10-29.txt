@@ -1,0 +1,15 @@
+**Do not launch the current 60-call plan: its minimum reservation is $0.7494348, above the $0.60 cap.** For example, the two Haiku product requests alone reserve $0.411462 for their six samples.
+
+One serious issue:
+
+- **The frozen plan cannot pass its budget check.** The [sender’s reservation formula](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-haiku-luna-v3-send-v5-2026-10-29.py:85) bounds input by serialized request bytes and applies the higher Haiku rate above 100,000. Both product requests exceed that threshold. Using the smallest accepted token count—1—for all 20 requests still produces $0.7494348. I exercised the [arm’s check](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-2026-10-29.py:137); it correctly refuses. Actual counts can only increase this reservation. Reduce and refreeze the population as the design allows; the hardcoded population checks must agree with that reduction.
+
+Other review results:
+
+- **Prompt and inputs:** All 20 frozen requests verified against the originals and intended replacements. Only system text changes. One substantive instruction adds the fact/inference/unknown distinction; the two compressions introduce no evident second task. System length falls **3,830 → 3,828 characters**. Token compression remains unmeasured.
+- **Sample, schema and leakage:** Provider pairs have identical messages and serialized schemas. Source hashes, quotes and case IDs agree. No gold/outcome fields or embedded credential signatures were found in the inspected files.
+- **Responses and controls:** **20 positive and 40 negative parser controls passed.** An in-memory exercise of the worker produced 60 unique attempt/raw/parsed result sets. Transport-error and missing-usage controls stopped further dispatch after eight already-started calls, leaving 52 unsent. Usage-bound controls also passed.
+- **Launch and paths:** The detached bootstrap targets the adapter correctly. Output names distinguish case, arm, provider and sample. Exclusive writes and the worker lock prevent reuse. Actual process launch and filesystem durability were not exercised.
+- **Benchmark honesty:** The design correctly limits this to five development cases, without a held-out test or product-quality claim. However, **four manifest entries still say `split: "test"`**—NVIDIA and Corning in both arms—contradicting that description. See the [manifest](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/stage4-fact-inference-arm-2026-10-29/manifest.json:7).
+
+No edits, credential access, or provider calls. The reservation calculation uses the sender’s configured rates; it is not a verification of current provider pricing.

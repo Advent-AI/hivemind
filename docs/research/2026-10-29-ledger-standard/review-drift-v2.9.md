@@ -1,0 +1,44 @@
+The proposal list is still incomplete, and the v2.9 draft contains contradictions and unsupported rules. For example, its fix for undated regulatory decisions now permits a researcher-set date more broadly than the cited source does.
+
+I reviewed [standard-v2.9.md](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:1), the file named in the request. The request also calls the draft v2.4; my findings concern **v2.9**, not the separate v2.4 file. No files were edited.
+
+## 1. Rules or examples without an adequate source or proposal
+
+- **A researcher-set date can now replace missing source timing for any question.** Draft §4.2 says “**时间依据在原文找到，原文没有时用研究员定的检查日并标明**” and cites the research review. The review asks whether the source supports the time basis and separately says a researcher-set check date must be marked; it does not say that a researcher’s date replaces missing source support in every case. The adopted prompt specifically permits fiscal year-end for an undated *pending regulatory decision*. The new general exception is not in the proposal list. [Draft §4.2](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:129); [review §1](/Users/lchingen/hivemind/research_notes/对冲基金论点粒度与金标/codex-challenger.md:12); [adopted role-v29](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/role-v29.txt:15).
+
+- **The proposed grading procedure can turn optional material into excluded material.** Draft §6.3 first says “**先按 §5.1 判这一句会不会留……不会 → 不收**”; only afterward does it reach the optional cases. A reader who would not put the Singapore case in a weekly note must therefore mark it excluded before reaching its optional status. D231 says that case is optional, with no penalty for keeping or omitting it. The same ordering affects the proposed optional categories. The new first step is not separately listed as a proposal. [Draft §6.3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:254); [D231](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2838).
+
+## 2. Contradictions
+
+- **The proposed weight rule disagrees with its own EPS example.** Draft §6.3 step 3 says a statement touching a key profit judgment, with “**一个带期间的预测**,” is core unless another listed exception applies. Its table then calls “**FY2028 EPS 一致预期**” supporting. The example is a profit forecast with a period, and the steps give no exception for it. The signed standard also calls that example supporting. Proposal 1 discloses a new grading rule, but does not resolve this inconsistency. [Draft §6.3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:260); [signed standard §0](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-analyst-standard/standard.md:13).
+
+- **Proposal 1 changes an accepted core case without identifying that case.** The proposal says a quantified matter still under discussion is supporting. The reference accepted in D229 marks the reported discussions of up to $600 billion in support as **core**, while preserving their rumour status. The rule change is listed, but its consequence for this accepted example is not stated. [Proposal 1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:11); [accepted gold check](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-analyst-standard/gold-check.md:30); [D229](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2826).
+
+- **The source-tier table leaves an established category without a destination.** Draft §5.5 quotes PRD 06 as treating “**没有出处的说法**” as rumour, but its operative table assigns rumour only to claims attributed to unnamed people or explicitly called unconfirmed. An unattributed claim that is neither an announcement nor expressly described as unconfirmed has no rule in the table. PRD 06 expressly includes unattributed statements. D238’s later announcement rule addresses reported announcements; it does not remove the PRD’s general unattributed-statement category. [Draft §5.5](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:216); [PRD 06, Four evidence tiers](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/06-views.md:93); [D238](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2879).
+
+- **The charter fix removes an exclusion from the adopted request without disclosing that consequence.** Draft §4.3 removes “章程” because it is absent from signed standard §6. But role-v29 explicitly excludes questions about **“bylaws,”** and D239 adopted that request. The draft presents its list as the question-opening standard and says future prompts follow it, yet does not list removal of the adopted prompt’s explicit exclusion as a proposed change. This is a conflict between the signed standard’s list and the adopted prompt that needs to be shown, even if other opening tests might still reject a particular charter question. [Draft §4.3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:131); [role-v29](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/role-v29.txt:18); [D239](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2887).
+
+## 3. Wrong citations and quotations
+
+- **Draft §4.2’s citation does not support its general date exception**, as described above. The review’s requirement to mark a self-set check date is not the same as permission to replace missing source timing in every case.
+
+- **Draft §10 B16 points to the wrong proposal.** It says the resolution of “**转述的公告算事实还是当事人陈述**” is the §5.5 table “**待拍第 9 条**.” Proposal 9 now concerns mixed statements, while §5.5 presents reported announcements as facts under the existing D238/role-v29 rule. The stale pointer makes an already recorded rule appear to remain undecided. [Draft §10 B16](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:375); [proposal 9](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/standard-v2.9.md:19).
+
+I found **no material misquotation of Alex** in the quotations checked against the signed standard and decisions. The two D241 excerpts in draft §9 appear in [D241](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2914). D241 calls for the draft and review; it does not itself approve proposal 1’s thresholds.
+
+## 4. First-review findings
+
+The [disposition log](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-ledger-standard/simulation-log.md:204) accounts for the seven changes. Five have been addressed in the specific respects identified: the unrelated-count recalculation is now proposal 12; the other-company-figures exception appears in the grading steps; the announcement rule is restored in §5.5; extraction’s candidate-question responsibility is restored; and the competitor-comparison path now checks relevance.
+
+Two fixes introduce further problems:
+
+- Removing the charter exclusion fixes the incorrect citation to signed standard §6, but leaves the adopted role-v29 exclusion undisclosed, as described above.
+- Allowing a marked researcher-set date fixes the specific undated-regulatory conflict, but broadens that exception beyond its cited sources, as described above.
+
+The relevance pre-check also introduces the optional-versus-excluded grading conflict described in section 1.
+
+**Correction to the first review:** its claim that D229 makes the Google Cloud revenue, growth and backlog item core is wrong. The accepted gold check calls that combined Google Cloud item **supporting**. The separate analyst forecast of 82% and 41% revenue growth is the core item. Therefore Google Cloud does not establish the conflict claimed in the first review. [Gold check](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-29-analyst-standard/gold-check.md:24).
+
+## 5. Is the proposal list complete?
+
+**No.** It does not disclose the general permission to substitute a researcher-set date for missing source timing, the grading pre-check’s effect on optional cases, or the removal of the adopted prompt’s explicit bylaws exclusion. Proposal 1 is listed, but its effect on the accepted $600 billion discussions case is not identified, and its EPS example does not follow its stated steps.

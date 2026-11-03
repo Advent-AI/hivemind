@@ -1,0 +1,140 @@
+{
+  "model": "gpt-6-luna",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the deliverable. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Keep conditions and periods exactly as the texts state them. Comparison opinions are hints with scores; the texts decide. Answer in the JSON schema only."
+    },
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"The companies are considering a 30-megawatt, nearly waterless data center in Utah using Valar’s Ward250 reactor and Nvidia’s water-efficient cooling technology.\", \"one_line\": \"Valar Atomics and Nvidia are considering a 30-megawatt, nearly waterless Utah data center using the Ward250 reactor and Nvidia cooling technology.\", \"speaker\": \"Deseret News, reporting the companies’ plans\", \"original_who\": \"Valar Atomics and Nvidia\", \"original_day\": \"2026-07-01\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\", \"publisher\": \"deseret.com\", \"publisher_type\": \"media\", \"publication_day\": \"2026-07-01\", \"category\": \"T7\", \"title\": \"Valar Atomics wants to power data center using minimal water\"}, \"source_article\": \"By Eva Terry\\nValar Atomics announced a partnership with Nvidia to explore AI data centers powered directly by advanced nuclear energy, marking a first for the industry.\\nThe companies are considering a 30-megawatt, nearly waterless data center in Utah using Valar’s Ward250 reactor and Nvidia’s water-efficient cooling technology.\\nValar Atomics, founded in 2023, reached a major milestone when its reactor became the first startup-built reactor to generate nuclear power.\\nValar Atomics, an advanced nuclear power startup, announced a collaboration with Nvidia on Wednesday afternoon to explore the development of artificial intelligence data centers in Utah.\\nIf the collaboration proceeds, it will be the first time advanced nuclear energy directly powers AI.\\nFounder and CEO Isaiah Taylor invited employees, investors, government officials and others to come on site in Orangeville for the announcement. A massive American flag waved between two of Valar’s boom lifts, inviting people inside.\\nAfter walking on stage to a standing ovation, Taylor told his audience, “I started this company with a very simple belief, which is that nuclear reactors ought to be built, and that no team was moving with the conviction and tenacity required to build the future.”\\nTaylor’s company has moved quickly toward his goals.\\nAfter being founded in 2023, Valar Atomics broke ground in Orangeville, Utah, last September. Their reactor, the Ward250, went critical on June 18, and it is now generating 100 kilowatts of electricity. Its energy production marks the first time in history a startup has produced nuclear power.\\nTheir progress has been streamlined by four executive orders signed by President Donald Trump last year.\\n“When government works hand in hand to fulfill its proper function — that is, to protect the public while allowing growth and innovation — beautiful things can happen. The American way has always been a way of growth and innovation, of looking at hard problems and saying, I can solve that,\\\" Taylor said.\\nValar Atomics and Nvidia are exploring the deployment of a 30 megawatt data center, fully powered by their nuclear reactor.\\nThe Ward250’s helium cooling system, combined with Nvidia’s new technology, will allow the data center to operate with almost no water use. The proposed size is 300 times smaller than the approved Stratos data center in Box Elder County.\\nMax Ukropina, head of projects at Valar Atomics, addressed concerns about water use and electricity costs.\\n“For families in Orangeville and Emery County, and for Americans concerned about their electric and water bills, this partnership delivers concrete reassurance,” he said. “The facility will create high-skill jobs in reactor operations, data center engineering and advanced manufacturing. It will attract private capital, strengthen supply chains and generate sustained tax revenue without placing new demands on local water supplies for the broader grid.”\\nNvidia recently announced its new AI factory design, DSX, which uses a highly water-efficient direct liquid cooling system. Water pumped through the factory remains at 113°F to eliminate the need for power-hungry water chillers.\\n“We are delivering the means to expand capability without forcing Americans to choose between their power bills, their water bills or their country’s future in artificial intelligence,” Ukropina said.\\nAmericans do not need to choose between AI infrastructure and the water and power they depend on, he added. “America rejects that price. We do not believe in zero-sum games.”\\nBefore Valar Atomics can generate power commercially, the Nuclear Regulatory Commission will need to license their reactor. In a recent editorial board meeting with the Deseret News, NRC chairman Ho Nieh said the commission is hoping to shorten federal licensing review times to less than 18 months.\\nIsaiah Taylor describes the power of nuclear energy\\nA descendant of a Manhattan Institute engineer, Taylor has long been fascinated by fission.\\nHe founded his company as a 24 year old with the goal of creating nuclear reactors smaller, safer and on a factory line.\\n“Valar Atomics is the company that is done waiting for someone else to unleash the power of the atom,” he said on Wednesday. “For thousands of years, mankind has been powered by chemistry ... A gallon of gasoline is enough to drive you 20 miles in a car. A candy bar has the chemical energy to let you walk for three miles. But the strong force, the force that binds atoms together, is completely unlike anything else.”\\nHe referenced the Ward250, which sat 150 feet from him.\\n“Nuclear fission is unlike anything else found in nature. It defies all sense of proportion,” Taylor said.\\nIf the fuel in Valar Atomics’ first reactor were to be concentrated, it would form a five-inch cube. “This is enough energy to send the fully loaded Saturn V rocket and Apollo capsule to the moon 12 times. It’s enough energy to drive your car around the entire Earth 7,000 times. If you were to continuously accelerate a 100-lb craft with this quantity of energy, it would achieve 37% the speed of light,” he said.\\nThe fuel inside the Ward250 will let it continue running for 165 years, Taylor said.\\n“This is the force that we are harnessing. It is humbling and sobering and incredibly exciting,” he said.\\nLocal and state leadership applaud Valar Atomics\\nEmy Lesofski, the director of Utah’s office of energy development, told the audience in Orangeville that Valar Atomics has “met and exceeded” the expectations of the state. “We in Utah are grateful to be a part of their story and proud to be a part of America’s nuclear future.”\\nLesofski was followed on stage by an Orangeville native, state Sen. David Hinkins.\\nHinkins described Emery County’s longstanding role in Utah’s energy market.\\n“We’ve been the producing county in the state of Utah forever — ever since I was a little kid,“ he said. Hinkins referenced Castle Gate Power Plant, which was a 172-megawatt, coal-fired plant demolished in 2017. The plant ran the county’s uranium mines.\\n“We want to do everything we can to keep manufacturing here,” Hinkins said. “I want to thank everyone for being here and being supportive. Hopefully we can continue to grow — not too much, I mean, we don’t mind being invaded by California as long as they bring jobs like this.\\\"\\nFind comments in their new home! Click the buttons at the top or within the article to view them — or use the button below for quick access.\", \"other_source_records\": [{\"id\": \"item:e1\", \"quote\": \"Valar Atomics announced a partnership with Nvidia to explore AI data centers powered directly by advanced nuclear energy, marking a first for the industry.\", \"one_line\": \"Valar Atomics and Nvidia announced a partnership to explore AI data centers powered directly by advanced nuclear energy; the article describes it as an industry first.\", \"speaker\": \"Deseret News, reporting the companies’ announcement\", \"original_who\": \"Valar Atomics and Nvidia\", \"original_day\": \"2026-07-01\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e3\", \"quote\": \"Valar Atomics, founded in 2023, reached a major milestone when its reactor became the first startup-built reactor to generate nuclear power.\", \"one_line\": \"Valar Atomics’ reactor became the first startup-built reactor to generate nuclear power; the article reports this milestone on 2026-07-01.\", \"speaker\": \"Deseret News\", \"original_who\": \"\", \"original_day\": \"\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e4\", \"quote\": \"Their reactor, the Ward250, went critical on June 18, and it is now generating 100 kilowatts of electricity.\", \"one_line\": \"Valar Atomics’ Ward250 went critical on June 18, 2026, and was generating 100 kilowatts of electricity as of 2026-07-01.\", \"speaker\": \"Deseret News\", \"original_who\": \"\", \"original_day\": \"\", \"tier\": \"fact\", \"event_time\": \"2026-06-18; status reported 2026-07-01\"}, {\"id\": \"item:e5\", \"quote\": \"Their progress has been streamlined by four executive orders signed by President Donald Trump last year.\", \"one_line\": \"The article says four executive orders signed by President Donald Trump in 2025 streamlined Valar Atomics’ progress.\", \"speaker\": \"Deseret News\", \"original_who\": \"\", \"original_day\": \"\", \"tier\": \"fact\", \"event_time\": \"2025\"}, {\"id\": \"item:e6\", \"quote\": \"The proposed size is 300 times smaller than the approved Stratos data center in Box Elder County.\", \"one_line\": \"The proposed Valar Atomics–Nvidia data center is described as 300 times smaller than the approved Stratos data center in Box Elder County.\", \"speaker\": \"Deseret News\", \"original_who\": \"\", \"original_day\": \"\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e7\", \"quote\": \"Before Valar Atomics can generate power commercially, the Nuclear Regulatory Commission will need to license their reactor.\", \"one_line\": \"Valar Atomics must obtain a Nuclear Regulatory Commission license for its reactor before generating power commercially.\", \"speaker\": \"Deseret News\", \"original_who\": \"\", \"original_day\": \"\", \"tier\": \"fact\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e8\", \"quote\": \"In a recent editorial board meeting with the Deseret News, NRC chairman Ho Nieh said the commission is hoping to shorten federal licensing review times to less than 18 months.\", \"one_line\": \"NRC chairman Ho Nieh said the commission hopes to shorten federal licensing review times to less than 18 months; the editorial board meeting was described as recent, with no date given.\", \"speaker\": \"Ho Nieh, NRC chairman, quoted by Deseret News\", \"original_who\": \"Ho Nieh\", \"original_day\": \"\", \"tier\": \"party_statement\", \"event_time\": \"Recent editorial board meeting; exact date not stated\"}, {\"id\": \"item:e9\", \"quote\": \"If the fuel in Valar Atomics’ first reactor were to be concentrated, it would form a five-inch cube.\", \"one_line\": \"Isaiah Taylor said the fuel in Valar Atomics’ first reactor, if concentrated, would form a five-inch cube.\", \"speaker\": \"Isaiah Taylor, quoted by Deseret News\", \"original_who\": \"Isaiah Taylor\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e10\", \"quote\": \"“This is enough energy to send the fully loaded Saturn V rocket and Apollo capsule to the moon 12 times.\", \"one_line\": \"Isaiah Taylor said the reactor’s fuel contains enough energy to send a fully loaded Saturn V rocket and Apollo capsule to the moon 12 times.\", \"speaker\": \"Isaiah Taylor, quoted by Deseret News\", \"original_who\": \"Isaiah Taylor\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e11\", \"quote\": \"It’s enough energy to drive your car around the entire Earth 7,000 times.\", \"one_line\": \"Isaiah Taylor said the reactor’s fuel contains enough energy to drive a car around Earth 7,000 times.\", \"speaker\": \"Isaiah Taylor, quoted by Deseret News\", \"original_who\": \"Isaiah Taylor\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e12\", \"quote\": \"If you were to continuously accelerate a 100-lb craft with this quantity of energy, it would achieve 37% the speed of light,” he said.\", \"one_line\": \"Isaiah Taylor said a 100-pound craft continuously accelerated with the fuel’s energy would reach 37% of the speed of light.\", \"speaker\": \"Isaiah Taylor, quoted by Deseret News\", \"original_who\": \"Isaiah Taylor\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}, {\"id\": \"item:e13\", \"quote\": \"The fuel inside the Ward250 will let it continue running for 165 years, Taylor said.\", \"one_line\": \"Isaiah Taylor said the fuel inside the Ward250 will let it continue running for 165 years.\", \"speaker\": \"Isaiah Taylor, quoted by Deseret News\", \"original_who\": \"Isaiah Taylor\", \"original_day\": \"2026-07-01\", \"tier\": \"party_statement\", \"event_time\": \"2026-07-01\"}], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}]}}"
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "research_update",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  },
+  "max_completion_tokens": 6000,
+  "reasoning_effort": "medium"
+}

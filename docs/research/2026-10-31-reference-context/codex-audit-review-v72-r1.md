@@ -1,0 +1,11 @@
+**The added clause has one serious problem:** it can turn a plan that the standard rejects into an automatic keep.
+
+1. **Source.** A specific plan or guidance still in force can trace to the retelling boundary in [standard §5.3](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:400) and [D250 item 1](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2979). But **“the company's own statement that its plan, schedule or guidance still stands … which keeps its place as a plan in force”** is broader: the standard preserves the plan at its *original weight*, which may be “not kept” under another row.
+
+2. **Other prompt sentences.** The clause agrees with the header about retold plans and with the background row when a plan is distinct from an existing arrangement. But its apparent instruction to keep any unchanged plan can conflict with the political or strategic stance row and the [role reject list](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/role-v72.txt), including its product-detail and boilerplate rules. The review header’s “unless the line says it is kept” makes that conflict consequential.
+
+3. **Re-admission.** For example, “the company says its plan for the phone to weigh 180 grams still stands” is an unchanged plan, but its substance is a product detail without business scale, rejected by [§5.3’s product-detail row](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:394). That row and the role reject list still name the rejection, but the added keep instruction competes with them. Vague statements such as “we remain committed to our strategy” also risk being treated as plans; the strategic-stance and boilerplate rows name reasons to reject them.
+
+4. **Example.** “The carmaker said the launch date has not moved” names no covered company, specific product, or test-article number. It uses one industry, but the same idea applies to a bank, drug maker, retailer, or chip maker, consistent with [D252](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2992).
+
+**One serious finding:** the clause makes an unchanged plan sound automatically kept, even when its original weight is “not kept.”

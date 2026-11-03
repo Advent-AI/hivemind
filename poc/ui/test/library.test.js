@@ -12,7 +12,7 @@ import { current as wire } from './fixtures.js';
 
 const data = fromBundles(wire);
 
-test('D181: the whole collected library retains exact groups, identity and source records', () => {
+test('D275: the whole collected library retains exact groups, identity and source records', () => {
   assert.deepEqual(libraryCounts(data), { theses: 90, groups: 18, evidence: 519 });
   assert.equal(data.theses.filter((t) => t.identity).length, 90);
   assert.equal(librarySelection(data, { group: 'ungrouped' }).length, 50);
@@ -38,7 +38,7 @@ test('D181: the whole collected library retains exact groups, identity and sourc
   );
 });
 
-test('D181: group membership is dated and never presented as a dependency', () => {
+test('D275: group membership is dated and never presented as a dependency', () => {
   for (const g of data.groups)
     for (const m of g.members) {
       assert(!groupsFor(data, m.thesis_id, addDays(m.day, -1)).some((x) => x.id === g.id));
@@ -53,7 +53,7 @@ test('D181: group membership is dated and never presented as a dependency', () =
   assert.throws(() => parseDataset(invalid), /missing thesis/);
 });
 
-test('D181: prior assessments use prior replacement status and prior source arrivals', () => {
+test('D275: prior assessments use prior replacement status and prior source arrivals', () => {
   let judged = 0;
   for (const t of data.theses)
     for (const j of t.judgements)
@@ -72,7 +72,7 @@ test('D181: prior assessments use prior replacement status and prior source arri
   console.log(`Checked ${judged} historical citations before a recorded replacement.`);
 });
 
-test('D181: waiting dependencies resolve only from the recorded date', () => {
+test('D275: waiting dependencies resolve only from the recorded date', () => {
   const thesis = structuredClone(data.theses[0]);
   thesis.dependencies = [
     {
@@ -88,7 +88,7 @@ test('D181: waiting dependencies resolve only from the recorded date', () => {
   assert.equal(dependenciesAt(thesis, '2026-07-26')[0].depends_on, 'v3');
 });
 
-test('D181/D190: references are clickable with one bracket pair and source text stays escaped', () => {
+test('D275/D284: references are clickable with one bracket pair and source text stays escaped', () => {
   const t = data.theses.find((t) => t.evidence.length);
   const e = t.evidence[0];
   const html = assessmentText(t, `Supported by [${e.id}] (${e.id}). <script>bad</script>`);

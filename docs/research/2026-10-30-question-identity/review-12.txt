@@ -1,0 +1,17 @@
+仍有严重问题：候选逐项核对的方向是对的，但计划对归档和抽取变化的测量还有缺口。
+
+1. **严重：归档移除候选的处理，与代码实际行为不符。** [计划第 125–126 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:125)说，候选的证据全部落到已有问题 X、候选消失，可视为并入 X。但[归档代码](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:608)只有在候选列出的证据**没有一条存活**时才移除候选；证据若落到 X 并存活，候选不会因此被移除。对应的[检查函数](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:746)也是按存活的证据 ID 判断。计划第 12 节声称修好了第 11 轮的问题，但这条规则没有描述实际路径。应以真实的候选移除和证据丢失结果核对，不能把它记作成功合并。
+
+2. **严重：E 臂改变抽取后，固定候选金标不能完整检查新问题。** [计划第 125–128 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:125)的 G1 范围和跨臂身份都依赖固定抽取答案；[第 188–189 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:188)却用它评价改了抽取提示词的 E 臂和最终配置。新抽取可能漏掉原候选，也可能提出原答案没有的小问题，候选编号还可能变化。[D211](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2682)记录过两次抽样只共同提出 11 个候选中的 2 个。现有抽取金标是额外护栏，但它的必开和不该开清单也不是 G1 对新输出的逐项覆盖。需要说明如何按原文中的研究事项对应各次新输出，并检查新出现的候选；否则开题回归可能漏过。
+
+3. **严重：H1 没指出涉及“金额题与签约题”的既有边界。** [计划第 94 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:94)提出计划内单笔交易并入计划金额题，但只列 D190、D210 和标准第 4 节。现行 [PRD 06](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/06-views.md:74)要求数字问题和事件问题分开；[D210](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/DECISIONS.md:2670)也区分未签约的是否签约题与已承担义务的金额题，并记录俄亥俄签约题仍可开。v38 账本里同时有云客户担保**总额**的 v1 和俄亥俄租约是否签约的 v2；两者是否属于同一计划需按材料判断，但若属于，计划的概括仍没有告诉读者它碰到了这个已记录的边界。这是对既有决定的披露问题，不是在重新评判 Alex 的选择。
+
+4. **措辞级：**[计划第 72 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:72)直接称 v3 是 v1 的重复，而[第 94 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/plan.md:94)仍把这组问题的边界交给 H1 和金标判断。前者应标为待核的判断。
+
+第 4 轮的结构性修订**部分成立**：逐候选比较预期身份、目标和证据落点，可以抓住总数相同但错并、漏开或落错的情况，也已把同篇续期关系纳入比较；上面两项说明它还不能覆盖计划所描述的全部路径。
+
+已核实的主要事实：两本账的候选、合并和续期计数及证据计数与[普查输出](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-30-question-identity/census/admission-census.txt:1)一致。担保和融资的例子确实同时在[签字标准](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/prd/05-extraction-standard.html:314)与[碰撞提示词](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/collision-v1.txt:1)中；现有记录尚不能证明它造成 ACP 拆题或必然与 D210 冲突。H3、H4 已标出相关标准边界，H7 的倾向与 D204 保留两条证据的决定一致。
+
+我只读查询了两本账本，并读了早前质量报告、金标及历轮审查；没有发现另一个能确认不被 H1–H7 覆盖的硬例。未能独立核实计划中的每一条存档裁决、费用估计或 Alex 回答所对应的完整提问，因此不把这些记为已验证。
+
+**仍有严重问题：有。**

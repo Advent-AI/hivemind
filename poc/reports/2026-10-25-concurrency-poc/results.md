@@ -12,17 +12,17 @@ The first D172 slice works on the exercised offline paths. It has not run a paid
 
 ## Problems found and corrected
 
-1. **Concurrent duplicate requests could disagree under one archive ID.** Before the fix, two fake service calls with identical requests returned 0.2 and 0.8 but both received the same archive call ID. Before proof (local artifact: `duplicate-before.json`). The batch now shares one request result. The duplicate-dispatch mutant is caught.
+1. **Concurrent duplicate requests could disagree under one archive ID.** Before the fix, two fake service calls with identical requests returned 0.2 and 0.8 but both received the same archive call ID. [Before proof](duplicate-before.json). The batch now shares one request result. The duplicate-dispatch mutant is caught.
 2. **Queued matching work continued after failure.** The first code review found all Jev jobs were submitted before reading failures. The scheduler now maintains at most the worker count in flight and checks failed completions before submitting more. The ten-job/two-worker test confirms the other eight requests do not start. The unbounded-submission mutant is caught.
 3. **Accepted-result cost omitted discarded speculative calls.** The daily log now reads the archive's actual cost change. Restoring accepted-only cost fails its test.
 
 ## Verification
 
-- 143 tests passed in 13.46 seconds (local artifact: `tests-full.txt`): the full product suite, corpus-label tests, review controls and 15 new concurrency tests. Run from a temporary working directory.
-- Five scratch mutants caught (local artifact: `mutants-final.json`): accept a stale request; dispatch duplicate requests; reverse result application; submit all jobs despite failure; omit speculative cost. Each failed at the intended assertion.
-- 3,595 stored request identities checked (local artifact: `archive-identities.json`): 2,061 in the Jev archive and 1,534 in the generative archive, with zero changes to serialization/hash identity.
-- Preflight (local artifact: `preflight.txt`): 250 stored Jev matching records judged, zero skipped and zero refusals; existing extraction refusals remain reported. This verifies the existing checks, not new model quality.
-- Final focused review (local artifact: `../../../docs/research/2026-10-25-day-batch-review/runtime-review-2.txt`): no serious findings after bounded-submission correction. Earlier design/code findings and their reports are retained beside it.
+- [143 tests passed in 13.46 seconds](tests-full.txt): the full product suite, corpus-label tests, review controls and 15 new concurrency tests. Run from a temporary working directory.
+- [Five scratch mutants caught](mutants-final.json): accept a stale request; dispatch duplicate requests; reverse result application; submit all jobs despite failure; omit speculative cost. Each failed at the intended assertion.
+- [3,595 stored request identities checked](archive-identities.json): 2,061 in the Jev archive and 1,534 in the generative archive, with zero changes to serialization/hash identity.
+- [Preflight](preflight.txt): 250 stored Jev matching records judged, zero skipped and zero refusals; existing extraction refusals remain reported. This verifies the existing checks, not new model quality.
+- [Final focused review](../../../docs/research/2026-10-25-day-batch-review/runtime-review-2.txt): no serious findings after bounded-submission correction. Earlier design/code findings and their reports are retained beside it.
 
 The tests cover reversed completion, stale thesis and group context, schema identity, first-item failure, stale speculative failure, saved-handover recovery after rollback, source/configuration change on restart, no next-day work after failure, the English v23/Jev/group/write/judge path, request traceability, shared duplicate results, partial-call cache reuse and failure with more jobs than workers. External services are faked; storage, request builders, checks and writers are real.
 

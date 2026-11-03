@@ -1,0 +1,453 @@
+{
+  "version": "analyst-gold-v4-2026-10-29",
+  "status": "bounded_development_reference",
+  "author": "Codex; user decisions attributed per dimension",
+  "unit": "一个来源中的一个研究事项；可由多条证据表达，按 required 判完整",
+  "scope": "列明的 16 项；不是全文穷尽参照，不用于估计全周精度",
+  "routing": "仅固定研究归属；没有当时真实输入和写入记录不评下游通过",
+  "items": [
+    {
+      "id": "G01",
+      "user_question": 1,
+      "input_id": "gnews:71df54965281684cc500960f",
+      "value": "core",
+      "meaning": "分析师预计 NVIDIA 收入在本文所说的今年余下时间增长 82%，2027 年增长 41%。",
+      "why": "收入预期是判断增长是否足以支撑估值的直接依据。",
+      "required": [
+        "NVIDIA 收入增长",
+        "分析师预测，不是已实现",
+        "82% 对应今年余下时间；41% 对应 2027 年",
+        "原文未清楚定义自然年／财年口径，不自行改写"
+      ],
+      "distortions": [
+        "丢掉收入指标",
+        "写成已公布收入增速",
+        "把今年余下时间改成 FY2027 或全年"
+      ],
+      "research_family": "收入预期",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 1 题；"
+      },
+      "source_parts": [
+        "That sounds like further revenue growth ahead, and that's exactly what Wall Street analysts are projecting as well. For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%. Those are strong growth rates and will likely lead to major profits as well."
+      ]
+    },
+    {
+      "id": "G02",
+      "user_question": 2,
+      "input_id": "gnews:71df54965281684cc500960f",
+      "value": "supporting",
+      "meaning": "分析师平均预计 FY2028 EPS 为 12.76 美元，原文称该财年于 2028 年 1 月结束。",
+      "why": "远期盈利预测可用于估值情景；时间远不等于垃圾。",
+      "required": [
+        "NVIDIA EPS 12.76 美元",
+        "分析师平均预测",
+        "FY2028；不能与 2028 自然年偷换",
+        "不添加原文没有的 GAAP／调整后口径"
+      ],
+      "distortions": [
+        "变成公司指引或实际利润",
+        "自行指定 GAAP",
+        "原预测日期未知却当已知日期"
+      ],
+      "research_family": "远期盈利与估值",
+      "authority": {
+        "selection": "user_correction_D216",
+        "value": "analyst_judgement",
+        "grouping": "analyst_judgement",
+        "note": "用户更正为可以保留；辅助等级由本次授权的分析师判断确定。"
+      },
+      "source_parts": [
+        "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share. I think that's a conservative estimate, because the analyst community has consistently underprojected Nvidia's growth."
+      ]
+    },
+    {
+      "id": "G03",
+      "user_question": 3,
+      "input_id": "gnews:fbce0469dbb5b33e2c34a0f5",
+      "value": "core",
+      "meaning": "SK hynix 预计 2027 年是内存短缺最严重的一年，短缺延续到 2030 年。",
+      "why": "供给瓶颈会限制硬件交付和改变成本。",
+      "required": [
+        "SK hynix 的预测",
+        "2027 年最严重",
+        "短缺持续至 2030 年"
+      ],
+      "distortions": [
+        "当成已经证实的未来事实",
+        "直接推定 NVIDIA 所有产品都无法交货"
+      ],
+      "research_family": "供给瓶颈",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 3 题；"
+      },
+      "source_parts": [
+        "Nvidia used to supply VRAM chips alongside GPU dies to its board partners, but it changed this policy in late 2025 as the memory chip crisis unfolded. Because of this, the companies that complete the final assembly of the graphics cards are forced to source their own memory chips in an increasingly competitive market. SK hynix, one of the big three memory chip manufacturers, even says that 2027 is set to be the “worst year” for the memory shortage and said that the crunch will last until 2030."
+      ]
+    },
+    {
+      "id": "G04",
+      "user_question": 4,
+      "input_id": "gnews:55b3b854d30ecb73679c2088",
+      "value": "supporting",
+      "meaning": "BofA 转述 AMD 模型：100kW 机柜场景下，EPYC 9965 对 Vera 吞吐量约 2.4 倍，EPYC 6 预计约 3.3 倍。",
+      "why": "可作为竞争判断的证据，但不是独立实测胜负。",
+      "required": [
+        "BofA 转述 AMD 自己的估计",
+        "100kW 机柜吞吐量口径",
+        "EPYC 9965 / Turin 约 2.4 倍 Vera",
+        "EPYC 6 / Venice 预计约 3.3 倍"
+      ],
+      "distortions": [
+        "改为独立测试",
+        "把机柜吞吐量当单芯片性能",
+        "把未来型号估计当现有实测"
+      ],
+      "research_family": "CPU 竞争",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 4 题；"
+      },
+      "source_parts": [
+        "AMD's numbers on a raw throughput basis are harder to dismiss. BofA notes that AMD estimates its EPYC 9965 (Turin) chip delivers approximately 2.4x the rack-level throughput of NVIDIA's Vera baseline in a modeled 100kW deployment, with the next-generation EPYC 6 (Venice) projected to extend that advantage to roughly 3.3x total throughput, according to BofA's characterization of AMD's own estimates. Those figures anchor AMD's competing framework. \"NVDA's framework is rooted in latency, per-thread progress, and GPU utilization. AMD's framework is rooted in concurrency, throughput, and service density,\" BofA wrote."
+      ]
+    },
+    {
+      "id": "G05",
+      "user_question": 5,
+      "input_id": "gnews:1eeceeb212a2c82c2e75e806",
+      "value": "exclude",
+      "meaning": "本篇新加坡服务器转运案件概况，最终去向与 NVIDIA 责任尚不清楚。",
+      "why": "用户明确不要本条案件概况；不推成排除全部出口限制新闻。",
+      "required": [],
+      "distortions": [
+        "从可能含 NVIDIA 芯片推定 NVIDIA 参与违法",
+        "从可能最终到中国推定已查实"
+      ],
+      "research_family": "本次排除",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 5 题；只排除此案件概况，不把个人资产子项冒充用户另行裁定。"
+      },
+      "source_parts": [
+        "Investigators allege that four individuals deliberately concealed the actual end-user of servers thought to contain advanced Nvidia AI chips.",
+        "Authorities say that the servers in question, which may have contained advanced Nvidia AI chips, were shipped from Singapore to Malaysia . Although it is unclear whether this was their ultimate destination, some media reports suggested that they may have been destined for China."
+      ]
+    },
+    {
+      "id": "G06",
+      "user_question": 6,
+      "input_id": "gnews:f9e7da6ddbf890fa64baf922",
+      "value": "supporting",
+      "meaning": "包括 NVIDIA 的 25 家公司联名反对过早限制开放权重模型。",
+      "why": "行业政策诉求可帮助判断模型生态和需求风险。",
+      "required": [
+        "包括 NVIDIA 的公司联名",
+        "反对过早限制开放权重模型",
+        "属于立场，不是已出台法规"
+      ],
+      "distortions": [
+        "改成政府已取消限制"
+      ],
+      "research_family": "政策与需求",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 6 题；合并回答 B 按三个子项均为辅助解释。"
+      },
+      "source_parts": [
+        "A group of 25 tech companies released a letter urging policymakers to avoid \"premature restrictions\" on open-weight AI models.",
+        "Nvidia , Microsoft , Meta , Palantir and more than 20 other companies released a letter Friday urging policymakers to avoid \"premature restrictions\" on open-weight artificial intelligence models that would \"stifle competition or drive innovation overseas.\""
+      ]
+    },
+    {
+      "id": "G07",
+      "user_question": 6,
+      "input_id": "gnews:f9e7da6ddbf890fa64baf922",
+      "value": "supporting",
+      "meaning": "Bessent 表示将调查中国公司是否窃取美国知识产权，并称政府有制裁能力。",
+      "why": "潜在制裁是需求和政策风险线索。",
+      "required": [
+        "Bessent 的表态",
+        "调查是否窃取知识产权",
+        "有制裁能力，不等于制裁已实施"
+      ],
+      "distortions": [
+        "写成已确定窃取",
+        "写成已经实施制裁"
+      ],
+      "research_family": "政策风险",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 6 题；合并回答 B 按三个子项均为辅助解释。"
+      },
+      "source_parts": [
+        "Moonshot AI, a Chinese startup, amplified concerns earlier this month after releasing a model called Kimi K3 that outperforms cutting-edge American offerings across some industry benchmarks. U.S. Treasury Secretary Scott Bessent told CNBC on Tuesday that the Trump administration would look into whether Chinese companies were stealing American intellectual property, and stated that the government has \"the ability to sanction them because of this theft.\""
+      ]
+    },
+    {
+      "id": "G08",
+      "user_question": 6,
+      "input_id": "gnews:f9e7da6ddbf890fa64baf922",
+      "value": "supporting",
+      "meaning": "Kratsios 指称 Kimi K3 蒸馏 Anthropic，并区分有益的合法蒸馏与隐蔽工业窃取。",
+      "why": "界定潜在限制针对什么行为，不能简单推出全面禁止蒸馏。",
+      "required": [
+        "Kratsios 的指称而非已证实事实",
+        "Kimi K3 与 Anthropic 的关系是其说法"
+      ],
+      "distortions": [
+        "把所有蒸馏都说成违法",
+        "把指称改成确认事实"
+      ],
+      "research_family": "政策边界",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 6 题；合并回答 B 按三个子项均为辅助解释。"
+      },
+      "source_parts": [
+        "White House advisor Michael Kratsios on Wednesday said that China's Moonshot AI developed its Kimi K3 model by distilling Anthropic's technology. Distillation is a term for an AI training method where a smaller, less capable model is built using outputs from an existing, stronger model.",
+        "Kratsios wrote in a post on X that legitimate AI distillation plays a vital role in the open innovation ecosystem, but warned that \"large-scale, covert industrial distillation aimed at stealing proprietary U.S. technology\" is \"unacceptable.\""
+      ],
+      "context_not_required": "同篇区分合法蒸馏与隐蔽窃取；这是反对一概而论的背景，不要求每次复述本条指称都额外摘录。"
+    },
+    {
+      "id": "G09",
+      "user_question": 7,
+      "input_id": "gnews:71df54965281684cc500960f",
+      "value": "core",
+      "meaning": "NVIDIA 管理层预计云巨头资本支出 2026 年 6500 亿美元，2027 年超过 1 万亿美元。",
+      "why": "衡量客户整体投入与潜在需求，不是 NVIDIA 自身收入。",
+      "required": [
+        "管理层在此前季度电话会的预测",
+        "云巨头支出，不是 NVIDIA 收入",
+        "2026 年约 6500 亿美元",
+        "2027 年超过 1 万亿美元"
+      ],
+      "distortions": [
+        "把客户全部支出转成 NVIDIA 收入",
+        "当成已经发生",
+        "以文章发表日冒充电话会日"
+      ],
+      "research_family": "客户投入与需求",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 7 题；"
+      },
+      "source_parts": [
+        "During its last quarterly conference call, management forecast that it expects hyperscaler spending to top $1 trillion in 2027 after reaching a projected $650 billion in 2026 ."
+      ]
+    },
+    {
+      "id": "G10",
+      "user_question": 8,
+      "input_id": "gnews:8c9d215416b714064de3b095",
+      "value": "supporting",
+      "meaning": "Omniverse 免费开发、生产和再分发；企业支持服务仍需付费订阅。",
+      "why": "影响采用门槛和收费方式，不能直接认作收入增长。",
+      "required": [
+        "Omniverse 生产使用与再分发免费",
+        "企业支持仍要 NVIDIA AI Enterprise 订阅",
+        "不把免费使用与免费企业支持混淆"
+      ],
+      "distortions": [
+        "写成所有服务免费",
+        "自动推断已增加收入或采用量"
+      ],
+      "research_family": "软件采用与收费",
+      "authority": {
+        "selection": "user_decision",
+        "value": "user_decision",
+        "grouping": "analyst_judgement",
+        "note": "第 8 题；"
+      },
+      "source_parts": [
+        "NVIDIA has dropped the subscription requirement for Omniverse . The platform is now free for development, production, and redistribution, with no NVIDIA AI Enterprise subscription required. For a product that carried a $4,500-per-GPU-per-year list price under NVIDIA AI Enterprise, and whose Nucleus server pricing prompted a developer forum thread titled “Pricing: $25,000 for the nucleus server!?”, this is one of the larger licensing resets NVIDIA has made. It’s great news for the community, but it was announced very quietly via a forum sticky.",
+        "Licensing documentation was updated to read “As of May 2026, Omniverse is freely available for both development and production use,” and a short announcement was posted to the NVIDIA Developer Forums on July 1. Two days later, the announcement threads had zero replies, which says less about interest than about how few people know about them. The timing is intuitive though: SIGGRAPH 2026 runs July 19 to 23 in Los Angeles, and NVIDIA has a full slate of OpenUSD, neural rendering, and physical AI sessions on the schedule. Expect the licensing change to get a more formal introduction there.",
+        "The catch, such as it is, sits in support. Without a subscription, support is limited to community channels, meaning the Developer Forums and Discord. Organizations that want enterprise support SLAs still buy NVIDIA AI Enterprise through a reseller or CSP marketplace. Partners who redistribute Omniverse within commercial products can use an embedded licensing model in which the partner handles front-line support, and NVIDIA provides back-line support. In practice, NVIDIA has moved Omniverse from a licensed product to a free platform with a paid support add-on, the same model as most open-source infrastructure businesses, minus the open source."
+      ]
+    },
+    {
+      "id": "G11",
+      "user_question": 9,
+      "input_id": "gnews:3854aeddaa3f31de00cf2816",
+      "value": "supporting",
+      "meaning": "Sharon AI 六年协议覆盖澳大利亚 72MW 新容量，最多 4 万颗 GB300。",
+      "why": "体现需求和部署计划；有执行风险，属于供需辅助证据。",
+      "required": [
+        "Sharon AI 六年协议",
+        "澳大利亚新增容量 72MW",
+        "最多 40000 颗 Grace Blackwell GB300，计划上限而非已交付"
+      ],
+      "distortions": [
+        "当成已经部署完成",
+        "把 Digital Alpha 的 2 亿美元写成 NVIDIA 担保",
+        "当成 NVIDIA 已支付金额"
+      ],
+      "research_family": "供给需求",
+      "authority": {
+        "selection": "user_decision",
+        "value": "analyst_judgement",
+        "grouping": "user_decision",
+        "note": "第 9 题原话为“辅助属于供给需求”。沿用历史记录的保守区分：用户确定归属，本次将辅助映射为 supporting；不宣称用户另行指定了评分权重。"
+      },
+      "source_parts": [
+        "In an 8-K filing dated June 12th, Sharon AI disclosed that the agreement runs for six years and covers 72 MW of new Australian data center capacity built to Nvidia's DSX AI factory design, scaling to as many as 40,000 Grace Blackwell GB300 GPUs. The Nasdaq-listed neocloud separately holds a revenue-share facility of up to $200 million with investor Digital Alpha, disclosed in its CY25 results, meaning portions of its income are now pledged in two directions. Meanwhile, Firmus is building a DSX-aligned campus in Batam, Indonesia, that’s expected to scale to 360 MW and house up to 170,000 Nvidia GPUs."
+      ]
+    },
+    {
+      "id": "G12",
+      "user_question": 10,
+      "input_id": "gnews:c75f16a6d64cc27fc28fb571",
+      "value": "supporting",
+      "meaning": "SemiAnalysis 称，NVIDIA 因客户反对把两个机柜作为一个单元运行而取消 NVL72x2 过渡方案。",
+      "why": "产品选择减少影响大规模部署；与 Kyber 相关但不是同一产品。",
+      "required": [
+        "SemiAnalysis 报道的说法",
+        "NVL72x2 双 Oberon 机柜过渡方案取消",
+        "客户反对把两柜作为一个单元运行"
+      ],
+      "distortions": [
+        "等同 Kyber 本体取消",
+        "推定所有 Rubin 产品延期",
+        "把报道当 NVIDIA 确认"
+      ],
+      "research_family": "产品进度",
+      "authority": {
+        "selection": "user_decision",
+        "value": "analyst_judgement",
+        "grouping": "user_decision",
+        "note": "第 10 题明确归产品进度；辅助等级由本次授权确定。"
+      },
+      "source_parts": [
+        "NVL72x2 would have bolted two Oberon racks back-to-back to reach Kyber-class density over copper NVLink, per SemiAnalysis , which said Nvidia abandoned the stopgap after its largest customers balked at running two linked cabinets as a single unit. NVL576, a separate configuration tying eight racks together through co-packaged optics, is likely to slip too or ship in low volume until that optical technology matures.",
+        "Update 7/6/2026 4:10pm PT : An Nvidia representative responded with a short statement to Tom's Hardware : \"Our roadmap is intact.\" Nvidia provided no further details in response to our follow-up questions. As such, it is unclear if Nvidia's statement refers to its original roadmap, planned delivery schedules, and hardware, or if those particulars had already been changed and the statement refers to a newly updated roadmap."
+      ],
+      "context_not_required": "NVIDIA 回应路线图完整，未直接澄清这一细项。归因准确地复述取消报道就可算本事项完整；不得把模糊回应解释成已证实或已推翻。"
+    },
+    {
+      "id": "G13",
+      "user_question": 11,
+      "input_id": "gnews:96e365fac0c2d3275358c1ea",
+      "value": "supporting",
+      "meaning": "Google Cloud Q2 收入 248 亿美元、同比增长 82%，订单积压超过 5000 亿美元。",
+      "why": "同时观察客户业务增长和在手需求；三个侧面按用户要求计一个事项。",
+      "required": [
+        "Google Cloud Q2 收入 248 亿美元",
+        "收入同比增长 82%",
+        "订单积压超过 5000 亿美元",
+        "收入与积压存量不同，不互换"
+      ],
+      "distortions": [
+        "只保留其中一个数字却计完整",
+        "自动等于 NVIDIA 订单",
+        "把积压写成当季确认收入"
+      ],
+      "research_family": "客户财务与需求",
+      "authority": {
+        "selection": "analyst_judgement",
+        "value": "analyst_judgement",
+        "grouping": "user_decision",
+        "note": "第 11 题用户要求一条；辅助等级由本次授权确定。"
+      },
+      "source_parts": [
+        "Alphabet is getting an enormous boost from AI demand as well, but it’s not as evident amid its advertising sales. In Q2, the company’s Google Cloud business enjoyed 82% year-over-year revenue growth to $24.8 billion, and its backlog of customer orders rose to over half a trillion dollars, up from $462 billion in Q1. Google Cloud is the division where customers can pay to access Alphabet’s proprietary AI models, and its rapid sales expansion demonstrates the company is successfully capturing its share of clients in the burgeoning AI market."
+      ]
+    },
+    {
+      "id": "G14",
+      "user_question": null,
+      "input_id": "gnews:71df54965281684cc500960f",
+      "value": "supporting",
+      "meaning": "作者用 FY2028 EPS 12.76 美元乘 25 倍估值得出该财年末 319 美元的条件估值。",
+      "why": "把盈利预期与价格联系成可检验的投资论证；不是因有目标价就丢弃。",
+      "required": [
+        "作者的估值情景",
+        "FY2028 EPS 12.76 美元假设",
+        "25 倍盈利估值假设",
+        "319 美元条件结果，非保证回报"
+      ],
+      "distortions": [
+        "只留目标价不留推导条件",
+        "写成公司承诺价格或确定达到"
+      ],
+      "research_family": "估值论证",
+      "authority": {
+        "selection": "analyst_judgement",
+        "value": "analyst_judgement",
+        "grouping": "analyst_judgement",
+        "note": "本次用户授权订标准；与 G02 不同问题：G02 是盈利预测，G14 是在此基础上的估值论证；不将二者合成总分。"
+      },
+      "source_parts": [
+        "For fiscal 2028, ending January 2028, the average analyst projects $12.76 in earnings per share. I think that's a conservative estimate, because the analyst community has consistently underprojected Nvidia's growth.",
+        "If we use that figure and value the stock at a reasonable earnings multiple of 25, the projected share price at the end of fiscal 2028 is $319. As a result, I think the stock could easily reach $300 per share sometime in late 2027."
+      ]
+    },
+    {
+      "id": "G15",
+      "user_question": null,
+      "input_id": "gnews:2934d9634471f3560f8697e0",
+      "value": "optional",
+      "meaning": "作者称最近八次财报中五次之后股价立即明显下跌，虽然财报增长强劲。",
+      "why": "可辅助理解市场预期与价格反应；不是业务恶化的直接证据。",
+      "required": [
+        "作者统计最近八次中的五次",
+        "财报后价格反应",
+        "不能推出财报造成下跌或未来必跌"
+      ],
+      "distortions": [
+        "推定收入已经恶化",
+        "推定下一次财报后必跌"
+      ],
+      "research_family": "市场预期背景",
+      "authority": {
+        "selection": "analyst_judgement",
+        "value": "analyst_judgement",
+        "grouping": "analyst_judgement",
+        "note": "留与不留不扣选择分；若保留仍须检查是否说错。"
+      },
+      "source_parts": [
+        "It can also set the company up to experience a major share price drop if it reports anything less than stellar earnings. Nvidia doesn't seem to have that problem. In fact, it almost faces the opposite issue: Over the past two years, Nvidia's earnings reports have been stellar, with massive growth in revenue and net income. Yet after five of its last eight earnings reports, the stock has seen an immediate and significant share price decline ."
+      ]
+    },
+    {
+      "id": "G16",
+      "user_question": null,
+      "input_id": "gnews:4b34a84a492cb836ad1ba1ed",
+      "value": "exclude",
+      "meaning": "Equiti 经纪商的注册号、注册地址等网页尾部公司信息。",
+      "why": "与本次 NVIDIA 研究无关，属于网站模板。",
+      "required": [],
+      "distortions": [
+        "把网站运营商当 NVIDIA 业务伙伴"
+      ],
+      "research_family": "本次排除",
+      "authority": {
+        "selection": "analyst_judgement",
+        "value": "analyst_judgement",
+        "grouping": "analyst_judgement",
+        "note": "仅此模板，不否定文章正文。"
+      },
+      "source_parts": [
+        "Equiti Brokerage (Seychelles) Limited is a company incorporated with limited liability under the laws of the Republic of Seychelles, under registration number 8428558-1, with its registered address at First Floor, Marina House, Eden Island, Republic of Seychelles."
+      ]
+    }
+  ]
+}

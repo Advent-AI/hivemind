@@ -28,6 +28,7 @@ ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_AP
 # the published rate; the token columns are the measurement, the bill is the provider's.
 PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
           'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+CACHED_INPUT_SHARE = 0.10          # cached input tokens are priced at 10% of the input rate (gpt-6-luna page, read again 2026-10-27)
 
 SCHEMA_SQL = """
 create table if not exists model_calls (
@@ -85,6 +86,14 @@ class Archive:
                 return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
             return cursor.lastrowid
 
+    def retire(self, call_id):
+        """A code check refused this answer: the row stays for the record, but no later identical request is answered with it
+        (the same shape as a schema-refused or malformed row, whose hash carries a suffix)."""
+        with self.lock:
+            self.conn.execute("update model_calls set request_sha256 = request_sha256 || ':refused:' || ? where call_id=? and request_sha256 not like '%:refused:%'",
+                              (uuid.uuid4().hex[:8], call_id))
+            self.conn.commit()
+
     def totals(self):
         with self.lock:
             return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()
@@ -116,7 +125,7 @@ def build_request(setting, system, user, schema, schema_name, provider):
     return request
 
 
-def openai_transport(provider, request, timeout=600):
+def openai_transport(provider, request, timeout=180):   # the slowest honest answers take about 40 s (judge) to 60 s; a call past 180 s is a stalled server and is retried (2026-11-02)
     url, _ = ENDPOINTS[provider]
     body = json.dumps(request).encode('utf-8')
     headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
@@ -136,15 +145,19 @@ def openai_transport(provider, request, timeout=600):
     raise TransportError(last or 'no answer')
 
 
-def check_schema(value, schema, path='$'):
+def check_schema(value, schema, path='$', root=None):
     """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
-    array/items, string/enum/pattern, integer, number, boolean, null in anyOf."""
+    array/items/minItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
+    root = root if root is not None else schema
+    if '$ref' in schema:
+        name = schema['$ref'].rsplit('/', 1)[1]
+        schema = root['$defs'][name]
     kind = schema.get('type')
     if 'anyOf' in schema:
         # a value matching no option reports the closest options' errors (fewest), not merely the last option's
         failures = []
         for option in schema['anyOf']:
-            errors = check_schema(value, option, path)
+            errors = check_schema(value, option, path, root)
             if not errors:
                 return []
             failures.append(errors)
@@ -161,7 +174,7 @@ def check_schema(value, schema, path='$'):
         properties = schema.get('properties', {})
         for name, item in value.items():
             if name in properties:
-                errors.extend(check_schema(item, properties[name], f'{path}.{name}'))
+                errors.extend(check_schema(item, properties[name], f'{path}.{name}', root))
             elif schema.get('additionalProperties') is False:
                 errors.append(f'{path}.{name}: not allowed')
         return errors
@@ -169,8 +182,10 @@ def check_schema(value, schema, path='$'):
         if not isinstance(value, list):
             return [f'{path}: expected array']
         errors = []
+        if len(value) < schema.get('minItems', 0):
+            errors.append(f'{path}: fewer than {schema["minItems"]} items')
         for index, item in enumerate(value):
-            errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]'))
+            errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]', root))
         return errors
     if kind == 'string':
         if not isinstance(value, str):
@@ -191,11 +206,16 @@ def check_schema(value, schema, path='$'):
     return []
 
 
+def request_identity(request):
+    """The exact serialized request and its archive key, shared by callers and validation."""
+    encoded = json.dumps(request, sort_keys=True, ensure_ascii=False)
+    return encoded, hashlib.sha256(encoded.encode('utf-8')).hexdigest()
+
+
 def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, transport=None):
     provider = cfg.provider
     request = build_request(setting, system, user, schema, schema_name, provider)
-    request_json = json.dumps(request, sort_keys=True, ensure_ascii=False)
-    sha = hashlib.sha256(request_json.encode('utf-8')).hexdigest()
+    request_json, sha = request_identity(request)
     hit = archive.lookup(sha)
     prompt_chars = len(system) + len(user)
     if hit:
@@ -217,8 +237,9 @@ def call(archive, cfg, setting, system, user, schema, schema_name, purpose, *, t
     usage = response.get('usage') or {}
     input_tokens = int(usage.get('prompt_tokens') or 0)
     output_tokens = int(usage.get('completion_tokens') or 0)
+    cached_tokens = min(input_tokens, int((usage.get('prompt_tokens_details') or {}).get('cached_tokens') or 0))
     price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
-    cost = round(input_tokens / 1e6 * price_in + output_tokens / 1e6 * price_out, 6)
+    cost = round((input_tokens - cached_tokens) / 1e6 * price_in + cached_tokens / 1e6 * price_in * CACHED_INPUT_SHARE + output_tokens / 1e6 * price_out, 6)
     call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
                              request_sha256=sha if not errors else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
                              response_json=json.dumps(response)[:200000], answer_json=json.dumps(data, ensure_ascii=False),

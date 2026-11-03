@@ -1,8 +1,8 @@
-# D194: explicit Idea impact weights
+# D288: explicit Idea impact weights
 
-Historical contract: D196 supersedes its zero-weight/exclusion representation. The current contract is [positive-weight selection](positive-weight-selection.md).
+Historical contract: D290 supersedes its zero-weight/exclusion representation. The current contract is [positive-weight selection](positive-weight-selection.md).
 
-Alex requested model-returned impact percentages for the connected theses, visible in their card headers, summing to 100%, with deterministic weighted composite history. This replaces D188's equal-weight rule, not its fixed selection or endpoint direction rules.
+Alex requested model-returned impact percentages for the connected theses, visible in their card headers, summing to 100%, with deterministic weighted composite history. This replaces D282's equal-weight rule, not its fixed selection or endpoint direction rules.
 
 ## Scope and existing path
 
@@ -72,6 +72,6 @@ Self-review against the tables: selection changes, related 0% cards, missing his
 
 Transport recovery: the sixth attempted sample failed inside TLS `do_handshake`, before HTTP headers or body could be sent. Five completed answers are retained. Recover only that unissued request after a connection health check, requiring its archive to be empty. The six completed-model-call limit and $0.035 ceiling remain unchanged; this is not a repeat of a model answer or a semantic retry.
 
-## D195 clarification
+## D289 clarification
 
-Alex explicitly wants the model to choose the participating theses and their weights. Fresh-sample allocation differences are not a reason to force a particular basket or allocation. Do not add the proposed horizon-based inclusion rule or another tuning arm. The v31 path removes the legacy three-driver display cap while preserving identity and percentage validation. The six completed D194 samples are retained as returned.
+Alex explicitly wants the model to choose the participating theses and their weights. Fresh-sample allocation differences are not a reason to force a particular basket or allocation. Do not add the proposed horizon-based inclusion rule or another tuning arm. The v31 path removes the legacy three-driver display cap while preserving identity and percentage validation. The six completed D288 samples are retained as returned.

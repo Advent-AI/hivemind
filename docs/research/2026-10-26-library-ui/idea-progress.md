@@ -1,4 +1,4 @@
-# D187: live Idea progress timeline
+# D281: live Idea progress timeline
 
 The pending card currently has one Reading chip and one static status sentence. The service returns only final JSON, so the browser cannot know when stages change. Replace this entire pending presentation with a vertical connected list. These are public task stages, never model reasoning text or invented timed steps.
 
@@ -26,7 +26,7 @@ read_idea owns stage boundaries; HTTP writes the NDJSON envelope; readIdea parse
 
 ## New path × checks and prior decisions
 
-D184/D186 own answered-card analysis; D185 composite is untouched. D135/D145/D186 model requests remain exact. Test real stored-ledger stage order and unchanged result; HTTP streaming at its public entry; stream framing across chunk and Unicode boundaries, errors/early termination, JSON fallback; UI list append/current state; abort/stale response handling stays bootstrap-owned. Use cached model calls or fake external model/HTTP only, no paid experiment. Verify pending preview and completed card in the browser, no header chip, connected nodes and motion. Source hashes must stay unchanged. Run touched/full suites once and docs/check.py after the reasoning refresh.
+D278/D280 own answered-card analysis; D279 composite is untouched. D135/D145/D280 model requests remain exact. Test real stored-ledger stage order and unchanged result; HTTP streaming at its public entry; stream framing across chunk and Unicode boundaries, errors/early termination, JSON fallback; UI list append/current state; abort/stale response handling stays bootstrap-owned. Use cached model calls or fake external model/HTTP only, no paid experiment. Verify pending preview and completed card in the browser, no header chip, connected nodes and motion. Source hashes must stay unchanged. Run touched/full suites once and docs/check.py after the reasoning refresh.
 
 ## D22 reasoning refresh
 

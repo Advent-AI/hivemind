@@ -55,17 +55,22 @@ def test_invalid_period_does_not_reach_writer():
 
 
 def test_event_type_distinguishes_search_identity_and_merge(tmp_path):
-    """B class: a product's announcement and shipment are distinct events at every reader."""
+    """B class, narrowed by D248 item 3: a product generation's launch and shipment are one question (a launch may merge into the open
+    shipment question when the model says they are the same event), but they are never the same exact key (search identity), and
+    a deployment stays a distinct event at every reader."""
     conn = store.open_db(str(tmp_path / 'views.sqlite'))
     ship = candidate('c1', measure='event', scope='Rubin', scope_source='watch', event_type='shipment')
     vid = writing.write(conn, UNIVERSE, 1, ITEM, handover([ship]), checked_new([ship]), {}).new_views['c1']
     launch = dict(ship, id='c2', event_type='launch')
     assert matching.key_matches(conn, launch) == []
     assert not matching._same_key(store.view_key(conn, vid), launch, 'NVDA')
-    for outcome, target in [('new', ''), ('merge', vid)]:
-        raw = {'candidates': [{'id': 'c2', 'outcome': outcome, 'target_view_id': target, 'dependencies': []}], 'evidence': []}
-        result = matching.check(conn, UNIVERSE, raw, [launch], [], matching.Lists({'c2': [vid]}, {}), [])
-        assert result.outcomes['c2'][0] == 'new'
+    says_new = {'candidates': [{'id': 'c2', 'outcome': 'new', 'target_view_id': '', 'dependencies': []}], 'evidence': []}
+    assert matching.check(conn, UNIVERSE, says_new, [launch], [], matching.Lists({'c2': [vid]}, {}), []).outcomes['c2'][0] == 'new'   # no automatic merge by key
+    says_merge = {'candidates': [{'id': 'c2', 'outcome': 'merge', 'target_view_id': vid, 'dependencies': []}], 'evidence': []}
+    assert matching.check(conn, UNIVERSE, says_merge, [launch], [], matching.Lists({'c2': [vid]}, {}), []).outcomes['c2'][:2] == ('merge', vid)
+    deployment = dict(ship, id='c3', event_type='deployment')
+    says_merge = {'candidates': [{'id': 'c3', 'outcome': 'merge', 'target_view_id': vid, 'dependencies': []}], 'evidence': []}
+    assert matching.check(conn, UNIVERSE, says_merge, [deployment], [], matching.Lists({'c3': [vid]}, {}), []).outcomes['c3'][0] == 'new'
 
 
 def test_same_answer_coalesces_without_losing_evidence(tmp_path):

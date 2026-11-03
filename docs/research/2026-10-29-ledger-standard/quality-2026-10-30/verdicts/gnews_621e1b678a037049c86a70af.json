@@ -1,0 +1,98 @@
+{
+ "input_id": "gnews:621e1b678a037049c86a70af",
+ "statements": [
+  {
+   "id": "e1",
+   "worth": "marginal",
+   "worth_reason": "NVIDIA's fiscal Q2 revenue of $96.2B and data-centre growth of 117% are the anchor numbers for the revenue questions, but on 2026-09-04 they restate a quarter NVIDIA already reported, so the ledger gains little (section 5.3: a restated past actual is optional).",
+   "one_line_ok": false,
+   "one_line_problem": "Wrong period label: the one_line (and event_time) copy \"Q2 2027\" without 'fiscal'; the article's own context (\"fiscal 2028 (ending January 2028)\") shows this is fiscal Q2 FY2027, the quarter ended July 2026, while \"Q2 2027\" as written reads as calendar April-June 2027, a future quarter.",
+   "who_ok": true,
+   "day_ok": true,
+   "day_note": "The article gives no report date for the quarter; original_day blank (unknown) is right.",
+   "tier_ok": true,
+   "tier_note": null,
+   "duplicate_of": null
+  },
+  {
+   "id": "e2",
+   "worth": "keep",
+   "worth_reason": "Company guidance of 89% growth next quarter and 70% for FY2028 plus 'still capacity-constrained' is still-valid forward guidance on the main driver and directly locates the FY2028 revenue answer (D243 #6: restated guidance keeps its weight).",
+   "one_line_ok": true,
+   "one_line_problem": null,
+   "who_ok": true,
+   "day_ok": false,
+   "day_note": "event_time is 2026-09-04, the report day; the guidance was given earlier (at the fiscal Q2 results, date not stated in the article), so the day is unknown and the periods covered are next quarter (fiscal Q3 FY2027) and FY2028.",
+   "tier_ok": true,
+   "tier_note": null,
+   "duplicate_of": null
+  },
+  {
+   "id": "e3",
+   "worth": "noise",
+   "worth_reason": "The Groq deal is old, well-known background for an NVIDIA analyst and the sentence is the author's framing with no new term, amount or date, so it changes no answer.",
+   "one_line_ok": false,
+   "one_line_problem": "Lost hedge / says more than the quote: the author wrote \"acquisition\" in quotation marks, signalling it was not a straightforward acquisition, but the one_line states flatly that \"Nvidia had acquired Groq\".",
+   "who_ok": true,
+   "day_ok": false,
+   "day_note": "event_time 2026-09-04 is the report day; the deal itself happened earlier and the article gives no date, so unknown.",
+   "tier_ok": true,
+   "tier_note": null,
+   "duplicate_of": null
+  },
+  {
+   "id": "e4",
+   "worth": "marginal",
+   "worth_reason": "NVIDIA's forward P/E of 14x FY2028 estimates is what the market prices, useful context for stance but optional under the standard (D243 #4: the covered company's valuation multiple is optional).",
+   "one_line_ok": true,
+   "one_line_problem": null,
+   "who_ok": true,
+   "day_ok": true,
+   "day_note": null,
+   "tier_ok": true,
+   "tier_note": null,
+   "duplicate_of": null
+  },
+  {
+   "id": "e5",
+   "worth": "keep",
+   "worth_reason": "A memory maker's forecast that DRAM stays supply-constrained through at least 2030 bears on HBM supply and cost, a key input for NVIDIA's gross margin and shipments (standard 5.1 example and section 6 core example).",
+   "one_line_ok": true,
+   "one_line_problem": null,
+   "who_ok": true,
+   "day_ok": false,
+   "day_note": "event_time 2026-09-04 is the report day; the article says only \"Rival SK Hynix has predicted\" with no date, so the day SK Hynix said it is unknown; the forecast period is through at least 2030.",
+   "tier_ok": false,
+   "tier_note": "party_statement: SK Hynix is a company making a management statement about its own market, not an analyst, media or expert opinion.",
+   "duplicate_of": null
+  }
+ ],
+ "missed": [
+  {
+   "quote": "Rival SK Hynix has predicted that the DRAM market will remain supply-constrained through at least 2030, while Micron and its rivals have begun to lock in long-term contracts for up to five years for the first time ever.",
+   "why": "The second clause, memory makers locking in contracts of up to five years for the first time, is a new structural change in how NVIDIA's key input (HBM/DRAM) is priced and allocated; e5 quotes only the first clause and drops it.",
+   "importance": "medium"
+  },
+  {
+   "quote": "The company saw its revenue last quarter surge to $41.5 billion from $9.3 billion a year ago, while its gross margin expanded to 84.6% from 37.7%.",
+   "why": "Micron's revenue and an 84.6% gross margin quantify memory pricing power, the cost pressure on NVIDIA's HBM bill and gross margin; a supplier's operating numbers are auxiliary under section 6.",
+   "importance": "medium"
+  }
+ ],
+ "questions": [
+  {
+   "id": "c1",
+   "sensible": true,
+   "reason": "FY2028 is NVIDIA's next fiscal year and its revenue growth, guided at 70% here, is the most position-relevant quantity; but per the standard's review precedent (total revenue judged as evidence for the data-centre question when growth comes from data centre) it would be better posed on FY2028 data-centre revenue, and matching should merge it into any existing FY2028 revenue question.",
+   "settled_by_ok": true
+  }
+ ],
+ "missing_questions": [],
+ "dropped_by_code_ok": [],
+ "grade": "C",
+ "grade_reason": "The key guidance (e2) and the memory-shortage forecast (e5) are kept, but e3 tells the judge NVIDIA 'acquired' Groq where the author put the word in quotation marks, e5 has the wrong tier, three records stamp the report day as the event time, e1's period reads as a future calendar quarter, and the memory long-term-contract clause is missed.",
+ "standard_doubt": [
+  "Section 5.5 lists \"公司的指引、管理层的表态\" as party_statement and \"分析师、媒体、专家的看法和估计\" as third_party_view but does not say how to tier a company's forecast about its whole industry (SK Hynix on the DRAM market); the output called it third_party_view. The table should say a company speaking about its own market is a party statement.",
+  "D243 #6 (\"重提的季度指引和仍然有效的预测、计划按本来分量\") keeps a Motley Fool rewrite of an earlier SK Hynix forecast at core weight each time it is repeated; AGENTS §8 says \"a repeat is not new evidence\". The standard relies on matching to mark it as the same claim, but nothing in section 5 tells extraction to prefer the original over a recycled mention, so the judge can see the same forecast many times."
+ ]
+}

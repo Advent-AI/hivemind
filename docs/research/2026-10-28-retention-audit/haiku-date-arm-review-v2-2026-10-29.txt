@@ -1,0 +1,19 @@
+**结论：上轮五项还没有全部闭合；有两处会妨碍解释实验结果，建议修订后再发送。**
+
+例如，如果改日期要求时也改变了“什么时候填写原始发言人”，实验组抽取内容变了，就无法知道变化来自日期要求还是发言人要求。另一个例子是，对照组三次内容完整度为 2/3、实验组为 1/3 时，现有判定会记为不达标，却没有先规定怎样处理对照自身的波动。
+
+1. **单一变量仍未闭合。** [新版设计第 9 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-date-arm-design-v2-2026-10-29.md:9)保留了两条引用要求，修复了上轮指出的删除引用指令问题。但它把生产原句中的“**转述时**识别原始发言人及发言日”，改成了无条件“识别发言人和原始发言人”，同时才加入未知日期留空的要求。原句见[生产提示](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/prompts/role-v22.txt:11)。这也改变了发言人字段的指令，不只是日期；可能影响来源归属和内容评分。应保留原来的发言人要求，只改变日期的处理。
+
+2. **对照稳定性仍未覆盖内容和引用。** [新版第 39 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-date-arm-design-v2-2026-10-29.md:39)为三个历史日期错误和两个已知日期设了复现门槛，也为未见文章限定了探索性结论；这是进展。但开发集的“完整内容及引用支持次数不低于对照”仍直接比较三次计数，没有规定对照自身在内容或引用上波动时能得出什么结论。上轮对此的担忧仍在。发送前需要固定：逐次呈现、哪些波动只能报告为不确定，以及这些情况如何影响“达标”结论。
+
+其余三项的核对结果：
+
+- **原始日期与筛后日期：已写清。** 新版要求逐条保存两者，并把模型写了非法日期、筛选后变空与模型主动留空分开。[现有代码](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:588)确实会把非 ISO 日期置空。已有收入案例的原始值是 `2026-05 (last quarterly conference call, approximate)`，筛后为空，正好说明为什么不能只看筛后值。[已有复核](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/2026-10-29-haiku-date-review-independent.txt:12)
+
+- **日期、内容与引用：主要闭合。** 新版分别定义日期结果和内容完整度，也规定至少两次抽出且来源可判断才比较日期。收入原文中，`revenue` 在数字之前的句子；旧回答只引用数字句，不能靠摘要补出“收入”就算引文完整。[新版第 37 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-date-arm-design-v2-2026-10-29.md:37)已明确这一点。内容比较的对照波动仍有上述问题。
+
+- **正反例：按代码可以构造，但尚未实际验证。** [新版第 41 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-date-arm-design-v2-2026-10-29.md:41)分别提出缺必填字段、原文不存在的引句、重复引句和非法月份日期。代码确实分别检查必填字段、剔除不存在的引句、合并同一引句，以及将非 ISO 日期置空：[schema 检查](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/model.py:163)、[筛选代码](/Users/lchingen/hivemind-extraction-quality-2026-10-28/src/hivemind/extraction.py:656)。重复和日期反例要选能先通过引文与链接检查的真实记录，否则会在到达目标检查前被剔除。设计已要求未突变对照通过、检查数量大于零和失败即停；本次只读审阅没有运行这些反例，所以不能说它们已经通过。
+
+**未见样本与预算：**我读取了三篇指定测试文章。Valar 原文将宣布时间写为周三下午，发表日是 2026-07-01；DeepSeek 文章将芯片计划归给 Reuters 所引消息人士，没有给出他们的具体发言日。新版把它们标为研究者事先读原文确定的目标，并未称作用户裁定的金标；这点正确。三篇是按条件筛选后的未用于日期句设计的样本，不代表全周。预算已写明 42 次、$0.60 上限、用量异常停发和在途请求照实记录；但请求及逐篇 token 数还未生成，**现在不能确认这 42 次的预留是否低于上限**。[设计第 17–23、29 行](/Users/lchingen/hivemind-extraction-quality-2026-10-28/docs/research/2026-10-28-retention-audit/haiku-date-arm-design-v2-2026-10-29.md:17)
+
+本次仅审第一步日期；没有修改文件、调用模型或运行流水线。

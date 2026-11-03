@@ -9,7 +9,7 @@ const read = (name) =>
   JSON.parse(fs.readFileSync(new URL(`./fixtures/${name}.json`, import.meta.url), 'utf8'));
 const stored = read('idea-card-v3');
 
-test('D184/D210: the summary and every reading-step explanation and search query remain available', () => {
+test('D278/D304: the summary and every reading-step explanation and search query remain available', () => {
   const data = fromIdeaResponse(stored);
   const html = ideaAnalysisHtml(stored, data.theses);
   assert(html.includes(`<p class="detail-copy">${esc(stored.reading.summary)}</p>`));
@@ -39,7 +39,7 @@ test('D184/D210: the summary and every reading-step explanation and search query
   assert.deepEqual(JSON.parse(decoded).reading, stored.reading);
 });
 
-test('D184: unavailable coverage and missing bundles are explicit; returned text stays escaped', () => {
+test('D278: unavailable coverage and missing bundles are explicit; returned text stays escaped', () => {
   const none = ideaAnalysisHtml(read('idea-card-null'));
   assert(none.includes('No recorded thesis matches this idea. No analysis was generated.'));
   const empty = read('idea-card-empty');
@@ -53,7 +53,7 @@ test('D184: unavailable coverage and missing bundles are explicit; returned text
   assert(html.includes('(not loaded)'));
 });
 
-test('D214: overview, trace and response contain their requested content', () => {
+test('D308: overview, trace and response contain their requested content', () => {
   const data = fromIdeaResponse(stored);
   const sections = ideaAnalysisSections(stored, data.theses);
   assert(sections.overview.includes(esc(stored.reading.summary)));

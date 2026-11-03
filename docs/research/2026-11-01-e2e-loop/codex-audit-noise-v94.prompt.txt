@@ -1,0 +1,48 @@
+Independent, read-only review. Do not edit any file, do not run paid model calls, do not propose changing the frozen ruler.
+
+GOAL
+The extraction step of this repo (branch fix/extraction-quality-2026-10-28) reads one news item plus the open research questions and files "evidence" statements under those questions. Measured on a frozen gold, the current default (poc-v94: prompts role-v74.txt / review-v74.txt / categories-v74.json) still files noise (statements the gold marks not kept) and still misses kept statements. The author's analysis (Claude, in design-v78-fields.md §9-§10 and design-v72.md §11-§14) concluded that the residual noise and the residual misses are "the same shape" and that no prompt sentence or code rule separates them ("one dial"). The owner does not accept that conclusion and wants an independent reader to look at the prompt and the design for the actual defect. Your job: find what the author did not see.
+
+READ FIRST (the governing documents; cite them, never propose changing them)
+- AGENTS.md §6 (writing prompts), §7.1 (the frozen ruler), §8 (product thinking: "lean cautious, catch the increment"; a senior analyst's granularity).
+- docs/prd/05-extraction-standard.html version 3: sections 5.1-5.3 (what is evidence, what is not), the counting unit (§11), and decisions D240, D243, D248, D250 (four evidence boundaries), D264 (one decider: extraction files statements itself), D266-D270 in docs/DECISIONS.md.
+- The gold: docs/research/2026-10-29-ledger-standard/golden-v5/golden-v5-dev.json and golden-v5-test.json (articles[].items = kept, with weight core/supporting/optional; articles[].not_kept[] with the standard row in `row`). Frozen; a disagreement with it is a gap in the system.
+
+THE REQUEST AS THE MODEL READS IT (read all of it, top to bottom, once)
+- System text: src/hivemind/prompts/role-v74.txt.
+- User blocks before the item: the category block (categories-v74.json, keyed by T1..T11), [Subjects], the fiscal-year note, [What to read out], [Research reference], [Open questions at the start of <day>] with one code-written "takes:" line per question, research groups; then the item; then the closing check review-v74.txt ending "Return only the items you keep."
+- The takes lines are generated in src/hivemind/extraction.py (search for "takes" and "more or less likely"); the schema field descriptions (links, original_day, original_who, speaker, tier) are in extraction.py too (search for "narrowest open question").
+- A stored, complete request of poc-v94 can be printed with:
+  python3 - <<'PY'
+  import sqlite3, json
+  a = sqlite3.connect('file:docs/research/2026-11-01-e2e-loop/arms/r7-combined-v94/d1/archive.sqlite?mode=ro', uri=True)
+  req = json.loads(a.execute("select request_json from model_calls where purpose='extract' order by call_id desc limit 1").fetchone()[0])
+  print(req['messages'][0]['content']); print(req['messages'][1]['content'])
+  print(json.dumps(req['response_format']['json_schema']['schema']['properties']['evidence'], indent=1))
+  PY
+  (the archive also holds the answers: response_json on the same rows; the ledger of that draw is views.sqlite beside it: tables evidence, evidence_sources, evidence_links, views, judgements).
+
+THE FAILURES (stored, $0)
+- Residual noise under v94 and under the field versions v78-v80: docs/research/2026-11-01-e2e-loop/design-v78-fields.md §9-§10 (noise by standard row; the R1-R6 rule census; the gold's split "new step vs in place"); design-v72.md §11 (where v94 still fails), §12 and §14 (two prompt audits).
+- Concrete noise lines with the gold's row in brackets: docs/research/2026-11-01-e2e-loop/proof-v80-view-noise.txt (lines starting "noise written"); the same file shows kept matters ("core"/"supp" lines) from the same articles.
+- The model's own accounts of why it kept or dropped specific sentences: probe-v80-common-knowledge.txt, probe-v79-newness.txt, probe-v75-residue.txt (same folder). Read these: they show which request sentence the model cites.
+- Residual noise concentrates under the questions v2 (Data Center revenue) and v9 (financing commitments): 54 of 79 noise statements in v80's reached set (design-v78-fields.md §10).
+
+THE AUTHOR'S CLAIMS TO ATTACK (say for each whether it is right, wrong or incomplete, with evidence you read)
+1. "One dial": the sentences the gold keeps and the sentences it rejects, among other parties' actions/figures/judgements with a name but no amount, cannot be told apart by any sentence of the request or any code rule over the model's labels; the gold splits them by the reader's judgement of tense/context ("has chosen" kept vs "is establishing" not kept).
+2. Since D264 (extraction files statements itself) and D209 (a statement with no home is dropped), the takes line has become the keep gate; every figure question's takes line ends with the same tail "and what makes that figure more or less likely: the demand, supply, competition and pricing behind it", which the model cites as the reason to keep (probe-v75-residue.txt) and which makes v2 the catch-all; "narrowest question" cannot narrow when every tail is identical.
+3. The reject rows of role-v74 and review-v74 carry exceptions ("unless…", "it does not cover…") broader than the rows; the model cites the exception and keeps (probes); the 2026-10-31 record (docs/research/2026-10-30-noise/SEALED-2026-10-31.md) found each exception read as "always keep"; v77 (exceptions first) raised recall and noise one for one.
+4. The "is it new / already known" test (standard line: what an analyst following the company knew before the item) cannot be answered by a reader with no memory of the company; the model answers "new" for any assertive sentence with figures; blind human readers agreed with the gold 93-95% on clear cases and 70% on these borderline items.
+
+WHAT TO LOOK FOR (beyond the four claims)
+- Contradictions between role, closing check, category block, takes lines and schema descriptions that decide keep/reject/link in opposite directions for the same shape of sentence.
+- Instructions that force the noise: e.g. "a page with eight such statements yields eight evidence items, not a selection"; "even when it gives no period, basis or exact amount, because the weight is judged later"; the category block's "read:" lines (T6: "partnerships, investments"; T8: "the facts and figures the author cites").
+- Definitions that are missing or abstract (no closed set, no example) for the residual classes: an arrangement in place vs a new step; common knowledge with a figure; a named party's judgement that states a level/direction/date for a question's quantity vs a characterisation; another company's matter "with a path".
+- Design-level causes: the one call doing four jobs (evidence, links, candidates, groups/identity); the drop of unfiled statements; the quote length (a quote spanning a kept and a not-kept sentence counts as both: 13 of v94's 33 noise on the mixed set); the window starting with an empty ledger (the system is "cold" while the gold's reader is "warm").
+- Whether the standard itself gives a resolvable reading for the borderline shape that the prompt does not implement (e.g. 5.1 kind 2 "with a size, date or name" + D250 item 1 "no new step" = a named party's NEW action; D240 lower weight vs D243 cautious).
+
+OUTPUT (write to the -o file; English; concise; no file edits)
+1. Findings, numbered, most important first. Each: the exact sentence(s) quoted with file and line; the mechanism (how it produces which noise class or which miss class, with one stored example you read and its file); the standard's line on that case; verdict (contradiction / missing / abstract / design / not the prompt); a concrete alternative formulation that cites the standard's line, reads the same for a bank, a drug maker, a retailer or a chip maker (no NVIDIA-specific wording, no example from a test article), and your predicted effect on noise AND on recall (say which kept matters it would lose).
+2. Blind spots: what the author's analysis did not consider at all.
+3. Verdict on "one dial": separable or not, and by which signal in the text; if separable, name the signal and three gold cases on each side that it gets right and the gold cases it gets wrong.
+Out of scope: judging, matching, UI, the question seeds' content, cost. Do not propose a second model call or a cap on statements per article.

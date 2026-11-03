@@ -1,0 +1,135 @@
+{
+  "model": "claude-haiku-5-5",
+  "max_tokens": 6000,
+  "system": "Maintain research arguments about the covered businesses. Keep source records intact.\n\n1. Read source_record with the supplied source_article and other_source_records, first to last. Use this context to understand the incoming claim, not automatically as independent confirmation or separate tasks. Read all history and catalog questions. Texts decide; scores and metadata are aids.\n\n2. In new_information, state the material claim, its origin, stated time/period and what it supports. Distinguish observed/reported facts, party claims, forecasts and your inferences. Preserve meaningful quantities, conditions and partial dates; unknown is not false or zero. A publication day is not automatically a statement or event day.\nJudge use claim by claim, not by a fixed source score:\n- A reported result or signed term supports the limited fact attributed to that source, not independent verification.\n- A supplier plan or vendor benchmark can support a conditional view of supply or competition; retain its forecast or modeled nature.\n- An unspecified financing obligation or unconfirmed deployment can be a lead: identify the missing link and what would resolve it, without asserting it exists.\n- Out-of-scope material or a bare mention with no business connection supplies no research conclusion. Follow explicit scope exclusions.\nExplain how customer, supplier or competitor evidence affects the covered business; its sales need not be stated. A supplier's revenue is not the covered company's revenue; a customer's backlog is not orders for the covered company. Use supplied support; neither uncertainty nor plausibility establishes missing facts.\n\n3. Compare each historical piece. same_claim_as means the same substantive claim across wording, outlets or dates (a relayed benchmark; a repeated financing report). Preserve extra detail and qualify partial overlap. revises means the owning party later changes that claim's value or status (raised guidance; talks become a signed agreement), not a later retelling. opposes means conflicting accounts (a denial versus a delay report; independent tests versus vendor claims). Keep both sides; name what resolves the disagreement. Otherwise leave the piece alone.\nTwo outlets relaying one announcement are one source; two with their own reporting can independently support one claim. Use original_source for provenance. independent_sources concerns this incoming claim, not impartiality: true for an identified origin with its own access distinct from matched claims; false for a shared or unknown origin, explaining which. With no matched claim, true marks the first identified origin, not corroboration. A relay adds no new origin beyond the source it cites.\n\n4. Choose the action.\n- update_existing: a fact, risk/condition or counterevidence changes an existing argument (a guidance revision; a disputed launch). Prefer the question about that business issue. Rephrasing or narrowing a deal component does not create a new question. Exact numeric answers require matching entity, period and definition; other evidence may affect the argument through an explained channel without being that number.\n- propose_new: a distinct investment judgement no catalog question carries AND one admission reason: a main annual business quantity or major product milestone; a shared annual industry quantity; a policy stage with named authority; a financing, guarantee, equity or purchase obligation. In reason name the public evidence that will settle it, its period/check date, the nearest catalog question and what folding would lose. Numeric questions use this or next fiscal/calendar year; later forecasts remain evidence. Unsigned obligations need a future signing check within 18 months; obligations already taken on measure the amount at the next annual filing. An unspecified provider is not an established obligation. Missing catalog, another number or mere curiosity is insufficient.\n- background_only: no argument change is supported (an unchanged pickup; incidental context). State any limited use; background does not mean worthless.\n- unresolved: supplied text cannot settle the research action (unclear attribution; an ambiguous claim), name what prevents a decision.\n\n5. For each updated question, write the full defensible argument: lean, supporting/opposing evidence IDs, limits and what would change it. Cite the records carrying each assertion, including incoming or same-source records used. Keep other periods distinct and inferences conditional; do not invent price expectations. Use the JSON schema only.\n",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"Investigators allege that four individuals deliberately concealed the actual end-user of servers thought to contain advanced Nvidia AI chips.\\nAuthorities say that the servers in question, which may have contained advanced Nvidia AI chips, were shipped from Singapore to Malaysia . Although it is unclear whether this was their ultimate destination, some media reports suggested that they may have been destined for China.\", \"one_line\": \"本篇新加坡服务器转运案件概况，最终去向与 NVIDIA 责任尚不清楚。\", \"speaker\": \"The Diplomat relaying investigators\", \"original_who\": \"Singapore authorities\", \"original_day\": \"\", \"tier\": \"third_party_view\", \"event_time\": \"\", \"publisher\": \"https://thediplomat.com/2026/07/singaporean-police-seize-42m-bungalow-in-nvidia-chip-smuggling-probe/\", \"publisher_type\": \"media\", \"publication_day\": \"2026-07-02\", \"category\": \"T7\", \"title\": \"Singaporean Police Seize $42M Bungalow in Nvidia Chip Smuggling Probe - The Diplomat – Asia-Pacific Current Affairs Magazine\"}, \"source_article\": \"Investigators allege that four individuals deliberately concealed the actual end-user of servers thought to contain advanced Nvidia AI chips.\\nBy Sebastian Strangio\\nSingaporean authorities said yesterday that they have seized a luxury bungalow and charged four people with money laundering as part of an investigation linked to the alleged movement of Nvidia chips subject to U.S. export controls.\\nIn a statement , the Singapore Police Force (SPF) said that it had issued a “prohibition of disposal order” against a residence valued at around S$55 million ($42.4 million) and seized around S$1 million of funds in connection with fraud investigations. The order means the property cannot be sold or transferred as long as it is in force.\\nThe investigation centers on two Singaporeans, Aaron Woon and Alan Wei, who were charged in February 2025 with criminal conspiracy to commit fraud, and a Chinese national named Li Ming, who was charged at the same time with committing fraud by false representation. In April of this year, a fourth defendant, Jenny Lim, was charged in connection with the case.\\nAt the time of the alleged offences, Woon, Wei, and Lim were key officers of three companies, Aperia International, A-Speed Infotech, and Aperia Cloud Services – collectively known as the Aperia Group – that are alleged to have concealed the actual end-user of servers. Separately, Li was found through investigations to be the controller of another company, Luxuriate Your Life, that was allegedly involved in the scheme.\\nAuthorities say that the servers in question, which may have contained advanced Nvidia AI chips, were shipped from Singapore to Malaysia . Although it is unclear whether this was their ultimate destination, some media reports suggested that they may have been destined for China.\\nYesterday, police also announced additional charges of fraud and money laundering against the defendants. Lim and Woon were each handed seven new charges, while Wei is set to receive seven new charges on July 6, the SPF said. The fraud charges allege that the three “engaged in a conspiracy to commit fraud in respect of the purchase of servers” from the U.S. companies Dell, Super Micro Computer, and Asus. The charges assert that between November 2023 and February 2025, the trio “falsely represented, in communications to these suppliers, that one of the Aperia Group companies would be the end-user of the servers.”\\nThe four companies will also face a total of eight charges of fraud by false representation which are due to be announced on July 6, which the SPF said was “the first instance of corporate entities being prosecuted in relation to these investigations.”\\nLim and Woon were also charged with money laundering, after “each acquiring approximately SG$1.2 million in their personal bank accounts,” which pointed to benefits from criminal conduct, police said. Wei faces three counts of money laundering relating to the aforementioned seized mansion, and an additional S$5.8 that was deposited in his personal account, and which police allege was partly made up of benefits from criminal conduct.\\nIn addition to this, Li was also slapped with additional charges of fraud related to a similar misrepresentation of the end-user of servers that Luxuriate Your Life intended to purchase from the U.S. firm Super Micro.\\nThe Singaporean investigation is an attempt to plug the holes in the regime of export controls that U.S. President Joe Biden placed on the most sophisticated AI chips, as well as the tools used to produce them. The goal of these restrictions was to hamstring China’s efforts to develop its own chip-making industry and prevent it from developing AI capabilities that could give the country a military edge.\\nIn February of last year, the same month that saw the initial arrests in this chip-smuggling case, it was reported that the U.S. Commerce Department was initiating investigations into whether the Chinese AI company DeepSeek had gained access to restricted Nvidia chips, and whether these chips had been sourced from third parties in countries including Malaysia and Singapore .\\nSingapore said that it is unaware of any smuggling taking place in the country, but that it would come down hard on any individuals or entities found to be breaching the law – a stance that the SPF reiterated in yesterday’s statement.\\n“The police hold a zero-tolerance stance towards such offenses and will act resolutely against those, whether businesses or individuals, who violate our laws, and safeguard Singapore’s integrity as a trusted global financial and business hub underpinned by the rule of law,” the statement read.\\nMalaysia has also promised to close any loopholes against the movement of advanced semiconductors through its jurisdiction. Last week, Malaysian authorities said they had foiled an attempt to smuggle advanced AI chips through the country’s main airport, seizing 72 servers worth nearly $13 million.\\nThe U.S. government is probing whether the Hangzhou-based AI firm has built its disruptive R1 AI model on restricted Nvidia chips.\\nThe U.S. government has accused the conglomerate and its chairman, Chen Zhi, of running a network of forced-labor scam centers.\\nThe number of such cases more than tripled from 589 in the first half of 2024 to 1,762 over the same period this year, according to the Singaporean police.\\nBy Marcus Loh\\nHistory suggests that the city-state will maintain its steady, pragmatic course through increasingly turbulent international waters.\\nBy Saqlain Rizve\\nBy Chen Wangwanyu\\nBy Toh Oon Hoe\\nBy Catherine Putz\\nBy Larry Luckey\\nBy Laure-Anne Courdesse and Arntraud Hartmann\\nBy Catherine Tan\\nBy Thomas Ching Wei Tu\\nRegardless of the Sino-Vatican agreement, the practical, multifaceted ties between Taiwan and the Holy See have deepened over the past year.\\nTashkent summoned the Iranian ambassador to lodge a protest regarding social media posts by Iranian diplomatic missions.\\nBy Grant Wyeth\\nIn the wake of the Pukpuk Treaty, Australia and PNG continued to deepen relations with a new rotation planned, defense infrastructure investment, and expanded ADF recruitment.\\nBy Robert Farley\\nHowever justified or inevitable it might be, this represents a major shift in how the U.S. has thought about intellectual property for the last three decades.\\nBy Other Means\", \"other_source_records\": [], \"questions_to_consider\": [], \"stored_pieces\": [], \"catalog\": [], \"comparison_opinion\": null, \"research_scope\": {\"covered_companies\": [{\"kind\": \"ticker\", \"value\": \"NVDA\"}], \"user_exclusions\": [\"Do not keep the overview of this Singapore server-transshipment case as research evidence. This exclusion does not apply to all export-control news.\"]}}"
+    }
+  ],
+  "output_config": {
+    "effort": "medium",
+    "format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          }
+        },
+        "required": [
+          "original_source",
+          "new_information",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "reason",
+          "question_ids",
+          "arguments",
+          "independent_judgement",
+          "new_question",
+          "action"
+        ]
+      }
+    }
+  }
+}

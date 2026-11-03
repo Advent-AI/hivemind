@@ -1,0 +1,9 @@
+One serious finding:
+
+**[P2] The exact-prefix audit does not verify which answer was accepted.** At [ingestion.py:176](/Users/lchingen/hivemind/poc/concurrency_study/ingestion.py:176), it only checks that the rebuilt request exists somewhere in the archive. It never ties that request’s answer to the saved handover.
+
+I reproduced a false pass entirely in memory: a replay using stored answers passed the audit; replacing its first accepted handover—3 evidence items and 1 candidate—with an empty answer still passed, with unchanged “accepted request” hashes.
+
+This means the audit cannot establish the plan’s central guarantee that every accepted extraction used its actual committed prefix. Each handover needs a verified link to its accepted call and rebuilt request.
+
+No other serious findings in the requested scope. No files changed or providers called.

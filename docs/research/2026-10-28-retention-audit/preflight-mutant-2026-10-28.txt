@@ -1,0 +1,24 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+________________ test_v22_replay_keeps_unlinked_until_placement ________________
+
+archived_answer = (<sqlite3.Connection object at 0x10846c120>, <sqlite3.Connection object at 0x10862b5d0>, <hivemind.universe.Universe object at 0x1086682b0>)
+capsys = <_pytest.capture.CaptureFixture object at 0x1086687c0>
+
+    def test_v22_replay_keeps_unlinked_until_placement(archived_answer, capsys):
+        archive, items, uni = archived_answer
+        assert preflight.part_b(archive, items, uni) == 1
+>       assert 'evidence produced 1 kept 1' in capsys.readouterr().out
+E       AssertionError: assert 'evidence produced 1 kept 1' in '\n   extraction archive rows 1: replayed 1, earlier refused 0, unidentifiable 0\n   extraction answers 1: evidence pr...d 1 (100%)\n       1  links to nothing shown: []\n          e.g. gnews:test-preflight e1: links to nothing shown: []\n'
+E        +  where '\n   extraction archive rows 1: replayed 1, earlier refused 0, unidentifiable 0\n   extraction answers 1: evidence pr...d 1 (100%)\n       1  links to nothing shown: []\n          e.g. gnews:test-preflight e1: links to nothing shown: []\n' = CaptureResult(out='\n   extraction archive rows 1: replayed 1, earlier refused 0, unidentifiable 0\n   extraction answ...)\n       1  links to nothing shown: []\n          e.g. gnews:test-preflight e1: links to nothing shown: []\n', err='').out
+E        +    where CaptureResult(out='\n   extraction archive rows 1: replayed 1, earlier refused 0, unidentifiable 0\n   extraction answ...)\n       1  links to nothing shown: []\n          e.g. gnews:test-preflight e1: links to nothing shown: []\n', err='') = readouterr()
+E        +      where readouterr = <_pytest.capture.CaptureFixture object at 0x1086687c0>.readouterr
+
+/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/preflight-mutant-8qt9se01/tests/test_preflight_replay.py:47: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/preflight-mutant-8qt9se01/tests/test_preflight_replay.py::test_v22_replay_keeps_unlinked_until_placement
+1 failed, 1 passed in 0.04s
+/Users/lchingen/Library/Python/3.9/lib/python/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))

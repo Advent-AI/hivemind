@@ -65,6 +65,7 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | Term | Meaning | Avoid |
 |---|---|---|
 | Research group | Theses organised around a continuing business process; association is decided during extraction under the library contract | Treating a group as an overarching investment thesis |
+| Admission reason | The one of four reasons a candidate thesis may open (D184): a main driver, an industry aggregate, a policy stage, a binding obligation; the answer states it as opens_as | Opening reason |
 | Item | One upstream unit processed by classification, dispatch and extraction | Using file for every kind of item |
 | File | Text-form source such as earnings, a report or news; qualify filesystem files as data/configuration files | Confusing source form with category |
 | Table data | Fixed-field information; one release, such as a 13F or statistical release, is one item | Treating every cell as an item |
@@ -104,6 +105,7 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | Unavailable answer / pending publication | Proposed pull-mode cases, not yet approved | Treating proposals as implemented states |
 | Evidence tier | Fact, party statement, third-party view or rumour; only facts can establish the outcome | Mixing tiers with thesis kinds |
 | Link | Evidence linked to a thesis, with its judgement-specific push | Treating push as intrinsic to evidence |
+| Theme block | The open, judged theme theses shown to an asset thesis's judgement, one to all; the judgement states each theme's push on it | Theme context, macro block, theme dependency |
 | Search / comparison list | Find plausible matches / top N shown to matching | Treating search ranking as identity |
 | Open / closed | The lifecycle switch; only open theses update; closed theses remain searchable | Active thesis, inactive thesis |
 | Repeat / replace / new evidence | Same existing statement / a later statement superseding it / another event, period or speaker | Counting repeated references as independent evidence |

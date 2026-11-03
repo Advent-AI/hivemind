@@ -1,0 +1,140 @@
+{
+  "model": "gpt-6-luna",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a hedge-fund analyst keeping one research record per question on a name you cover. One source record arrives. Read it beside every stored piece of the questions it may bear on, then write the update. Sources are never edited or deleted: you say what the record adds to each question's argument, and what it is the same as, revises or opposes.\n\nProcedure. Read the record: who first said it (original source), when, with what period and definition. Then walk every stored piece of each linked question, first to last, and classify each one against the record:\n- same_claim_as: the same claim, in any wording, by any outlet, on any day, whoever reports it. A second newspaper relaying NVIDIA's own benchmark; an author repeating his own figure five days later; a bank's note repeating the customer's remark; two newspapers reporting the same talks from their own sources. The argument counts one claim however many records carry it.\n- revises: the same claim's later value or status from the party that owns it. A rumoured guarantee becomes an announced amount; management raises guidance it gave before. Both pieces stay; the argument cites the later one and keeps the path.\n- opposes: a claim that contradicts the piece. A company's denial against an analyst's delay report; an independent test against a vendor's benchmark. Both stay side by side; the argument says contested and names what resolves it.\n- otherwise the piece is different: leave it alone.\nPeriod and definition: a record bears on a question only if its period and definition match or the mapping is stated. A Q1 print is not a full year; FY2028 growth is not FY2027 growth; five companies' total AI outlays are not four hyperscalers' data-center capex. On a mismatch the record is background and new_information names the mismatch.\nAction: update_existing when the record moves a number, a probability, a risk or a condition of an existing question's argument (would it appear in this week's note?); background_only when it is a pickup or context that moves nothing (a sizeless first delivery, a vendor efficiency claim, a consumer-GPU price note); propose_new only when the record carries an investment judgement no catalog question carries, a decision that could change the position, and independent_judgement says what that view is (a narrower scope, a new figure, or a second legal form of one deal is not one: a $6bn license inside an equity deal already tracked updates that question; twenty yes/no questions on individual stakes are one judgement about investment exposure and circularity, and a candidate phrased as \"did NVIDIA sign this round\" does not carry it); unresolved when the texts do not let you decide.\nIndependence is a separate question from claim identity: independent_sources is true when the record's original source has its own access to the fact and is not the same source as the pieces in same_claim_as (a customer's own disclosure, a filing, a third-party test, a second newspaper's own reporting of the same talks). A vendor claim relayed by ten outlets is one source; two papers each citing their own people familiar with the talks are two sources of one claim. A record with no same_claim_as pieces leaves independent_sources true unless it merely relays one of them.\nThe argument is the deliverable. For each question you update, rewrite it in full as the statement you would defend now: the current lean, the piece ids it rests on with their source quality, the ids that oppose it, the limitations the texts impose (vendor benchmark, unverified leak, period unstated, guidance not result), and what would change it (the next print, a shipment confirmation, a filing). Keep conditions and periods exactly as the texts state them. Comparison opinions are hints with scores; the texts decide. Answer in the JSON schema only."
+    },
+    {
+      "role": "user",
+      "content": "{\"source_record\": {\"id\": \"incoming\", \"quote\": \"Start the month with Monopoly: Star Wars Heroes vs. Villains , bringing a galaxy far, far away to the iconic board-game franchise, alongside 12 new games joining the cloud this month.\", \"one_line\": \"NVIDIA said 12 new games, including Monopoly: Star Wars Heroes vs. Villains, would join GeForce NOW in July 2026.\", \"speaker\": \"NVIDIA Corporation\", \"original_who\": \"NVIDIA Corporation\", \"original_day\": \"2026-07-02\", \"tier\": \"party_statement\", \"event_time\": \"July 2026\", \"publisher\": \"NVIDIA Corporation\", \"publisher_type\": \"company\", \"publication_day\": \"2026-07-02\", \"category\": \"T6\", \"title\": \"GFN Thursday: GeForce NOW Games in July | NVIDIA Blog\"}, \"source_article\": \"Start the month with Monopoly: Star Wars Heroes vs. Villains , bringing a galaxy far, far away to the iconic board-game franchise, alongside 12 new games joining the cloud this month.\\nPlus, don’t let the sun set on the biggest GeForce NOW savings of the year. Level up for less before the deals disappear.\\nRule the board, you must. Choose a side in Monopoly: Star Wars Heroes vs. Villains , the classic property-trading board game reimagined with legendary characters, locations and rivalries from across the Star Wars universe.\\nPlay as iconic heroes or infamous villains — each with unique abilities — to assemble a team and experience cinematic moments while competing with family and friends across locations from every era of the saga. Every roll of the dice brings new opportunities to build an empire and claim victory.\\nGeForce NOW makes it easy to take the battle between the light and dark sides across nearly any device. Jump into a match on a low-powered PC, Mac, phone, TV, tablet or handheld device and keep the fun going across the galaxy.\\nThe final days of the GeForce NOW Summer Sale are here. Before the savings disappear, gamers can save $35 on a 12-month Performance membership or $70 on a 12-month Ultimate membership — unlocking GeForce RTX-powered gaming in the cloud across devices they already own.\\nThe Performance membership delivers smooth, high-quality gaming with RTX-powered servers, making it easy to jump into favorite titles across PCs, Macs, phones, handhelds and TVs.\\nThe Ultimate membership takes cloud gaming to the max with RTX 4080‑ or 5080‑class performance. Experience cinematic visuals, ultralow latency and responsive gameplay powered by technologies like NVIDIA DLSS , ray tracing and NVIDIA Reflex — all without the cost of a new gaming rig.\\nOne GeForce NOW member recently called the Summer Sale “ quite significant ” after realizing the savings were even larger than expected in their local currency. By locking in a year of Ultimate, they calculated their monthly cost dropped from roughly 29 CAD to 17 CAD – showcasing how GeForce NOW continues to help gamers around the world enjoy the games they love, wherever they choose to play.\\nPlus, check out this spreadsheet , made by a community member, featuring discounted games streaming on GeForce NOW and build out a bigger library at the best bargains during the Steam Summer Sale .\", \"other_source_records\": [{\"id\": \"item:e2\", \"quote\": \"gamers can save $35 on a 12-month Performance membership\", \"one_line\": \"NVIDIA offered a $35 saving on a 12-month GeForce NOW Performance membership during the Summer Sale.\", \"speaker\": \"NVIDIA Corporation\", \"original_who\": \"NVIDIA Corporation\", \"original_day\": \"2026-07-02\", \"tier\": \"party_statement\", \"event_time\": \"Summer Sale; final days as of 2026-07-02\"}, {\"id\": \"item:e3\", \"quote\": \"or $70 on a 12-month Ultimate membership\", \"one_line\": \"NVIDIA offered a $70 saving on a 12-month GeForce NOW Ultimate membership during the Summer Sale.\", \"speaker\": \"NVIDIA Corporation\", \"original_who\": \"NVIDIA Corporation\", \"original_day\": \"2026-07-02\", \"tier\": \"party_statement\", \"event_time\": \"Summer Sale; final days as of 2026-07-02\"}, {\"id\": \"item:e4\", \"quote\": \"By locking in a year of Ultimate, they calculated their monthly cost dropped from roughly 29 CAD to 17 CAD\", \"one_line\": \"An unnamed GeForce NOW member said a year of Ultimate reduced their calculated monthly cost from roughly 29 CAD to 17 CAD.\", \"speaker\": \"An unnamed GeForce NOW member, as reported by NVIDIA\", \"original_who\": \"An unnamed GeForce NOW member\", \"original_day\": \"2026-07-02\", \"tier\": \"rumour\", \"event_time\": \"2026-07-02\"}], \"questions_to_consider\": [{\"view_id\": \"v1\", \"looks_at\": \"NVIDIA’s financial obligations to cloud providers, including capacity-purchase guarantees and customer data-center lease guarantees\", \"question\": \"How much will NVIDIA’s disclosed commitments for guarantees and similar obligations to cloud providers reach in its FY2027 annual filing?\", \"due_day\": \"2027-02-28\", \"rungs\": [{\"label\": \"Strongly bullish\", \"condition\": \"The disclosed amount is below $5 billion.\"}, {\"label\": \"Bullish\", \"condition\": \"The disclosed amount is at least $5 billion and below $10 billion.\"}, {\"label\": \"Neutral\", \"condition\": \"The disclosed amount is at least $10 billion and below $15 billion.\"}, {\"label\": \"Bearish\", \"condition\": \"The disclosed amount is at least $15 billion and below $20 billion.\"}, {\"label\": \"Strongly bearish\", \"condition\": \"The disclosed amount is at least $20 billion.\"}], \"latest_judgement\": {\"rung\": 2, \"reasons\": \"Rung 2 is the best-supported estimate, but the FY2027 filing amount is not established. The strongest quantified evidence is a $6.3 billion CoreWeave capacity-purchase contract and a later $3.5 billion addition for customer data-center lease guarantees. Together they indicate a scale near $10 billion, but they do not establish the aggregate amount that will be disclosed in the FY2027 filing. The newly announced cloud-provider program and reported provider plans lean toward greater exposure, but no amount is given, so they do not warrant moving to rung 3.\", \"day\": \"2026-07-01\"}, \"argument\": null, \"piece_ids\": [\"e1\", \"e11\", \"e12\", \"e13\", \"e2\", \"e3\", \"e4\", \"e5\", \"e6\", \"e7\", \"e8\", \"e9\", \"e14\", \"e15\"]}, {\"view_id\": \"v2\", \"looks_at\": \"NVIDIA guarantee for OpenAI’s lease of the Ohio data center\", \"question\": \"Will NVIDIA sign or announce a financial guarantee for OpenAI’s Ohio data-center lease by 2027-12-31?\", \"due_day\": \"2027-12-31\", \"rungs\": [{\"label\": \"Yes\", \"condition\": \"NVIDIA signs or publicly announces a financial guarantee for the Ohio data-center lease by 2027-12-31.\"}, {\"label\": \"No\", \"condition\": \"NVIDIA has not signed or publicly announced such a guarantee by 2027-12-31.\"}], \"latest_judgement\": {\"rung\": 1, \"reasons\": \"The report of negotiations modestly favors a guarantee being announced by the deadline. It is only a rumour about negotiations, however—not evidence that NVIDIA has signed or announced a guarantee—so the Yes outcome is not established. The deadline is still in the future, and the evidence does not establish No either; rung 1 is the better-supported forecast, not a confirmed outcome.\", \"day\": \"2026-07-01\"}, \"argument\": null, \"piece_ids\": [\"e10\"]}], \"stored_pieces\": [{\"id\": \"e1\", \"tier\": \"rumour\", \"speaker\": \"The Information, as reported by moomoo.com\", \"original_who\": \"The Information\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"The Information reported on 2026-07-01 that NVIDIA guarantees young GPU cloud providers by agreeing to repurchase unsold capacity at a pre-agreed price if they cannot secure enough renters.\", \"quote\": \"NVIDIA is providing financial guarantees to young cloud service providers that lease or rent its GPUs—if these companies fail to secure enough AI developers to rent their computing capacity, NVIDIA will repurchase their unsold GPU capacity at a pre-agreed price.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e11\", \"tier\": \"third_party_view\", \"speaker\": \"moomoo.com\", \"original_who\": \"moomoo.com\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"moomoo.com reported that NVIDIA had invested several billion dollars in equity stakes in emerging cloud providers and entered chip leaseback transactions totaling several billion dollars, including with CoreWeave and Lambda.\", \"quote\": \"To date, NVIDIA has invested several billion dollars in equity stakes in multiple emerging cloud service providers and, in certain cases, agreed to lease back chips from these companies—including CoreWeave and Lambda—in transactions totaling several billion dollars.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e12\", \"tier\": \"fact\", \"speaker\": \"moomoo.com, recounting NVIDIA’s commitment\", \"original_who\": \"NVIDIA\", \"original_day\": \"\", \"event_time\": \"2024-09\", \"one_line\": \"In September 2024, NVIDIA committed to purchase CoreWeave’s unsold capacity through 2032 if it failed to secure tenants; the contract was then valued at $6.3 billion.\", \"quote\": \"In September 2024, NVIDIA committed to purchasing all of CoreWeave’s unsold capacity through 2032 if CoreWeave failed to secure tenants, under a contract then valued at $6.3 billion.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e13\", \"tier\": \"fact\", \"speaker\": \"NVIDIA, in a regulatory filing as reported by moomoo.com\", \"original_who\": \"NVIDIA\", \"original_day\": \"\", \"event_time\": \"2026-05\", \"one_line\": \"NVIDIA’s May 2026 regulatory filing, covering the quarter ended in April, reported an additional $3.5 billion to guarantee customer data-center leases in exchange for rights to purchase their shares.\", \"quote\": \"According to a regulatory filing submitted by NVIDIA in May of this year (covering the quarter ended in April), NVIDIA subsequently added another $3.5 billion to guarantee customer data center leases in exchange for rights to purchase their shares.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e2\", \"tier\": \"rumour\", \"speaker\": \"The Information, as reported by moomoo.com\", \"original_who\": \"The Information\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"The Information reported on 2026-07-01 that NVIDIA will receive a share of participating cloud providers’ revenue, with the rate declining over each contract term.\", \"quote\": \"In return, NVIDIA will receive a percentage of these cloud providers’ revenue, with the revenue-sharing rate gradually declining over the term of the contract.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e3\", \"tier\": \"rumour\", \"speaker\": \"The Information, as reported by moomoo.com\", \"original_who\": \"The Information\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"The Information reported on 2026-07-01 that Firmus and Sharon AI had joined NVIDIA’s program and that three executives with NVIDIA business ties confirmed the arrangement.\", \"quote\": \"GPU cloud providers Firmus and Sharon AI have already joined the program, and three executives with existing business ties to NVIDIA confirmed the arrangement.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e4\", \"tier\": \"party_statement\", \"speaker\": \"NVIDIA\", \"original_who\": \"NVIDIA\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"On 2026-07-01, NVIDIA announced a business model combining revenue sharing and credit support for AI cloud providers procuring NVIDIA infrastructure.\", \"quote\": \"On July 1, NVIDIA published a statement on its official website announcing a new business model that combines revenue sharing with credit support, enabling AI cloud providers to procure NVIDIA infrastructure without bearing the full upfront capital expenditure, and allowing them to offer computing services to downstream AI-native enterprises, model developers, and corporate clients.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e5\", \"tier\": \"party_statement\", \"speaker\": \"NVIDIA spokesperson, as reported by moomoo.com\", \"original_who\": \"NVIDIA spokesperson\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"A NVIDIA spokesperson confirmed the program’s existence; the report said some NVIDIA personnel internally call it the “AI Compute Partnership.”\", \"quote\": \"According to the report, the initiative is internally referred to by some NVIDIA personnel as the 'AI Compute Partnership.' A NVIDIA spokesperson also confirmed the existence of the program.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e6\", \"tier\": \"party_statement\", \"speaker\": \"NVIDIA\", \"original_who\": \"NVIDIA\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"NVIDIA said in its press release that the model will provide it an additional share of cloud-service revenue alongside standard product revenue.\", \"quote\": \"According to NVIDIA’s official press release, the company will earn not only standard product revenue but also an additional share of cloud service revenue, creating a usage-based, recurring revenue stream.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e7\", \"tier\": \"party_statement\", \"speaker\": \"NVIDIA, as reported by moomoo.com\", \"original_who\": \"NVIDIA\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"NVIDIA described the framework as its “DSX AI Factory” model for continuous, cross-regional, multi-tenant accelerated computing services.\", \"quote\": \"NVIDIA positions this framework as the 'DSX AI Factory' model, targeting AI service scenarios requiring continuous cross-regional operations, high utilization rates, and multi-tenant accelerated computing.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e8\", \"tier\": \"third_party_view\", \"speaker\": \"moomoo.com\", \"original_who\": \"moomoo.com\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"NVIDIA’s model has Sharon AI and Firmus as its first participating cloud providers, according to the report published 2026-07-01.\", \"quote\": \"Sharon AI and Firmus are the first cloud providers participating in this model.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e9\", \"tier\": \"third_party_view\", \"speaker\": \"moomoo.com\", \"original_who\": \"moomoo.com\", \"original_day\": \"2026-07-01\", \"event_time\": \"2026-07-01\", \"one_line\": \"Sharon AI plans to deploy up to 40,000 GB300 GPUs; Firmus is constructing a Batam campus planned for up to 360 MW and 170,000 NVIDIA GPUs.\", \"quote\": \"Sharon AI plans to deploy up to 40,000 NVIDIA Grace Blackwell GB300 GPUs, while Firmus is constructing a DSX AI Factory campus in Batam, Indonesia, expected to scale up to 360 megawatts and accommodate up to 170,000 NVIDIA GPUs.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e14\", \"tier\": \"party_statement\", \"speaker\": \"Yahoo Finance article, recounting a blog post\", \"original_who\": \"Colette Kress, Nvidia CFO\", \"original_day\": \"2026-07-01\", \"event_time\": \"\", \"one_line\": \"Nvidia CFO Colette Kress said Nvidia would connect AI data centre operators with cloud service providers to simplify access and establish a recurring earnings stream; no amount or timeframe was specified.\", \"quote\": \"The company at the heart of the AI boom will help connect AI data centre operators with cloud service providers, simplifying the process for each side and establishing a new recurring \\\"usagelinked earnings stream\\\" for itself, chief financial officer Colette Kress wrote in a blog post on Wednesday.\", \"sources\": [[\"gnews:cdd5ccd6fd57b79e703bfb7d\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e15\", \"tier\": \"party_statement\", \"speaker\": \"Yahoo Finance article, recounting Kress's remarks\", \"original_who\": \"Colette Kress, Nvidia CFO\", \"original_day\": \"2026-07-01\", \"event_time\": \"\", \"one_line\": \"Colette Kress said start-ups could access cloud compute from providers such as Firmus Technologies through Nvidia's DSX AI factories; no deployment amount or timeframe was specified.\", \"quote\": \"Under the company's branding of DSX AI factories, an aspiring AI start-up can access the cloud compute resources of a provider like Firmus Technologies with greater speed and flexibility than would otherwise be the case, Kress said.\", \"sources\": [[\"gnews:cdd5ccd6fd57b79e703bfb7d\", \"2026-07-01\"]], \"replaced\": []}, {\"id\": \"e10\", \"tier\": \"rumour\", \"speaker\": \"The Information, as reported by moomoo.com\", \"original_who\": \"The Information\", \"original_day\": \"\", \"event_time\": \"2026-07-01\", \"one_line\": \"The Information previously reported that NVIDIA was negotiating to guarantee OpenAI’s lease of an Ohio data center, whose full build-out could cost up to $500 billion.\", \"quote\": \"According to prior reporting by The Information, NVIDIA has also recently been negotiating to provide financial guarantees for OpenAI’s lease of a large data center in Ohio—an asset that, if fully built out at current prices for chips, labor, power, and other materials, could cost as much as $500 billion.\", \"sources\": [[\"gnews:4d1677af37befd53ca3e7b45\", \"2026-07-01\"]], \"replaced\": []}], \"catalog\": [{\"view_id\": \"v1\", \"looks_at\": \"NVIDIA’s financial obligations to cloud providers, including capacity-purchase guarantees and customer data-center lease guarantees\"}, {\"view_id\": \"v2\", \"looks_at\": \"NVIDIA guarantee for OpenAI’s lease of the Ohio data center\"}], \"comparison_opinion\": null}"
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "research_update",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "update_existing",
+              "propose_new",
+              "background_only",
+              "unresolved"
+            ]
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same_claim_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revises": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opposes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "independent_sources": {
+            "type": "boolean"
+          },
+          "original_source": {
+            "type": "string"
+          },
+          "new_information": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "question_id",
+                "statement",
+                "support_ids",
+                "opposing_ids",
+                "limitations",
+                "what_would_change_it"
+              ],
+              "properties": {
+                "question_id": {
+                  "type": "string"
+                },
+                "statement": {
+                  "type": "string"
+                },
+                "support_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opposing_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "what_would_change_it": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "new_question": {
+            "type": "string"
+          },
+          "independent_judgement": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "question_ids",
+          "same_claim_as",
+          "revises",
+          "opposes",
+          "independent_sources",
+          "original_source",
+          "new_information",
+          "arguments",
+          "new_question",
+          "independent_judgement",
+          "reason"
+        ]
+      }
+    }
+  },
+  "max_completion_tokens": 6000,
+  "reasoning_effort": "medium"
+}
