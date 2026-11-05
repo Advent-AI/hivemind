@@ -64,6 +64,7 @@ class Config:
     idea_summary: Setting = None  # optional analyst TLDR after the mapping is fixed
     collision: Setting = None # D190: the analyst question asked of the generative model when a candidate lists a thesis of its own object and measure; absent: Jev alone
     placement: Setting = None # 2026-10-28: the call that files an item's statements under existing theses (extraction v20); absent before v20
+    baseline: Setting = None  # D364: the coverage-start reading of the company's latest report (hivemind.baseline); absent: no such step
 
     def extraction_setting(self, category):
         setting = self.extraction.get(category)
@@ -106,7 +107,11 @@ def load(path):
         raise ConfigError('idea_summary requires an idea setting')
     collision = _setting('collision', raw['collision']) if 'collision' in raw else None
     placement = _setting('placement', raw['placement']) if 'placement' in raw else None
+    baseline = _setting('baseline', raw['baseline']) if 'baseline' in raw else None
     _prompt_files(extraction, matching, rejudging, idea, idea_summary, collision, placement)       # final_verdict is kept in the file but no POC step calls it
+    if baseline is not None and not os.path.exists(prompt_path(baseline.prompt_version + '.json')):
+        raise ConfigError(f'baseline: prompt {baseline.prompt_version}.json does not exist')
     return Config(version=str(raw['version']), checksum=checksum, provider=str(raw['provider']),
                   search_top_n=int(raw['search_top_n']), extraction=extraction,
-                  matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea, idea_summary=idea_summary, collision=collision, placement=placement)
+                  matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea, idea_summary=idea_summary, collision=collision, placement=placement,
+                  baseline=baseline)

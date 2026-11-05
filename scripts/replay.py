@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Run the POC replay.
 
-  python3 scripts/replay.py --from 2026-02-25 --until 2026-07-23 --views poc/data/<run>/views.sqlite \
-      --archive poc/data/<run>/archive.sqlite [--only NVDA] [--day0 2026-07-24] [--cap 3] [--workers 1]
+  python3 scripts/replay.py --from 2026-07-01 --until 2026-07-14 --views poc/data/<run>/views.sqlite \
+      --archive poc/data/<run>/archive.sqlite --seed poc/seeds/nvda-2026-07-01-v2.json [--only NVDA] [--day0 2026-07-24] [--cap 3] [--workers 1]
 
 The ledger and the archive are named on every run (a new run gets a new dated folder; an existing ledger resumes after
-its last completed day). Defaults: the item window poc/data/items-window-tags2-2026-10-24.sqlite, config
-poc/config/poc-v108.json (D274: the frozen production extraction prompt, v74i, the only version the code builds, D359; the one-decider
-architecture, D264: the request shows the day's open questions with their takes lines and the extraction files each statement by its links, no placement call, a statement linked to nothing dropped as no home; Jev matching with the
+its last completed day). Defaults: the items database poc/data/items-nvda-2026-07-01-10-27.sqlite (it holds the page text the
+coverage-start reading needs), config poc/config/poc-v116.json (D366): poc-v108 (D274: the frozen production extraction prompt, v74i, the only
+version the code builds, D359) plus the coverage-start reading of the company's latest report after --seed (D364, D365; this configuration refuses
+a run without --seed); the one-decider architecture, D264: the request shows the day's open questions with their takes lines and the extraction files each statement by its links, no placement call, a statement linked to nothing dropped as no home; Jev matching with the
 collision judge collision-v2; judging-v7; a statement under a driver and its root keeps the driver; a quote a word or two off the source is stored as the source passage), universe poc/universe.json. The log goes to stdout and
 replay.log beside the ledger. Each day runs with hivemind.parallel_day by default (D183): up to `--workers` (16)
 extraction requests prepared early and validated against the committed ledger at each item's turn, `--jev-workers`
@@ -30,10 +31,10 @@ def main():
     parser.add_argument('--from', dest='from_day', required=True)
     parser.add_argument('--until', dest='until_day', required=True)
     parser.add_argument('--day0', default=None)
-    parser.add_argument('--testdb', default=os.path.join(ROOT, 'poc', 'data', 'items-window-tags2-2026-10-24.sqlite'))
+    parser.add_argument('--testdb', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'))
     parser.add_argument('--views', required=True, help='the ledger this run writes (a new run: a new dated folder)')
     parser.add_argument('--archive', required=True, help='the model-call archive of this run')
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v108.json'))    # D274 (2026-11-03): the frozen production extraction prompt, v74i at low reasoning
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v116.json'))    # D366 (2026-11-05): poc-v108 (D274) plus the coverage-start reading
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--only', default=None, help='comma-separated object ids to restrict the stream to')
     parser.add_argument('--cap', type=float, default=None, help='USD spend cap for this run')
@@ -53,6 +54,8 @@ def main():
             handle.write(line + '\n')
 
     cfg = config.load(args.config)
+    if cfg.baseline is not None and not args.seed:
+        raise SystemExit(f'config {cfg.version} has the coverage-start reading (D364), which reads the seed questions: give --seed')
     uni = universe.load(args.universe)
     archive = model.Archive(args.archive)
     day_runner = None
@@ -63,12 +66,17 @@ def main():
     log(f'--- replay {args.from_day}..{args.until_day} config {cfg.version}/{cfg.checksum} provider {cfg.provider} universe {uni.version}'
         f' workers {args.workers}')
     if args.seed:                                           # D253: seeds before the first day; a view already present is left as it is
-        from hivemind import seeding
+        import json as _json
+        from hivemind import baseline, seeding, testdb
         from hivemind.views import store as _store
         ledger = _store.open_db(args.views)
         written = seeding.seed_views(ledger, args.seed, created_at=f'{args.from_day}T00:00:00Z')
-        ledger.close()
         log(f'--- seeded {len(written)} questions from {args.seed}: {", ".join(written) or "none new"}')
+        if cfg.baseline is not None:                        # D364: the coverage-start reading, once, before the first day's items
+            with open(args.seed, encoding='utf-8') as handle:
+                ticker = _json.load(handle)['company']
+            baseline.run(ledger, testdb.open_db(args.testdb), archive, cfg, ticker=ticker, coverage_start=args.from_day, log=log)
+        ledger.close()
     totals = replay.run(testdb_path=args.testdb, views_path=args.views, archive=archive, cfg=cfg, universe=uni,
                         from_day=args.from_day, until_day=args.until_day, day0=args.day0, spend_cap_usd=args.cap, log=log,
                         only_objects=set(args.only.split(',')) if args.only else None, max_items_per_day=args.max_items_per_day,

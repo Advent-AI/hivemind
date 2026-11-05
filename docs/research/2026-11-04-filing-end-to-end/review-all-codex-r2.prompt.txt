@@ -1,0 +1,12 @@
+You are a read-only reviewer, round 2. Repository: /Users/lchingen/hivemind. Do not edit anything; send no model request.
+
+In round 1 (docs/research/2026-11-04-filing-end-to-end/review-all-codex-r1.md) you found five serious issues in a paid validation test's design and scripts. The author verified all five and changed the code and the design; the record is section "第 9 轮" of docs/research/2026-11-04-filing-end-to-end/baseline-design.md, and the round-8 design text was updated in place.
+
+Check, reading the current files (baseline_all_judge.py, baseline_all_measure.py, baseline-design.md round 8 and 9; baseline_all.py, baseline_all_send.py, baseline_read.py, classify-reader.prompt.txt for context):
+1. Is each of the five fixed as claimed? Try to break each fix again with an in-memory counterexample (as you did in round 1). For the permutation test: is the within-draw exact test computed correctly (null_distribution, tail, false_failure), is the one-sided direction right, and is "the chance that some question fails when the records do nothing" computed correctly given the margins?
+2. Did the changes introduce a new serious problem? (e.g. the unit suffix changes what the judge reads in a way that biases the arm; v10/v12 handling; counting a missing answer; the classification file format; the adjudication format; condition 3's closed set and its new "another accounting basis, labelled" case.)
+3. Anything still serious from the round-1 scope (does the code do what round 8 says; can the test pass while unsafe or fail while safe; gold leakage; a request asking for what a check refuses; fairness of control vs arm).
+
+Out of scope as before: the frozen ruler and gold, the frozen extraction prompt, the links rule, the dependency arrows, production build, document style, other companies.
+
+Output: numbered findings with severity (serious / minor), evidence (file:line or quote), fix. Say explicitly if nothing serious remains. Under 700 words.

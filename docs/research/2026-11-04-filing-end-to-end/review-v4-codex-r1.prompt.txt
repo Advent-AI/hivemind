@@ -1,0 +1,15 @@
+You are a read-only reviewer. Repository: /Users/lchingen/hivemind (branch feat/coverage-start-baseline-2026-11-05). Do not edit anything; send no model request.
+
+SCOPE: the fourth version of a research reading prompt and its validation, before anything is sent. Read section "第 18 轮" of docs/research/2026-11-04-filing-end-to-end/baseline-design.md (design and pre-registered conditions) and rounds 16-17 above it (why: the third version's boundary clause dropped the capex line in 3 of 12 reads; no held-out report had been read). Code in that folder: baseline_read.py (LINES_V4, CHECK_V4, TASK_V4; SYSTEM, TASK, SCHEMA, kept_figures unchanged), baseline_all.py (TASKS[4], latest_report's filed-copy rule, --coverage-start), baseline_v4_trial.py (the trial's conditions on the May report), baseline_heldout_measure.py (the August 26 held-out reading's conditions). The judging, sending and measure scripts are unchanged (reviewed in review-all-codex-r1..r4.md, review-v3-codex-r1.md). D364 in docs/DECISIONS.md is Alex's decision to build this into the product.
+
+GOVERNING: AGENTS.md §6 (the prompt carries the standard; audit both directions; general for any company; a test applied to each item goes at the end of the same prompt; never grow without a reason; a request never asks for what a check refuses), §7.1-§7.3 (a held-out set; conditions written before the send; trial on motivating cases first), §2 "code owns identity".
+
+OUT OF SCOPE: the frozen ruler and gold, the frozen extraction prompt, the links rule, production build design (next step), document style, other companies.
+
+LOOK FOR (serious = would make the trial or the held-out test wrong or misleading, or the prompt wrong):
+1. TASK_V4 read whole: contradictions between sentences; does the end check keep what v10 (operating income and revenue for an operating margin) and v12 (the purchases-of-property-and-equipment-and-intangible-assets line for capex) need, and v22 (FY2028 revenue: its starting figure is the latest quarter's total revenue)? Does "drop ... a figure of any other period" clash with "the figure this question's quantity stands at in the report's most recent reported period" or with year-to-date columns? Is it general?
+2. The filed-copy rule in latest_report: right for May (unchanged) and August (excludes the newsroom and investor-site copies)? Any way it picks the wrong documents?
+3. baseline_v4_trial.py and baseline_heldout_measure.py: are the conditions computed as written in round 18? Try in-memory counterexamples (a misread column labelled as the latest period, a six-month figure labelled as the quarter, a failed send, an empty answer, a figure of another period for v1/v3). Are the August printed sets and other-column sets right (check against the page text in poc/data/items-nvda-2026-07-01-10-27.page.sqlite)?
+4. Is the plan sound (trial, then May three conditions with judging, plus August held-out reading with two-reader classification; stop on any failure)?
+
+OUTPUT: numbered findings, severity, evidence (file:line or quote), fix. Say explicitly if nothing serious. Under 600 words.

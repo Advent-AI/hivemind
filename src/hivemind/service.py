@@ -38,6 +38,8 @@ def seq_day_map(conn):
     cache = {}
     for seq, day in conn.execute('select sequence_no, min(publication_day) from processing_steps where sequence_no > 0 group by sequence_no'):
         cache[seq] = day
+    if cache:                 # sequence 0 is the seed questions written before the first item (D253): visible from the ledger's first day
+        cache[0] = min(cache.values())
     if len(_SEQ_DAYS) >= 64:
         _SEQ_DAYS.clear()
     _SEQ_DAYS[id(conn)] = (conn, stamp, cache)

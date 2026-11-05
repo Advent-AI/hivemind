@@ -20,6 +20,8 @@ The old system pulled dated batches. Category definitions existed in nine module
 - **Tests:** stream stored items in publication order through the product's path, with replay time supplied to pull mode.
 
 ```text
+                         Coverage-start reading (once, before the first item)
+                                         ↓ starting figures
 Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
                          │               ↑
                   read-only; groups   Pull mode: at day end, freeze
@@ -30,7 +32,8 @@ Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
 |---|---|---|
 | Research universe | Upstream | Subjects and tracked categories |
 | Research universe | Extraction | All themes for candidate selection in block 3 |
-| Config | Extraction, library | Model settings version; library search result count |
+| Config | Extraction, library, coverage-start reading | Model settings version; library search result count |
+| Coverage-start reading | Library | Once at coverage start, each open question's starting figure from the company's latest earnings report, linked to every question that read it (D363, D364) |
 | Library | Extraction | Open subject theses and their dependencies: question, focus, due date and links; available groups under the library contract, in block 5 |
 | Library | Matching labels | Comparison records for human labels and future smaller-model training |
 | Dispatch, extraction, library | Human review | Unresolved items, proposed themes and repeated failures |
@@ -122,6 +125,7 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | Code | Programmed rules, distinct from model judgement | — |
 | Family / group | Five classification families / twelve theme-library groups | Calling theme groups categories |
 | Frozen design | A decided module version; changes need a new decision | Confusing design freeze with a frozen thesis state |
+| Starting figure / coverage-start reading | The figure a question's quantity stands at in the company's latest earnings report, recorded once when coverage starts / the step that reads it, after the seeds and before the first item (D363, D364) | Baseline figure; re-reading restated figures on the daily path |
 
 ## Modules
 

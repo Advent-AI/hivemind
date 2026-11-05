@@ -26,7 +26,7 @@
 <div class="eyebrow">Hivemind / 实现与实验状态</div>
 <h1>一篇文章，怎样改变一个判断？</h1>
 <p class="intro">从左边选一步，顺着箭头看。每张图都标出：读到什么 → 谁做决定 → 结果去哪里。</p>
-<div class="status"><strong id="version-title">当前默认 poc-v108 | 抽取 v74i | 低推理</strong><span id="version-status">五个步骤都已定下 | 第 1—4 步冻结，第 5 步到期关闭已建好 | 没有测试在跑</span></div>
+<div class="status"><strong id="version-title">当前冻结 poc-v108 | 抽取 v74i | 低推理</strong><span id="version-status">五个步骤都已定下 | 第 1—4 步冻结，第 5 步到期关闭已建好 | 没有测试在跑</span></div>
 <div class="mode-bar" role="group" aria-label="切换新旧架构"><button type="button" data-mode="v108" aria-pressed="true">当前冻结：v108</button><button type="button" data-mode="v94" aria-pressed="false">历史基线：v94</button><button type="button" data-mode="v100" aria-pressed="false">已退役：字段实验 v100</button><button type="button" data-mode="v91" aria-pressed="false">历史对照：不读库 v91</button><span>当前采用 v108。历史版本可切换查看；v100 的字段分类代码已退役。</span></div>
 </header>
 <p class="page-jumps"><a href="#current-status">看当前进度 ↓</a><a href="#latest-status">看抽取收尾记录 ↓</a><a href="#flow-workspace">直接看逐步流程 ↓</a></p>
@@ -124,10 +124,10 @@
 </article>
 </div>
 <section class="notes" aria-label="版本、边界与代码来源">
-<details><summary>当前冻结版本、提交与验证范围</summary><p><b>main 默认 poc-v108 / 抽取 v74i / 低推理。</b>判断为 v7。抽取经 PR #3 合并到 main；v108 随后跑了三遍完整回放，开题、匹配和判断据此冻结（D354）；到期关闭见 D356。</p><p>当天题库快照 → 同一次模型调用选证据并关联 → 代码检查 → 匹配保存 → 每日判断。v100 的字段分类路线已退役。</p><p><a href="../scripts/replay.py">当前默认入口</a> | <a href="../tests/test_frozen_extraction_prompt.py">生产提示词冻结检查</a> | <a href="../docs/DECISIONS.md">D271—D274 决定记录</a></p></details>
-<details><summary>预设问题从哪里来？可以在第一篇文章之前放进去</summary><p>运行时显式传入 <code>--seed</code>，把文件里预先写好的研究问题、结果区间和依赖关系放进研究库。这些整条流程回放全部传入同一份种子 v2，共 22 道题。v92 第一日的快照已经包含这些种子；运行中当天新开的题，次日进入快照。</p><p>例子：先准备好“产品何时交付”，第一篇关于交付延迟的报道就有地方归入。没有预设问题时，系统也可以依靠文章提出候选问题。</p></details>
+<details><summary>当前冻结版本、提交与验证范围</summary><p><b>main 默认 poc-v116：冻结的 poc-v108（抽取 v74i / 低推理）加开始跟踪时读一次财报（D364—D366）。</b>判断为 v7。抽取经 PR #3 合并到 main；v108 随后跑了三遍完整回放，开题、匹配和判断据此冻结（D354）；到期关闭见 D356。</p><p>当天题库快照 → 同一次模型调用选证据并关联 → 代码检查 → 匹配保存 → 每日判断。v100 的字段分类路线已退役。</p><p><a href="../scripts/replay.py">当前默认入口</a> | <a href="../tests/test_frozen_extraction_prompt.py">生产提示词冻结检查</a> | <a href="../docs/DECISIONS.md">D271—D274 决定记录</a></p></details>
+<details><summary>预设问题从哪里来？可以在第一篇文章之前放进去</summary><p>运行时显式传入 <code>--seed</code>，把文件里预先写好的研究问题、结果区间和依赖关系放进研究库。这些整条流程回放全部传入同一份种子 v2，共 22 道题。默认配置 poc-v116 在放入种子题之后、第一天之前，让每道题读一次公司最近一期财报，记下起点数（D364）。v92 第一日的快照已经包含这些种子；运行中当天新开的题，次日进入快照。</p><p>例子：先准备好“产品何时交付”，第一篇关于交付延迟的报道就有地方归入。没有预设问题时，系统也可以依靠文章提出候选问题。</p></details>
 <details><summary>失败了会怎样？哪些信息会被丢掉？</summary><p>一条证据的引用检查不过，或者检查后既没有关联已有问题也没有有效候选，会被丢弃并记录原因。v92 不再调用另一个模型补归题。候选问题失去全部支持证据后也会被丢弃。记录原因用于检查丢掉了什么，不是等待以后使用的证据池。</p><p>模型调用或保存发生错误，会记录失败步骤并停止当天流程。判断输出被代码拒绝时会修正重试一次；仍不通过就停止。恢复运行会依据已经保存的处理记录继续。</p></details>
-<details><summary>已经写好的部分，与还没有实现的部分</summary><p>已经有：v92 抽取读题库并直接归题、旧版单独归题路径、预设问题导入、问题与证据查重、保存关系、每日判断、到期冻结和关闭。</p><p>还没有：每个问题一份持续更新的完整论证。到期关闭不另做最终裁决（D356）；关闭时停的选项和真实结果的对照，等第一个真实到期日 2026-12-31 再做。当前判断直接读证据列表、关联结论和上一次判断。</p><p>v91、v92、v94 各完成三遍，v95 完成一遍，已有计数和判断评分。v108 完成三遍（D354），是当前冻结默认；v103 没有完整回放结果。后续主要问题仍是辅助证据漏抽、部分错接，以及已有题库抑制新问题的提出。</p></details>
+<details><summary>已经写好的部分，与还没有实现的部分</summary><p>已经有：v92 抽取读题库并直接归题、旧版单独归题路径、预设问题导入、开始跟踪时每道题读一次最近一期财报（D364）、问题与证据查重、保存关系、每日判断、到期冻结和关闭。</p><p>还没有：每个问题一份持续更新的完整论证。到期关闭不另做最终裁决（D356）；关闭时停的选项和真实结果的对照，等第一个真实到期日 2026-12-31 再做。当前判断直接读证据列表、关联结论和上一次判断。</p><p>v91、v92、v94 各完成三遍，v95 完成一遍，已有计数和判断评分。v108 完成三遍（D354），是当前冻结默认；v103 没有完整回放结果。后续主要问题仍是辅助证据漏抽、部分错接，以及已有题库抑制新问题的提出。</p></details>
 <details><summary>后面会把杂音自动删掉吗？</summary><p>没有专门的杂音清理步骤。匹配保存记录证据关系；判断只缩小本次阅读范围，不按“是不是杂音”删除记录。用户证据列表按日期、替换关系和可选来源类型筛选，不使用判断模型的阅读窗口。</p><p>所以“一条证据不再出现在判断请求里”和“它从研究库或用户页面消失”是两回事。</p><p><a href="../src/hivemind/views/judging.py">判断读取规则</a> | <a href="../src/hivemind/service.py">用户证据列表</a></p></details>
 <details><summary>看实现依据</summary><p>当前实现：<code>main</code>，已包含抽取工作。旧分支仅用于查历史实验材料。本页是代码导读，不替代标准、PRD 或已记录决定。例子使用虚构公司与数字，不是实测结果。</p><p><a href="../docs/CURRENT_STATE.md">分支状态</a> | <a href="../poc/config/poc-v108.json">当前默认配置</a> | <a href="../docs/prd/05-extraction.md">抽取 PRD</a> | <a href="../docs/prd/06-views.md">研究库与判断 PRD</a></p></details>
 </section>

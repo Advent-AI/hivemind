@@ -1,0 +1,88 @@
+stored (control) against v74l, 4000 reassignments of each article's six answers (seed 20261105)
+
+dev: 54 articles
+  measure                                       control  variant   diff    p up  p down  per send (control | variant)
+  M1 elsewhere                                      100      104      4  0.3995  0.6677  [24, 37, 39] | [32, 37, 35]
+  M1 narrow home                                     98      105      7  0.2530  0.8183  [29, 35, 34] | [36, 36, 33]
+  M1 no home (dropped)                               15        8     -7  0.8468  0.2228  [14, 0, 1] | [4, 1, 3]
+  M1 not written                                     66       71      5  0.3695  0.6860  [26, 18, 22] | [26, 23, 22]
+  M1 only v1/v2                                      33       24     -9  0.8998  0.1535  [11, 14, 8] | [6, 7, 11]
+  M2 v1: kept, used by no question                   53       13    -40  1.0000  0.0000  [20, 16, 17] | [4, 4, 5]
+  M2 v1: no gold span                                25       14    -11  0.9878  0.0310  [9, 8, 8] | [6, 6, 2]
+  M2 v1: not kept by the standard                    31       11    -20  0.9995  0.0037  [9, 9, 13] | [5, 3, 3]
+  M2 v1: used for q01                                13       10     -3  0.9533  0.2117  [4, 4, 5] | [4, 4, 2]
+  M2 v1: used only for other questions               13        8     -5  0.9123  0.1918  [6, 3, 4] | [1, 2, 5]
+  M3 core matters                                   177      177      0  1.0000  1.0000  [59, 59, 59] | [59, 59, 59]
+  M3 core present                                   149      146     -3  0.7610  0.3563  [48, 52, 49] | [47, 49, 50]
+  M3 optional matters                               138      138      0  1.0000  1.0000  [46, 46, 46] | [46, 46, 46]
+  M3 optional present                                37       40      3  0.3187  0.8508  [11, 11, 15] | [14, 13, 13]
+  M3 supporting matters                             309      309      0  1.0000  1.0000  [103, 103, 103] | [103, 103, 103]
+  M3 supporting present                             205      166    -39  0.9998  0.0003  [73, 67, 65] | [56, 54, 56]
+  M4 not-kept present                               120       78    -42  0.9998  0.0005  [43, 36, 41] | [24, 32, 22]
+  M4 not-kept spans                                1224     1224      0  1.0000  1.0000  [408, 408, 408] | [408, 408, 408]
+  M4 optional (listed under not_kept) present        14       17      3  0.2903  0.8888  [7, 3, 4] | [5, 6, 6]
+  M4 optional (listed under not_kept) spans          57       57      0  1.0000  1.0000  [19, 19, 19] | [19, 19, 19]
+  M5 guard pairs                                     78       78      0  1.0000  1.0000  [26, 26, 26] | [26, 26, 26]
+  M5 kept under v1/v2                                34       28     -6  0.9980  0.0225  [12, 11, 11] | [10, 10, 8]
+  M6 gold-used items                                300      300      0  1.0000  1.0000  [100, 100, 100] | [100, 100, 100]
+  M6 homeless                                         9       13      4  0.2675  0.8508  [7, 1, 1] | [4, 5, 4]
+  M6 reaching a gold question                       185      192      7  0.2567  0.8143  [58, 64, 63] | [67, 63, 62]
+  M7 links on kept statements                       619      571    -48  0.9563  0.0510  [212, 201, 206] | [195, 189, 187]
+  P parking: statements under v1 or v22             147       68    -79  1.0000  0.0000  [51, 43, 53] | [24, 23, 21]
+  code refusals                                       7       12      5  0.2060  0.8845  [1, 4, 2] | [6, 2, 4]
+  statements homeless                                89       99     10  0.2635  0.7788  [35, 27, 27] | [31, 31, 37]
+  statements kept                                   575      510    -65  0.9960  0.0050  [197, 183, 195] | [176, 168, 166]
+  -> M6 reaching a gold question: up required; diff 7, p 0.2567: FAIL
+  -> P parking: statements under v1 or v22: down required; diff -79, p 0.0000: pass
+  -> M4 not-kept present: up must not happen; diff -42, p 0.9998: pass
+  -> M3 core present: down must not happen; diff -3, p 0.3563: pass
+
+heldout: 15 articles
+  measure                                       control  variant   diff    p up  p down  per send (control | variant)
+  M1 elsewhere                                        1        2      1  0.4925  0.9510  [1, 0, 0] | [1, 0, 1]
+  M1 narrow home                                      6        5     -1  1.0000  0.5045  [2, 2, 2] | [2, 2, 1]
+  M1 no home (dropped)                                0        1      1  0.4948  1.0000  [0, 0, 0] | [1, 0, 0]
+  M1 not written                                      0        1      1  0.5045  1.0000  [0, 0, 0] | [0, 0, 1]
+  M1 only v1/v2                                       5        3     -2  0.9768  0.2722  [1, 2, 2] | [0, 2, 1]
+  M3 core matters                                    63       63      0  1.0000  1.0000  [21, 21, 21] | [21, 21, 21]
+  M3 core present                                    50       47     -3  0.9237  0.2462  [15, 16, 19] | [16, 16, 15]
+  M3 optional matters                                15       15      0  1.0000  1.0000  [5, 5, 5] | [5, 5, 5]
+  M3 optional present                                 4        3     -1  0.9083  0.5022  [1, 1, 2] | [0, 2, 1]
+  M3 supporting matters                              60       60      0  1.0000  1.0000  [20, 20, 20] | [20, 20, 20]
+  M3 supporting present                              45       36     -9  1.0000  0.0073  [14, 15, 16] | [11, 14, 11]
+  M4 not-kept present                                26       15    -11  0.9890  0.0323  [8, 6, 12] | [2, 8, 5]
+  M4 not-kept spans                                 294      294      0  1.0000  1.0000  [98, 98, 98] | [98, 98, 98]
+  M4 optional (listed under not_kept) present         0        0      0  1.0000  1.0000  [0, 0, 0] | [0, 0, 0]
+  M4 optional (listed under not_kept) spans           6        6      0  1.0000  1.0000  [2, 2, 2] | [2, 2, 2]
+  M6 gold-used items                                 66       66      0  1.0000  1.0000  [22, 22, 22] | [22, 22, 22]
+  M6 homeless                                         3        6      3  0.2435  0.9207  [1, 2, 0] | [2, 2, 2]
+  M6 reaching a gold question                        39       38     -1  0.7710  0.5015  [12, 13, 14] | [12, 13, 13]
+  M7 links on kept statements                       151      116    -35  0.9992  0.0013  [48, 46, 57] | [37, 44, 35]
+  P parking: statements under v1 or v22              17        3    -14  0.9945  0.0213  [5, 10, 2] | [1, 2, 0]
+  code refusals                                       0        1      1  0.5040  1.0000  [0, 0, 0] | [0, 0, 1]
+  statements homeless                                11       18      7  0.1605  0.9115  [2, 7, 2] | [7, 4, 7]
+  statements kept                                   148      112    -36  1.0000  0.0000  [46, 46, 56] | [36, 43, 33]
+  -> M6 reaching a gold question: down must not happen; diff -1, p 0.5015: pass
+  -> M4 not-kept present: up must not happen; diff -11, p 0.9890: pass
+  -> M3 core present: down must not happen; diff -3, p 0.2462: pass
+
+per question, both sets (69 articles); limits {'drops': 3, 'full drops': 2, 'noise': 6, 'full noise': 3} (base {'drops': 3, 'full drops': 2, 'noise': 5, 'full noise': 3}); a variant identical to the control fails in 9.2% of 4000 reassignments (drops 1.7%, full drops 0.5%, noise 5.1%, full noise 3.6%)
+  question   drops  gains  full -  full +  1-home out  1-home in  new noise  removed  full new
+  v1             0      0       0       0           0          0          1       17         1
+  v2             0      0       0       0           0          0          1        2         0
+  v3             0      0       0       0           0          0          2        0         0
+  v4             0      0       0       0           0          0          0        1         0
+  v5             1      0       0       0           0          0          0        0         0
+  v6             0      0       0       0           0          0          1        0         0
+  v7             1      1       1       0           0          0          1        1         1
+  v8             0      2       0       0           1          0          0        0         0
+  v9             0      0       0       0           0          0          2        2         0
+  v11            0      0       0       0           0          0          1        0         1
+  v16            1      1       0       1           0          0          0        0         0
+  v17            0      0       0       0           0          0          1        1         0
+  v18            0      1       0       0           0          0          1        0         0
+  v20            1      0       0       0           0          0          1        0         0
+  v22            0      0       0       0           0          0          1        0         0
+  failing: none
+
+verdict: FAIL (M6 reaching a gold question); 23 cases listed for the reader in /Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/answers-links-reading-v74l.json

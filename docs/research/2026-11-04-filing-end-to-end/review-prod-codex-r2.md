@@ -1,0 +1,16 @@
+**Two serious findings remain.** Sequence 1 itself is safe: the first daily item receives 2, completion tracking still works, and uncited evidence remains visible for its first five judgements. No files were edited or model requests sent.
+
+1. **Serious — The seeded questions still disappear from the product.**  
+   Moving evidence to sequence 1 fixes its visibility, but seeds remain at sequence 0 ([seeding.py:28](/Users/lchingen/hivemind/src/hivemind/seeding.py:28)). The service excludes that sequence, including when checking whether a question exists ([service.py:39](/Users/lchingen/hivemind/src/hivemind/service.py:39), [service.py:58](/Users/lchingen/hivemind/src/hivemind/service.py:58)). The public bundle consequently rejects the question ([bundle.py:130](/Users/lchingen/hivemind/src/hivemind/bundle.py:130)).  
+   **Evidence:** An in-memory reproduction with the actual seed file and sequence-1 evidence returned that evidence to the judge, but zero library questions; requesting `v1` raised `KeyError`. Thus round-1 finding 1 is only partly addressed.  
+   **Fix:** Specify how seeded questions and their associated seed records become visible from coverage start. Extend $0 verification to `service.view`, `bundle.library` and `bundle.thesis_bundles`, including sources and arrival dates—not only the inner evidence reader.
+
+2. **Serious — An interrupted initialization can still lose its first judging round.**  
+   The design skips any existing baseline row without checking whether its coverage-start day finished ([production-design.md:46](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/production-design.md:46)). Example: baseline commits for July 1, the process stops before daily processing, then restarts with `--from July 2`. Replay permits advancing past unfinished July 1 ([replay.py:56](/Users/lchingen/hivemind/src/hivemind/replay.py:56)); its July-1 change marker is never visited.  
+   **Fix:** Require completion of the stored coverage-start day before advancing beyond it. Add this interrupted-initialization state and an entry-point $0 check that either resumes July 1 or refuses before calls.
+
+3. **Minor — Two table cells still specify sequence 0.**  
+   Table 2 says evidence has `created_seq 0`; Table 3 explains back-dating safety using sequence 0 ([production-design.md:73](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/production-design.md:73), [production-design.md:85](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/production-design.md:85)).  
+   **Fix:** Use the step’s allocated sequence throughout; explain that its processing date equals coverage start.
+
+Round-1 findings **2–4 are correctly addressed for their stated cases**. I confirmed both selected report texts equal the validated page texts. The progressed-ledger refusal and wire-byte comparison are sound. Sequence 1 introduces no additional issue in dispatch, the parallel manifest, judgement numbering or evidence arrival retention.

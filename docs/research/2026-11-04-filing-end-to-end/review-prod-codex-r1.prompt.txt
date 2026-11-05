@@ -1,0 +1,18 @@
+You are a read-only reviewer. Repository: /Users/lchingen/hivemind (branch feat/coverage-start-baseline-2026-11-05). Do not edit anything; send no model request.
+
+SCOPE: the design of a new product step, before its code is written: docs/research/2026-11-04-filing-end-to-end/production-design.md ("the coverage-start reading"). It builds what was validated in baseline-design.md rounds 13-25 (same folder) and decided in D363 and D364 (docs/DECISIONS.md). The step's check already exists in src/hivemind/baseline.py.
+
+Read the production code it touches: scripts/replay.py (seeding, then replay.run), src/hivemind/replay.py (run), src/hivemind/views/round.py (changed_views_of_day, judge_day, run), src/hivemind/parallel_day.py (_manifest "day started"), src/hivemind/views/store.py (add_evidence, add_source, link, evidence_in_force, next_sequence, mark_step), src/hivemind/views/judging.py (evidence_in_view, round_of_judgements, _lines_english), src/hivemind/views/jev_matching.py (thesis_text), src/hivemind/config.py (load, _setting, _prompt_files), src/hivemind/model.py (call, build_request), src/hivemind/extraction.py (shown_views), src/hivemind/placement.py (question_lines), src/hivemind/bundle.py and service.py (readers of evidence), scripts/preflight.py, dispatch.py.
+
+GOVERNING: AGENTS.md §2 (the four tables; a blank or wrong cell means not ready), §3 (one owner; explicit inputs; a configured step whose input is missing refuses), §4-§5 (tests, $0 replay of stored decisions), §9.
+
+OUT OF SCOPE: the frozen ruler, the extraction and judging prompts, the reading's prompt wording (validated and frozen as baseline-v3), whether to build it (decided), document style.
+
+LOOK FOR (serious = the code built from this design would be wrong, break an existing path, or not be what was validated):
+1. Wrong or missing cells in the four tables: a state or event not handled, a reader of the written values not listed or misdescribed, an old check the new path fails, a decision misquoted.
+2. Does writing at sequence 0 with a processing step 'baseline' dated the coverage-start day break anything (resume, back-dating, parallel day, dispatch, judge_day, store.next_sequence, evidence_in_view arrivals, Jev's thesis_text, the bundle/service)? Would the first day's judging round actually judge these questions?
+3. Will the production requests be byte-identical to the validated ones (setting, schema name 'extraction', user message), so the $0 replay can prove it?
+4. Is anything in "what is built" different from what was validated (records, one-line unit rule, links, document rule, check)?
+5. Is the $0 verification enough to accept the code before the paid end-to-end run?
+
+OUTPUT: numbered findings, severity (serious / minor), evidence (file:line), fix. Say explicitly if nothing serious. Under 700 words.

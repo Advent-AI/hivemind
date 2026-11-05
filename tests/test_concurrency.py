@@ -178,8 +178,9 @@ def test_the_shown_questions_takes_lines_and_the_schema_change_the_request_ident
 
 @pytest.mark.parametrize('extra_arguments, parallel', [([], True), (['--workers', '1'], False)])
 def test_replay_script_runs_the_parallel_day_by_default_and_serially_with_one_worker(tmp_path, monkeypatch, extra_arguments, parallel):
-    """D183/D274 entry point as the user calls it: `scripts/replay.py` with no --config runs poc-v108; with its defaults the
-    parallel day (16 extraction and 8 Jev workers), with `--workers 1` the serial path; both write the serial ledger."""
+    """D183 entry point as the user calls it: `scripts/replay.py` with its worker defaults runs the parallel day (16 extraction and 8 Jev
+    workers), with `--workers 1` the serial path; both write the serial ledger. Run under the frozen pipeline poc-v108: the default poc-v116 is
+    the same plus the coverage-start reading, which needs --seed (test_baseline runs that entry)."""
     import runpy
     serial_dir = tmp_path / 'serial'; serial_dir.mkdir()
     serial = setup_run(serial_dir)
@@ -198,7 +199,8 @@ def test_replay_script_runs_the_parallel_day_by_default_and_serially_with_one_wo
             super().__init__(*arguments, **options)
     monkeypatch.setattr(parallel_day, 'ParallelDay', RecordedParallelDay)
     monkeypatch.setattr(sys, 'argv', ['replay.py', '--from', '2026-02-25', '--until', '2026-02-25', '--testdb', args['testdb_path'],
-                                      '--views', args['views_path'], '--archive', str(tmp_path / 'cli-archive.sqlite')] + extra_arguments)
+                                      '--views', args['views_path'], '--archive', str(tmp_path / 'cli-archive.sqlite'),
+                                      '--config', str(ROOT / 'poc/config/poc-v108.json')] + extra_arguments)
     runpy.run_path(str(ROOT / 'scripts/replay.py'), run_name='__main__')
     assert (tmp_path / 'manifests' / 'day-2026-02-25.json').is_file() == parallel
     assert built == ([{'extraction_workers': 16, 'jev_workers': 8}] if parallel else [])

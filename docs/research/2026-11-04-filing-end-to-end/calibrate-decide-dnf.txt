@@ -1,0 +1,59 @@
+stored (control) against definition_no_fallback, 1000 reassignments of each article's six answers (seed 20261105)
+
+dev: 54 articles
+  measure                                       control  variant   diff    p up  p down  per send (control | variant)
+  M1 elsewhere                                      114      110     -4  0.6770  0.3980  [38, 37, 39] | [39, 41, 30]
+  M1 narrow home                                    108      113      5  0.2800  0.8070  [35, 36, 37] | [39, 39, 35]
+  M1 no home (dropped)                                2       19     17  0.0280  0.9910  [0, 2, 0] | [6, 3, 10]
+  M1 not written                                     54       47     -7  0.8560  0.2030  [21, 17, 16] | [13, 15, 19]
+  M1 only v1/v2                                      34       23    -11  0.9440  0.0960  [10, 12, 12] | [7, 6, 10]
+  M2 v1: kept, used by no question                   49       19    -30  1.0000  0.0000  [18, 16, 15] | [5, 6, 8]
+  M2 v1: no gold span                                17        7    -10  0.9890  0.0220  [1, 6, 10] | [4, 1, 2]
+  M2 v1: not kept by the standard                    30        5    -25  1.0000  0.0000  [8, 13, 9] | [2, 1, 2]
+  M2 v1: used for q01                                12       12      0  0.6930  0.6930  [4, 4, 4] | [3, 5, 4]
+  M2 v1: used only for other questions               13        2    -11  1.0000  0.0030  [5, 3, 5] | [1, 1, 0]
+  M3 core matters                                   177      177      0  1.0000  1.0000  [59, 59, 59] | [59, 59, 59]
+  M3 core present                                   150      148     -2  0.6850  0.4460  [50, 50, 50] | [50, 53, 45]
+  M3 optional matters                               138      138      0  1.0000  1.0000  [46, 46, 46] | [46, 46, 46]
+  M3 optional present                                38       38      0  0.6040  0.5970  [10, 15, 13] | [13, 12, 13]
+  M3 supporting matters                             309      309      0  1.0000  1.0000  [103, 103, 103] | [103, 103, 103]
+  M3 supporting present                             197      176    -21  0.9890  0.0210  [63, 65, 69] | [57, 55, 64]
+  M4 not-kept present                               102       76    -26  0.9940  0.0080  [37, 36, 29] | [24, 25, 27]
+  M4 not-kept spans                                1224     1224      0  1.0000  1.0000  [408, 408, 408] | [408, 408, 408]
+  M4 optional (listed under not_kept) present        17       16     -1  0.6940  0.4960  [4, 8, 5] | [5, 6, 5]
+  M4 optional (listed under not_kept) spans          57       57      0  1.0000  1.0000  [19, 19, 19] | [19, 19, 19]
+  M5 guard pairs                                     78       78      0  1.0000  1.0000  [26, 26, 26] | [26, 26, 26]
+  M5 kept under v1/v2                                32       34      2  0.3420  0.8830  [11, 11, 10] | [11, 12, 11]
+  M6 gold-used items                                300      300      0  1.0000  1.0000  [100, 100, 100] | [100, 100, 100]
+  M6 homeless                                         9       16      7  0.1490  0.9210  [3, 4, 2] | [5, 3, 8]
+  M6 reaching a gold question                       191      200      9  0.1180  0.9350  [62, 63, 66] | [68, 68, 64]
+  M7 links on kept statements                       595      544    -51  0.9670  0.0380  [185, 203, 207] | [200, 164, 180]
+  P parking: statements under v1 or v22             139       53    -86  1.0000  0.0000  [41, 49, 49] | [17, 15, 21]
+  code refusals                                       9       13      4  0.2920  0.8420  [6, 2, 1] | [6, 4, 3]
+  statements homeless                                81      154     73  0.0000  1.0000  [30, 29, 22] | [55, 44, 55]
+  statements kept                                   552      495    -57  0.9940  0.0070  [174, 188, 190] | [173, 150, 172]
+  -> M6 reaching a gold question: up required; diff 9, p 0.1180: FAIL
+  -> P parking: statements under v1 or v22: down required; diff -86, p 0.0000: pass
+  -> M4 not-kept present: up must not happen; diff -26, p 0.9940: pass
+  -> M3 core present: down must not happen; diff -2, p 0.4460: pass
+
+heldout: no article answered by both arms: UNEXERCISED
+
+per question, both sets (54 articles); limits {'drops': 3, 'full drops': 2, 'noise': 5, 'full noise': 3} (base {'drops': 3, 'full drops': 2, 'noise': 5, 'full noise': 3}); a variant identical to the control fails in 8.1% of 1000 reassignments (drops 2.8%, full drops 0.3%, noise 4.0%, full noise 1.5%)
+  question   drops  gains  full -  full +  1-home out  1-home in  new noise  removed  full new
+  v1             0      0       0       0           0          0          0       10         0
+  v2             0      0       0       0           0          0          2        4         0
+  v5             0      0       0       0           1          0          1        0         0
+  v6             0      0       0       0           1          0          3        0         1
+  v7             0      1       0       1           0          0          0        0         0
+  v8             1      0       0       0           0          1          0        0         0
+  v9             0      0       0       0           0          0          1        0         0
+  v13            0      0       0       0           1          0          0        0         0
+  v16            0      3       0       0           0          0          0        0         0
+  v17            0      0       0       0           0          0          1        0         0
+  v18            0      0       0       0           0          0          0        1         0
+  v20            1      0       1       0           0          0          1        0         1
+  v22            0      0       0       0           0          0          0        1         0
+  failing: none
+
+verdict: UNEXERCISED on heldout; 19 cases listed for the reader in docs/research/2026-11-04-filing-end-to-end/answers-reading-definition_no_fallback.json

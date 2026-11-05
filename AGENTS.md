@@ -14,7 +14,11 @@ rule at its decision; it becomes a new rule only when no rule covers that decisi
   `poc/config/poc-v108.json`, extraction v74i at low reasoning (role-v74i, review-v74i, categories-v74i, `placement.takes`,
   `placement.FILING_RULE_ROOT_FALLBACK`). No piece of it is edited; a change is a new version that only his decision opens, measured against it.
   `tests/test_frozen_extraction_prompt.py` fails the suite when any piece moves. The code builds no other extraction or judging version and
-  refuses a configuration that names one (D359); an older version's results are read from its stored runs.
+  refuses a configuration that names one (D359); an older version's results are read from its stored runs. The replay default since D366 is
+  `poc/config/poc-v116.json`: this configuration plus the coverage-start reading (D364, D365) and nothing else, which the same test checks.
+- **The current phase's core PRD is `docs/prd/10-filing-phase.md`** (filing that links facts the way an analyst does): read it in full, and do its
+  §0 checklist, before any step of this phase; it holds the proven core problem, what is out of scope, the constraints, the measure and the
+  decision rule, which no test result rewrites (Alex, 2026-11-04: "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit").
 - `docs/CURRENT_STATE.md`: status, open defects and the one next task. Each branch keeps its own.
 - `docs/DECISIONS.md`: recorded decisions. At the 2026-11-03 merge of `fix/extraction-quality-2026-10-28` into `main` the branch kept its numbers (D171–D274) and `main`'s D181–D241, D258 and D259 were renumbered D275–D336, in order (the mapping heads that section of the file).
 - Worktrees: `/Users/lchingen/hivemind` is `main` (service, UI, pipeline). `/Users/lchingen/hivemind-extraction-quality-2026-10-28`
@@ -346,7 +350,11 @@ Verify at the point the change touches, at the sharpest level that shows it work
   D208 had designed two days earlier and marked "not built". Before any arm on one step: the production replay through the
   whole path on the gold window, the count at the step the product reads, and the decisions on the topic read for a parked
   fix (`research/2026-10-31-reference-context/reflection-2026-10-31.md`). Alex, 2026-10-31: "make sure we are not going
-  around in circles using wrong ruler and wrong prompts that don't work".
+  around in circles using wrong ruler and wrong prompts that don't work". Before a phase targets one step, the upside of that step done perfectly
+  is measured where the product is judged: the judge is given the gold's own evidence, built by the production code, a few sends
+  (2026-11-04: a filing phase rested on "the judge infers once it has the facts", which held for moving the answer, 9 of 9, and not for
+  landing it in the gold's range, 3 of 9; seven review rounds and a registered test later the filing count moved within luck. Alex:
+  "我很不开心你的失败，为什么，深度多轮检讨记录，想思路突破").
 - **Read what was kept against the gold, blind, before the next noise arm.** The not-kept gold entries a version keeps are
   judged by a reader who wrote neither the gold nor the prompt, mixed with controls it cannot tell apart; where it parts
   from the gold, the standard is unclear or the gold misreads it, and that goes to Alex before any arm counts it as noise
@@ -392,12 +400,30 @@ Verify at the point the change touches, at the sharpest level that shows it work
   need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we dive into do the
   full analysis stability test. This is a principle you should remember"); an agreed recommendation is first challenged by an
   independent reader on the concrete evidence behind it ("why you give recommendations for this. What did you see exactly?").
+  What reaches Alex is one recommendation and one test of it, reached after rounds of review (Claude's own, Codex's, an independent
+  reader's) on the traces until a round finds nothing serious; never a menu of arms or options, never a conclusion the next probe
+  overturns (Alex, 2026-11-04, after a probe overturned a conclusion and two options were offered: "就测试一种，一次 … 你就没有自己看5轮review，
+  能不能自己有个超级自信的定论和证据再给我提建议？"). A review round reads a rule as its author meant it; only a send shows how the model applies it: before
+  a registered test, the changed request is sent on the cases that motivated it, a few cents (2026-11-04: a tie sentence written for one
+  rack price and judged sound by two review rounds sent that price to the buyers' spending question in 3 of 3 sends of the test).
 - **A failed arm is diagnosed before the next one.** When an arm fixes its class and regresses another, write the root cause
   first: the process error (what grew, what the small sample did not guard) and the mechanism, traced to the raw answers and
   the model's account, never a guess stated as the cause. A small sample guards every class the change can move, not only
   its own. When a fix keeps moving another class, the call is doing several jobs: move the rule to its owner (a field's
   definition sits in the schema beside the field) rather than add a sentence (Alex, 2026-10-30: "那你这些修改都是失败的呀，为什么，
-  根因，你要检讨然后再接着尝试。我觉得你已经陷入deep loop 了").
+  根因，你要检讨然后再接着尝试。我觉得你已经陷入deep loop 了"). A failed step of a plan is fixed and re-run at that same step:
+  the failures it found are the work list, and nothing later in the plan (a longer run, the next stage) and no substitute plan
+  starts before it passes (Alex, 2026-11-04, after the argument card failed its 14-day step and a 60-day run of the old version
+  was launched instead of the fixes: "你为什么要drift? 你现在明明还有这么多的问题要fix,你到底知不知道你要fix什么？"). Before a
+  fix is proposed, write which goal the mechanism still serves and what the product already gives for it; a measurement that
+  removes the reason a mechanism exists retires the mechanism instead of starting its repair (Alex, 2026-11-04, after a repaired
+  card that no judgement reads was proposed for a run and then judged nearly useless by its proposer: "I told you to think about it
+  and you're giving me suggestions that you reject yourself").
+- **Before a version is rejected, the rejection is checked.** Every failed or refused answer behind a "did not pass" is read against its source, and each is put down
+  as the model's error or the measuring rule's or check's error; a rule or check that refuses right answers is fixed, and a version that already meets the goal (what it
+  was built to fix is fixed, nothing that was right turned wrong) is not dropped for a stricter rule a later review added. Alex, 2026-11-05, after four versions in a
+  day were each rejected on rules added along the way and six right figures had been refused by the author's own quote check: "你到底是不是再搬石头砸自己的脚？各种reject
+  自己，你确定是正确的rejection 吗？你又下去看trace吗？"; "你不能每次都这样判错然后浪费我时间，我需要你深度看完所有失败trace给我准信下一步你要跑什么才能收敛".
 - **Correct, then cheap.** Make the pipeline right and stable before any cost, speed or throughput work; report cost
   as a baseline only (Alex, 2026-10-25).
 
@@ -478,7 +504,8 @@ Verify at the point the change touches, at the sharpest level that shows it work
   reads the day-start list with the takes lines and files the statements itself (extraction v72, `poc-v92`), so no placement call
   sits on the chain; measured against `poc-v91` that evening and made the default and the base of every later change (D265, his
   words: "this is going to be the latest version. Use this, and don't drift again"; since D267 the default was `poc-v94`, the same
-  architecture with the three D266 fixes, since D272 `poc-v103`, and since D274 it is `poc-v108`, the frozen production extraction prompt). A run starts only on his word: the acceptance
+  architecture with the three D266 fixes, since D272 `poc-v103`, since D274 `poc-v108`, the frozen production extraction prompt, and since D366 it is `poc-v116`, the same plus the
+  coverage-start reading). A run starts only on his word: the acceptance
   run of `poc-v91` launched at 17:24 that day was stopped at his word at 17:27 inside its first day (about five cents); the six
   draws of 18:05 (v92 against v91) ran on his "get it worked out".
 - Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.

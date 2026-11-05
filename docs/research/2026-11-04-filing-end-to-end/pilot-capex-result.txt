@@ -1,0 +1,27 @@
+statements written per article (kept + no home), stored | clause:
+  gnews:25d0b1d2a9dfe0bb99432e1a: [5, 4, 4] | [3, 6, 5]
+  gnews:4a892d75e355bee00aa3c572: [3, 4, 3] | [3, 3, 4]
+  gnews:4d1b1ca014068fb532f116b3: [4, 8, 5] | [8, 9, 7]
+  gnews:d4c5dc540392f8df39aee250: [6, 8, 5] | [9, 7, 7]
+  gnews:085b1e1a1543437edb9756d6: [8, 8, 7] | [13, 9, 10]
+  gnews:c675b7c2548b02233ee7b05c: [11, 11, 12] | [10, 11, 10]
+  gnews:1b5a3359dd0644861c0fce42: [6, 6, 8] | [8, 7, 8]
+  gnews:82472d26336e1982cf8a3eff: [8, 6, 7] | [7, 9, 5]
+  gnews:ededac685b09f7a9c6952202: [11, 11, 6] | [14, 7, 9]
+  gnews:dedacecd6d2ed5192c307199: [4, 3, 3] | [5, 2, 6]
+  gnews:b68c019528300c6a1fcd3515: [10, 8, 11] | [12, 12, 10]
+  gnews:1e1fa5a194198eaf05d90c9e: [11, 10, 11] | [14, 10, 8]
+  gnews:295fceb25273abae9bb6c995: [12, 6, 8] | [8, 11, 10]
+  gnews:221f52333c8f5e936e515c4d: [5, 7, 7] | [6, 10, 8]
+
+statements under v12 in the free-cash-flow-only and other-company articles (read for C):
+
+clause one-lines under v12 stating a capex figure the quote lacks (E):
+  ('gnews:25d0b1d2a9dfe0bb99432e1a', 1, 'NVIDIA reported fiscal 2027 Q1 operating cash flow of $50.3 billion and free cash flow of $48.6 billion, implying capital expenditures of $1.7 billion for the q')
+
+verdict (C is decided by reading the list above):
+  A works      FAIL  cash-flow statement under v12: stored 0/3, clause 1/3
+  B fcf-only   pass  free-cash-flow-only articles with such a statement under v12 in 2+ clause sends: 0 []
+  D moves      pass  hyperscaler capex moved to v12: []
+  E inference  pass  articles with a v12 one-line stating a capex figure its quote lacks in 2+ clause sends: []
+  F delivery   FAIL  gold facts delivered in 2+ fewer clause sends: [('i288', {'stored': 3, 'capex_identity': 0}), ('i291', {'stored': 3, 'capex_identity': 1})]

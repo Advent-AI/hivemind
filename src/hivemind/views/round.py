@@ -62,9 +62,10 @@ def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence
 
 
 def changed_views_of_day(conn, day):
-    """The views whose reading changed on a replay day: the union of the 'written' records of that day's items."""
+    """The views whose reading changed on a replay day: the union of the 'written' records of that day's items and of the coverage-start reading's
+    record dated that day (D364: the questions it linked starting figures to are judged in the first day's round)."""
     changed = set()
-    for row in conn.execute("select reason from processing_steps where step='written' and result='ok' and publication_day=?", (day,)):
+    for row in conn.execute("select reason from processing_steps where step in ('written', 'baseline') and result='ok' and publication_day=?", (day,)):
         changed.update(json.loads(row['reason']).get('changed', []))
     return changed
 

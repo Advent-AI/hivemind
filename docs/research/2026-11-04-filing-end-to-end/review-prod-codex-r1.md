@@ -1,0 +1,19 @@
+**Four serious findings remain; the design is not ready for implementation.** No files were edited and no model requests were sent.
+
+1. **Serious — Sequence-0 evidence disappears from the service and dated bundles.**  
+   The design says these records are displayed ([production-design.md:63](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/production-design.md:63)). However, [service.py:39](/Users/lchingen/hivemind/src/hivemind/service.py:39) excludes sequence 0 from its date map; `visible` consequently rejects it, and [bundle.py:66](/Users/lchingen/hivemind/src/hivemind/bundle.py:66) removes it. An in-memory reproduction confirmed: the judge sees `e1`, the service and dated bundle return no evidence, and its arrival day is `None`.  
+   **Fix:** Specify how these records resolve to their coverage-start date without changing ordinary item numbering. Include service evidence, sources, arrival history and dated bundles in Table 2 and the $0 verification.
+
+2. **Serious — The required report-text input is absent from the default replay database.**  
+   [production-design.md:24](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/production-design.md:24) requires `item.text_page`. The default selected at [scripts/replay.py:33](/Users/lchingen/hivemind/scripts/replay.py:33) has no such column; I inspected its schema. The validated harness instead reads `text` from a separate page database ([baseline_all.py:68](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/baseline_all.py:68)). Thus selecting the new configuration with otherwise-default arguments cannot execute the specified read.  
+   **Fix:** Define the supported source input explicitly, including where raw report text comes from. Refuse missing required text before calls or ledger writes. Verify the CLI’s actual defaults and compare the selected report text with the validated bytes.
+
+3. **Serious — Enabling the step on an already-progressed ledger is unhandled.**  
+   [production-design.md:47](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/production-design.md:47) starts whenever seeds exist and no baseline row exists. Existing seeding permits resumption, but [replay.py:58](/Users/lchingen/hivemind/src/hivemind/replay.py:58) advances past completed days. For example, enabling baseline on a ledger already through July 14 can write its change marker dated July 1; replay resumes July 15, so that marker never triggers judging. The newly inserted evidence also claims sequence 0 despite being added after earlier judgments.  
+   **Fix:** Add the “progressed ledger, baseline newly enabled” state. Refuse it before calls unless a separately specified migration is authorized. Verify normal resume, interrupted initialization and this refusal through the entry point.
+
+4. **Serious — Equal archive keys do not prove byte-identical requests.**  
+   The promised proof is “archive keys equal” ([production-design.md:95](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/production-design.md:95)). But [model.py:211](/Users/lchingen/hivemind/src/hivemind/model.py:211) sorts keys for that identity, while [model.py:130](/Users/lchingen/hivemind/src/hivemind/model.py:130) sends unsorted JSON. I reproduced two reordered schemas with equal archive keys and different transmitted bytes.  
+   **Fix:** Compare the production transport’s serialized bytes against requests reconstructed by the validated builder, preserving schema order. Include a reordered-schema negative control.
+
+Sequence 0 itself does not disturb `next_sequence`, dispatch or the parallel-day start guard. Extending `changed_views_of_day` should queue the linked questions on a fresh first day. The proposed $0 checks need the additions above before they establish readiness for the paid run.
