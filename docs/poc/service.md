@@ -25,7 +25,7 @@ Field and route names are compatibility identifiers; `view` in an API name means
 | `changes(since_day, to_day)` | Changed judgements with previous/current positions, reasons and historically visible citations | Polling agent |
 | `evaluate(view_id, comparator, value_usd, as_of)` | Whether evaluable and why; otherwise claim position, judged position/label/condition and verdict | Numeric claim display |
 | `thesis_bundles(view_ids, as_of)` / `GET /thesis-bundles?ids=...` | Complete dated bundles with ladder, judgements, historical evidence, sources, dependencies and switches | `fromBundles` in the modular UI |
-| `thesis_library(as_of)` / `GET /library?as_of=...` | Complete dated library and research groups under the [library envelope](#current-library-envelope-d181) | Library UI and agents |
+| `thesis_library(as_of)` / `GET /library?as_of=...` | Complete dated library and research groups under the [library envelope](#current-library-envelope-d275) | Library UI and agents |
 | `POST /ideas` | Idea, search summary, mapped parts and chosen theses, related theses, evaluation, optional bundles, days, trace and cost | Idea application/UI; see its contract |
 | Derived index | Content hashes, embedding model, vectors, token counts and build timestamps | Search only; not the thesis ledger |
 

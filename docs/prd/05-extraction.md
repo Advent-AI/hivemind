@@ -1,8 +1,8 @@
 # Extraction
 
-> Status: foundation frozen, October 18, 2026; category prompt wording needs validation. D149 requires extraction-time grouping; D165 integrates it into the default pipeline (poc-v20), with a company's own financial lines carrying no group. English edition: October 25, 2026 (D163).
+> Status: foundation frozen, October 18, 2026; the production prompt is frozen at extraction v74i (`poc/config/poc-v108.json`, D274) and the code builds no other version (D359). D149 requires extraction-time grouping; D165 integrates it into the default pipeline (poc-v20), with a company's own financial lines carrying no group. English edition: October 25, 2026 (D163); corrected to D207, D209, D211, D251, D259, D264, D265, D273, D274 and D361 on 2026-11-05 (D367).
 > Design page: `docs/system-design.html` → New → Extraction → Details. Recorded decisions take precedence over this PRD.
-> The step's standard (what is kept, how much it weighs, which questions open, the golden set and how a prompt change is measured) is the signed page `05-extraction-standard.html` (D243), which replaces `docs/research/2026-10-29-analyst-standard/standard.md` (D229). Where this PRD differs from it, the page governs.
+> The step's standard (what is kept, how much it weighs, which questions open, the golden set and how a prompt change is measured) is the signed page `05-extraction-standard.html` (D243), which replaces `docs/research/2026-10-29-analyst-standard/standard.md` (D229). Where this PRD differs from it on what is kept, its weight, which questions open or how a change is measured, the page governs; on the request's shape and the pipeline, the decisions in force govern (the page is frozen, D261; its statements later decisions changed are recorded in [05-extraction-standard-corrections.md](05-extraction-standard-corrections.md), D368).
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Read each whole item with its category prompt as a senior hedge-fund analyst. Re
 - Read the complete file with embedded tables, or an entire table release, without separate text/table pipelines.
 - Categories require different reading: news for events and attribution, research for views and ratings, official decisions for actions and effective dates. They share one prompt structure.
 - A thesis is the analyst's judgement expressed as a question, ladder and due date. Evidence is an objective record of who said what in which item. Most items add evidence; fewer create new questions.
-- Evidence matters in relation to a question. Block 5 supplies existing subject theses and their dependencies, allowing a company statement about assured export licences to link directly to the licence theme.
+- Evidence matters in relation to a question. Block 5 shows the theses open at the start of the item's day (the item's subjects' own and every theme thesis), each with its question, subject and due date and a line code writes from its key and research group saying what it collects (its takes line); it shows no states, no evidence and no separate list of research groups (D211, D251, D264). The model files each statement under those theses itself, with no separate placement call, so a company statement about assured export licences is filed directly under the licence thesis.
 - Important uncovered matters, including another named company, a new material issue or a macro/policy event, become candidates with initiating evidence. The library later determines whether they are existing or new questions.
 - Sources make both theses and evidence traceable to the original text.
 
@@ -25,8 +25,8 @@ The model performs step 2; code performs the others.
 <!-- generated: steps -->
 ```
 An item arrives with category and sequence number
-  ↓ 1 Build the prompt (Code): Use the category's content in the shared template. The library supplies block 5: open subject theses, their dependencies and existing groups needed for association.
-  ↓ 2 Read (Model): Read the whole item. Return evidence linked to block-5 theses or current candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources.
+  ↓ 1 Build the prompt (Code): Use the category's content in the shared template. The library supplies block 5 once per day: the item's subjects' theses and every theme thesis open at the start of the item's day, each with its takes line (D251, D264); no dependency links and no list of stored groups.
+  ↓ 2 Read (Model): Read the whole item. Return evidence, each piece filed under the narrowest block-5 thesis it bears on and the answer's candidates it supports (D207, D264), and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources.
   ↓ 3 Check sources and group references (Code): Check that the quote or cell exists in the item and that cited numbers appear there. Evidence must link to block-5 theses or current candidates. Reject source mismatches with reasons. Validate association references under the library's complete handoff contract.
   ↓ 4 Hand off to the library (Code): Hand off evidence, candidates, associations and necessary group definitions with the sequence number. Matching decides identity; writing preserves membership.
 ```
@@ -34,20 +34,20 @@ An item arrives with category and sequence number
 
 ## Two outputs: evidence and candidates
 
-One reading returns evidence, candidates, group associations and necessary new group definitions. Evidence may link to shown theses or current candidates. Candidates are reserved for important uncovered questions, subject to the personal-memo rule. From extraction version 12 (D184) a candidate opens only for one of four admission reasons, stated in the answer: an annual quantity that carries the company's value, guided or not; one industry aggregate per calendar year; a stage of a policy process; a binding obligation a universe company takes on (due within 18 months, D185). The candidate also names the public material that settles it, the shown thesis the statement would otherwise attach to (or none) and what is lost if it only attached there. Code checks the shape of these fields; the model keeps the judgement of importance (D154/D155). A later estimate, another population or another wording of a shown aggregate is evidence to it. The library first resolves a candidate's destination, then compares its evidence within that thesis.
+One reading returns evidence, candidates, group associations and necessary new group definitions. Each statement is filed under one home: the narrowest open thesis it bears on, as that thesis's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer, never also a broader thesis beside it, plus the answer's own candidates it supports (D207, D259, D264). When no specific thesis is connected, a statement that moves the demand, supply, competition or pricing behind the company's results goes to the company-wide revenue thesis of its period (D273, kept by D361); a statement nothing takes is dropped as "no home" (D209). Code keeps the narrower of a thesis and one it depends on when a statement is linked to both (D265). The coverage-start reading's records are the one exception: each links to every thesis that read it (D364, below). Candidates are reserved for important uncovered questions, subject to the personal-memo rule. From extraction version 12 (D184) a candidate opens only for one of four admission reasons, stated in the answer: an annual quantity that carries the company's value, guided or not; one industry aggregate per calendar year; a stage of a policy process; a binding obligation a universe company takes on (due within 18 months, D185). The candidate also names the public material that settles it. Code checks the shape of these fields; the model keeps the judgement of importance (D154/D155). A later estimate, another population or another wording of a shown aggregate is evidence to it. The library first resolves a candidate's destination, then compares its evidence within that thesis.
 
 <!-- generated: two -->
 |  | Evidence | Candidate thesis |
 |---|---|---|
 | What it is | A statement or number from the item: who said what or what happened | A complete question to track: subject, question, ladder, due date and research-group association |
 | How common | Present in almost every item | Few: important questions uncovered by block 5; also all judgements from the user's memo |
-| Links | One or more block-5 theses, or current candidates | Carries initiating evidence; candidates from the user's memo may omit it |
+| Links | One home: the narrowest block-5 thesis it bears on, plus the answer's candidates it supports (D207, D264) | Carries initiating evidence; candidates from the user's memo may omit it |
 | In the library | Compare against its thesis's existing evidence: repeat, replacement or new | Decide existing identity or a part of it, succession, new thesis or skip. Preserve associations with the final thesis; matching does not regroup. |
 | Example | The 8-K statement that H20 exports to China require a licence | What will the China export-licence regime for chips covered by the April 2025 rule be on April 15, 2026? |
 
 ```
 Read a statement or number | Which thesis does it concern? (Judgements in the user's memo bypass this tree: all become candidates and may lack evidence)
-├─ A thesis in block 5 → Evidence: link to that thesis (Link only to the thesis directly discussed, not also to theses that depend on it)
+├─ A thesis in block 5 → Evidence: file it under the narrowest one it bears on (As that thesis's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer; that thesis only, never a broader one beside it, plus the answer's candidates it supports (D207, D259, D264). When no specific thesis is connected, a statement that moves the demand, supply, competition or pricing behind the company's results goes to the company-wide revenue thesis of its period (D273, D361).)
 ├─ Not in block 5, but important → Candidate thesis with this statement as evidence (Return its group association during extraction. The library later decides existing identity or new thesis. A thesis covers only up to its due date; events after that date belong here too.)
 └─ Neither → Do not extract (Background or boilerplate)
 ```
@@ -64,7 +64,7 @@ All categories use these five blocks. Classification owns the category's definit
 | What this category is and how to read it | The category definition and reading method; for example, attribute opinions and estimates to their author rather than treating them as completed facts. | Owned by classification; not redefined here |
 | Subjects | The item's related subjects plus every theme in the research universe. Select an existing theme for a theme candidate when applicable; otherwise describe the new issue clearly. | Item metadata; themes from the research universe |
 | What to extract from this category | One row per category in the table below. | Extraction module |
-| Existing theses and research groups | Open theses for the item's subjects and their dependencies, with dependency links. Supply only question, focus and due date, not states or evidence. Also supply available research groups under the library's grouping contract. | Thesis library |
+| Open theses at the start of the day | The theses of the item's subjects and every theme thesis open at the start of the item's day, the same list for every item of that day, each with a code-written takes line saying what its file holds. No states, evidence, dependency links or list of stored research groups; a candidate declares its group by name and scope. | Thesis library, read once per day (D251, D264) |
 <!-- /generated: template -->
 
 ## Category-specific prompts
@@ -78,7 +78,7 @@ T7 news prompt (The same template, with news-specific blocks 2 and 4)
 ├─ 2 How to read this category → Media reporting (From classification: opinion and analysis belong to T8; registered publication series use their category; remaining media material belongs here.)
 ├─ 3 Subjects → Subjects of this report (Filled by code, such as NVDA and AMD, plus all universe themes)
 ├─ 4 What to extract → What happened, when and who was involved; attribution and original sources (Official confirmation is fact; unnamed-source claims are rumours)
-└─ 5 Existing theses and research groups → Open theses for the report's subjects and their dependencies (Filled by code with dependency links, questions, focus and due dates. For example, NVDA FY2027 China revenue versus FY2026 and its chip-export-licence dependency. Also include available research groups.)
+└─ 5 Open theses at the start of the day → Every NVDA and AMD thesis and every theme thesis open at the start of the report's day (Filled by code once per day, each thesis with its takes line: for example NVDA FY2027 China revenue (“takes: revenue figures, guidance, estimates and revisions for NVIDIA China, this question's period …”) and the chip-export-licensing theme thesis. No states, evidence, dependency links or list of stored research groups.)
 ```
 
 - Each category has its own prompt using the same template. Blocks 2 and 4 vary by category; block 1 is shared; code fills blocks 3 and 5 for the item.
@@ -86,7 +86,7 @@ T7 news prompt (The same template, with news-specific blocks 2 and 4)
 - For theme candidates, select from block 3 or describe a new issue if absent. For companies, cryptocurrencies and commodities, provide the relevant symbol or name. Code resolves reference data and accepts registered names only, as classification does.
 - The user's own memo (T8 authored by the user) yields candidate judgements, not evidence. These candidates may have no evidence. Once opened, their state is “not yet judged” until evidence first links to them.
 - Code defines and validates output fields for evidence, candidates and associations, necessary new groups and sources. Do not restate the shape in prompts.
-- Test each category's prompt on stored items before settling its wording. Config records each version; a change creates a new version.
+- The production prompt is frozen at extraction v74i (D274); a change is a new version Alex opens, measured against it, and Config records each version.
 <!-- /generated: prompt -->
 
 ## What each of the 16 categories yields: block 4
@@ -121,12 +121,12 @@ Read every whole file, including tables. A table release is one item and is read
 What two items yield (Illustration)
 ├─ NVIDIA 8-K, April 15, 2025 → Empty library; no theses in block 5 | Two candidate theses (T6 other company publication: H20 exports to China require a licence; expected charges up to approximately $5.5 billion)
 │   ├─ Candidate: theme thesis → What will China export licensing for chips covered by the April 2025 rule, including H20 and MI308, look like on April 15, 2026? (Event thesis. Five rungs: full ban; licences required and none issued; licences issued with some conditions; all issued licences unconditional; no licence required. Due April 15, 2026. Quote: “…requires a license for export to China … of the Company’s H20 integrated circuits…”. NVIDIA discloses the licence requirement, classified as fact. The library opens thesis #1.)
-│   └─ Candidate: NVDA asset thesis → How will NVDA FY2026 China revenue compare with FY2025? (Numeric thesis. Five rungs: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Due on the FY2026 annual earnings date. Quote: “…up to approximately $5.5 billion of charges…”. This is a company expectation, classified as a party statement. The library opens #2, dependent on #1.)
-└─ NVIDIA statement, July 14, 2025 → Block 5 contains #2 and its dependency #1 | One evidence item, no candidate
+│   └─ Candidate: NVDA asset thesis → How will NVDA FY2026 China revenue compare with FY2025? (Numeric thesis. Five rungs: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Due on the FY2026 annual earnings date. Quote: “…up to approximately $5.5 billion of charges…”. This is a company expectation, classified as a party statement. The library opens #2; its dependency on #1 would be chosen in matching (D51), which the default Jev path does not yet do, and the licence theme reaches #2 through the theme block (D191, D195).)
+└─ NVIDIA statement, July 14, 2025 → Block 5 shows #1 and #2, open at the start of the day, with their takes lines | One evidence item, no candidate
     └─ Evidence → Link to #1 (Party statement: NVIDIA says the US government assured it that H20 export licences to China will be granted (July 14, 2025))
 ```
 
-Each evidence item records upstream ID, paragraph and exact quotation. Code checks that “$5.5 billion” appears in the quoted sentence. The first item sees an empty library, so important questions become candidates. The second sees the licence thesis and links NVIDIA's statement directly. The library compares candidates with searched theses and evidence within its thesis. Both candidates join the chip-licensing-and-China-business group; the evidence-only second item updates existing membership. Grouping does not replace #2's dependency on #1. The NVDA example uses the same process as equities, futures and cryptocurrencies.
+Each evidence item records upstream ID, paragraph and exact quotation. Code checks that “$5.5 billion” appears in the quoted sentence. The first item sees an empty library, so important questions become candidates. The second sees the licence thesis and links NVIDIA's statement directly. The library compares candidates with searched theses and evidence within its thesis. Both candidates join the chip-licensing-and-China-business group; the evidence-only second item updates existing membership. Grouping is not a dependency: it neither creates nor replaces one. The NVDA example uses the same process as equities, futures and cryptocurrencies.
 <!-- /generated: example -->
 
 ## Source-reference fields
@@ -152,7 +152,7 @@ A source reference
 - Give the model every whole item with its category prompt; record the settings version.
 - Every evidence link targets a shown thesis or current candidate. Reject missing or invalid targets with reasons.
 - Repeated statements of the same fact within one item, including text/table repetitions, produce one evidence item with multiple references.
-- Evidence contains a quotation, standalone summary, speaker, original source, tier and event time. A candidate contains subject, asset/theme kind, focus, question, ladder, due date, association, admission reason, settling material, the thesis it would otherwise attach to (or none), the loss if folded, and at least one evidence item; personal-memo candidates may lack evidence. A blank loss or settling material, an unshown thesis in the fold field, or a binding obligation due beyond 18 months is refused with its reason. Themes select from block 3 or clearly identify a new issue; assets use a symbol or registered name.
+- Evidence contains a quotation, standalone summary, speaker, original source, tier and event time. A candidate contains subject, asset/theme kind, focus, question, ladder, due date, association, admission reason, settling material and at least one evidence item; personal-memo candidates may lack evidence. A blank settling material or a binding obligation due beyond 18 months is refused with its reason. Themes select from block 3 or clearly identify a new issue; assets use a symbol or registered name.
 - Every thesis and evidence item has a source. Reject absent quotes/cells or numbers not printed in the cited location, recording the reason.
 - Extraction does not mutate the library. Return evidence, candidates and associations together without a separate clustering call. Reference and semantic criteria are owned by the [grouping contract](06-views.md#research-groups-associate-during-extraction); similar names or equal counts do not prove correct grouping.
 - Retry from the failed step and replace only that attempt's own result.
@@ -177,7 +177,7 @@ writes "Purchases related to property and equipment and intangible assets"; a qu
 prompt is `prompts/baseline-v3.json` with the schema in code; the code builds no other version.
 
 **What code keeps (identity only).** A figure whose quote is the report's own text (at least eight characters), carries a label, and prints the figure written as the
-value. A table row quoted with a footnote mark left off or a cell left out is stored as the report's exact row from its label to the figure. Refused figures are dropped
+value. A table row quoted with a footnote mark left off or a cell left out is stored as the report's own text from the row's label to the figure. Refused figures are dropped
 with their reasons in the step's processing record. Which question a figure belongs to, and which column it is from, stay the reading's.
 
 **What it writes.** One evidence record per item and quote, linked to every question that read it (D364: first-quarter revenue read by total revenue, operating margin and
@@ -198,7 +198,7 @@ the reading keeps is written with the fact tier; later reports reach the questio
 ## Open questions
 
 <!-- generated: open -->
-- Validate each category prompt on stored items before settling it; record its version in Config.
+- The asset-ladder and shared-quantity changes Alex decided (D186, D191 point 4) are built in the next extraction version (D368; DECISIONS §6).
 <!-- /generated: open -->
 
 ## Related decisions
@@ -207,15 +207,19 @@ the reading keeps is written with the fact tier; later reports reach the questio
 - D25–D28: one extraction module, shared analyst role, category prompts, whole-item reading, sources and restored report ingestion.
 - D32/D33: whole table releases, no separate filing XBRL ingestion, read-only extraction with matching/writing in the library.
 - D35/D37: first-version review and freeze; changes require a decision.
-- D41/D42: candidates and block-5 context updated for the rebuilt library; separate evidence/candidate outputs with existing dependencies shown.
+- D41/D42: candidates and block-5 context updated for the rebuilt library; separate evidence/candidate outputs with existing dependencies shown (block 5 replaced by D211, D251 and D264, below).
 - D45: only recorded decisions apply; no unapproved preset settlement source or theme-scope restriction.
 - D46: write the complete candidate while the full source is available.
-- D47: explicit dependency links; link a statement only to the question it directly concerns.
+- D47: explicit dependency links; link a statement only to the question it directly concerns (widened by D259: the narrowest open thesis it bears on, including through the demand, supply, competition or pricing behind its answer).
 - D51: omit unapproved restrictions on theme observations; evidence-link quality checks belong with matching labels; no consensus calculation.
 - D58: include due dates in block 5; events after an existing due date can form candidates.
 - D59/D60: subject identification and personal-memo candidates; no judgement before evidence first links; wording and diagram alignment without new rules.
 - D149: associations are required extraction output; D165 integrates them into the default implementation.
 - D155: current POC identity/reference changes are described in the improvement plan, not evidence of grouping acceptance.
+- D184/D185: four admission reasons and the settling material. D211: the fields naming the thesis a candidate would otherwise attach to and what would be lost left the output.
+- D207/D209/D259/D264/D265/D273/D361: one home per statement, the narrowest open thesis it bears on, plus the answer's own candidates; the company-wide revenue thesis takes indirect evidence no specific thesis takes; a statement nothing takes is dropped as "no home"; code keeps the narrower of a thesis and one it depends on.
+- D211/D251/D264: block 5 shows the theses open at the start of the item's day with their takes lines and no list of research groups; the extraction files each statement itself, with no separate placement call.
+- D274/D359: the production prompt is frozen at v74i; a change is a new version only Alex's decision opens, and the code builds no other.
 - D363/D364: the coverage-start reading of the company's latest report, once per ledger; a figure several questions read is one record linked to each.
 
 <a id="抽取时同时确定研究归属"></a>

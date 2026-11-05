@@ -1,0 +1,3 @@
+- **Serious — [docs/decisions/log.md:2571](/Users/lchingen/hivemind/docs/decisions/log.md:2571)：决策日志搬迁后，原有相对链接失效。** 例如，这里的 `research/2026-10-27-single-call/log.md` 现在指向不存在的 `docs/decisions/research/...`；实际文件仍在 [docs/research/2026-10-27-single-call/log.md](/Users/lchingen/hivemind/docs/research/2026-10-27-single-call/log.md)。只读检查发现 **143 处**链接的目标在搬迁前的位置存在、但按新位置解析不存在。AGENTS 要求读这份日志核对规则出处，因此这些链接妨碍追查证据。**修正：**让日志中的相对链接从新位置指向原目标，同时保留历史记录内容；或提供能兼容原相对路径的目录映射。
+
+serious: 1, wording: 0

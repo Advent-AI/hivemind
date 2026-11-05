@@ -1,154 +1,201 @@
-# 下一阶段核心 PRD：挂题要像分析师一样认间接关系
+# Core PRD for the next phase: filing must recognise indirect relations the way an analyst does
 
-> 状态：进行中（2026-11-04 立）。Alex："你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit, 然后开始做"。
-> 本页是这一阶段的唯一依据。冲突时：Alex 的话 → `docs/DECISIONS.md` → 本页 → 其他设计文档。本页的结论、证据、约束、量法和流程不随测试结果改写；
-> 测试结果写进 `docs/research/2026-11-04-filing-end-to-end/log.md`，要改本页须先有 Alex 的话。
-> 2026-11-04 修订（Alex 对修改提议回复"go"；D360）：第 5.2 节删去"另一方的题也挂"、改为取舍和拆分两句；第 6 节决定规则改写。经过见
-> `docs/research/2026-11-04-filing-end-to-end/prd-amendment-proposal.md` 和 `log.md` 第 11–16 行。
+> Status: in progress (opened 2026-11-04). Alex: "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit, 然后开始做".
+> This page is the single source for this phase. In a conflict: Alex's words → `docs/DECISIONS.md` → this page → the other design documents. This page's
+> conclusions, evidence, constraints, measuring method and process are not rewritten to follow test results;
+> test results go into `docs/research/2026-11-04-filing-end-to-end/log.md`, and changing this page first needs Alex's word.
+> Amended 2026-11-04 (Alex replied "go" to the proposed amendment; D360): §5.2 drops "also file under the other party's question" and puts two
+> sentences in its place, one on choosing and one on splitting; §6's decision rule is rewritten. How it came about:
+> `docs/research/2026-11-04-filing-end-to-end/prd-amendment-proposal.md` and `log.md` rows 11–16.
+> 2026-11-05 (D368): translated into English on Alex's word ("不，用英文吧"); §4 corrected to name the frozen standard's version 5 and §5 given a status line, on his delegation ("你要来帮我看到底做不做").
 
-## 0. 每次开工前必过（Alex："每次开始前都需要revisit"）
+## 0. Checklist before every start (Alex: "每次开始前都需要revisit")
 
-开始任何一步之前，按顺序做完，做不到就不开工：
+Before starting any step, finish these in order; if one cannot be done, do not start:
 
-1. 读完本页第 1～8 节；读 `log.md` 最后三行，确认上一步停在哪、为什么停。
-2. 对照第 3 节"不在范围"：这一步做的事不在那张表里。在表里的，停下，交 Alex。
-3. 对照第 4 节"约束"：这一步不改冻结的东西；要改冻结抽取说明的，是第 5 节写明的那一处，并且已有 Alex 的话。
-4. 这一步要花钱的：预期和停下条件已按第 7 节写下并冻结（sha256 记在旁边）；请求按第 6 节逐字节重建；对照组是当天重发的。
-5. 给 Alex 的东西：一个结论、一个建议、一个测试，经过第 7 节的几轮审查；不给选项菜单；用人话（AGENTS 开头"Explain and answer as to a sixteen-year-old"）。
+1. Read §§1–8 of this page in full; read the last three rows of `log.md`, and confirm where the previous step stopped and why.
+2. Check against §3, "not in scope": what this step does is not in that table. If it is in the table, stop and take it to Alex.
+3. Check against §4, "constraints": this step changes nothing frozen; a change to the frozen extraction prompt is the one place §5 names, and Alex's
+   word for it is already given.
+4. If this step costs money: its predictions and stop conditions are written down and frozen as §7 says (with their sha256 recorded beside them); the
+   requests are rebuilt byte for byte as §6 says; the control is re-sent the same day.
+5. What goes to Alex: one conclusion, one recommendation, one test, after §7's rounds of review; no menu of options; in plain words (the opening of
+   AGENTS, "Explain and answer as to a sixteen-year-old").
 
-## 1. 目标（端到端）
+## 1. Goal (end to end)
 
-每道题的判断，要拿到能改变它答案的那些事实；拿不到的、与任何题无关的，不能堆进某一道题。量的是最终判断（冻结的判断尺子，读者 B，
-窗口末 2026-07-14），不是哪一步自己的分数。
+Each question's judgement must receive the facts that can change its answer; facts that no question receives, those that bear on no question, must
+not be piled into some one question. What is measured is the final judgement (the frozen judgement ruler, reader B, at the window end 2026-07-14), not
+any one step's own score.
 
-## 2. 核心卡点（已证实）
+## 2. The core blocker (proven)
 
-**系统只在一条事实"说的正是这道题自己的数"时，才把它用到这道题上。分析师还会推着用：交易另一方的数、价格和销量对产品收入、
-产品的变体对它的上市，等等。挂题这一步做不到；判断这一步拿到事实就会推。**
+**The system uses a fact for a question only when the fact "states exactly this question's own figure". An analyst also reasons onward from a fact: the other party's figure in a deal, price and volume for a product's revenue, a product's variants for its launch, and so on. The filing step cannot do this; the judging step reasons onward once it has the facts.**
 
-这一个卡点有两面（以前说成"两个问题"）：
+This one blocker has two faces (described earlier as "two problems"):
 
-- **停车场。**挂题认不出间接关系的事实，没有题接；保留一条事实又必须先挂上（D209、D264），于是 D273 加了兜底句，把它们停进英伟达
-  总收入题。总收入题下的报道，标准答案读过的那部分里，标准不留的占 32–39%，留了但 22 道题都没用上的占 31–44%，标准答案真用来判
-  总收入的只占 7–10%（三遍）；总收入题的判断引用里有 24–44% 是别家公司或整个市场的新闻（英特尔显卡零售价、台湾燃气电厂）。
-- **窄题挨饿。**只能靠间接事实回答的题拿不到它们：自研芯片题三遍都没收到博通的数，三遍都判"低于 400 亿"；营业利润率、英伟达资本
-  开支什么都没收到，一直没判。
+- **The parking lot.** Filing does not recognise facts that bear on a question indirectly, so no question takes them; yet to be kept, a fact must
+  first be filed (D209, D264). So D273 added the fallback sentence, which parks them in NVIDIA's total-revenue question. Of the reports under the
+  total-revenue question, in the part the gold read, 32–39% are ones the standard does not keep, 31–44% are kept but used by none of the 22 questions,
+  and only 7–10% are what the gold actually uses to judge total revenue (three draws); 24–44% of the total-revenue question's judgement citations are
+  news about other companies or the whole market (Intel graphics-card retail prices, a gas-fired power plant in Taiwan).
+- **Narrow questions starve.** Questions that only indirect facts can answer do not receive them: the custom-chip question received none of Broadcom's
+  figures in any of the three draws, and judged "below $40 billion" in all three; the operating-margin and NVIDIA capital-spending questions received
+  nothing at all and were never judged.
 
-**证据：**
+**Evidence:**
 
-| 证据 | 内容 | 出处 |
+| Evidence | Content | Source |
 |---|---|---|
-| 挂题只认"自己的数" | 模型说"博通的 AI 芯片收入不是云厂商在自研芯片上的花费""谷歌云积压不是资本开支"；中性重挂（不点题号、规则不可见）42 条要紧事实 23 条仍不挂 | `probe-filing-account-d1.md`、`refile-no_fallback.json` |
-| 判断拿到事实就会推 | 自研芯片题 7-14 的请求，三遍各发 3 次：原样 9/9"低于 400 亿"；补上该遍账本里写下的博通、Trainium 等事实 9/9 离开最低一级（6 次 400–600 亿，3 次 600–800 亿），推法同两位读者（"指引 160 亿，年化约 640 亿，扣掉网络芯片"） | `predictions-one-test.md`、`one-test-result.json`、`log.md` 第 8 行 |
-| 停车场的来历 | D273：加兜底句后抽取尺子的核心条目 64 → 68；抽取尺子不看挂到哪道题（AGENTS §7.1"What it does not measure"） | `docs/DECISIONS.md` D273 |
-| 停车场的构成 | 上表数字；独立读者随机 12 篇：原样挂错 25 处里 21 处是停进收入题，删兜底后 8、5 处 | `sink_by_standard.py`、独立读者报告（`log.md` 第 8 行） |
+| Filing recognises only "its own figure" | The model says "Broadcom's AI chip revenue is not cloud providers' spending on custom chips" and "Google Cloud's backlog is not capital spending"; on a neutral refiling (no question id named, the rule not shown), 23 of 42 facts that matter are still not filed | `probe-filing-account-d1.md`, `refile-no_fallback.json` |
+| The judgement reasons onward once it has the facts | The custom-chip question's request of 7-14, sent 3 times in each of the three draws: as it was, 9/9 "below $40 billion"; with the Broadcom, Trainium and other facts written in that draw's ledger added, 9/9 left the lowest rung (6 times $40–60 billion, 3 times $60–80 billion), reasoning as the two readers did ("guidance $16 billion, about $64 billion annualised, less networking chips") | `predictions-one-test.md`, `one-test-result.json`, `log.md` row 8 |
+| Where the parking lot came from | D273: with the fallback sentence added, the core items on the extraction ruler went 64 → 68; the extraction ruler does not look at which question a fact is filed under (AGENTS §7.1, "What it does not measure") | `docs/DECISIONS.md` D273 |
+| What the parking lot holds | The figures above; an independent reader on 12 random articles: of 25 misfilings as it was, 21 were parked in the revenue question; 8 and 5 with the fallback deleted | `sink_by_standard.py`, the independent reader's report (`log.md` row 8) |
 
-以上文件都在 `docs/research/2026-11-04-filing-end-to-end/`，除另注明。
+All files above are in `docs/research/2026-11-04-filing-end-to-end/` unless noted otherwise.
 
-## 3. 已排除或次要的（不在本阶段范围，各自另记）
+## 3. Ruled out or secondary (outside this phase's scope, each recorded separately)
 
-| 事 | 结论 | 出处 |
+| Matter | Conclusion | Source |
 |---|---|---|
-| 论证卡片 | 不做，代码已删（Alex："好，删掉卡片代码"） | `docs/research/2026-11-04-argument-record/log.md` 第 4–11 行 |
-| 题目关系图的箭头 | 真的接反了：种子题的箭头意思是"支撑"（D208），判断代码读成"读谁的结论"（PRD 06）；造成主题排在总收入题后面才判、读到前一天的结论，第 3 遍一串跟着错。但它解释不了挂错题（挂题在判断之前），标准答案判数据中心收入本身也用"总收入 × 92%"。另开一题，Alex 定 | `core-problem.md`、`review-core-codex.md` |
-| 代码删掉总收入题自己的数字 | 真的（"只留最窄的题"把种子箭头当成"更窄的子题"），但每次只让总收入题少 0–2 条要用的事实 | `log.md` 第 8 行 |
-| 末尾加一遍挂题复核 | 救回一些，也挂错差不多一样多（独立读者：每挂对一条约挂错一条），不是解法 | 独立读者报告 |
-| 通用的一句"交易另一方的数也算" | 自研芯片题受益，但把摩根士丹利对 Rubin 机柜的售价从 Rubin 收入题拉到资本开支题，并让一些事实无处可挂 | `answers.json`（definition、definition_no_fallback 两组）、`measure-corrected.txt` |
-| 收紧 D259 的"放宽" | Alex 自己的决定，本阶段不推翻 | D259 |
-| 开题（俄亥俄担保没开出来）、中国份额题两位读者分歧 | 另一类问题，不在本阶段 | `docs/research/2026-11-04-filing-end-to-end/diagnosis.md` §0 |
-| 模型漂移 | 同一份请求，今天挂进总收入题的约是 11-03 的一半；原因未证实。只和当天重发的对照比，不和存档比 | `log.md` 第 6 行 |
+| The argument card | Not built; its code is deleted (Alex: "好，删掉卡片代码") | `docs/research/2026-11-04-argument-record/log.md` rows 4–11 |
+| The arrows of the question graph | Really wired backwards: a seed question's arrow means "supports" (D208), while the judging code reads it as "whose conclusion to read" (PRD 06). As a result themes are judged only after the total-revenue question, so the total-revenue question reads the themes' conclusions of the previous day, and in draw 3 a chain of questions went wrong in turn. But it does not explain the misfiling (filing comes before judging), and the gold itself judges data-center revenue as "total revenue × 92%". A topic of its own; settled by D368 (item 4: the arrow means "supports"), its fix to be built and measured | `core-problem.md`, `review-core-codex.md` |
+| Code removes the total-revenue question's own figures | True ("keep only the narrowest question" takes a seed arrow for "a narrower sub-question"), but each draw it costs the total-revenue question only 0–2 of the facts it needs | `log.md` row 8 |
+| A filing re-check added at the end | Recovers some, and misfiles about as many (independent reader: about one misfiled for each one filed right); not the solution | The independent reader's report |
+| One general sentence, "the other party's figure in a deal counts too" | The custom-chip question gains, but it pulls Morgan Stanley's price for a Rubin rack from the Rubin revenue question to the capital-spending question, and leaves some facts with no home | `answers.json` (the two arms definition and definition_no_fallback), `measure-corrected.txt` |
+| Tightening D259's "leeway" | Alex's own decision; this phase does not overturn it | D259 |
+| Opening questions (the Ohio guarantee was not opened); the two readers' disagreement on the China-share question | Another class of problem, not in this phase | `docs/research/2026-11-04-filing-end-to-end/diagnosis.md` §0 |
+| Model drift | With the same requests, today about half as many facts go into the total-revenue question as on 11-03; the cause is not proven. Compare only with a control re-sent the same day, never with the archive | `log.md` row 6 |
 
-## 4. 约束（不能动的，和为什么）
+## 4. Constraints (what must not move, and why)
 
-- **冻结的尺子**（AGENTS §7.1，D261、D262）：抽取标准第 3 版和 golden-v5、种子题、判断金标，一个字不动；有分歧是系统的缺口（D263）。
-- **冻结的抽取说明**（D274）：v74i（`poc-v108`）一字不动；本阶段要改的是挂题规则那一处（`links` 字段说明），做成新版本、新配置，和 v74i
-  比。Alex 已开口做这件事（2026-11-04："好你去解决问题""开始做"）；做成默认，另要他的话。
-- **冻结的开题和判断**（D354）：本阶段不碰。
-- **标准原文**：第 6 节"挂到最窄的那个已开问题；没有问题接，记 no home 扔掉，评估时逐条读"；第 5.1 节"让某个问题的答案更可能或更不可能"、
-  四条路"需求、供给、竞争、定价"；第 5.3 节"别家公司的事，说不出它通过需求、供给、竞争、定价这类路径动了在研公司哪个问题的，不收"。
-- **决定**：D207（一条事实一个家，最窄的题）、D209（没家就扔，逐条读）、D259（放宽：数字题收"让它更可能或更不可能的需求、供给、竞争、定价"，
-  总收入题多收是接受的代价，"由最窄题规则和驱动题兜住"）、D265（代码只留最窄）、D273（兜底句）、D355（上一轮挂题专题的两次失败测试）。
-- **提示词原则**（AGENTS §6）：只带标准，不加新规则；通用对冲基金分析员——每条规则和例子对银行、药企、零售、芯片公司读起来一样，不点名
-  英伟达、它的产品和数字，不取自测试文章；分类写成闭合集合加每类两三个例子，替掉抽象说法；不靠加长提示词修质量，加多少就删多少或写明理由。
-- **代码只管"是不是同一个"，不管"重不重要"**（AGENTS §2）。
+- **The frozen ruler** (AGENTS §7.1, D261, D262): the extraction standard, version 5 (the signed version 3 with D248's seven boundaries and D250's four
+  evidence boundaries and counting unit), golden-v5, the seed questions and the judgement gold; not a word changes; a disagreement is a gap in the
+  system (D263).
+- **The frozen extraction prompt** (D274): v74i (`poc-v108`) does not change by a word; what this phase changes is the one place that holds the filing
+  rule (the description of the `links` field), made into a new version with a new configuration and compared with v74i. Alex has given his word for this
+  work (2026-11-04: "好你去解决问题", "开始做"); making it the default needs his word again.
+- **Frozen opening and judging** (D354): this phase does not touch them.
+- **The standard's text** (in translation): §6, "file under the narrowest open question; when no question takes it, record no home and drop it, and read
+  each one at evaluation"; §5.1, "makes the answer to some question more or less likely", with four paths, "demand, supply, competition, pricing"; §5.3,
+  "another company's matter is not kept when one cannot say which question about the covered company it moves through a path such as demand, supply,
+  competition or pricing".
+- **Decisions**: D207 (one home per fact, the narrowest question), D209 (no home means dropped, each one read), D259 (leeway: a figure question takes
+  "the demand, supply, competition and pricing that make it more or less likely"; the total-revenue question taking more is an accepted cost, "bounded by
+  the narrowest-question rule and the driver questions"), D265 (code keeps only the narrowest), D273 (the fallback sentence), D355 (the two failed tests
+  of the previous filing topic).
+- **Prompt principles** (AGENTS §6): carry only the standard and add no new rule; a general hedge-fund analyst: every rule and example reads the same
+  for a bank, a drug maker, a retailer or a chip company, names neither NVIDIA nor its products or figures, and is not taken from a test article; a
+  classification is written as a closed set with two or three examples per class, replacing the abstract wording; quality is not fixed by lengthening
+  the prompt: remove as much as is added, or write down the reason.
+- **Code decides only "is it the same thing", never "does it matter"** (AGENTS §2).
 
-## 5. 要做的
+## 5. What to do
 
-1. **把"通过需求、供给、竞争、定价让答案更可能或更不可能"这句抽象话，换成分析师认间接关系的几类，写成闭合集合，每类配两三个别的行业的例子**
-   （AGENTS §6：抽象一句就是每次抛硬币，例子替掉它）。几类的初稿（设计时按标准逐条核对，只写标准已有的意思）：
-   - 题自己的数：这道题的数字、指引、估计、修正（另一时期、另一人群的估计照现有规则）。
-   - 同一笔钱的另一方：卖方卖给题所数的那些买方的收入，买方给这些卖方的订单和积压。
-   - 价格和销量：一个产品的价格或出货量，对这个产品收入的题。
-   - 变体和部件：一个产品的变体、替代方案、关键部件、时间表变化，对这个产品上市的题。
-   - 带数字的需求、供给、竞争动作：客户的订单和资本开支计划、供应商的产能和价格、对手的销售和份额，对受它影响的那道题。
-2. **写明两道具体的题都沾边时怎么挂**（`definition_no_fallback` 那组暴露的问题：摩根士丹利的机柜售价被挂到买方的资本开支题，丢了卖方的
-   Rubin 收入题）。一条事实一个家（D207）：挂它的数字最直接衡量的那道题（例：酒店的房价挂它的客房收入题，不挂旅客花费题；零部件商卖给车厂
-   的收入挂车厂的零部件花费题，不挂对手零部件商的份额题）；一句话里给了两道题各自的数，写成两条，各挂各的（代码把引用同一句话的两条存成
-   一条、两道题都挂上）；绝不再挂同一家公司更宽的题（D355 测试 2 的失败：模型给它多挂一道英伟达收入题）。原稿"另一方的题开着…一并挂上"
-   和 D207 冲突，2026-11-04 经 Alex 同意删去（D360）。
-3. **删掉兜底句**，回到标准第 6 节：没有题接就不挂，代码按"无处可挂"扔掉并记下（D209），评估时逐条读。
-4. 只改挂题规则那一处；字数前后都报，加长要写明理由（本次理由：用例子替掉一句抽象话）。
+Status: the links-rule version that carried items 1–3 (v74l) failed its one test (§8 step 5); D361 keeps the fallback sentence, so item 3 is not carried out. The plan below is kept as written.
 
-## 6. 怎么量（尺子不动，量法不再改）
+1. **Replace the abstract sentence "makes the answer more or less likely through demand, supply, competition or pricing" with the few classes in which an analyst recognises an indirect relation, written as a closed set, each class with two or three examples from other industries** (AGENTS §6: one
+   abstract sentence is a coin flip on every send; examples replace it). A first draft of the classes (checked against the standard line by line at
+   design time; it holds only meanings the standard already has):
+   - The question's own figure: this question's figures, guidance, estimates and revisions (estimates for another period or another population follow
+     the existing rule).
+   - The other side of the same money: a seller's revenue from the buyers the question counts; those buyers' orders and backlog with these sellers.
+   - Price and volume: a product's price or shipments, for the question on that product's revenue.
+   - Variants and parts: a product's variants, alternatives, key parts and schedule changes, for the question on that product's launch.
+   - Demand, supply and competition moves with a number: customers' orders and capital-spending plans, suppliers' capacity and prices, competitors'
+     sales and share, for the question they affect.
+2. **State how to file a fact when two specific questions both bear on it** (the problem the `definition_no_fallback` arm exposed: Morgan Stanley's rack
+   price was filed under the buyers' capital-spending question, and the seller's Rubin revenue question lost it). One home per fact (D207): file it under
+   the question its figure measures most directly (for example, a hotel's room rate goes under its room-revenue question, not under the
+   travellers'-spending question; a parts maker's revenue from carmakers goes under the carmakers' parts-spending question, not under a rival parts
+   maker's share question); when one sentence gives a separate figure for each of two questions, write two items, each filed under its own question
+   (code stores two items that quote the same sentence as one record linked to both questions); never also file it under a broader question about the
+   same company (the failure of D355's test 2: the model filed it under an NVIDIA revenue question as well). The original draft's "when the other
+   party's question is open … file it there as well" conflicted with D207 and was deleted on 2026-11-04 with Alex's agreement (D360).
+3. **Delete the fallback sentence** and return to the standard's §6: when no question takes a fact, it is not filed; code drops it as "no home" and
+   records it (D209), and evaluation reads each one.
+4. Change only the one place that holds the filing rule; report its length in characters before and after, and write down the reason for any growth
+   (this time's reason: examples replace one abstract sentence).
 
-- **请求**：用正式运行的代码逐字节重建存档请求，只换挂题规则那一处；重建后的存档编号必须和原来一致，否则不发（`resend_filing.py`，
-  AGENTS §5）。不重发存档里按字母排过键的那份。
-- **文章**：开发集 = `selection.json` 的 54 篇（已读过多遍）；留出集 = 抽取金标读过、判断金标用到、不在那 54 篇里的文章，测试前一次抽定、
-  冻结名单，之后不换。两套都量，分开报。
-- **对照**：当天原样重发 3 次。不和存档比（模型漂移）。
-- **每条回答**：先过正式的代码检查和挂题（含"只留最窄""无处可挂就扔"），再数。
-- **数什么**（`measure_filing.py`，配对规则已修：按原文里独立的数字和英伟达以外的专有名词配；系统引用的原文和标准答案那段原文重合的也算
-  同一件事；"可选"按可选算；读标准答案正文里的引用）：
-  - 每条要紧事实（标准答案判任何题用到的）有没有进到它用的那道题——按事实算，不按"事实 × 题"算；
-  - 逐道题：进到这道题的要紧事实、新冒出的杂音，按下面决定规则数；
-  - 停车场：总收入题（v1，连同 v22）收进的条数和构成；
-  - 杂音：标准不留的句子留下多少；逐道题的杂音挂法（挂在标准不留或没题用的事实上的链接）；
-  - 核心、辅助事实出现数；被扔的要紧事实；每条事实平均挂几道题。
-  - 配对仍有少量误差（抽查：新规则错配个别、漏配个别），报数时注明，要紧的逐条读。
-- **决定规则**（2026-11-04 经 Alex 同意改写，D360。原稿要求"每一次都超过对照三次的最高值"等，拿对照自己再测一遍也过不了，判不出好坏。
-  脚本 `decide.py`；每次测试前写下、冻结；每一次的数和总数都报）：
-  - **总数，先排除运气**：每篇文章新旧两组共 6 份回答，在两组间随机重分 4,000 次（种子固定）；新规则的差距，要重分里达到它的不到 5%，才算
-    真的变化。
-    - 开发集：要紧事实进到它用的题，要涨；总收入题（v1、v22）下的条数，要降；标准不留的句子，不能涨；核心事实，不能降。
-    - 留出集：要紧事实进到它用的题，不能降；标准不留的句子，不能涨；核心事实，不能降。
-  - **逐道题，由代码按标准答案数**（开发集和留出集合起来）：
-    - 一条要紧事实，新规则比对照至少少进两次，算这道题"少一条"；对照三次都进、新规则三次都没进，算"整条掉"。挪到标准答案也用它、而且
-      不比原题宽的另一道题（一条事实一个家，D207），不算少；挪到更宽的题照算。反方向的"多一条"抵扣。
-    - 一句杂音（标准不留，或留了但没有题用），新规则至少两次挂到这道题、对照一次没挂，算"新杂音"；三次都挂算"整条新杂音"。反方向抵扣。
-    - 任何一道题净少 3 条、净整条掉 2 条、净多 5 条新杂音、或净多 3 条整条新杂音，就不过。这几个门槛是"新旧完全一样时被误判"约一成以内的
-      最小值；测试时先按重分算误判率，超过一成就把最容易误判的那一项调高一档，再比实测。
-  - **更小的变化**（一道题少 2 条、多两三条杂音）三次测量分不清是不是运气：全部列出，交没写规则的读者对着原始回答读，写进报告，不决定过不过。
-  全过，才成为候选；候选在 14 天窗口跑三遍端到端（抽取重发，匹配和判断照跑，冻结判断尺子打分），那一步要 Alex 开口。
+## 6. How to measure (the ruler does not move; the method does not change again)
 
-## 7. 流程（不 drift）
+- **Requests**: rebuild each stored request byte for byte with the production code, changing only the one place that holds the filing rule; the
+  rebuilt request's archive id must equal the original's, or it is not sent (`resend_filing.py`, AGENTS §5). Never re-send the archive's copy whose
+  keys were sorted alphabetically.
+- **Articles**: development set = the 54 articles of `selection.json` (already read many times); held-out set = articles the extraction gold read and
+  the judgement gold uses that are not among those 54, drawn once before the test, with the list frozen and never changed afterwards. Both sets are
+  measured and reported apart.
+- **Control**: the unchanged requests re-sent 3 times the same day. No comparison with the archive (model drift).
+- **Each answer**: goes through the production code checks and filing first (including "keep only the narrowest" and "no home means dropped"), and is
+  counted after.
+- **What is counted** (`measure_filing.py`, with its matching rule fixed: items are matched on the distinct numbers and the proper nouns other than
+  NVIDIA in the source text; a source passage the system quotes that overlaps the gold's passage also counts as the same matter; "optional" counts as
+  optional; the citations in the body of the gold's answers are read):
+  - whether each fact that matters (one the gold uses to judge any question) reached the question that uses it, counted per fact, not per "fact ×
+    question";
+  - per question: the facts that matter that reached it and the new noise that appeared, counted by the decision rule below;
+  - the parking lot: how many facts the total-revenue question (v1, together with v22) takes in, and what they are;
+  - noise: how many of the sentences the standard does not keep are kept; per question, how noise is filed (links on facts the standard does not keep
+    or no question uses);
+  - how many core and supporting facts appear; the facts that matter that are dropped; how many questions each fact is filed under on average.
+  - Matching still has a small error (spot check: the new rule mismatches a few and misses a few); say so when reporting the numbers, and read the
+    ones that matter one by one.
+- **Decision rule** (rewritten on 2026-11-04 with Alex's agreement, D360. The original draft required "every draw above the highest of the control's
+  three" and the like, which the control itself fails when measured again, so it cannot tell good from bad. Script `decide.py`; written down and frozen
+  before each test; each draw's numbers and the totals are all reported):
+  - **Totals, with luck ruled out first**: each article's 6 answers from the new and the old arm are randomly reassigned between the two arms 4,000
+    times (with a fixed random seed); the new rule's difference counts as a real change only when fewer than 5% of the reassignments reach it.
+    - Development set: facts that matter reaching the question that uses them must rise; the count under the total-revenue questions (v1, v22) must
+      fall; sentences the standard does not keep must not rise; core facts must not fall.
+    - Held-out set: facts that matter reaching the question that uses them must not fall; sentences the standard does not keep must not rise; core
+      facts must not fall.
+  - **Per question, counted by code against the gold** (development and held-out sets together):
+    - A fact that matters which reaches the question at least two fewer times under the new rule than under the control counts as "one fewer" for that
+      question; in under the control all three times and under the new rule none of the three, it counts as "lost outright". A move to another question
+      that the gold also uses it for and that is no broader than the original (one home per fact, D207) does not count as fewer; a move to a broader
+      question counts. "One more" in the opposite direction offsets it.
+    - A noise sentence (not kept by the standard, or kept but used by no question) that the new rule files under the question at least twice while the
+      control never does counts as "new noise"; filed all three times, it counts as "outright new noise". The opposite direction offsets it.
+    - Any question with a net 3 fewer, a net 2 lost outright, a net 5 more new noise, or a net 3 more outright new noise fails. These thresholds are the
+      smallest values that keep "misjudged when new and old are exactly the same" within about one in ten; at the test, first compute the
+      misjudgement rate from the reassignments; if it is above one in ten, raise the threshold most prone to misjudgement by one step, then compare with
+      what was measured.
+  - **Smaller changes** (a question 2 fewer, two or three more noise) cannot be told from luck in three measurements: all are listed, given to a reader
+    who did not write the rule to read against the raw answers, and written into the report; they do not decide pass or fail.
+  Only when everything passes does it become a candidate; a candidate runs end to end three times on the 14-day window (extraction re-sent, matching and
+  judging run as usual, scored on the frozen judgement ruler), and that step needs Alex's word.
 
-- **一次一个建议、一个测试**（AGENTS §7.3，Alex："就测试一种，一次"）：先写设计，经几轮审查——自己核实、Codex 只读、一个没写过它的读者
-  读原始记录——直到一轮找不出严重问题；预期和停下条件写下冻结；测一次；不符合就停，交 Alex（D355："如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估"）。
-- **审查的报告是线索**：每条都对着记录核实了才算（AGENTS §1）。
-- **提示词改动前做提示词审计**（`.claude/skills/prompt-audit/SKILL.md`）：把整份请求按标准逐句对过，两个方向。
-- **每一步写进 `log.md`**：做了什么、得到什么、文件；错的和被推翻的也留着。
-- **不重复已排除的东西**（第 3 节）。
+## 7. Process (no drift)
 
-## 8. 步骤和当前位置
+- **One recommendation and one test at a time** (AGENTS §7.3, Alex: "就测试一种，一次"): write the design first and put it through rounds of review (own
+  checks, Codex read-only, a reader who did not write it reading the raw records) until a round finds nothing serious; write down and freeze the
+  predictions and stop conditions; test once; if it does not match, stop and take it to Alex (D355: "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估").
+- **A review's report is a lead**: each finding counts only once it is checked against the records (AGENTS §1).
+- **A prompt audit before any prompt change** (`.claude/skills/prompt-audit/SKILL.md`): check the whole request against the standard sentence by
+  sentence, in both directions.
+- **Every step goes into `log.md`**: what was done, what came of it, the files; mistakes and overturned results stay in it too.
+- **Do not repeat what was ruled out** (§3).
 
-| # | 步骤 | 产出 | 状态 |
+## 8. Steps and where we are
+
+| # | Step | Output | Status |
 |---|---|---|---|
-| 1 | 设计：几类间接关系（闭合集合 + 别的行业的例子）、两边都量到时的挂法、删兜底；按标准逐句核对；字数前后 | `docs/research/2026-11-04-filing-end-to-end/design-links.md` | 完成（第 3 稿，v74l / poc-v115） |
-| 2 | 不花钱的检查：按新规则写一份示范回答过全部代码检查；新规则文本过提示词审计 | 同上 | 完成 |
-| 3 | 审查轮次（Codex、独立读者、自己），到没有严重问题 | `review-links-*.md` | 完成（Codex 7 轮、独立读者 3 次；第 7 轮无严重问题） |
-| 4 | 抽定并冻结留出集；写下并冻结这次测试的预期和决定规则 | `heldout.json`、`predictions-links.md` | 完成（两份都记 sha256） |
-| 5 | 测一次：开发集 + 留出集，新规则和当天对照各 3 次 | `answers-links.json`、`log.md` | 完成（2026-11-04）：没过——要紧事实进对题开发集 +7（p 0.26）；其余各条都过 |
-| 6 | 过了：交 Alex 决定是否跑 14 天三遍端到端；没过：停，交 Alex | `design-links.md` 第 8 节 | 停，交 Alex |
-| 7 | （D361，Alex："按照你的提以来，但是你一定是自己反思多轮之后才给出的行动"）先量上限：把标准答案引用的原文直接交给冻结的判断，自研芯片、营业利润率、资本开支三道题在窗口末各判 3 次，自研芯片原样 3 次作对照；兜底句暂不删 | `reflection-v74l.md`、`oracle-design.md` | 完成：营业利润率有据 3/3、资本开支 2/3、自研芯片 0/3（差在解读）；下一步待 Alex |
-| 8 | （D362，Alex："你继续啊不要scope drift and strongly follow evidence of your discovery and learning"）两处送不到的小改动，一次一处：①引用被改写时由代码对回原文那一句（不改模型看到的任何东西，存档重放验证）；②数字题的说明写明它按定义由哪些数得出（先在引出它的那篇文章上各发 3 次） | `delivery-fixes.md` | 停：第一处的代码改法被独立检查推翻（会收进错的数）；第二处试发没过（1/3）。根子是两条关键事实被已签标准第 5.3 节当作"已知事实的重述"不收（待批第 6 条），交 Alex |
-| 9 | （D363，Alex："乙"）开始跟踪时从公司最近一期财报一次性记下每道题的起点数，日常照旧不收重述：设计、几轮自查和独立检查、先在存档上用最简单的办法验证 | `baseline-design.md` | 两道题验证过了：冻结的抽取不读财报表格（0/3）；每道题单独读一次财报，营业利润率题 2/3、资本开支题 3/3 读到起点数，判断据此判对（2/3、3/3），约 2.5 美分。全部 22 道题测了一次（2026-11-05，Alex："你充分验证"；文件由代码选，当天对照，约 0.43 美元）：v10、v12 各 9/9 判对；已判对的题一道没变错；但读到的 53 个数里 5 个是别的量（Vera CPU 题、Blackwell 和 Rubin 题收了更大或旁边的收入行），按事先写的第 3 条没过。模型自己指出是读法里"写出组成它的行或报告记它的那一行"那一句；停，交 Alex。Alex："改"——只改这一句（"只写算出它的那几行，或换了名字的同一个量；更大的行、旁边的行都不写"），先试 4 道题、再测全部 22 道（约 0.36 美元）：三条全过——v10、v12 各 9/9，判对的题一道没变错，46 个数全是自己的量。独立读者挑战后查实：新句子让资本开支那一行 12 次读漏了 3 次，而且只在 5 月这一份财报上测过；第四版（写完逐条复核）删多了，没过；全部失败记录普查后（Alex："我需要你深度看完所有失败trace给我准信"），定为第三版加修好的引用检查（D365），8 月留出财报上 0 个错数，已做进正式系统（poc-v116，$0 核对和测试全过）。14 天三遍完整验收（Alex："跑验收"，当天对照，约 4.79 美元）：全过——营业利润率、资本开支各 3/3 判对（对照从没判过），合计 53 对 45（满分 57）；唯一少两次的中国份额题，两人都认定不是起点数带偏的。Alex："都做"——poc-v116 成为默认（D366），代码提交、开 PR |
+| 1 | Design: the classes of indirect relation (a closed set + examples from other industries), how to file when a fact measures both sides, deleting the fallback; checked against the standard sentence by sentence; length before and after | `docs/research/2026-11-04-filing-end-to-end/design-links.md` | Done (draft 3, v74l / poc-v115) |
+| 2 | Checks at no cost: a sample answer written by the new rule goes through every code check; the new rule's text goes through the prompt audit | Same as above | Done |
+| 3 | Review rounds (Codex, independent readers, own), until nothing serious remains | `review-links-*.md` | Done (Codex 7 rounds, independent readers 3 times; round 7 found nothing serious) |
+| 4 | Draw and freeze the held-out set; write down and freeze this test's predictions and decision rule | `heldout.json`, `predictions-links.md` | Done (sha256 recorded for both) |
+| 5 | Test once: development set + held-out set, the new rule and the same-day control 3 times each | `answers-links.json`, `log.md` | Done (2026-11-04): failed: facts that matter reaching the right question, development set +7 (p 0.26); every other condition passed |
+| 6 | If passed: to Alex, to decide whether to run three 14-day end-to-end draws; if failed: stop, to Alex | `design-links.md` §8 | Stopped, to Alex |
+| 7 | (D361, Alex: "按照你的提以来，但是你一定是自己反思多轮之后才给出的行动") Measure the ceiling first: hand the source passages the gold cites straight to the frozen judgement; the custom-chip, operating-margin and capital-spending questions judged 3 times each at the window end, the custom-chip question as it was 3 times as the control; the fallback sentence is not deleted for now | `reflection-v74l.md`, `oracle-design.md` | Done: operating margin grounded 3/3, capital spending 2/3, custom chips 0/3 (the gap is in interpretation); the next step waits for Alex |
+| 8 | (D362, Alex: "你继续啊不要scope drift and strongly follow evidence of your discovery and learning") Two small changes where facts are not delivered, one at a time: ① when a quote is rewritten, code matches it back to the source sentence (changing nothing the model sees; verified by replaying the archive); ② a figure question's description states which figures it is derived from by definition (first sent 3 times each on the article that motivated it) | `delivery-fixes.md` | Stopped: an independent check overturned the first change's code (it would take in wrong figures); the second failed its trial send (1/3). The root: the signed standard's §5.3 does not keep two key facts, treating them as "a restatement of known facts" (proposal 6, awaiting approval); to Alex |
+| 9 | (D363, Alex: "乙") At coverage start, record each question's starting figure once from the company's latest earnings report; the daily path still takes no restatements: design, rounds of self-checks and independent checks, validated first on the archive in the simplest way | `baseline-design.md` | Validated on two questions: the frozen extraction does not read the report's tables (0/3); with each question reading the report once on its own, the operating-margin question read its starting figure 2/3 and the capital-spending question 3/3, and the judgement then judged right (2/3, 3/3), about 2.5 cents. All 22 questions tested once (2026-11-05, Alex: "你充分验证"; files chosen by code, a same-day control, about $0.43): v10 and v12 judged right 9/9 each; no question already judged right turned wrong; but 5 of the 53 figures read were other quantities (the Vera CPU question and the Blackwell and Rubin question took a larger or neighbouring revenue line), so it failed condition 3, written beforehand. The model itself pointed to the reading instructions' sentence "write the lines it is computed from, or the line the report uses for it"; stopped, to Alex. Alex: "改"; only this sentence was changed ("write only the lines it is computed from, or the same quantity under another name; never a broader line or a line next to it"), tried on 4 questions first, then tested on all 22 (about $0.36): all three conditions passed: v10 and v12 9/9 each, no question judged right turned wrong, and all 46 figures were the questions' own quantities. Checked after an independent reader's challenge: the new sentence made the reading miss the capital-spending line in 3 of 12 reads, and it had been tested only on the one May report; the fourth version (a line-by-line re-check after writing) removed too much and failed; after a census of every failure trace (Alex: "我需要你深度看完所有失败trace给我准信"), the third version with the repaired quote check was chosen (D365): 0 wrong figures on the held-out August report; built into the production system (poc-v116; the $0 checks and the tests all pass). The full acceptance, three 14-day draws (Alex: "跑验收"; a same-day control; about $4.79): all passed: operating margin and capital spending judged right 3/3 each (the control never judged them), 53 against 45 in total (of 57); for the China-share question, the only one two fewer, both readers found the starting figures did not lead it astray. Alex: "都做": poc-v116 became the default (D366); the code was committed and a PR opened |
 
-## 9. Alex 在这件事上的原话（按时间）
+## 9. Alex's own words on this matter (in time order)
 
-- "你这个单独开一个专题出来解决 … 是promot，是系统结构设计还是到底哪里有问题挂错一堆东西，机制是不是有问题（一定要挂吗？有没有可能是杂音" （2026-11-03）
-- "So if it's a customer problem or other companies that you think is relating NVIDIA and it's the wrong evidence, then what is the standard for it? … from a hedge fund analyst standpoint, are these even relevant? Do you think your ruler is wrong in this aspect?" （2026-11-04）
-- "你确定下你接下来要改进的量化目标，以及你要看到端到端我们的管线是要做什么的，不要乱硬优化，要看到目标" （2026-11-04）
-- "就测试一种，一次 … 能不能自己有个超级自信的定论和证据再给我提建议" （2026-11-04）
-- "这些只是类型题，你需要抽象拔高我们现在的核心问题和卡点。这个很重要这样改下去才是对的" （2026-11-04）
-- "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit, 然后开始做" （2026-11-04）
-- "go"（2026-11-04，对第 5.2、6 节修改提议和这一次测试）
+- "你这个单独开一个专题出来解决 … 是promot，是系统结构设计还是到底哪里有问题挂错一堆东西，机制是不是有问题（一定要挂吗？有没有可能是杂音" (2026-11-03)
+- "So if it's a customer problem or other companies that you think is relating NVIDIA and it's the wrong evidence, then what is the standard for it? … from a hedge fund analyst standpoint, are these even relevant? Do you think your ruler is wrong in this aspect?" (2026-11-04)
+- "你确定下你接下来要改进的量化目标，以及你要看到端到端我们的管线是要做什么的，不要乱硬优化，要看到目标" (2026-11-04)
+- "就测试一种，一次 … 能不能自己有个超级自信的定论和证据再给我提建议" (2026-11-04)
+- "这些只是类型题，你需要抽象拔高我们现在的核心问题和卡点。这个很重要这样改下去才是对的" (2026-11-04)
+- "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit, 然后开始做" (2026-11-04)
+- "go" (2026-11-04, on the proposed amendments to §5.2 and §6 and on this test)

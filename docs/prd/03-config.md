@@ -1,11 +1,11 @@
 # Config
 
-> Status: first version frozen, October 18, 2026. English edition: October 25, 2026 (D163).
+> Status: first version frozen, October 18, 2026. English edition: October 25, 2026 (D163); corrected to D169, D190 and D364 on 2026-11-05 (D367).
 > Design page: `docs/system-design.html` → New → Config. Recorded decisions take precedence over this PRD.
 
 ## Purpose
 
-Config contains settings a person must choose: extraction model settings per category, separate matching and rejudgement settings, and the thesis search result count. A final-verdict setting stays in the frozen configurations and is read by no step (D356). Extraction owns category content and prompt assembly.
+Config contains settings a person must choose (D2): extraction model settings per category; separate settings for matching, the collision judge (the generative model that decides whether a candidate and a thesis of its own subject and measure are one question, D190) and rejudgement; the optional coverage-start reading setting (D364); and the thesis search result count. A final-verdict setting stays in the frozen configurations and is read by no step (D356). Extraction owns category content and prompt assembly.
 
 The old system had five overriding configuration layers and several presets. Multiple switches could control one feature, so a file did not reveal actual behaviour. Here the universe owns research scope, classification supplies item metadata, and code owns ordering and failure handling. Config retains only deliberate human choices.
 
@@ -15,8 +15,8 @@ The old system had five overriding configuration layers and several presets. Mul
 | Item | Meaning | Source |
 |---|---|---|
 | Version | Every settings change creates a new version. | Created when settings change |
-| Checksum | Calculated from the complete configuration and recorded with every model call, including extraction, matching and rejudgement, so the exact version can be traced. | Calculated by code |
-| Model settings and search result count | Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching and rejudgement settings. An optional coverage-start reading setting (model, prompt version, reasoning effort, temperature) turns on the once-only reading of the company's latest report at coverage start (D364); a version without it has no such step. Config also sets the search result count, initially 10. Prompt content belongs to the extraction and thesis library modules. A settings version is immutable; a change creates a new one. | Chosen by a person |
+| Checksum | Calculated from the complete configuration and recorded with every model call, including extraction, matching, the collision judge, rejudgement and the coverage-start reading, so the exact version can be traced. | Calculated by code |
+| Model settings and search result count | Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching (the Jev engine, D169) and rejudgement settings, and an optional collision-judge setting: the generative model asked whether a candidate and a listed thesis of its own subject and measure are one question (D190); a version without it leaves matching to Jev alone. An optional coverage-start reading setting (model, prompt version, reasoning effort, temperature) turns on the once-only reading of the company's latest report at coverage start (D364); a version without it has no such step. Config also sets the search result count, initially 10. Prompt content belongs to the extraction and thesis library modules. A settings version is immutable; a change creates a new one. | Chosen by a person |
 <!-- /generated: schema -->
 
 ## Rules
@@ -34,7 +34,7 @@ Changing the news prompt creates a new configuration version. Subsequent news ex
 
 ## Acceptance
 
-- Every extraction, matching and rejudgement call records Config version and checksum.
+- Every extraction, matching, collision-judge, rejudgement and coverage-start reading call records Config version and checksum.
 - Missing required values or nonexistent model settings invalidate the entire version.
 - Any change creates a new version without changing the old one.
 - Config does not select processed categories or contain spending/concurrency settings.
@@ -54,3 +54,5 @@ Changing the news prompt creates a new configuration version. Subsequent news ex
 - D41: separate model-call settings and temperature. D45: proposed duplicate checks are not approved and receive no settings yet.
 - D46: search result count N, initially 10. D47: Config is not limited to model settings.
 - D51: dependency selection occurs within matching, so the library has matching and rejudgement settings, not a separate dependency call.
+- D169: the matching setting names the Jev engine. D190: an optional collision-judge setting beside matching; a version without it leaves matching to Jev alone.
+- D364: an optional coverage-start reading setting; a version without it has no such step.

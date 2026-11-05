@@ -21,7 +21,7 @@
 | 数字错、财期错 | FinanceBench（2023）：GPT-4-Turbo 配共享向量库，150 题里 29 对、20 错、101 拒答；整份申报放进上下文也还错 26 题（[表 2](https://arxiv.org/abs/2311.11944)）。Daloopa 2026 基准：三家前沿模型接上结构化数据库后约 90% 对，Claude 的 46 个错里 63% 是财期弄混；3 月财年的公司只有 65% 对（[Daloopa](https://daloopa.com/benchmark/benchmarking-ai-agents-on-financial-retrieval)）。Vals Finance Agent 基准 2026-06：最好的模型 64%（转述） | 能修大半，厂商都在修。不是我们的增量 |
 | 顺着用户说 | 《The Price of Agreement》（ICLR 2026 FinAI workshop）：用户只是反驳，掉得不多（Claude Sonnet 4.5 掉 17%）；用户先亮出自己的偏好，掉得很狠：GPT-5-Nano 0.83 → 0.47，Gemini-3-Pro 0.83 → 0.24；加过滤只能部分救回（0.49 → 0.67，基线 0.87）（[论文](https://arxiv.org/abs/2604.24668)）。「我这个想法怎么样」正是「先亮偏好」这一种 | 修不了。状态得在用户开口之前就已经判好，用户拿到的是一次查询，不是一次回答 |
 | 不知道「当时知道什么」 | 模型答出的「预测」有一部分是训练数据里的事后信息：Gao–Jiang–Yan 的 lookahead propensity 在训练截止后归零（转述）；Kim、Muhn、Nikolaev 要把公司名和年份全抹掉才敢测（转述） | 要一套带日期的证据集：「这一天、凭这几份文件，状态是 X」 |
-| 每次答得不一样 | 同一个问题连问三天，推荐方向反转（Lee 2026，转述）；IMF 工作论文：重跑一致率 88%（转述）。AGENTS §6：模型调用是一次采样 | 要存下来的状态，只在证据变了的时候变，变了有记录 |
+| 每次答得不一样 | 同一个问题连问三天，推荐方向反转（Lee 2026，转述）；IMF 工作论文：重跑一致率 88%（转述）。AGENTS §7.3：模型调用是一次采样 | 要存下来的状态，只在证据变了的时候变，变了有记录 |
 | 没有记分 | FactSet 的产品负责人：客户要的是「一条长的预测记录，好让他们自己下注」（转述）。Alpha Theory 对 300 多家基金的统计：经理默认 75% 的成功率，实测 batting average 55%（[Alpha Theory](https://www.alphatheory.com/blog/probability-inflation-the-risk-of-ignoring-batting-average-2)） | 要到期定格 + 记分。没有一个对话产品有 |
 | 不知道市场预期在哪一格 | 没有任何基准测「这件事是不是已经在价里」；裸用 GPT 答不了 | 要把「市场当时预期哪一格」摆在状态旁边比。见第 8 节的选择 1 |
 

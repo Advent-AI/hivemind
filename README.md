@@ -2,7 +2,7 @@
 
 Hivemind reads a stream of information as a hedge-fund analyst would: it identifies theses, links supporting and opposing evidence, and updates its judgement as information arrives. Equities, commodities and cryptocurrencies use the same process.
 
-This repository rebuilds the earlier system in `../tn-hivemind`. It contains a working proof of concept, a browsable thesis library and an Idea explorer. The English pipeline runs end to end, but has not passed product acceptance. [Current state](docs/CURRENT_STATE.md) records the measured results, open defects and one next task.
+This repository rebuilds the earlier system in `../tn-hivemind`. It contains a working proof of concept, a browsable thesis library and an Idea explorer. The pipeline runs end to end and has been measured on one company and one 14-day window; it has not passed product acceptance. [Current state](docs/CURRENT_STATE.md) records what runs, the open defects and the one next task; [Decisions](docs/DECISIONS.md) records what is decided now.
 
 For example, an Idea about NVIDIA revenue can draw on several stored theses. The explorer shows the selected theses, their weights, evidence and historical assessments. Its confidence chart applies the selected weights to those assessments; it is not a calibrated probability of the Idea coming true.
 
@@ -13,12 +13,11 @@ For example, an Idea about NVIDIA revenue can draw on several stored theses. The
 | Browse the included demo | [Thesis Library and Explore Ideas](poc/mock/index.html); serve it locally using the command below |
 | Understand the system | [Design page](docs/system-design.html) and [PRD index](docs/prd/README.md) |
 | Run the API or connect an agent | [Run the service for testing](#run-the-service-for-testing) and [service contract](docs/poc/service.md) |
+| Run or measure the pipeline | [Run the pipeline](#run-the-pipeline) and the [pipeline guide](docs/poc/pipeline-plan.md) |
 | Work on the UI | [Frontend integration and development](poc/ui/README.md) |
-| Check what is finished | [Current state](docs/CURRENT_STATE.md) and [recorded decisions](docs/DECISIONS.md) |
+| Work on this repository | [Working rules](AGENTS.md), [current state](docs/CURRENT_STATE.md) and [decisions](docs/DECISIONS.md) |
 
-The current UI has two workspaces. **Thesis Library** browses the collected English snapshot and its research groups. **Explore Ideas** submits a question to the API and displays an analysis with weighted theses. Its Trigger compares the displayed confidence with a chosen threshold. Its Action card is an editable preview with a dated NVDA price snapshot; it has no wallet connection or order execution.
-
-This documentation update describes the working POC. The latest Trigger/Action implementation and other uncommitted development work are being kept local; this documentation-only commit does not publish them. The committed demo may therefore show the earlier frontend.
+The UI has two workspaces. **Thesis Library** browses the collected English snapshot and its research groups. **Explore Ideas** submits a question to the API and displays an analysis with weighted theses. Its Trigger compares the displayed confidence with a chosen threshold. Its Action card is an editable preview with a dated NVDA price snapshot; it has no wallet connection or order execution.
 
 ## Open the demo and design
 
@@ -34,10 +33,6 @@ Open <http://127.0.0.1:8000/poc/mock/index.html> for the app, or <http://127.0.0
 
 The design page also opens directly from disk. **New** shows the rebuild and **Old** the historical comparison. Select a module to read its flow, examples and linked PRD. The bundled PRDs keep these links usable without a server.
 
-## The extraction standard and the frozen production prompt
-
-The extraction step is measured against one frozen ruler (AGENTS §7.1, D261, D262): the standard [`docs/prd/05-extraction-standard.html`](docs/prd/05-extraction-standard.html) (version 3, signed by Alex, D243, with D250's boundaries), the golden set `docs/research/2026-10-29-ledger-standard/golden-v5/`, the seed questions `poc/seeds/nvda-2026-07-01-v2.json` and the judgement gold `docs/research/2026-11-01-e2e-loop/judgement-gold/`; `tests/test_frozen_rulers.py` fails the suite when any of them changes. The production extraction prompt is frozen at `poc/config/poc-v108.json` (D274): extraction v74i on the one-decider architecture (D264) at low reasoning, pinned by `tests/test_frozen_extraction_prompt.py`; a change is a new version that only Alex opens. The measurements behind it are in [`docs/research/2026-11-01-e2e-loop/`](docs/research/2026-11-01-e2e-loop/) (`design-v78-fields.md` §11–§13, `log.md`).
-
 ## How it works
 
 ```text
@@ -45,19 +40,22 @@ Research universe: what to research and which information categories to track
   ↓ determines what upstream supplies
 Upstream (outside this system): obtain information and classify it
   ↓
-Dispatch: validate each item, assign a sequence number and route it
+Seed questions for a covered company, written before the first day (optional, --seed)
   ↓
-Extraction (read-only): read the whole item, without the library's theses;
-  return evidence with sources, candidate questions and research groups
+Coverage-start reading (once): each open question reads the company's latest
+  earnings report, when one is found; the figures code keeps become evidence
+  linked to the questions
   ↓
-Placement: file each statement under the narrowest open question;
-  a statement no question takes is dropped, and evaluation reads the drops
-  ↓
-Thesis library: search and match each candidate;
-  merge it, continue a previous period, open a new thesis, or skip it.
-  Compare evidence within its thesis: repeat, replacement, or new evidence.
-  At day-end, rejudge open theses whose inputs changed, dependencies first.
-  ↔ Save matching records for human labelling and future model training
+Each day, in order:
+  Dispatch: validate each item, assign a sequence number and route it
+  Extraction (read-only): read the whole item with the questions open at the start
+    of the day; return evidence with sources, the questions each statement bears on,
+    candidate questions and research groups; a statement no question takes is dropped
+  Thesis library: match each candidate (open, merge, continue a period, or skip) and
+    each evidence piece (repeat, replacement or new); save matching records for labelling
+  Judging: once at the end of the day, re-judge the open questions whose evidence
+    changed, dependencies first
+  Pull mode: close every question whose due day has come, at the rung it stands on
 ```
 
 A thesis has a question, an outcome ladder and a due date, fixed when it is created. An asset thesis concerns a company, cryptocurrency or commodity; its five rungs run from strongly bullish to strongly bearish. A theme thesis concerns macroeconomics, policy or an industry; its rungs name outcomes without judging them as good or bad. A yes/no question has two rungs.
@@ -70,22 +68,22 @@ Other modules:
 - **Pull mode** owns time-based work: at the end of each day it closes every question whose due day has come, at the rung it stands on; it re-judges nothing (D356).
 - **Human review pool** holds unresolved identifiers, proposed themes outside the universe and repeated processing failures.
 
-For example, NVIDIA's April 15, 2025 8-K says H20 exports to China require a licence and may cause a charge of up to $5.5 billion. With an empty library, extraction proposes a theme thesis about licences for the affected chips and an NVDA thesis about FY2026 China revenue versus FY2025. Each carries quotations from the filing. Matching can open both and record the revenue thesis's dependency on the licence thesis. AMD's subsequent MI308 filing can contribute to the same licence thesis. A Reuters retelling of the NVIDIA filing adds another source for existing evidence, not new corroboration.
+For example, NVIDIA's April 15, 2025 8-K says H20 exports to China require a licence and may cause a charge of up to $5.5 billion. With an empty library, extraction proposes a theme thesis about licences for the affected chips and an NVDA thesis about FY2026 China revenue versus FY2025. Each carries quotations from the filing. Matching can open both; the licence theme then reaches the revenue thesis through the theme block its judgement reads (D191, D195). AMD's subsequent MI308 filing can contribute to the same licence thesis. A Reuters retelling of the NVIDIA filing adds another source for existing evidence, not new corroboration.
 
 ## Design and implementation status
 
-The foundational design was frozen on October 22, 2026; pull mode and closing at the due day were decided and built later (D54, D356). Later decisions authorize specific changes and the POC build. A design freeze does not imply that the implementation has passed acceptance.
+The foundational design was frozen on October 22, 2026; later decisions authorize specific changes and the POC build. A design freeze does not imply that the implementation has passed acceptance. Changes to a frozen module require a recorded decision.
 
-| Module | Design status |
+| Module | Status |
 |---|---|
 | Research universe | First version frozen; specific themes remain a draft |
 | Upstream classification, Config, dispatch | First versions frozen |
-| Extraction | Frozen at `poc-v108` (D274): extraction v74i, one decider (D264) that files each statement under the questions open at the start of its day; the step's standard is `docs/prd/05-extraction-standard.html` and its frozen ruler (AGENTS §7.1). At coverage start each question reads the company's latest earnings report once (D364, D365; `poc-v116`, the replay default since D366) |
-| Thesis library and matching records | Foundation frozen; matching on Jev (D169) with the collision judge (D190); listed open questions pending |
+| Extraction | Frozen at extraction v74i (D274): one decider (D264) files each statement under the questions open at the start of its day; at coverage start each question reads the company's latest earnings report once, when one is found (D363–D365) |
+| Thesis library, matching and judging | Frozen as the production configuration runs them (D354): Jev matching (D169) with the collision judge (D190); judging-v7 (D263) |
 | Human review pool | Intake frozen; output not yet designed |
 | Pull mode and closing at the due day | Decided and built: at the end of each day a due question freezes at its rung and closes; no separate final verdict (D54, D356) |
 
-Changes to frozen modules require a recorded decision. [Decisions](docs/DECISIONS.md) contains the history; decision numbers are per branch until a merge (D227). Historical records and original source material retain their original language. Maintained documentation and new product text use English under D163; pages written for Alex's review are in plain Chinese.
+The production configuration is `poc/config/poc-v116.json`, the replay default (D366). Every measurement uses one frozen ruler: the extraction standard [`docs/prd/05-extraction-standard.html`](docs/prd/05-extraction-standard.html) (its version 5: version 3 as signed in D243, with D248's and D250's boundaries) with its golden set golden-v5, the seed questions and the judgement gold ([AGENTS §7.1](AGENTS.md); D261, D262). Tests fail when a piece of either moves (`tests/test_frozen_rulers.py`, `tests/test_frozen_extraction_prompt.py`, `tests/test_frozen_questions_and_judgement.py`, `tests/test_baseline.py`). Maintained documentation, new product text and pages written for Alex's review are in English (D163, D368); historical records and quotations keep their original language.
 
 ## Local requirements and data
 
@@ -96,8 +94,8 @@ The default backend reads these local files:
 | Purpose | Path |
 |---|---|
 | Collected thesis ledger | `poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite` |
-| Source items | `poc/data/items-nvda-2026-07-01-10-27.sqlite` (cleaned pages, D351; the whole pages as fetched are in `items-nvda-2026-07-01-10-27.page.sqlite`, column `text_page`) |
-| Replay configuration | `poc/config/poc-v116.json` (D366): `poc-v108`, the frozen production extraction prompt (D274) with Jev matching, plus the coverage-start reading (D364, D365) |
+| Source items | `poc/data/items-nvda-2026-07-01-10-27.sqlite` (cleaned pages, D351, with the whole pages as fetched in column `text_page`; also kept apart in `items-nvda-2026-07-01-10-27.page.sqlite`) |
+| Replay configuration | `poc/config/poc-v116.json` (D366): the frozen production extraction prompt with Jev matching and judging-v7 (`poc-v108`, D274), plus the coverage-start reading (D364, D365) |
 | Idea configuration | `poc/config/poc-v33-idea.json`: two discovery calls and a final adoption/weighting call |
 | Derived service index and Idea archive | `poc/data/service-english/` by default; overridable per run |
 
@@ -116,7 +114,7 @@ The page build, the two services and Compose each carry the same two defaults: t
 | This README and `poc/ui/README.md` | the default paths named in the table above and in the build description |
 | `tests/test_ui_bundles.py` | `SERVED_VIEWS` and `SERVED_GROUPS`, the served library's thesis and group counts |
 
-Then restart the API in a new dated service folder (below) so the search index is built for the new ledger. The current default, `served-2026-10-28-v34-nvda-3m-through-0828`, is the three-month NVDA run (poc-v34, extraction v18) stopped and sealed at 2026-08-28 on evidence bloat; its folder README names the one empty thesis removed. Earlier defaults: `english-v23-jev-2026-10-25` until 2026-10-27, then a 2026-10-27 snapshot of the same three-month run until 2026-10-28.
+Then restart the API in a new dated service folder (below) so the search index is built for the new ledger. The current default, `served-2026-10-28-v34-nvda-3m-through-0828`, is the three-month NVDA run (`poc-v34`, extraction v18) stopped and sealed at 2026-08-28 on evidence bloat (D358); its folder README names the one empty thesis removed.
 
 ## Run the service for testing
 
@@ -152,7 +150,7 @@ docker compose ps && curl -s http://127.0.0.1:8788/days
 docker compose down
 ```
 
-The recorded VPN setup on this Mac blocked outbound model calls from Docker. Host operation is the tested workflow; the documentation refresh does not establish that container connectivity has changed.
+The recorded VPN setup on this Mac blocked outbound model calls from Docker; host operation is the tested workflow, and container connectivity needs a fresh check before a container model run.
 
 ## Run the pipeline
 
@@ -165,13 +163,15 @@ python3 "$repo/scripts/preflight.py" \
   --items "$repo/poc/data/items-nvda-2026-07-01-10-27.sqlite"
 ```
 
-Inspect changed refusals before continuing. For an authorized replay, use a new dated destination and the agreed spending cap; `--help` lists the options:
+Inspect changed refusals before continuing; the preflight does not yet replay the coverage-start reading's check. A replay is a paid run: it starts only when authorized, in a new dated folder, with the agreed spending cap. The default configuration needs a seed file:
 
 ```sh
-python3 "$repo/scripts/replay.py" --help
+python3 "$repo/scripts/replay.py" --from 2026-07-01 --until 2026-07-14 --only NVDA --cap 3 \
+  --seed "$repo/poc/seeds/nvda-2026-07-01-v2.json" \
+  --views /absolute/path/to/new-run/views.sqlite --archive /absolute/path/to/new-run/archive.sqlite
 ```
 
-The default replay configuration is `poc-v116` (D366): `poc-v108`, the frozen production extraction prompt (D274), plus the coverage-start reading, which reads the company's latest earnings report once after `--seed` and refuses a run without it (D364); `tests/test_frozen_extraction_prompt.py` checks it adds nothing else. The default items database is `poc/data/items-nvda-2026-07-01-10-27.sqlite`, which holds the page text the reading needs. The replay runs the parallel day by default (D183); `--workers 1` runs the serial path. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
+`--cap` is checked after each item: the run stops as soon as an item takes the spend past it; a day's judging round runs after the last item without a check, calls already sent in parallel are still paid, and the coverage-start reading is not counted, so it is not a hard limit on the whole run. The default configuration is `poc-v116` and the default items database `poc/data/items-nvda-2026-07-01-10-27.sqlite`, which holds the page text the coverage-start reading needs; a run of `poc-v116` without `--seed` is refused (D364). The replay runs the parallel day by default (D183); `--workers 1` runs the serial path; `--help` lists the options. Measurements run three draws at once with `docs/research/2026-11-01-e2e-loop/harness/run_arm.sh`, scored by `docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py`. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
 
 ## Build and check
 
@@ -188,24 +188,24 @@ PYTHONPATH=src:poc python3 -m pytest tests -q
 python3 docs/check.py
 ```
 
-Install pytest in your Python environment to run the Python tests. `mock_build.py` reads the local databases and embeds the dated market snapshot into `poc/mock/index.html`; it makes no model calls. `npm --prefix poc/ui run build` builds component assets only. The [frontend guide](poc/ui/README.md) covers custom data paths and browser fixtures. Run the reasoning refresh below before the final documentation check.
+Install pytest in your Python environment to run the Python tests. `mock_build.py` reads the local databases and embeds the dated market snapshot into `poc/mock/index.html`; it makes no model calls. `npm --prefix poc/ui run build` builds component assets only. The [frontend guide](poc/ui/README.md) covers the frontend in detail.
 
-The tests make no model calls: `tests/conftest.py` refuses every credential read. `docs/check.py` checks generated blocks, glossary controls, classification simulation and page rendering, and rebuilds the PRD bundle. A pass does not replace the reasoning review in [the PRD index](docs/prd/README.md) or establish product acceptance.
+The tests make no model calls: `tests/conftest.py` refuses every credential read. `docs/check.py` checks generated blocks, glossary controls, classification simulation and page rendering, and rebuilds the PRD bundle. A pass does not replace the reasoning review in [the PRD index](docs/prd/README.md).
 
 ## Repository map
 
 | Path | Purpose |
 |---|---|
-| `AGENTS.md` | Working rules: diagnosing, design, code, tests, verification, writing prompts, measuring and iterating; `CLAUDE.md` points to it |
-| `docs/prd/05-extraction-standard.html` | The extraction step's standard and golden set (signed, D243) |
-| `docs/research/2026-10-29-ledger-standard/` | Its drafts, simulations, drift reviews and golden set |
-| `docs/research/2026-10-29-analyst-standard/` | The first version (D229, superseded) and the prompt loop's log |
+| `AGENTS.md` | Working rules: authority, diagnosing, design, code, tests, verification, writing prompts, measuring and iterating; `CLAUDE.md` points to it |
+| `docs/DECISIONS.md` | What is decided now, by module, and every decision number's status |
+| `docs/DECISIONS-log.md` | The full record of every decision, in number order |
+| `docs/CURRENT_STATE.md` | What runs, open defects and the one next task |
+| `docs/system-design.html`, `docs/system-design/new-*.js` | Maintained design page and its source data |
+| `docs/prd/` | One specification per module and an index; `05-extraction-standard.html` is the extraction step's standard (signed, D243) |
+| `docs/poc/` | The pipeline guide and the service, Idea card and UI contracts |
+| `docs/check.py` | Mechanical design checks and PRD bundle refresh |
+| `docs/research/` | Measurements, golds and reviews behind the decisions, by date; `2026-10-29-ledger-standard/` holds the standard's drafts and golden set |
+| `docs/archive/` | Frozen design snapshots |
 | `src/hivemind/`, `scripts/`, `poc/` | Implementation, entry points and the POC corpus, configurations and universe |
 | `poc/eval/gold/`, `poc/reports/` | Earlier golds and the measured reports behind the build log |
-| `docs/system-design.html`, `docs/system-design/new-*.js` | Maintained design page and its source data |
-| `docs/prd/` | One specification per module and an index |
-| `docs/DECISIONS.md` | Recorded decisions |
-| `docs/CURRENT_STATE.md` | Status, known defects and next task |
-| `docs/check.py` | Mechanical design checks and PRD bundle refresh |
-| `docs/archive/` | Frozen design snapshots |
 | `reports/`, `research_notes/` | Research and reviews behind the design |

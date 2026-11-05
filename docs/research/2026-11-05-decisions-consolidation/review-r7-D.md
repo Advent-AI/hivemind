@@ -1,0 +1,1 @@
+serious: 0, wording: 0
