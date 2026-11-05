@@ -1,6 +1,6 @@
 # Pull mode
 
-> Status: decided and built (D54, D356). English edition: November 4, 2026.
+> Status: decided and built (D54, D356; day-end scope confirmed by D368). English edition: November 4, 2026.
 > Design page: `docs/system-design.html` → New → Pull mode. Recorded decisions take precedence.
 
 ## Purpose
@@ -11,6 +11,7 @@ The only time-driven module. The incoming stream handles one item at a time and 
 
 - At the end of each day, with the day passed in (real time in production, the replayed day in tests), it closes every open question whose due day has come, at the rung it stands on. See [Closing at the due day](07-final-verdict.md).
 - It does not re-judge open questions without new evidence (D356), and it does not wait for the day's items (D54).
+- It opens nothing: an event question that falls due unresolved closes at its state, and no next-deadline successor is opened at the due day (D248 boundary 2's step dropped, D368).
 - Due days are set when a question is opened, on or after the day its result is published (D356). A question whose result is still unknown on its due day closes at its state like any other.
 - Upstream delivery is a separate thing and is not pull mode.
 

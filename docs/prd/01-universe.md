@@ -76,7 +76,7 @@ D155's POC entries include research references without changing this information
 4. Upstream supplies only subjects and categories covered by the universe. Test code follows the same scope. Every supplied item is processed.
 5. Adding a subject or changing tracked categories creates a new version. Upstream backfills relevant historical items under the new universe.
 6. Rates, exchange rates and indices belong to themes, such as the US Treasury yield curve or US dollar strength, rather than separate subject kinds.
-7. Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry.
+7. Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry. Decided, to be built (D187, D368): the own quantity of any company is a thesis under that company, private companies included, which needs a private-company object kind here.
 8. Macro and geopolitical themes reach companies one to all: every open, judged theme thesis is shown to every asset thesis’s judgement (the theme block), and that judgement states how each theme pushes on it (D191, D195). Explicit dependencies stay only where a document states them. A theme thesis describes an outcome without calling it good or bad. A changed theme conclusion queues every open asset thesis with evidence in force for rejudgement in the same round.
 <!-- /generated: rules -->
 
