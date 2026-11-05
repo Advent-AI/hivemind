@@ -1,6 +1,6 @@
 # Thesis library
 
-> Status: foundation frozen, October 20, 2026. D149 adds extraction-owned grouping; D165 puts it in the default pipeline. D169: the matching step runs on Jev, with the collision judge for a candidate whose list holds a thesis of its own subject and measure (D190, D258); the replay default is `poc-v116` (D366). D168 states the Replace row's full definition and the succession answer it needs. Corrected to D63, D198, D202, D204, D169, D190, D191, D207, D251, D259, D260, D264 on 2026-11-05 (D367). English edition: October 25, 2026 (D163). Only recorded decisions apply; open questions and one proposal remain separate.
+> Status: foundation frozen, October 20, 2026. D149 adds extraction-owned grouping; D165 puts it in the default pipeline. D169: the matching step runs on Jev, with the collision judge for a candidate whose list holds a thesis of its own subject and measure (D190, D258); the replay default is `poc-v116` (D366). D168 states the Replace row's full definition and the succession answer it needs. Corrected to D63, D198, D202, D204, D169, D190, D191, D207, D251, D259, D260, D264 on 2026-11-05 (D367); the builds D368 decided are marked where they apply. English edition: October 25, 2026 (D163). Only recorded decisions apply; open questions and one proposal remain separate.
 > Design page: `docs/system-design.html` → New → Thesis library → Details. This PRD also owns Matching labels. Recorded decisions take precedence. Historical discussion: `docs/views-rebuild-log.md`.
 
 ## Purpose

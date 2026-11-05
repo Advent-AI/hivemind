@@ -1,6 +1,6 @@
 # Research universe
 
-> Status: first version frozen, October 18, 2026; specific themes remain a draft. English edition: October 25, 2026 (D163); corrected to D191 and D195 on 2026-11-05 (D367).
+> Status: first version frozen, October 18, 2026; specific themes remain a draft. English edition: October 25, 2026 (D163); corrected to D191 and D195 on 2026-11-05 (D367); a private-company object kind is decided, to be built (D187, D368).
 > Design page: `docs/system-design.html` → New → Research universe. Recorded decisions take precedence over this PRD.
 
 ## Purpose
