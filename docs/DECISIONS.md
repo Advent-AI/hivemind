@@ -1,3931 +1,696 @@
 # Decisions
 
-Recorded choices of the rebuild, newest last. A decision names who made it, what it decides and where it is enforced.
-A later decision that changes one names the one it replaces.
-
-## D1 · 2026-10-15 · Input classification carries each input's related companies
-
-- By: Alex ("好，补进分类模块，仿真跑通先").
-- Decides: every classified input carries `companies` (entity ids, each with its basis) and `unresolved_companies`.
-  They are read only from the identifiers the channel gives and from the author when the author is a company; never
-  from the text or the URL. A ticker resolves on its publication day; an unresolved identifier is kept, never a refusal.
-  Related companies never change the tag.
-- Enforced: `docs/system-design/new-classification.js` (`COMPANY_RULES`, `INPUT_SCHEMA`) and
-  `docs/system-design/simulate_classification.py` (`related_companies`, `COMPANY_CASES`, the old ledger's 17
-  independently derivable inputs). The simulation must PASS.
-- Changed by D11: related companies became related objects (company, crypto, commodity, theme); the page's
-  `COMPANY_RULES` became `OBJECT_RULES`.
-
-## D2 · 2026-10-15 · Config holds only the choices a person makes
-
-- By: Alex, in the Config discussion.
-- Decides: Config holds the companies researched, the tags processed and the model settings of text extraction.
-  Facts (tag, form, times, related companies) come from Input classification; mechanisms (when work runs, retries,
-  rounds, due triggers) belong to code; fetch parameters are derived from the companies and the processed tags and are
-  not written. Whether an input is read by code or by a model follows from its form (structured or text), which
-  classification gives; Config does not choose it.
-- Enforced: `docs/system-design/new-config.js`.
-- Changed by D6: the companies researched moved out of Config into the universe module.
-- Changed by D10: there is no fetch step in the system; the fetch parameters belong to the upstream pipeline.
-- Changed by D18: the tags processed moved out of Config into the universe (what each object tracks); Config
-  holds only the extraction policy.
-- Changed by D25: the form no longer chooses a reader. Every item that belongs to a category goes to the one
-  extraction module and is read by its category; Config holds one model setting per category.
-- Changed by D27 and D29: Config holds three kinds of model setting: reading, one per category; matching; and the
-  final verdict.
-
-## D3 · 2026-10-15 · Config has no budget or concurrency limits
-
-- By: Alex ("我觉得3 不是一个重点可以完全干掉").
-- Decides: the limits section (budget per policy, total budget, concurrency) is not part of Config. Where limits live,
-  if anywhere, is not decided.
-- Enforced: `docs/system-design/new-config.js`.
-
-## D4 · 2026-10-15 · Dispatch is by tag only, never by company
-
-- By: Alex ("不看公司，因为这个pipeline 应该不管公司的，就是按照tag的种类来分发").
-- Decides: an input whose tag is not processed is stored only; a processed structured input goes to code; a processed
-  text input goes to model extraction. The input's related companies play no part in dispatch. The list of companies
-  is used only to decide what to fetch.
-- Enforced: `docs/system-design/new-config.js`.
-- Changed by D7: an input whose tag is not processed is not processed and not stored by us (it stays in the source
-  database).
-- Changed by D18: dispatch no longer filters by tag at all; every item that arrives is within the universe's scope
-  and is processed. Dispatch still never reads related objects.
-
-## D5 · 2026-10-15 · Time is the material's own time and the run's day
-
-- By: Alex ("是的，用材料的时间，不要陷入之前的问题").
-- Decides: time is two things: the time a material became public (`published_at`, carried by the material) and the
-  day a run stands on (T, given by the run command: today for a live run; a replay walks T forward one day at a time
-  from its first day). One rule: standing on T, the system sees only materials with `published_at ≤ T`. T moves
-  forward every day, a day without new material included, and never moves back. No rule reads the computer's clock;
-  `retrieved_at` is for audit only. Input classification no longer writes `admitted_on`: what an input's visibility
-  needs is its `published_at`. The old design's knowledge date, log order and clock patches are not carried over.
-- Enforced: `docs/system-design/new-classification.js` (`TIME_RULES`, `OUTPUT_FIELDS`) and the run node of
-  `docs/system-design/new-design.js`.
-- Changed by D7: replay is not part of the system design.
-- Changed by D9: `published_at ≤ T` compares days, cut in New York time.
-- Changed by D10: T is no longer given by a run command; it is the stream's current New York day, moved by the
-  stream's day markers.
-- Changed by D12: there is no current day T and no day markers; each item carries its own publication day.
-- Seal note (2026-10-16): the run node named above no longer exists (D12); the time rules live in `TIME_RULES`.
-
-## D6 · 2026-10-15 · The research universe is its own module
-
-- By: Alex ("公司主题名单可以单独管理，我们有500多个us euqity, crypto commodity etc. 所以模块上这个需要写进某个地方").
-- Decides: the list of what is researched (500+ US equities, crypto assets, commodities and other asset classes) is a
-  module of its own with its own versions, managed apart from Config; Config no longer holds a company list (this
-  changes D2). Each entry is an entity id from the reference data (T16) and its asset class. Only fetch reads the
-  universe, to decide what to pull; dispatch never reads it (D4). A run records the universe version it used.
-- Enforced: the universe node of `docs/system-design/new-design.js`.
-- Changed by D10: nothing in the system fetches; the universe is handed to the upstream pipeline as the scope it
-  feeds, and is not a filter inside the system.
-- Changed by D18: the universe also states which kinds of information (tags) each object tracks; the supply scope
-  is objects × tracked tags.
-
-## D7 · 2026-10-15 · No input store; replay is a test database, not a design concern
-
-- By: Alex ("不会消失，我们自己有自己的database and pipeline 不会消失"; on replay: "那和系统设计无关啊，只是一个test
-  database").
-- Decides: the system keeps no copy of the materials it reads: they stay in the team's own database. The system keeps
-  only a processing record: which material (its id and version in that database) was processed, how, and with what
-  result; whether an input arrived before (a copy) is answered from it. An input whose tag is not processed is simply
-  not processed (dispatch's "store only" becomes "not processed"); when the tag is turned on later, the material is
-  read from the database again. The system knows one thing about time: given a day T and a database, run that day.
-  Testing the past is running it on a test database with a past T; the system's logic does not change.
-  (Changed by D10: the system consumes a stream instead of running a day; testing is a test feeder streaming a test
-  database.)
-  (Changed by D10: copies, the same content arriving again under another id, are found by upstream classification
-  and arrive as "merged into the original"; the processing record answers only whether the same id and version was
-  processed, dispatch's second question, D17.)
-  (Changed by D18: "when the tag is turned on later" becomes "when the universe starts tracking it": a new
-  universe version, and upstream feeds the past items of the new scope.)
-- Enforced: `docs/system-design/new-config.js` (`DISPATCH_TREE`) and the run, dispatch, code and extract nodes of
-  `docs/system-design/new-design.js`.
-- Seal note (2026-10-16): the run node no longer exists (D12).
-- Changed by D26: besides the processing record, the system keeps the views database; materials are still not
-  copied, and every view and piece of evidence names the material it came from by id, version, location and quote.
-
-## D8 · 2026-10-16 · Classification's lookup tables: one data file, results are tags
-
-- By: Alex ("其实可以映射到classification 的品类 … 这样能一起联动update"; "你要做一份json数据文件或是yaml 好查找maintain的统一数据结构").
-- Decides: classification reads four lookup tables: datasets → tag (or "not an input"), form codes → tag (one table
-  per filing system; 8-K and 6-K, 425 and ownership forms go on to a rule), official series → tag, and authors →
-  author type (the tag then follows from the type with the category, format or series, since one author lands in
-  different tags). They live in one JSON data file that production and tests both read; a changed table is a new
-  classification version. Reading the file checks one thing: every value is valid (one of the 16 tags, "not an
-  input", a named rule or one of the five author types). The code ↔ company table (AAPL ↔ Apple) is not a
-  classification table; where it comes from is open.
-- Not decided: a duplicate-entry check (rejected by Alex as unneeded).
-- Changed by D15: the official series table becomes the publication series table, open to any publisher; author
-  entries carry validity dates.
-- Enforced: the "对照表" section of `docs/system-design/new-classification.js`. Design only: no data file is built at the
-  architecture-POC stage.
-
-## D9 · 2026-10-16 · A day is cut in New York time; only the day counts
-
-- By: Alex ("好按照纽约时间切，不要再产生什么时间戳漂移的问题，那几分钟几秒其实根本没差，不要自己给自己制造麻烦").
-- Decides: each material belongs to the New York calendar day it was published on (its publication day). Standing on
-  T, the system sees materials whose publication day is T or earlier. The hour and minute play no part in any rule, and
-  materials of the same day are not ordered. An SEC filing's day is the New York day EDGAR accepted it, not its
-  statutory filing date. A copy merged into its original gives the original the earliest day among them.
-- Enforced: `TIME_RULES` and `INPUT_SCHEMA` of `docs/system-design/new-classification.js`; the run node of
-  `docs/system-design/new-design.js`.
-- Changed by D12: there is no T; an item belongs to its publication day, and how a reader takes the state as of a
-  day is decided with the thesis design. The run node is gone.
-- Changed by D34: an SEC filing's day is the day SEC makes it public (its statutory filing date), not its
-  acceptance day. Changed by D31: inside one day, items are ordered by their arrival number; no rule reads the hour.
-
-## D10 · 2026-10-16 · The system starts at a stream of classified items
-
-- By: Alex ("现在就是assume 又一个pipeline 会不断的feed 打好classification tag 的信息进来，这个系统应该怎么处理；这才是我们的
-  PRD … 和之前的系统思路不同，务必明确记录好不要再混淆"; "测试的时候你当然是可以从一个test bd 例如你现在的cache 去读取然后
-  stream in and build the bd … 所以不是"拉"").
-- Decides: the system's boundary is a stream. An upstream pipeline keeps feeding items that already carry their
-  classification (tag, text or structured, attributes, related objects). The system receives each item, dispatches it
-  by tag, processes it by code or model, and builds its research store. Fetching and classifying happen upstream and
-  are discussed later; Input classification is the stream's contract: upstream produces it, the system validates it.
-  This differs from the old system, which pulled sources itself by date and processed them in batches; nothing in the
-  new system pulls. Testing is a test feeder reading a test database (for example the old system's cache) in
-  publication-day order and streaming it in through the same path.
-- Receive: validates the contract and refuses a malformed item with its reason; does not process the same item (same
-  upstream id and version) twice, by the processing record; a corrected item is a new version and is processed. The
-  current day T is a New York day that moves with day markers in the stream, empty days included, never backwards
-  (who sends the markers is proposed, not confirmed: upstream live, the test feeder in tests, one per day).
-  (Changed by D12: no current day and no day markers.)
-  (Changed by D17: receive is not a step of its own; its checks are dispatch's first two questions.)
-- Enforced: `docs/system-design/new-design.js` (summary, the classify, receive and store nodes, the overview view) and
-  the intro of `docs/system-design/new-classification.js`.
-
-## D11 · 2026-10-16 · Related objects and the theme library
-
-- By: Alex ("我觉得主题是必要的。你可能得跨政治经济战争地缘政治通胀等各种宏观因素做这个主题库"; "我同意").
-- Decides: the universe holds four kinds of object: company, crypto, commodity and theme; the theme library is the
-  theme part of the universe, not a separate list. Rates, FX and indices are not objects of their own; they are data
-  that themes track. Classification's related companies become related objects (any of the four kinds), with
-  identifiers written by kind (CIK, ticker, name; crypto symbol; commodity code; theme id). A theme comes only from
-  the object upstream fed the item for, or from an upload's declaration, never from the text. Macro items need no new
-  tag: they already fall in T7, T10, T11, T12 and T14; what differs is the related object. Facts are attached to
-  objects at extraction; a stock is linked to a theme through its thesis's drivers (thesis not designed yet). The
-  classification simulation covers companies only.
-- Enforced: `OBJECT_RULES` and `INPUT_SCHEMA` of `docs/system-design/new-classification.js`;
-  `docs/system-design/new-universe.js`.
-- Changed by D18: each theme lists the tags it tracks; companies, crypto and commodities have a default per kind.
-- Changed by D26: a stock is linked to a theme through the premise of its view, which names a theme view.
-- Changed by D38: a company reaches a theme through a dependency on a theme view (premises are not used).
-
-## D12 · 2026-10-16 · No current-day clock in the system
-
-- By: Alex ("没有新的thesis 或日期为什么要硬推进").
-- Decides: the system keeps no "current day" and no day markers. Each item carries its own publication day (New York,
-  D9), and processing an item reads only that item; when no item arrives, nothing happens. How date-driven work
-  (a prediction falling due, reading the research store as of a day without seeing later facts) is triggered is
-  decided with the thesis design, not before. This drops D5's "T moves forward every day" and D10's day markers.
-- Enforced: the receive and store nodes of `docs/system-design/new-design.js`; `TIME_RULES` of
-  `docs/system-design/new-classification.js`.
-- Seal note (2026-10-16): the receive node became dispatch's first two questions (D17).
-- Changed by D31: processing an item may read the state left by earlier items (a smaller number and a publication
-  day not after its own); it still never reads the wall clock. Pull mode's "now" is an input (D29).
-- Changed by D56: classification's time rule 2 says the stream has no "today"; pull mode, the only place that acts
-  on time, gets its "now" as an input (D14, D54).
-
-## D13 · 2026-10-16 · The system is driven by information, not by the calendar
-
-- By: Alex ("时间是一直往前推进，但是增额推荐是现实的时间，你抽取出来未来会成为thesis 或是ladder, evidence 的东西是会被这些
-  streming events 影响的，不是按照每一天来的 … 不需要按部就班的推日期，有相关的信息抽取出现，自然会影响整个系统抽取的thesis
-  向前").
-- Decides: the system moves forward only when an item arrives. Its facts are attached to objects, and the theses,
-  ladders and evidence that depend on those objects move forward from them. There is no daily step anywhere in the
-  system, including the layers not designed yet; a day without items changes nothing. Later designs (thesis, ladder,
-  evidence) are built on this.
-- Enforced: the summary and the store node of `docs/system-design/new-design.js`.
-- Scope (D14): this is the stream mode. Date- or schedule-triggered work exists only in the pull mode.
-
-## D14 · 2026-10-16 · Two modes, designed apart: stream and pull
-
-- By: Alex ("下面肯定会探讨到例如thesis 里面的laddar /evidence 有些可能到期日就需要看下证据或是甚至主动的run 一个cron 来看下是否
-  满足。这是stream的相反模式，也就是pull mode (agent 主动查找）这个我们后面设计，但是我希望你分的很清楚这两种模式").
-- Decides: the system has two modes. Stream mode (designed now): items arrive and their facts move dependent theses,
-  ladders and evidence forward; it never reads the calendar (D13). Pull mode (designed later): at a ladder's or an
-  evidence's due date, or on a cron schedule, an agent in the system actively looks for evidence and checks whether a
-  condition is met; it is the only place where time triggers work. "Pull" names only this agent-initiated checking;
-  the upstream pipeline that feeds the stream is called upstream supply, not pull.
-- Enforced: the summary, the thesis and pull nodes and the overview view of `docs/system-design/new-design.js`.
-- Changed by D29 and D31: pull mode sends due views to the final verdict, re-checks views whose weakened premise
-  was not seen within 7 days, and periodically merges and splits drivers.
-- Changed by D54: pull mode runs at the end of the day or on a cron interval, goes through the views proactively
-  and freezes the state of the views due that day.
-
-## D15 · 2026-10-16 · Macro, political and economic material in the classification
-
-- By: Alex, after the walk-through of theme material ("你继续再深度推演一次"; "你持续思考反思直到solid. 不要乱加戏，但是千万注重细节").
-- Decides:
-  1. The publication series table is checked before the author type and is open to any publisher (official, private,
-     media, company). It is keyed by (publisher, series) and yields only T8, T10 or T11; T10 only for an official
-     publisher. Registration principles, the same for the dataset table: statistics, official or private, → T11; a
-     central bank's material on monetary policy and the economy (statements, minutes, speeches, dot plot, Beige Book)
-     → T11, its research and working papers → T8; forecasts, outlooks and research → T8; actions and records → T10.
-     A text without a registered series follows the author type as before; an official author without one → T10.
-  2. T11 is macro policy and statistics whoever publishes them. Measures of the whole economy or a whole industry →
-     T11; measures of specific companies, products or places → T15.
-  3. Author entries carry validity dates, looked up on the publication day and counted by term of office, not by
-     influence (the same account is official in office and individual before and after). International organizations
-     (IMF, World Bank, OECD, OPEC, WTO) are official.
-  4. "Not an input" covers only indicators the system can compute from inputs it already has (valuation multiples,
-     technical indicators, the Fear & Greed index). An indicator it cannot compute is classified by what it is (LEI and
-     financial conditions indices → T11; GDPNow → T8). Investor sentiment surveys are aggregated views → T8.
-- Checked by reasoning over 14 boundary materials (Fed statements and papers, IMF, CBO, ISM, ADP, card panels, AAII,
-  Fear & Greed, OPEC, a Reuters poll, a president's posts in and out of office); the expected outcomes of the existing
-  412 real inputs and 161 cases do not change. Not simulated: no code at the POC stage.
-- Enforced: `TAGS` (T8, T10, T11, T15), `TREE`, `ROUTING`, `INPUT_SCHEMA` (`series`), `RULES`, `LOOKUP_TABLES`,
-  `LOOKUP_RULES` and `NOT_SOURCES` of `docs/system-design/new-classification.js`.
-
-## D16 · 2026-10-16 · A human review pool for what the tables do not know
-
-- By: Alex ("如果是新的指标或是在classification 里面出现不存在的company theme 应该要有一个机制可以自动的给人review 并认为的更新这个
-  系统 … 把他认为是一个exception handling pool for human review").
-- Decides: what the tables do not know is not guessed but goes to a human review pool: unregistered form codes and
-  datasets and undetermined author types (the item is refused); unregistered series, i.e. new indicators (the item is
-  classified by the author-type fallback and goes on); unresolved object identifiers (processed, object unresolved);
-  facts about an object that does not exist, found at extraction (attached to "unknown object"); contract violations
-  (upstream's defect). Only real gaps enter: an identifier found in the reference data or the theme library but not in
-  the universe is not an exception. One entry per gap, with its count and examples. After a human registers it, the
-  table or the universe gets a new version, the affected items are fed again from upstream, and an item whose tag
-  changes is a new version. The pool's delivery, reviewers and how a review takes effect are designed later.
-- Changed by Alex (2026-10-16, "复核池不要画虚线出来，再module 写明白这个部分先不设计output"): only what enters the
-  pool is designed now; its output, including the steps after registration above, is not designed yet, and the
-  overview draws no lines out of the pool.
-- Enforced: the review node and the overview view of `docs/system-design/new-design.js`; `ROUTING` and `LOOKUP_RULES`
-  of `docs/system-design/new-classification.js`.
-- Changed by D27 and D31: the pool also receives matches the model is unsure of, proposed new themes and items
-  that fail repeatedly.
-- Changed by D33: an object outside the universe is found when the views database writes a view, not at extraction.
-
-## D17 · 2026-10-16 · Receive is merged into dispatch
-
-- By: Alex ("接受和分发什么区别？你在给自己加戏吗？").
-- Decides: there is no separate receive step. Dispatch is the system's single entry and one decision tree asks, in
-  order: does the item meet the contract (no → refused, to the review pool); was this item, same id and version,
-  processed before (yes → skipped, D7); the classification outcome; is the tag processed; text or structured. Every
-  item reaches exactly one destination.
-- Enforced: the dispatch node and the overview view of `docs/system-design/new-design.js`; `DISPATCH_TREE` of
-  `docs/system-design/new-config.js`.
-- Changed by D18: the question "is the tag processed" is removed; the tree asks four questions.
-
-## D18 · 2026-10-16 · One switch: the universe decides what is processed
-
-- By: Alex, on two switches that could disagree (the universe tracks a theme while Config leaves its tags unprocessed):
-  "那你不觉得这是个设计问题吗？你应该怎么做你深度思考"; "那你就这样改 … 一定要严谨".
-- Why: whether a kind of information matters depends on the object researched (a tariff theme needs official
-  notices; a stock needs filings and calls; a crypto asset needs on-chain data and social posts). A global "tags
-  processed" switch in Config cuts across every object and can contradict the universe; two lists that must agree is
-  the defect the rebuild set out to remove.
-- Decides: the universe states, for each object, the kinds of information (tags) it tracks: a default per kind
-  (company: T1–T10 and T12–T15; crypto: T7, T8, T10, T12–T15; commodity: T7, T8, T10–T15) and, for each theme, its own
-  list (at least one). Tracked tags must be valid tags. The supply scope is objects × tracked tags; upstream pushes only
-  items within it, and the test feeder streams by the same scope; the rule is kept by whoever writes the stream, not
-  checked by dispatch. Every item that arrives is processed: dispatch drops the "is the tag processed" question and asks
-  four: contract, processed before, classification outcome, text or structured; it still never reads related objects
-  (D4). Config drops `processed_tags` and holds only the extraction policy. A new object or tracked tag is a new
-  universe version, and upstream feeds the past items of the new scope (as D7).
-- Enforced: `TRACKING_DEFAULTS`, `TRACKING_EXAMPLES` and `RULES` of `docs/system-design/new-universe.js`;
-  `CONFIG_SCHEMA`, `RULES` and `DISPATCH_TREE` of `docs/system-design/new-config.js`; the universe, config and dispatch
-  nodes and the overview view of `docs/system-design/new-design.js`; the stream contract in the intro of
-  `docs/system-design/new-classification.js`.
-
-## D19 · 2026-10-16 · Freeze v1: everything up to classification
-
-- By: Alex ("我们当前为止到classification 的模块和定义都可以freeze了吗，做最后一次review"; "是改一轮").
-- Before the freeze, a final review fixed seven text defects, none a design change: the time rules still read "as of
-  T" (D12 removed T); D1 and D9 lacked their change notes; the code ↔ object table and T16 were open items of
-  classification though classification is upstream (D10); the lookup tables had several names each (now: dataset
-  table, form-code table, publication series table, author table); the tree's refusal text missed malformed object
-  identifiers and the review pool; T7's condition missed "no registered series"; T12, T13, T14 and T15 did not name
-  crypto (assets, whale and smart-money positions, token unlocks, on-chain activity of chains and protocols).
-- Decides: the research universe (structure, object kinds, tracking defaults, rules), the Input classification
-  contract (16 tags, tree, routing, input schema, object rules, time rules, lookup tables and their registration
-  principles, what is not an input), Config (extraction policy only), dispatch (the four-question tree) and the human
-  review pool (as an exception pool) are frozen as v1. A later change needs a new decision, and the simulation is run
-  again or the boundary materials are reasoned through again.
-- Not frozen: the theme library's concrete themes (draft); the extraction policy's granularity; the review pool's
-  mechanism; upstream supply and classification, including the code ↔ object table and T16; pull mode; where
-  positions, trades and P&L belong.
-- Known limits: the classification simulation covers companies only; the macro rules (D15) and crypto, commodity and
-  theme objects (D11) are reasoned, not simulated; the script resolves tickers on the UTC date, not the New York day
-  (D9). No code is changed at the POC stage.
-- Enforced: the status of the classify, universe, config, dispatch and review nodes and the summary of
-  `docs/system-design/new-design.js`; the status line of `docs/system-design/new-classification.js`.
-- Changed by D24: the universe's company default no longer tracks financial reports (T1, T2, T4).
-- Changed by D25: dispatch asks three questions (the text-or-table question goes); Config's open item is settled
-  (one model setting per category); classification's wording "the form decides model or code" became "the form
-  decides how the category is looked up".
-- Sealed 2026-10-16: after a final check (simulation PASS; every node placed, every edge and code reference valid,
-  every detail page renders; no stale wording on the page; decisions whose enforced place moved carry a seal note) and
-  the plain-language rewrite of all page texts (wording only, rules unchanged), the design is copied to
-  `docs/archive/2026-10-16-v1/` with `SHA256SUMS`. The archived simulation is a record: it reads the old ledger by a
-  path relative to the live tree and runs only from `docs/system-design/`.
-- Changed by D27–D31 (2026-10-18): the universe's company default tracks financial reports again (D28); Config
-  holds the matching and final-verdict settings as well; dispatch numbers each item; the review pool has three more
-  sources. The boundary materials were reasoned through again; the classification wording now says views and
-  evidence instead of facts.
-- Changed by D32: a filing's XBRL numbers are not pushed as items; table data is one release per item.
-- Changed by D34: classification time rule 4 dates an SEC filing by the day SEC makes it public.
-- Wording aligned 2026-10-18 (a consistency review; no rule changed): inside one day items are ordered by their
-  arrival number (D31); length no longer decides how an item is cut (items are read whole, D27); an author missing
-  from the author table falls back to the channel's default type before the review pool (as rule 4 already said);
-  only indicators we can compute from our own inputs are "not material" (D15); dispatch's first question checks the
-  classification outcome, since merged, not-material and refused items carry no category.
-- Changed by D37 (2026-10-18): frozen again together with extraction, in the 2026-10-18 text.
-
-## D20 · 2026-10-16 · A PRD per module, in Markdown, viewable from the design page
-
-- By: Alex ("你现在应该针对每个模块写prd，并且归档好，并且在FE的地方点进去模块能再打开预览PRD，PRD就用 .md来写就好，FE解析呈现好看就好").
-  Claude had suggested waiting until the main line was designed, to keep one source; Alex decided to write them now.
-- Decides: `docs/prd/` holds one PRD per module (`00-system.md` and ten modules) and an index (`README.md`). Frozen
-  modules have full PRDs (what it is, why, scope, inputs, outputs, rules, examples, acceptance criteria, open
-  questions, decisions); undesigned modules list only what is decided and what is open. Their tables (categories,
-  rules, fields, dispatch tree, universe defaults) were generated from the design page's own data, so they start
-  identical to it. The design page opens a module's PRD from its detail ("查看 PRD") and the system PRD from the intro,
-  rendered by its own small Markdown renderer (`markdown.js`, no external library). Opened from disk the page shows
-  the copy bundled by `docs/prd/build_bundle.py` (`prd-bundle.js`); served over HTTP it reads the .md files.
-  Precedence: Alex, then DECISIONS, then the PRDs and the page. A change to the page or a new decision updates the PRD
-  in the same change, and the bundle is rebuilt; `python3 docs/prd/build_bundle.py --check` finds a stale bundle.
-- The sealed copy `docs/archive/2026-10-16-v1/` is refreshed to include the PRDs and the viewer; its checksums are
-  regenerated.
-- Enforced: `docs/prd/*.md`, `docs/prd/build_bundle.py`; `docs/system-design/markdown.js`, `prd-bundle.js`, the `prd`
-  fields of `new-design.js`, `openPrd` in `render.js`.
-- Changed 2026-10-18 (Alex: "在这些模块里面，要有一个link可以展开看PRD (编译.md)"): every detail page also opens its
-  module's PRD from the top of the sheet, and that PRD goes back to the detail page (`openDrilldown`, `openPrd` and the
-  sheet's click handler in `render.js`). Detail pages draw processes as step cards and decisions as trees; the PRDs show
-  the same trees, generated from the same data (`ascii_tree`, `step_flow` in `docs/check.py`).
-
-## D21 · 2026-10-16 · Any change refreshes everything, by one command
-
-- By: Alex ("嗯如果有改动需要全部刷一遍").
-- Decides: after any change to the design page, a PRD or a decision, `python3 docs/refresh.py` runs before the change is
-  done. It rewrites the PRD blocks generated from the page's data (marked `<!-- generated: NAME -->`; the hand-written
-  parts around them are kept), rebuilds the PRD bundle, and checks the classification simulation, the page (every node
-  placed, every edge and code reference valid, every detail page renders, every module has a PRD) and the bundle. It
-  exits 1 on any failure, and a change is not finished while it fails. DECISIONS and CURRENT_STATE are still updated by
-  hand in the same change. The sealed copies in `docs/archive` are not refreshed; a new freeze gets a new dated copy.
-- Checked: on a scratch copy, a changed Config rule reached `03-config.md` and the bundle, and a removed marker was
-  reported with exit 1.
-- Enforced: `docs/refresh.py`; the generated-block markers in `docs/prd/01-universe.md`, `02-classification.md`,
-  `03-config.md` and `04-dispatch.md`.
-- Changed by D22: refreshing is a reasoning pass by Claude, not a script; `refresh.py` became the check-only
-  `docs/check.py`.
-
-## D22 · 2026-10-16 · Refreshing is a reasoning pass; the script only checks
-
-- By: Alex ("你跑refresh.py有什么鸟用，这个是需要reason的需要llm跑").
-- Decides: after any change, Claude refreshes everything by reasoning, module by module in a fixed order (universe →
-  classification → Config → dispatch → code processing → model extraction → research store → research conclusions →
-  pull mode → review pool → system overview). For each module, against DECISIONS: does the change touch it; do the
-  page and the PRD say the same thing; do the examples still hold; do the acceptance criteria and open questions need
-  to change. Inconsistencies are fixed in the same change and listed in the reply with their reason. The script
-  `docs/check.py` is only the last, mechanical step: it reports (never rewrites) a generated PRD block that differs
-  from the page, rebuilds the bundle, runs the classification simulation and checks that the page loads. Its passing
-  does not mean the refresh is done.
-- First pass (2026-10-16) fixed ten inconsistencies the script could not see: the system's first principle ignored
-  pull mode; "we check" in classification read as re-classifying (it means checking completeness and category
-  validity at dispatch); who reads the lookup file; the Config version was recorded on every processing record though
-  code processing does not use Config (now only on model reads; page and PRDs); the open items of dispatch (how a
-  returned item reaches upstream), the research store (records for items not processed), the conclusions (whether a
-  theme has its own conclusion) and the universe (its existence check depends on upstream's reference data); a
-  placeholder number in the code-processing example; the PRD index still described the removed refresh script.
-- Enforced: `docs/prd/README.md` (the procedure), `docs/check.py`.
-- Changed by D25: the order reads universe → classification → Config → dispatch → extraction → research store →
-  research conclusions → pull mode → review pool → system overview.
-- Changed by D26 and D29: the order reads universe → classification → Config → dispatch → extraction → views
-  database → final verdict → pull mode → review pool → system overview.
-- Changed by D36: `docs/check.py` also runs the wording check over the four input and extraction modules.
-
-## D23 · 2026-10-16 · Tables without XBRL tags are read by the model
-
-- By: Alex ("可以交给模型", answering whether the untagged tables of MD&A and earnings releases get a code path of their
-  own; then "这个地方就是系统设计问题了，怎么抽取关键数据，怎么存取关键信息等，这个你给我在FE画出来我们一起看").
-- Context: an evaluation of the old system's code extraction, on its stored data, found that parsing the flattened
-  text of 10-Q/10-K tables read every value faithfully at its position but read too little and broke silently: no
-  NVIDIA table at all (abbreviated months), half of Microsoft's tables dropped (no caption), Apple's 10-K statements
-  missed ("Years ended"), Apple's segment operating income stopped after FY2025 Q3 (new layout), and 64 of 71
-  "restatements" were different rows sharing one id. The research report `reports/SEC 财报 代码抽取 开源方案.md` found
-  that statements and notes carry inline XBRL, that MD&A and earnings releases carry none, and that no open-source
-  parser reads untagged tables reliably (edgartools' release parser repeats the old failure classes).
-- Decides: code processing reads structured data only. The untagged tables inside text documents (MD&A, EX-99.1 and
-  EX-99.2) are read by model extraction; there is no separate code path that parses them. This applies D2 (the form
-  decides the reader) to tables inside text.
-- Not decided (a draft for discussion on the design page): that filings reach code processing as each filing's own
-  complete XBRL; a number's identity (object, concept or metric, segment members, start and end, unit) and one
-  observation per item that reports it; how the model is given a table (raw text or a grid of cells) and how its
-  numbers are checked against the source; how the store serves "as of a day" reads and whether derived values are
-  stored.
-- Enforced: the code, extract and store detail pages in `docs/system-design/new-facts.js`; the code, extract and store
-  nodes of `docs/system-design/new-design.js`; `docs/prd/05-code-processing.md`, `06-model-extraction.md`,
-  `07-research-store.md`.
-- Changed by D24: financial reports are no longer streamed, so filings do not reach code processing in stream mode;
-  the fact-path drafts are paused until the research conclusions are designed. The rule still holds for any text that
-  arrives.
-- Changed by D25: there is no code processing module; extraction reads every item, tables inside text included.
-- Changed by D27: every item goes whole to the model, tables and table items included.
-
-## D24 · 2026-10-16 · Financial reports are not streamed; pull mode reads them when a thesis needs them
-
-- By: Alex ("这个system的核心是抽取thesis, 所以我在想这样刷财报是真的有意义的吗？"; on designing the research
-  conclusions first: "我同意，我们不应该再stream 财报了，这个没有意义。应该是在我们还没设计的pull mode 里面采用。这个记录下来，
-  和我们之前旧版的设计思路有很大的区别").
-- Why: the system exists to form and test theses, and a thesis is an argued view whose few drivers name the numbers
-  it needs; financial-report lines are evidence, never its definition. Reading every reported number as it streams
-  in builds a store the theses then search, and lets the available numbers shape the theses. The old system's stored
-  data shows it: for three companies it kept 11,841 numbers, of which the theses cited 543 (4.6%); of the 21 KPIs the
-  theses watched, 9 appear in no table at all and none of those 9 got a number.
-- Decides: financial reports are not part of the stream. When a thesis's ladder or evidence needs a number from a
-  report (for example "if Apple's iPhone revenue turns negative year over year next quarter, the view fails"), pull
-  mode fetches that number at the due date and checks it. Stream mode keeps the items that move theses as they arrive.
-  The research conclusions (thesis, ladder, evidence) are designed next; extraction and the research store follow
-  from what a thesis needs (the fact-path drafts of D23 are paused, not deleted: a number's identity and "the same
-  value again is a confirmation" may be reused).
-- Differs from the old system: the old system fetched each company's whole financial statements on every refresh
-  (provider statements plus the tables of every 10-Q/10-K), kept every line and its derived growth, and offered the
-  lines to the model calls that formed theses as a menu. The new system starts from the thesis and asks for a number
-  only when a thesis names it.
-- Scope (Alex, "你说的这些都算"): financial reports are periodic reports (T2: 10-K, 10-Q and their XBRL), earnings
-  releases (T1) and earnings calls (T4). The universe's company default (frozen in D19) changes from T1–T10, T12–T15
-  to T3, T5–T10, T12–T15, and the US–China tariffs example from T1–T6 to T3, T5, T6. This is the only change: the
-  universe is the single switch (D18); classification and dispatch stay as they are, and the tags still exist for pull
-  mode. Because the universe tracks tags, everything in T4 leaves the stream, not only earnings calls: investor days
-  and conference talks too (telling them apart would need a classification change). Earnings slides in T5 stay.
-  What stays in the stream for code processing (prices, holdings, calendar, consensus, official records, macro
-  statistics) is decided with the research conclusions, by the same thesis-first test.
-- Enforced: the summary and the universe, code, extract, store and pull nodes of `docs/system-design/new-design.js`;
-  `TRACKING_DEFAULTS` and `TRACKING_EXAMPLES` of `docs/system-design/new-universe.js`; the paused status of the detail
-  pages in `docs/system-design/new-facts.js`; `docs/prd/00-system.md`, `01-universe.md`, `05-code-processing.md`,
-  `06-model-extraction.md`, `07-research-store.md`, `08-thesis.md`, `09-pull-mode.md`.
-- Changed by D28: financial reports stream again and are read into views and evidence; the no-number-warehouse
-  point stays.
-
-## D25 · 2026-10-16 · One extraction module, read by category from a senior hedge fund analyst's view
-
-- By: Alex ("我感觉这个环节的抽取应该貌似要全部让LLM来了。。。只是每种类型文件的prompt 可能是不一样的"; "嗯可以这样做，但是你写在这个
-  模块好了。首先删掉代码这个模块，就是一个模块叫抽取，然后按照classification 品类分别抽取不一样的东西，可以有一套template
-  prompt, persona 就是用senior hedge fund analyst 视角来做thesis 或是观点抽取").
-- Decides: code processing is removed; model extraction becomes the single module "extraction". Dispatch hands every
-  item that belongs to a category to extraction, with its category; its last question ("text or table") goes, so it
-  asks three. Extraction reads each item by its category with one template prompt for all categories, assembled in
-  this order: a fixed persona (a senior hedge fund analyst who reads to form and test views), the category's
-  definition and reading rule taken from classification (not rewritten), the item's related objects, what this
-  category should yield (one line per category in the extraction module), and later the object's thesis drivers
-  (after the research conclusions are designed). Every item yields facts, views (whose), the analyst's reading of what
-  it means for the object (marked as inference), and anything that could change the view, each with its source. The
-  program, not the prompt, owns the output shape and checks every number and quote against the source.
-- Config: one model setting per category (its open item is settled). What each category reads and the template live
-  in the extraction module, as Alex asked; Config keeps its frozen role of recording which model and prompt version
-  each category uses.
-- Not decided: whether table data (T12–T15 and the table forms of T6, T8, T10, T11) still streams and is read here,
-  or, like financial reports, is fetched by pull mode when a thesis needs it. Financial reports (T1, T2, T4) do not
-  stream (D24); their rows in the per-category table are kept for pull mode.
-- Files: the PRDs are renumbered (05-extraction.md, 06-research-store.md, 07-thesis.md, 08-pull-mode.md,
-  09-review-pool.md); file names in earlier decisions refer to the old numbering. The code-processing detail page and
-  PRD are deleted.
-- Enforced: `CATEGORY_READS`, `TEMPLATE`, `EVERY_ITEM_YIELDS`, `PROGRAM_DOES` of `docs/system-design/new-facts.js`;
-  `DISPATCH_TREE`, `TREE_NOTES`, `CONFIG_SCHEMA`, `OPEN` of `docs/system-design/new-config.js`; the nodes and the
-  overview view of `docs/system-design/new-design.js`; the generated blocks of `docs/prd/05-extraction.md` (checked by
-  `docs/check.py`).
-- Changed by D26 and D27: extraction yields views and evidence with sources, not facts, views and a separate
-  analyst's reading (the view is the analyst's judgment); the template's last part is the objects' existing drivers;
-  extraction also matches against the drivers. Table items are read too (D27).
-- Changed by D35: extraction v1 is final; each category has its own prompt from the one template.
-- Changed by D33: matching against the drivers belongs to the views database; extraction only reads, checks sources
-  and hands over.
-
-## D26 · 2026-10-18 · The views database is the system's core
-
-- By: Alex ("其实整个system做的事情就是建构，更新，删除这个data structure"; on whose views: "就是你的模型抽取出来的观点，谁说的
-  什么这些是客观的信息，你的模型抽取出来的东西才是真的"; "这个观点其实也是因子，只是他可能是一系列量化+非量化的evidence来支撑的";
-  on closing: "一个thesis 如果被证伪了，应该被invalidate, 或是过期了，被invalidate, 但是应该存在这个db里面以供历史查询"; on
-  levels: "我觉得分开。之前也说过宏观类型的thesis 其实是公司层次之外的"; on drivers: "前者，need be specific"; on sources:
-  "你的观点抽取一定要附带这个观点的source 是哪里来的，这样可以未来快速查找文件/数据源来做reason"; and "1. 这个没问题" to the
-  views database being thesis · ladder · evidence).
-- Decides: the system builds, updates and closes a views database; it is the thesis · ladder · evidence of the design
-  page, and the research store merges into it (the store's paused draft of number identities and observations is
-  dropped; processing records stay). Structure: object (company, crypto, commodity, theme, all from the universe) →
-  driver (specific: who does what to what; its definition is never rewritten, a change is a new driver with a
-  redirect) → view. A view has a one-sentence claim that is never rewritten (a change is a new view that supersedes
-  it), a direction (up or down), a horizon class (short or long) with a due date, for object views a stance on the
-  object, a rationale that cites evidence, an optional premise, confirm and falsify conditions (the ladder), evidence,
-  a status (active, confirmed, falsified, expired, merged, superseded, no longer tracked) and versions. Views are the
-  model's judgments; evidence is objective (who said what, where). Two levels: theme views say what will happen in the
-  world; object views say what will happen to the object, and name a theme view (or another object's view) as their
-  premise. Every view, piece of evidence and change carries its source: upstream id and version, category,
-  publication time, location in the document (section and paragraph, table cell; for data, dataset and record) and the
-  quote; code refuses a source it cannot find or a quote not in the document, and both directions can be looked up
-  (a view's documents; a document's views). Closed views and old versions are kept for history.
-- Enforced: the views node and the overview view of `docs/system-design/new-design.js`; `VIEW_TREE`, `VIEW_FIELDS`,
-  `EVIDENCE_FIELDS`, `LEVEL_RULES`, `LEVEL_TREE` and `SOURCE_TREE` of `docs/system-design/new-facts.js`; `docs/prd/06-views.md`
-  (replaces `06-research-store.md` and `07-thesis.md`).
-- Changed by D33: matching and writing what extraction hands over run in the views database.
-- Wording aligned 2026-10-18: an object view's "利好还是利空" is the driver's direction of effect on the object, not a
-  buy or sell stance (AGENTS section 8: a stance is weighed against what is priced).
-- Changed by D38: the structure is rebuilt (a view is a question, a five-rung ladder and a due date; drivers,
-  claims, horizon classes, conditions and premises are not used).
-
-## D27 · 2026-10-18 · Extraction reads the whole item by category, then matches it against the drivers
-
-- By: Alex ("就是他妈的整个文档丢给llm去解读就好了，不用再分什么有的没得"; "我们按照不同分类做不同prompt tempalte 的LLM抽取";
-  "不是，应该和一个观点database 做对比"; "我觉得dedup 和match 应该是要用embegging 来查找的，你觉得呢，这个你可以reseach web";
-  "你觉得这是最有效的做法吗？我觉得你要把我们这边的PRD去web serch别人是怎么解决这个问题的，再讨论").
-- Research: `reports/观点库 向量检索 去重匹配.md` (embeddings cannot tell direction, numbers or periods apart; choosing
-  among a few ranked candidates beats pairwise judging; agent memory systems moved to append-only with invalidation)
-  and `reports/观点库匹配 业界做法对比.md` (mature systems put identity on a fixed key and use similarity only for
-  recall; "new" is the harder half and models under-report it; a small set given in full beats retrieval).
-- Decides: every item, whatever its form, goes whole to the model. Steps: (0) dispatch numbers it; (1) read, with the
-  category's template (persona, the category's reading rule from classification, the related objects, what the
-  category yields, and the names only of the objects' existing drivers), writing candidate views and evidence with
-  sources; (2) code merges evidence with the same original source, subject and date or period; (3) code lists every
-  driver of the related objects in full, plus a keyword and embedding search over all theme drivers; (4) a short call
-  without the document names, for each candidate, its driver, a new driver or "unsure", its premise and any duplicate
-  evidence; (5) code decides: one active view per driver and horizon class; same direction is supporting evidence,
-  opposite direction is weakening evidence (no opposite view is created), no active view is a new view; a new driver
-  is created and revisited by pull mode's periodic merge; "unsure" is created, flagged and sent to the review pool;
-  theme writes come before object writes; unknown objects go to the review pool; numeric conditions use fixed forms
-  (metric, period, calculation, comparison, threshold) judged by one shared piece of code; ids outside the candidate
-  list are refused; (6) code sends views that meet a final-verdict trigger to the final verdict. Config gains one
-  setting for the matching call.
-- Not decided: how large one table item is (a whole batch or one record) and whether prices stream (proposed: one
-  filing's XBRL or one object's day of prices is one item; prices off by default, read by pull mode when a condition
-  needs them); how an item too long for one call is cut; measurements on stored data before building (drivers per
-  object, agreement of two independent "same driver" labelings, accuracy of "new driver", position bias).
-- Enforced: the extract and config nodes of `docs/system-design/new-design.js`; `TEMPLATE`, `CATEGORY_READS`,
-  `EXTRACT_STEPS`, `WRITE_STEPS`, `DECIDE_TREE`, `SOURCE_TREE` of `docs/system-design/new-facts.js`; `CONFIG_SCHEMA` of
-  `docs/system-design/new-config.js`; `docs/prd/05-extraction.md`.
-- Changed by D32: the open item is settled (one release per item; no separate XBRL; no price-specific rule).
-- Changed by D33: extraction is reading and checking sources; the evidence merge, candidate drivers, matching,
-  deciding and verdict triggers run in the views database.
-- Changed by D39: matching against drivers (steps 2–5) is replaced by matching candidates to open views.
-
-## D28 · 2026-10-18 · Financial reports stream again
-
-- By: Alex ("我觉得新的财报应该还是可以推进来，但是观点就变成抽取新的 + 验证当前的").
-- Decides: earnings releases (T1), periodic reports (T2) and earnings calls (T4) are back in the stream; the
-  universe's company default is T1–T10, T12–T15 again and the US–China tariffs example T10, T7, T8, T1–T6. They are
-  read like every other item into views and evidence (D27). D24's thesis-first point stands: no number warehouse.
-- Enforced: `TRACKING_DEFAULTS` and `TRACKING_EXAMPLES` of `docs/system-design/new-universe.js`; the universe node of
-  `docs/system-design/new-design.js`; `docs/prd/01-universe.md`.
-
-## D29 · 2026-10-18 · A final verdict before any view is closed
-
-- By: Alex ("确实让模型完整看一遍再关掉是稳妥的，这边可以多画一个环节block就是来做final verdict").
-- Decides: a view is closed only by the final verdict, a model call that reads the view, all its evidence, its
-  premise's state and why it was sent. Triggers: a confirm or falsify condition met (code); the due date (pull mode,
-  only after every item published on or before it is processed); the premise's status changed (at once); the premise
-  weakened (at the object's next item, at the latest after 7 days by pull mode); weakening evidence of the "happened"
-  tier; a disagreement between independent sources in one tier; a corrected item that removes a view's basis.
-  Outcomes: closed as confirmed or falsified (citing evidence), closed as expired ("no data to verify" when no evidence
-  can decide), or kept (a premise removed or replaced, conditions added). Only conditions plus evidence of the
-  "happened" tier can close a view. A verdict is a new version of the view with its sources; when a view closes,
-  every view resting on it is sent again. Pull mode's "now" is an input: real time live, the replay time in tests.
-  Config gains one setting for the verdict.
-- Enforced: the verdict and pull nodes of `docs/system-design/new-design.js`; `VERDICT_TRIGGERS`, `VERDICT_TREE`,
-  `VERDICT_RULES` of `docs/system-design/new-facts.js`; `docs/prd/07-final-verdict.md`, `docs/prd/08-pull-mode.md`.
-- Wording aligned 2026-10-18: "only conditions plus 'happened' evidence" governs closing as confirmed or falsified;
-  expiry at the due date is not a judgment of right or wrong. The premise statuses that send dependents at once
-  include "no longer tracked".
-- Changed by D41: the final verdict is an old draft to be redone on the rebuilt views database (D38).
-- Changed by D54: at the due date the state is frozen and the view closes, with no answer apart from it; nothing
-  waits for the items published on or before the due date.
-
-## D30 · 2026-10-18 · Conflicting sources and the consensus
-
-- By: Alex ("even for the same thesis, you should be prepared that given different sources that streamed it at
-  different time frames, there should be conflicting views … as a hedge fund analyst, how would you deal with these
-  conflicting views? Or … what is the consensus view that you think would make sense in terms of determining whether
-  or not to validate or invalidate the evidence within the thesis").
-- Decides: evidence has four tiers (happened; said by the party itself; third-party view; rumour). Views are not
-  decided by vote: only the "happened" tier can meet a condition, the others only strengthen or weaken. Sources are
-  counted by original source (twenty outlets relaying one scoop are one). A disagreement inside a tier sends the view
-  to the final verdict, which may only keep it and add the decisive fact as a condition unless "happened" evidence
-  decides it. Conditions are added, never removed or loosened. When a fact answers a condition, code marks the earlier
-  statements on it confirmed or denied, which builds each source's record; the record is shown, not used to weight
-  evidence. The consensus of a view is computed by code from the latest stance of each independent third-party source;
-  the view may state where it differs.
-- Enforced: `TIERS` and `CONFLICT_RULES` of `docs/system-design/new-facts.js`; `docs/prd/06-views.md`.
-- Changed by D38: tiers and counting by original source stay; add-only conditions, the conflict trigger and the
-  consensus by code are replaced (the consensus is open again).
-- Changed by D51: consensus is not part of the design at all; third-party views stay evidence of their tier.
-## D31 · 2026-10-18 · Order, one writer, and the link between the levels
-
-- By: Alex ("你觉得公司层级link 到宏观thesis 的方式是类似symbolic link 还是怎么处理两者之间可能存在的async /sync 关系？";
-  "反正是stream, 理论上时间是以前走到近期，所以应该要time sorted").
-- Decides: a premise is a link by id that follows merges, plus the version last seen; a newer version means the
-  dependent view is behind. When the premise's status changes, every dependent view goes to the final verdict at once;
-  a merge repoints the link; a weakened premise sends dependents to the verdict at the object's next item or after 7
-  days; a supported premise changes nothing. Only items produce evidence; views pass notices, never evidence. Dispatch
-  numbers each item in arrival order (never the wall clock). Each view has one writer, its object's queue; evidence
-  from another item reaches it as a message carrying that item's number. An item reads only the state left by items
-  with a smaller number and a publication day not after its own (inside one day the number decides; no rule reads
-  the hour); the result must equal one-at-a-time processing,
-  and a parallel read that changed before commit is judged again. A late item reads the versions of its publication
-  day and is written last with its real date. A corrected item's evidence replaces the old version's. A failed item
-  records the step it reached and retries from it, replacing only its own result; repeated failures go to the review
-  pool. A view whose object leaves the universe is kept as no longer tracked and not judged at its due date. This
-  changes D12: processing an item may read the state left by earlier items.
-- Enforced: `PROPAGATION_TREE` and `ORDER_RULES` of `docs/system-design/new-facts.js`; `DISPATCH_TREE` and `TREE_NOTES` of
-  `docs/system-design/new-config.js`; the dispatch node of `docs/system-design/new-design.js`;
-  `docs/prd/04-dispatch.md`, `docs/prd/06-views.md`.
-- Changed by D38 and D39: dependencies replace premises (pinned years, chains); a late item is re-judged when it
-  arrives and does not read the versions of its publication day.
-- Changed back by D45: the change of the late-item rule by D38 and D39 is a proposal Alex has not decided; this
-  rule stands: a late item reads the state of its publication day and is written with its real date, and a view
-  whose object leaves the universe is kept as no longer tracked and not judged at its due date.
-- Changed by D46: the late-item rule is replaced by D46 item 13 (the timeline only grows forward); the rule for a
-  view whose object leaves the universe stands.
-- Changed by D55: a view whose object is taken off the list (by hand) is flagged no longer tracked and no longer
-  updated; "not judged at its due date", written for the old final verdict, is replaced by that.
-
-## D32 · 2026-10-18 · Table data comes one release at a time; XBRL is not pushed again
-
-- By: Alex (on XBRL: "如果是财报直接进来，那就不用重复XBRL了啊，这不是废话吗"; on one release per item: "这是废话吧"; on
-  Claude's proposal to keep prices out of the stream: "我觉得这个还是交给模型判断吧，因为有些时候股价的信息会带观点，这个很难说，我们先
-  不要做一些特殊处理", then "the news or whatever you streamed in may have a title that contains stock price or move
-  but body with reasoning, you can't just not pass it … keep the shape of the pipeline as is, don't 自己加戏").
-- Measured: the stored SEC companyfacts give 203–640 tagged numbers per recent 10-Q or 10-K for Apple, NVIDIA and
-  Amazon (Apple's 10-Q of 2026-07-31: 112 concepts, 283 numbers, revenue alone four periods), and companyfacts leaves
-  out the segment and product breakdowns. They are the numbers of the filing's own tables.
-- Decides: a filing's XBRL numbers are not pushed as items of their own; the filing, read whole (D27), already carries
-  them, and pull mode looks up an exact tagged value when a condition needs one. Table data is pushed one release per
-  item (for example one 13F, one statistics release), whole. Nothing gets a price-specific rule: the pipeline keeps its
-  shape, and whatever the universe streams goes whole to the model.
-- Changes D19 (two classification rules: a filing no longer yields XBRL records to push; one release is one item) and
-  settles D27's open item.
-- Enforced: `RULES` of `docs/system-design/new-classification.js`; `CATEGORY_NOTE` of
-  `docs/system-design/new-facts.js`; the classify node of `docs/system-design/new-design.js`;
-  `docs/prd/02-classification.md`, `docs/prd/05-extraction.md`.
-
-## D33 · 2026-10-18 · Extraction only reads; matching and writing belong to the views database
-
-- By: Alex ("你确保抽取环节就只是抽取thesis 理解不，我们探讨的都只是不同classification 该怎么抽取或是走什么数据").
-- Decides: extraction reads each item, whole, with its category's template, and hands candidate views and evidence,
-  each with its source, to the views database; it never changes the database. Its steps: build the template, read
-  (model), check the sources (code), hand over. The views database does the rest of D27: merge duplicate evidence,
-  list candidate drivers, match (a short model call), decide by direction and horizon class, send views to the final
-  verdict, and route unsure matches, unknown objects and proposed themes to the review pool. The matching setting in
-  Config belongs to the views database.
-- Enforced: `EXTRACT_STEPS`, `WRITE_STEPS`, `EXTRACT_EXAMPLE_TREE` and `WRITE_EXAMPLE_TREE` of
-  `docs/system-design/new-facts.js`; the extract, views and config nodes and the overview edges of
-  `docs/system-design/new-design.js`; `docs/prd/05-extraction.md`, `docs/prd/06-views.md`.
-- Changed by D39: after extraction the views database matches candidates to open views (D39), not to drivers.
-- Changed by D42: extraction attaches each piece of evidence to an existing view it was shown, or to a candidate view,
-  as it reads; it still never changes the database, and matching stays in the views database.
-## D34 · 2026-10-18 · An SEC filing is dated by the day SEC makes it public
-
-- By: Alex ("ok 可以", to Claude's proposal on classification time rule 4).
-- Why: time rule 4 dated an SEC filing by its EDGAR acceptance day, but filings accepted after 17:30 ET are disseminated
-  only the next business day morning (Regulation S-T Rule 13). Amazon's 10-Q accepted 2026-07-30 18:11 ET became public
-  2026-07-31 06:01 ET, so the rule dated it a day early: it would be ordered before news written that evening, and a
-  replay would know it a day early.
-- Decides: an SEC filing's publication day is the day SEC makes it public, which is its statutory filing date:
-  accepted before 17:30 ET, that day; after, the next business day. The input field `filing_date` already carries
-  it. The hour still plays no part in any other rule (D9).
-- Known limit: `simulate_classification.py` dates items by `published_at` and does not model this rule; the script is
-  not changed at the POC stage.
-- Enforced: `TIME_RULES` and `INPUT_SCHEMA` of `docs/system-design/new-classification.js`; the classify node of
-  `docs/system-design/new-design.js`; `docs/prd/02-classification.md`.
-
-## D35 · 2026-10-18 · Extraction v1 is final
-
-- By: Alex ("抽取你最后review 一次可以定稿了吗"; on prompts: "不同类型文件是不是都有自己的LLM prompt 这个部分有写明白在PRD").
-- Final review (2026-10-18): extraction only reads (D33); every item goes whole to the model with its category's
-  prompt; the prompt is one template whose part 2 (the category's reading rule, from classification) and part 4 (what
-  the category yields) change per category, part 1 is shared and parts 3 and 5 are filled by code; each of T1–T15 has
-  its own prompt (T16 is not tracked by default); the output format is enforced by code, not written in the prompt;
-  every view and piece of evidence carries a checked source; failures retry from their step. One assembled prompt
-  (T7 news) is drawn on the page and in the PRD.
-- Decides: extraction is frozen as v1. Not frozen: how an item too long for one call is cut; the exact wording of each
-  category's prompt, written and tested on stored items when it is built, each version recorded in Config. A later
-  change needs a new decision.
-- Enforced: the extract node's status and `PROMPT_EXAMPLE`, `PROMPT_NOTES` of `docs/system-design/new-facts.js`;
-  `docs/prd/05-extraction.md`.
-- Changed 2026-10-18 (Alex: "应该不会context 太长这不是一个问题，pass"): cutting a long item is not an open item;
-  the only part not frozen is each category's prompt wording. A wording review aligned the page and the PRD: one
-  template, one prompt per category; step 2 names what a candidate view and its evidence carry, which the views
-  database reads; the source check is split between extraction (the quote is in the item) and the views database
-  (the source is in the processing record).
-- Changed by D37: frozen together with the input side; the page and the PRDs say 已冻结, not 定稿.
-
-## D36 · 2026-10-18 · One word per concept in the input and extraction modules
-
-- By: Alex ("你和codex 要一起完全对齐用字用词，这个非常重要，不然我们的PRD就是瞎几把写的，你深度的抠").
-- Why: rounds of review kept finding new wording mismatches, because each fix changed only the instance named. Claude
-  and Codex each took an independent inventory of every wording per concept in scope (universe, classification and
-  tagging, dispatch, extraction, and the sentences at their boundaries), and merged them into one glossary.
-- Decides: the glossary in `docs/prd/00-system.md` (section "用词") names one word per concept and the words not to use.
-  Notable choices: 信息 is the unit, 文件 is a text-form 信息 and 表格数据 a table-form one; 申报 and 申报代码 (not 表格代码,
-  which collided with 表格数据); 体裁 for transcript, minutes and the like (形式 is only text or table); 提示词模板 and
-  上传模板 (never a bare 模板); 角色 for the prompt's persona (身份 is the identity fields); 看法 for what authors in a
-  document think and 观点 only for the system's views; 说法 for what parties say and 主张 only for a view's claim;
-  主题层 and 对象层 for a view's level, separate from an evidence tier; 作者 (not 发布方). No rule changed.
-- Second pass, same day: Codex checked the scope against the glossary and every flagged wording was counted over the
-  whole scope. 代码 is only the party that does the work (程序 is not used); an identifier is an 对象标识 (CIK, 股票代码,
-  公司名, 加密货币代码, 商品代码, 主题编号), so classification rule "只看代码" now reads "只看对象标识"; 作者类型 is
-  the one name for the author's kind; 类型 is not used for 类别; 相关对象 covers any object found in the reference data,
-  in the universe or not (D16); T10 is renamed 官方行动与记录 so the category, its group 官方行动与宏观统计 and the
-  universe use one word; a SEC filing's source is its 申报编号 (accession number). No rule changed.
-- Third pass, same day (Codex on the result): an object kind is written in full, 公司 and 加密货币 (not 股票 or 加密),
-  and 股票代码 replaces ticker in prose; 代码 also covers code not yet written or to be changed. No rule changed.
-- Enforced: `AVOIDED_WORDS` and `wording_scope` in `docs/check.py` scan the in-scope page data and PRDs (the glossary
-  section itself excluded) and fail on any avoided word, with a control sentence the check must catch.
-- Changed by D41: the wording scope also covers the views database and the labels node.
-- Changed by D52: 对上 → 比对 (比对记录, 比对标注), 并进 → 归入, and the pull-mode proposal's 并入 → 合并; ruled out with
-  control pairs.
-## D37 · 2026-10-18 · Freeze v1 of the input side and extraction
-
-- By: Alex ("好你把写完的freeze了在html 上……我们要继续move on").
-- Decides: the research universe, classification, Config, dispatch, extraction and the human review pool are frozen
-  as v1 in their 2026-10-18 text, which includes D25–D36. What each PRD lists under "还没定的" stays open, among them the
-  themes in the theme library, upstream supply and the identifier tables, the review pool's output, each category's prompt
-  wording. A change to a frozen module needs a new decision. The views database and the final verdict stay in design
-  and pull mode is partly decided; the work moves on to them as Alex takes them up.
-- Enforced: the six nodes' `status` in `docs/system-design/new-design.js` (the page marks each 已冻结), the status
-  lines of their PRDs and of `docs/prd/README.md`; 已冻结 replaces 定稿 in the glossary and the wording check.
-- Changed by D41: extraction, Config, the universe and the review pool were changed for the rebuilt views database.
-
-## D38 · 2026-10-20 · The views database rebuilt: a view is a question with a five-rung ladder and a due date
-
-- By: Alex, over the rebuild discussion logged in `docs/views-rebuild-log.md` (steps 1–13). On the unit: "这个 hypo 更像是一个
-  thesis with a state"; on rungs: "我们用 5 个 state 吧 very bullish, bullish, neutral, bearish, very bearish"; on kinds: "有些事情不一定对所有人都是
-  bull / bear，有可能完全相反！……这个需要明确分开来看"; on one layer: "一条观点一定是有一个明确的 ladder 和到期日，这样才构成一个观点呀";
-  on periods: "这个肯定要写清楚日期", then yes to one view per year (this year and next); on chains: "是不是用 linked list 来存储 lineage 就好";
-  on the reading rule and the remaining fixes: "looks right".
-- Decides:
-  - A view is one question, a ladder of five fixed rungs and a due date, never rewritten. It looks at one number (which
-    year, whether a period amount or a point-in-time value, and the source it is answered from) or the state of one
-    thing (scope and stage). An object view's identity is its object plus what it looks at; a theme view's identity is
-    only what it looks at (the theme is where it is filed), so theme views are compared across all themes. A view looks
-    at one thing: a question that needs a number and an event is two views joined by a dependency; a question whose
-    parts can move in opposite directions is two views, joined only if one really depends on the other.
-  - Object views (companies, crypto, commodities) have the rungs strongly bullish to strongly bearish, meaning good or
-    bad for the business, fixed at creation. Theme views have five outcomes on one axis, named by outcome, with no
-    bull or bear; each dependent object view's arrow says which end is bullish for it. The stance on the price is our
-    state against the consensus, which is not designed yet.
-  - Each rung is an observable yes-or-no condition; rungs do not overlap, cover every outcome, and exactly one holds at
-    the due date; there is no "partial". A number ladder is ranges of one number in its stated year, judged by code;
-    an event ladder is the states one thing can be in on the due date, judged by the model from "happened" evidence
-    only, citing it. The model sets the rungs when the view is created; they do not change before the due date.
-  - The due date is when the debate is settled, usually 6–12 months out; a number's due date is the day it is
-    published; quarterly reports in between are evidence. Number views carry their year (fiscal year for companies,
-    calendar year otherwise) and at most this year's and next year's are open at once. The year counts from the latest
-    publication day among the items processed so far, which only moves forward (never the wall clock); a year whose
-    period has ended gets no new view. An event view is one open view per thing. (Claude's reading of "this year", to be
-    confirmed by Alex.)
-  - Two positions on a ladder: where it is now (a fact; only "happened" evidence moves it; a point-in-time number takes
-    the latest published value, a period amount has none before it is published) and the state (where we think it
-    lands; re-judged by the model each time from all of the view's evidence and its dependencies' current state, never
-    stepped from the last state; citations checked by code; temperature set in Config). A replay reads the stored
-    judgements; it does not call the model again.
-  - Evidence is a sentence or number, stored once, with its source and tier (happened, said by a party, third-party
-    view, rumour); independent sources are counted by original source; the direction it pushes is written on the link
-    between evidence and view by each re-judgement.
-  - A dependency B → A carries one direction (which end of A is bullish for B; between themes, same or opposite). A
-    relation that looks good-then-bad means a middle view is missing. Notices pass, evidence never does; code marks
-    B's evidence that is also linked to A. A number dependency is pinned to its year (a closed A is read by its answer;
-    an A not yet created is waited for and connected when created; an unanswerable A is a missing input, never
-    neutral); an event dependency follows A's chain. A new view may depend on theme views (found by search) or on
-    another object's views (supply chain). B is told when A changes rung, when what B reads changes, or when A cannot
-    be answered. No cycles, checked on the graph each
-    round reads. A new theme view that succeeds nothing is checked against every open view for missing arrows.
-  - Succession: the next view on the same thing succeeds the last one, forming a chain that holds the lineage; no
-    forks; the successor keeps the rung orientation; a wrong succession is revoked by an appended record; a successor
-    proposes its predecessor's dependencies one year on.
-  - A view ends answered (the first published value from its stated source; the score compares it with the last state
-    committed before the item carrying the answer was processed), unanswerable (with its reason, not scored; a
-    processing failure is retried, not unanswerable) or merged. A view whose object leaves the universe is closed as
-    unanswerable for now; whether it is scored is open.
-    A number view past its period and waiting for its answer does not count against the two open years.
-- Replaces: D26's structure (object → driver → view with a claim, direction, horizon class, confirm and falsify
-  conditions and a premise); D30's add-only conditions, conflict trigger and consensus-by-code (open again); D31's
-  premise links with a seen version.
-- Enforced: `VIEW_TREE`, `VIEW_KINDS`, `KIND_NOTE`, `LADDER_EXAMPLES`, `LADDER_RULES`, `POSITIONS`, `TIERS`, `TIER_RULES`,
-  `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `CHAIN_RULES`, `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `EVIDENCE_FIELDS`
-  of `docs/system-design/new-facts.js`; the views node of `docs/system-design/new-design.js`; `docs/prd/06-views.md`.
-- Changed by D42: a yes-or-no question has two rungs; a re-judgement reads the view's evidence that has not been
-  replaced, and a round that brought only repeats and no dependency change does not re-judge; "replaced" also covers a
-  later statement by the same speaker and an official confirmation or denial of a rumour; a dependency links only an
-  input (B's answer uses A's answer), and a cycle is rewritten.
-- Changed by D45: what stands is what points to Alex's words or an earlier decision: a view as a question, a
-  ladder of five rungs (two for yes or no) and a due date where the debate resolves; object and theme views; the
-  state judged by the model from all evidence not replaced and from the dependencies; evidence stored once with its
-  push on the link; tiers (D30); dependencies with arrows read by kind; succession as a chain; this year's and next
-  year's number. Where it is now, how rungs are written and judged, answer sources, how the years are counted, the
-  details of log step 13, unanswered and waiting views, and how answers are scored are proposals (D45).
-- Changed by D51: B is re-judged when what it reads changed (its evidence, or a dependency's conclusion marked
-  changed), not only when A changes rung.
-## D39 · 2026-10-20 · Writing into the views database: match by where a candidate belongs, then one round of re-judging
-
-- By: Alex ("已经存在的观点就 merge，日期遵照之前已经存在的期限"; "我们来深度聊一下 thesis 被抽取之后我们怎么和现有的数据结构做对比和整体的纳入、合并机制";
-  "it's very similar to like a search engine … then what is the best judge"; steps 11, 14 and 15 of the log).
-- Research: `reports/观点库重建 去重 证据 血缘（Codex 调研）.md`, `reports/观点库重建 接续 依赖 到期（Codex 调研）.md`, and the two
-  D27 reports, which still hold: identity sits on a key and similarity only finds candidates; choosing from a few
-  candidates beats judging pairs; "new" is the harder half; small sets given whole beat retrieval.
-- Decides: one item is one round, in dispatch order. Code checks sources; stores evidence once (a retry reuses it, a
-  corrected version replaces the old one, which is kept and marked replaced); matches by key (a number candidate with
-  the same answer source and year as an open view is that view); builds the list (all open views of the tagged
-  objects plus each chain's last closed view; for themes, five more from a keyword and embedding search over all open
-  theme views; number candidates beyond next year dropped; an empty list still goes to the model, which only decides
-  new view or not opened). One model
-  call without the document decides, for each candidate, attach to #k (the same thing or a part of it), succeed #k,
-  new view, not opened (too broad), or unsure, with a reason, and for each piece of evidence which views it pushes.
-  Code accepts only listed ids, the succession rules and the open-view limits. Each object's queue writes its own
-  views, themes first; a list that changed before the write is matched again. New views pick their dependencies
-  (model; code checks cycles). Then every touched view is re-judged once, upstream before downstream; a change of rung
-  passes on. Merges happen three ways: attach (at matching), succeed (at matching), merge (a daily duplicate check
-  started by pull mode: the later view closes as merged into the earlier one, its links are added there and arrows
-  follow the merge). Evidence that links to no view is not stored; the processing record notes it. Records are
-  append-only: matching, re-judging, succession, closing, merging and labels each add a record with the dispatch
-  number, so any past day can be replayed from the records. An item reads the state left by items with smaller
-  numbers plus what its own round has already written (upstream views judged earlier in the round). A late item is
-  re-judged when it arrives and does not rewrite past states. A corrected item touches every view linked to its old or
-  new evidence. A merge re-checks the direction of the arrows it redirects against the kept view's rungs, and cycles. Storage is one relational database with append-only tables; full-text and vector indexes live in
-  it and can be rebuilt; no separate vector or graph database; the product is chosen at build time.
-- Open: what to do with "unsure" (create and let the duplicate check merge, or attach to the closest view).
-- Replaces: D27's steps 2–5 (candidate drivers, matching to a driver, deciding by direction and horizon class) and
-  D33's list of what the views database does after extraction; D31's rule that a late item reads the versions of its
-  publication day.
-- Enforced: `INTAKE_STEPS`, `MATCH_OUTCOMES`, `MATCH_NOTES`, `MERGE_KINDS`, `INTAKE_EXAMPLE_TREE`, `ORDER_RULES`, `STORE_NOTE`
-  of `docs/system-design/new-facts.js`; the views node and the overview edges of `docs/system-design/new-design.js`;
-  `docs/prd/06-views.md`.
-- Changed by D42: evidence arrives attached to the views it bears on, or to a candidate view, so matching no longer
-  decides which views a piece pushes; the same call instead compares each piece with the evidence its view holds
-  (repeat, replacement, new evidence); a repeat is one more source of the piece it repeats; a corrected version changes
-  only its own source, so "its evidence replaces the old version's" holds only when the item is itself the original
-  source.
-- Changed by D44: no key is matched by code. Whether a candidate is an open view, a part of it or its next period is
-  decided only by the model in the matching call; code builds the list and accepts only listed ids and the succession
-  rules. "One open view per thing" is the rule the model applies when matching, not a code check.
-- Changed by D45: matching searches a few existing views and the model decides the same view, its next period or a
-  new view (no match, or only a weak one, is new). How the list is made, the year filter, the outcomes "part of an open
-  view" and "not opened", the daily duplicate check, the "already counted" mark, the order inside a round,
-  re-judging a late item on arrival and the storage are proposals.
-## D40 · 2026-10-20 · The matching judge: a general model first, every match recorded, humans label, a small model later
-
-- By: Alex ("let's do a general LLM at this point because we need to make it work first and … for the traces that we collect
-  essentially that just have a logging system so that we can do RLHF in the process to human label and then use that data
-  to train a small model classifier that's faster in the future for this purpose").
-- Research: LLM-labelled training sets train small matchers about as well as hand-labelled ones, at 34–459 times less
-  inference time (Steiner and Bizer 2026, arXiv 2606.28823); fine-tuned matchers reach high F1 with labelled pairs
-  (Ditto); selecting among candidates suffers position bias as the list grows (ComEM).
-- Decides: matching (step 5 of D39) uses a general model through Config's matching setting. Every match writes a
-  matching record: the item, the candidates as handed over, the list in the order shown and how each entry got there,
-  who decided (code, the general model, later the small model, or a person), the request, the raw answer and the Config
-  version, the decision with reasons and code's checks, what was written, and later records pointing back (a merge by
-  the duplicate check, a human label that differs). Code samples records for labelling: every unsure one, every one a
-  later merge reversed, every one code refused, and a weekly random sample started by pull mode. A person labels with the same options plus
-  "can't tell", with a reason; Alex sets the standard on a first batch. Labels for the test set are made without seeing
-  the model's answer; the test set is fixed and scored once per change of judge. Labels measure the matching (precision
-  and recall of "new", wrong attachments, order sensitivity) and, with the model's own decisions, train a small
-  matcher; it decides only where it is confident and its agreement with human labels on the test set passes a bar Alex
-  sets, and the general model decides the rest. Labelling never blocks the stream and never changes the database
-  directly; duplicates it finds go to the duplicate check. This is human labelling and supervised training; no
-  reinforcement learning is needed. Requests and answers of the other model calls are recorded too; only matching is
-  labelled in v1.
-- Open: who labels, how many are sampled each week, the labelling screen, the bar for the small model.
-- Enforced: the labels node and its edge in `docs/system-design/new-design.js`; `JUDGE_STEPS`, `TRACE_FIELDS`, `LABEL_RULES`
-  of `docs/system-design/new-facts.js`; `docs/prd/06-views.md`.
-- Changed by D42: matching and its labels also cover the evidence outcomes (repeat, replacement, new evidence).
-- Changed by D44: code never decides a match; "who decided" is the general model, later the small model, or a
-  person.
-- Changed by D45: the general model, the records, human labels and a small model later stand; which records are
-  sampled, the test set, measuring with labels, the training data and "no reinforcement learning" are proposals.
-## D41 · 2026-10-20 · What the rebuilt views database changes outside it
-
-- By: Alex ("you need to add it to the current PRD, you need to add it to the current system design … put everything into context").
-- Why: D38–D40 change what extraction hands over, which model settings Config holds, how the universe describes macro
-  links, what the review pool receives, and make the final verdict and pull mode drafts obsolete. Leaving them would
-  leave the page and the PRDs saying two things.
-- Decides:
-  - Extraction (frozen, D37): a candidate view now carries its object, kind, what it looks at, the question, five rungs,
-    due date and answer source; evidence carries when the thing happened and which candidate or existing view it
-    belongs to (or neither; matching decides). Prompt part 1 adds the writing rules for views (one thing; a number's
-    year and answer source; a theme view's scope set by the rule or decision that governs it). Prompt part 5 gives the
-    objects' existing views (question and what they look at, no state or evidence) instead of driver names.
-    The category reads no longer mention conditions (T1, T10, T12, T14), and the example shows a theme view and an
-    object view, with the filing's own English sentences as the checked quotes.
-  - Config (frozen): the views database has one setting per model call (matching, picking dependencies, re-judging,
-    the duplicate check); a setting includes the temperature; every model call records the Config version.
-  - Universe (frozen): rule 8 says macro and geopolitics reach a company through dependencies.
-  - Review pool (frozen): from the views database it receives the themes proposed when a candidate is about something
-    in the world with no theme in the universe, and failed items; unsure matches no longer go there. A candidate about a
-    company outside the universe is not built and only noted in the processing record.
-  - The final verdict and pull mode are old drafts to be redone when Alex takes them up; until then their pages carry
-    the note. Pull mode's role in the rebuilt design is the due date, the daily duplicate check and the periodic labelling sample.
-  - The wording scope (D36) covers the views database and the labels node; the retired words are 驱动, 检验条件 (证实条件,
-    证伪条件), 前提, 期限档, 主题层 and 对象层, 主张, 已证实 and 已证伪, and 分发序号 (the glossary's word is 顺序号).
-- Enforced: `TEMPLATE`, `PROMPT_EXAMPLE`, `CATEGORY_READS`, `CATEGORY_NOTE`, `EXTRACT_STEPS`, `SOURCE_NOTES`,
-  `EXTRACT_EXAMPLE_TREE` of `docs/system-design/new-facts.js`; `CONFIG_SCHEMA` of `docs/system-design/new-config.js`; `RULES`
-  of `docs/system-design/new-universe.js`; the extract, config, review, verdict, pull nodes and the summary of
-  `docs/system-design/new-design.js`; `AVOIDED_WORDS`, `VIEWS_CONSTANTS` and `wording_scope` of `docs/check.py`; the glossary in
-  `docs/prd/00-system.md`; `docs/prd/00-system.md`, `01-universe.md`, `03-config.md`, `05-extraction.md`, `07-final-verdict.md`,
-  `08-pull-mode.md`, `09-review-pool.md`, `README.md`.
-- Changed by D42: the last prompt part also lists the views the related objects' views depend on; evidence is attached
-  to a view on that list or to a candidate view, never to neither; universe rule 8 links a company to a theme view whose
-  answer its own answer uses.
-- Changed by D45: Config has no duplicate-check setting while the duplicate check is a proposal; extraction's prompt
-  asks for one thing per view and a number's year, not for answer sources or a theme view's scope; how complete a
-  candidate view is when extraction hands it over is open.
-- Changed by D51: the views database has two model settings in Config (matching, re-judging); dependencies are
-  chosen in the matching call.
-## D42 · 2026-10-20 · Extraction hands over evidence and candidate views as two things; evidence is matched to what its view already holds
-
-- By: Alex, over steps 17–30 of `docs/views-rebuild-log.md`. On attaching evidence: "evidence 怎么在抽取的时候不挂钩
-  thesis？这怎么可能。"; on two rungs: "如果只有是否就不用硬分，可以 binary"; on cycles: "我觉得这个应该是 thesis 的定义问题"; on the evidence path: "It's
-  not clear to me how this logic is similar to thesis", then "我觉得差不多了"; on writing it up: "抽取现在分成了 evidence / thesis,
-  你要特别分开讨论和解释这部分的设计". The first write-up grew new words and rules for edge cases raised in review
-  ("卡片又是什么。。。你为什么又给自己加了一堆戏？"); the cut-back then dropped four rules that real cases need ("那你本来提的一些东西难道都没用吗？"). Kept:
-  what he decided, plus those four ("可以吧"); log steps 31–33.
-- Research: `reports/观点库重建 抽取后的证据和观点怎么进库（Codex 调研）.md`, `reports/观点库重建 证据和观点的逻辑仿真（Codex）.md`,
-  `reports/观点库重建 对抗式审查：做不到和说不通的地方（Codex）.md`, `reports/观点库重建 证据怎么作用到库里（Codex 调研）.md`; a count on a stored run of the old
-  system (log step 30): of 2,499 numbers it read, 383 matched one already read, 214 of them elsewhere in the same
-  document. Reviews of the first write-up: `reports/观点库重建 D42 审稿第 1 轮（Codex）.md` to `第 5 轮`.
-- Decides:
-  - Extraction (frozen; changes D41's hand-over). Prompt part 5 lists the related objects' open views and the views they
-    depend on (question and what each looks at, no state or evidence). One read hands over two things, each with its
-    source: evidence, attached to the views on that list it bears on or to a candidate view of the same item; and
-    candidate views, for important matters none of those views covers, written as D41 has it and carrying the evidence
-    that raised them. The same thing said in several places of one item (text and table) is one piece with several
-    sources. Evidence attached to nothing is not extracted; code checks the attachments.
-  - Views database (changes D39 and D40). The one matching call also compares each piece of evidence with the evidence
-    its view holds that has not been replaced; a piece attached to several views is stored once and compared once. A
-    repeat (a reprint, the same number in text and table, the same speaker saying it again) adds one more source to that
-    piece. A replacement (two statements of the same thing: the same speaker's later number or wording, an official
-    confirmation or denial of a rumour, the original source's own corrected sentence) keeps the one said later, by the
-    day it was said, and marks the earlier replaced, kept as history, so a late older statement goes straight into
-    history; views still linked to the replaced piece are linked to the new one too. Anything else, and anything unsure,
-    is new evidence. An upstream corrected version changes only its own source: a corrected reprint leaves the piece it
-    reprinted alone; the original source's corrected version replaces a changed sentence through matching and marks a
-    deleted one replaced. Matching records and labels cover these outcomes.
-  - Re-judging (changes D38). A re-judgement reads the view's evidence that has not been replaced, each piece with the
-    one it replaced, and its dependencies' current state; a round that brought only repeats and no dependency change
-    does not re-judge the view.
-  - Ladders (changes D38). A yes-or-no question has two rungs: bullish and bearish for an object view, named by outcome
-    for a theme view.
-  - Dependencies (changes D38). B depends on A only when B's answer uses A's answer; the other side's reaction to what
-    has already happened is evidence. Two questions that are each other's input are badly cut and are rewritten; code
-    refuses an arrow that closes a cycle.
-  - Wording: 重复, 替代, 新证据 and 被替代 enter the glossary; a ladder has five rungs or two; 个股 is written 公司; a bare 候选 had two
-    meanings and is split into 候选观点 and 清单; prompt part 5 is 第 5 块 (not 最后一块). 五格的梯子, 个股 and a bare 候选 are checked by
-    `docs/check.py`.
-- Not decided (PRD 05 and 06 under 还没定的): opening views when an object starts empty (a start-of-coverage step that sets
-  two or three key debates); changes inside a rung that do not reach dependents; whether theme views take companies'
-  views of the macro; sampling extraction's attachments for review. The other questions raised in steps 25–27 stay in
-  the log.
-- Enforced: the extraction and views constants and pages of `docs/system-design/new-facts.js`; `RULES` of
-  `docs/system-design/new-universe.js`; the summary and the extract, views, labels and universe nodes of
-  `docs/system-design/new-design.js`; `AVOIDED_WORDS` and the generated blocks of `docs/check.py`; the glossary in
-  `docs/prd/00-system.md`; `docs/prd/00-system.md`, `01-universe.md`, `05-extraction.md`, `06-views.md`, `README.md`.
-- Changed by D45: the dependency definition (only an input; a cycle is rewritten) is a proposal; Alex said a cycle
-  is a problem of how the theses are defined.
-- Changed by D58: prompt part 5 also gives each view's due date; a view covers what happens up to its due date, and
-  what happens after it goes in as a candidate view, so a closed view a dependent still points to is succeeded.
-
-## D43 · 2026-10-20 · A second stable version of the design is sealed
-
-- By: Alex ("完整的刷一遍，我要又一个稳定版本的html fe system design and prd").
-- Decides: after a full reasoning refresh of every module in the D22 order and `python3 docs/check.py` passing, the
-  design page, its data, the PRDs, DECISIONS, CURRENT_STATE and the views rebuild log are copied to
-  `docs/archive/2026-10-20-v2/` with `SHA256SUMS`; the archived page opens from that folder. Module statuses do not
-  change: the input side and extraction stay frozen v1 as amended by D41 and D42, the views database stays in design
-  with D38–D42 decided, the final verdict and pull mode stay old drafts to redo. Like v1, the sealed copy is never
-  edited; a later stable version gets a new dated copy.
-- Enforced: `docs/archive/2026-10-20-v2/` and its `SHA256SUMS`; the status in `docs/CURRENT_STATE.md`.
-- Changed by D44: v2 still shows a key matched by code before the model; the current stable version is v3
-  (`docs/archive/2026-10-20-v3/`).
-## D44 · 2026-10-20 · Matching is the model's alone: no key matched by code
-
-- By: Alex, at log step 16 ("let's do a general LLM at this point because we need to make it work first"), and after v2
-  was sealed ("I just want LLM to do the matching? Why is it still matching by the key with code? … I told you to make
-  it easy so that we can prototype in the beginning").
-- Why: the key was Claude's proposal in log step 15 (four layers: a key matched by code, the list, the model as judge, a
-  small model later). Alex's answer chose the general model to make the system work first; D39 still wrote the key as
-  a code step before the model, and its check on open-view limits needs the same key to tell "the same number" or "the
-  same thing". In log step 26 Claude found the key does not hold (one answer source serves different questions, an
-  amount and a growth rate; one number gets two names) and proposed dropping it; the step stayed through steps 31–33
-  and v2 (D43) was sealed with it.
-- Decides: whether a candidate view is an open view, a part of it or its next period is decided only by the model in
-  the matching call, from the short list. Code builds the list (as in D39) and accepts only listed ids and the
-  succession rules. "One open view per thing (a number: this year and next)" is the rule the model applies when
-  matching, not a code check. Writing into the views database has eight steps; matching is step 4. The matching
-  record's "who decided" is the general model, later the small model, or a person. A number view keeps its answer
-  source: it says where the answer is read at the due date.
-- Seals: the corrected design is sealed as v3 in `docs/archive/2026-10-20-v3/` with `SHA256SUMS`, as D43 sealed v2;
-  v2 stays as sealed and is superseded.
-- Enforced: `INTAKE_STEPS` and `TRACE_FIELDS` of `docs/system-design/new-facts.js`; the views and labels nodes of
-  `docs/system-design/new-design.js`; `docs/prd/00-system.md` (principle 7, the glossary), `docs/prd/06-views.md`;
-  `docs/check.py` fails on the word "钥匙".
-- Changed by D45: the answer source of a number view is a proposal (who judges a rung, and how), not decided.
-- Changed by D58: "one open view per thing" is the rule matching keeps when it opens views; a view a person reopens
-  by hand is outside it.
-## D45 · 2026-10-20 · Only what Alex said or decided is decided; Claude's proposals are listed apart
-
-- By: Alex ("我明明就很清楚的告诉你了我过去所有的讨论和思路，你不要 diverge and make shit up, review this shit"; to the
-  rule "写成‘已定’的，每一条都要指得到你的一句原话；指不到的，一律放进‘没确认的’": "要，我们重点搞定观点库模块好吧，
-  然后抽取 thesis /edvdence 在前面的逻辑分清楚，把这两个干 solid").
-- Why: checked against his 46 messages of the views rebuild (`reports/观点库 设计和 Alex 原话对照（2026-10-20）.md`),
-  D38–D44 wrote as decided proposals he had answered in part or not at all, details from Codex reviews, and log lines
-  recording his agreement where he had said "ok" and asked for a recap. Applying the rule also found that D39 had
-  replaced D31's late-item rule without him.
-- Decides: in the views database and in what extraction hands to it, a rule is decided only when it points to Alex's
-  own words, his reply to that question, or a decision in force from before the rebuild (D11, D14, D16, D30, D31,
-  D33, D37). Everything else is a proposal: the page and `docs/prd/06-views.md` list Claude's 17 proposals apart
-  ("Claude 提的、Alex 还没定的"), and none is built until he decides it. On his words: a candidate that matches nothing,
-  or only weakly, is a new view, so there is no "unsure" outcome; evidence tiers and counting by original source stand
-  (D30), and only "happened" evidence settles which rung holds; a late item reads the state of its publication day and
-  is written with its real date, and a view whose object leaves the universe is kept as no longer tracked (D31). The
-  proposals: where it is now; how rungs are written; who judges a rung, with answer sources; how this year and next are
-  counted, with a code filter; how the list is made and a theme view's identity; the outcomes "part of an open view"
-  and "not opened"; dependency as input only, with the cycle refusal; the succession and notice details of log step
-  13; the order inside a round; unanswered and waiting views; the daily duplicate check (with Config's setting for it
-  and pull mode's daily start); the "already counted" mark; the code check on cited evidence and replay; how answers
-  are scored; re-judging a late item on arrival; the labelling details; the storage. Open in extraction: how complete a
-  candidate view is when extraction hands it over (log step 30's object, what it looks at and evidence, or D41's
-  question, ladder and due date); the prompt no longer asks for answer sources or a theme view's scope.
-- Changes: D31 (its late-item rule stands again), D38, D39, D40, D41, D42, D44 (notes under each).
-- Checked: Codex read-only against the same 46 messages; six sentences still pointing past Alex's words were fixed
-  (the calendar year for numbers other than a company's, searching only open views, re-judging once per round, "which
-  item comes first does not shape the view", the late February report in the example, and examples that assumed a
-  complete candidate view); none of the 17 proposals turned out to be something he had agreed to.
-- Seals: the design is sealed as v4 in `docs/archive/2026-10-20-v4/` with `SHA256SUMS`, as D43 sealed v2.
-- Enforced: `VIEWS_PROPOSED`, the views constants, `TEMPLATE`, `EXTRACT_TWO`, `EXTRACT_SORT_TREE`, `EXTRACT_EXAMPLE_TREE`
-  and `EXTRACT_OPEN` of `docs/system-design/new-facts.js`; the summary, the extract, views, labels, config and pull
-  nodes and the overview edges of `docs/system-design/new-design.js`; `docs/system-design/new-config.js`;
-  `docs/prd/00-system.md`, `03-config.md`, `05-extraction.md`, `06-views.md`, `08-pull-mode.md`, `README.md`;
-  `docs/check.py` renders the proposals into `06-views.md`.
-- Changed by D46: Alex settled the proposals one by one; the ones he decided are in D46, the three about due dates,
-  unanswered views and the daily duplicate check wait for pull mode, and the rest stay listed apart.
-## D46 · 2026-10-20 · Alex decides Claude's views proposals one by one
-
-- By: Alex, asked item by item. (1) "A thesis has a state. That's it … There's only one state." (2) "ok". (3) "Just
-  use the … model and right now we're only talking about data streaming in … the next financials come in, it will
-  basically have evidence that will validate or invalidate that thesis … We're talking about like push mode, streaming
-  data, not the pull mode that we have that has not been designed yet." (4) "when they say by this year, it just means
-  by this … year, December 31st. If it's next year, just next year, December 31st." (5) "It's going to trigger a search
-  engine that is overlaid on top of this database. It's going to return maybe like top n, n being 5 or 10 … semantic
-  search … Elasticsearch. And then you basically let the model check which one is the matching thesis or relevant
-  evidence"; "Yes, and the recall criteria or the search criteria needs to be designed … this is the final decision."
-- Decides:
-  1. A view has one state: where it sits on its ladder, our view, pushed toward bullish or bearish by evidence and
-     judged by the model on facts. There is no second position.
-  2. How a ladder is written: each rung a result that can be checked, rungs neither overlapping nor leaving gaps, so
-     exactly one holds at the due date; no vague "partial" rung, a partial outcome is spelled out as its own rung;
-     neutral says what it is compared with; one ladder holds one kind of thing, and a question needing a number and
-     an event is two views linked by a dependency.
-  3. The model reads the information that brings an answer like any other evidence; there is no answer source and no
-     code judging a rung. Due dates and answers belong to pull mode, not designed yet; the proposals on unanswered
-     and waiting views, the daily duplicate check and how answers are scored wait for it.
-  4. A number view names its year: this year is the year the item comes in, to December 31, and next year the one
-     after; a company's numbers follow its fiscal year (the one the item falls in is this year). At most this year's
-     and next year's are open; a candidate beyond that is not opened. No code filter.
-  5. Matching: a search engine over the views database (like Elasticsearch; semantic, keyword or both is to be
-     designed) searches the
-     whole database, open and closed views, for a candidate view and returns the top N (N in Config, 10 to start); the
-     model decides the same view (evidence attached, ladder and due date kept), its next period (succession), or a new
-     view (no match, or only a weak one). A piece of evidence searches only the evidence of the view it is attached to,
-     top N, and the model decides repeat, replacement or new evidence. How the search ranks is to be designed.
-  6. A candidate that is a part of an open view goes into that view ("H20 in China" into "China revenue"). Alex: "行
-     但是这个观点的颗粒度我们需要之后明确，例如 nv 中国区收入就很关键肯定不能 bundle 到总收入；而且如果太粗那你会
-     发现所有观点都基本是财务指标这是不行的". How big a view is stays open, with a research task: what a thesis looks
-     like from a hedge fund's side, what to combine and what to carve out.
-  7. A candidate that bundles several things that may move in opposite directions is not opened; its evidence counts
-     only where it is also attached to a specific view. Alex: "Yes, I think it's okay … make note that the granularity
-     of these theses matters … we need to run a full research on what a thesis actually looks like from a hedge fund
-     perspective."
-  8. Dependencies: the model decides, like an analyst, which views' conclusions a new view needs and in which
-     direction; what has already happened is evidence, not a dependency. Code keeps the graph free of loops: an arrow
-     that would close a loop (a new arrow, or one moving to the next period) is refused and sent back to the model,
-     which decides how to rewrite it.
-     Alex: "这个的判断不是 LLM 来吗？…hedge fund analyst 会怎么做？"; "你自己要有 circular dependency avoidance 机制".
-  9. Succession: one view has at most one next period, and the next period keeps the ladder's direction (thresholds may
-     change). The other succession details Claude proposed are dropped. Alex: "可以".
-  10. One item's changes are one round: upstream views are judged first, then downstream ones, which read the upstream
-      state judged in this round; each view is judged once per round. Alex: "global thesis is impact everything …
-      like a celebrity … it connects to everyone."
-  11. Views relate in one way only: B refers to A's conclusion (its state and reasons), which is not stored as B's
-      evidence, so the system cannot prove itself with its own judgements. A message counts once: about A, it is A's
-      evidence and reaches B through A's conclusion; about B, it is B's; if B does not refer to A, a message about A
-      is B's evidence too. Whom a view refers to is set when it is built. The "already counted" mark is dropped. Alex:
-      "我觉得什么特殊处理代码这种都是非常 dirty 的解法，你现在给我想清楚 what is the best way"; "可以".
-  12. Every judgement cites its evidence by number in a fixed answer field; code looks each number up (it belongs to
-      this view and is not replaced); if one fails, the judgement is not written, the reason is recorded and the model
-      judges again. What was judged on a past day is read from the stored records, never asked again. Alex: "就是有
-      source 注解和 lookup 对吧，那你要写明白这个机制".
-  13. The timeline only grows forward, in the order we learned things. A late message about a matter that already has
-      a newer statement does not count: it is not added to the view, only noted in the processing record; a late
-      message about something we did not know counts, with its real date. This replaces D31's late-item rule. Alex:
-      "if data is coming in out of order … it shouldn't be appended … Think about this entire relation of building a
-      time lineage"; "go ahead".
-  14. Labels: every match is recorded; people label two kinds, the ones code refused and a few drawn at random from
-      time to time; the rest is filled in later. Alex: "是，之后细节在补，把这个模块画出来就好".
-  15. Where the data is stored is decided when the build starts. Alex: "可以".
-  Still Claude's proposals, for pull mode: unanswered and waiting views, the daily duplicate check, how answers are
-  scored at the due date.
-  Checked by Codex against the 76 messages: the rewrite of a loop is left to the model; the search method is open
-  (N starts at 10); a view also re-judges when a view it waits for is built (log step 13's tree); prompt part 5
-  says who refers to whom, so extraction can keep a message about A off B.
-  16. Extraction writes a candidate view in full on the spot: question, ladder and due date, with its evidence; the
-      model has the whole document then, and new views are few. Alex: "写全".
-- Seals: the design is sealed as v5 in `docs/archive/2026-10-20-v5/` with `SHA256SUMS`.
-- Changes: D45's list of proposals (settled except three for pull mode); D3 and D41 (Config also holds the
-  search size N).
-  D31 (the late-item rule is replaced by item 13).
-- Enforced: `LADDER_RULES`, `POSITIONS`, `VIEW_TREE`, `INTAKE_STEPS`, `INTAKE_SHAPE`, `MATCH_NOTES`, `EVIDENCE_NOTES`,
-  `TRACE_FIELDS`, `VIEWS_OPEN`, `VIEWS_PROPOSED` of `docs/system-design/new-facts.js`; the views and config nodes of
-  `docs/system-design/new-design.js`; `docs/system-design/new-config.js`; `docs/prd/00-system.md`, `03-config.md`,
-  `06-views.md`; `docs/check.py` rules out 检索 for 搜索.
-- Changed by D51: item 9's re-judging on succession comes back as a case of the one re-judging rule; Config's
-  views settings are matching and re-judging.
-- Changed by D54: there is no answer apart from the state, which is frozen at the due date; the proposal on how
-  answers are scored is dropped.
-- Changed by D58: item 4 limits which years a candidate may open (this year and next, one view per year); last
-  year's view stays open until its due date. Item 8: a dependent theme view writes whether the two ladders run the
-  same way or opposite.
-## D47 · 2026-10-20 · End-to-end consistency from the universe to the views database
-
-- By: Alex ("now you have everything, you have every log … do end-to-end consistency test … up until the model db
-  module … make sure the terms, the usage, the logic, the details … consistently reflected in the PRD and in the front
-  end HTML … in multiple rounds. Fire codex sub-agents to check for you, and you also review holistically yourself and
-  just make it work").
-- How: three Codex read-only reviews (wording, logic with two worked examples, page against PRD against DECISIONS)
-  and Claude's own read of every in-scope PRD and the page; every finding was checked against the text before a fix.
-- Decides, wording (one word per concept): the attach word is split by its three senses: evidence 连到 a view, a
-  candidate view 并进 an open view, a view 属于 an object (classification: an object is 标 on an item), and `docs/check.py`
-  rules the old word out; views relate only by 依赖 (the everyday 参考 is gone from the documents); the rules written
-  this round say 证据 or 信息, not 消息; evidence repeats are 转述 (a whole reprint is merged by classification and never
-  reaches the views database); the state is 我们的判断 (看法 is what authors say) and is pushed to either end of the
-  ladder; a rung is a result that can be checked (能核对); 答案 is only the rung at the due date; the whole item is not
-  stored, evidence keeps its one sentence; "one layer" reads "not split into periods"; 链 covers replacements too; the
-  view field is "开着还是关了"; the item duplicate in dispatch is "重复的信息"; the glossary gains 并进, 共识, 出处, 原始来源,
-  一句话说清; an upstream id names one version (an update is a new item that says which one it replaces).
-- Decides, logic: evidence carried by a candidate view is compared after the candidate's place is known (one more
-  model call when it goes into an open view); a judgement may cite the views it depends on, which code checks against
-  its dependencies; two candidates from one item: a sentence goes to the one it is about; prompt part 5 says who
-  depends on whom; the Reuters examples are Reuters' own stories retelling the filing; the universe sends unknown
-  identifiers and themes outside the universe to the review pool, not known companies outside it; Config holds the
-  choices a person makes (model settings and the search size); T1 and the category note no longer speak of 判卷, and
-  T14 no longer of 催化剂.
-- Enforced: the page data (`new-facts.js`, `new-design.js`, `new-config.js`, `new-universe.js`, `new-classification.js`),
-  `docs/prd/00`–`06`, `README.md`, `docs/CURRENT_STATE.md`; `docs/check.py` rules out 挂 and 消息.
-- Second round (Codex, one combined review): rung boundaries say which side each edge falls on; a replacement
-  re-judges and a dropped late statement does not; step 4 is one call plus one more only for a candidate that goes
-  into an open view; the state is pushed to either end of the ladder everywhere; Config's table names the search
-  size beside the model settings; D31 notes that D46 replaced its late-item rule; 转述 in every example; 消息 becomes
-  说法 (T7, the rumour tier) and 报道 (classification's example); classification and dispatch show the D47 wording change.
-- Third round: the review pool takes themes outside the universe (as suggested themes) and leaves out known
-  companies, crypto assets and commodities outside it; classification's rule 13 says the system's own output is not
-  accepted (不合格), as its first rule does; a judgement's cited sources include the views it depends on in the
-  acceptance and the source notes; the universe node and the extraction page show D47.
-- Fourth round: the export-licence ladder's rungs exclude each other (none issued / issued, some with conditions /
-  issued, none with conditions); the hand-over table says part 5 shows who depends on whom; the review pool's
-  exclusion says only what stays out (known items); dependents read A's state and reasons, not a separate "现状";
-  the AMD example says the item is about AMD; classification's cross-reference points to the first step of its
-  order. "Usually 6–12 months" stays: Alex agreed to it in log step 10.
-- Fifth round: "not opened" also covers a number view beyond next year; an item reads the state left by earlier
-  items plus what its own round has written; the review pool leaves out known companies, crypto assets and
-  commodities outside the universe (themes outside it come in); the review-pool, Config and extraction statuses show
-  the later decisions.
-- Sixth round: one finding, CURRENT_STATE's order line now includes what an item's own round has written. The
-  rounds found 20+, 11, 4, 6, 4 and 1 issues; the pass ends here.
-- Changed by D52: a plain-language pass over the same scope.
-## D48 · 2026-10-20 · The views database, with match labelling, is frozen as version 1
-
-- By: Alex ("现在这个 db 模块算是 freeze 了吗还是你需要最后 review"; "Is there any inconsistencies and can we freeze? You
-  need to change the front-end module to be frozen, right? … you need to read overall end-to-end because we added a
-  lot of details and stuff, so you need to make sure").
-- Decides: after the six rounds of D47 and a last read of the system diagram and the front-page summary, the views
-  database and match labelling are frozen as v1 in their current text; a change needs a new decision. What
-  `docs/prd/06-views.md` lists under 还没定的 stays open (the granularity of a view, to be researched first; big changes
-  inside a rung that do not reach dependents; opening views when an object starts empty; consensus; …), and the
-  three pull-mode proposals wait for pull mode. The diagram now shows search in the views step, part 5 as questions,
-  what each looks at and who depends on whom, failed items from the views database to the review pool, the
-  classification result "并到原来那条", frozen statuses on the views and labels nodes, and the final verdict and pull
-  mode as old drafts to redo.
-- Enforced: the statuses of the views, labels, verdict and pull nodes, the caption, two edges, the summary and the
-  classification subtitle in `docs/system-design/new-design.js`; the views page status in `new-facts.js`;
-  `docs/prd/06-views.md`, `00-system.md`, `README.md`; `docs/CURRENT_STATE.md`; the sealed copy
-  `docs/archive/2026-10-20-v6/`.
-- Changed by D51: Alex settled Claude's open items of the frozen views database (2026-10-21).
-## D49 · 2026-10-20 · Code review of the frozen views database: contradictions fixed, no new mechanism
-
-- By: Alex ("你可以 freeze 然后 run code review and clean up then push").
-- How: a code review of the whole diff against the last commit (the `code-review` skill, run as a separate agent);
-  every finding was checked against the text. It fixes only contradictions with decided rules and slips; a finding
-  that would need a new mechanism is listed as open, and two that Alex had dropped stay dropped.
-- Fixed: another queue's change reaches a view as a notice on its own queue, with that item's sequence number (D31's
-  hand-off, lost in the rewrite); the search result counts as something an item reads, so a change before commit
-  redoes the work (D31); this year and next count from the item's publication day, never the clock (D12, the
-  glossary); prompt part 1 carries the decided rules for writing a view (ladder, due date, year), since extraction
-  writes candidates in full; only an open view takes a merge, a closed one can only be succeeded (log step 10); a
-  candidate about something outside the universe is not opened (a missing theme goes to the review pool as a suggested
-  theme, a known company is only noted; D16, D41, universe rule 7); code checks a dependency names a view that exists
-  or a year it waits for; a refused retry follows the failure rule; the labelling sample is the matching answers code
-  refused; an upstream id names one version everywhere; the final verdict's note and the diagram no longer say who
-  sets an answer; the wording check's message for "NVDA 层" points to 对象观点（NVDA）, and each newer ruled-out word has a
-  control pair that must be caught and a corrected sentence that must pass (16 pairs, shown to catch a broken rule).
-- Opened instead of built: a waiting arrow can count a sentence twice (the claim that it cannot is removed); which views
-  the model chooses dependencies from.
-- Left as Alex decided: no notice when a dependency closes or moves to its next period (dropped in D46 item 9); no
-  same-day order between two statements (dropped in log step 32).
-- Notes: `MERGE_KINDS` and `LABEL_RULES`, named by D39 and D40, were removed by D45 and D46; older "Enforced" lines name
-  constants of their time.
-- Seals: v7 in `docs/archive/2026-10-20-v7/` with `SHA256SUMS`, the version pushed.
-- Changed by D51: the two open items it added are settled (dependencies chosen from the views shown; the double
-  count through a waiting arrow does not occur).
-## D50 · 2026-10-20 · Clean-up after the freeze
-
-- By: Alex ("都做掉，然后提交推送", to Claude's list: the repository README, the superseded sealed copies, the stale
-  end of the views rebuild log, the duplicated constant lists in `docs/check.py`, the local page server).
-- Decides: the repository `README.md` describes the current design (the flow up to the views database, one state per
-  view, dependencies, the module statuses with the views database frozen, D1–D50). The sealed copies v2–v6
-  (`docs/archive/2026-10-20-v2` to `-v6`) are removed from the tree; each is kept in commit `94622a5` and can be
-  restored from it. `docs/archive/` keeps v1 (the earlier design, 2026-10-16) and v7 (the current design, D49); D43's
-  rule that a sealed copy is never edited stands, and this removal is the one exception, made at Alex's request. The
-  views rebuild log's "合成" and "暂时放着的问题" sections, not updated since log step 16, are replaced by a pointer to
-  the page, the PRDs and DECISIONS. `docs/check.py` writes each page-data file's constant list once (`PAGE_CONSTANTS`,
-  passed into the embedded script) and fails when `new-facts.js` defines a constant no list names, since the wording
-  check reads that file one constant at a time.
-- Enforced: `README.md`; `docs/archive/`; `docs/views-rebuild-log.md`; `PAGE_CONSTANTS` and `unlisted_constants` in
-  `docs/check.py`; `docs/CURRENT_STATE.md`.
-## D51 · 2026-10-21 · Claude's open items settled: one re-judging rule, dependencies chosen in the matching call, no consensus
-
-- By: Alex, item by item. Asked which items were his to decide, he had Claude re-check the twelve open items Claude
-  had written in, against the latest design ("for yourself to reiterate the issue in case you made stupid mistakes that
-  are not issues anymore in the latest version"). Then: "好，一个一个来问我" (the nine no longer issues dropped); on
-  re-judging, "A 可以但是设计逻辑要干净点；你思考下和我说", then "ok"; on which views dependencies are chosen from,
-  "ok"; on consensus, "What … is a consensus that you're talking about … Every time the evidence updates or whatever,
-  the ladder needs to be run by the model to determine whether it's going to shift from neutral to bearish or from
-  neutral to bullish … That's the logic"; then "可以你再仔细的对齐一次逻辑". On the page: "那你 FE 为什么写定稿了，这不是瞎写吗？"
-- Decides:
-  1. Re-judging has one rule: a view is re-judged when what it reads changed. It reads its own evidence and the
-     conclusions (state and reasons) of the views it depends on. Its evidence changed when new evidence came or
-     evidence was replaced (a repeat alone does not count); a dependency's conclusion changed when that view's
-     judgement says so. Every judgement answers "结论变不变" in its fixed form: changed when the rung moved or a key fact
-     or number behind the state changed (AMZN's capex guidance from +12% to +25% inside one rung), unchanged when the
-     same thing is said again. Code checks only that a judgement that moved a rung, and the first judgement of a new
-     view, say changed. This gives Alex's "如果美联储有重大的改动……确实需要重判" (log step 10) to the model and
-     replaces the notice on a rung change only. A waiting view just built, and a dependency moving to its successor,
-     are cases of the same rule, so B is re-judged when its arrow moves to the next period (one of the details dropped
-     in D46 item 9, back as a case of this rule, as Claude told Alex before his "ok").
-  2. A new view's dependencies are chosen in the matching call (step 4), from the views the model already has in front
-     of it: the search results, the views listed in prompt part 5, and the views new in the same item; there is no
-     other search. In step 5 code checks that each is one of the views shown (or a year it waits for) and that no loop
-     forms. Writing into the views database has seven steps. Config holds two settings for the views database's model
-     calls (matching, re-judging), no longer a separate one for dependencies. A dependency on a view in none of the three
-     is missed, like a match the search misses; the records and the labels show it.
-  3. Consensus is not part of the design: a view has one state, judged by the model from its evidence whenever that
-     evidence changes (D46 item 1). The glossary row, the views notes and extraction's "用来算共识" go. Third-party views
-     stay evidence of their tier.
-  4. Open items are only what Alex deferred: how search ranks; the granularity of views, researched first (how many
-     questions per object is part of it); the labelling details (with how to check evidence that extraction attached
-     wrongly or missed); who sets an answer at the due date (with pull mode and the final verdict). Removed as no
-     longer issues on the current design: when an event counts as a successor (the model decides in matching); dates
-     between now and a due date (the stream reads no dates; what happens on them arrives as evidence); futures on rates,
-     currencies and indices (theme views whose rungs are outcome ranges); measuring before the build (a build practice,
-     AGENTS.md); a double count through a waiting arrow (a sentence about A counts only on A, so once or not at all);
-     opening views on an empty database (stored history streams through the same path); companies' macro opinions
-     crowding a theme view (tiers and counting by original source, D30); a hard-coded notice on rung change only
-     (settled by item 1); which views dependencies are chosen from (settled by item 2).
-  5. The design page tags a module 已冻结 only for a frozen status; the final verdict and pull mode carry a `draft` line
-     and a 旧稿 tag. D48 had given them a status line, which the page drew as 已冻结.
-- Changes: D30, D38, D41, D46 item 9, D49; the frozen views database (D48) and the frozen Config, extraction and
-  universe (D37), through this decision.
-- Review: Codex read the change read-only and found three, all fixed: the list check in step 5 and the acceptance
-  criteria covered every id, which would refuse a dependency on a view from prompt part 5 or new in the same item (the
-  list check now covers where a candidate or a piece of evidence goes; dependencies have their own); extraction's node
-  still listed the two removed open items; a re-judgement did not see the view's last conclusion, so "结论变不变" had
-  nothing to compare with (the model now compares with the last conclusion, used only for the comparison, never as a
-  base to add to). The labels' "refused by code" now reads "failed step 5's check".
-- Seals: v8 in `docs/archive/2026-10-21-v8/` with `SHA256SUMS`.
-- Enforced: `STATE_RULES`, `POSITIONS`, `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `INTAKE_STEPS`, `INTAKE_EXAMPLE_TREE`, `JUDGE_STEPS`,
-  `TRACE_FIELDS`, `LIFECYCLE_TREE`, `ORDER_RULES`, `VIEW_FIELDS`, `KIND_NOTE`, `VIEWS_OPEN`, `CATEGORY_READS`,
-  `EXTRACT_OPEN` of `docs/system-design/new-facts.js`; the views, extract, config and universe nodes and the `draft`
-  field of `docs/system-design/new-design.js` and `render.js`; `new-config.js`; rule 8 of `new-universe.js`; the
-  glossary of `docs/prd/00-system.md` (结论 added, 共识 removed); `docs/prd/01`, `03`, `05`, `06`; `README.md`.
-- Changed by D54: item 4's "who sets an answer at the due date" is settled: the state is frozen at the due date.
-- Changed by D58: an existing piece newly linked to a view counts as its evidence changing; a piece that only gains a
-  source does not by itself trigger re-judging; "changed or unchanged" compares with the conclusion before this
-  round, retries included.
-
-## D52 · 2026-10-21 · Plain, consistent wording across the design page and PRDs
-
-- By: Alex ("you gotta write in a consistent manner that's more understandable across … You have a lot of like
-  AI-ish shit jargon that is just very hard for humans to comprehend"; "don't add any additional shit that was not
-  intended … need to scrub everything clean"; review with several Codex sub-agents).
-- How: four read-only Codex reviews over the universe, classification, Config, dispatch, extraction, the views
-  database with match labelling, the review pool, the system overview and the repository README: wording of the views
-  database, wording of the rest, logic, and rules not traceable to Alex's words or a decision. The final verdict and
-  pull mode are old drafts and were left out. Every finding was checked against the text before a change. The
-  traceability review found nothing written as decided that Alex had not decided.
-- Renamed, one word per concept: 对上 → 比对 (比对记录, 比对标注; "对上" implied a match even when the result is a new
-  view or not opened); 并进 → 归入 (a candidate view joins an existing one), and the pull-mode proposal's 并入 → 合并, so
-  the three no longer sound alike (classification's 并到 stays for duplicates); "upstream / downstream" for views →
-  被依赖的观点 / 依赖它的 (上游 stays the data supplier only); 血缘 → 前后期关系 or 查来历; 写入者 → 由一个队列来写;
-  只追加 → 只加不改; 一条轴上的结果 → 从一头排到另一头的结果; the module title drops "thesis · ladder · evidence";
-  table cells are 单元格 and output fields 栏, so 格 means a rung only; 新指标 → 没登记的发布系列. Kept, being explained
-  where first used: 格, 层 (the four tiers are ordered), 接续, 连线, 一轮, 顺序号, and 颗粒度 (Alex's word).
-- Fixed, no rule changed: the dependency check and acceptance criteria now also allow a year a view waits for; the
-  views node's re-judging said only evidence, now evidence and the dependencies' conclusions; the PRD's "重大改动才重判"
-  bullet read as the condition for all re-judging, now it is the condition for a dependency and the one rule follows;
-  the first classification check refuses a missing readable text only for text items; a correction that names the
-  version it replaces (for example only the category changed) is a new version, not a duplicate; step 4 says plainly
-  what the one call judges and that a candidate joining a view gets one more call for its evidence; the Reuters example
-  relays NVDA's 8-K; decision numbers are taken out of rule sentences (status lines and decision lists keep them).
-- Second round: two more read-only Codex reviews of the result found fourteen, all checked and fixed. Two were
-  Claude's own slips in this pass: a time rule rewritten as "排先后、算日期只看发布日", which contradicted processing in
-  sequence-number order (now "每条信息只用一个日期：它的发布日", ordering untouched); and the not-a-duplicate case fixed in one
-  rule but not in the first check and the field table (now in all three, and `supersedes` is used in classification).
-  The rest were wording: a few 格 still meaning a table cell, 官方动作 / 官方行动, "叠在观点库上", 答不出 / 等答案 / 合并 listed
-  differently in two places, the PRD index title, an example's subject.
-  A third, short Codex check of those fixes found one more place, the `copy_of` field, now with the same condition.
-- Enforced: `docs/check.py` rules out 对上, 并进, 血缘, 写入者, 只追加, 一条轴上 (22 control pairs); the page data, the
-  in-scope PRDs and `README.md`.
-- Seals: v9 in `docs/archive/2026-10-21-v9/` with `SHA256SUMS`.
-## D53 · 2026-10-21 · A full line-by-line read of the page and PRDs, in rounds
-
-- By: Alex ("再 review 几轮你做的不够仔细需要完整的全部看过").
-- How: each round splits the in-scope files among five read-only Codex reviews; each reads its files from the first
-  line to the last and reports the line ranges it read, checking wording, consistency, logic, examples and anything
-  not decided. Claude reads every PRD in full in the same round. Every finding is checked against the text first; a
-  round follows a round until one finds nothing that would make a reader do the wrong thing or fail to understand.
-- Round 1: five reviews and Claude's read found about a hundred items. Changed, no rule added: a view's dependents read
-  its conclusion (state and reasons), not its state alone; the glossary's 依赖 covers two theme views (same or opposite
-  direction) and dependencies are not only from object to theme views; prompt part 1 says company numbers follow the
-  fiscal year; the ladder is written by extraction and kept when the view opens; the late February report in the AMZN
-  example drops only its outdated forecast; a correction of an item is described without an ambiguous "it"; the
-  matching call is said to also choose dependencies wherever the labels describe it; classification's time rule
-  says processing follows the sequence number, not the publication time; T2 includes exchanges' quarterly reports; an
-  IR deck marked as results is T1, other IR decks T5; T9 sends company-hosted talks to T4 by organizer, as rule 7 says;
-  rule 12 is about views and analysis; the measurement split T11/T15 applies to activity measurements only; scans
-  with a text layer are classified by the rules; "不算材料的东西" is titled for what it holds; companies, crypto and
-  commodities outside the universe are all kept out of the review pool; a re-sent item is skipped only when processing
-  finished; Config's settings cell is split into sentences; the system diagram no longer shows the final verdict
-  "writing back"; English labels on the page are Chinese; decision numbers left the explanatory text; the
-  classification page and node say what the simulation does and does not cover.
-- Round 2: five reviews found 24. Two were Claude's own slips in round 1, now fixed: a correction re-judged every
-  view linked to the item's evidence, also where only a relayed source changed (now only views linked to changed or
-  deleted sentences); and extraction's check named only a sentence, which would refuse evidence from a table cell
-  (now a sentence or a table cell). Also: the views node lists every case not opened and that a candidate joins only
-  an open view; the structure tree gives a theme-to-theme dependency its same or opposite direction; the state check
-  is described as checking the citations against those rules, not their mere existence; a number dependency reads
-  that year's view; four classification fields are marked as used in classifying; Config's summary separates the
-  search size from the three model settings; labels on the page are Chinese.
-- Round 3: three of five reviews found nothing; two items fixed (the current state lists every case not opened;
-  extraction stores the cited sentence or table cell).
-- Round 4: four of five reviews found nothing; the system overview's review found three, fixed: the glossary's 归入
-  says the view must still be open; its 出处 includes a table cell; the README example sets the dependency in the views
-  database, not in extraction. A fifth read of those files found nothing. Every in-scope file has now been read in
-  full by a review that found nothing.
-- Round 6, six cross-cutting reviews (one item followed end to end; the glossary word by word; every number and
-  list; a new reader answering sixteen questions; the rules against the decisions; Claude's own D52 and D53 edits):
-  the new-reader and own-edits reviews found nothing. Fixed: the NVDA example quoted "charges of up to approximately
-  $5.5 billion", which the 8-K does not say (it says "up to approximately $5.5 billion of charges"), so by the
-  extraction check that evidence would have been refused; "留下的状态" for what earlier items wrote, where 状态 means
-  a rung; an English "upstream views" left in CURRENT_STATE; the identifiers field marked as used in classifying; the
-  review pool row in the views PRD names crypto and commodities too. Not changed: D40's request and raw answer are
-  required for matching records, not for every model call, so Config's acceptance line stands.
-- Round 7, the same six reviews: five found nothing; the glossary review found two, fixed ("状态" for how far a
-  matter has got, in the replacement row; "template" for a category's prompt in CURRENT_STATE). Round 8, the glossary
-  review again: nothing.
-- Round 9, a final full line-by-line read by five reviews: nothing (two reviews were rerun after the model was
-  at capacity).
-- Not changed in round 2: missing fields go back to upstream and wrong identifiers are not valid, as the rules say,
-  so the review pool's "信息缺东西 → 退回" stands; the simulation's 13F sample joins the open defects.
-- Not changed: dispatch's completeness check lists what dispatch itself needs; the required fields are checked in
-  classification's first step, so the two do not conflict.
-- Found in the simulation script, which is not changed at the POC stage (CURRENT_STATE, open defects): it merges a
-  copy without looking at the replaces-version field; it does not check fields required only in some cases; one
-  sample is a single XBRL fact, which is not pushed in; one branch treats a same-issuer, same-day item as a copy.
-- Seals: v10 in `docs/archive/2026-10-21-v10/` with `SHA256SUMS`.
-- Seals: v11 in `docs/archive/2026-10-21-v11/` with `SHA256SUMS`, after rounds 6–9.
-
-## D54 · 2026-10-21 · A view's state is frozen at its due date; pull mode runs at the end of the day
-
-- By: Alex. Asked how the final verdict fits the rebuilt views database, Claude set an "answer" apart from the
-  state and asked whether to wait for the due date's items before closing. Alex: "为什么会有状态和答案的区别？最后到期日的
-  状态就定格就好，为什么会有答案？"; "为什么要等？不合理啊"; "just like run it at the end of the day … the other mode
-  will proactively run through theses and update holistically by end of day, or like a certain cron job with a
-  certain time interval. All you're dealing with right now is streaming data … you don't need to care about this";
-  "pull再做啊，记录起来".
-- Decides:
-  1. A view has one state (D46 item 1) and no answer apart from it. At the due date the state is frozen where it
-     stands: that rung is the view's conclusion, and the view closes. What settles the debate (the annual report,
-     the official action) comes in as evidence and moves the state like any other (D46 item 3). A view that depends
-     on a closed view reads its frozen state.
-  2. Pull mode runs at the end of the day, or on a cron interval: it goes through the views proactively and updates
-     them as a whole. Freezing the views due that day is part of that run. Nothing waits for the day's items.
-  3. Stream mode handles no timing: due dates, freezing and when pull mode runs are pull mode's (D14). Pull mode,
-     with what is left of the final verdict, is designed later.
-- Dropped: Claude's pull-mode proposal on how an answer is set at the due date (the first published value; scoring
-  the state before the item that brought the answer; waiting for every item published on or before the due date),
-  since there is no answer apart from the state and nothing waits; D29's wait for those items; the sentence "到期拿答案
-  对一下，就知道判得准不准", which read as scoring against a separate answer (scoring was Claude's proposal, D45).
-- Open, for pull mode: how its run works (D14); Claude's two remaining proposals (views that cannot be answered or
-  wait for a number to be published; the daily duplicate check); whether the final verdict stays a step of its own
-  (Claude proposed folding it into pull mode, since every re-judgement already reads all of a view's evidence; not
-  confirmed). Config's one setting for the final verdict (D29, frozen) stands until that is decided.
-- Wording: 定格 replaces 答案 (the glossary's row; `docs/check.py` rules out 答案, with a control pair); Claude's
-  proposal "等答案" is called 等公布.
-- Changes: D14, D29, D46, D51 item 4 (who sets an answer at the due date is settled); the frozen views database (D48)
-  through this decision.
-- Pages: the final verdict and pull mode PRDs lead with what D54 decided and keep the old draft in a section of its
-  own; on the system map pull mode points to the views database (freezing) and to the final verdict (whether it stays a
-  step is open). "收盘后" in a first draft was corrected to the end of the day, as Alex said.
-- Checked: Codex read the change read-only (every in-scope file in full) and found three, all fixed: two places
-  explained "no wait" as if the settling item were always processed before freezing; the final verdict page opened
-  with the old flow as the current one; the system overview's module table left D54 out of the views status.
-- Enforced: `DEPENDENCY_TREE`, `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `VIEWS_OPEN`, `VIEWS_PROPOSED`, the views
-  page's introduction and the verdict page's status line in `docs/system-design/new-facts.js`; the summary, the views,
-  verdict and pull nodes and the system view of `docs/system-design/new-design.js`; `docs/prd/00-system.md`,
-  `05-extraction.md`, `06-views.md`, `07-final-verdict.md`, `08-pull-mode.md`; `AVOIDED_WORDS` and `WORD_CONTROLS` of
-  `docs/check.py`.
-
-## D55 · 2026-10-22 · The final verdict checked against the rebuilt views database; a removed object's views stop updating
-
-- By: Alex. He asked "最终判定模块已经定稿了吗？你来review 一下和我们最新改的模块的consistency", then "你一个一个和我核对，讲人话".
-  On a view whose object leaves the list: "这个我自己定就好了，我们manual改名单，如果不update的name 就放个flag 不要继续更新即可".
-  On the other two findings: "可以".
-- Decides:
-  1. The research list is edited by hand. A view whose object is taken off it is kept, flagged no longer tracked, and
-     no longer updated. This replaces D31's "not judged at its due date", written when the old final verdict judged
-     every view at its due date; since D54 nothing is judged then. Claude's "not frozen at the due date either" is not
-     written: no longer updated covers it. The D31 rule was Claude's addition, not Alex's words.
-  2. The final verdict card's inputs, outputs and checks start with "旧稿：", as its purpose does: they still name
-     premises and conditions.
-  3. The final verdict PRD's opening note, and the same list on the page (the card's open item, the detail page's
-     status line), name every part of the old draft no longer used, adding the 7-day backstop for a weakened premise
-     (already retired in the pull mode PRD) and sending a view on a disagreement within a tier (replaced by D38).
-- Checked: Claude read the final verdict, pull mode, views database, system overview and Config against D51 and D54.
-  The final verdict is not final: only D54's freezing is decided, and whether it stays a step waits for pull mode
-  (D54). Each trigger of the old draft has a place in the rebuilt design (re-judging, D51; freezing, D54; the rule for
-  corrected items); nothing is decided from that. Three inconsistencies were found and gone through with Alex one by
-  one; all three are fixed. No mechanism is added.
-- Changes: D31 (the rule for a view whose object leaves the list); the frozen views database (D48) through this
-  decision.
-- Enforced: `LIFECYCLE_TREE`, `VIEW_FIELDS` and the verdict page's status line in `docs/system-design/new-facts.js`;
-  the views and verdict nodes of `docs/system-design/new-design.js`; `docs/prd/00-system.md`, `06-views.md`,
-  `07-final-verdict.md`, `README.md`.
-- Changed by D57: "no longer tracked" is gone; a view has one switch, open or closed, and a person closes or
-  reopens it by hand.
-
-## D56 · 2026-10-22 · A full sweep before sealing v12
-
-- By: Alex ("你准备freeze 但是完整扫一遍"), then, as Claude went through the findings one by one: "可以", "ok",
-  "可以", "ok".
-- How: seven read-only Codex reviews, five split by module as in D53's rounds, one on the final verdict and pull
-  mode's current parts, one on every change since v11 (`git diff 35bb392`: the UI redo 9886c79, D54, D55); Claude
-  read every PRD and the repository README in full. Three reviews found nothing; the diff review confirmed the UI
-  redo changed no text. Four findings remained after checking each against the text.
-- Decides:
-  1. Only open views are re-judged: a view frozen at its due date or flagged no longer tracked is not re-judged when
-     what it reads changes. This follows D54 (frozen) and D55 (no longer updated); the rule said "a view is re-judged
-     when what it reads changes" without the scope, so a correction or a dependency's change would have re-judged a
-     frozen view. Written in the re-judging rule, intake step 7, the views acceptance criteria and the glossary's 重判.
-     Changed by D57: the scope reads "only open views"; closed covers both frozen and closed by hand.
-  2. The decision lists that still described old-draft content as current now say so: the final verdict PRD's D30
-     (conditions, replaced by D38) and D31 (premises, replaced by dependencies), the system overview's D29. D55 item 3
-     had fixed only the final verdict PRD's opening note; these lines are the same class.
-  3. Classification's time rule 2 says the stream has no "today"; pull mode, the only place that acts on time, gets
-     its "now" as an input. "系统里没有‘今天是哪天’" read as if pull mode could not act on dates (D14, D54).
-  4. The repository README follows D54 and D55: the decision range, the log's step count, pull mode's run and
-     freezing, the final verdict and pull mode statuses, and v12 as the current sealed design. D54 had left it out.
-- No mechanism is added.
-- Changes: D12's enforcement in classification (frozen, D19, D37) and the frozen views database (D48), through this
-  decision.
-- Enforced: `DEPENDENCY_RULES` and `INTAKE_STEPS` of `docs/system-design/new-facts.js`; `TIME_RULES` of
-  `docs/system-design/new-classification.js`; the views node of `docs/system-design/new-design.js`;
-  `docs/prd/00-system.md`, `02-classification.md`, `06-views.md`, `07-final-verdict.md`, `docs/prd/README.md`; the
-  repository `README.md`.
-
-## D57 · 2026-10-22 · A view has one switch: open or closed
-
-- By: Alex, when Claude asked where to write "only open views are re-judged": "So, a thesis basically can have like
-  an active and inactive flag. That's it. … It's very simple system design. The active flag can be turned on and off
-  by me if … the asset gets delisted."
-- Decides:
-  1. A view has one switch, open (active) or closed (inactive), and nothing else; D55's "no longer tracked" label is
-     gone. The design's existing words 开着 and 关了 name the two positions; no new word.
-  2. Only open views are updated: a closed view is not re-judged, keeps the state it had when it closed, and stays in
-     the database, searchable. A view that depends on it reads that state and its reasons.
-  3. At the due date pull mode freezes the state and closes the view (D54). A person can close or reopen a view by
-     hand, for example when the asset is delisted; the research list is edited by hand too (D55).
-- Not changed: when a superseded piece of evidence is still linked to a closed view, the new piece is linked there
-  too; a link is a record, not an update of the view's state, and adding a refusal would be a new mechanism.
-- Checked: the second round of Codex reviews (five, on the files D56 touched) found the "only open views" scope
-  missing in five more places: the views node, the system overview's two-modes table, the README, and the rules for
-  superseded evidence and for corrections. All five now say open views; Claude's question on where to write the scope
-  is answered by the one switch. Two of the five reviews found nothing.
-- Wording: 开着、关了 gets a glossary row; `docs/check.py` rules out 不再跟踪, with a control pair.
-- Changes: D55 item 1, D56 item 1; the frozen views database (D48) through this decision.
-- Enforced: `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `INTAKE_STEPS`,
-  `EVIDENCE_NOTES`, `ORDER_RULES` of `docs/system-design/new-facts.js`; the views node of
-  `docs/system-design/new-design.js`; `docs/prd/00-system.md`, `06-views.md`, `docs/prd/README.md`; the repository
-  `README.md`; `AVOIDED_WORDS` and `WORD_CONTROLS` of `docs/check.py`.
-- Changed by D58: each manual close or reopen is a record (who, after which item number); the rule that every
-  change carries a source covers the changes items cause.
-- Seals: v12 in `docs/archive/2026-10-22-v12/` with `SHA256SUMS`: the design after D54–D57 and the full sweep of D56.
-
-## D58 · 2026-10-22 · A deep review before freezing everything but pull mode
-
-- By: Alex ("你为什么不跑一个非常长且细致的 overall read and reasoning of this system deisgn so far - consistency in
-  wording - consistency in logic - specifity in writing and description - system design flow and state 你自己要超级深度的研究以及多轮的反攻来自洽。
-  不要自己加戏，我们当前的设计需要完整的freeze (除了 pull mode) 你现在就深入的review，直到你自己满意可以定稿，不要偷懒或是不真的读代码，做仿真").
-- How: Claude read every PRD, the page data, the renderer's visible text and D38–D57, traced items through the stream
-  and wrote down eight candidate problems of its own. Eight rounds of read-only Codex reviews followed, by angle: an
-  end-to-end simulation of eighteen items (dispatch, extraction, the seven intake steps, the due date and manual
-  switches); state-by-event tables for a view, a piece of evidence, a candidate and an item; wording against the
-  glossary; whether an engineer could build each step from the text; every decided rule against Alex's words and the
-  decisions; an attack on Claude's own candidates; the input side with `simulate_classification.py` run; a new reader
-  answering seventeen questions; every change since v11 read in context; and line-by-line reads split by module.
-  Each finding was checked against the text before a change. The rounds found about 20, 7, 5, 7, 3, 2, 1 and 1;
-  in the last two rounds eight of nine reviews found nothing, and the last finding was a cross-reference.
-- Decides (written out, no mechanism added; each follows a decision in force):
-  1. A dependent object view writes which end of the other view is bullish for it; a dependent theme view writes
-     whether the two ladders run the same way or opposite (it was written only for two theme views).
-  2. A waiting arrow records which chain (that of a view shown to the model) and which year; it connects when that
-     year's view is succeeded on that chain.
-  3. A view covers what happens up to its due date. Prompt part 5 gives each listed view's question, what it looks
-     at and its due date (no state or evidence); what happens after the due date goes in as a candidate view, so a
-     closed view a dependent still points to is succeeded rather than given evidence it will not use.
-  4. Matching shows each existing view's question, what it looks at, ladder, due date and whether it is open. A
-     candidate that is the same thing and period as a closed view is not opened ("a closed view can only be
-     succeeded"). A successor's ladder runs the way its predecessor's did, with the candidate's thresholds.
-  5. Evidence linked to a candidate view, even if also linked to existing views, is compared once, after the
-     candidate's place is known, under every existing view it links to; evidence only on a new view is new.
-  6. Re-judging: only open views; an existing piece newly linked to a view counts as its evidence changing; a piece
-     that only gains a source does not by itself trigger re-judging; "changed or unchanged" compares with the
-     conclusion before this round, retries included. Writing puts themes before objects; judging follows the
-     dependencies. Universe rule 8 says dependents still open are re-judged.
-  7. "This year and next" limits which years a candidate may open, one view per year; last year's view stays open
-     until its due date (counting all open views would close it before its due date, against D54).
-  8. A conclusion is a state with its reasons: at the due date the rung and its reasons are the view's last
-     conclusion, and dependents read the state and reasons a closed view had when it closed.
-  9. Each manual close or reopen is a record (who, after which item number); the rule that every change carries a
-     source covers the changes items cause. "One open view per thing" is the rule matching keeps when it opens views
-     (D44); a view a person reopens is outside it.
-  10. Wording: 官方行动, not 官方动作; decision numbers out of body text; the headings 一条观点开着还是关了 and 已经定的;
-      the page's open items are called 还没定的, as in the PRDs; the map edge between extraction and the views
-      database says what goes each way; pull mode "only decided when it runs"; 并进 out of the final verdict and pull
-      mode.
-- Rejected after review: Claude's own idea to list only open views in prompt part 5 (it changes D42's input; the due
-  date answers the case instead); adding a dependency to the AMD example (the model chooses, and #3 is judged as new
-  anyway); a pull-mode open item on number views whose publication day is not known yet (pull mode is not designed).
-  Kept as is: a manually closed view whose source is later corrected loses the old sentence and does not take the
-  new one (closed views are not updated).
-- Recorded, not changed (the script is not changed at this stage): three gaps in `simulate_classification.py`, in
-  `docs/CURRENT_STATE.md` under open defects.
-- Open, for Alex (in extraction's 还没定的): how a candidate view names its object when the item's tags do not carry
-  it (a theme not tagged, another company named in the text), since step 5 checks the object is in the universe;
-  and what a candidate view read from his own memo does without other evidence, since classification counts the memo
-  as a view to track, not evidence, and a candidate view carries at least one piece of evidence.
-- Freeze: every module except pull mode and the final verdict, which is designed with it, is frozen in this text; a
-  change needs a new decision.
-- Changes: D42, D44, D46, D51, D57 (notes under each); the frozen universe, extraction and views database through this
-  decision.
-- Enforced: the page data (`new-facts.js`, `new-design.js`, `new-universe.js`), `render.js`; `docs/prd/00`, `01`, `05`,
-  `06`, `07`, `08`, `README.md`; `docs/CURRENT_STATE.md`, `README.md`.
-- Seals: v13 in `docs/archive/2026-10-22-v13/` with `SHA256SUMS`.
-- Changed by D59: Alex answered both open questions; the freeze holds, with D59's text.
-
-## D59 · 2026-10-22 · How a candidate view names its object; a view from Alex's own memo
-
-- By: Alex, to the two questions D58 left open, each with two options and Claude's lean: "1 选 A，2 选 A，然后再做一次".
-- Decides:
-  1. A candidate view names its object as follows. Prompt part 3 carries the item's related objects and, appended,
-     every theme in the research universe (a few dozen); a candidate about a theme picks it from that list. A company,
-     crypto asset or commodity is written by ticker, crypto symbol, commodity code or name, and code looks it up the
-     way classification looks up object identifiers. What is found but outside the universe, what is not found, and a
-     theme not in the universe keep their existing outcomes (noted only; the review pool; a suggested theme). Step 5
-     checks the object this way.
-  2. Alex's own memo (T8 with him as the author): its judgements are read as candidate views, not as evidence (as
-     classification says). Such a candidate may carry no evidence; once opened, its state is "还没判" until evidence
-     first links to it, when it is judged for the first time; a view that depends on it reads "还没判" until then. The
-     code check that a judgement says "changed" now covers a view's first judgement, whenever that comes.
-- Changes: D42 and D46 item 16 (a candidate carries evidence, except one read from Alex's own memo); the frozen
-  universe (its themes also go to extraction), extraction and views database, through this decision.
-- Enforced: `TEMPLATE`, `PROMPT_EXAMPLE`, `PROMPT_NOTES`, `EXTRACT_TWO`, `EXTRACT_OPEN`, `STATE_RULES`,
-  `DEPENDENCY_RULES`, `INTAKE_STEPS`, `VIEW_FIELDS` of `docs/system-design/new-facts.js`; the extract, views and
-  universe nodes and an edge from the universe to extraction in `docs/system-design/new-design.js`;
-  `docs/prd/00-system.md` (the glossary's 状态, the side lines), `01-universe.md`, `05-extraction.md`, `06-views.md`.
-- Changed by D60: written out wherever it applies (the second deep review); the code-or-name lookup follows registered
-  names in the reference data.
-
-## D60 · 2026-10-22 · The deep review again, after D59
-
-- By: Alex ("1 选 A，2 选 A，然后再做一次").
-- How: as D58, from the top, with D59's cases added: the flow simulation took 21 items (a theme the tags do not
-  carry, another company named in the text, a memo of Alex's with no facts, then evidence for it, a view depending
-  on a view still "还没判"); the state tables took the state "还没判"; the new reader answered two more questions;
-  one review attacked only what D59 had written. Five rounds: 13, 8, 7, 6 and 7 read-only Codex reviews, each
-  finding checked against the text first. They found about 8, 5, 3, 1 and 0; the last round's seven reviews found
-  nothing.
-- Decides (no mechanism added; D59 written out where it applies, and wording):
-  1. Alex's memo: its judgements all go in as candidate views, may carry no evidence and are not evidence. This is
-     now in prompt part 1, extraction step 2, the hand-over table, the "读到一句话或一个数" tree (memo judgements do
-     not go through it), the extraction page, the nodes, the glossary and the summaries; "only what the views do not
-     cover" governs other items.
-  2. A candidate's object: a theme from the universe's themes in part 3, or written out when the universe has none;
-     a company, crypto asset or commodity by code or name, as Alex chose, looked up in the reference data, a name
-     only as registered (as classification does for company names). A first-round narrowing to company names only
-     was Claude's slip, reverted.
-  3. "还没判" is in the state's definitions; a closed view keeps the state it had; the lifecycle and the re-judging
-     summaries say a memo view without evidence is not judged. Universe rule 8 now says dependents are re-judged by
-     the views database's rule rather than restating its conditions, so they live in one place.
-  4. Matching shows each existing view's object too; code checks whether a cited piece is marked replaced (which
-     also covers deleted sentences); writing puts theme views before object views, and an object view is written by
-     its company's, crypto asset's or commodity's queue; a manual switch counts "after the item with which sequence
-     number"; only the sentence or cell a view's or a piece's source cites is stored.
-  5. On the map the universe → extraction edge (themes) and the views → review pool edge run between the rows,
-     not through other modules.
-- Recorded, not changed: the classification simulation reads related objects from an old field name, so its pass
-  does not test the current field (`docs/CURRENT_STATE.md`, open defects).
-- The freeze of D58 holds, now with D59 and this text.
-- Enforced: the page data (`new-facts.js`, `new-design.js`, `new-universe.js`); `docs/prd/00`, `01`, `05`, `06`,
-  `README.md`; `docs/CURRENT_STATE.md`, `README.md`.
-- Seals: v14 in `docs/archive/2026-10-22-v14/` with `SHA256SUMS`.
-
-## D61 · 2026-10-22 · Clean-up: a code review, bloat removed, superseded seals out of the tree
-
-- By: Alex ("你跑一个code reveiw 移除不必要的垃圾和bloat, 更新好所有文档，readme, agents.md 然后push").
-- How: three read-only Codex reviews (code, text bloat, the repository); each finding checked against the files; a
-  read-only review of the result for meaning lost or changed.
-- Decides (no rule changed):
-  1. Sealed copies v7–v14 leave the tree; v1 (the earlier design) and v15 (the frozen design) stay. Each removed copy
-     is in Git: v2–v7 in `94622a5`, v8 `7830a18`, v9 `267c89d`, v10 `8d617c7`, v11 `35bb392`, v12–v14 `3da83a9`. D50
-     called its removal of v2–v6 a one-time exception; this is a second, at Alex's request.
-  2. Text: status lines keep the frozen date and what is open, the change history being in each PRD's decision list
-     and here; the front summary is shortened; summaries point to the one re-judging rule and to the memo note
-     instead of restating them, and the glossary's 重判 points to the rule; a sentence the map caption said twice is
-     said once; `docs/CURRENT_STATE.md` keeps the status, the open defects and the next task and points to the PRDs
-     for the design.
-  3. Code: styles and two colour tokens no page uses (`design-system.css`); edge label coordinates `render.js`
-     computed and never read; the font script's note on a `fonts.css` that does not exist.
-  4. `AGENTS.md`: the sentence on scripts made true; three lessons written at their decisions: bring Alex only the
-     choices that change what the system does; a rule's text has one owner and other places point to it; before a
-     freeze, review in rounds by angle until a round finds nothing.
-- Not changed: `copy_old_design.py` copies 113 configuration fields the Old tab never reads; trimming them needs a rerun
-  against the old repository's snapshot to save 5 KB, so they stay.
-- Seals: v15 in `docs/archive/2026-10-22-v15/` with `SHA256SUMS`, the design as frozen after D58–D61.
-
-## D62 · 2026-10-23 · The POC build: Alex's choices, in his words
-
-- Build started on the frozen design (2026-10-23): "数据准备好了之后，你清洗干净就可以准备开始去建这个 POC 的管线", "尽量按照那个系统设计来……当然没有这么复杂……做简洁一点". The simplifications are listed in `docs/poc/pipeline-plan.md`; nothing in the frozen PRDs changed.
-- No cap on the number of views: "不一定要二到四个问题啊". The model decides; code checks only the shape (ladder, due day, quarter, year).
-- The corpus first, whole and original: "先建好这个素材库……再尝试来建构这个管线"; "要像是原始数据……不能是你自己已经处理过的". Industry, macro, geopolitics and noise added: "起码多两倍的数据".
-- Test small before any full run: "你最好小范围的测试下不要全部跑完然后完全不 work 或是质量有问题再全部重跑". The first week, then August: "你别全跑，到 8 月底先。我们来完整的看下结果".
-- Extraction variance is fixed in the prompt, not by sampling several times: "太浪费钱和时间了，那你的 prompt 就应该改成可以抽的出来的方式". The v2 extraction prompt replaces taste words and the company-specific line with rules checkable against the material (the firm's total and largest-segment full-year numbers, every full-year number the firm guides, dated pending events); measured on the same transcript three times, the core set is stable (`docs/poc/pipeline-plan.md`).
-- Model: gpt-6-luna stays: "那我觉得还是用 luna 吧，记录这个比较结果". The comparison with DeepSeek-V4.1-Flash-1017 (the `deepseek-flash` endpoint) is in `docs/poc/pipeline-plan.md`: the only way to get schema-valid JSON from it was a strict tool call with thinking off (3/3; json_object 2/3 and 1/3; thinking-mode forbids a forced tool_choice); about five times cheaper (≈$0.01 against ≈$0.05 per transcript), 18–22 s against 26–31 s, three times more evidence, the candidate set a little less stable; matching and re-judging were not tested on it.
-
-## D63 · 2026-10-24 · Re-judging once a day; the first window ends on 2026-08-15
-
-- Alex, shown that re-judging was half the cost (a hot view re-judged after every item, each call carrying all its evidence): "是的应该要一天一次". Re-judging moves from each item's round to one round per day: the day's items are extracted, matched and written in sequence as before; after the last item, and before pull mode freezes the views due that day, one judging round runs over every open view whose reading changed that day, dependencies first, each view once, dependants added when a dependency's conclusion changed. The judgement is recorded under the day's own processing record (`day:<date>`) at the day's last sequence number. This amends 06-views step 7 / D51 for the POC; the design text is updated when Alex takes the module up. The stream still never reads the calendar: the day comes from the replay (in production, from pull mode).
-- Reasoning effort stays medium: "可以之后试试看比较质量，这次先别改".
-- The window: "嗯改成 8/15 吧；然后已有的结果封存，然后改一下重判的设置，然后继续跑完剩下的". The results through the last completed day are sealed in `poc/data/sealed-2026-10-24-run3-through-0728/` with `SHA256SUMS`; the same views database continues from the next day to 2026-08-15 with daily re-judging.
-
-## D64 · 2026-10-24 · Hide the mock header's date label
-
-- Alex: "remove this", pointing to the "As of 2026-08-15" label. Remove that label from the mock header; replay dates and the stored data window stay as they are.
-
-## D65 · 2026-10-24 · Remove black focus outlines from the mock
-
-- Alex: "remove this pattern from the UI", pointing to the black outline around the claim slider while dragging. Disable focus outlines throughout the mock, including both sliders and buttons, in its own stylesheet.
-
-## D66 · 2026-10-24 · Remove the canvas hint and shorten the search field
-
-- Alex asked to remove the bottom canvas hint and make the search bar shorter. Remove the hint and cap the input at 480px, allowing it to shrink when space is limited.
-
-## D67 · 2026-10-24 · Simplify the view card headers
-
-- Alex asked to remove the unnecessary counters and questioned the "Thesis view" / "Factor" badges. Remove the rounds, evidence and facts counters and both role badges from canvas card headers. The underlying relationships and detail-panel history remain available.
-
-## D68 · 2026-10-24 · Put the current judgment in the card header
-
-- Alex asked to move the score and label, such as "+1 Bullish", into an upper-right pill on the card. Move the existing state display into the header; replay continues to update it.
-- Alex then asked for centered, consistent pills. Use equal padding and a common height; hide an empty label so a Yes/No state has no spare gap beside its text.
-
-## D69 · 2026-10-24 · Use matching score circles on charts and state pills
-
-- Alex specified black-filled number circles for +2/+1, grey for neutral, and white-filled circles for bearish scores. The chart axes and current-state pills share the same icon and palette, including in the detail panel. Chart rows have enough room for separate circles. Yes/No remains text.
-- Superseded by D70 after Alex rejected how the circles looked.
-
-## D70 · 2026-10-24 · Simplify the score display after visual review
-
-- Alex rejected the stacked circles and tiny circle inside the header pill, asking for a better design. The axis now uses quiet score labels and highlights only the current state. The header uses a single badge with a readable score and a separated label. The current axis marker and badge share black for positive, grey for neutral, and outlined white for negative; Yes/No uses the neutral treatment. This replaces D69's circles on both the canvas and detail chart.
-
-## D71 · 2026-10-24 · Use black for Yes and white for No
-
-- Alex specified that binary states use black for Yes and white for No. The shared state palette applies this to both the header badge and highlighted axis label, including the detail panel, replacing D70's neutral treatment of binary states.
-
-## D72 · 2026-10-24 · Remove redundant card footer tags
-
-- Alex called the object and view-kind tags redundant. Remove these two tags from canvas view cards; retain the due date. Object and kind remain available in the detail panel.
-
-## D73 · 2026-10-24 · Use one title style across canvas cards
-
-- Alex asked for consistent card-title font sizes. Thesis and view titles share one CSS rule: 16px, weight 500, 22px line height; card-specific size overrides are removed.
-
-## D74 · 2026-10-24 · Remove the change-summary line from view cards
-
-- Alex called the "1 change | since…" line redundant. Remove it, including the "no change since…" form, from canvas view cards. The chart and detail panel retain the change history.
-
-## D75 · 2026-10-24 · Give daily evidence volume its own chart band
-
-- Alex asked for a clearer X axis and more height for the evidence bars. Canvas cards now separate the state history from a 52px evidence band labelled "Evidence / day". Each bar counts the stored evidence records arriving that day, with a labelled zero and upper count scale; it does not count distinct real-world events. A single set of aligned month-and-day labels serves both plots. The replay reveals both plots together. Cards are 392px tall to fit the band, and binary views use the same plot height as five-state views.
-
-## D76 · 2026-10-24 · Hivemind is a database with a search engine on top; the caller chooses
-
-- Alex: "我们不要这样 POC，我觉得把我们的 poc 现在打包成一个 MCP 或是 API" … "现在我们的观点库上面需要 overlay 一个 search engine interface 能解析语意，返回例如 top-10 对应观点之类的，然后让 llm 分析看选那几个" … "agent 调用这个工具，返回的是观点，他自己选择要那些观点不就完事了吗" … "hivemind 就是一个数据库上面有个搜索引擎，你理解 scope 了吗？写好，然后让 codex subagent review".
-- Decided: the views ledger gets a read-only service: `search` (semantic top-k over each view's own text; evidence is anchored under the view and is not indexed), readers (`views`, `view`, `history`, `evidence`, `record`, `changes`) and `evaluate` (a threshold against the judged band), all as of a calendar day (D12, D13). Hivemind does not pick or arrange views for the caller (no issue-tree tool), does not know users and stores no theses; the agent that calls it does that. Two thin fronts: MCP (stdio) and HTTP (127.0.0.1). The search index is a derived file beside the ledger, never a write to it. Design: `docs/poc/service.md`.
-- An idea no view covers: settled in D91 (null).
-
-## D77 · 2026-10-24 · Label the state chart
-
-- Alex asked for an "AI score" title above the top chart, matching "Evidence / day". Both titles use one shared style and align to the same left edge.
-
-## D78 · 2026-10-24 · Name the user input Idea and stored questions Thesis
-
-- Alex: "these should be called Thesis not view, the initial card is called Idea" and "now scrub the FE and logic". Apply Idea to the input card and Thesis to matched questions throughout frontend labels, placeholders, empty states, tooltips, detail headings, judgment display text, CSS and helper names. A single frontend adapter maps the existing ledger's `views`, `view_id` and kind values into the UI terminology; the service's wire format stays compatible. This clarifies D76's wording: Hivemind stores the questions now displayed as theses, not user ideas.
-
-## D79 · 2026-10-24 · Align plot headings to the number column
-
-- Alex asked to left-align "AI score" and "Evidence / day" with the chart numbers. Both titles start at the left edge of the number-label column, and the evidence scale uses that same edge.
-
-## D80 · 2026-10-24 · Give the due date a separate card footer
-
-- Alex asked for the due date below a divider matching the header. Thesis cards have a dedicated 40px footer with a full-width top border; the date is outside the chart body. Cards are 408px tall to retain the plot space.
-
-## D81 · 2026-10-24 · Simplify the thesis detail panel
-
-- Alex asked for a clean, minimal detail panel following the canvas design. The old panel put metadata, counters, score definitions, the full history, repeated reasons and all evidence into one scroll. The mock contains 42 theses, 375 assessments and 1,089 evidence links; the new layout applies to all of them.
-- The header shows the thesis question, current score and assessment date. The due date belongs to the footer. Overview shows the current band, a four-line assessment preview and at most three recent cited records. Full explanations and source quotes expand on request. Metadata and related theses are collapsed.
-- Evidence has text search, a type filter and 20 records at a time. History has a calendar chart shared with the canvas, a selector for every assessment, previous/next controls and expandable reasons, citations and score definitions. The old independent chart and duplicate rendering paths are removed.
-
-| Event | Result |
-|---|---|
-| Open a thesis | Pause replay, capture its date, show Overview using only assessments and evidence available by that date. |
-| Switch tab | Show the selected panel; initialize Evidence or History once for this opening. |
-| Search or change evidence type | Reset the visible limit to 20 and filter the same dated evidence snapshot. |
-| Show more evidence | Reveal the next 20 matching records. |
-| Select an assessment | Update its date, score, explanation and citations without changing the current-score header. |
-| Open before the first assessment | Show that no assessment is available; History and Evidence handle an empty snapshot. |
-| Close or open a related thesis | Close the panel, or open a fresh snapshot for the related thesis at the same replay date. |
-
-## D82 · 2026-10-24 · Use the same font for dates and labels
-
-- Alex: "所有的日期和pill 内日期字体不要用特殊的font, just use the same throughout". The mock uses its regular sans-serif font for dates, numeric labels, pills, charts and detail text; monospace overrides are removed.
-
-## D83 · 2026-10-24 · Center the fan-out and animate connected edges on hover
-
-- Alex asked for the tree to grow symmetrically above and below the middle, with connections at the midpoints of card edges. The Idea and primary Thesis share the vertical center of the supporting-card group. Child cards keep their 24px gap; horizontal spacing leaves room for curves.
-- Every connector records its source and target. Hovering any card highlights all directly connected incoming and outgoing edges with moving black dashes; unrelated edges stay quiet. The Idea participates in the same hover behavior.
-- Layout verification covers zero through four child cards; stored-data browser checks cover two- and three-child fan-outs, midpoint endpoints, no-match layout, and root/parent/child hover behavior.
-
-## D84 · 2026-10-24 · Use right-angle connectors
-
-- Alex asked for more right-angled connectors. Replace the sweeping curves with horizontal–vertical–horizontal paths and small rounded elbows. He then clarified that branches should leave the parent at separate positions, as in the reference: space the outgoing ports 24px apart around the parent’s middle, rather than sharing one point. Child inputs remain at their midpoints; centered fan-out and hover animation stay the same. This amends D83’s shared midpoint for outgoing branches.
-
-## D85 · 2026-10-24 · Thin connectors with directional arrowheads
-
-- Alex asked for thinner lines and arrowheads at their endpoints. Connectors use a 1px stroke in both normal and hover states, with a 10px arrowhead pointing into the destination card (enlarged at Alex’s follow-up request); the arrow follows the line color and the hover dashes keep moving.
-
-## D86 · 2026-10-24 · Replace Idea and Thesis header icons
-
-- Alex asked to redo both icons. Idea uses an outline light bulb; Thesis uses an outline document. Both use the same 16px size, rounded joins and 1.5px stroke.
-
-## D87 · 2026-10-24 · Hover highlights only the path into a card
-
-- Alex clarified that hovering a card must highlight only its preceding connection hierarchy, never outgoing branches. Follow incoming edges recursively back to the Idea. Hovering the Idea highlights no edges; hovering the primary Thesis highlights only Idea → Thesis; hovering a supporting Thesis highlights that full upstream path. Clear the highlight on pointer exit. This replaces D83’s incoming-and-outgoing rule.
-
-## D88 · 2026-10-24 · Refine detail controls, dates and source presentation
-
-- Alex asked for the Thesis icon in the panel header, an X close control, and "Last updated:" followed by a full date. The header uses the existing Thesis icon and an accessible icon-only close button.
-- Replace the moving "Full assessment" disclosure with one paragraph and a button underneath it. The button stays after the text and switches between "Read more" with a down chevron and "Read less" with an up chevron. The Overview and History use the same renderer.
-- Evidence dates show month, day and year. Expanded records put the quoted text in an italic, light-grey block. One "Source document" group contains the publisher and linked title; a separate "Original source" row names the cited original where it differs. Remove the repeated source title, loose attribution and separate "Open source" link.
-
-## D89 · 2026-10-24 · Give the detail panel a clear visual hierarchy
-
-- Alex asked for an overall hierarchy rather than similarly styled headings, prose and controls. The detail title is 20px semibold, section headings 16px semibold, body and evidence text 14px with 24px line height, and metadata 12px. Shared local font tokens keep body, action and metadata roles consistent across Overview, Evidence and History.
-- The current assessment has a light background; sections have consistent spacing and dividing rules. Read more/Read less, navigation and links use one restrained blue accent, making actions distinct from text. This adds an interaction color to the mock; black/grey/white score meanings stay unchanged.
-
-## D91 · 2026-10-24 · An idea the library holds no view on gets null
-
-- Alex, asked what Hivemind returns for an idea no view covers: "没有观点就返回null 啊，然后就代表我们没有记录观点".
-- Decided: `search` answers `results: null` when the library holds no view on anything the idea names as of that day: none of the companies or themes the universe lists is named in it, and the ledger's own text index matches no view. Null means "Hivemind has no recorded view on this". Otherwise the ranked list comes back whole and the caller judges which views, if any, correspond (D76). The envelope (`as_of`, `mode`) stays, so the caller knows which day and which mode said so.
-- Measured before building, on 25 sentences (the four examples, the 16 day-0 sentences, five unrelated ones): a similarity cutoff cannot draw the line, because "NVDA 的 logo 比 AMD 好看" scores 0.49 while real theses on CUDA or China re-opening score 0.35–0.40. The name-or-text rule nulls six of the nine no-view sentences (Tesla, Apple, Bitcoin, a house, the Fed, "黄仁勋是个天才") and none of the sixteen with a view; the three nonsense ideas that name NVDA (a logo, a dream, a split) get NVDA's views back for the caller to reject.
-
-## D92 · 2026-10-24 · Keep the existing monochrome theme
-
-- Alex rejected the added blue and required the existing theme colors only. D89’s typography, spacing and section grouping stay; actions use the existing charcoal tokens with underlines, and neutral backgrounds use theme tokens. This supersedes D89’s blue accent.
-
-## D93 · 2026-10-24 · Simplify detail sections and move the due date
-
-- Alex asked to remove "Browse evidence", remove extra dividers at the bottoms of sections, and move the due date to the right of "Last updated". Remove the duplicate evidence shortcut and its handler. Keep separators only between evidence rows, not after the last row; section and related-thesis boundaries use spacing. The detail footer is removed, and the due date appears beside the update date in the header. Canvas card footers are unchanged.
-
-## D94 · 2026-10-24 · Merge the current assessment and its reasoning
-
-- Alex asked for one unboxed "Current assessment" section: the current assessment is the first, bold sentence, followed by the reasoning and its Read more/Read less control. Remove the separate "Why this assessment" heading. The first cited evidence and first related-thesis item use the same 12px heading-to-content gap as prose sections, without extra row padding.
-
-## D95 · 2026-10-24 · Keep one divider at each section boundary
-
-- Alex clarified D93: keep dividers between sections and between list items; remove only the extra bottom border on the final item that doubled the next section’s divider. Section boundaries use a top border, and list rows use a top border only after the first row. The last row has no bottom border, in both collapsed and expanded states.
-
-## D96 · 2026-10-24 · Present the current assessment as a quote
-
-- Alex asked for the leading assessment sentence to look like a Markdown `>` quote. Use a bold blockquote with a slim grey left border and no surrounding box, followed by the reasoning in the same section.
-
-## D97 · 2026-10-24 · Make the lower detail sections consistent accordions
-
-- Alex asked for Recent evidence cited, Related theses and About this thesis to share the same heading size and expand/collapse behavior. All use the same 16px semibold disclosure heading, spacing and single section divider, and start closed. Remove nested "Depends on" / "Used by" headings; related theses form one deduplicated navigable list.
-
-## D98 · 2026-10-24 · Highlight the assessment row with a quote accent
-
-- Alex asked for a light-grey highlight across the assessment row, then clarified that the left line should fill its height from top to bottom. Use the existing wash color, bold text and a full-height vertical accent; no surrounding card border.
-
-## D99 · 2026-10-24 · Put the related-thesis arrow before the title
-
-- Alex asked for the navigation arrow on the left as an icon, not appended to the question. Each related-thesis row starts with a small outline arrow, aligned with its first text line.
-
-## D100 · 2026-10-24 · Animate all detail expansions consistently
-
-- Alex asked for smooth show/hide transitions for Read more/Read less and every dropdown. Use one 240ms eased height transition for assessment text and all detail/evidence disclosures, with matching chevron motion. Controls stay after their content; the final height returns to automatic sizing.
-- A repeated click cancels the running transition and continues from its visible height toward the new target. Closing a parent settles any running child transition first. The operating system's reduced-motion preference skips the animation.
-
-## D101 · 2026-10-24 · Separate the header dates with vertical bars
-
-- Alex requested "| Last updated: xxx | Due: xxxx". Put each separator with its date label so it stays together if the metadata row wraps.
-
-## D102 · 2026-10-24 · Shorten the evidence heading and use solid disclosure triangles
-
-- Alex asked for "Recent evidence" and solid triangle indicators on section dropdowns. All detail-section headings share a filled triangle pointing right when closed and down when open, preserving the existing smooth rotation and monochrome theme.
-
-## D103 · 2026-10-24 · Align detail labels and values at one readable size
-
-- Alex rejected the smaller labels and loose stacked layout in About this thesis. Definition lists use compact, aligned label/value rows: both 14px with 24px line height, labels semibold, values regular, and a 12px row gap. The shared layout also keeps Score definitions consistent.
-
-## D105 · 2026-10-24 · Animate disclosure content without moving its heading
-
-- Alex reported that Related theses and About this thesis still opened abruptly. The shared handler covered seven disclosure templates, but opened the native details contents before animating the whole details element. Its open-only heading margin and expanded evidence-summary height changed at the same time.
-- Each disclosure now wraps its contents in a clipped region and animates that region from zero to its natural height, keeping the heading and its spacing fixed. Evidence summaries animate their own height when the text expands. Closing keeps contents mounted until the transition ends; repeated clicks and parent/child transitions retain D100's behavior. Disable scroll anchoring inside the detail viewport so the browser does not reposition it during an expansion.
-- Browser verification on About this thesis kept the heading at y=692 through opening and closing; content height was observed at 6.75px while opening toward 108px and 102.14px while closing toward zero. Related theses, keyboard activation, and closing a parent during a nested evidence transition were also exercised.
-
-## D104 · 2026-10-24 · A theme holds a document only if it can move a thesis; Commerce anti-dumping notices do not
-
-- Asked why Commerce anti-dumping and countervailing notices on Chinese goods are not filed under 中美关税, Alex gave the test instead of a ruling: "你自己评价下是不是会有影响的 thesis".
-- Applied on stored data: 89 Commerce notices naming China in the corpus (29 in the run window); none mentions semiconductor, server, data center, GPU, chip, NVIDIA or printed circuit (the one "heat sink" is the aluminum-extrusions scope clause); in the sealed ledger their evidence sits only under five procedural views ("will Commerce publish X by date Y": v44, v64, v65, v66, v85; 0 dependants) and under no view of the 15 companies or other themes.
-- Decided: the rule stays (`official_objects`: the Commerce feed carries no object). The test is general: a document belongs to a theme when it can move a thesis of the universe, not when a case number or keyword matches.
-
-## D106 · 2026-10-24 · Reserve scrollbar space without a track divider
-
-- Alex asked for dropdowns to leave the assessment width and text wrapping unchanged. The shared detail viewport always reserves the same scrollbar gutter across Overview, Evidence and History. Its track is transparent and borderless; only a slim neutral thumb appears when scrolling is possible.
-- Browser verification: opening Recent evidence and its first quote increased scroll height from 602px to 795px while the viewport stayed 709px wide and the assessment text stayed 653px wide. The computed track background is transparent and its border is 0px.
-
-## D107 · 2026-10-24 · Put expanded evidence dates after its sources
-
-- Alex asked to place the date below Original source when an evidence row is expanded and enclose the quoted passage in “ ”. The shared evidence renderer keeps date/type metadata beneath the summary when collapsed, shows it after the source details when expanded, and adds the quotation marks while retaining the existing quote styling.
-
-## D108 · 2026-10-24 · Combine source, type and date on one attribution line
-
-- Alex asked for "Goldman Sachs | Third-party view | date" on the Original source row instead of a separate date line. Expanded evidence appends type and full date to its original-source attribution; where no separate original source exists, it appends them to the source publisher. Collapsed rows keep their existing metadata line.
-
-## D109 · 2026-10-24 · Show the source in collapsed evidence rows too
-
-- Alex asked for the collapsed metadata to include Goldman Sachs or the relevant source. Both states now use source, type and full date in the same order. Prefer the recorded original source; otherwise use the source publisher. The shared evidence renderer applies this across Overview, Evidence and History.
-
-## D110 · 2026-10-24 · Show thesis status in a pill
-
-- Alex asked for Open, Closed and other thesis statuses to use a pill. About this thesis now renders the existing status value in the shared neutral outlined chip; status calculation is unchanged.
-
-## D111 · 2026-10-24 · Use an in-page evidence type menu
-
-- Alex rejected the native operating-system menu for All types. Replace that menu with a white, bordered list directly below the control, using existing theme colors and typography. The selected row has a checkmark, and opening uses a short transition.
-- States: closed → trigger click or arrow key opens; open → option selection writes the existing `detail.tier`, resets pagination and redraws evidence, then closes; outside click, focus leaving, Tab or Escape closes without changing the filter. Escape closes this menu before the drawer. Arrow keys and Home/End move through the options; Enter/Space selects. Accepted values stay exactly All types (empty) plus the tiers already present in this thesis. Only `drawEvidence` reads the chosen tier; data and filter rules do not change.
-
-## D112 · 2026-10-24 · The service runs in Docker; the FE asks it to read an idea; the user's thesis is the idea card
-
-- Alex: "我们来这样做，你用 docker 起一个 mcp /api service, 然后我们的 FE 就是一个调用 luna 然后去访问这个 endpoint 来做出我们现在的 FE" … "我们需要的返回其实是这些 thesis 的各种信息可以 overlay 在 FE 上面" … "还有 user thesis 要能够变成一个 idea card" … "这边有蛮多需要思考和你先自己测试的，我们开始做吧".
-- Decided: the HTTP and MCP fronts run as two services of one Docker image (local ports only). One new route, `POST /ideas`: the service searches (D76, D91), luna reads the top-k and chooses the views that bear on the idea with one line why each and a short reading, code evaluates a number the idea states, and the answer carries the chosen views in the FE's existing data shape so the FE overlays them under the idea card. The model key stays in the service (the credentials file mounted read-only), never in the browser. Hivemind still stores no idea (D76). Design and tables: `docs/poc/idea-card.md`.
-- Measured first, before the FE is wired: the example theses and the day-0 sentences through the route once (cost, seconds, chosen views against the leads).
-
-## D113 · 2026-10-24 · Add the colon to canvas due dates
-
-- Alex requested "Due:" on canvas card footers, matching the detail header label. Date values and formatting stay unchanged.
-
-## D114 · 2026-10-24 · Present score definitions as a table
-
-- Alex asked to replace the loose score-definition list with a table. History now uses aligned Score, State and Definition columns, a neutral header and thin row separators. When the score already names the state (Yes/No), omit the redundant State column. The underlying rungs and their order are unchanged. About this thesis keeps its compact label/value rows.
-
-## D115 · 2026-10-24 · Use a uniform Score change heading
-
-- Alex asked for the history change section to be titled "Score change" consistently. Both previous heading variants use that title; the explanation remains in the body.
-
-## D116 · 2026-10-24 · Simplify history navigation to two right-aligned buttons
-
-- Alex asked to remove the long assessment selector and keep only left/right buttons at the lower right. Place Previous and Next together below the chart, aligned to its right edge. The selected date and score remain in the assessment heading. Buttons still visit every stored assessment and disable at the first/last record; chart selection is unchanged.
-
-## D117 · 2026-10-24 · Strengthen chart headings and separate the two plots
-
-- Alex asked for larger AI score and Evidence / day headings and more space between their plots. The shared chart uses 14px semibold titles and a 36px inter-plot gap (previously 11px medium and 24px). Canvas cards gain the same 12px of height, to 420px, keeping the plot and footer spacing intact. Data, scales and date alignment are unchanged.
-
-## D118 · 2026-10-24 · Keep canvas chart subtitles smaller than detail headings
-
-- Alex clarified that the larger chart titles are too big on the main canvas cards. Canvas AI score and Evidence / day titles use 11px medium; detail-panel chart headings stay 14px semibold. The increased spacing between plots remains.
-
-## D119 · 2026-10-24 · Inspect and anchor history by date
-
-- Alex asked for a hover crosshair and click-to-anchor state in History. Hover previews the calendar date, the last assessment on or before that date, and that day's evidence count; it never changes the selected assessment. A vertical guide spans both plots, with a horizontal guide and dot at the score when one exists.
-- Clicking pins the date and selects that assessment; leaving the chart restores the pinned preview. Previous/Next selects and pins the corresponding assessment date. A date before the first assessment shows "No assessment" rather than borrowing a future state; Next moves to the first assessment. Arrow keys/Home/End move the preview and Enter/Space pins it. Opening another thesis starts without a pinned crosshair. Only History changes; canvas charts and stored data do not.
-
-## D120 · 2026-10-24 · Remove the History hover label and navigation buttons
-
-- Alex asked to remove the floating date/score/evidence label and the Previous/Next buttons. Remove those elements and their unused styling and handlers; retain crosshair hover, click-to-pin and keyboard date selection. The selected assessment date and score remain in the content below the chart, and the chart's accessible value still describes the inspected date.
-
-## D121 · 2026-10-24 · Make quiet-day History selection explicit
-
-- Alex rejected the persistent right-edge crosshair and the confusing behavior between dated events. History omits the canvas replay playhead and the separate assessment marker; its only inspection crosshair is the hovered or pinned date.
-- A click anchors the exact calendar day, even without a new assessment. The content heading shows that day and the active score; a quiet-day note names the assessment date carried forward, and says "No new evidence on this date" only when the selected day's stored evidence count is zero. Dates before the first assessment retain the explicit no-assessment state. Canvas replay stays unchanged.
-
-## D122 · 2026-10-24 · Lock clicked History anchors and keep endpoint dots whole
-
-- Alex clarified that a click must leave a visible vertical dashed line and dot, a quiet-day click should select the closest earlier assessment, and the latest dot needs more right-side room. Pointer movement previously reused and moved the clicked guide. The final clip boundary also passed through the last dot's center (observed x=643 and clip width=643, radius=3.5).
-- Hover previews until a click pins an assessment. After a click, pointer movement does not move that anchor; another click selects a new one. Snap both guide and dot to the last assessment on or before the clicked date, and show that assessment date below. Dates before the first assessment still show no assessment. Use a dark dashed guide and a filled pinned dot.
-- Increase the chart's right inset from 10px to 18px. At the final date, extend the clip to the SVG edge so the whole endpoint circle fits; intermediate canvas replay frames retain their time cutoff. This supersedes D121's exact quiet-day anchor and carried-forward note.
-
-## D123 · 2026-10-24 · Remove the current-date dashed line from canvas cards
-
-- Alex asked to remove the rightmost current-state dashed line from the outer cards too. Canvas charts omit the replay playhead and the final-date vertical grid line; the endpoint dot, date label and intermediate grid lines remain. Replay still updates the score, clip and dot without a vertical cursor.
-
-## D124 · 2026-10-24 · Remove canvas card footers
-
-- Alex asked to remove the due-date pill and the entire bottom footer from the main cards. Remove the footer markup and its unused styles, and reduce card height by its 40px to 380px so no empty footer space remains. Due dates remain in the detail header. Chart dimensions and centered fan-out layout are preserved.
-
-## D125 · 2026-10-24 · Center the initial graph in the usable canvas
-
-- Alex asked for newly created cards to appear around the middle of the canvas rather than at its top. Fit now measures the actual card bounds and centers them horizontally and vertically inside the viewport, reserving space above for the replay toolbar and 24px at the other edges. The Fit control uses the same calculation.
-- First creation is fitted even when only an unmatched Idea card exists. A different matched graph is fitted again; updates to the same graph preserve the user's pan. The parent-centered fan-out inside the graph is unchanged.
-
-## D126 · 2026-10-24 · Add the black TrueNorth mark beside Hivemind
-
-- Alex asked for the black TrueNorth logo to the left of Hivemind in the header. Reuse `web/hivemind-logo.svg`, which matches the old repository's TrueNorth mark, display it at 20px with a 9px gap, and render it black through a local style. The shared source asset is unchanged.
-
-## D127 · 2026-10-24 · Balance the Hivemind wordmark with its logo
-
-- Alex asked for slightly larger Hivemind text to match the 20px logo. Increase the mock header wordmark from 15px to 18px, retaining its weight and alignment.
-
-## D128 · 2026-10-24 · Enlarge and center canvas navigation controls
-
-- Alex asked for larger zoom buttons and larger centered icons. Use 44px square buttons with 22px outline SVG icons, centered with grid layout, and 6px spacing. Zoom in, Zoom out and Fit to view keep their existing actions and receive explicit accessible labels.
-
-## D129 · 2026-10-24 · Keep only Full and Last 30 days
-
-- Alex asked to remove the From Jul 24 range. The replay range control now offers only Full and Last 30 days, using their existing date calculations.
-
-## D130 · 2026-10-24 · Modular Thesis UI with a versioned data contract
-
-- Alex asked to clean and modularize the Thesis components for data returned by an agent/MCP, leaving the Idea card for later. Use one versioned, closed schema, one adapter for existing bundles, pure dated selectors, and separate card/chart/detail/canvas components. Keep the agreed visual design. Components take data and callbacks and own their event cleanup; no UI component calls a model or reads global application state.
-- Source uses ES modules. The existing standalone mock remains a generated artifact; esbuild bundles the modules and Ajv compiles the JSON schema at build time, avoiding a hand-written bundler or schema engine. These are build-only dependencies. Scope, state/reader tables and budgets: `docs/poc/thesis-ui.md`.
-- The existing bundle writer now includes stable judgement IDs and event dates. `thesis_bundles` (MCP) and `GET /thesis-bundles?ids=...` expose that same complete read-only envelope, so the agent need not reconstruct UI inputs from partial reads. No model call or write is added. ESLint and Prettier provide development checks only.
-
-## D131 · 2026-10-24 · Remove native hover text from card UI
-
-- Alex asked to remove the repeated full-title tooltip that appears over a card. Card titles remain visible and clickable, but have no native title tooltip. The shared chart and navigation controls use accessible labels instead of native hover-title text.
-
-## D132 · 2026-10-24 · Probing the idea route: aliases from the universe, Chinese text terms, a floor under null
-
-- Alex: "do more matching of how an idea could use the endpoints to go about finding the right theses … see where, for example, the search engine retrieval may be lacking". 49 realistic ideas were run through search and the model (`docs/research/2026-10-24-idea-probes/findings.md`).
-- Decided (implementation of D76 search and D91 null, not a change to either decision): an object is named only by its id, its full name or an alias the universe lists (`poc/universe.json` now carries product and Chinese names per company and theme; single words of a name are never aliases); the ledger's text index is asked for Latin words and three-character Chinese windows; `results` is null only when no object is named, no view text matches and the top similarity is below 0.30 (measured: every idea with a view scores 0.33 or more; a house purchase 0.19). Ideas above the floor that name nothing go to the model, which answers "none".
-- Open, for Alex (findings §Choices): k above 10 or a per-object cap; evaluating percent, gigawatt and count ladders; the card naming objects without a view; a role per chosen view.
-
-## D133 · 2026-10-24 · Everything in data and code is English from now on, natively
-
-- Alex: "从现在开始所有数据和代码里面的各种都要是英文" … "不要再做什么转译。原生全部是英文理解了不".
-- Decided: code (identifiers, strings, comments, docstrings), everything the system writes (ledger text, answers, labels, card fields) and every model output are English, written in English at the source. No translation layer anywhere: a Chinese text is not turned into English after the fact. The sealed ledger of 2026-10-24 is Chinese and is not rebuilt (Alex, same evening: "千万不要 rebuild 这个 db"); it stays as it is, and the page shows its text as stored, until the next run writes English natively. That run needs the pipeline's prompts to ask for English (role, categories, matching, judging), a new config version, and the service's ladder parser to read English conditions; it is a paid run Alex launches. The design documents stay in plain Chinese for Alex (AGENTS §11).
-
-## D134 · 2026-10-24 · The idea is read by an agent that calls Hivemind, the way a fresh Luna with the MCP would
-
-- Alex: "imagine it's just like a fresh Luna loaded with the MCP of HiveMind … what the users ask as an idea, how to break it down into mapping theses … it's going to break down into a couple ways, which … are basically just query endpoints or whatever API or MCP calls to the HiveMind to retrieve whatever is necessary so that the agent can actually determine what are the final theses that need to go in to support the idea … That's the flow." Earlier the same evening: "你现在映射的观点都比较少，这个也是一个问题" and "idea 的拆解，映射这个可能有一定的系统提示词需求，可以写在这个 mcp 或是我们 api loading 时候就给到的系统提示词".
-- Decided: `POST /ideas` runs that flow inside the service: luna gets the same tools the MCP front offers (search, view, evaluate) plus finish, and a system prompt (`prompts/idea-v4.txt`) that says how to work: break the idea into two to four parts (the thing itself, its drivers, what could break it), search for each part, read what matters, map each part to every view that answers or moves it, evaluate a dollar number, finish with the reading. Code runs the tools, remembers which views the agent has actually seen (a finish may name no other), evaluates the claim itself, and archives every turn so a card replays for $0. The MCP front's instructions carry the same recipe for an external agent. Measured before this change: one call over the top-10 of one search mapped a median of one view per idea (49 probes); the two-step prompt over 20 candidates mapped a median of two.
-
-## D136 · 2026-10-24 · Slide the Thesis detail drawer open and closed
-
-- Alex asked for smooth slide-in and slide-out when opening and closing a Thesis. Use a shared 280ms drawer motion controller: the panel slides from the right while the scrim fades, and stays mounted until the closing motion finishes.
-- X, scrim and Escape use the same close path. Reopening during a close reverses from the current visual position; repeated closes do not restart it. Focus returns after the exit finishes. Dataset replacement and destruction cancel pending motion; reduced-motion preference skips it.
-
-## D135 · 2026-10-24 · The service does the looking up; the model is asked twice
-
-- Alex, after the agent version was measured (27,000 input tokens per idea, a quarter of them a catalog re-sent every turn, the same mapped count as one call): "But isn't this return very, very inefficient in terms of the context bloat? … Measure it and realistically tell me if this is the right way." Then, shown the split: "不是本来就应该这样做吗？"
-- Decided: `POST /ideas` asks the model twice and nothing else. Call 1 breaks the idea into two to four typed parts (object from the library's object list, what to look for, period, a search query) and reads a dollar claim. The service searches once per part (8 candidates each, id + what it looks at + judged position), follows the ledger's dependency graph from the first part's views to their upstream and downstream views, and evaluates the claim. Call 2 maps each part to its candidates and writes the summary; the service admits only candidate ids. The agent loop (D134) is removed from the service; the MCP front keeps the recipe for an external agent, with the object list instead of a catalog. Measured on the first three ideas: 2,640–2,750 input tokens per idea against 27,000.
-- Confirmed by Alex after the 49-probe comparison (5 views mapped per idea against 2, 2,704 input tokens against 27,048): "可以，你确认这个方向是对的，先定论，然后再继续想要怎么优化 1. 速度 2. 成本 3. 质量和稳定的结果". The split is the design; what follows is tuning, each change measured against a fresh control on the same ideas.
-
-## D137 · 2026-10-24 · Keep card connectors separate and attached to their cards
-
-- Alex asked for the reference's rounded orthogonal routes, without overlapping lines or attachment points outside a card. This amends D84's fixed 24px outgoing-port spacing: 24px is the maximum; compress the spacing to keep the ports at least 24px inside the top and bottom corners. Each path begins exactly on the source's right edge and ends on the target's left midpoint. Keep D85's arrows and D87's incoming-path highlight.
-- Diagnosis: the three stored Idea response fixtures contain one 12-child graph, with 30 overlapping vertical-segment pairs; the other two are empty. The 42 stored default graphs have no overlapping branch pairs because their fan-outs are smaller. Every route currently turns at the same horizontal midpoint; with 17 or more children the fixed port spacing also exceeds the 380px card height. Card-only entry translation briefly detaches connectors from their cards.
-- Route ownership is `poc/ui/src/components/connectors.js`: order destinations vertically, nest the outer destinations' turns nearest the source, and give successive turns 12px lanes. Upper and lower routes can reuse a lane only where their vertical spans do not touch. Increase the inter-column gap when the lanes need it. Fade cards into place without translating them independently of their lines.
-
-| State / event | Result |
-|---|---|
-| Empty / zero destinations | No paths. |
-| Render / one or many destinations | Measure unscaled card rectangles, assign bounded ports and nested lanes, then draw rounded paths. |
-| Replay or range change | Preserve the same graph attachments; a graph redraw recomputes from its card rectangles. |
-| Pan, zoom, fit | Cards and paths share the world transform; attachments stay aligned. |
-| Replace data or graph | Rebuild paths with the new card set; retain no old lanes. |
-| Destroy | Existing canvas cleanup removes cards, paths and handlers. |
-
-| Value / writer | Readers and checks |
-|---|---|
-| Card rectangles / canvas placement | Shared route function; source and destination edge assertions. |
-| Bounded ports, lanes and rounded path / route function | SVG renderer, stored-fixture and all 0–93 child-count intersection checks. |
-| Expanded column gap / route function | Supporting-card placement and fit bounds; existing pan, zoom and hover handlers. |
-
-- Before implementation, the proposed geometry was replayed over every 1–93 child fan-out supported by the 94-thesis ledger: no intersections and no ports outside the source. The browser check must exercise the stored 12-child response and compare real path endpoints to card bounds. No schema, data, model prompt or thesis relationship changes.
-
-## D138 · 2026-10-24 · Idea cards share the Thesis header and connect every mapped thesis directly
-
-- Alex asked to match the Thesis header, remove the redundant decomposition list, and explain/fix why every thesis was drawn after the first. The stored response has three analysis parts, eight distinct chosen theses and five related theses. Its third part maps to none. Across the three stored response fixtures, one has this graph and two have no chosen theses. The FE made the first chosen thesis the parent of the other seven and all five related theses; four of the five related paths ignored their actual `via` source. The backend already supplies each related source, so no backend or model change is needed.
-- The Idea and Thesis use one header renderer and a non-shrinking 40px header. Remove the decomposition rows and their IDs from the Idea card; keep its question, verdict and reading. `reading.parts` stays in the response for analysis, not as card rows.
-- All distinct `reading.chosen` IDs are peer roots directly connected to the Idea. Only `related` entries connect after a root, using their supplied `via`; neither list order nor the first chosen thesis creates a dependency. Keep related nodes in separate, vertically reserved groups after their actual source. Null/empty responses still show the Idea alone. This replaces the first-thesis-as-parent UI rule recorded in D112/D135 integration notes; it does not change which theses the service chooses.
-
-| State / event | Result |
-|---|---|
-| Pending, failed, null, or no chosen theses | One Idea card, shared header, no invented thesis or edge. |
-| Answer with chosen theses and related entries | One direct edge per chosen thesis; one related edge from its supplied `via`. |
-| Replay or time-range redraw | Keep the explicit graph; update the same dated card contents. |
-| New answer or dataset | Validate known IDs before rendering; retire graph nodes no longer loaded. |
-| Pan, zoom, hover, detail open/close | Preserve attachments and incoming-path highlighting for each branch. |
-
-| Value / owner | Readers and checks |
-|---|---|
-| `rootIds` and `branches[{sourceId,targetId}]` / Idea graph adapter | Shared graph validation, layout and canvas; stored response must map each chosen ID and `related.via` exactly. |
-| Card rectangles and edges / pure graph layout | Renderer and connector planner; reserve each source's related group, bounded ports, no overlapping routes. |
-| Header HTML / shared primitives | Both card renderers; browser compares height, padding and icon placement. |
-
-- Existing standalone `primaryId`/`supportingIds` callers are normalized into the same layout. The new explicit graph accepts only loaded, unique root IDs and single-parent related nodes with a root source; malformed graphs fail before replacing the visible graph. D130's data contract, D137's attachments, and the existing empty/replay/instance checks remain in force. Uneven groups need lanes based on the actual upward/downward routes, rather than assuming half the roots lie on each side of the Idea.
-
-## D139 · 2026-10-24 · Evaluate overarching main theses before building the next layer
-
-- Alex clarified that the desired result is an overarching main thesis exposed to agents, with linked supporting theses underneath, potentially spanning companies and industries. He asked for small POCs of the different approaches on existing NVIDIA data and a written technical proposal before implementation.
-- Scope authorized: isolated experiment code and new dated outputs. Do not rebuild the sealed ledger, change production extraction, or switch the UI while evaluating. The experiment compares vector density, recorded-graph communities, global LLM grouping, incremental grouping, and a separately declared argument-first approach; a targeted revisit diagnostic checks the observed orphaning mechanism.
-- Plan, raw-output locations, findings and proposed interfaces are in `docs/research/2026-10-24-hierarchy-poc/`. This decision authorizes research, not adoption of a production grouping method, main-thesis ladder, or scoring rule. The draft uses supported/challenged qualitative arguments without a new numerical score; that choice remains a product decision.
-
-## D140 · 2026-10-24 · Validate only two main-thesis update paths
-
-- Alex: “开始实验，不要随便乱加戏，scope creep. 好好的做好核心验证.” The authorized follow-up is only Rubin commercialization and cloud capex → NVIDIA revenue, replayed over three stored historical snapshots with three independent samples and fresh-generation controls.
-- This is an isolated research follow-up to D139. No extraction, production schema, MCP, UI, automatic clustering, identity discovery, or recursive hierarchy is added. Invalid results are retained without repair or replacement sampling; dependent update chains stop.
-- Results: 25 completed requests, estimated $0.546144 under repository prices; 14 of 23 synthesis outputs rejected for real evidence IDs paired with the wrong view. The only complete Rubin update chain omitted supplied delay risk. Findings: `docs/research/2026-10-24-main-thesis-replay/findings.md`. No production approach is adopted; the proposed citation-representation follow-up is not implemented.
-
-## D141 · 2026-10-24 · Validate code-owned sources and current evidence before summaries
-
-- Alex authorized the follow-up after the failure analysis: “好你思考清楚了就下手跑验证”. Scope remains the same two questions, three historical snapshots, same model, and three independent samples. No production or UI changes.
-- The experiment gives each real source one immutable reference with code-owned origin paths. It assesses every current source before a final summary, without reading old summary text; fresh direct-synthesis controls share the same source format. Both final cards are read by an agent.
-- Completed 42 requests, estimated $1.059854 at repository prices. All 822 source-assessment instances and all 24 summary/reader outputs passed structural checks. Rubin's delay risk reached the summaries and readers in all three samples of both methods. Full basis processing did not show better core outcomes than direct synthesis; its final-round cost was 2.52 times as high. Findings: `docs/research/2026-10-24-main-thesis-basis/findings.md`.
-- This records research, not production adoption. The recommendation is to prefer code-owned provenance and synthesis from current material, without making a full per-source basis table mandatory yet. Automatic clustering, stable main-thesis matching and bounded streaming updates remain outside the experiment.
-
-## D142 · 2026-10-24 · Test organization inside ingestion, not after extraction
-
-- Alex corrected the research direction: thesis associations should emerge during extraction and streaming ingestion. He authorized a short original-article replay through extraction, matching and writing, with no separate full-library clustering pass.
-- The isolated POC uses three original articles, three independent samples and ordinary-ingestion controls. New grouping fields are part of existing extraction/matching calls; original checks and writer are reused. No sealed database, production prompt, MCP or UI changes.
-- Completed 37 requests, estimated $0.512881. All three extraction samples linked the new SK deployment thesis to the existing Rubin shipment thesis, but all three matching answers placed them in separate narrow groups. A zero-call replay resolves and retains those three extracted relations. This diagnoses the duplicated relationship decision; it does not adopt a production group hierarchy.
-- The experiment's affected-group bookkeeping defect was fixed and verified by replaying all 37 identical requests without network calls. Findings: `docs/research/2026-10-24-ingestion-groups/findings.md`.
-
-## D143 · 2026-10-24 · Test one owner for ingestion relationships
-
-- Alex asked which PRD must change, for a clean end-to-end repair, a logical simulation, then another POC. Amend the extraction and views PRDs with an explicitly experimental relationship contract. This authorizes the isolated experiment, not a production rollout.
-- Extraction proposes the shared research question, members and source evidence. Matching resolves thesis identity without rewriting group membership. The writer resolves all temporary references and saves the group, members and provenance in the same transaction as the original thesis/evidence writes. A new group requires two distinct resolved theses; a single thesis stays independent. Group membership does not create a causal dependency or a scored parent thesis.
-- Keep the same three original articles, three fresh paired samples, existing model/settings, and a total ceiling of 48 calls/$8 estimated. The control is D142's grouping path. No sealed-data rebuild, production prompt change, extra clustering call, summary, MCP or UI work. Plan and acceptance: `docs/research/2026-10-24-relation-handoff/design.md`.
-
-- Result: all six streams completed; 36 requests, estimated $0.561000, no extra clustering calls. Fresh automatic shipment/deployment grouping succeeded in 1/3 new samples and 1/3 controls. New-arm risk evidence reached the original shipment thesis in 3/3 samples, but reached a shared group in only 1/3. Acceptance failed; no production adoption or further arm. Findings: `docs/research/2026-10-24-relation-handoff/findings.md`.
-
-## D144 · 2026-10-25 · Research continuing subject identity inside ingestion
-
-- Alex rejected the two failed grouping attempts as an unclean design and explicitly asked for deeper research and another run within the current pipeline. Scope remains isolated research, not production adoption.
-- Proposed experiment: extraction gives every candidate thesis a required reference to a continuing business subject; the existing matching call separately resolves subject identity and thesis identity. Code preserves those references when writing. A subject can start with one thesis; membership is not an optional afterthought or causal claim. This replaces D143's experimental two-member creation condition, not the frozen production schema.
-- Keep the three original articles, three fresh paired samples against D143, the same model/settings, and the existing maximum of 48 calls/$8 estimated. If the three new core grouping samples pass, use one predetermined additional Rubin customer-deployment article per new stream (as late arrival) to test another milestone; no new comparison claim. Full contract, prior decisions, research sources and fixed criteria: `docs/research/2026-10-25-ingestion-threads/plan.md`.
-
-- Result: 23 attempts, 22 returned and one extraction timeout. Both returned new-arm first-article match answers used self-targets for all six local threads and were rejected by the registered identity contract; none of the three new streams reached the later grouping test. All three D143 controls completed but formed no shared group. Returned-call estimated cost was $0.315563; the timeout has unknown usage and retains a $0.2327375 budget reservation. No extra article or replacement samples ran.
-- A zero-call diagnostic changed only those six self-targets to the required empty new-target representation; both first articles then wrote three theses and three threads. This isolates a format-boundary failure, not successful automatic grouping. No production adoption. A proposal to replace local pointer chains with direct identity groups remains unimplemented and needs a revised experiment contract. Findings: `docs/research/2026-10-25-ingestion-threads/findings.md`.
-
-## D145 · 2026-10-25 · The idea card keeps the full mapping contract
-
-- Alex, after the night's tuning report (13 measured iterations, `docs/poc/idea-tuning-log.md`): "用完整版吧". The
-  service's mapping call keeps the per-part reason (prompt idea-v7, the `MAP` schema), at reasoning effort none:
-  `poc/config/poc-v9.json` is the default of the API and the scripts. The lean contracts (idea-v8: no reason, each
-  candidate once; idea-v9: no reason, full briefs) stay in `CONTRACTS` as measured arms, not as the product.
-- Why (measured): the reason the page never shows is what steadies the mapping. 8 ideas × 3 fresh samples, canvas
-  overlap median: with the reason 0.58 and 0.65, without it 0.55 and 0.50; first view 8 of 8 against 7 of 8. The
-  reason costs ≈ 2 s and ≈ $0.003 per idea (10.9 s and $0.0098 against 8.6 s and $0.0070).
-- Kept with it, all code: direct / driver / context tiers with at most three drivers per part; the direct pick made
-  among the model's direct views in search order with the year check; the market-price guard; the English re-ask;
-  the canonical second query per part; one embeddings round trip per idea.
-- Next arms, in order, each measured the same way (49 probes, 8 × 3 stability, serial timing): the reason capped
-  at twelve words; six candidates per part instead of eight. Target $0.005; the 6 s target is below the floor of
-  two serial calls on this network and is not pursued.
-
-
-## D147 · 2026-10-25 · Continue grouping POCs with direct subject identity results
-
-- Alex explicitly asked to keep testing from different angles, read the system design and code, and improve barriers within the existing pipeline. This authorizes continued isolated diagnosis and development POCs; no production, sealed ledger, Idea, UI, deploy or model/provider change.
-- Replace D144's model-authored local pointer graph with direct groups of local subject IDs whose destination is either new or a displayed stored subject ID. Keep extraction-owned required thesis membership, original thesis identity/evidence rules, and one transaction. Schema restricts destinations; code resolves final IDs without recursion.
-- Three fresh paired original-article streams against D144, followed by the predetermined extra deployment article only after correct core grouping; same gpt-6-luna/settings, shared maximum 48 calls/$8 estimated. Preserve failed variants and fixed measurements; do not silently replace samples. Plan, state tables and scope: `docs/research/2026-10-25-direct-subjects/plan.md`.
-
-- The first direct-group variant completed 20 requests ($0.334354 estimated). One new stream omitted its required groups; two completed but treated the customer deployment as a different subject from Rubin and split it. All three D144 controls failed subject-count checks. The displayed old group was present in both split cases, so retrieval was not the cause.
-- Continue within the same 48-request/$8 ceiling with extraction-owned membership: retrieve existing group descriptions before reading the full article, require every candidate to cite a shown old group or declared new group, and remove group identity decisions from matching entirely. Matching still resolves the thesis and evidence identities. This asks whether a thesis belongs under a business process, not whether two business processes are identical. The narrower required-output-format draft is not implemented because it would leave this semantic defect intact. Contract and tables: `docs/research/2026-10-25-direct-subjects/extraction-membership-plan.md`.
-- Extraction-owned membership reached the old Rubin group in all three second-article answers, but all returned duplicate g1 references and an unused local t1, so all three were rejected. Nine new calls brought the shared total to 29 ($0.447565 estimated). Continue with a strictly equivalent reference-schema spelling, without changing the prompt, accepted values or local checks; fresh second-article calls use copies of their successful first-article states. This is a representation diagnostic, not proof of a provider defect. Contract: `docs/research/2026-10-25-direct-subjects/flat-reference-plan.md`.
-- The equivalent single-pattern schema produced valid distinct old/new references in all three second-article samples. Two completed the core relation/risk path; one valid old-group assignment was rejected solely for an unused proposed new-group definition. Remove that redundant rejection: unreferenced definitions already never reach the writer. Keep nonempty, unique and valid membership references, unique definition IDs, and all original evidence checks. This changes the experimental input contract, not the semantic acceptance criteria. Replay identical stored requests into new databases, call only missing steps, and keep the same shared ceiling; 38 requests/$0.560701 estimated have been used. Contract and census: `retained-membership-plan.md`, `unused-census.json` in the D147 research directory.
-- Final core result: all three recorded streams preserve separate shipment and SK-deployment theses in the same Rubin group and route later supply risk to it. The three preselected satellite continuations also reuse that group without changing historical snapshots or removing the earlier risk. The code-only final correction replayed original answers; it did not obtain three replacement samples. Total: 47 returned requests, estimated $0.641424. 121 tests and targeted mutants passed. No production adoption; overall group counts (1, 4, 3), large-library recall, cross-company boundaries and an argued main-thesis layer remain unvalidated. Findings: `docs/research/2026-10-25-direct-subjects/findings.md`.
-
-## D146 · 2026-10-25 · The idea gold set: twenty ideas judged as an analyst, authored by Claude, sealed
-
-- Alex, asked for twenty gold ideas with the right views written beside each: "做。然后3.的标准就是hedge fund analyst
-  /investor 会看的观点，你来进入角色做golden 然后封存". The standard is the views a hedge-fund analyst or investor would
-  want to see for the idea; Claude writes the gold in that role, from the view texts of the sealed ledger as judged on
-  2026-08-15, and seals it.
-- The file: `poc/eval/gold/idea-gold-2026-10-25.json`, digest in `poc/eval/gold/SHA256SUMS`, never edited; a revision
-  is a new dated file. Twenty ideas: six on NVIDIA, seven on other companies (TSMC, Meta, CoreWeave ×2, AMD,
-  Microsoft, Intel), six on themes (hyperscaler capex, Big Tech AI spend, H100 prices, the AI trade, 232 tariffs,
-  data-center demand), two in Chinese, two the library does not cover (232 tariffs on semiconductors, chip export
-  controls and NVIDIA's China revenue), whose right card shows no direct view. Each idea carries the accepted direct
-  views, the one a stated amount is judged against, the drivers an analyst wants beside it, acceptable neighbours,
-  and traps (a view that looks like the answer and is not: total revenue for a segment, total expenses for capex,
-  TSMC revenue for TSMC capex).
-- Labelled model-authored gold (AGENTS §7): it measures the service against an analyst's reading written by the same
-  model family, not against Alex's hand; a disagreement with Alex's own reading is settled by a new dated file.
-- `scripts/idea_gold.py` scores a configuration against it: direct view right, traps shown as direct, driver recall,
-  canvas noise, claims right; it refuses a gold file whose digest is not the sealed one.
-
-
-## D148 · 2026-10-25 · Check grouping consistency by research meaning, not identical group counts
-
-- Alex asks to keep working on grouping consistency while Claude Code works on Idea consistency: results need not match exactly every time, but must not be far off. Keep grouping and Idea work separate until their findings can be combined.
-- First replay the three completed D147 streams from stored answers and separate extraction coverage from membership variation. Keep distinct questions and their real evidence links; names, local identifiers and extra small groups alone are not errors. Do not add a group-count target or delete small groups to make the counts agree.
-- Run the unchanged D147 process on two previously unused full articles, one about AMD growth and one about Google Cloud's Rubin deployment, starting from copies of the three different D147 states. Report missing connections, unrelated memberships, extraction gaps and rejected calls separately. This is descriptive boundary research with assistant-authored semantic checks, not a new overall quality acceptance threshold or a claim that the method improved.
-- New bounded continuation experiment: at most 18 requests/$2 estimated, same model/provider/settings. The completed D147 budget and artifacts stay unchanged. No production, Idea, UI, summary or separate clustering-call change. A failure is retained and reported without replacement samples. Contract and scope handoff: `docs/research/2026-10-25-grouping-consistency/plan.md`.
-- Before paid calls, source-level review corrected an earlier classification: sample 2's OpenAI deployment explicitly uses Rubin but belongs only to its new OpenAI group. This is one real missed membership among ten reviewed Rubin-related thesis instances, alongside two samples that did not extract that extra thesis. Pause the new-article continuation and first test the narrower cause: D147 stopped showing existing theses' stored group memberships. Run three fresh unchanged controls and three fresh requests that add only those already-stored membership IDs to the displayed theses, through the original matching/writing path, within the same 18-request/$2 ceiling. Preserve the earlier plan and review; no new prompt, schema, production rule or acceptance target.
-- Result: all six samples completed in 12 fresh requests, estimated $0.202629. Context samples preserved the OpenAI-to-Rubin link in 3/3, but one also placed the unrelated PC thesis in Rubin and another omitted delay evidence. Controls showed an omitted extraction, a rejected altered quote, and an OpenAI membership in the SK-specific group. Both controls that actually proposed OpenAI already referenced Rubin, so the original missed-membership mechanism is not proven repaired. The context variant is not adopted. All history/resend checks pass; the known semantic defects remain explicit. Findings and the proposed joint review with Claude's Idea work: `docs/research/2026-10-25-grouping-consistency/`.
-
-## D149 · 2026-10-25 · Group association is required during extraction
-
-- Alex asks to refresh the relevant PRDs so group association is implicitly needed during extraction. Organization is part of reading incoming information, not an optional later whole-library clustering step. Every proposed thesis carries structured membership in a continuing business subject; evidence-only updates follow the existing thesis memberships.
-- Preserve the D33 responsibility boundary: extraction decides membership while reading the full source; matching resolves thesis/evidence identity and dependencies without deciding membership again; the views writer preserves the association against final thesis IDs. The complete target contract is owned by `06-views.md`, with extraction's responsibility in `05-extraction.md` and summaries in the system overview and design page.
-- A group organizes related questions, including across companies, without turning them into the same question or automatically making one a scored parent. A single thesis can start a group. The longer-term overarching investment thesis for agents remains separate work, not a capability delivered by this refresh. D148's tolerance for minor naming or optional subgroup differences remains; wrong members and missing core connections still matter.
-- This changes the documented target, not the running pipeline. Keep D147's isolated handover implementation visibly separate from the required behavior and D148's rejected context variant. No production prompt/schema change, stored-data migration, new paid run, group-summary generation, MCP or UI change is authorized by this documentation slice. Adding a short reason for each membership remains an unvalidated proposal.
-- Record current implementation gaps in `docs/poc/pipeline-plan.md`; refresh status and the PRD bundle. Change census and reasoning refresh: `docs/research/2026-10-25-grouping-doc-refresh.md`.
-
-## D150 · 2026-10-25 · Test a source-based membership explanation within extraction
-
-- Alex asks to continue working on a clean grouping-consistency solution while Claude works on Idea. Continue isolated grouping research; do not change Idea or the default pipeline.
-- The census is 18 saved extraction answers, 19 candidates and 27 membership references. Wrong PC→Rubin and OpenAI→SK references are already in raw extraction; matching and storage retain them. Test whether requiring a short source-to-scope explanation before each chosen group ID reduces these errors. This is a hypothesis, not an adopted fix.
-- Keep the full original article, fixed two-article prefix, original model/settings, and original identity/source checks. Three fresh controls and three fresh explanation samples; only if the registered development conditions hold, measure the predefined Google article once with three samples per arm. New independent maximum: 24 HTTP attempts/$1 estimated; prior study budgets and records are untouched. Stop without replacement samples or automatic new arms.
-- The new output is validated before projection to the old membership IDs; explanations are archived, never treated as evidence or sent to identity matching. No separate clustering call, group-count target, production schema migration, or claim that rationale helps because Claude used it. Claude's latest per-driver rationale arm did not improve consistency.
-- Contract, state/event and value/reader tables, unchanged measurement definitions and read-only review: `docs/research/2026-10-25-grouping-basis/plan.md`.
-- Result: 12 fresh calls, estimated $0.199548. The basis arm had one correct OpenAI→Rubin result, one omission, and one PC→Rubin error; controls repeated OpenAI→SK and also produced PC→SK. No adoption or conditional Google run. Across D147/D148/D150, five wrong references and one missed membership remain visible; three wrong-reference answers also declare an appropriate new group but reference a different old one. A zero-call one-ID correction confirms the writer preserves the supplied reference. This does not establish why the model selected it or validate the next representation. All 135 tests and targeted mutants pass; source, history and resend checks pass. Findings: `docs/research/2026-10-25-grouping-basis/findings.md`.
-
-## D151 · 2026-10-25 · Before the NVDA rerun: the two sessions merged, two prompt rules corrected and proven on stored requests
-
-- Alex: "codex 做完了，你合并，然后解决你上面的顺序问题，开始跑小的验证快速的收敛这些问题。确认是真实的问题，不是你自己看错或是理解错误；务必不要scope creep乱搞". The merge is commit 7033c87 (one tree, both sessions' work, every suite passing).
-- Verified on the sealed run (`docs/poc/pipeline-plan.md`, 重跑前的基本面): nine product-trivia views and no H200 licence view (60 items mention it); two of 465 judgements read "no fact confirms" as the lowest rung; eight theme views that are anti-dumping or scrap-metal notices; the English requirement is a contract migration (137 Chinese literals in the pipeline's code, 13 KB of prompts, a Chinese-only ladder parser), not a prompt change.
-- Adopted for the rerun as `poc/config/poc-v14.json`: `role-v3` (a dated event opens a view only when it moves a full-year number or a segment; pending regulatory decisions open without a date, due at the fiscal year end) and `judging-v2` (missing confirmation is not the lowest rung). Proof on the stored requests with only the prompt changed: the three trivia items open nothing in 6 of 6 samples, the May 10-Q opens the H200 import-licence view in 2 of 2; the two misjudged cases move to rungs 4 and 3, the rung-5 control holds.
-- Not changed: grouping (D149, Codex's slice, still not in the default pipeline); the language (Alex's call: run in Chinese now or migrate first). The rerun reads the relabelled corpus `items-window-tags2-2026-10-24.sqlite`. A one-week run comes first.
-
-## D152 · 2026-10-25 · The rerun runs in Chinese first; grouping passes to Claude
-
-- Alex, on the language: "1. 可以吧。" The NVDA rerun runs on the Chinese pipeline with the corrected rules (poc-v14);
-  the English migration (137 Chinese literals in the pipeline's code, the four prompts, the ladder parser; D133) is a
-  separate slice, scheduled after it, measured on its own.
-- Alex, on grouping: "2. codex 已经停止了，要靠你来接着把这部分整好，你单独的把这块搞对". Grouping at extraction
-  (D142–D150) is Claude's slice from here, worked on its own: Codex's experiments, reports and handoff
-  (`docs/research/2026-10-25-grouping-basis/`, `poc/hierarchy_study/`) are the starting record; the default pipeline
-  stays without grouping until a measured design is accepted.
-
-## D153 · 2026-10-25 · Keyed views: the structural correction is the direction; the week run is read first
-
-- Alex, after the structural review (`docs/research/2026-10-25-structural-review.md`): "好就这么做。你需要看完trace 给出非常干净
-  的系统修正方案来解决我们上叙述的问题，从完整的写log 和计划按照这个来小范围的测试和改进，并量化的测量其效果".
-- Direction: A, the one-week run with poc-v14 finishes and its trace is read in full; B, the correction is designed as
-  one plan before any pipeline code changes: a view carries a key written by extraction and owned by code (measure
-  from a closed list, period as a date span, basis, unit, rung bounds as numbers), research subjects become objects of
-  the universe with aliases, each object carries the analyst's list of the quantities to watch, identity is a key
-  match in code and the model only fills keys or chooses among shown names. The full-night rerun waits for the keyed
-  design; the sealed ledger and the week run's data stay as they are.
-- Record: `docs/poc/keyed-views-plan.md` (the plan and its tables), `docs/poc/pipeline-tuning-log.md` (one row per
-  small test with its numbers). This decision departs from the frozen extraction and views design (D37, D58–D60) in
-  the direction stated; the detailed contract is recorded as its own decision when Alex accepts the plan.
-
-## D154 · 2026-10-25 · The keyed view contract as built and measured on the bootstrap documents (T1–T2d)
-
-- Under D153 (Alex: "T2可以按照你看完T1的结果自己思索之后开始动工…我要看的就是量化的结果收敛"), the contract of
-  `docs/poc/keyed-views-plan.md` was built into the default pipeline behind prompt version v4 (`poc/config/poc-v15.json`):
-  every candidate view carries `measure` (closed list), `scope`, `period_start/end`, `basis`, `unit`, `event_type`; every rung
-  carries numeric `lo/hi`; the ledger stores them (`view_keys`, rung bounds); the service judges claims on the numbers.
-- What the four small runs on the same twenty bootstrap documents taught, each turned into a code rule and a test
-  (`docs/poc/pipeline-tuning-log.md` T1–T2d): the key is a necessary, not a sufficient, condition of identity (T1: exact
-  keys over-merged a run-rate into revenue); the model must not spell the scope or convert the fiscal year (T2: four tax-rate
-  views, a wrong Compute & Networking period); a watched scope is recognised by the list's aliases (T2b: hyperscaler capex and
-  the H200 licence refused on spelling); the unit belongs to the key (a level and a growth rate collided); the model's answer
-  to "same quantity?" on a same-key pair is not stable between samples (T2c), so where code owns the key (scope from the
-  list or none) code decides identity, and a merge across periods or quantities is refused whatever the model says.
-- Result on the twenty documents: 11 views, 0 duplicate keys, 0 product-trivia views, the H200 licence, the Rubin shipment,
-  hyperscaler capex and the export rule all open (the sealed run opened 10 views with duplicates; poc-v14 opened 15 with four
-  duplicates). The watch-list gate was not exercised by filings (review pool empty); the week run (T4) exercises it.
-- Known limits recorded, not patched: a basis of n/a on an existing view accepts both GAAP and non-GAAP candidates (right for
-  NVIDIA's joint guidance, to be re-read on a company with distinct guidance); a statement about another year can still be
-  linked as evidence to this year's view by the extraction when no view of that year exists (an evidence-link class, not a
-  candidate class); grouping (research subjects as universe objects, 2.3) is not yet in the default pipeline.
-
-## D155 · 2026-10-25 · 清单是参考，先修身份，再按顺序验证归组
-
-- Alex 明确：公司清单可以作为初始参考，但清单外不能忽略；随后要求“总体的重新看一次系统设计”“完整的写一个 improvement plan”“一步一步的来解决并量化验证”。Codex 接手这一修复范围，保留 Claude 的并行修改。
-- 改进计划与每步的证据在 `docs/poc/grouping-improvement-plan.md`。D154 的清单门槛取消；范围别名可以帮助找候选，不能单凭部分文字命中改写范围并自动合并观点。完整单年与明确自然年分开处理，多年不再抓首个年份转财年。
-- 自动认定同一观点须完整键相同，包含事件类型；含糊的口径不能作为自动合并通配符。同一次交接中代码确定的同一问题只写一次，保留所有证据。搜索的宽松召回与身份判断分开。
-- D149 归组要求不变。先验证同次抽取的归属交接，再接入按分发顺序读写的新路径；当天开始的快照不能证明后续抽取看到了当天新主线。小实验不证明全市场搜索能力。
-- 当前只实施并验证计划中合同已完整的步骤；归组表示、原子写入与恢复的具体合同经原答验证和设计审查后再建。旧数据不回填，Idea、前端、交易、分类、Pull 和最终判定不在本次修改范围。
-
-## D156 · 2026-10-25 · 先校正归组验收，再评价模型方案
-
-- Alex 看过验收审查后要求「好你开始吧，我们一起看」。先修验收定义和离线检查入口，用已存结果及受控反例验证，不把旧关系保留或零次判断报成新归组成功。
-- 当前验收定义、已数清的测量缺陷、状态表和案例卡由 `docs/research/2026-10-25-grouping-acceptance.md` 统一维护。它替代名字实验旧计划的推广通过线；旧计划与原答保留为历史。
-- 本轮不修改产品的抽取、归组表示、身份、写入或提示词，不启动新的付费实验。业务样本按原文和已有研究分别判断应新增、更新证据、重复或不抽；语义未审不报正确，三次样本不推断总体可靠率。
-- D149、D155 的产品边界不变。修好测量之后再固定下一轮真实案例的逐项预期和对照；上层投资论点、跨市场规模能力不由本轮获证。
-
-## D157 · 2026-10-25 · 用当前中文管线验证 Ohio 两篇连续报道
-
-- Alex 要求「开始继续做」，继续 D156 留下的 Ohio 案例。登记、接口和验收见 `docs/research/2026-10-25-ohio-grouping-poc.md`；各三次新鲜对照和归组序列，固定两篇全文，不延用旧缓存前缀或英文抽取。
-- 只在隔离 POC 复用当前抽取、身份和证据写入，再由抽取携带业务组引用。下一篇能读组内真实成员；不凭相同名称合并组，不让比对替抽取补分组。归组不增加模型调用。
-- 本次限 30 次请求、$1.50 估算保留额；不自动重试不明请求、不提高预算。逐项核对风险判断、同源转述和金额口径，失败停止推广，不私改验收或续开新臂。默认管线与其它模块不变。
-- 实测已结束且业务验收失败：20 次调用、估算 $0.373923；三次归组只有一次接回风险判断，仍有错归与错连。实验自身漏传的编号 schema 约束已在原答上修正，未付费复测。原答和结果在 `poc/reports/2026-10-25-ohio-grouping-01/`；关于改变观点入口的建议尚未决定，不启动下一臂。
-
-## D158 · 2026-10-25 · 追查 Ohio 入口并在同一归组流程内对照
-
-- Alex 在 D157 失败后要求「根因是什么」「务必深度的看代码，trace 思考」「再重新尝试是否能解决」。据此重新诊断并做隔离实验，不沿用 D157 的失败配置直接推广。
-- 全链路诊断、事前设计与同一验收在 `docs/research/2026-10-25-ohio-root-cause.md`。两臂都使用已修编号 schema、相同连续归组读取和写入；唯一模型差异是把枚举数字的入口段改为先提出重要且可核对的业务问题。没有官方承诺日期时使用明确的研究检查日。仅供实验，默认 role-v5 不变；不增建存储类型或上层 thesis。
-- 另修已由原答证明的代码偏差：06 的次年限制针对数字，明确的 event / policy_event 不应被同一年度检查拒绝。其它检查照旧，重放全部范围列出差异。此修复不能解释或解决 Ohio 原答没提出事件的问题，独立报告。
-- 各三次新鲜完整两篇序列，原 O1–O6 不变；本轮独立 30 次请求、$1.50 估算保留额、30 分钟，不加预算、不自动重试，不从失败中私自续开第三臂。默认归组、前端、Idea、分类、Pull、最终判定和上层论点均不在本次工作范围。
-
-- D158 运行结果：免费重放 326 个答案，事件年度修复仅恢复 NAVER 一条部署事件及三条证据；两个反向修改和完整 211 项测试通过。在线第一条对照请求 180.342 秒超时，无模型回答；其余五个序列未开始，$0.105535 未知用量保留额不释放。新入口尚无在线效果结论，不推广、不自动重发。结果：`poc/reports/2026-10-25-ohio-grouping-02/results.md`。
-
-## D159 · 2026-10-25 · 从抽取到入库重放，先修读取顺序，单独检验身份所需来源
-
-- Alex 要求重新看完整抽取、找已有观点、去重和归组流程，找结构性原因后修复，不做个案调参。诊断、表、固定案例与验证方案见 `docs/research/2026-10-25-pipeline-replay.md`。
-- 八个 v15 库有 834 次日初预抽取，其中 576 次之前已有同日新观点；此数是上下文暴露，不是错误数。删除预抽取，让一条写完下一条再抽，恢复 D31/D63 的顺序要求。D155 中这一顺序修复不再等待分组语义试验；分组仍不因此启用。未完成的旧并行交接明确拒绝恢复，保留原数据，不静默重抽。
-- Ohio 所查的既有问题均已搜到，不能统称数据库没召回。原拟用四个比对请求检验补充双方原句和来源，审查在调用前发现：165 的候选已变成年度实际出资，与旧担保金额不同；不能把合并算成功。该实验不运行，先把抽取改变含义与身份拆分分开评价。不换搜索、不增加专用合并规则、不改默认提示词。
-- 每个案例每臂三次，最多 24 次请求、$1.50 估算保留额、30 分钟；与 D158 超时请求及其未知费用分开，不自动重发。原文审阅形成的开发预期不是人工金标，结果不充当完整分组验收。前端、Idea、分类、Pull、最终判定和上层论点均不在本次范围。
-- 结果：顺序修复的 3 项入口测试、31 项相关测试、完整 214 项套件通过；恢复旧并行的反向修改被调用顺序断言抓住。身份试验的 24 次是草案上限，实际没有开始，生成费用为零。下一步先确认“同问题去重、同项目不同问题归组、原意改变归抽取”的验收界限，再固定最小实验；不得按被审查否决的预期启动。
-
-## D160 · 2026-10-25 · 按原意检验三篇连续抽取，不用错误合并掩盖提问失真
-
-- Alex 同意 D159 的界限并要求继续完整修复。以同一可核对问题判去重，以同一业务过程判归组；拟议担保改成当年实际付款属于抽取失真，不能强行合并算修复。
-- 最小下一步见 `docs/research/2026-10-25-extraction-continuity.md`：三个真实 Ohio 输入、两臂各三次连续样本，两臂都沿用已有组成员上下文、身份与原子保存，仅改变实验角色的阅读入口。默认角色和归组仍不改变；本轮不声称验证大库检索。
-- 独立登记最多 54 次请求（18 次抽取、最多 36 次比对），费用上限仍 $1.50，30 分钟。旧预算、超时记录和未知费用不动；不自动重试，不用失败样本改尺或续开臂。无关产品模块和上层投资论点仍不在范围内。
-
-- D160 实测结果：六个序列全部完成，36 次调用，估算 $0.51142625。新入口三次均把两项融资问题分别保留且归在同组，但风险论据和三种金额口径完整保留均只有 2/3，与对照覆盖相同；完整验收失败，不推广、不自动续开臂。18 条成员、54 次出处交接全部对应；完整 216 项 Python 测试通过。后两篇没有新候选，不能声称检验了旧身份拆分问题。结果和剩余合同问题见 `poc/reports/2026-10-25-ohio-grouping-03/results.md`。
-
-## D161 · 2026-10-25 · 继续修抽取，把保留论据与新开问题分开
-
-- Alex 在 D160 失败后要求继续改进抽取和后续运行，为封存做准备。当前合同能够保存遗漏的风险论据；不采用前一轮提出但未获证的新证据存储层。
-- 设计、计数、阅读机制和固定验证见 `docs/research/2026-10-25-extraction-evidence.md`。以 D160 角色为新鲜对照，仅重排并明确证据选择：关键条款及支持/反对理由可归入同一个问题，不因无需新开问题而丢掉。原问题边界、引用检查及存储保持。
-- 六个独立三篇序列，每臂三次；原 O1–O6 不变，另报首篇总成本是否保留。最多 54 次请求、$1.50、30 分钟；不自动重试或超额。通过这个开发案例不等于全部抽取封存，也不启用默认归组。失败按原标准报告，不补采改尺。
-- 实测失败：36 次调用、估算 $0.497585。新角色批评论据 3/3（对照 2/3），但首篇总成本只保留 1/3（对照 0/3），两臂各有一次把 Ohio 问题放进 Rubin 组。11 条成员及 66 次出处交接全部对应，说明错误已在原答，不是保存丢失。217 项测试通过。默认不变，抽取未封存；分两步读内容再建问题的建议尚未决定或实施。结果：`poc/reports/2026-10-25-extraction-evidence-01/results.md`。
-
-## D162 · 2026-10-25 · 先验证分两步抽取的假设
-
-- Alex 明确同意先测试 D161 的下一步假设。仅在隔离 POC 把抽取分为读取原文内容、组织问题及归属两个内部步骤；第二步须交代第一步每条内容的去向。最终仍交现有证据、候选观点及归属，不增加产品数据层。
-- 注册设计见 `docs/research/2026-10-25-source-first.md`。对照为 D161 的证据优先角色，三篇原文、每臂三个独立新鲜序列，原语义标准保持；不同时改原文引用表示、模型或搜索。
-- 最多 63 次请求，独立上限仍 $1.50、30 分钟；不自动重试、不调整旧预算。通过开发案例才谈后续验证，不直接启用默认管线或封存；失败报告，不自行改尺续开臂。
-
-- D162 result: the registered comparison failed end to end. All six sequences completed, 45 calls, estimated $0.6928525. First-step cost selection improved, but invalid ownership, wrong grouping, a period-check merge override and an inaccurate numerical summary remain. No default promotion. 227 Python tests passed. Evidence: `poc/reports/2026-10-25-source-first-01/results.md`.
-
-## D163 · 2026-10-25 · English for the maintained project
-
-- Alex: “let’s also use this chance to convert everything into english from chinese.” English becomes the language for maintained prompts, generated explanations, UI text and current documentation. Original source quotations and historical records retain their original language and identity.
-- The D162 experiment finishes under its original frozen requests. Language conversion is a separate change, not an unregistered experimental arm and not evidence that the extraction defects are fixed.
-- Inventory exact schema values and their readers before conversion. Preserve the ability to read existing records; no in-place rewriting of historical databases, frozen prompts, raw answers or prior decisions. New decisions and reports are written in English.
-- Alex additionally requires prompt translations to be well written and structured, with terminology matching the PRD and no drift. Audit complete requests against the glossary, schema and readers; use the actually adopted prompt versions, not later experimental filenames. Candidate English prompts remain inactive until compatibility checks are complete. Existing PRD/implementation gaps must be reported separately from translation corrections.
-- Alex selected a fresh English library: “yes start an english library work. how was this lib constructed previously, and how should we do it noe”. Start from original sources and an empty, separately named ledger; preserve the old Chinese ledgers and their raw answers. Do not copy translated thesis rows or append English ingestion to the old library. The [build plan](research/2026-10-25-english/english-library.md) records the old construction, selected source population and staged verification. This selection does not promote D162, enable default grouping, or authorize a larger spending cap.
-
-## D164 · 2026-10-25 · Claude builds the English library on Codex's plan; the watch list is a reference, not a gate
-
-- Alex stopped the keyed-views line as Claude had built it overnight, on seeing that the per-object watch list decided what may open: "你这个做法难道不是非常的限死吗？永远都是一堆财务指标，真正的观点呢？", "你现在是写死一些一定需要关注的证据吧？", then "停了吧，codex 再重整呢". The code-owned key (identity: is this the same quantity?) stays; what is worth a thesis is the analyst-model's judgement (00-system: 候选观点是抽取交出去的、已有观点管不到的要紧事). Codex had already recorded the same correction as D155.
-- Alex then handed the English library build (D163, [english-library.md](research/2026-10-25-english/english-library.md)) to Claude: "好那你按照codex 需求来重建，然后开始充分的测试，一定要仔细的看结果以及评量". The build log with one row per measured step, costs and mistakes is [build-log.md](research/2026-10-25-english/build-log.md).
-- Implementation choices recorded there and settled by Claude: canonical English values live in `src/hivemind/vocabulary.py` and are applied where an answer or a stored record is read for comparison (`extraction.sift`, `matching.check`, `judging._record`, the service's tier counts, the UI adapter), never by rewriting rows; the prompt version is the one switch between the Chinese and English contracts (extraction v6, `matching-v2`, `judging-v3`, `idea-v11`; `poc/config/poc-v17.json`); the Chinese versions keep their request text byte for byte, including the universe's `legacy_name` theme names, so stored requests replay at no cost; `direction` is an enum in the English matching schema; a view's year is stored in one canonical spelling (a fiscal form becomes FY2027 or 2027 for a December year-end, a calendar form 2026, a bare year keeps its digits and is never reinterpreted) so that a waiting dependency joins its year; the half-year filter admits the same questions in both languages; successor orientation and the UI's score orientation read the rungs' numeric bounds first.
-- The seed build runs on the 20 NVIDIA documents of 2026-02-25..07-23 with a $5 cap, then the week 2026-07-24..31 and August 1–15 on the same ledger, each stage read before the next; the API and UI are pointed at the English ledger only after that. Grouping stays out of the default pipeline (D149, D162 unchanged).
-
-## D165 · 2026-10-25 · Research groups enter the default pipeline; a group is an ongoing matter, a company's own financial lines carry none
-
-- Alex, on learning that the grouping research (D142–D150, D156–D162) had not reached the pipeline: "把我要做的grouping逻辑充分地scope in 做第一周管线的验证". Claude put the D149 contract in D147's final form into the default pipeline (`thesis_groups`, `thesis_group_members`, extraction v7 with `group_refs` and `new_groups`, the writer resolving local ids and storing memberships with the theses, matching deciding none), config `poc-v19`.
-- The first grouped seed day showed the company-folder failure (eight NVDA financial theses in one "AI infrastructure demand" group) because every candidate had to cite a group. Alex chose the correction from the two offered ("看起来可以你深度思考计划之后改再跑"): a research group is one ongoing matter in the world that several questions track together (a product rollout and its deployments, a financing or acquisition deal, a policy process, an investment or demand cycle), usually across companies and themes; a company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and carry no group unless the line itself tracks such a matter. Code guards it: a declared group is created only when a written thesis that tracks a matter cites it; the lines may join a group another thesis founded. This amends D149's "every proposed thesis carries structured membership" and 06-views' "every candidate needs nonempty references". Config `poc-v20` (`role-v8`).
-- Validation is on real data, not the three-article experiments: the seed, then the week 2026-07-24..27 on `poc/data/english-groups2-2026-10-25/`, read group by group (Rubin shipment with its customer deployments; the OpenAI–NVIDIA financing and Ohio campus; the hyperscaler capex cycle; China chip export controls; PC and other companies' own lines outside those). Alex: stop and report as soon as the groups look wrong ("如果你跑了前几天就发现grouping 有问题或是实现出来的质量有问题就停止来和我说").
-- Alex's standing note (same day): the pipeline is brute-force LLM prototyping on purpose; it must work and replicate stably before any cost, speed or throughput optimisation.
-
-## D166 · 2026-10-25 · Group identity and membership by names, in code
-
-- After the grouped seed and two week days (poc-v20) the model still declared a group of its own for each customer deployment (SK Telecom, NAVER) although the Rubin rollout group was shown, the research's recurring failure; the trace confirmed the request, schema and stored answers were right. Alex approved the code-owned alternative with a warning: "可以但是你要小心不要步上crazy bloat prompt 和overfitting prompt 的后尘，想清楚架构问题再下手快速小范围的验证".
-- A research group carries aliases, the names the matter goes by (products, projects, programmes, parties; never a company's id, name or alias). The model's only new output is that alias list on a declared group (one schema field, `role-v9`). Code decides: a declaration whose names hit a stored group is that group and creates nothing; a thesis whose own focus, question or scope carries a group's name joins it (membership basis `alias:<name>`), next to the groups the model cited (basis `model`); a company's financial lines still cannot found a group. Matching is unchanged.
-- Validation stays small: the seed and the first two week days on a fresh ledger (`poc/data/english-groups3-2026-10-25/`, poc-v21), read group by group before anything larger.
-
-## D167 · 2026-10-25 · No hard-coded identity for aggregates; the judge gets the evidence, the vocabulary gets the missing measures, the writer owns replacement
-
-- Alex, after the Jev benchmark showed three theses opened for one ~$700bn spending figure under three scope wordings: "我不要 hardcode 解法 it's premature optimization, not general root fix, you need to make sure then poc then measure result". Claude had proposed a named list of aggregate scopes and then a key rule "under a theme, same measure and period = one thesis"; the first is a list of what matters (the kind D154 rejected), the second fails the old checks (`test_a_model_written_scope_is_wording_not_identity`, D155) and the gold's own counter-example under one theme, measure and period: the $250bn guarantee and the $350bn chip financing are two quantities. Neither is built.
-- Decided: identity over a model-written scope stays a judgement (D155). The judge is given the material the judgement needs, the candidate's own quotes and the target thesis's defining quotes, and its `same quantity or event` criterion says what the word means here: two estimates or figures of one quantity are one question. Code gates stay on typed fields only.
-- The measure vocabulary gains `market_size` and `project_cost` from extraction version 10 (the week filed an accelerator TAM and a data-center project's cost as `spend_total`); version-gated so earlier requests stay byte-identical.
-- The writer owns the replacement rule (06-views, the Replace row): a piece may replace one in force only with a stated day not earlier than the stored one's, a tier at least the stored one's (fact and party statement above third-party view above rumour), and, between two third-party views, the same party; otherwise it is stored as new. Found when Jev's `supersedes` let analysts' reactions retire reported facts (log rows 39–41); the rule applies to both matching engines.
-- Measured as two arms on identical extraction (`poc-v23-llm`, `poc-v23`) over the seed, the week and August 1–15, per state (`scripts/benchmark_states.py`), with the retrieval stage quantified apart.
-
-## D168 · 2026-10-25 · Four corrections found by the D167 measurement: one repeat rule, one replace definition, one succession rule, one missing answer
-
-Found while measuring the two D167 arms (log rows 44–48); each is general, follows the PRD, and was measured on stored data or by re-sending stored requests before it entered the code.
-- **A repeat may name the piece shown for the same evidence under another of its theses** (`matching.check`). 06-views step 6: a repeat adds a source and any new thesis link; the writer already resolves a piece to one stored identity for all its theses. The check required the target under the destination thesis and failed an item twice (9 of 17 such refusals over four ledgers were this case). A replacement still stays within its thesis.
-- **The Jev replace criterion carries the PRD's full definition**: a later version of the same statement or number, changed (the same speaker revises it, an official confirms or denies that claim, the original source revises it); another statement on the same topic is not this (06-views lines 191, 197, 306). Probed against a fresh control, three samples: wrong replacements 10 of 10 removed on the seed and week, 6 of 7 out of sample on August; the right ones that stay are the guidance revisions and a source revising its own figure. A second wording ('the same party') was rejected by its pre-registered rule.
-- **The writer's replacement rule, generalised from the PRD**: an incoming third-party view or rumour replaces only the same party's earlier piece (subsumes the view-over-view rule of D167). On every stored ledger it refuses 6 written replacements, all a commentator's view over another party's rumour, none right.
-- **Succession**: the code's rule uses the shared typed-field rule (`identity.conflicts`: 'n/a' matches any basis or unit), so an unstated basis no longer blocks a succession (adds exactly 2 over all ledgers, both right); and the Jev relation question gains the answer 'the same defined quantity or event series for another period', with the direction, the typed fields and the successor check in code, so a succession between differently worded model scopes can be judged (probe: recovers the one such case, changes nothing gold-labelled for the worse).
-
-## D169 · 2026-10-25 · Jev is the default matching engine
-
-- Asked "要不要把 Jev 定为默认的匹配引擎" after the D167/D168 measurement (log rows 44–49), Alex answered: "要的。你的抽取，trace和当前抽好的db都很宝贵，这些都留下来然后开始做这个阶段的收尾".
-- Decided: `poc-v23` (extraction v10, `matching.engine: "jev"`, model `jev-1.14.0`, with D168) is the default configuration of the replay (`scripts/replay.py`, which now also requires the ledger and archive it writes). The service's idea route keeps its adopted configuration `poc-v9` (D135/D145) on the sealed ledger and its search index; moving the service to the English library needs a new index and is a separate step. The generative matcher stays a configured alternative (`engine: "llm"`); old configurations and stored archives replay unchanged.
-- The phase's extractions, traces and ledgers are kept (data manifest `docs/research/2026-10-25-english/data-manifest.md`, two backups outside the repository); the close-out is a code review for stale code and bloat, then the documents, then a push.
-- Not decided here: moving group membership from extraction to matching (D149/D166), which the queued day-batch shape needs; it comes with that task.
-
-## D170 · 2026-10-25 · Phase close-out: what the code review removed, fixed and left
-
-Alex: "我们跑一个code review 清理一下过程中stale code 和 bloat 然后准备写好文档push". Two read-only Codex reviews (product code with its tests; tooling), each finding checked against the code before acting (log row 50). The full measured state is commit `f4ff787`; everything removed here is there.
-- Removed: the retired research harness `poc/hierarchy_study/` (17 experiments and 15 test files, D146–D162, none adopted; its tests wrote three SQLite files to the repository root through a module-named path, also removed); five finished one-off scripts (`jev_poc.py`, `supersedes_probe.py`, `succession_probe.py`, `key_views.py`, `review_keyed_run.py`; results in the build log and `poc/reports/`); six product functions with no caller (`judging.judge_one`, `matching.same_orientation`, `Universe.canonical_scope`, `testdb.days_with_items`, `store.lineage_of_view`, `store.replaced_by`) and six unused constants.
-- Fixed: the preflight's matching section now judges Jev records (it had skipped all 250 of the Jev ledger) and fails when every record of a ledger is skipped; the cost reports read the one price table (`model.PRICES`) and refuse an unpriced model; the benchmark stops when its evidence scorer fails; Jev succession eligibility has one rule (`jev_matching.can_succeed`); a test no longer reads the real credentials file, another no longer writes the real service archive; the newsroom category rule has one owner that its test exercises; the replay requires the ledger and archive it writes and defaults to `poc-v23` and the current item window; the compose file uses the adopted idea configuration `poc-v9`.
-- Left, with the reason: the dependency-cycle pass in `matching.check` (its refusal wording reaches stored retry requests, so merging it would change replayed requests); the two ladder validators (admission of a new ladder and reading of a stored one are different jobs); splitting `matching.check`, `writing._write` and `idea.read_idea` (behaviour-preserving refactors of the core without a measurement round); unused parameters and result fields (signature churn across many call sites); the corpus harvesters' shared fetch code; the test-only `search.fake_embed` in the search module; `scripts/review_english_run.py` counting equal model-written scopes as a breach (D155 makes them a lead, not identity). The reviewers' lead that the API's `poc-v9` default was stale was wrong: it is the adopted idea configuration (D135/D145).
-
-## D171 · 2026-10-25 · Review and free proofs for the day-batch acceleration proposal
-
-- Alex asked to review the extraction/Jev/per-day acceleration plan deeply and test it against the stored golds and result databases. Scope is review and isolated offline proofs; no product-contract change, runtime adoption or paid comparison follows automatically.
-- The [review](research/2026-10-25-day-batch-review/review.md) and its scripts reconstruct 960/960 extraction requests from the two saved v23 ledgers. Day-start context differs for 214/480 Jev-arm requests and 168/480 control requests; rechecking the same raw answers with day-start IDs loses 73/797 and 62/744 evidence items. Extraction depends on earlier theses as well as groups. The Jev arm has 86/320 final repeat/replace decisions targeting same-day evidence, and Jev membership alone cannot declare the 26 new groups.
-- At 32 workers, a three-wave schedule using recorded Jev call durations projects 8.6× on July 27 and 3.2× over 31 nonempty days, before reconciliation/rate-limit overhead. This replaces the unsupported general 10× claim, not the speed target. It is a schedule estimate, not fresh measured latency. Judging already uses six workers per dependency level.
-- Recommendation awaiting Alex's choice: concurrent request preparation with exact read validation before sequential commits, retaining D149/D159 semantics; re-run requests whose inputs changed. A more aggressive day-start extraction contract must be decided and tested separately. The review defines both boundaries, failure/recovery states, local-ID namespacing, evaluation limits and staged tests.
-- Verification: 128 product/corpus/diagnostic tests passed; two diagnostic mutants were caught; preflight judged 250 stored Jev records with no skipped records. Existing golds remain unchanged. No batching runtime or fresh model-quality pass is claimed.
-- A read-only review independently reproduced the 960 request message pairs and schemas, the stale-reference losses and the timing projection; no serious finding against the proposed contract. Runtime implementation and live measurement remain the next, separate steps.
-
-## D172 · 2026-10-25 · Build the isolated ordered-concurrency POC
-
-- Alex accepted the D171 recommendation: “yes be super careful about the logic ... do not fuck up the order ... flag it immediately”. Implement concurrent preparation with current-prefix validation and one ordered writer. Keep the default serial path and its tests unchanged. Group ownership and thesis/evidence semantics do not move.
-- Speculative calls may precede earlier commits in the experimental path; accepted handovers and writes may not. Stale prepared requests are recomputed; earlier failure cancels pending work and drains running calls without accepting later results. This scheduling distinction is explicit, not an accidental weakening of D159.
-- The [first implementation slice](research/2026-10-25-day-batch-review/implementation.md) covers offline coordinator, independent Jev calls and failure/restart verification on temporary storage. No paid call, new spending cap or default activation is authorized by this slice. The current per-item spend check is not safe reservation accounting for concurrent paid calls; resolve it before a live comparison.
-- Offline slice result: [ordered-concurrency POC](../poc/reports/2026-10-25-concurrency-poc/results.md). Shared request identity prevents conflicting concurrent answers under one archive ID. Bounded Jev submission cancels pending work on failure; the daily cost log includes discarded speculative work. Default replay remains serial. 143 tests pass; five intended mutants fail; 3,595 historical request hashes are unchanged. Final focused review finds no serious issue. Live accounting, fresh controls and speed measurement remain outstanding; no paid ingestion calls were made.
-
-## D173 · 2026-10-25 · Isolated provider smoke before a larger concurrency test
-
-- Alex approved proceeding with a small test and required preserving the working database: “don't contaminate the current working db ... check the batch API usage correctly ... small scale test before moving forward”. All existing databases remain read-only; no merge or production activation is authorized.
-- The [registered smoke](research/2026-10-25-api-smoke/plan.md) repeats two unchanged extraction requests and two unchanged Jev requests, with three fresh samples of two serial controls and one two-worker arm. Maximum 36 requests; conservative $1.50 reservation ceiling; no automatic retries. This is ordinary API concurrency, not OpenAI's asynchronous Batch API, and is not end-to-end or 10x acceptance.
-- The isolated transport reserves money before dispatch, retains unknown usage after failures, and closes admission on any worker failure or cancellation. A synchronized dispatch decision separates work not yet committed to sending from in-flight work. The provider endpoints, pinned models, response shapes and price envelopes were checked against the official documentation. Existing prompts, product behavior, golds and default transports remain unchanged.
-- Result: [36-request smoke](../poc/reports/2026-10-25-api-smoke/results.md) completed with valid responses, no retries, and all 122 pre-existing database files unchanged. Median two-request speed ratios were 1.08x extraction and 1.77x Jev. Fresh extraction varied between controls; one of 27 Jev categorical comparisons differed. This passes API integration, not semantic or 10x acceptance. A small end-to-end comparison remains next; no production promotion.
-
-## D174 · 2026-10-25 · Three-document end-to-end concurrency diagnostic
-
-- Alex asked to keep going. The [registered comparison](research/2026-10-25-ingestion-smoke/plan.md) uses the whole SK, NAVER and follow-up documents from July 24 against the ordered pre-July-24 baseline. It runs through the product's replay path on separate scratch ledgers, with fresh archives, three serial controls and three concurrent trials; the first control is read before the next trial. This is diagnostic, not production acceptance.
-- The study shares at most two provider requests across all stages. It keeps the $1.50 total conservative ceiling and a 144-call ceiling, stops on failure, and does not alter production prompts, grouping rules, default transports or source/gold databases. Reservation now uses the existing request's actual output cap while retaining the full model input bound and conservative published rates.
-- Before paid calls, the snapshot was corrected for this study to explicitly omit unordered sequence-zero audit rows; the source records are retained untouched. The audit rebuilds each accepted request from its committed prefix and rechecks that exact archived answer into the saved handover. Worker-side schema checks close admission before releasing a slot, including during daily judging. Free full-path controls and a substituted-handover mutant pass/fail as intended; 156 tests passed. Read-only design and code follow-up reviews found no serious issue.
-- The first live serial control completed structurally but failed the NAVER-project check. The model expressed the 2028 expansion as capacity, which the numeric horizon refused; the older library expressed it as an event and accepted it. Evidence and its group disappeared with the candidate. The [result and census](../poc/reports/2026-10-25-ingestion-smoke/results.md) record the trace. No concurrent live trial followed; the journal is closed. Eligibility and the gold remain unchanged pending a product decision. This is not a concurrency acceptance failure or a measured speed regression.
-
-## D175 · 2026-10-25 · Publish sequential cleanup separately from experiments
-
-- Alex asked to commit and push fixes/cleanup that relate to the current sequential version. The pure request-construction cleanup was isolated in a separate worktree and pushed as `07aaff0` on `cleanup/sequential-requests`. It centralizes existing request and hash construction without changing payloads or processing behavior; all 3,595 archived request identities and 123 sequential product/corpus tests pass.
-- The branch contains no concurrent runner, parallel matching, experimental transport or project-eligibility change. It is pushed, not merged into `main`. Experimental work remains local in the original worktree.
-
-## D176 · 2026-10-25 · Judge business-question coverage, not mandatory project cards
-
-- After the D174 result, Alex asked for the hedge-fund-analyst interpretation and then a systematic clean solution. The clarified criterion is whether material source information informs an appropriate, testable business question, retaining attribution and distinguishing plans from orders or realized revenue. A named project does not automatically require its own thesis or group.
-- The earlier D174 mandatory-project-card interpretation is not itself sufficient to establish an extraction defect. Preserve that experiment and its original criterion; review evidence coverage, unsupported implications, wrong links and duplicate questions before changing the gold.
-- The [admission proposal](research/2026-10-25-thesis-admission/proposal.md) identifies the numeric-card recipe and overloaded measure/horizon decision, and proposes a minimal instruction-only causal comparison before any new schema. This records the investigation scope, not approval of the proposed schema, a wider numeric horizon, a production prompt change or another paid run.
-
-## D177 · 2026-10-25 · Modify and test NAVER admission on one frozen context
-
-- Alex explicitly asked: “那你改了然后验证这一条啊”. The [NAVER-only test](research/2026-10-25-naver-admission/plan.md) changes the experimental T6 role to v11, retains the same category text, schema, model, horizon check, matching and writer, and compares three fresh controls with three fresh treatments. The original v23 configuration remains the default.
-- The treatment removes mandatory numeric-card instructions, asks first for a material uncovered business question, and distinguishes an announced milestone's quantitative completion criterion from an annual forecast. It names no NAVER-specific facts. The system message shrinks by 172 characters; non-system request content is identical.
-- Six isolated single-item rounds use the exact pre-NAVER state from the failed serial control, with a new $0.60/36-call ceiling and no network retries. Their scope ends after matching/writing; daily judging and wider extraction quality are not tested. The existing working databases remain read-only. No schema or general horizon-policy change is authorized by this experiment.
-
-- Result: [six fresh samples](../poc/reports/2026-10-25-naver-admission/results.md) retained appropriate project coverage in 3/3 treatments versus 2/3 controls. The other control attached platform-use evidence to Rubin production instead; the two passing controls also proposed discarded annual-capacity questions. Treatment preserved plan attribution and the 200 MW / 2028 milestone without that extra question. Twelve physical requests used $0.009831 at Standard list prices and $0.031480 conservative accounting; all 124 protected databases were unchanged. This supports the candidate on this source only; the default remains v23, with no schema or horizon-policy change.
-- Publication: the versioned prompt, T6-only test configuration and measured outputs are pushed on `fix/thesis-admission-v11` as `884866055cc265455bb72d25cd22e71db10e6558`, based on the sequential cleanup. The paid experiment harness and concurrency runtime remain isolated in the original worktree; no merge or default activation.
-
-## D178 · 2026-10-25 · Resume the isolated acceleration POC with the tested T6 role
-
-- Alex asked to push the change and return to the acceleration POC. The prompt candidate is already pushed as `8848660`; it remains inactive by default. The [resumed comparison](research/2026-10-25-ingestion-v11/plan.md) uses the identical `poc-v24-admission-test` configuration in both modes, the same three complete source items and ordered baseline, and fresh scratch ledgers and archives.
-- Keep D174's two-request outbound limit, $1.50 conservative ceiling and 144-call maximum. No provider/model, production schema, horizon, grouping or writer changes. Add only an explicit study `--config` path whose path/content are frozen before any live call. The prior stopped journal is not resumed.
-- Read each trial before the next. Apply D176/D177's material coverage, direct attachment and faithful status criterion, preserving D174's original result. A failed control, structural error, unsupported material assertion or duplicate counting stops the comparison. Six small trials can measure this workload, not establish general 10x acceleration or production readiness.
-
-- Result: the first sequential control completed in 60.65 seconds and retained both project questions, but failed the direct-link criterion on three of six new links (NAVER future deployment to FY2027 revenue and 2026 Rubin shipments; SK partnership size to FY2027 revenue). The [trace and source review](../poc/reports/2026-10-25-ingestion-v11/results.md) locate the incorrect targets in raw extraction; matching only compares evidence identity inside those targets. The journal is halted before any concurrent trial. Twelve physical requests cost $0.007102 at Standard list prices ($0.020530 conservative accounting); all 138 protected databases remain unchanged. No speed comparison or new default is established.
-
-- Attribution correction after Alex challenged the repeated blocker: the accepted v23 Jev ledger already carries three NAVER-source evidence links to the FY2027 revenue question (archived extraction call 687). The direct-link finding is not established as introduced by acceleration or v11. Reconcile existing baseline issues and fresh-sample variation with introduced regressions before proposing another extraction work order. The study remains halted and no acceptance criterion is changed here.
-
-## D179 · 2026-10-25 · Roll back the unrelated extraction prerequisite
-
-- Alex explicitly requested that the mistaken change be undone. Withdraw D178's use of an existing evidence-association issue as a requirement to repair extraction before continuing the acceleration POC. Restore D171/D172's comparison of sequential behavior with concurrent preparation; report existing semantic issues, sampler variation and introduced regressions separately. Keep the structural correctness requirements.
-- No evidence-link repair had entered product code. Preserve the validated D177 NAVER prompt, the existing matcher/writer and source/gold databases. The historical plans, measurements and reviews remain; the [effective continuation](research/2026-10-25-ingestion-v11/resume.md) supersedes the withdrawn work order.
-- The only runtime state restored is the assistant-set semantic `settings.halted` flag in the isolated study budget journal. A backup precedes the update; all 12 completed attempts, charges and the original limits are unchanged. No unknown-usage or technical-failure state is reopened. The next trial is concurrent-1; no paid request is part of this rollback.
-
-- Continuation result: concurrent-1 completed in 43.03 seconds versus control-1 at 60.65 seconds. Both projects remain and structural checks pass; two stale preparations were recomputed. The single pair has different judgment workloads, so it is not an isolated speedup estimate. Concurrent-2 stopped on a TLS EOF before any new product record. One unknown-usage request retains its $0.517 reservation; no automatic retry or cap increase. The [continuation summary](../poc/reports/2026-10-25-ingestion-v11/continuation-summary.json) preserves all measured results. The next task remains acceleration measurement, not extraction modification.
-
-## D180 · 2026-10-25 · Execute the existing implementation plan on the complete busy day
-
-- Alex reiterated that the task is the parallel POC, instructed reading the existing implementation plan and told the assistant to complete it. Continue D172's implementation, not a source-first redesign or another extraction-quality work order.
-- Use all 53 July 27 items in the preserved v23 Jev library. First build a current-code canonical response fixture, reusing exact archived requests and completing only missing current requests. Older stored Jev calls predate D168 criterion wording and cannot be claimed as exact current requests. Keep the original files read-only. Fixture completion is not a fresh latency control.
-- Run the actual sequential and eight-worker coordinator over that full day with identical recorded responses and real scratch storage. Every accepted extraction must match a recorded request; unknown speculative responses cannot become authoritative. Compare all logical records and measure actual executor overlap. Synthetic timing is labelled synthetic, not model speed.
-- Any additional live checks retain the original combined $1.50 and 144-attempt limits: the earlier unknown reservation remains held; allocate only the remainder to a separate journal. No provider, model, prompt, schema, grouping or identity change, and no cap increase.
-
-- D180 result: [full-day proof and live matching measurement](../poc/reports/2026-10-25-full-day-parallel-r4/results.md). All 53 July 27 inputs complete in sequential and eight-worker recorded-response runs; 10 logical tables match, 106 handovers bind to exact requests/answers, and the deliberately altered nonempty handover is rejected. Ten stale preparations are recomputed. Separately, five identical Jev jobs across three serial and three parallel samples measure 3.959 versus 1.185 seconds median (3.340x), with five actual simultaneous provider calls. One near-threshold decision differs in two parallel samples; that variation is preserved. No whole-pipeline 10x or new semantic acceptance is claimed. 156 tests pass; all 138 protected databases remain unchanged. Combined use stays within the original 144-attempt/$1.50 cap, retaining unknown usage.
-
-## D181 · 2026-10-26 · The parallel day, measured end to end on live APIs, and promoted as an opt-in replay mode
-
-- Alex: "finish the entire POC of parallelization ... the results are correct compared to the golden that we ran sequentially and the speed up end-to-end is measured and benchmarked"; "我是要你真的implement 下去跑"; then "do code review, clean up the code and push the parallelized version and update all documentation". D180 left the whole-day live measurement open.
-- Scheduling change inside D172: a waiting request that a commit changed is prepared again right after that commit, not at its turn; the turn still accepts only a byte-identical request. Recorded replay of the full day stays identical in all ten tables (ingestion chain 154 s → 95 s at recorded durations, 16 workers). Preparing the whole day ahead, ordered by item, left the chain unchanged and was not kept: the remaining waits are real dependencies between items.
-- [Registered study](research/2026-10-26-e2e-parallel/plan.md) and [result](../poc/reports/2026-10-26-e2e-parallel/results.md): July 27, 53 items, three serial against three parallel live trials interleaved. Median 501.8 s → 112.5 s, **4.46× end to end**, 5.91× for item work; daily judging (~37–40 s, D63) is the same code in both. Every trial's audit is clean, the runner's accepted request equals the rebuilt exact-prefix request 53/53 in each parallel trial, and each trial's answers replayed through the other mode give an identical ledger (12 tables, ~1,000 rows). Drift from the recorded golden (29–30 of 53 items identical for parallel, 27–34 for serial) is inside the serial trials' own spread. Cost +24% at published rates for re-prepared requests ($0.086 against $0.070 a day).
-- Budget: a new journal for this study, $4.00 conservative and 2,000 attempts, request-sized input bound, up to three attempts on failures without a reply with each failed attempt's reservation held; used $1.712 conservative, $0.467 published, plus $0.09 for one run of the product entry point. The D173–D180 journal and its held reservation were not reused.
-- Promotion: the runner is `hivemind.parallel_day.ParallelDay`, opt-in through `scripts/replay.py --workers N [--jev-workers M]`; the serial path stays the default; worker counts are run arguments, not Config (D3). The product entry point ran the live day in 135.5 s, audit clean, cross-replay identical. The Jev client now retries a dropped connection like the OpenAI client (two such failures in one parallel trial); a final status is not retried.
-- Code review (Codex, read-only): fixed the study's pass rule (a failed cross-replay audit now stops the study), a signal handler that could wait on the journal lock, duplicated handover binding (one check in `poc/concurrency_study/proof.py`, now also binding the runner's accepted request), and a schema-identity test that did not test the schema. Not changed, with the reason: a serial restart after a parallel failure resumes exactly as a serial restart after a serial failure (accepted handovers are serial-equivalent); the product cap counts archived calls, as the OpenAI client's retries already did. Superseded study harnesses (`ingestion`, `smoke`, `summarize`, `within_item`, `poc/naver_admission.py`) were removed; commit `6ed66ca` holds them as they ran.
-- Limits: ten times end to end on this day would need daily judging and dependency chains to shrink, neither a scheduling change. The spend cap is checked per committed item, so in-flight early requests can pass it by at most the worker count's calls. Making parallel the default is Alex's choice.
-
-## D182 · 2026-10-26 · The parallel day over fifteen consecutive days, against the serial path, with no network
-
-- Asked after D181 whether the optimisation is "super solid": D181's evidence covered one day (July 27), so the parallel day had never run several days in a row, where a day's judging and its last commits feed the next day's first requests.
-- The recorded August run predates D168 (its Jev requests lack one relation option and carry the older replace wording, and D168 changed matching and writing), so its answers cannot serve the current code for more than one item. [Study](../poc/reports/2026-10-26-multi-day-oracle/results.md) (`poc/concurrency_study/multi_day.py`, $0): the serial path and the parallel day (16 extraction, 8 Jev workers) each replay August 1–15 (221 items) from the July 31 ledger, every call answered by one deterministic oracle of the request bytes (the item's recorded extraction answer with each evidence line tagged by the request digest; Jev choices drawn from the digest; a valid judgement).
-- Result: the two ledgers are identical in all 12 compared tables (3,418 rows; 1,458 written over the fifteen days), the parallel turns accepted exactly the serial run's 221 extraction requests, and 121 early requests were changed by an earlier commit and prepared again; a mutant without re-preparation and turn check was caught (11 of 12 tables differ). The same holds with answers served instantly.
-- Speed, estimated at recorded call durations (not live): 2,512 s → 900 s over the fifteen days, **2.79×** end to end, 3.66× for item work; per day from 1.5× (4 items) to 4.5× (19 items). Small days gain little because their own dependency chain and judging dominate. The extraction requests rose 55% under the oracle (live July 27: +15% to +45%).
-- A rerun of a day whose answers are all archived (July 27, no network, calls counted): the serial path sends no paid call and takes 0.2 s; the parallel day takes 1.3–1.4 s and sends the early requests the archive does not hold (8 on the serial trial's archive, 0 on a parallel trial's). Parallel pays only where the models are called afresh.
-- Nothing in the code changed. Lean on the default, revised: keep the serial path the default, which reruns on saved answers free and fastest, and pass `--workers 16` to runs that call the models afresh (new days, or a changed prompt or configuration). Alex's choice.
-
-## D183 · 2026-10-26 · The replay runs the parallel day by default
-
-- Alex, after the comparison of the two modes (same ledger for the same answers; about 4× faster on a busy day of fresh calls; about 24% more cost; a rerun on saved answers free and fastest serially): "没事我们先都跑parallel, 这样可以快速的收敛。" This replaces D182's lean.
-- `scripts/replay.py` now runs each day with `hivemind.parallel_day` unless told otherwise: `--workers` defaults to 16, `--jev-workers` to 8 when the configuration matches with Jev and to 1 for another matching engine (the parallel day refuses parallel matching outside Jev). `--workers 1` runs the serial path; it is needed to resume a day a serial run left unfinished, which the parallel day refuses without its manifest. Worker counts stay run arguments, not Config (D3); `replay.run` itself keeps `day_runner=None` as its serial path.
-- Cost of the default, as measured: early requests a later commit changes are paid and discarded (+24% a busy day live), and a rerun on saved answers sends the early requests its archive lacks (0–8 on July 27) and takes about a second longer.
-- Test: the entry point with its defaults runs the parallel day and writes the serial ledger; with `--workers 1` it runs serially (a mutant that asks a non-Jev matcher eight questions at a time is caught).
-- Code review before the push ([request](research/2026-10-26-e2e-parallel/review-2-request.txt), [Codex, read-only](research/2026-10-26-e2e-parallel/review-2.txt); no correctness defect in request identity, commit order, matching order or thread ownership). Fixed, each with a test that failed first: (1) a restart under `--max-items-per-day` counted only the remaining items, so it dispatched an item beyond the day's limit (serial) or was refused by the manifest (parallel); the items an earlier run of the day wrote now count toward the limit. (2) The study and test comparison read 12 of the ledger's 20 tables; one comparison (`proof.ledger_rows`) now reads every product table without row ids, call ids and wall-clock times, and recomparing every stored pair found them identical (D180's recorded day, the 16-worker recorded run, the product-entry live run, the six D181 cross-replays, D182's fifteen days: 5,805 rows), the D182 mutant differing in 16 tables. (3) The entry point is tested with no arguments on the default Jev configuration (16 and 8 workers, serial ledger; a mutant default is caught). (4) A stale sentence in the current state. Found by Claude: a manifest left by another ledger in the same folder refused a fresh ledger that had written nothing of that day; such a manifest is now replaced, and a ledger that has written part of the day still refuses a changed contract.
-
-## D184 · 2026-10-26 · A candidate thesis opens for one of four reasons, stated in the answer
-
-- After the granularity research ([report](../reports/对冲基金论点粒度与金标.md); four notes in `research_notes/对冲基金论点粒度与金标/`): the ledger's 90 theses hold 25–32 at analyst granularity by two independent readings; the rest are financial lines, duplicates of one aggregate, customer deployments or unsettleable questions. The mechanism is one: the extractor's unit was "a sentence with a number and a period", not a disagreement; matching then rightly judged nine populations of one aggregate as nine quantities. Alex, on the clean version of option B (prompt plus schema-enforced fields, no dedup key): "可以".
-- Decided: from extraction version 12 the default output for a statement is evidence to a shown thesis. A candidate opens only for one of four reasons, a closed schema enum `opens_as`: `main_driver` (an annual quantity that carries the company's value, whether or not the company guides it; first named `guidance_on_main_driver`, which the seed run showed excludes NVIDIA's data-center revenue because NVIDIA guides only quarterly), `industry_aggregate` (one aggregate quantity per calendar year; a later estimate or another population of it is evidence), `policy_stage` (a stage of a policy process with its authority named), `binding_obligation` (a guarantee, financing, equity stake or purchase commitment a universe company takes on). Every candidate also carries `settled_by` (the public material that resolves it), `folds_into` (the shown thesis it would otherwise attach to, or empty; the schema pattern is built from the shown ids) and `lost_if_folded` (the investment implication lost if it only attached there). Code checks shape (`extraction.check_admission`): blank text, an unshown `folds_into` and a binding obligation beyond its horizon are refused; the judgement of importance stays with the model (D154/D155). No key rule is added (log row 43 stands). Versions ≤ 11 are unchanged.
-- The prompt `role-v12` replaces v11's "which questions to propose" with the four reasons and the three fields (7,357 characters / 1,482 o200k tokens against v11's 6,567 / 1,312: growth of 790 characters, the definitions of the three required fields and the four reasons; the recipe lines were already removed in v11, and the user message is unchanged). Configuration `poc-v25` = `poc-v23` with every category on v12. Measured against the extraction gold (D188) on the seed, week and August windows; results in `poc/reports/2026-10-26-admission-v12/`.
-- Closes the open question "thesis granularity" of 05-extraction and 06-views: the research synthesis's "split when settled by different prints" and "2–4 per name" are not rules; the eight labeller rules of the report §1 are the standard, and a count is an outcome.
-- Result ([results](../poc/reports/2026-10-26-admission-v12/results.md)): two false starts diagnosed on stored data ($0.08 together: a check that demanded a reason not to fold when there was nothing to fold into; reason 1 named as guidance, which excluded NVIDIA's data-center revenue), then one run over seed, week and August ($1.31 against the baseline's $1.01, the three fields and re-prepared requests). Theses 90 → 60, financial-line theses 29 → 3, evidence 534 → 710; gold full 3 → 9, partial 7 → 0, fail 10 → 11, every v12 failure a miss and none an extra. Remaining, counted: six theses for one 2026 aggregate, about seven small binding obligations, three proceedings opened as policy stages; eight candidates named a thesis in `folds_into` and opened anyway, six of them duplicates. A read-only code review's two wording findings on the role (a milestone on the main product under `main_driver`; the D185 exception beside the year limit) go to a v13 arm with the rule-2 wording for obligations and policy stages, Alex's call. Branch `feat/thesis-admission-v12`, not merged.
-
-## D185 · 2026-10-26 · A binding obligation is due within 18 months and is exempt from the next-year rule
-
-- Alex chose option B ("可以"): the current/next-year window keeps bounding quantities; a thesis on a binding obligation a universe company takes on (guarantee, financing, equity, purchase commitment) may set its own check day up to 18 months after the item (`extraction.BINDING_HORIZON_DAYS = 548`), because the signing can be checked long before the project it finances is built (Ohio: the guarantee in 2026, the campus in 2028). Due with no reliable material: "no data to verify", never a pass or a fail (AGENTS §8). Amends 06-views ladder rule 5 for this reason only.
-
-## D186 · 2026-10-26 · Asset-thesis rungs describe business outcomes; the favourable end is registered per thesis
-
-- Alex chose option C ("可以"): rungs of an asset thesis state the business outcome (above, near or below guidance), and each thesis registers which end is favourable for the company, as a theme thesis's dependants already state a direction. Reason: results and direction separate (NVDA beat four quarters and fell; capital spending can build capacity or hurt returns). Recorded; not implemented in this slice: it changes `check_ladder`, the writer, judging, the UI adapter and the Idea route (value × reader), so it is its own slice with its own measurement.
-
-## D187 · 2026-10-26 · A company's own quantity sits under that company's object, private companies included
-
-- Alex chose option C ("可以"): any company's own quantity is a thesis under that company (SpaceX's compute capacity under SpaceX, Alphabet's capital spending under GOOGL), consistent with 06-views rule 5 ("company figures use the fiscal year"); a macro theme opens only when a thesis depends on it. Recorded; not implemented in this slice: it needs a private-company object kind in the universe and the one switch (01-universe), its own slice. Until then the gold accepts the Codex reading (evidence to NVDA data-center revenue) for SpaceX.
-
-## D188 · 2026-10-26 · The extraction gold: twenty cases labelled by the assistant this round, human review later
-
-- Alex: "不是你要标吗？之后我们可以human in the loop, but this time in the beginning just use the research you just did"; "标20条". The gold `poc/eval/gold/extraction-admission-2026-10-26.json` holds 20 cases from the real items (the report §5's 15 plus five: CoreWeave managed-inference ARR, the four-company $745bn figure, the Bloomberg NAVER retelling, the Taiwan smuggling clause, the Goldman 2027 aggregate), each with the theses that must open (typed keys: object, measure, year, event type, scope pattern, with acceptable alternatives), the theses that must not open, the evidence links that must exist and the baseline's score. Scoring (`scripts/score_admission_gold.py`): fail when a must-open thesis or an evidence target is missing; partial when all are present but a must-not-open thesis was created; full otherwise; "not processed" when the run never saw the item. Labelled `assistant`; a human pass with two labellers and a reported agreement is the next protocol step, not this one.
-
-## D189 · 2026-10-26 · poc-v25 is the replay default; the trace review names the next mechanisms
-
-- Alex, after the measurement: "你可以取代，但是看所有的 trace 然后告诉我我们怎么持续做的更好接近 golden … We don't want to overfit … It needs to act exactly like a very senior hedge fund analyst". `scripts/replay.py` now defaults to `poc/config/poc-v25.json` (extraction v12, Jev matching); `poc-v23` stays as a configuration and replays unchanged.
-- The [trace review](research/2026-10-26-thesis-admission-v12/trace-review.md) reads every thesis, every gold failure and the duplicate aggregates to their raw requests, answers and matching decisions, and names the root causes by design layer: thesis identity is a quantity where the analyst's unit is a question (six 2026 aggregates, each judged "new" correctly under the current criterion); the contract under-produces on first contact with a company (AMD 2 theses, MSFT 0); the role states categories where the labeller applies tests; theme candidates name no dependant; the extractor never sees the current view. Six general mechanisms are proposed with the class and count each moves, in the order: matching's "another estimate or population of the same question" option and theme dependants (code and schema, no prompt growth), then role v13 (tests instead of lists, the first-contact rule, quarterly statements as evidence; net shorter), then showing the view in block 5 as an A/B, then the daily duplicate check as pull-mode design. Each is Alex's call; none is built here.
-
-## D190 · 2026-10-26 · The collision judge: Jev for identity, the generative model for the analyst's question when a question may be held twice
-
-- Alex: "查重是用的 Jev 吗？… 你可以先单独跑这个，重新 review 一次 Jev 的提示词，然后优化他，不仅达到你的目的，也更贴近 hedge fund analyst 的大脑，你有黄金集做标准". Jev answers every candidate-to-thesis relation and every evidence comparison since D169.
-- Review of Jev's relation criteria against the r3 ledger ([probe](../poc/reports/2026-10-26-admission-v12/jev-relation-probe/probe.md), 31 stored candidate calls whose list holds a thesis of the same object and measure, 18 labelled by the assistant): under the current options Jev calls a population variant of one aggregate `part_of` (0.4–0.9) and the code maps that to "new"; under an analyst's option set ("one question: the same outcome settles both; another estimate, population or proxy of one aggregate is the same question") it answers `distinct_question_same_matter` 0.5–0.9 on the same pairs. Both wordings: 8 of 18 right. Jev compares wording; it does not hold the decision. No change to Jev's criteria is made: the measured criteria stay (D167–D169).
-- The generative model asked the same analyst question on the same 18 ([records](../poc/reports/2026-10-26-admission-v12/jev-relation-probe/llm-records.json), 3 samples each, $0.02): 11 of 18 right by majority, and 5 of the 6 aggregate duplicates merged; the misses are the debatable pairs (a reporting segment beside the business segment, the same deal under two names).
-- Decided to build and run alone: `matching` keeps Jev; a configuration may add a `collision` setting (model, prompt `collision-v1`). When a candidate's list holds a thesis of its own object and measure, one generative call answers the analyst question for those theses and its verdict replaces Jev's on them (`jev_matching.collision_peers`, `ask_collision_judge`); every other relation stays Jev's. `poc-v26` = `poc-v25` plus the judge. Measured by one run over seed, week and August against the extraction gold and the census (ledger `english-v26-collision-r4-2026-10-26`); result appended here.
-- General, not a list: the routing rule is a structural fact of the library (two theses of one object and quantity), and the question is the one a desk asks. The cost is one call per collision (31 of 69 candidates on r3), about $0.002 each.
-- Result (run r4, `poc-v26`, seed + week + August, $1.33): 26 collision verdicts, 9 merges or successions, all on aggregate variants; 2026 aggregate theses 6 → 2 (v23: 11); theses 60 → 45; no merge removed a thesis the gold wants and A17 (the four-company figure as evidence to the five-company aggregate) turns full. The gold's overall score moved 9 → 4 full, and every lost case is an extraction difference between two fresh runs of the same v12 prompt (Rubin not opened from the call this time, the NAVER and META lines not extracted), not a matching decision. Recorded as the measurement rule for later arms: a matching change is judged on stored candidates and the duplicate census; an extraction change needs three fresh runs or pinned extraction answers; a one-run gold score carries about ±5 cases of sampler noise on this corpus. `poc-v25` stays the replay default until the judge is measured that way.
-- Confirmation with extraction pinned (same recorded extraction answers in both arms, ids translated, Jev live, judging synthetic; `pinned_matching_study.py`): control reproduces r3 (60 theses, gold 9 full); the judge arm 56 theses, 2026 aggregates 6 → 3, evidence equal (711 vs 707 rows), gold 8 full with the one difference a repeat the scorer cannot see; 31 verdicts, 6 merges, $0.011; no required thesis lost. Alex: "有效果我们可以做". `poc-v26` becomes the replay default; `poc-v25` stays as a configuration. Open: the judge leaves 2 of 5 aggregate duplicates apart on one sample; a majority of three samples on collisions would cost three cents a run.
-
-## D191 · 2026-10-26 · Theme theses reach every company; no named dependant is required to open one
-
-- On the theme-dependency design (`docs/research/2026-10-26-theme-dependencies/design.md`), Alex decided the four points:
-  1. A theme candidate does **not** have to name the company thesis it feeds. Alex: "我觉得这个非常难，有时候一个政策影响非常的广，你这种做法基本不可行，不可能所有的公司都 map 到，你可以默认这些宏观的东西和所有公司都有影响，我觉得这个 1 to all mapping 比较 make sense，至于这个 thesis 的 state 对每个不同公司的影响需要别的方法来判断". Decided: a theme thesis is context for every company thesis (one to all); how its state bears on each company is decided when that company's thesis is judged, not by an edge written at extraction. Explicit dependencies stay for the cases a document states (a company thesis on another thesis), and may be added to an existing thesis later (point 2).
-  2. A dependency may be added to an existing thesis by a later item ("可以").
-  3. From a macro-only item, a theme opens only when the theme is in the universe's list ("是"); an unlisted theme waits for a company item.
-  4. `industry_aggregate` is renamed `shared_quantity`: a quantity or price outside any one company that several move on ("好").
-- Consequences for the design, to be worked before any build: the judge of a company thesis reads the current state and reasons of the open theme theses of the themes its items were tagged with (block of the judging request), and states the sign it applies; a changed theme conclusion does not fan out to every company thesis in the same round (06-views: a repeated Fed statement must not trigger hundreds), it is read at each thesis's next judgement; proceedings that move no line are kept out by the admission test on themes (the model's judgement), not by a missing edge. The `feeds` field of the design is withdrawn for themes.
-
-## D192 · 2026-10-26 · Role v13 (tests instead of lists) fails its probe; wording is exhausted as a lever
-
-- Alex: "接着做下一步，不要 scope creep, just solve the core problems on improving quality for the extraction". Role v13 replaced the four category definitions and the ban list by the labeller's three tests (swing, independence, loss), added the first-contact rule (two to four questions for a company with no thesis shown) and named quarterly or run-rate statements as evidence; 7,580 characters against v12's 7,458.
-- Probe ([role_probe.py](research/2026-10-26-thesis-admission-v12/role_probe.py), `poc/reports/2026-10-26-admission-v12/role-probe/`): the gold's 20 items re-sent with the stored v12 request's user message and v13's system prompt and schema, three samples each, sifted and scored at the candidate level against the gold's must-open and must-not-open keys; the stored v12 answers of two runs (r3, r4) are the controls. Must-open keys proposed: v12 9/15 and 8/15, v13 26/45 (8.7 per sample); must-not-open keys proposed: v12 0 and 1, v13 11/174 (3.7 per sample: a tax-rate thesis from the press release in two samples, a Taiwan proceeding in two, a run-rate thesis); candidates 30, 30, 33 per sample. $0.09.
-- Read: the tests moved two cases the right way (the Helios milestone 3/3 against 1/3; the Ohio guarantee 2/3 against 0/2) and others the wrong way (the press release and the proceeding); coverage did not rise. The consistent misses (a numeric China-revenue thesis 0/5, Microsoft's capex 1/5, AMD's data-center FY2026 line) are judgements the model makes the same way under both wordings, not a reading of a list. Not adopted; `poc-v27` stays a configuration.
-- A narrower v14 (role-v12 plus only the milestone clause the Helios gain came from, the D191 rename and the D185 exception, minus the peripherals sentence) is probed the same way; result appended here. Result: worse than v12 in the other direction: must-open keys proposed 14/45 (4.7 per sample against 9 and 8), candidates 17 per sample against 30; the February 25 call opened neither data-center revenue nor gross margin in any of three samples (two candidates each), while Helios rose to 2/3 and Ohio to 1/3. Twenty-five characters of wording moved coverage by half. Not adopted; `poc-v28` stays a configuration.
-- Decided: role v12 stays. Two audited wordings moved the extractor in opposite directions on the same items; the extractor's behaviour is more sensitive to wording than to meaning, and a single sample at temperature 0.2 is the unit being measured. The levers that remain are structural, each Alex's call: (1) show the current view in block 5 so the swing test has an input; (2) sample the extraction three times and keep the candidates a majority proposes (identity by typed key), which turns the variance into a vote at three times the extraction cost (about +$1.7 over this window); (3) the first-contact pass as its own call on a company's first item. None is built here.
- Beyond that, the remaining lever for extraction is not wording: the extractor never sees the current view (05-extraction block 5 shows question, focus and due date only), which is the input the swing test needs (trace review §5).
-
-## D193 · 2026-10-26 · Extraction coverage is at the model's steady state; the phase closes on v12 with the collision judge
-
-- Alex: "太贵了抽 N 次 … 其他的点你自己深度思考啊 … 你深度的研究思考小范围尝试，给我结果让我清晰的做决策". Sampling several times per item is ruled out on cost.
-- Two structural arms probed on the gold's 20 items with the stored v12 user messages, three samples each ($0.22): extraction at `reasoning_effort: medium` (configuration only) and block 5 carrying each shown thesis's current rung and last reasons. Neither moves coverage: 8.3 of 15 must-open keys per sample against 9 and 8 for the two stored v12 runs; medium reasoning proposes fewer candidates (25 against 30) at 1.8× the time; the view block adds a little clutter (1.7 against 0–1). With D192's v13 and v14, five arms give the same picture: the gold's must-open coverage is the model's steady state on these texts, about 8–9 of 15, and the six misses are the same judgements under every arm.
-- Decided: extraction stays on v12 with the collision judge (`poc-v26`, D190). No further extraction arm is run without new information: a human pass on the six persistent misses (three of which the gold could accept as alternatives) decides whether they are the gold's or the model's; the next build is the D191 theme block in judging. Recorded probes: `poc/reports/2026-10-26-admission-v12/role-probe/`.
-
-## D194 · 2026-10-26 · The six persistent misses read against the transcripts: one gold key removed, five stand
-
-- Alex: "你自己看完是怎么归类评价的" … "好那你既然有判断了，那来改吧". The pass D193 left open was done by the assistant against the source texts and the stored candidates of every v12 run (r1–r4), not by a second labeller.
-- The yardstick: does the text give a number or a date an analyst would track to a due day, and did the model open the same decision through another admission reason. Read that way:
-  - **AMD data-center FY2026 (A14): the gold's.** The call gives no full-year 2026 data-center figure (only the Q3 guide, "server revenue more than 80% in the second half" and "data-center revenue more than double in 2027"); the model opens the 2027 line in every run. The key came from v23's `v53`, not from the transcript. Removed; the gold's must-open keys go from 15 to 14; resealed.
-  - **NVDA China (A03): the model's, by authority, not by granularity.** The policy reading is already an accepted alternative, but every policy candidate the model wrote ("will the U.S. government allow H200 imports into China", r1 and r4) names the U.S. as the authority the text leaves open ("we do not know whether any imports will be allowed into China" after "approved by the U.S. government"). The gold's rule that the China key cannot match a U.S.-licence thesis stands; in r2 and r3 the model opened nothing on China.
-  - **MSFT calendar-2026 capex (A13): the gold stands.** The call states the figure. The model links it as evidence to the five-company aggregate (r3) or opens FY2027 capex (r4); both are defensible, but a Microsoft page without its own capex question is the wrong product. Kept as must-open with the fiscal-year alternative.
-  - **Helios first shipments (A14), Intelligent Cloud FY2027 (A13), CoreWeave FY2026 revenue (A12): the model's.** Each is a stated number or date ("initial shipments on track to begin later this quarter"; Intelligent Cloud guided to $40.95–41.25bn, Azure +45%; revenue guidance raised to $12.4–13.2bn). The three share one shape: the first call of a company in the window, where the model opened one or two theses and stopped. That is the first-contact pattern v13 tried (D192: +0.7 must-open, +3.7 must-not-open), so it is a known limit of v12, recorded here, not an open arm.
-- Scores do not move: every reported ledger scores the same against the corrected gold (v23 3 full / 7 partial / 10 fail; r3 9/0/11; r4 4/0/16; pinned control 9/0/11, pinned arm 8/0/12), because A14 still fails on Helios. The probes' per-sample coverage in D192/D193 was counted on the 15-key gold; the removed key was proposed by no stored run, so the readings there are 8–9 of 14.
-- Decided: the gold is corrected as above and stays assistant-labelled (D188's two-labeller pass remains Alex's); extraction stays closed on v12 with the collision judge (D193); the next build is the D191 theme block in judging.
-
-## D195 · 2026-10-26 · The theme block: every asset thesis is judged with the open theme theses in view, and a changed theme conclusion reaches them in the same round
-
-- Alex: "做，先零成本数完再改；然后你得确认这个架构和逻辑是对的", then on the one open choice "A 但是仔细思考怎么做才是正确的". Census and design: `docs/research/2026-10-26-theme-dependencies/design.md` §8 (`theme_block_census.py`; Codex read-only review, 12 findings, each read against the code, §8.8).
-- What the ledgers said ($0): every company judgement would carry a block (175 of 175 in r4, 2–6 theme lines); the narrow reading by item tags shows a block in 14 of 175, so Alex's one-to-all rule is the only one with data; in 9 judgements the theme was judged after the company thesis in the same round; without propagation 109 of 228 theme changes are never read inside the window; with it, 141 more judgement calls, about $0.24 on the window.
-- Decided (A): under `judging-v4` (`poc-v29`) an asset thesis's request carries `[Themes in force]`: every open theme thesis with a current state, its rung, the reasons of its last judgement and whether it changed since this thesis was last judged; the answer carries `theme_pushes` (view id, push in the evidence-push vocabulary), checked by code against the block and stored as `judgements.theme_pushes_json`, served as `theme_pushes`. Theme theses are judged before asset theses in a round; a theme judgement that says changed queues every open asset thesis with evidence in force, once per round, the rule explicit dependants follow (`changed` is the PRD's filter: a repeat does not fire it, a facts-only change does). The round's queue is derived from the ledger (the day's changed views, the dependants of views judged at this sequence number with a changed conclusion, the asset theses a changed theme queued), which also closes a hole the review found: a round interrupted after some judgements committed lost what they had queued. Everything is gated on the prompt version; v3 ledgers replay unchanged.
-- This replaces the consequence note under D191 ("a changed theme conclusion does not fan out to every company thesis in the same round"): that sentence was the assistant's, and the census priced both sides. Explicit dependencies, D191 point 2 and the UI are unchanged. A theme conclusion is never evidence (06-views) and is never cited in `cites`.
-- Three r4 asset theses re-judged once under v4 ($0.009, `poc/reports/2026-10-26-theme-block/resend-three.txt`): the signs read as an analyst would give them (hyperscaler capex toward the bullish end for NVIDIA data-center revenue, AMD data-center growth and TSMC revenue; the H200 permission toward it for NVIDIA; the overseas-computing restriction away; a tungsten-scrap allocation ignored by all three). One replay of the window under `poc-v29` (r5) measures it beside r4; adoption as the replay default waits for that measurement.
-
-## D196 · 2026-10-27 · `poc-v29` (the theme block) is the replay default
-
-- Measured once over the r4 window (`poc/reports/2026-10-26-theme-block/results.md`): 245 asset judgements carried the block, 194 named a theme push with signs that follow each thesis's own ladder; propagation added 121 judgements (+$0.20) and changed a conclusion one time in ten; reasons read the same or better on the five theses with the same question in both ledgers; one judge call in 307 ran out of output on the largest thesis and answered on resume. The whole run cost $1.46 against $1.21 with cached input at its published rate ($1.59 against $1.33 with every input token at the input rate; the cost column priced cached input at the full rate until 2026-10-27, build-log row 57).
-- Decided: `scripts/replay.py` defaults to `poc/config/poc-v29.json`; `poc-v26` stays as the control configuration. Not built: the block on the UI; a tighter aggregate-theme identity (the near-duplicate aggregates each take a line in every block).
-
-## D197 · 2026-10-27 · A shared quantity is one thesis per theme, measure and period; its wording is not identity
-
-- Alex: "先把合计资本开支的重复主题题解决掉; 你小范围验证就好这个问题不要全部重跑，你能不能快速收敛".
-- The class ($0, `docs/research/2026-10-27-shared-quantity/proof.py`): every AI-capex aggregate candidate of r3, r4 and r5 (9, 11, 11) against the theses that existed before it. r3 (no collision judge) opened six 2026 aggregates; r4 and r5, with the judge, each opened one duplicate: the judge read "Big Tech AI outlays" against "the top five's total capex" (r4 seq 351) and "the five named companies' capex" against "industrywide AI infrastructure spending" (r5 seq 200) as distinct questions in one matter, and later candidates then merged into the duplicate (r4: two). The contract already says what identity is: `industry_aggregate` is "one aggregate quantity for one calendar year … another population or another wording of the same aggregate is evidence to the shown aggregate thesis" (role-v12), and D155 puts identity in code where it is fully determined.
-- Decided: a candidate admitted as `industry_aggregate` / `shared_quantity` with a quantity measure is keyed by (theme, measure, period) with no scope (`identity.automatic_key`); the writer records its key with `scope_source = 'shared'`; on the Jev path code decides its destination before any judge (`jev_matching.shared_quantity_target`): the open thesis of the same key is the same thesis (merge), the latest earlier period without a successor is its predecessor (succession), otherwise new. Policy stages and other events keep their event-typed identity; a company's own line (MSFT capex) is another object and never the aggregate; a theme quantity without the admission reason (the pre-D184 financing-amount case of T4) stays the model's. Tests: `tests/test_shared_quantity.py` (3, red first), suite 187.
-- Proof on stored data: the rule flips every duplicate to a merge (r3: 5 merges + 1 succession; r4: 1; r5: 1), touches no other object, and changes no stored matching check (preflight C: 618 judged, 9 refused, as before). Small-scale validation (Alex: no full rerun): the r5 window replayed with extraction pinned to r5's answers and matching live (`docs/research/2026-10-27-shared-quantity/pinned_arm.py`, `poc/data/pinned-shared-2026-10-27/`): one 2026 aggregate thesis (v22, 33 evidence links; r5 had two theses with 40 links between them) and one 2027 successor (v29, succeeding v22); the rule decided 10 aggregate candidates (8 merges, 1 succession, 1 opened), the collision judge was asked 17 times about other peers, cost $0.21 (Jev) + $0.01 (judge).
-- Codex read-only review of the branch's code (D195–D197, `scratchpad codex-code-review-d195-d197.out.md`), seven findings, each fixed with a failing test first: an unknown measure (`other`) is never a shared identity; two wordings of the next year's aggregate in one answer are one successor (coalesced by key, not refused as a second successor); a shared candidate's comparison list holds every thesis of its theme and measure, so a predecessor outside the search window is a valid target; the judgement's theme ids are checked against the block the request carried, not the ledger's state at check time; Jev is not asked a relation question about a shared candidate; a ledger written before the theme block gains the column at the write boundary (test that fails without the migration); one propagation rule (`queued_by_change`) serves live and resumed rounds. Suite 192.
-
-## D198 · 2026-10-27 · A judgement reads the evidence in view, not everything in force
-
-- Alex, 2026-10-27, on the finding that evidence in force grows without bound (v6, NVIDIA FY2027 Data Center revenue: 574 pieces after six weeks, 415 never cited by any of its 33 judgements; 40 of 316 judge requests over 30k tokens, max 67k; judging 38% of spend and rising; the run's stall came from enumerating 300+ ids): "这是什么问题你深度思考之后改".
-- What the problem is (design: `docs/research/2026-10-27-evidence-in-view/design.md`): two mechanisms. (1) Extraction links wide: `role-v14.txt` says "every statement and number is, by default, evidence linked to a shown thesis" and also "link only to the thesis it directly concerns; omit statements with no thesis"; the model attaches every business mention to the broadest thesis (2.5 pieces per item on v6; a liquid-cooling note, a SuperPOD purchase, a rack R&D story). Not changed here; the prompt audit is reported to Alex as the next slice. (2) Judging-v4 reads everything in force every time ("Rejudge from all evidence currently in force"); an analyst keeps what his view rests on and reads what arrived.
-- Decided: from judging-v5 (`poc-v30`) a judgement of a thesis is shown, of its evidence in force, the arrivals (pieces linked after the thesis's fifth most recent judgement, READINGS = 5; everything when it has fewer) and the basis (pieces cited by one of its last ten judgements, BASIS = 10). The rest stays in force in the ledger; the request names the count ("[Not shown: N more pieces in force, read in earlier judgements; the previous conclusion carries them]"); the answer may cite and push only shown ids, checked against the request that was sent (`judging.evidence_shown_in`, as the theme block is). Nothing leaves the ledger; the repeat / replace / new rules, "in force", the rejudgement triggers, eligibility, the theme block and dependencies are unchanged. Gated on the prompt version: v4 ledgers and configurations read in force as before.
-- Measured ($0, `census.py`, two ledgers): among judgements after a thesis's first, the rule would have hidden 1.5% (nvda-3m) and 1.1% (r5) of the citations the judge actually made (22 of 325 and 7 of 261 judgements lose one cite, mostly third-party risk mentions listed in a "pull the other way" sentence); shown mean 95 and 109 pieces where in force averaged 225 and 178. Tighter rules hid 16% (cited last time + new since) or kept growing (ever cited + three readings). Arm beside control (`ab.py`, $0.03): v6, v11, v22 from the same ledger state, v4 fresh against v5: the same rung and `changed` on all three, reasons consistent, request tokens 76,476 → 12,516, 53,151 → 11,204, 25,806 → 8,425. Tests: `tests/test_evidence_in_view.py` (4, red first); suite 199.
-- Applied to the three-month run at a day boundary: 2026-08-18 finished under `poc-v29` on the serial path (the parallel runner refuses a half-done day after a code change), `poc-v30` from 2026-08-19. Prompt `judging-v5` is `judging-v4` with the first rule reworded (2,264 → 2,437 characters; the growth is the sentence that says what is not shown and who carries it).
-- Also in this slice, from the stall at 2026-08-07: a code-refused judgement answer is retired from the archive's lookup (`model.Archive.retire`; the row stays; schema-refused and malformed rows already carried a suffix), so a resume re-samples instead of replaying the refused answer; and the request's closing line names a closed set that exists ("cites_views must be empty: this thesis depends on no other thesis"; "a theme id goes only in theme_pushes, never in cites or cites_views"): 4 of the run's 5 retried first answers had put theme ids into cites_views.
-
-## D199 · 2026-10-27 · One extraction call stays; its gate rule becomes decidable and the empty-answer exit goes (v16, poc-v32)
-
-- Alex, on the instability trace: "不这个一次一定是可以搞过的 → 读明白，抽取 … 这一定是prompt 的问题，你如果再拆成两步这个消耗的luna calls 太多了"; then "你要反思自己的错误，然后下去改然后马上测试啊，不要一直diverge scope". The two-call design (`docs/research/2026-10-27-two-step-extraction/design.md`, two review rounds) is recorded and not built.
-- Found ([log](research/2026-10-27-single-call/log.md)): the run's 493 empty extraction answers in 1,553 calls (32%; 65% of the first week's items) were the model following the written rules: "every statement is, by default, evidence" against "link only to the thesis it directly concerns … omit statements with no thesis", decided once per page, so a customer, partner or product page was omitted whole (asked directly, the model names that rule: a national lab buying Vera Rubin CPU servers "describes a customer project, not NVIDIA's reported sales"). The five-send benchmarks before this were sent with an alphabetised schema (the archive stores sorted keys; production sends the dict as built) and overstated the empties; in production order no send of three articles was empty. A second mistake stopped the first week test: code edited while the parallel runner was mid-day.
-- Decided: extraction v16 (`role-v16.txt`: one rule, "a statement is evidence to each shown thesis whose answer its fact or figure makes more or less likely", with the customer/supplier/competitor/regulator and policy cases and the omit cases; the closing line "Return empty arrays only for a page with no business content", `extraction.EMPTY_LINE_FROM`; v12's admission reasons, `V12_REASON_VERSIONS`). `poc-v32.json` is the configuration. Measured on the same 98 items of 2026-07-01..07 against the paused run (v12, whole pages): empty handovers 65% → 32%, the model's own empties 55 → 8, evidence per item 1.1 → 2.7, candidates 9 → 11, week cost $0.22. v17 (`poc-v33`, an account per mandatory paragraph in the same call) held the piece set across sends (A3: Jaccard 0.6–0.8 against 0.4–0.5) but tripled the pieces with court-case minutiae and opened 5 theses where v16 opened 11, at twice the extraction and matching cost: refuted for production, kept as the record of the shape.
-- The three-month run restarts from 2026-07-01 with poc-v32 on the cleaned database (D256) in `poc/data/english-v32-nvda-3m-2026-10-27/`; the poc-v29/v30 run stays paused and untouched. Open, named: links read widely (every piece to three or four theses; D198's "links wide"), candidates for product and gaming news (no thesis list entry fits them), the cold start's "no thesis fits" drops.
-
-- Amendment, 2026-10-27 23:20: Alex stopped the restarted run ("我不是要你看下step 1抽取到底行不行？") and asked for the prompt to be read and fixed, with examples ("什么叫重要陈述，你也没给例子"). Arms B1–B6 ([log](research/2026-10-27-single-call/log.md) §10–17) rewrote the role as the model reads it: evidence first; four kinds of material statement with examples; a walk over the whole page ("a page with eight such statements yields eight evidence items"); a reject list with examples; links decided statement by statement; a rumour bears on a thesis as a confirmed statement does; T8's reading block narrowed to forecasts, ratings, targets and cited figures. Extraction v18 (`role-v18.txt`, `categories-v18.json`, `poc-v34.json`) supersedes v16 as the candidate configuration: on six articles sent five times each every material statement is present in every send; at scale (243 items of the run, one send each) 2% of answers are empty against 32% under v12 and 7–8 material statements come out per page, of which the theses that exist absorb 18% in the first week and 48% in the last. v17 and the two-call design stay refuted and unbuilt. The restarted run (`english-v32-nvda-3m-2026-10-27`, $0.215, 119 items) is paused; whether a run resumes, and with poc-v34, is Alex's call.
-
-## D200 · 2026-10-27 · Extraction v18 (`poc-v34`) is the production default
-
-- Alex, after the step 1 verdict (D199 amendment): "is step one and step two done? … whatever latest fixed version that you have, it just needs to be on production for these two. Do it, and then we move to step three and four."
-- Decided: `poc/config/poc-v34.json` (extraction T*-v18; matching, collision judge and judging as `poc-v30`) is the replay default (`scripts/replay.py --config`, README). Evidence: the arms B3–B6 and the two extraction-only scale tests in the [log](research/2026-10-27-single-call/log.md) §12–17 (243 items, 4 empty answers against 32% under v12, 7–8 material statements per page), recounted from the scratch archive before this decision.
-- Acceptance on the product's own path: one week (2026-07-01..07, NVDA, cleaned database) replayed through extraction, matching and judging with `poc-v34` in `poc/data/english-v34-nvda-week-2026-10-27/`, compared with the v16 week (`compare_week.py`). The result is appended to the log; a defect found there is diagnosed under §1 before any further change.
-- Step 2 on the review page (the complete retrieval entry point of D250, main branch) is verified as a component and has no production consumer until step 3 (question selection) exists; nothing of it goes to production in this decision. The paused runs (`english-v29/v30`, `english-v32`) stay paused; whether a three-month run resumes with `poc-v34` is Alex's call.
-- Found while switching the default, before the acceptance run: `extraction.ACCOUNT_FROM = 17` made v18 send v17's per-paragraph account shape in production, while arms B3–B6 and both scale tests were sent with the flat shape (`arm.py` restores the stored request and replaces only the role, the closing line and T8's reading block). The harness bytes were not the production bytes (AGENTS §5). Fixed at the owner: `ACCOUNT_VERSIONS = (17,)` and `extraction.accounts(version)`; test `test_v18_sends_the_flat_answer_shape…` (red on the old code, green after); the production `poc-v34` request now equals the scale test's bytes for all 243 items (system, schema keys and evidence item, user text from the item header). Suite 205 pass; preflight exit 0.
-
-## D201 · 2026-10-27 · Steps 3 and 4: Jev gives opinions only, the library keeps sources and research arguments, a new question needs an independent investment judgement; gold first, small scope, root cause before any change
-
-- Alex, to the three choices on the review page (`docs/research/2026-10-27-pipeline-review/index.html`, main branch): "我都同意但一样你的黄金标准要有然后自己下去改和量化测试，先小范围验证可行，深度解读错误的trace不要乱做test和乱改一定要知道问根因".
-- Decided: (1) Jev's output is an opinion with a score (same statement / revision / different; direct result / business lead / background / unrelated / uncertain); whether a source is kept, merged or placed is decided by the analysis step that reads the complete old and new content. (2) The library keeps both the source records (immutable, for tracing) and the research argument each question carries, updated as a new version with what changed, its supporting and opposing sources, whether they are independent, and its limitations; the judgement reads the argument and its sources, not only the flat evidence list. (3) A new question opens only on an independent investment judgement with the full admission contract; a new product, a new figure or a narrower scope alone does not open one.
-- Method, Alex's: a written gold before the first send (reference answers for every case, held-out cases included), one small scope (about 20 incoming records at their historical library state) measured against a fresh control of the current path, quantified per case; a failure is traced to its raw answer and its mechanism before any test or change; no tuning on the cases that were read.
-- This decision changes the thesis-library PRD (06-views: the argument record and its writer/reader) and the matching PRD (Jev as opinion); the PRD text follows the measured build, not before it. No production change and no paid call in this decision itself.
-- Acceptance result ([log §18](research/2026-10-27-single-call/log.md)): the v18 week through the whole path, 98 items, 361 calls, none failed, $0.22 (equal to the v16 week). The model left 4 answers empty against 8; 222 evidence rows against 213; 9 theses against 11, the two missing being v16's noise theses (Xeon 6 host CPU, Intel 18A wafers). Items that end with no evidence rise from 32% to 51% because v18 writes 506 statements with empty links where v16 stretched them to the nearest financial thesis, and the code drops them (D42); read on the eight largest items, every extra v16 piece was such a stretch. The one real loss is the cold start (the CNBC Kyber-delay statements of 07-05 dropped a day before the Kyber question opens) and 14 capex pieces pointing at theme theses the extraction request does not show: both on D199's open list, neither new. v18 is accepted and stays the default.
-- Measured ([results](research/2026-10-27-stage34-gold/results.md), 2026-10-27 23:05–23:30, $0.24): the 24-case gold was written, then re-read as a hedge-fund analyst's standard (eight rules in `gold.md`, Alex: "做一个 hedge fund analyst 的专业视角去看怎么做这一步的标准"). One send per case of the new path (step 2 reader → Jev opinions → one gpt-6-luna call with the complete context): step 4 places and merges right on 20 of 21 development and 3 of 3 held-out cases, never retires a different statement; two misses (G09 the denial not written into the argument, G11 a bank's echo taken as independent). Jev's piece opinions are right on 7 of 18; the product's replace class has its mechanism in the `supersedes` criterion ("an official confirms or denies that reported claim"): re-sending the 47 stored replacements, 16 do not reproduce and 7 flip to a `contradicts` class once the clause is split out. Two harness contradictions of the assistant's (a check refusing what the prompt asked; the record's own id) were fixed at $0, and nine gold rows were corrected from verified ledger ids (the gold had been written from a ranked excerpt, not the complete expansion). No production change yet: the writer still acts on Jev's label.
-
-## D202 · 2026-10-27 · The writer retires nothing on a matching label: a replacement is recorded as a revision and both pieces stay in force
-
-- Alex, on the arm1 result and the proposal: "你接着做，需要非常严谨的看结果和测量". Census first ([labels](research/2026-10-27-stage34-gold/replacements-47-labels.json), every pair read): of the run's 47 retirements, 22 are the owner's later value or status of the same claim (right under rule E), 20 retired a statement that should have stayed (10 a contradiction or qualification, among them a denial erasing the delay report, "subject to final agreements" erasing the $500bn announcement; 10 a different matter), 5 were restatements mislabelled. Jev's `supersedes` label does not separate them: 17 of 22 right and 12 of 20 wrong carry it; with "confirms or denies" split out (`jev_contradicts.py`) 4 wrong ones flip to `contradicts` but so do 3 right ones. No label the matcher gives is safe to retire on.
-- Decided: `writing` no longer calls `store.replace`. A `replace` decision stores the incoming piece, links it wherever the target is linked, and records the pair in a new `revisions` table (old, new, said day, seq); both pieces stay in force. `replacement_refused` becomes `revision_refused` with the same conditions (a stated day, a tier at least the old piece's, the same party for views and rumours): refused means stored as new without the relation, as before. The late-older-statement rule is unchanged. `replacements` is history: read by every present reader as before, never written again. `store.evidence_in_force` carries `revises` (the predecessor by revision) and judging prints "It revises eX (both in force)" so the judge sees the path; the library UI and service do not show revisions yet (open). The Jev criteria are unchanged: the split was measured and not adopted (3 false `contradicts` on right revisions against 4 catches).
-- The decision word stays `replace` in matching records, schemas and the generative matcher's prompt; its meaning in the writer is "revises". Renaming it across prompts, records and scripts is a separate wording slice (D36).
-- Not decided here: the step 4 analysis call in production (D201's reader of both texts), which would decide `same_as` / `revises` / `opposes` itself; until it exists the matcher's label is recorded as an opinion and nothing is lost to it.
-- Regression week ([results](research/2026-10-27-stage34-gold/results.md), `english-v34b-nvda-week-2026-10-27`, $0.23, 98 items, none failed): the whole path runs with the revision rule; `replacements` gains no row. Counts differ from the v18 week (129 against 176 evidence rows, 12 against 9 theses) because extraction is a sampler, not because of the writer; the writer's effect is proved on the decisions themselves. Reading the week's one `replace` decision found a second silent loss in the same code path: an incoming statement said before its target was logged in `late_statements` and linked nowhere (both weeks dropped SemiAnalysis's Kyber delay report this way; the three-month run dropped the SharonAI backstop figure; 1 of 3,216 decisions, each a material statement). Fixed in the same slice: an older statement is stored and linked as one more piece, no revision recorded, the log row kept. Test red on the old writer, green after; suite 209. Observed, not fixed here: 34 of 1,530 stored pieces carry a non-ISO `original_day` ("2026-07-05 to 2026-07-06", "2026-03"), which is what made the Kyber report "older"; an extraction-contract item for the next pass.
-
-## D203 · 2026-10-28 · A statement day is an ISO day or unknown; the writer never fills it with the publication day
-
-- Found while reading D202's regression week: the extraction answer's `original_day` is a free string (54 of the three-month run's 2,369 raw pieces carry a month, a range or text; 1,445 are empty) and the writer filled every empty day with the item's publication day, against D245's rule that an unknown stays unknown. A range read as "older than" the denial it answered dropped SemiAnalysis's Kyber delay report from the week ledger.
-- Decided, at the owners: `extraction.statement_day` keeps an ISO day and blanks anything else when the answer is sifted (the quote and `event_time` keep the period as written); `writing._store_piece` stores the stated day or '' and the revision path stores the stated day too (the ordering day `new_day` orders the revision only). Readers print the blank; matching's `said_day` still falls back to the publication day for ordering, never for storage. Tests: `test_a_statement_day_is_an_iso_day_or_unknown…` (red on the old sift), `test_an_unknown_statement_day_is_stored_unknown…` (red on the old writer); suite 211; preflight B/C/D unchanged.
-- The judge's revision note is labelled as what it is: "Opinion, not verified: the matcher read it as a later version of eX; both are in force" (D202's census: 19 of 37 recorded revisions carry a wrong label).
-- Census of the other silent loss in the same path, read pair by pair ([labels](research/2026-10-27-stage34-gold/repeats-40-labels.json)): of 40 sampled `repeat` decisions (1,034 in the run), 32 are pickups, 8 merged a different or richer statement into an old piece and lost its content (an estimated 200 of 1,034). The mechanism is D202's: a one-sample label triggers an irreversible write (a repeat adds a source and discards the incoming text). The fix is the argument record's reader side (store every source record, relate `same_as`, collapse same-claim groups for the judge); not built here.
-- D201 measured further ([results](research/2026-10-27-stage34-gold/results.md), 2026-10-28 00:00–01:20, $0.85): a fresh 16-case gold written from the complete expansions before any send (action 11/12 and 4/4 held out; nothing wrongly retired 16/16; same-claim 8/12 with one class: a second outlet's own reporting treated as independent, which the contract could not express); arm 2 split claim identity from source independence (the class is gone; two new judgement weaknesses appeared); three draws per disagreeing case under both prompts show the arm-to-arm differences are within one draw's noise, while in 144 draws no must-not-touch piece was ever marked same or revised. Decided: the contract keeps arm 2's split; prompt arms stop here; the variable fields are annotations under D202 and the next build is the argument record (steps 5 and 6), where a wrong relation in one draw is corrected by the next instead of being frozen into the ledger.
-
-## D204 · 2026-10-28 · A repeat is stored as its own source record; the merge becomes a labelled relation
-
-- Alex: "补那个洞，跑一周验收，仔细思考很重要". The hole (D203's census): on a `repeat` decision the writer adds the incoming item as an outlet of the old piece and discards the incoming text; 8 of 40 sampled repeats (20%, about 200 of 1,034 in the run) had merged a different or richer statement, and its content was gone. The mechanism is D202's: a one-draw label (same_statement ≥ 0.5) triggers an irreversible write.
-- Choice weighed. (A) Store the incoming piece, link it to its own destinations, record the pair in `same_claims`, show both to the judge with the relation labelled as the matcher's opinion. (B) Keep the merge and store the text as a variant of the old piece, hidden from the judge. Under (A) true pickups (about 80%) appear twice in view for their first readings, labelled; under (B) the 20% wrong merges stay hidden from the judge. The standard (rule A: an outlet, not a fact; rule C: support counts sources) is served by the label; losing content is the failure that is not recoverable at read time. Decided: (A).
-- Decided: `writing` stores every incoming piece once with all its destination links; a `repeat` decision records (target, new, seq) in `same_claims`; the old piece gains no source row and no new link (the new piece carries the outlet and the links; a link written on a one-draw label is a write like any other). `store.evidence_in_force` carries `same_as` (the in-force pieces of its group); the judge's request prints "Opinion, not verified: the matcher read this as the same claim as eX; the argument counts one claim". Readers of `evidence`, `evidence_links` and `evidence_sources` keep their shapes; the library UI's per-row outlet count now counts one row's sources (the claim's outlets are its `same_claims` group), an open UI item.
-- Acceptance: tests red on the old writer (`test_a_repeated_statement_is_stored_as_its_own_record…`, the two D167 tests whose assertions pinned the merge, changed with this decision), a mutant that merges again fails them; the 40 sampled repeat decisions replayed through the new writer at $0 (40/40 stored, relation recorded, the 8 lost contents present); then one week through the whole path (`english-v34c-nvda-week`), counting `same_claims` rows, pairs both in the judge's view, and judgements citing both members of a pair (the double-count exposure the label must hold).
-- Accepted ([results](research/2026-10-27-stage34-gold/results.md)): 40 of 40 sampled repeat decisions replayed through the new writer keep the piece, the relation and both pieces in force (the 8 lost contents are present); the week through the whole path ran with none failed at $0.23, wrote 45 same-claim relations and no merge, and the judge's reasons where a pair was in view treat the relays as one source ("ultimately trace to SemiAnalysis", "not independent confirmation"). The three-month run may resume on `poc-v34` with D202–D204 in the writer; that is Alex's call.
-
-## D205 · 2026-10-28 · The judging call's output budget is 16,000 tokens
-
-- Found in the three-month resume (`english-v34-nvda-3m-2026-10-28`, 01:32): the judgement of v10 (Data Center revenue, a 24,150-token request) came back empty with `finish_reason` length: all 8,000 completion tokens were reasoning tokens, so the code read a malformed answer and the day halted (resumable; the re-send passed). Census over every archive: 2 of 793 judge answers hit the cap this way (the other in `english-v29-nvda-3m`, a 56k-token request), 13 of 793 used 6,000 or more. The archive books such a call at $0 while it costs its tokens (about $0.006 each).
-- Alex: "嗯你加倍吧". Decided: `rejudging.max_output_tokens` 8,000 → 16,000 in `poc-v34.json`, nothing else changed; a normal judgement costs the same, only a long-reasoning one may spend more. Applied from day 2026-07-22 of the run (days 1–21 ran under 8,000; the archive records the configuration checksum per call).
-- Also from this run: the Mac slept at about 02:00 and a Jev call failed with URLError during a dark wake; the run's `launch.sh` now wraps the run in `caffeinate -i -s`.
-
-
-## D206 · 2026-10-28 · Every open theme thesis is shown to every item's extraction (extraction v19, `poc-v35`)
-
-- Alex: "你可以改A然后尝试". The class ($0, `docs/research/2026-10-28-extraction-quality/report.md`): every one of the run's 1,414 extraction requests named the H200 key in its reference list while the H200 thesis (a theme) was never in the shown list; 48 pieces linked only to theme ids the groups block printed and the link check refused; three H200 theses opened for one matter.
-- Decided: `store.views_for_prompt(themes=True)` lists every open theme thesis after the objects' own, in creation order; `extraction.shown_views` is the one owner of the shown list (the stream and the parallel runner both read it); the groups block prints only member ids the answer may link to. Gated on the prompt version (`THEMES_SHOWN_FROM = 19`): v18 requests are byte-for-byte as before.
-- Measured: frozen gold (`gold-standard.md`, 26 articles, 26 statements, 11 core; `ab_gold.py`): control (production bytes, 26/26 identities archived) 9/11/7 kept right against the arm's 13/15/14 over three sends, core 6/6/5 → 9/8/8, written-dropped 13/12/13 → 8/7/8, extra flat; two weeks through the whole path (`english-v35-nvda-2w-2026-10-28`, $0.59): one H200 thesis instead of three, 14 pieces and 3 judgements on it, capex themes 7 pieces / 4–5 judgements each against 2 / 2, zero drops for an unshown id (17 in the control weeks). Tests `tests/test_theme_shown.py`.
-
-## D207 · 2026-10-28 · Statements are filed by a separate placement call under the one-home rule; an unfiled statement is kept (extraction v20, `poc-v36`)
-
-- Alex, on the root cause ("你还是没有根因的去解决这个问题 … 要么挂不到，要么挂多"; "跑那个归档实验"; "你看着结果来做"; "一样的标准开始测"). The mechanism ([routing-analysis.md](research/2026-10-28-extraction-quality/routing-analysis.md)): the in-call link decision was a coin flip (36% right on the gold, 46–78 pieces kept from the same bytes) and the gate at once (an unlinked statement was dropped: 60% of all statements, ~15–30% of them material); the link rule routed demand news to the company-wide quantities (six root theses held 66% of all links; v2's pieces 86% double-linked, 26% cited); the thesis list had no driver layer.
-- Decided, three parts measured one at a time on the frozen gold (three draws each, 8 threads, $0.04–0.05 an arm) and on the first week's 255 in-call pieces: (1) `placement.py`: one call per item with the title line, the statements and the open questions, each with a code-written 'takes' line (key, event type, research-group names; aggregates admit other populations); the sift keeps statements without a link (`keep_unlinked`); the placer's links replace the extraction's, candidate links survive; a statement filed nowhere is stored in `unplaced_statements` with the handover. (2) The rule is the placement prompt: `placement-narrow-v1` — one home, the narrowest question; company-wide figure questions take only their own figures, guidance and management statements. (3) D42's "evidence is linked at extraction" becomes: the extraction's links are its first opinion; placement decides. Gated on the prompt version (`PLACEMENT_FROM = 20`); `cfg.placement` is required from v20.
-- Measured: core statements filed right 6/6/5 → 9/9/9 (with six seeded driver questions shown) and 9/10/9 under the old rule; wrong links 9 → 3; links to the two sinks 63/60/44 → 6/1/5; junk placed 53/48/32 → 39/27/35; every decisive matter statement (the Kyber/Rubin Ultra rack delay cluster, the AI Compute Partnership participants, Goldman's capex estimate) placed; one week through the whole path (`english-v36-nvda-1w-2026-10-28`, $0.22 against $0.22) kept 580 statements the old path dropped. Arms retired by measurement: the extraction's links shown as a hint (junk and sink links returned), group aliases alone (the groups lack the press names). Tests `tests/test_placement.py`, suite 222.
-- Not built here: re-placement of unplaced statements when a thesis opens later (the cold-start class, 12% of gold cells); the driver layer (D208).
-
-## D208 · 2026-10-28 · The thesis tree: root quantities, a seeded driver layer per company, shared macro themes with declared channels (design, not built)
-
-- Alex: "可以，但是不能因为有了这层我们的抽取就是非常的模版化缺少了hedge fund analyst 的灵魂"; on macro: "算是个global factor to all, 但影响正反面不一定". Measured before the decision (routing-analysis.md §11): with six analyst-seeded driver questions shown to the narrow placer, recall equals the old rule's (core 9/9/9), the sinks stay empty (6/1/5) and the neocloud, competitor-share and memory-cost statements land in their drivers (every landing read).
-- Decided as design: (1) every company's library has the same skeleton — root quantities (its reported lines), a driver layer of seven fixed classes (demand, supply/inputs, competition/share, pricing/installed base, product cycle, policy, capital/obligations), and shared themes; the instances are the analyst's, written once at coverage start (the universe watch list completed), keys by code, each driver declaring the root it feeds through `dependencies`. (2) The template routes; it never gates: material statements are found as before, new questions open from articles as before, the judgement writes the argument. Two counts guard this: candidates outside the template must not fall; every driver's junk and citation share is counted like v2's. (3) Macro factors are shared theme theses judged once on their own (T11) evidence; direction per company is a declared dependency with a channel sentence the judge reads; macro evidence is filed only under the macro theme. Root judgements read driver and theme conclusions, not their evidence (the D195 theme block extended).
-- To build, in this order, each with the same gold and a one-week whole-path run: bootstrap seeding with dependencies, the judge's "drivers in force" block, re-placement of unplaced statements; then the macro themes with channels.
-
-## D209 · 2026-10-28 · A statement no open question takes is dropped at extraction; evaluation reads the dropped record, not a side list
-
-- Alex, on the `unplaced_statements` table D207 had added: "If you think about yourself as a hedge fund analyst, if it doesn't matter, just
-  fucking throw it away. That's the original design. Why are you keeping it on the side? It breaks the entire design. … But if there are
-  false positives that got thrown away in this side list, you got to pick it up. Again, that's the way to do proper evaluation. So don't
-  do something that is like halfway done and just to cherry pick and get the result in numbers."
-- Decided: the placer's unfiled statements go to the handover's `dropped` list with the reason `no home`, like every other drop; the
-  `unplaced` field, the `unplaced_statements` table and `store.add_unplaced` are removed; no re-placement mechanism is built. The
-  dropped record (every drop with its reason, already in every handover) is where evaluation reads what was thrown away.
-- Evaluation done the same evening on the acceptance week's 630 drops, read one by one
-  ([thrown-away-read.md](research/2026-10-28-extraction-quality/results/thrown-away-read.md)): 393 junk (62%), 236 material; of the
-  material, 87% had no standing question to go to (the AI Compute Partnership question alone 96: identical request bytes proposed it in
-  1, 2 and 0 candidates across three runs), 2% were statements of the article that opened the question (the placer never sees the
-  item's candidates), 4% the placer left out with the home shown (two self-admitted mistakes, three where the stopgap rack NVL72x2 was
-  not recognised as the Kyber/Rubin Ultra matter), 7% marginal.
-- Follows (corrected the same night, Alex: a seed written after reading the period is lookahead): a seed may hold only what was public
-  before the start day, written by the model from those documents and frozen; a question the period's news creates (the ACP) is not
-  seedable. The ACP loss is admission: 7–10% of sends propose any candidate, the 12 ACP articles produced one proposal per run, and in
-  this run that proposal was refused by the due-day check (`due_day 2026-07-03 not after the item`). Next mechanism: admission.
-
-## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
-
-- Alex, after the arm ("go 但是你不要只是看什么acp好不？你需要解决的是抽取质量问题 … 有用的，你得一条一条看是不是真的值得抽才知道你这些改动的抽取效果").
-  Mechanism (two stored accounts, `docs/research/2026-10-28-extraction-quality/results/ask_admission.json`): D184/D185's sentence
-  "due when its signing can be checked, at most 18 months out" is written for a deal not yet signed; for a programme already announced
-  and signed (the AI Compute Partnership) the model proposes nothing or dates the question on the item day, which the code refuses.
-  Over the acceptance week the twelve ACP articles produced one proposal per run and none survived in `poc-v36`; 96 statements had no home.
-- Decided: role-v21 replaces that one sentence. Not yet signed: a yes/no question due after the item within 18 months (D185 unchanged).
-  Already taken on, one deal or a programme: a financing_amount question on the amount the obligation reaches at the company's next
-  annual filing, settled by its commitments note; the announcement is evidence to it. Entries and code checks as v20; `poc-v37` is the
-  replay default. Role 10,089 → 10,434 characters; the growth is the second form, which no other sentence covered.
-- Measured before the decision (`admission_arm.py`, production bytes as control, frozen reference, three draws): on the six ACP articles
-  whose text carries the obligation, control opened 0/18, the arm proposed 17/18 and the code kept 13/18 (two refused by the ladder-label
-  rule, D186); the four articles that report only the revenue share open nothing under both, rightly; the Reuters Ohio signing event
-  still opens (2/3, one refusal at the 548-day boundary). Acceptance: the same week replayed as `english-v37-nvda-1w-2026-10-28`, then
-  every dropped statement of the week read one by one against the analyst's standard (results.md).
-
-## D211 · 2026-10-28 · The extraction request shows no thesis and no group: one sample per item, filing at the turn (role-v22, `poc-v38`)
-
-- Alex chose option 1 after the D210 week ("1"): the admission judgement sat in the extraction call, whose request carried the open
-  theses and groups of the moment, so the same article was a different request on every day and after every commit of the parallel
-  day; a re-sent item (34 of 98 that week) was a fresh sample and the first sample's candidates vanished (9, the Kyber story's home
-  among them). Two samples of the same article agreed on 2 of 11 proposals.
-- Decided: from extraction v22 the request depends on the item alone (code, `extraction.LEDGER_BLIND_FROM`): no [Existing theses]
-  block, the research-groups block carries only the standing instruction to declare the matter, links name the answer's own
-  candidates or nothing, `folds_into` and `lost_if_folded` leave the schema. What the shown list did is owned elsewhere: the placement
-  call files statements under the open theses at the item's turn (`extraction.read` early, `extraction.file` at the turn, in both the
-  serial and the parallel path), matching folds a candidate into an open thesis (D190), a declared group with a stored group's names
-  is that group (D166). The parallel day never finds a v22 request stale. Role 10,434 → 9,456 characters (the sentences that assumed a
-  shown list are cut).
-- Measured before the decision's acceptance (`blind_arm.py`, three draws over 39 items): the Kyber question proposed in 6 of 21 sends
-  over seven articles, at least one per draw (v21: one in ten, erased by the re-send); the ACP amount question 3/3; about 10 of 25
-  distinct questions are re-proposals of open ones, to fold at matching; per-sample agreement unchanged (3 of 25 in all draws).
-  Acceptance (`english-v38-nvda-1w-2026-10-28`, $0.23, drops read one by one): 98 sends for 98 items, no re-send; every story of the week
-  has a page (ACP, Kyber, Rubin shipping, H200, the aggregates), the judge's reasons on them read as an analyst's; 17 pages of which 4 are
-  duplicates by wording (the collision judge's `distinct_question_same_matter` on `same_quantity_or_event`/`part_of` pairs) and 1 a
-  succession; the placer leaves ~60 statements out when near-identical pages compete. Next mechanism: D190's verdict set.
-
-## D212 · 2026-10-28 · Measure retained content from source through final writing before another quality change
-
-- Alex requested actual traces, useful retention and correct junk removal, with one overall acceptance basis rather than further piecemeal fixes. The [audit](research/2026-10-28-retention-audit/results.md) uses the same 98 stored items in v36b/v37/v38 at $0. It changes no product rule or default.
-- All 841 v38 extraction records were labelled M (material), C (context/marginal) or J (clear junk); 127 written M records were read beside their quotes and destinations. Earlier configurations have 1,522 records, of which 1,316 inherit the same article's exact/contained quote label and 206 were read separately. Labels are Codex-authored, not independent human gold. Actual written evidence is 106/54/144, versus the old intermediate handover counts 108/55/146.
-- Material written: 67/47/127; precision among written records: 63.2%/87.0%/88.2%; retention among already-extracted material: 23.0%/17.4%/44.9%. V38 correctly removes 254/255 clear junk records and 541/558 nonessential records including C. Of its 697 lost records, 156 are M. Three written M records are under the wrong product's question.
-- A fixed, source-first-for-this-pass 20-article reference contains 33 material claims, 25 core. Five articles had been inspected earlier and are explicitly not an unseen holdout. Complete final claims: 12/5/13; complete core claims: 12/4/11. V38 improves on v37 but does not establish better core completeness than v36b. Each version has one stored run; these differences do not measure sampling stability.
-- Trace census of v38's 156 material losses: 94 have no corresponding question all week; 49 have the destination shown; 7 belong to an unshown candidate of their own item; 4 precede a later question; 1 fails the quote check and 1 disappears after matching rejects its candidate. The earlier claim that matching alone owns the remaining loss, or duplicate pages explain the placement misses, is withdrawn.
-- D190 remains a bounded next comparison, not a validated remedy for these losses. Its ACP pairs are directly affected; revenue/growth bypasses its same-measure gate and launch/shipment also conflicts at the identity check. A link-relabeling diagnostic reduces 17 pages to 13 and 178 links to 152 while retaining the same 144 records, restoring none of the drops; this is not a new model result. Any later improvement claim must report final core retention, meaning, placement and junk alongside page count, using the fixed reference. No paid call or production edit in this audit.
-
-## D213 · 2026-10-28 · Trace the largest losses and restore a trustworthy preflight before comparisons
-
-- Alex requested root-cause work against the fixed content benchmark and fast, scoped experiments aimed at the analyst's actual result. The [trace](research/2026-10-28-retention-audit/root-trace-2026-10-28.md) classifies all 94 no-question losses into existing D208 directions; competition 43, supply 20 and demand 14 dominate by record count, with repeated reports included. D208 is already decided, but prior results are not an acceptance on the D212 benchmark: only one article overlaps and some seed examples use names from after the test starts. The May 20 earnings call and 10-Q exist as valid pre-start inputs.
-- Before paid comparisons, the v38 preflight is itself defective: its old sift reports 77/841 statements kept, while the current production pre-placement sift keeps 831/841 over all 98 stored requests. One matching refusal also comes from applying a final ledger to a decision made before its own successor was written. The initial version-aware preflight repair failed an independent read-only review; the [review](research/2026-10-28-retention-audit/preflight-review-2026-10-28.txt) identifies source verification, exact shown-list boundaries, older output shapes and stage labels as missing dimensions. Rework and review the complete replay contract before implementation; do not treat the existing preflight PASS as proof of the current path.
-- Priority replaces D212's suggested collision-first comparison: after preflight is trustworthy, test D208 with only pre-start source material and compare the final content and junk against D212's fixed reference and fresh controls. The prior collision diagnostic remains an open issue, not evidence that this change fixes it. No product code, prompt, default or product-model call changed in this trace.
-
-## D214 · 2026-10-28 · Reconcile the analyst standard before interpreting scores
-
-- Alex: “我们明明有 golden set 和 hedge fund analyst 的准则，你这边应该按照这个标准来”; “评量方式都不定，你怎么去跑修正”; “你自己作为模型要下 LLM as a judge 要亲自看”. Original frozen gold stays intact. Its analyst standard, source-first judgement and explicit uncertainty govern; code checks identities, coverage and counts, not economic significance by keyword.
-- D212's later 20-article reference conflicts with the frozen gold on the one shared article: revenue growth 82%/41% is colour in the original and core in the later reference; FY2028 EPS is excluded by the original scope and included by the later reference. The time-scope exclusion does not establish that an earnings forecast is economically irrelevant. The 33/25 reference scores and pre-start question experiment's scores are exploratory, not acceptance. Keep the original records, labels, decisions and prior scores for traceability.
-- The old scorer gives `kept_right` to two controls despite losing the metric “revenue”; quote overlap alone is not semantic correctness. The old `no_destination` category also was not implemented as specified. Trace, deterministic counterexample and source references: [evaluation and trace](research/2026-10-28-retention-audit/evaluation-and-trace-2026-10-28.md). A complete end-to-end result counts a fixed source fact only when its meaning and attribution reach the appropriate final question or, for distinct periods, the appropriate questions together. Report the local extraction, question availability, placement, matching and writing measures separately, including same-item candidates.
-- The 49 previously labelled misses have been traced to their archived requests and empty answers; the expected targets have not been independently established. One first lost the metric in extraction. Existing article 65 also loses the alternative's connection to Kyber in its standalone summary. No conclusion attributes all 49 to placement. The week also contains one missing placement answer out of 831 statements, counted by code as no home; it was labelled background. Production behaviour was not changed.
-- Codex read the 20 source articles as a model analyst and recorded reasons and ambiguity; this post-result read is development, not unseen gold. A read-only review identified six serious gaps; close them and agree the source reference and evaluation before a new model-quality arm. No new full-pipeline run, prompt, default, or production model call is authorized by this record.
-- On 2026-10-29 an independently prompted model read the 49 archived cases without prior labels and produced a finding for each. Its tentative 5/21/23 split across placement, extraction and no suitable question is not an accepted census: it missed context carried by other statements in a real request and marked some destination choices uncertain while still assigning placement. The [case-by-case review](research/2026-10-28-retention-audit/independent-49-assessment-2026-10-29.md) keeps the raw model output and separates a confirmed missing revenue metric from disputed destinations. Model agreement is not a source, and model-authored judgements require calibration against the frozen standard.
-- Separate judge calibration, not a product acceptance: [ten source-meaning and citation development cases](research/2026-10-28-retention-audit/judge-calibration-results-2026-10-29.md) scored 10/10 in each of three blind sessions. On [six frozen-gold development articles](research/2026-10-28-retention-audit/economic-judge-results-2026-10-29.md), four of twelve reference facts were not selected in any session, with repeatable disagreements on weights and destinations. These small, selected tests do not establish general reliability, and some frozen gold boundaries themselves require review. The model's economic judgement is not yet accepted as the evaluation authority.
-- One [registered judge-prompt arm](research/2026-10-28-retention-audit/economic-judge-arm-results-2026-10-29.md), replacing the treatment of third-party estimates and policy, did not consistently recover the four missing facts over three sends; in one send the recovered revenue-growth summary still omitted the metric and the citation omitted one rate. The gold-excluded Singapore case details rose from 2/2/1 to 3/2/3. The gold's treatment of some other technical comparisons is itself a question, not automatically noise. No product or default change follows; do not stack more prompt edits against this development set.
-
-## D215 · 2026-10-29 · Record Alex's eleven analyst judgements without rewriting frozen data
-
-- Alex answered the eleven cases in [gold-for-alex](research/2026-10-28-retention-audit/gold-for-alex-2026-10-29.md): “1. A; 2.C; 3. A; 4.B; 5. C; 6. B;7.A; 8.B.;9.辅助属于供给需求；10.属于产品进度问题；11.一条吧都属于财务”. [The mapping](research/2026-10-28-retention-audit/gold-user-decisions-2026-10-29.md) records the exact answers. The grouped answer 6.B is applied to all three subcases, with that interpretation made explicit and open to correction. Question 5's asset details retain their earlier exclusion without claiming a separate answer.
-- A new [reference candidate](research/2026-10-28-retention-audit/gold-user-2026-10-29-v2/reference.json) preserves the complete old gold and week candidate as immutable base data, and records only the answer overlays. The revenue-growth expectation is core; the specific FY2028 EPS is excluded; SK hynix's shortage forecast and hyperscaler spending estimates are core; the AMD 100 kW modeled comparison and Omniverse change are colour. Sharon is supply/demand support; NVL72x2 concerns product progress; neither answer asserts a specific page or adds a rule that different products are identical. The Google Cloud revenue, growth and backlog form one gold item, with all three parts needed to claim complete meaning.
-- The original 26 gold facts become 27 candidates when AMD is included; 11 are core and 16 colour, including historical model-authored weights not all individually reviewed by Alex. Original data, source statements and exclusions remain intact. Source excerpts omitted from the Omniverse and second Kyber article were separately located in their own originals, without presuming a new identity or user weight. The new shape is not accepted by the old scorer and `ready_for_scoring` is false; no retrospective success score or acceptance is claimed. Stored source hashes, positive/negative controls and residual review are in the [checks](research/2026-10-28-retention-audit/gold-user-2026-10-29-v2/checks.json). The [independent review](research/2026-10-28-retention-audit/gold-output-review-2026-10-29.txt) found no serious errors in the first candidate; it is preserved, and the second changes only the status of the grouped 6.B interpretation, verified by comparing the two structures.
-- No product behaviour, prompt, model, configuration or default changed. Finish per-fact source, time, correct-page and unknown-case review before using the candidate as an evaluation reference; do not run an arm against partially reviewed gold.
-
-## D216 · 2026-10-29 · Clarify that the FY2028 EPS forecast may be retained
-
-- Alex: “2028 EPS 预测可以留下来啊，我的意思是因为太久远了，现在才2026.。。” This corrects D215's interpretation of his original answer 2.C: the particular forecast may be kept, with its distant timing made clear. He did not assign it core or colour or name a target page; neither is inferred here.
-- [The new reference and recount](research/2026-10-28-retention-audit/gold-user-2026-10-29-v3/reference.json) preserve the frozen sources and original answer, record the clarification, and leave the reference unscoreable. The old 3/8 free-reading recount becomes 2/7 after EPS is removed from the weight denominator; the direct judge's 5/9, 7/9, 7/9 become 5/8, 7/8, 7/8. The three models' choice to keep EPS as colour is not called an error. Citation counts remain over nine answers. This is a retrospective correction, not a new acceptance or a judgment on the remaining unreviewed reference.
-- Alex also requested a quick DeepSeek test. Compare it on the same source-backed user decisions with fresh controls, without switching the product default or launching the full pipeline.
-
-## D217 · 2026-10-29 · Haiku as the target model; improve extraction pipeline steps 1–4 against the analyst's standard
-
-- Alex: “现在开始以haiku 为模型取代luna；优化目标重新调整prompt 的方式 … 把当前我们抽取管线1-4步骤完整的optimize … 每一轮都根据尺子去迭代 … 不达标就读取我这边的准责 … 小心 … overfit … 尺子其实不对 … scope creep.” This explicitly changes the target model from D62's Luna to Haiku 5.5 for the work Alex has taken up. It authorizes scoped experiments and implementation for these steps; it does not imply that a change has already been measured or that an unqualified full-pipeline run was requested. Jev remains the separate step-3 comparator unless evidence and a new decision change it.
-- The step numbers are those in the [steps 3–4 design](research/2026-10-27-stage34-gold/design.md): 1 read source into evidence and candidates; 2 read the historically correct question catalog and its full relevant evidence; 3 compare and record Jev's opinion; 4 decide where evidence belongs and how it changes the research argument. The current v38 pipeline has a distinct placement call and does not yet wire the D201 step-4 research-argument path; these are measured separately rather than counted as already built.
-- Alex's explicit case judgments and EPS clarification (D215–D216) remain the authority for those cases; the larger assembled reference remains a candidate with unresolved source and destination details, not a validated population gold. Use the approved cases directly and label any further model-authored reference or judge as such; preserve original gold and genuine uncertainty. Separate development cases from new, source-read holdouts before each trial, measure the control's own variance, and stop a failed registered acceptance rather than chasing its test set. Deliver an explicit Haiku configuration and product path only after the applicable changes are designed, tested and measured; never silently rewrite historical records or claim a stage result is end-to-end acceptance.
-
-## D218 · 2026-10-29 · Continue independently after the failed development acceptance
-
-- Alex: “是推断，你不要再问我了，你要自己尝试 figure out 开始跑。” A claim not established by a source may be offered as an analyst inference, but it must not be presented as an established source fact; preserve material unknowns. Alex explicitly directs the agent to work out the next iteration without asking him again. This supersedes the prior instruction to wait for Alex to jointly design the next arm after the failed scope development acceptance. Preserve the failed result, source-based gold, original spending cap, holdout separation, and honest uncertainty.
-- The [registered scoped comparison](research/2026-10-28-retention-audit/stage4-fact-inference-arm-v4-2026-10-29.md) tests one prompt change on four development cases and one source-read fourth-step holdout with fresh controls for each model. The source-read holdout was extracted in v38 and is model-authored, not user gold. This decision does not promote a result before it is measured, change a product model or prompt, or authorize an unrequested full-pipeline run.
-
-
-## D219 · 2026-10-29 · 订立分析师金标准 v4，分开投资价值、原意和记录错误
-
-- Alex：“那你要改对尺子啊，你现在就改，这个已经错了好几次了，你要把金标准给订好”。本次直接订案，不再把已授权的判断留为待问。范围是 [v4 清单](research/2026-10-28-retention-audit/gold-v4-2026-10-29/reference.md) 的 16 项、11 篇保存来源，全部属于已观察的开发案例；不冒称全周穷尽金标。覆盖 D215 十一题和 D216 EPS 更正，区分用户原话、合并回答的解释、本次模型定级。原始金标和历史结果保留。
-- [规则](research/2026-10-28-retention-audit/gold-v4-2026-10-29/README.md)：先判核心、辅助、可选背景或明确不收；然后分别判是否保留、内容表达、引用支持和结构化记录错误。核心与辅助分开计数，可选背景留弃均不扣选择分，未列事项先标未评。内容正确但有重大期间错误不能称整条可用。引用短不自动等于不理解；合理推断和条件估值不自动等于垃圾。
-- 金标按一个研究事项计，不按模型切了几条计。Google Cloud 三个侧面合计一项且完整保留才算完整；EPS 预测与条件估值是两个不同研究问题。每项只要求必要内容；辅助上下文不偷偷增加漏失处罚。没有历史问题列表和真实写入证据，不评下游通过。
-- [15 个校准例](research/2026-10-28-retention-audit/gold-v4-2026-10-29/calibration.json)由 Codex 逐条阅读并标注，其中 5 个保留原模型回答，10 个明确为构造边界例；不是人工独立金标，也不是模型表现分数。独立只读审阅核对来源与理由；结构检查只核对完整性、来源身份、版本和标签，不用关键词替代语义。
-- 本次不修改产品提示词、模型、默认配置或历史评分。下一步先用固定参照重评已有 Haiku／Luna 回答，报告各维度；不因更换标准而宣称系统提升，也不据此推算全周精度。
-
-
-## D220 · 2026-10-29 · Judge necessary meaning by its investment consequence
-
-- Alex: “你来修正对齐，你是 hedge fund analyst 你来做好标准”. This authorizes the analyst judgement needed to finish the standard without another user adjudication round. V4 made some incidental source details mandatory and then scored their absence as lost meaning. The [full 16-item audit](research/2026-10-28-retention-audit/gold-v5-2026-10-29/change-audit.md) finds three instances: G04's intermediary BofA, G09's ordinary conference-call venue, and G10's paid subscription brand name. All values, original sources and user case decisions remain unchanged. Independent review also found G14 omitted the target-price horizon from required meaning; preserve FY2028-end explicitly, since the earnings period alone does not specify the investment horizon. The six retained historical valuation answers already preserve it.
-- V5's rule: a required meaning component must affect the business interpretation, valuation calculation, risk, scope of applicability, or evidentiary nature. Original claimant and estimate-versus-measurement remain necessary. A relay outlet or ordinary speaking venue need not be repeated in the summary when omission does not change authority, legal effect or chronology. Fabricated source details still count as record errors. Readable [standard](research/2026-10-28-retention-audit/gold-v5-2026-10-29/README.md) and [case list](research/2026-10-28-retention-audit/gold-v5-2026-10-29/reference.md).
-- The same standard governs extraction acceptance: preserve linked meaning and conditions, including useful forecasts, conditional valuation arguments and counterevidence. A standalone price target does not substitute for its valuation argument. The user's excluded Singapore case must not be required by a positive prompt example. Unknown original dates cannot be invented from publication dates; candidate fiscal conventions cannot rewrite an ambiguous source period. These are acceptance requirements, not a claim that the old runtime prompt now satisfies them.
-- Preserve V4 and its read results. Reassess the same 48 saved answers with V5; the source-venue-only penalty on Luna/revenue-clean-3/G09 is removed, while its time-field problem remains. This changes evaluation, not product behaviour or model capability. No new product call, default promotion or full-pipeline run is part of this standards correction.
-
-## D221 · 2026-10-29 · Judge evidence by the conclusion it can support, then test one action-rule change
-
-- Alex asks to distinguish incomplete but useful clues by source, credibility, time and missing information, then authorizes deciding the standard and experimenting after reading traces. [The bounded plan](research/2026-10-29-evidence-use/design.md) keeps D220's source fidelity rules and adds use-relative assessment: usable, conditional, lead, or reject. One source may support different conclusions at different levels. This is not a numerical confidence score or a new storage layer.
-- Trace review covers all 32 actions in the previous fact/inference trial, ten raw answers beside their full requests, and the saved NVIDIA explanation that the credit-support provider was inferred. The candidate mechanism is coupling a useful record to the demand for a position-changing new question; a causal fix is not claimed before comparison.
-- Six cases, fresh control and one replacement of the existing Action paragraph, Haiku three times each, same schema and source per pair; 36 calls within the existing $0.60 reservation cap. Four development cases and two explicitly source-known test cases; no full-pipeline run, product prompt edit, model promotion or rewritten old results. A failed comparison is recorded rather than answered by adding further prompt patches.
-
-- Execution correction before semantic scoring: the first attempt lowered max_tokens from the archived 6000 to 1800 and truncated 2 of 14 sent responses. Preserve it; a fresh paired 36-call run restores 6000 only, with source/prompt/schema/reference unchanged. Both full reservations together remain below $0.60. This is a measurement setup correction, not a new semantic arm. No further retry is authorized by this correction.
-
-- Result: the restored-length comparison completed all 36 answers. Explicit existing NVIDIA credit-exposure assertions changed 3/3 to 0/3, but an unsupported table rejection and an exclusion of supplied Corning context appeared in one treatment answer each. The registered no-new-error criterion failed; retain the use-relative standard, do not adopt the prompt. Both arms preserved the five factual targets in 15/15 observations and respected the excluded case in 3/3. Proposed questions rose 3/18 to 8/18, not a quality gain. [Complete readings and limits](research/2026-10-29-evidence-use-6000/results.md).
-
-## D222 · 2026-10-29 · Restructure the fourth-step research prompt against existing decisions, then compare without changing gold
-
-Alex explicitly asked to deeply restructure the existing prompt after reading decisions, PRD and prior failures, then measure the effect. This authorizes a new isolated fourth-step prompt arm after D221 failed, not a production default, new storage layer, retrieval change, or full-pipeline run. The [registered design](research/2026-10-29-prompt-restructure/design.md) separates reading the whole current source, deciding the strength and limits of each claim, comparing history, and choosing a research action. D201's independent investment judgement remains the new-question threshold; D202–204's preservation and source-identity rules remain. D221's use-relative standard and D220's necessary-meaning standard are unchanged. Whole-prompt restructuring is one experimental configuration; sentence-level causal attribution is not claimed. Six known development sources plus two historical regression cases are sent three times per arm with the same schema constraints, payload, Haiku model and 6000-token ceiling; the treatment also orders evidence fields before action, within the existing $0.60 cap including two diagnostic continuations. All raw answers are read and recorded, including failures.
-
-- D222 result: 19 of 48 planned comparison calls returned complete responses (10 control, 9 treatment); one treatment fabricated a question ID and was refused, so the remaining 29 were not sent. Target facts stayed present (7/7 control, 6/6 treatment observations), but both treatment NVIDIA answers turned unknown signing status into unsigned in admission reasoning and one called Firmus an unnamed builder. Both arms also asserted a shared WSJ origin for old reports without sufficient provenance. The prompt is not adopted; there is no stable-improvement claim from these incomplete repeats. All calls, readings and unissued slots are preserved in the linked results. No additional paid arm, production code, default, gold or ledger change.
-
-## D223 · 2026-10-29 · Test a single research note with references instead of repeated admission narratives
-
-Alex explicitly rejected stopping at D222's failed result and asked to trace causes and improve. The [single-note experiment](research/2026-10-29-single-note/design.md) tests a bounded contract change in the fourth-step research harness: write the investment note once, separate unknowns by their actual role, and let routing reference it rather than regenerate it as independent judgement and action reason. Known empty history/catalog fields are omitted from generation and restored as empty lists; nonempty references use the actual ID domain. Original-source relation can explicitly be unknown per historical comparison. Existing-question arguments and D201/D184/D185/D210 admission requirements remain. This changes an experimental output shape, not product storage, production prompts, gold or deployment. Frozen D220/D221 semantics judge all output fields. Start with the two decisive sources, three fresh samples per arm, and expand to the fixed eight regressions only if that proof improves without a new definite error; the old failed data remain. No full-pipeline run is authorized or implied.
-- D223 first pilot: 12 responses completed. All six single-note treatments passed identity/schema checks; the old-schema controls had two identity refusals. The treatment removed the previously observed unsigned-status and unnamed-builder errors in its three NVIDIA samples, but one still assigned credit support to NVIDIA without a stated provider, and one NN answer over-dismissed the supplier target. Do not expand that configuration. The [next isolated arm](research/2026-10-29-inference-check/design.md) keeps the single-note contract and changes only one reasoning instruction: test whether the source can remain true with an inferred business link false, and if so keep the link conditional while preserving weaker research use. Fresh controls, unchanged criteria and the combined $0.60 cap remain.
-
-
-## D224 · 2026-10-29 · Separate model capability from further prompt changes in the research experiment
-
-Alex asks to trace the cause and improve, and previously explicitly requested Haiku/Luna comparison. D223's counterexample instruction failed its 12-answer pilot; a two-answer diagnostic Haiku source editor corrected the NVIDIA provider but still misdescribed NN's end application as a reported buyer link. Neither configuration is adopted or expanded. The [fixed-prompt capability comparison](research/2026-10-29-model-capability/design.md) now sends the same single-note task to fresh Haiku controls and Luna treatments, three samples per case, first two development sources and then the eight predeclared regressions only if the pilot passes. No second editor call is added. D220/D221 standards, original sources, the two unrun positive holdouts, combined $0.60 cap and production/default boundaries remain. The model selection is explicitly disclosed, not a silent provider switch.
-
-
-## D225 · 2026-10-29 · Correct the measurement and compare both models on the same prompt change
-
-Alex clarifies that the primary task is Haiku versus Luna and their response to prompt changes, and challenges the scoring. Stop redesigning prompts. Independent reading of all57 D224 returns confirms that its pilot improperly labelled two conditional Haiku analyses as definite source-fact errors; retain the original reading and supersede that claim with uncertain inference boundary, per unchanged D218. The signed-positive must-open expectation is stronger than the complete D201/D210 rule and must not be scored as factual comprehension. D224 still has a clear Cloud completeness difference (Haiku3/3, Luna1/3), one Luna period error, relation errors in both models, and one Haiku truncation; no overall winner or adoption is established.
-
-The [measurement audit](research/2026-10-29-measurement-audit/) also counts all32 earlier D218 cases as empty catalog, empty history and no argument updates: the added instruction sat in the paragraph for rewriting updated arguments, so that trial does not establish compliance with that instruction. The [paired model-and-prompt comparison](research/2026-10-29-paired-prompt-model/design.md) reuses two already-frozen prompts unchanged, with both models in both conditions, five known development sources, three fresh samples each (60 calls). Standards, calibration and budget are recorded before sending. Observe output effects, not hidden reasoning; no new prompt, production change, default promotion or full-pipeline run.
-
-D225 final measurement: [the paired experiment](research/2026-10-29-paired-prompt-model/results.md) completed all60 responses. Final source readings, including independent blind review and the root’s adjudication, give complete core meaning 12/12→11/12 for Haiku and 10/12→9/12 for Luna; all12 explicit exclusion observations comply. Haiku mean latency10.02s versus Luna14.25s. Do not infer whole-system accuracy or general model superiority from five known development sources. The counterexample paragraph is not adopted: no stable semantic gain was shown. Six Haiku NVIDIA role-boundary concerns remain uncertain, not established fabrication. All six emitted signed-obligation proposals miss D210’s required obligation-amount measure; six nulls are not comprehension failures. The rewritten experimental prompt omitted D210’s amount/commitments-note language, retaining only next-annual-filing timing; this mismatch is identified, not causally isolated in this experiment. Preserve the initial and intermediate readings; final-readings.json/final-measurements.json are authoritative. No production change, default switch, further paid arm or full-pipeline run.
-
-## D226 · 2026-10-29 · Focus on Haiku and judge useful research reasoning with evidence-relative strength
-
-Alex asks whether evidence layering and the gold were actually used, directs improvement of Haiku only, and clarifies: reasonable ambiguity is acceptable; gold examples teach the layering logic rather than prescribe one rigid answer; the harness should assess broad analyst research judgment. This supersedes using complete-field conformity or any isolated defect as the primary pass/fail for the new experiment, not the underlying source-fidelity requirements. Preserve prior scores and identify the new evaluation basis.
-
-The [claim/use experiment](research/2026-10-29-claim-use/design.md) audits D221's four strength levels and D225's actual requests. One experimental output change expresses each connected business judgment with its supporting claim, research use, strength, grounds and material next check. Both arms remain Haiku, with identical sources and proposal rules. Assess overall useful/reliable, useful/needs-review, or misleading/missed-main-point; log exact data defects separately by investment consequence. Reasonable alternative grades and conditional inferences are accepted. The seven-source, three-repeat paired experiment stays within the existing 0.60-dollar planning cap. These are known-source development/regression cases, not independent proof of full hedge-fund decision capability. No Luna calls, production integration, default promotion, new storage or full-pipeline run.
-
-
-## D227 · 2026-10-29 · Restore investment relevance without tightening the gold
-
-D226 completed42 full responses on seven known sources. The root and independent model read all answers: control17 useful/reliable plus4 needs-review; treatment14 useful/reliable,3 needs-review and4 missed-main-point. All3 treatment Cloud answers reject customer financial demand evidence; one treatment valuation answer rejects a conditional EPS-times-multiple scenario. These are substantive research-use losses, not grade-label differences. All42 proposals are null; no proposal improvement is established. The prompt rewrite omitted the prior explicit customer/supplier/competitor relevance rule and emphasized business judgments. Two preserved diagnostic continuations cite that narrow scope. [Results](research/2026-10-29-claim-use/results.md).
-
-Under D218's standing independent-iteration authorization and Alex's current Haiku-only request, the [scope repair](research/2026-10-29-claim-use/scope-repair/design.md) tests only a replacement purpose paragraph: information is relevant by its economic connection to the investment; forecasts and valuation scenarios can be useful without being established outcomes. Same structured schema, remaining prompt, sources, model and broad D226 rubric. Four known sources, fresh paired controls, three repeats,24 calls. No gold change, no hidden exact-label gate, no Luna, production integration or full-pipeline run. Prompt growth3603→3892 characters restores the omitted purpose rather than adding case-specific exceptions; token/cost changes are measured. All failed runs remain preserved. Original0.60-dollar planning cap unchanged.
-
-
-D227 completion and user clarification: The24 calls finished; [source readings](research/2026-10-29-claim-use/scope-repair/source-readings.json) preserve all answers. Customer-demand use on Cloud is0/3 fresh controls versus3/3 revised purposes, supporting the narrow scope diagnosis. This does not establish overall analyst ability or justify adoption. Two valuation answers marked reject still explicitly permit illustrative scenario use; labels alone do not establish loss. The root records remaining meaning defects separately. No further paid calls follow.
-
-Alex then asks why the existing hedge-fund principles and ledger standard were not read before changing prompts. [The audit](research/2026-10-29-claim-use/principle-alignment.md) identifies the earlier main-worktree90-thesis review, the formal06-views evidence-tier rule and main-worktreeD251-D255 argument-evaluation work. They were missed before this rewrite. Research-note proposals are not silently promoted to adopted rules; main-worktree decision numbers are not merged into this divergent branch by number. The existing standard, with Alex's current allowance for reasonable ambiguity, governs the next evaluation. These22 requests all omit historical questions/evidence, so their single-article scores cannot establish argument-update competence. No gold rewrite, production adoption or new blanket criterion is authorized by a score.
-
-
-## D228 · 2026-10-29 · Put both existing analyst standards at the decision to work; stop for handoff
-
-Alex directs that the thesis-library evidence standard and prior hedge-fund analyst ledger review must both be applied, allows reasonable ambiguity, and asks to stop and leave a complete retrospective and current state. Both worktrees’ `AGENTS.md` §8 now point to the sources and require judging source, investment use and question admission separately. The eight-question research review is context, not a replacement for Alex’s decisions, adopted PRDs or frozen gold. Existing routing rules, including D209, remain unchanged. Gold examples inform judgment; optional details or differing labels do not become a rigid pass/fail. The [handoff](research/2026-10-29-claim-use/handoff-2026-10-29.md) preserves the failures, evidence, experiment limitations, active worktree and next task. No further experiment, product change, default switch, commit, push or deployment.
-
-## D229 · 2026-10-29 · The analyst standard for extraction is signed off and does not drift; measure Haiku against it
-
-- Alex, on [the standard](research/2026-10-29-analyst-standard/standard.md) and its five open points (conditional valuation argument kept as supporting without a bare price target; post-earnings share reaction optional; four weight levels only, no numeric score; the pass line of §11; role-v23 after sign-off with one change per arm): "1-5 都可以，按照这套标准来开始做测量，这条标准不要漂移，放到agents.md 和memory 里面".
-- Decided: the standard is the one ruler for extraction gold, prompts, arms and acceptance; it changes only by a recorded decision in Alex's words. Both worktrees' `AGENTS.md` §8 point to it. The [gold check](research/2026-10-29-analyst-standard/gold-check.md) applies: the frozen golds keep their files; the reference used from now on carries the four weight changes (two Alex's: revenue growth core, the 25-company letter supporting; two the assistant's, stated to Alex without objection: RTX 50 Super supporting, KeyBanc's Vera Rubin delay core), the three additions (AMD benchmark, FY2028 EPS, the conditional valuation) and the `fold_expected` cell for admission under ledger-blind extraction (D211).
-- Measurement, in this order: the per-article reference for the v38 week's 98 items and the 20-article holdout of 2026-07-08..14 (`holdout-pick.json`) written from the texts and frozen before any send; three gpt-6-luna draws of the production bytes and three Haiku 5.5 draws of the same text and schema (`haiku_week.py`, expected $0.78); every answer through the production sift; scored by the standard's §11 (structure by code, content by reading, core and supporting apart, no composite). role-v23 (the three conflicts in gold-check.md §5) is the arm after the measurement, not part of it.
-- Measured 2026-10-29 ([results](research/2026-10-29-analyst-standard/results.md)): neither model meets every §11 pass line. Week / holdout: core every draw correct gpt-6-luna 41/45, Haiku 43/45 / both 3/3; supporting two of three 66/69 and 65/69 / both 15/16; the excluded Singapore case kept in every draw by both (7 items); must-propose raised every draw 6/23 and 7/23; ruled-out questions 15 and 30; unrelated statements (per-article medians summed) 464 and 286. Cost for 354 answers each: $0.457 and $0.886. The reference and labels are one reader's (Claude) and count as model-authored gold. No model or prompt change follows from the measurement by itself.
-
-## D230 · 2026-10-29 · Haiku's output cap is 16k tokens; its thinking shares the cap with the answer
-
-- Found during the D229 measurement: the Haiku request carried the production per-category caps (T7/T8 8000, others 12000) and no reasoning setting, so Haiku 5.5 thought at its default level. Over the first 138 Haiku answers thinking was 61% of output tokens (median 1959, maximum 6071) while the answer text itself never exceeded 3724; three answers were cut at 8000 (one spent 6071 tokens thinking and stopped mid-JSON). Production gpt-6-luna runs `reasoning_effort: low` (about 500 reasoning tokens a call). Alex, offered three options (low effort at the same caps; 16k cap with default thinking; both): "直接改成16k token 上限吧我们不要纠结了".
-- Decided: Haiku extraction requests carry `max_tokens` 16000 with default thinking. In the D229 measurement every Haiku draw is re-sent at 16k; the 246 answers made at the production caps are kept in `answers_haiku_cap_production` as a record, not scored. The Luna control keeps the production request bytes (its largest answer used 4811 tokens).
-
-## D231 · 2026-10-29 · The Singapore case is optional evidence, no longer excluded
-
-- Alex, on the D229 result that both models keep the Singapore server case in every draw: "我觉得新加坡那条就随意吧我自己看觉得可能重要可能不重要，我不是很在乎这个其实".
-- Decided: the Singapore case overview and its defendants' details are optional evidence (kept or omitted without penalty) wherever the reference or a gold marked them excluded under his question 5 (D215, gold v5 G05, standard §11's exclusion line). Whether a question may be opened from the case is still judged by the standard's §6 tests like any other matter; a court step against the defendants does not change an NVDA position, so such questions stay out. The role-v22 example "Singapore charged four firms over server exports" is no longer a conflict to fix.
-
-## D232 · 2026-10-29 · The ruler checked against the raw answers; reference v2; four one-sentence prompt changes work on their pages
-
-- Alex, after the D229 result: "你说提示词方面可以改可以进步，你要不要针对没做对/做好的部分该提示词快速的验证测量；同时你要下去直接看trace，确保你写的尺子没问题".
-- The ruler was checked three ways ([results](research/2026-10-29-analyst-standard/results.md), section 尺子核查): the raw answers, the model's own account of seven stored answers (the stored conversation continued, $0.010), and a blind second reader (Codex read-only, no model names, no labels) on 90 item cells and 80 unmatched records (88% agreement on the 84 comparable item cells). Five defects of the ruler were found and corrected, each written with its reason: four articles were asked for the obligation question though their text holds no guarantee, backstop or credit-support statement (now acceptable, not required); questions the production sift refused were read as not proposed (both counts now reported); article 352's relayed Kyber report and denial were missing (added as core); two 34x-input cells were over-credited; four partnership cells that drop the credit support the text names were over-credited. Reference v1 stays frozen; [reference v2](research/2026-10-29-analyst-standard/reference-v2-changes.json) is frozen in `reference-v2.sha256`. Under v2 with the corrected labels: core every draw gpt-6-luna 41/47, Haiku 43/47; supporting 65/69 each; must-propose every draw 6 and 7 of 19 (7 and 10 counting questions the sift refused).
-- Not changed, for Alex: G01's requirement that "the rest of this year" not be written as a fiscal year came from the Codex-written gold v5, not from his answer; the request's own fiscal-year note tells the model this year is FY2027.
-- Five one-sentence arms of role-v22 on Haiku 5.5, each on the week pages that showed its failure beside a fresh control, three draws ($0.80): removing "valuation arithmetic" from the reject list keeps the conditional valuation (108: 0/3 to 3/3; 209: 2/3 to 3/3); an event's due date tied to the timing the item states cuts too-early Kyber due dates (8 to 2; discriminating questions 18/27 to 22/27); naming the measure from a neighbouring sentence keeps "revenue" at 209 (0/3 to 2/3); stating that every ticker-object ladder, an obligation amount included, uses the asset labels ends the sift's refusals of obligation questions (4 to 0; raised and kept 20/27 to 24/27). Requiring that a question's answer change a view of a listed subject did not reduce ruled-out questions (18 to 17). No prompt is adopted: the four working changes have not been measured together, on the whole week or on the holdout.
-
-## D233 · 2026-10-29 · "This year" written as the company's fiscal year is correct
-
-- Alex, on G01's requirement (from the Codex-written gold v5) that "the rest of this year" not be written with a fiscal-year basis: "算对".
-- Decided: a record that writes an item's "this year" as the company's fiscal year containing the publication day (FY2027 for NVDA in July 2026), or as the calendar year, keeps the meaning; this matches the request's own fiscal-year note. The standard's example in §5 stays: turning "the rest of this year" into a full year changes the period and is a distortion. Gold v5's distortion "把今年余下时间改成 FY2027" no longer applies to the basis alone. Labels re-read under this rule: Haiku's third draw on 209 becomes correct; the other draws on that item still drop or deny the revenue measure.
-
-## D234 · 2026-10-29 · Haiku is parked; extraction work continues on gpt-6-luna
-
-- Alex, after the D229–D233 numbers (core cells right gpt-6-luna 133/141, Haiku 135/141; ruled-out questions 5 and 8–11 per pass of the week; unrelated statements 464 and 286; Haiku about twice the cost): "我觉得haiku 没有比LUNA好多少，我们记录下先park".
-- Decided: Haiku 5.5 is parked as an extraction model; D217's choice of Haiku as the target model for steps 1–4 is suspended for extraction. Its measurement, probes, blind check and the one-sentence arms (D232) stay as the record; the arms' findings about role-v22's wording are leads for gpt-6-luna, not results for it. The production model stays gpt-6-luna.
-
-## D235 · 2026-10-29 · gpt-6-luna one-sentence arms: three changes work, three classes go to Alex
-
-- Alex: "你好好做完这个可以开多个subagent 并行测试，但是要确保控制变量，不要同时改到你要测试的prompt, 快速并行验证给结果".
-- Method ([results](research/2026-10-29-analyst-standard/luna-results.md)): each arm replaces one sentence of the production extraction system text (role-v22, poc-v38 bytes; no prompt file edited), beside one fresh control per round with all jobs shuffled into one window, three draws, production sift, judgements registered before reading and read under hidden codes where reading was needed. Two subagents investigated only (quote-check census at $0; the model's own account of the missing Kyber question), writing to new folders. Cost $1.24.
-- Working on their pages: the conditional valuation once the reject list no longer names valuation arithmetic (108: 1/3 to 3/3; 209: 2/3 to 3/3); product and benchmark details rejected with or without a figure (records on the product-blog pages 195 to 111, reference cells kept 79/84 in both); main_driver naming the launch or ship date of the product generation that carries the value (Kyber question 10/27 to 20/27, every draw 1 to 5 of 9 pages; ruled-out launch questions 3 to 0). Small: naming the measure from a neighbouring sentence (209: one correct, one partial, one wrong); subject-tied kinds (2), (3), (4) cut partner-page records by 8–9%.
-- No effect: two wordings of the standard's first test for opening a question (ruled-out 6 to 5 and 5; the excluded-kinds wording lost the obligation question on page 3); deleting the release-figures clause; tying kind (1) to the subject company.
-- For Alex: (1) the Kyber change rewrites the standard's main_driver ("承载公司价值的年度量") to include a product generation's launch or ship date; (2) the quote-check rule (typographic differences only, or also one elided run within a sentence, the stored quote restored to the source text; replay on 708 stored answers: 38 refusals to 24 or 35, no false accept read) changes what the system accepts; (3) ruled-out questions trace to the standard's own opening reasons (入股, 融资) without its 值得追 test, and two prompt wordings did not change them: a change to §6 or a code rule is his call. Nothing is adopted until the combined prompt is measured on the week and the holdout.
-
-## D236 · 2026-10-29 · Three proposals approved; every change stays general (a hedge-fund brain, not an NVIDIA rule)
-
-- Alex, on D235's three questions: "好都按照你的提议来。但是你的prompt 改动要确认不是hardcode for nvidia 你在建构的是hedge fund brain；确认这些改动都是ok的之后进行你的评测".
-- Decided, as proposed: (1) the standard's main driver also covers the launch or ship date of the product generation that carries the company's value; (2) the quote check accepts a quote that differs from the source only by punctuation, quotation marks or case, or by one run of words left out within one sentence, and stores the exact source text; (3) a binding obligation opens a question when the company guarantees, finances others, buys or backstops in its own name, or takes an equity stake whose size is stated and is not yet completed; its own borrowing does not open one. standard.md §6 is amended in these words.
-- Every prompt change is checked before the evaluation for wording tied to one company and for misfiring on other companies' material: the benchmark sentence tested in D235 rejected product and benchmark details "with or without a figure", which contradicts the standard's §2 ("没有业务规模的…跑分细节") and Alex's boundary ruling that a competitor's modelled comparison against the company's product is supporting (AMD 100 kW, 2.4x); it is rewritten to the standard's words and retested with two competitor-comparison articles outside the measured sets as guards.
-
-## D237 · 2026-10-29 · The extraction prompt is a general hedge-fund brain: scrub it, then measure the whole bench
-
-- Alex: "You can use examples from different domains to teach the agent in the prompt to give it examples, but you can't directly hard code it. I think it's a thing that you need to look at for the prompt. The prompt is not purpose-built for NVIDIA extraction only. You're not doing this the right way. It needs to be general purpose as a hedge fund brain. I keep on telling you this, and you keep on cherry picking the results just to meet the metrics or the benchmarks. This is not okay. You need to do a general fixed scrub and then give me the benchmark numbers on what its current performance on our test bench."
-- Decided: the one-sentence arms of D232/D235/D236 were written against the bench pages' failures and checked on those pages; they are evidence of mechanisms, not the method. The extraction request is scrubbed as a whole: every rule and example must read the same for any covered company and sector; examples teach from varied domains and none comes from the test articles or names the covered company; the signed standard (D229, D231–D236) is the only source of rules. The scrubbed request is then measured once on the whole bench (the week's 98 articles and the 20-article holdout, three draws, reference v2, labelled in full like the baseline), and every number is reported against the role-v22 baseline, regressions first.
-
-## D238 · 2026-10-29 · Extraction prompt work moves to a direct-read loop; role-v29 is the loop's current request
-
-- Alex: "你根本不要再给我跑什么三轮了。每一篇的问题明显地出错的你不要再用工具尺子了，你直接下去看；改动分提示词准则你有了按照他下去改，并快速实验"; then "你也不用全部读完，看到问题差不多就下去自己改了，持续这个loop".
-- Decided (Alex's words): no three-draw rounds and no self-built scoring ruler for this work; each article's answer is read beside its text, obvious errors are fixed in the prompt by the prompt principles (AGENTS §6, D237: general rules, examples from other industries) and tried at once with one send per article.
-- Done: six rounds on the 118 bench articles with gpt-6-luna, role-v24 to role-v29 (poc-v40 to poc-v45), each round read by hand and logged with its own mistakes (`docs/research/2026-10-29-analyst-standard/loop-2026-10-29/log.md`). Each rule comes from the signed standard (D229, §2 keep and reject lists, §6 opening reasons, §8 judgement 11), not from a new rule: another company's valuation, share price or deals that touch none of the company's markets, retail prices, content and compatibility details, and investors' trades are rejected even when a named party states them; a counterparty's or industry's statement that bears on demand, supply, input costs, competition, prices or products is kept; one deal, hire, programme or reported measure with its figures is one item; a reported announcement is a fact, rumour is what the item credits to unnamed sources; a guarantee or credit support for another party's debt, lease or revenue, financing to others, a purchase commitment or a backstop opens an obligation question whether or not the item gives its amount, while the company's own borrowing and leases and a completed or unsized stake do not; a launch or ship date opens only for the company's own product.
-- Code: `extraction.sift` no longer refuses an event question that names its quarter as a quarterly figure (`test_admission.py::test_an_event_question_naming_a_quarter_is_not_a_quarterly_number`).
-- Not decided: whether role-v29 replaces role-v22 as the product's extraction request. The product default is unchanged and nothing is committed.
-
-## D239 · 2026-10-29 · role-v29 (`poc-v45`) is the extraction request; the bench loop stops
-
-- Alex chose option A after the v29 report ("A，这是最新版"): role-v29 replaces role-v22 as the extraction request, and the later
-  steps run on it.
-- Decided: `scripts/replay.py` defaults to `poc/config/poc-v45.json` (it still named `poc-v37` although D211 moved extraction to
-  v22; v38 runs passed `--config`). The direct-read loop on the 118 bench articles stops: the open classes of D238 each touch one or
-  two pages, and further rules from them would fit this bench (D237). The next check is v29 on articles it has not seen, through the
-  later steps, launched only on Alex's word.
-- Found on the way: the collision judge in Jev matching never received the caller's transport (`views/round.py` passed it to Jev
-  only), so a test or replay with a fake transport sent the collision question to the real provider with the real key; two tests
-  did so on every run since D211 (`test_ledger_blind`, and the default-entry test once v45 made the second item open a candidate).
-  Fixed at the caller; `tests/conftest.py` now refuses every credential read in the suite (mutant: the old line fails exactly
-  those two tests). The configs `poc-v39` to `poc-v45` carried `version: poc-v38`; each now names itself (request bytes unchanged).
-
-## D240 · 2026-10-29 · A named party's action without an amount is kept; a reject rule never removes what the standard keeps
-
-- Alex, on role-v30–v32 rejecting a partner's integration of the company's software without business scale (the Palantir pages):
-  "我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点，我们是聊过这个事情的你难道没看文档吗".
-- What the documents already said: standard.md §2 keeps kind 2, "客户、供应商、竞争者、伙伴的有规模、有日期或有名字的动作" (a name is enough), and
-  "预测、传闻、反证、远期、条件情景都是证据。它们的层级和确定性另记"; AGENTS §8: indirect or incomplete information is evidence, and
-  incompleteness alone does not establish that it lacks research value. Its weight (core, supporting, optional) is judged apart from
-  keeping it, at evaluation; the extraction keeps it and records its source tier.
-- Decided: role-v34 removes the v30–v32 rejection, keeping v33's kind (2) wording (a counterparty's reported figure, the standard's own
-  example). The reference v2 entries that keep nothing on pages whose statements are a named party's action (the Palantir partnership
-  pages among them) are wrong under §2; the count of records on "nothing-to-keep" articles is no longer read as a target, only the
-  reference's core and supporting statements are a regression alarm. The frozen reference file is not edited.
-
-## D241 · 2026-10-29 · One unified definition of the ledger's types, question opening and evidence levels, with a traced golden set, before more prompt work
-
-- Alex, stopping the class-by-class loop: "你要开始校准，但是整个判断标准和账本类型是不是完全的干净同一？我们今天一直浪费时间在不同标准之间来回 - 几个大类型的账本 - 开题标准和档次 这两个要完整的定义好写好，我们的提示词和测量才会有统一的标准，你停下手边的工作先把我这个事情完整深度的给做好，你必须非常的谨慎来做多次校验逻辑的仿真我们来review"; then: "你确定这些足够作作为prd 指引 - 有涵盖我的抽取开题，研究观点标准 -档位根据信息量作定标 -以上有你自己trace 过的golden set 来做为改prompt测试标准 你自己深度review 几轮把这个写好作为这个环节最重要的参考再接着做".
-- Decided (the work, not its content): prompt changes and sends stop; a unified standard draft (`docs/research/2026-10-29-ledger-standard/standard-v2*.md`) merges the signed standard (D229) with the recorded decisions and PRD 06, is checked by independent readers on fixed cases over several rounds and by a read-only drift review against the decisions, and goes to Alex for review with every behaviour change listed for his decision; a golden set traced to the article text and to the standard's sentences is built from it as the test standard for prompt changes. Until Alex signs, the signed standard (D229) stays the ruler and no part of the draft is adopted.
-
-## D242 · 2026-10-29 · The standard becomes a web page, the extraction step's PRD; AGENTS.md and the README are cleaned and carry the prompt, measuring and iterating principles
-
-- Alex: "你给我一个网页，这个同时也是你这个环节重要的PRD，你必须更新agents.md 和readme；然后你也顺便cleanup一次这两个文档，有很多outdated 甚至误导的部分要删掉，把我们之前很容易Missed out principles all add inside so that you will not miss them again in the next run. Principles including how to write prompt, what is the way to measure, and how do we iterate?"
-- Decided: `docs/prd/05-extraction-standard.html` (version 2.15) is the extraction step's PRD and the one source of the draft standard; its rules are those of `standard-v2.14.md`, which it supersedes, and it adds the golden set's results (§8) and how a prompt change is written, measured and iterated (§9, pointing to AGENTS.md). Its status is unchanged by this decision: a draft until Alex decides its twelve proposals; until then the signed standard (D229) is the only ruler and no prompt changes (D241). AGENTS.md §8 points to the page; §6 (writing prompts) and §7 (measuring and iterating, split into the ruler, reading results and iterating) carry the principles that were missed in earlier rounds, each with Alex's words or the incident behind it; outdated statements were removed (the design-phase "no product code" rule, a function that no longer exists, the old glossary section name). Two principles quote Alex's words from earlier the same day, recorded here as their source: on iterating, "你一类一类改，快速迭代然后测regression"; on self-graded measurement, "你的这个垃圾代码和尺子根本就是fucking cancer 我根本无法相信你的评价". The same AGENTS.md is in both worktrees. The README of each branch describes that branch. A read-only Codex review checked the rewrite against the old file and the decisions, and the page against v2.14 (`review-agents-rewrite.md`, `review-page-v2.15.md`); its confirmed findings were fixed, among them a D240 rule written stronger than Alex's words, a calibration step he never asked for, and 49 golden entries without speaker or meaning, now filled from the text.
-
-## D243 · 2026-10-29 · The extraction standard is signed: proposal 5 stricter, the other eleven at their leans; lean cautious, catch the increment
-
-- Alex, on the twelve proposals of `docs/prd/05-extraction-standard.html`: "5. 这种典型的主张背景属于常识，基本上抽出来也没有太多的意义除非带数字和具体的叙事不然都是属于不采纳"; "然后你基本上也理解了这个核心，不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎不要看什么都是线索的感觉，但是同时我们要敏感一些新的信息带来的增量不要错过"; "其他几条的意见我都ok，sign off, 你重新整合这个prd 和agentmd and readme 我们要开始重新跑了".
-- Decided: proposals 1–4 and 6–12 as their leans. Proposal 5 as Alex wrote it: a typical claim or background statement is common knowledge, what an analyst following the company knew before reading the item (who leads, who competes, demand is strong, supply is tight, a known state retold), and is not kept unless it carries a number and a specific narrative. A statement that is not common knowledge (a new report's judgement, a new market data point, the detail of something that just happened) is new information and is judged by the keep rule like any statement. The general direction, in his words, governs extraction as a whole: lean cautious, the page is mostly noise, and new information that adds to an answer is not missed.
-- The page becomes version 3 and replaces the signed first version (D229) as the one ruler for extraction; AGENTS.md §8 points to it. The golden set is fixed under these decisions by `golden-v3/finalize.py` into `golden-v3-signed.json` (sha256 78844bc329fc85000e18ddcab9ea59feb57abe6407cf11bbead4ba8fe4c3c0d3): 348 entries to keep or optionally keep (week 80 core, 152 supporting, 63 optional; holdout 6, 29, 18), 738 sentences not kept and 24 more now optional, every span found verbatim in its article. 39 changes, each with its reason: 24 common-knowledge claims without a number and a specific narrative and one characterising quote left the kept list; 19 entries kept and rejected at once (the blind-check additions had not been compared with the drafters' rejected sentences) were settled. A read-only review of the first integration found the claim rule applied to every named claim rather than to typical ones, and a distant forecast written as always supporting; both were corrected to Alex's words and the leans, and nine specific new statements returned to the gold. The 20 holdout articles were seen in the earlier prompt loop, so a fresh held-out set is written before the first prompt arm.
-- The known code defect of the standard (B17) is fixed: the year limit counts a fiscal-year form in the company's own fiscal years (`extraction.beyond_next_year`); in the stored role-v29 answers it had refused 2 of 40 candidates with a year (NVIDIA FY2028 in July 2026). Test `tests/test_fiscal_year_horizon.py` on two stored candidates; the mutant that drops the fiscal shift fails it.
-
-## D244 · 2026-10-29 · Claude sets the dev/test split; scores are leads and Claude reads the traces every time; first the role-v29 baseline
-
-- Alex: "1. 好你来定 test validation split"; "2. 我觉得这是最容易出错的问题；你非常容易写死，我们在改的过程中如果drift你会一直用久的标准来衡量，这边需要有打分，但是“一定”要你自己下去看trace这是必须，记起来"; "3. v29 你先能跑出第一版的基线".
-- Decided: (1) the split is Claude's: the 118 bench articles, all seen, are the development set used for iterating and reading; a fresh test set from a later window no run has read is written from the text and frozen before its first send, and is scored once per configuration, never tuned on. (2) Every measurement has a score and Claude reads the traces: the raw answer beside the article, for every missed core or supporting entry and a sample of the extras and of the hits; a score is a lead, never the conclusion. The scorer hard-codes no rule of the standard: it reads the gold file it is given, prints the gold's and the page's sha256 and refuses a gold whose standard field names another page; a score is compared only with scores on the same gold; when the standard changes, the gold is re-derived and re-frozen before the next score. (3) The first task is the role-v29 baseline on the development set, three draws.
-
-## D245 · 2026-10-30 · role-v42 (`poc-v58`) is the extraction request; its must-not questions on small release dates are the next class
-
-- Alex, on the acceptance report (role-v42 against role-v29, five simultaneous full runs and a blind reader; option A "switch to v42 now and fix the question regression next", option B "keep v29 until it is fixed"): "A".
-- Decided: role-v42 replaces role-v29 as the extraction request; `scripts/replay.py` defaults to `poc/config/poc-v58.json`, which differs from `poc-v45` only in the ten extraction prompt versions (T*-v42). What it buys, pooled over the five runs on the development set: core kept 238.4 against 240.4 of 258 draw-hits (run differences −4, −10, −2, +4, +2), supporting kept in two draws 153.8 against 154.8 of 181, sentences the gold rejects kept 102.8 against 139.8 per draw, statements outside the gold 123.0 against 162.2 per draw; the test set shows the same pattern. What it costs: about 15 questions per full run that the gold says must not open, on release dates of small products, features and services (most from one article), against about 0 for role-v29 (`loop-log.md` rows 15–18).
-- The next class is that regression. Two fixes measured during the acceptance (role-v49, role-v50) each lost 3–5% of core and did not fully stop the questions; neither is adopted. The opening of questions is changed apart from the evidence rules.
-
-## D246 · 2026-10-30 · role-v51 (`poc-v67`) is the extraction request
-
-- Alex, on the report of the role-v51 fix (option A "switch the default to v51 (poc-v67)", option B "keep v42 for now"): "A".
-- Decided: role-v51 replaces role-v42; `scripts/replay.py` defaults to `poc/config/poc-v67.json`, which differs from `poc-v58` only in the ten extraction prompt versions (T*-v51). role-v51 changes one clause of the main_driver opening reason to the page's §3 B row (the generation of the company's own product that carries the quantity, its launch or first shipment), with one example and one counter-example (+177 characters). Against role-v42 sent together: must-not questions on small products, features and services 20 → 0 over 15 draws each; one full run (development + test, three draws) shows no cost elsewhere: must-open raised in every draw 18 against 16 of 28, core 235 against 230 of 258, supporting in two draws 154 against 155 of 181, rejected sentences kept 100 against 106 per draw; all paired intervals cross 0 (`loop-log.md` rows 20–22).
-
-## D247 · 2026-10-30 · role-v53 (`poc-v69`) is the extraction request: the attribution fields are defined in the schema
-
-- Alex, on the report of the record-field class ("默认换不换 v53"): "我们先锁定v53吧。"
-- Decided: `scripts/replay.py` defaults to `poc/config/poc-v69.json`, which differs from `poc-v67` only in the ten extraction prompt versions (T*-v53). role-v53's role text is role-v51's unchanged; from version 53 the schema carries descriptions of `speaker`, `original_who` and `original_day` (`extraction.FIELD_NOTES`; standard 5.4 and 5.5, D203, D220, the signed gold's who column), and every earlier version's schema is byte-identical (`tests/test_field_notes.py`).
-- Measured (`loop-log.md` rows 26–33, `research/2026-10-29-ledger-standard/fields-2026-10-30/`): writing the same definitions into the role text (role-v52) fixed the fields but kept about 7–15 more gold-rejected statements per draw; in the schema, against role-v51 sent together (run U, development + test, three draws): outlet-as-speaker and report-day signals 166 → 35 over 148 articles × 3 draws; verified field errors on a blind read of 24 fresh articles 18/96 → 11/94 records; gold-rejected statements kept −6.7 per draw; core per draw −1.3 and supporting at least two draws −4, both inside their paired intervals; must-open raised in every draw 17 → 22. Two follow-ups did not beat it and are not adopted: role-v54 (the role text's attribution clause removed) and role-v55 (the tier rule moved to the schema, refuted on its small sample). Left open: an author's restatement of another company's reported figures is still credited to the author (role-v56, which removes the T7 and T8 attribution phrases, is built and unsent).
-
-## D248 · 2026-10-30 · What counts as one question and one piece of evidence: seven boundaries, chosen one by one
-
-- Alex, on the census of duplicate and trivial questions: "我们的标准要收口"; then "你要不要深度的写好plan, 怎么测量，golden 是怎么，我们来解决这个问题；整体不能regress，你要秉持我们过往工程的原则，以及作为一个hedge fund analyst 到底怎么判断合并，去重，这个标准很重要，不能观点爆炸"; then, not following the plan's table, "我没理解每个难点，我需要一个一个和你过，你讲人话给我例子". Each boundary was put to him with an example and two options; his replies are quoted per row. Plan, census and review rounds: [question-identity plan](research/2026-10-30-question-identity/plan.md) §0–§4, §11b, §12.
-- The class ($0, `census/`): the sealed three-month run opened 69 questions in 59 days; Claude's reading of the first 50 (not reviewed by Alex) marks 12 duplicates and 10 that should not have opened, 5 borderline. Matching merged 39 of 122 candidates; the candidates opened new fall in three verdict classes (parsed from the decisions' reason text, not yet verified case by case): the collision judge's "distinct question in one matter", "same question" verdicts the code still opened (two traced to a model-written period start), and twins never compared.
-- The principle, Alex after the seven answers: "我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则" (written into AGENTS §8, "A senior analyst's granularity").
-- Decided (the general rule under all seven: two questions are one when the same outcome settles both; they are kept apart only when their answers can move apart and an analyst would bet on each separately):
-  1. **One plan, several wordings** (H1, "A"): wordings of one plan whose final check is the same number are one question; two numbers that move on their own and are watched separately stay apart; a single deal under a plan already opened by amount merges into it. Not put to Alex: a not-yet-signed deal's yes/no signing question (D210; PRD 06 keeps number and event questions apart) stays as it is and does not merge into a plan's amount question (the Ohio lease guarantee and the cloud-customer total in v38 both stay). Narrows the standard §4 "another quantity in the same deal (a guarantee beside a financing)" sentence taken from D190; consistent with D210.
-  2. **One event, several deadlines** (H2, "A"): while the earlier-deadline question is open, a later deadline is its evidence, not a new question; when the earlier one falls due unresolved and the matter is still live, the system opens the next-deadline successor with the merged evidence, without waiting for a new article (new work for pull mode, D14, D54).
-  3. **One product generation, several milestones** (H3, "A"): one question per generation, asked at the step that brings revenue (shipments begin); sampling and launch are its evidence; only milestones an analyst bets on separately (a drug's phase-3 data and its approval) are separate questions.
-  4. **A company's own quantity by fiscal and by calendar year** (H4, "A"): only the fiscal year opens (PRD 06 ladder rule 5); a calendar-year estimate is evidence to the fiscal question, weighed lower when the years differ much.
-  5. **A model-written period start** (H5, "A"): for event and policy questions it no longer blocks a merge; object, event and due day are still checked.
-  6. **Small matters opened as questions** (H6, "A， A"): a deal, product or project (the question was put about small deals and products) opens a question only when its scale can change the company's revenue, profit, cash or credit risk; otherwise no question opens, and whether its statement is kept follows the evidence rule (standard §5). Done in this round together with the merge changes, each measured as its own arm, then together on the holdout. Narrows the standard §3 class C ("a sized, not yet completed stake or acquisition").
-  7. **The same statement carried by several outlets** (H7, "A"): code treats pieces with the same known original speaker, original day and figures as one (an unknown speaker or day never matches: 297 of the sealed run's 4,298 pieces have both unknown); the judge sees it once with the outlet count; every piece is still stored. Changes D204's "both shown to the judge" for this case, and is a chosen exception to AGENTS §3 "equal values alone never establish identity"; the risk put to him with the question (a qualification such as "excluding China sales" hidden; D204's 8 of 40 wrong merges) is measured on the G3 gold before it is switched on, as is the accuracy of the original-speaker and original-day fields it relies on.
-- Next, in this order: the signed standard page (§3 class C, §4 "same question, succession or another question") carries these rules, then a read-only Codex drift review; then the plan's step 1 (structured census, the fixed-extraction replay harness, gold G1–G3, the September holdout week on Alex's go).
-
-## D249 · 2026-10-30 · A test the model applies to each statement is a check at the end of the same request; role-v63 (`poc-v79`) measured, the default stays role-v53
-
-- Alex, after a second-turn probe judged statements by standard 5.1 correctly that the one-pass answer had kept: "那为什么你不在prompt 里面要求做完自己复核一边就好，这样就是一个call完成"; then "你尝试一组先吧，这个完全就是再prompt 的最后面要求做完一遍基于"你刚才说的复核条件"再跑一次；写在同一个提示词里面"; then "可以，但是这个做法是有效的对吧，那你应该好好地写复核的侧重点然后跑；这个如果有效可以记录下来这个做法"; then the goal "你需要让这个加到prompt里面的方式improve performance. 一定要improve but don't hardcode or break our principles".
-- Decided (the method, written at AGENTS §6): from role-v59 the extraction request ends with a check that reads the evidence list back by standard 5.1 (`prompts/review-v<N>.txt`, `extraction.REVIEW_FROM`) and names no empty-answer condition; the role text of role-v59 to role-v63 is role-v53's. Every line of the check cites the standard (§5.1, §5.3, §6, D238, D243, D240); six read-only Codex rounds (`research/2026-10-30-noise/codex-review-*`); examples from other industries.
-- Measured (run Y3, role-v53 and role-v63 sent together, development 118 + test 30 articles, three draws; `loop-log.md` rows 34–48): gold-rejected statements kept per draw 94.3 → 77.3 (−17, interval −33 to −2); core kept in every draw 72 → 74 of 86 and supporting in at least two draws 152 → 154 of 181 once a blind reader judged the 58 entries the counting aid scored differently (core draws 31 → 34, supporting 85 → 85); test supporting in at least two draws 38 → 41 of 42.
-- Not decided: switching the default to `poc-v79`. Alex's reply to the report was "你可以commit push", with further noise work asked ("但是还是有70多篇被留下"), not an answer to the switch; `scripts/replay.py` stays on `poc-v69`.
-
-## D250 · 2026-10-31 · Four evidence boundaries and the counting unit settled; the ruler is fixed before any further measurement (standard version 5)
-
-- Alex, on the ruler check of the not-kept statements role-v63 keeps (`research/2026-10-30-noise/ruler-check-2026-10-31.md`; a blind reader agreed with the gold on 93–95% of the controls and on 70% of the entries v63 kept) and the five places put to him with a lean each: "五处都按你的倾向定，计数单位也改; 你要修正尺子；你已经多次因为尺子标准问题陷入假的测量".
-- Decided (each is the lean he was given):
-  1. **An arrangement retold without a new step** (Nokia AI-RAN collaboration, a carmaker's model on the platform, labs using a system): the lean as put: "只描述一个现成安排、没有新动作的，算背景，不收". An arrangement the item only describes as already in place (a collaboration, a customer using a product, a deployment), with no new step, is background and not kept, even when the item gives no date; everything else under the retelling row (D243 item 6, "看不出是旧事的不算重提") is judged as before, and guidance and a forecast or plan still in force keep their weight when retold.
-  2. **How close another company's matter must be** (a lidar maker's price cut, a partner's reactor going critical): the lean as put: "说不出它通过需求、供给、竞争、定价这类路径动了英伟达哪个问题的，不收". Another company's matter that one cannot say moves a question about the company through a path such as demand, supply, competition or pricing is not kept; a party next to the company only by sharing an article, an event or an ecosystem is not kept.
-  3. **A comparison the company, a partner or a third party publishes** ("10x lower cost than closed models", "40% more GPUs in the same power budget", a third party's test): the lean as put: "标准只说'对手拿来和本公司比'的要按 5.1 判；其余的都算产品细节，不收". A partner's or customer's adoption or integration in the same sentence is not dropped by this rule and is judged by 5.1 as before (the lean says nothing about it; an unconditional keep would be a new rule); ruling 4 (a competitor's 2.4x, supporting) unchanged.
-  4. **A named analyst's view of a new event** ("a Kyber delay widens the window for alternatives"): the lean as put: "只是解读一件已经记下的事、没有新事实或推算的，不收". One that adds a new fact or calculation is judged by 5.1; the conditional valuation (5.3) is unchanged.
-  5. **The counting unit**: the lean as put: "只有当那条记录本身不是该留的事，才算留了杂音". A not-kept gold entry counts as kept only when the record that carries it is not itself the same matter as a core, supporting or optional gold entry (optional is never penalised); not-kept words that ride inside the quote of a kept matter are one record of that matter ("一件事用几句话说仍是一条", standard §2).
-- The ruler (Alex: "你要修正尺子"): the standard page goes to version 5 with these rules, then a read-only drift review; the gold's evidence part is re-derived for version 5 (version 4 changed no evidence entry, `gold-v4-evidence-check.md`) by two independent readers with every disagreement decided against the article, written as a new frozen file with every change listed (before, after, reason), the version-3 file untouched (D243 item 11); the opening part of the gold is not re-derived here and the scorer reports no question score until it is. The scorer refuses a gold whose evidence part was made for another version of the page: `final_scores.py` had bypassed `score_gold.py`'s version check and scored rounds since D248 on the version-3 gold, which is the false measurement Alex names.
-- Not decided here: the financing-analysis entries (an IRR scenario, a debt-service floor) the blind reader would keep; they are judged by 5.1 in the re-derivation like any entry not on the 5.3 list.
-
-## D251 · 2026-10-31 · The extraction request may read the open questions as a daily snapshot (architecture under test)
-
-- Alex, on the reference-context architecture (`research/2026-10-31-reference-context/design.md`): extraction should "read from the database and return all of the outstanding theses … as reference", one line each, no evidence, so "evidences can directly be linked to open theses" and a new thesis is proposed only when none is open; on the open point of D211 (a request that changes with the ledger): "是的每天为单位最快照读取".
-- Decided: when (and only when) the architecture is adopted after the measurement in design.md, the open-question list an extraction request shows is a snapshot frozen once per day; every article of that day sees the same list; the archive key is (item, snapshot hash); a day in flight never re-sends an item because the ledger moved. This narrows D211 ("the request depends on the item alone") to "depends on the item and the day's snapshot". Not decided: whether other companies' questions are shown, whether the one-home rule (D207) moves into the extraction prompt, what happens to a failed candidate's evidence; the measurement's predictions P1–P6 are frozen in design.md (sha256 in `predictions.sha256`).
-
-## D252 · 2026-10-31 · The extraction prompt teaches what noise looks like, with general paired counter-examples; useful theses and evidence must not regress
-
-- Alex, after the noise ruler was verified by two blind readers (130 of 165 kept gold-rejected entries confirmed noise) and four role versions showed noise and recall falling together on one line: "you can probably start to add in some false positives on what in general should be considered as noise … we don't want to throw away the useful things in discovering key thesis. I think that is a very important metric. On top of that, it is whatever noise reduction that we can do … the hedge fund analyst has no idea in the prompts of what specifically constitute noise. And that's where I think in the prompt you should educate it … do not let this cause like regression to the extraction of useful theses … try not to make it like NVIDIA specific … a management statement that this is super bullish or whatever doesn't constitute as good evidence. It needs to be more evidence-based".
-- Decided: the role text carries a section that teaches noise by paired examples, one pair per §5.3 row that the measurement shows the model keeps (an existing arrangement retold against a new step; management cheer against guidance; an author's view against a sourced estimate; a trend remark against a figure; a product boast against business scale; a political stance against a policy step; a general risk against a supplier's stated cut; another company's own matter against one with a path; an analyst's reading against the fact it reads). Every pair is general (no covered company, product or figure) and sits inside its row's boundary: the kept side of each pair is what the standard keeps. The acceptance order is fixed: core and supporting recall first (no regression against the control, blind-corrected), then the noise count; a version that lowers recall is not adopted whatever its noise number.
-- Not decided: the five proposals that would change the standard (P1–P5 in `research/2026-10-31-reference-context/design-v69.md`); they stay proposals.
-
-## D253 · 2026-10-31 · D208's first step is built: seed questions for a covered company, written before the run, as homes for evidence
-
-- Alex, after the end-to-end measurement and the reflection (`research/2026-10-31-reference-context/design-e2e.md`, `reflection-2026-10-31.md`: the placement call drops a third of the extracted core matters and 70% of the supporting ones for want of a question to file them under, while the questions those statements name — demand, inputs, competition and share, pricing, the company's own annual lines — are the root quantities and seven driver classes D208 designed and marked not built): the seed list for NVDA was put to him as a table (roots: FY2027 total revenue, data-center revenue, non-GAAP gross margin; drivers: hyperscaler capex 2026, server-memory contract price 2027, NVIDIA's share of 2026 data-center accelerator spending, the Rubin rack's price, Rubin shipping, China's H200 permission, AI Compute Partnership commitments). Alex: "可以吧".
-- Decided: `scripts/replay.py --seed <file>` writes the seed questions into an empty ledger before the first day (views, ladders, keys, open switches, the driver's dependency on its root), from a per-company seed file the analyst keeps (`poc/seeds/`); keys are written by code so an article-born candidate for the same quantity merges into the seed (D190 exact-key identity) and the placer's 'takes' line is the one every keyed question gets. The template routes and never gates (D208): extraction and candidate opening are unchanged. Ladders of the four seeds that the control run also opened are copied from that run; the new ones are drafts marked as such for the analyst to confirm.
-- Measured next (three draws against three control draws, the same 14 days, end to end): core and supporting matters reaching judgement and dropped for no home, noise reaching judgement, questions opened and their duplicates. The driver-in-force block for the judge and re-placement of earlier statements (D208's later steps) are not built here.
-
-## D254 · 2026-11-01 · Placement: a question's code-written 'takes' line is the one rule for its file; D207's "company-wide figure questions take only their own figures" is retired
-
-- Alex, when the two placement calls were put to him as questions (2026-11-01 night): "你自己回答自己好吗这种傻逼问题你有这么多context和prd 以及人设，你为什么不自己回答". Decided by Claude under that delegation, from the signed standard, the decisions and the analyst persona; recorded here so the departure from D207 is written before any default moves.
-- The mechanism (`research/2026-11-01-e2e-loop/plan.md` §3.2′): one placement request, read as the model reads it, held two rulebooks. The system prompt (`placement-narrow-v2`, D207's wording) said a company-wide figure question "takes only the company's own reported figures, guidance, estimates of that figure and management's statements about it"; the code-written takes line of the same question said "figures, guidance, estimates and revisions for <scope> over <period>, and the direct drivers of that figure stated with a size". The model followed the system prompt: SemiAnalysis's estimate of data-center revenue 3/3 filed under none with the data-center question open, Morgan Stanley's rack price the same, a hyperscaler's own capex guidance 3/3 under none against the hyperscaler-capex question. The system prompt also called filing under none "a valid answer, not a failure", and the placer filed 74% of extracted statements nowhere, two fifths of them gold-kept.
-- Decided: the takes line is the one rule for what a question's file holds; the system prompt (`placement-narrow-v4`, 1,311 characters against v2's 1,587) says only how to apply it: narrowest covering question, that one only; a covered statement belongs in the file whoever says it (the company, a named analyst or bank, a customer, a competitor, a reporter) and with or without a period, basis or exact amount, the weight being the judge's; the period in a takes line tells questions apart and bars no driver from another period when no open question covers it; nothing a takes line covers is filed under none. D207's "only their own" sentence goes: an analyst betting on a company's revenue reads every credible estimate of it, and the signed standard keeps third-party estimates as core (gold v5: SemiAnalysis, Morgan Stanley). The anti-sink gate D207 wanted is the takes line's own "direct drivers of that figure stated with a size" plus the narrowest-question rule and the driver questions (D253 seeds); the 2026-10-31 stored re-send showed that removing the "only their own" sentence filed 11 more gold homes and no more noise. The event takes line (`placement.takes()`) now also names "cancellations, design or configuration changes", the content of a v2 sentence the proof showed the takes line lacked (a scrapped alternative rack plan 2/3 → 0/3 without it); the catch-all measure `other` is no longer printed as a word.
-- Measured before the send ($0, `resend_place_set.py`, stored requests re-sent three times as stored and three times changed, `proof-v4-final.txt`): of 17 core statements of matters that reached no question, filed in at least two of three sends 3 → 8; supporting 1 → 4 of 5; the 12 gold not-kept guards 0 → 0. A reviewer-driven weakening of two sentences (`proof-v4-final-b.txt`) lost the effect (core 3 → 3): the proven text is the one kept. Arm 3 (three draws, `poc-v86`) measures it end to end against the seed-v2 arm; the sink guard is the links a draw puts on the total and segment revenue questions (r1: 66/72/76 of 335/374/370). The default configuration stays `poc-v69` until the arm is read; a switch is a separate record.
-
-## D255 · 2026-11-01 · The extraction's one-line summary names the matter the statement belongs to (the next arm after D254's)
-
-- Alex, the same words as D254 (the question was put to him as `plan.md` §5 (f)). Decided by Claude under that delegation.
-- The class (`research/2026-11-01-e2e-loop/dropped-census-r2-placement-v3.md`): of the 25 gold core matters the seed-v2 arms dropped at placement, 11 had their question open; 6–7 of those 11 are one story, the Rubin Ultra rack delay of 2026-07-05/06, whose statements say "NVL72x2", "two Oberon racks back to back", "a backup plan bolting two racks together", "our roadmap is intact", while the question says "Rubin Ultra / Kyber NVL144". The placer reads the item's title line, the statements (one-line summary and quote) and the open questions, never the article (D207); it cannot connect a statement to a matter the statement does not name. The company's own denial in the same article, which names the roadmap, was filed. No placement wording can fix this class: three proofs filed 0 of 3 of these statements under every variant.
-- Decided: the one-line summary stands alone, as an analyst's note card does: who, what, how much, and the matter the statement belongs to, by the name the article uses (a product generation, a deal, a process, a market) when the statement itself uses another name or a part's name. The rule is written where the field is defined today: the role prompt's one sentence on `one_line` (role-v53 line 16: "a standalone summary … who did or said what, how much and for which period, naming the measure even when a neighbouring sentence gives it") gains "and the matter it belongs to"; the schema's `one_line` carries no description, and moving the definition there is the same change in another place (AGENTS §7.3), decided when the arm is written. General words that read the same for any company; no list of names, no company's products. It is built after arm 3 is read (no edit to package code while a run is live) and measured as an extraction change: the whole bench, three draws against the stored v53 draws (field correctness read by hand on the dropped class and on a sample of unchanged statements), then the end-to-end funnel.
-
-## D256 · 2026-11-01 · D255's sentence refuted by its proof; the mechanism is the undefined `links` field. One decider with the article, the open questions and one code-written rule is a PROPOSAL for Alex, not a decision
-
-- The one-line-summary sentence D255 prescribed was re-sent on the four rack-delay articles' stored extraction requests (`research/2026-11-01-e2e-loop/proof-d255-oneline.txt`, three sends as stored, three with the sentence): the summaries did not change (NVL72x2 and the backup plan are still named only as themselves). Per AGENTS §1 a fix that does not flip its case is not built; `role-v53b.txt` stays byte-identical to `role-v53.txt`.
-- The model's own account, two cases (`probe-d255-links.txt`): it left the backup-plan and NVL72x2 statements unlinked from its own Kyber candidate because it read `links` as "evidence that settles the candidate" ("One thesis concerns one figure or one event"), and it agrees, reading the article, that both belong to the Kyber matter. The request defines `links` nowhere: the schema field has no description and the only sentence about it says which ids to use. A field without a definition is a coin flip per send (AGENTS §6).
-- Proposed, not decided (an architecture change was left to Alex on 2026-10-31 and stays his; recording this as decided on the night of 2026-11-01 was an overreach, corrected after his 23:45 message "你在给我新架构之前有没有想过自己在耍什么智障一直跑一些没用的东西"; the review is `research/2026-11-01-e2e-loop/review-2026-11-02.md`): the structural cause of the whole class is that one analyst's judgement, "this statement bears on this bet", is split across three calls that each hold half the information (extraction has the article and no questions; placement has the questions, a summary and 240 characters of quote; matching only questions). The fix is one decider with the whole article, the day's open questions with their code-written takes lines, and the `links` field defined by that same rule (owner: `placement.takes`'s clauses). It would be extraction version 72 (role-v53's text, the day's open questions shown with takes lines, the links definition in the schema, no separate placement call), one of three ways to give the filing judgement its information (the review §4 lists them with a lean); nothing of it is built or applied until Alex chooses. The 2026-10-31 arm of the same shape (v82, `design-v71-production.md`) failed on two wirings this version does not repeat: its role text halved the candidates ("only for a matter no open question covers") and its links bypassed the filing rule.
-
-## D257 · 2026-11-01 · A declaration that is a stored group under other names gives the group those names (D166, the alias half); question identity R2 applied
-
-- Census on one 14-day draw (`e2e-loop/plan.md` §3.8): of 35 declared groups that folded into a stored group by a shared name, 23 carried names the stored group lacked; the Kyber rack group never learnt NVL72x2, Oberon or NVL144 although three articles declared them, so the placer's takes line never showed them and the statements using those names were dropped in every draw.
-- Decided (same delegation): `groups.plan` returns the declared names a stored group lacks and the writer appends them (`thesis_group_aliases`, append-only; `store.add_group_aliases`); every reader of a group's aliases (the placer's takes line, membership by alias, group search) sees the creation's names plus the added ones; the takes line prints every name, not the first six. D166's rule for what an alias may be is unchanged (products, projects, programmes, parties; never a research object's name). Test `tests/test_group_alias_merge.py`; `test_groups.py`'s expectation of the SK Telecom case follows this decision (the deployment's names join the Rubin group).
-- The question-identity rules of D248 items 2–3 (R2-a: an open event question takes the same event under another deadline; R2-b: a generation's launch and shipment are one question), built on 2026-10-31 on branch `fix/question-identity-r2` and accepted at $0 by replaying the stored matching decisions (55 blind-judged duplicates: 22 merged, 0 false merges), are applied to the working tree (no commit, at Alex's word) and measured with the alias change as one identity arm (`log.md` row 4), control = arm 3.
-
-## D258 · 2026-11-02 · Question identity brought in line with D248: a part of an open question is filed under it; `event` and `policy_event` are one family and a process's step words are one process; the collision judge is given D248's test
-
-- Alex, 2026-11-02 00:05, on why questions were duplicated although the matching step sees every open question: "开题为什么重复？你不是都可以看到存在的题了吗那你操他妈的在干嘛你到底系统有没有接对"; then "我刚才说的这个问题你也发现是什么 part of 问题你不该去反思一下这个设计或是哪里有问题直接修直接改。开干。用这个思路来一个一个的提升我们的能力。不要陷入无限没必要的测试循环".
-- The wiring is as designed (every candidate is compared with every open question by Jev, and the collision judge is asked); the duplicates come from the identity rules, which predate D248. Census of the 23 questions one draw's articles opened (arm 3 d1, `research/2026-11-01-e2e-loop/review-2026-11-02.md`; the three draws in `replay-part-of-r3.txt`): 10 were ones Jev had called `part_of` an open question (ZTE's H200 licence of the China authorization question, the CoreWeave backstop and the credit-support programme of the financing-commitments total, Rubin shipping by September of Rubin launching by December), and `part_of` fell through to "new question"; 5 were deadline variants or a launch beside a shipment (R2-a/b, built 2026-10-31, measured only tonight as arm 4); 1 opened because the model typed the China H200 authorization as `event` against the seed's `policy_event` and two more because its event-type word for the one licensing process varied (licence, approval, other), each a typed-field conflict that blocked a Jev "same" of 0.85–0.92 before the judge was ever asked; 3 are the GAAP/non-GAAP and growth/level variants (R2-d, open); 4 were new matters.
-- Decided (under D248's general rule, "two questions are one when the same outcome settles both; they are kept apart only when their answers can move apart and an analyst would bet on each separately", its item 1 "a single deal under a plan already opened by amount merges into it" and item 6 "a small part opens no question"):
-  - R2-e: a candidate Jev calls `part_of` an open question (above the threshold) is filed under that question, like a `same_quantity_or_event` verdict, when the typed fields allow; the part is evidence of the card, not a card of its own. The typed fields still decide: a yes/no signing question never merges into an amount question (D248 item 1's recorded exception, the Ohio lease guarantee) because `event` and `financing_amount` conflict. The collision judge is consulted as before and may keep a component apart under its rule.
-  - R2-f: in `identity.conflicts`, `event` and `policy_event` are one measure family, and for a policy process the event-type word is not identity (a licence, an approval and an unnamed step of one process are one process); a product event's type still distinguishes a deployment from the generation's launch and shipment (R2-b).
-  - The collision judge's prompt gains D248's test (`collision-v2.txt`): a single deal, counterparty or instance under a plan or process already asked about, and a step or deadline of one event, are the same question; a component is a question of its own only when its scale alone can change revenue, profit, cash or credit risk and an analyst watches it separately. Proof on the 50 stored judge requests of arm 3 d1, two sends each with the stored prompt and two with v2 (`proof-collision-v2.txt`): of 113 "distinct question, same matter" verdicts, 28 became a merge verdict (same question 17, same question other period 11) and 36 became "different" (the same outcome for the code, no merge); of 66 "same question" verdicts 2 moved to "distinct"; the credit-support programme, the GPU rental commitments, the AI-cloud credit support and the Rubin platform launch flipped in both sends, the GAAP margin, the memory share and the supply commitments stayed apart.
-- $0 acceptance (`harness/replay_part_of.py`, the stored Jev verdicts and keys of arm 3's three draws replayed through the new rules): of 23 / 26 / 25 questions the articles opened, 10 / 13 / 15 merge into the open question an analyst would hold (the financing total, the China authorization, the Kyber and Rubin questions, the non-GAAP margin, the Vera CPU revenue), 1 of the 38 is questionable (supply commitments filed under the CoreWeave capacity purchase, Jev `part_of` 0.57), and the Ohio signing question stays apart in every draw. Still open after this decision: the near-threshold Jev verdicts on launch-vs-shipment pairs whose scopes carry different names (Kyber vs Rubin Ultra, 0.35–0.48: the names belong to one research group, R2-g), and the GAAP/non-GAAP and growth/level variants (R2-d).
-- Tests: `tests/test_identity_part_of.py`; `test_collision_judge.py`'s case "without a collision setting Jev decides alone" now expects the merge (the spec changed here, recorded before the test). Measured by replay, not by a paid arm (Alex: "不要再跑这些有的没的臂了"); the configuration that names `collision-v2` is `poc-v89` (poc-v86 otherwise); the default stays `poc-v69`.
-
-## D259 · 2026-11-02 · The takes line takes the evidence that bears on a question's answer, not only its own figures: D254's "direct drivers stated with a size" gate goes; supporting evidence gets its leeway
-
-- Alex, 2026-11-02 morning, asked what to do with the supporting evidence the standard keeps but no question takes (74 gold supporting matters a draw dropped at placement, 88% with no bet under the library and the takes lines; the three options put to him were drop and tighten the standard, a company file outside the judgement, or widen the takes line at the cost of the revenue sinks): "先放款take 吧，辅助反正就是个中间地带我们给点leeway".
-- Mechanism (arm 3's 51 supporting matters dropped in every draw read one by one, `research/2026-11-01-e2e-loop/supporting-dropped-read-r3.txt`; one placement request read as the model reads it, `review-2026-11-02.md` §7): the figure question's takes line ended "and the direct drivers of that figure stated with a size", and the event and policy lines named only the event's own steps. The size gate contradicted the same request's system prompt ("even when it gives no period, basis or exact amount") and D240, and "direct drivers" excluded what the standard files as supporting: another company's operating figures (§6), a named customer's, supplier's or competitor's action (§5.1 item 2), anything reached through D250 item 2's path test. Half the dropped class is named partner, customer and competitor actions without an amount (Palantir's Nemotron integration, DeepSeek's chip, SambaNova's round, JPMorgan choosing SambaNova), a fifth is other companies' numbers (Broadcom's AI revenue guide, Micron's margin, Google Cloud's backlog), the rest demand and supply colour with an open home (the NVL576 delay and the Oberon stopgap of the Kyber question, TSMC's fabs, the AI debt market of the backstop questions), enforcement details of the H200 process, and consensus or valuation figures.
-- Decided (code, `placement.takes()`, under every configuration): a figure question's file takes its figures, guidance, estimates and revisions "and what makes that figure more or less likely: the demand, supply, competition and pricing behind it" (the standard's 5.1 test and D250 item 2's four paths); a launch, shipment or deployment event's file also takes the event's "variants and stopgaps"; a deal or obligation's file also takes "the counterparties' own plans, financing and demand that bear on it"; a policy process's file also takes "its enforcement and evasion … and the affected parties' own plans and statements about it". The system prompt `placement-narrow-v4` is unchanged: it says how the line is applied (whoever says it, with or without a size, the narrowest covering question only, nothing a line covers is filed under none). The weight stays the judge's. The sink D207 guarded against is accepted as the price of the leeway, bounded by the narrowest-question rule and the driver questions.
-- Proof (`proof-takes-wide.txt`; `harness/resend_takes_wide.py`: every stored placement request of arm 4 draw 1, 212 requests, re-sent once with the four clauses edited in the stored text, the edit checked byte for byte against the code on the run's 46 questions; one draw, one send, $0.18 at list price): gold supporting matters with a filed statement 40 → 98 of the extracted ones, core 69 → 75; statements filed 358 → 690 and links 390 → 717 over the draw; links on the total and Data Center revenue questions 22% → 32% of all links (Data Center 48 → 152, total revenue 39 → 79, the accelerator-share question 8 → 78, China share 17 → 38). By gold class over the 104 gold-article requests: supporting statements gaining a home 62, losing 0; core 11 and 2; gold not-kept 41 and 1; unlisted 23 and 1; optional 12 and 0. The two core losses were sampler noise: sent three times as stored and three times changed, the company's "nearly $20 billion in CPU sales" statement is filed 1/3 → 3/3 under the Vera CPU question and the "80% of core technologies domestic" statement 2/3 → 3/3 under the China share question (`proof-takes-wide-lost-core.txt`). The first wording also named "decisions behind it", a word D250 does not have: it filed hires, an R&D centre, game launches and an executive's pay under revenue and margin questions (`proof-takes-wide-a-with-decisions.txt`: not-kept gains 53, unlisted 35, total revenue 39 → 115, sink share 36%); the word was removed and the proof re-run (the numbers above), the supporting class unchanged (97 → 98).
-- What the leeway costs, written down: the noise the placement step used to remove is the extraction's noise and now reaches the judge (41 gold not-kept statements over the gold articles of one draw: ecosystem adoption lists, a CEO's generic claim, restated known deals, one game expansion under total revenue). The share of noise among pieces reaching judgement, 15% in arm 4, is estimated at about 22% after this change (from the gold-article counts, not measured end to end); filed statements double, so the judgement count and cost a draw are estimated to grow by 60–90% (arm 4: 310 judgements, $0.92 a draw; judging-v6's longer answers add to it). The owner of that noise is the extraction standard's 5.1 item 5 and 5.3 (common knowledge, current arrangements, product details), not the placement step; it is the next class to count, at the extraction. Tests: `tests/test_placement.py` (the D259 case). Measured by re-sent stored requests, not by an arm (Alex: "不要再跑这些有的没的臂了"); the default configuration stays `poc-v69`, and since the change is code every configuration run from now on carries it.
-
-## D260 · 2026-11-02 · A judgement is a forecast against a reference: the rung the evidence in force makes most likely, judged against what the market expects; the answer states the reference and the implied outcome (judging-v6)
-
-- Alex, 2026-11-02, asked whether the judge's stance should stay an absolute-band lookup (the current reading) or be judged relative to expectations: "门槛没有标准，按照你作为 hedge fund analyst 的认识来定". Decided by Claude under that delegation: the definition below is Claude's analyst judgement, recorded as such, not Alex's words.
-- Mechanism (arm 4 draw 1, all 356 judgements read, `research/2026-11-01-e2e-loop/review-2026-11-02.md` §7 and `proof-judging-v6.txt`): 8 of 314 later judgements moved a rung and 320 of 356 reasons say "remains"; the FY2027 total revenue question was judged 12 times at neutral while its upward pushes grew from 1 to 35, every reason "the $392 billion estimate is inside the band … does not establish $400 billion"; the gross-margin judgement wrote "leans toward rung 2 but does not warrant moving"; the 2027 hyperscaler-capex theme stayed below the band management's own forecast names because the forecast "is not fact". The judging-v5 prompt asked the judge to "be precise about what is established" and said only fact can establish a rung: the model read "established" as the bar for leaving a rung and the consensus figure as the anchor. A second cause stays open: the ladder's neutral band is written at opening without naming what it compares against (PRD 06 ladder rule 2 asks for it); that is the extraction's rule and is not changed here.
-- Decided, the analyst's rule: (1) the rung is a forecast, the outcome the evidence in force makes most likely at the due date, not the one it has proved; "not established" is a statement of confidence, never a reason to stay. (2) The reference is what the market expects: consensus, the company's guidance, the stated plan or deadline; a consensus or guidance figure alone keeps the judgement at the reference's rung and, once other evidence has arrived, is never the reason to stay. (3) The judge derives the outcome the evidence implies (reported figures and guidance give a run-rate; a quantified revision, a customer's demand number, a supplier's constraint, a confirmed delay or cancellation shift it), checks it against the dependencies' conclusions (a part cannot exceed its whole; a figure spanning several periods or products gives the question only its share), compares it with the rung boundaries and moves when it crosses one. (4) Weight follows tier and novelty: fact fixes what is known; party statements are the strongest forecast input; third-party views and rumours move the forecast in proportion to their specificity; a repeat, another outlet or an opinion with no new fact or calculation moves nothing. (5) The answer states `reference` and `implied_outcome` as required fields from `judging-v6` (`judging.schema_for`; code refuses an empty one; stored beside the rung in `judgements.reference` / `implied_outcome`; a ledger written before v6 gains the columns at its first write), so the D3 stance gold can read the reasoning, not only the rung. Written where the judgement is specified: PRD 06 State rules (`docs/system-design/new-facts.js` STATE_RULES, the generated block) and this record.
-- Proof (`proof-judging-v6.txt`, `proof-judging-v6b.txt`: the last stored judgement request of 14 theses of arm 4 draw 1 re-sent once each under v6 and read beside the stored v5 answers, about a cent): every answer names the reference and derives the implied outcome. Six rungs moved against the stored ones: non-GAAP gross margin 3 → 2 (Q1 reported 75% and Q2 guided 75% sit on the rung-2 boundary), 2027 hyperscaler capex 4 → 5 (management's own "more than $1 trillion"), China accelerator share 4 → 5 (share "fallen to zero"), China H200 authorization No → Yes (a reported plan to permit named firms and reported progress in reviews, six months before the deadline), Data Center revenue 2 → 3 ($355–360 billion derived from Q1 and the total-revenue proxy, below the $360 billion boundary), Blackwell+Rubin revenue 2 → 1 in the first send by annualising a two-year "$1 trillion visibility" figure to $545 billion, a part above its whole: clause (3)'s consistency check was added for it and the re-send gives rung 2 ($320–360 billion, a share of the Data Center segment). Total revenue stays at 3 with the arithmetic shown (H1 $172.6 billion from Q1 and the Q2 guide; $400 billion needs more than $227 billion in H2). Prompt 2,453 → 3,782 characters: the request defined neither what a rung means nor a reference and its "established" wording forced the defect; the two sentences that carried it were cut. Configuration `poc-v90` (poc-v89 with judging-v6); the default stays `poc-v69`. Tests: `tests/test_stance_fields.py`. Measured by re-sent stored requests, not by an arm (Alex: "不要再跑这些有的没的臂了").
-
-## D261 · 2026-11-02 · A ruler or gold that is built and reviewed is never changed again
-
-- Alex, 2026-11-02, while the judgement ruler (D3) was being built: "你的尺子做出来和金标真的不能再动了，已经造成了3天的各种漂移，非常的严重，我需要你记录到我们的决策和原则里面，我们做完的review过的尺子金标不能再动了".
-- The drift he names, counted: the extraction ruler went from the first standard (D229, 2026-10-29) to the signed page version 3 (D243, the same day) to version 5 (D250, 2026-10-31), the gold was re-derived from version 3 to version 5 with 62 recorded changes, and every score between D248 and 2026-10-31 had been read against the version-3 gold (the "假的测量" of 2026-10-31); the judgement step had no ruler at all until today. Three days of numbers that cannot be compared with each other.
-- Decided (his words; written at the decision it governs, AGENTS §7.1): once a ruler and its gold have been reviewed (readers who did not write them read them against the decisions; Alex signed), neither the definition nor the gold changes again. A defect found later is a dated correction record beside the gold (`corrections-*.json`), printed with every score and never merged in. A new definition is a new version that only his decision opens, with its own gold derived from scratch; old scores stay as they were and are never compared with the new. A ruler under construction is edited only until that review, and nothing is scored against it before.
-- What is locked by this record: the extraction standard page (`docs/prd/05-extraction-standard.html`, version 3 signed D243, with D250's four boundaries and counting unit) and `golden-v5/` (sha256 in `golden-v5.sha256`): no version 6; the loop's desk ruler (`research/2026-11-01-e2e-loop/README.md`, D1–D3). What is still under construction and locks at his review: the judgement ruler `research/2026-11-01-e2e-loop/judgement-gold/ruler-v1.md`, its reader brief, question list and gold `gold-v1.json` (the sign-off is a separate record).
-
-## D262 · 2026-11-02 · The judgement ruler (D3) and its gold are fixed: the gold is reader B's answers; frozen at sha256 636c056d1e4252fa…
-
-- Alex, 2026-11-02, after reading the two readers' reasoning on every disagreement (readers A and B differed on 3 of 23 questions by range or yes/no and on 12 of 20 direction labels; the system disagreed with the draft on the total revenue and Vera CPU questions in every draw): "那就不要理A了；我们就go with B 好吧，定下尺子金表".
-- Fixed by that decision: the ruler `research/2026-11-01-e2e-loop/judgement-gold/ruler-v1.md` (unit: a gold question at the window end 2026-07-14; material: golden-v5's 309 items by sha; a numeric question agrees when the gold's implied range overlaps the band of the rung the judge chose, a yes/no question when the answers match; the two null baselines printed with every score); the question list and the must_open mapping as built (`questions-v1.json`, 22 seeds + the Ohio guarantee); the gold `gold-v1.json` = reader B's 23 answers verbatim (B: a fresh-context Claude reader, model-authored, 3 questions marked no material: CoWoS capacity, semiconductor growth, SK Telecom), sha256 `636c056d1e4252fa759660803067e6ccd67a81067b012905e918aa9dec4005f2` in `gold-v1.sha256` and in `score_judgement.py`, which refuses any other. Reader A (Codex) stays beside it as the control record (`reader-A.json`, `reconcile-v1.md`): its distance from B is the stick's own noise. Claude's two proposals of the afternoon (a three-level score when readers split; toss-up questions excluded) were not adopted: one range per question, every question counts. From here D261 applies: nothing in the ruler or the gold changes; a defect is a dated record in `corrections-v1.json`.
-- First measurement on the frozen gold (`score-r4-identity.txt`, arm 4, three draws, judging-v5): judged questions agreeing 13/19, 15/18, 12/17; the lookup baseline (the rung containing the gold's reference figure) 9/15, 8/14, 8/14; always-neutral 5/11, 5/10, 5/10. Disagreeing in every draw: FY2027 total revenue (gold $400–435 billion, judge neutral by consensus lookup) and Vera CPU revenue (gold $8–18 billion, judge the top rung on management's $20 billion at face value); in two of three: the financing-commitments total (gold $25–60 billion, judge $10–20 billion). Never judged in any draw: NVIDIA's own capex (q12); the operating margin in two draws (q10): evidence never reached them, counted apart as "no judgement". The new judge (`judging-v6`, D260) has no run to score yet; a run on `poc-v90` is Alex's call.
-
-## D263 · 2026-11-02 · The judge is written to the frozen gold's own reasoning (judging-v7, poc-v91); a gap to the gold is closed in the judge, not re-measured
-
-- Alex, after the first score on the frozen gold was reported as the system being "wrong" on some questions: "不是啊什么叫错？我不是和你说了就按照claude的标准来就好了嘛". The gold is Claude's (reader B's) standard by D262; a disagreement is the distance between the judge and that standard, to be closed in the judge's rule, not a verdict to be measured again.
-- What reader B does that judging-v6 did not, read from B's answers on the questions that differed (`judgement-gold/reconcile-v1.md`, `gold-v1.json`): carries the guided growth forward rather than annualising the last quarter flat (Data Center, total revenue); discounts a management target for a product with no shipments by default (Vera CPU: two selling quarters, four million units at $5,000, the company's own choice of another CPU); sizes an announced but unsized commitment from its disclosed comparable (the Firmus backstop from Sharon's); derives a figure no one states from the accounting identities in the evidence (capex from operating less free cash flow); keeps linked conclusions consistent (China share against the H200 authorization theme). Written into `judging-v7.txt` as five clauses (v6 3,782 → 4,924 characters; reason: each clause is a behaviour of the frozen standard the judge lacked), named by `poc-v91`; schema and code unchanged.
-- Proof on the stored requests of the questions whose arm-4 judgement differed from the gold (`proof-judging-v7a.txt`, `proof-judging-v7.txt`; one send each, cents): total revenue rung 3 → 2 (about $421 billion from the guided growth on FY2026's base; gold $400–435 billion), Data Center 3 → 2 (about $372 billion; gold $370–400 billion), Vera CPU 1 → 2 ($12 to below $20 billion, the target discounted for the volume not in hand; gold $8–18 billion), DRAM prices 3 → 2 (about +15%; gold +10–35%), financing total stays 4 ($33.5–39.8 billion; gold $25–60 billion), the Ohio guarantee stays Yes; China share stays below 1% in draw 1, consistent with that draw's H200 theme judged No (the gold has the authorization likely and the share 1–8%; the consistency clause ties the share to the theme, so it moves with it). Six of the seven re-sent questions now land in the gold's band; the end-to-end agreement under judging-v7 needs a run on `poc-v91`, which is Alex's call. A placement gap seen on the way: the Vera CPU question never held the fall-launch statement (filed under the Rubin launch questions), so the judge could not count selling quarters from evidence; the default-discount clause covers it, the filing is a D2 class to count.
-
-## D264 · 2026-11-02 · The extraction reads the day's open questions with their takes lines and files the statements itself (extraction v72, poc-v92): the one-decider architecture Alex chose is built and measured against poc-v91 on the frozen ruler
-
-- Alex, 2026-11-02 evening, after asking why the open library was never adopted as the extraction's context ("你为什么架构上没有采纳我说的开的库作为step 2 context"; the answer traced the chain from his 10-31 instruction through the one-draw v82 replay I judged "不采用" myself to the D256 proposal left waiting): "我们非常专注的验证这个架构选择：我们有金标和尺子frozen可以比；我们这个架构设计的核心就是透过适当的Prompt 和引入已经开的题，和题的叙述来决定抽取；现在最新的prompt有修改了很多小毛病，你看是不是用最新最好的prompt + v72这边告诉模型怎么用读取开题库的prompt 来做新的实验prompt。充分理解我的ask然后get it worked out". This is his choice of the one-decider architecture (review-2026-11-02.md §4 way (i), the D256 proposal) and of its base prompt.
-- Built (design: `research/2026-11-01-e2e-loop/design-v72.md`, the four tables of AGENTS §2, predictions frozen at sha256 `aec1bb40…` in `predictions-v72.sha256` before any send): extraction version 72, named by `poc/config/poc-v92.json` (= poc-v91 with T*-v72 and no placement setting). The request shows the questions open at the start of the item's day (D251's snapshot) each with the code-written takes line the placer read (`placement.question_lines`, one writer for both requests); the schema defines the evidence field `links` by the same rule (`placement.FILING_RULE`, the placer's v4 system-prompt rule restated beside the field: the narrowest open question whose takes line covers the statement, whoever says it, with or without a period or amount, plus the answer's own candidates, else empty); `role-v72.txt` is `role-v66.txt` with its first paragraph pointing at [Open questions] and the links field (the latest extraction prompt on the frozen extraction gold: v53 → v65 gold-rejected kept per draw about 109 → 59 with core and supporting flat, v66 = v65 + R3's boundary, `r3-final-scores-Y6.txt`); `categories-v72.json` and `review-v72.txt` are v66's. The extraction's links file each statement: one linked to an open question is filed there, one linked only to its candidates follows them, one linked to nothing is dropped as 'no home' (D209; the handover's reason is the same word, so `e2e_funnel` and `dropped_census` read it); no placement call exists for v72 (`extraction.one_decider`, `places` ends at v71). v71's `new_in_it` and `moves` fields are not asked (`MOVES_FIELDS_VERSIONS`). Settled by me under the delegation of 2026-11-01, and said so: the candidate rules stay v66's (propose when the item raises it; code owns identity and folds a duplicate of an open question, D258), not v71's "only for a matter no open question covers", which halved the candidates and the homes in v82; it is one sentence to tighten if the questions ruler says so.
-- Two wirings of D251's snapshot were wrong and are fixed in the same change, each with a test that fails on its mutant (`tests/test_one_decider.py`): (1) before the first completed day the snapshot was empty, so the seeds (seq 0, D253) were invisible to every first-day item while the placer of poc-v91 saw them (`store.day_start_seq` is 0 before the first completed day); (2) the takes line prints a question's group names and aliases, which D257's alias merges change within a day, so the request bytes would have changed mid-day, the parallel day would have re-sent every waiting request, and two items of one day would have seen different lists (`store.groups_of_view_at` reads memberships and aliases at the snapshot's seq). Version gates: v53's and v71's request bytes are unchanged (tests); 274 tests pass; `scripts/preflight.py` over arm 4 draw 1 replays 243 stored answers through the current checks with the same 22 refusals as before (`preflight-v72-prep.txt`).
-- Proof before the run (cents; `harness/resend_extract_v72.py`, `proof-v72-links.txt`: the four rack-delay articles of 2026-07-05/06 rebuilt under v72 from arm 4 draw 1's day-start snapshots, three sends each; the stored outcome of the same run as the control). The statements that name nothing ("Our roadmap is intact", the scrapped backup plan, NVL72x2 back-to-back racks), which the placer dropped or filed under same-day duplicate questions in every arm since 10-31, are filed under the seed question v18 (Rubin Ultra / Kyber NVL144 shipping) in 3/3 sends of the SemiAnalysis article (both statements), 3/3 of the Tom's Hardware article (NVL72x2; the denial 2/3 with one send's quote refused), 3/3 of the Cramer article (to v18, v2 or v31 by send), while in the Asian-suppliers article the NVL72x2 statement went once to no home and twice to the revenue questions (v1/v2, v2/v20: a sink link; the Kyber question v33 the control's placer used was opened that same day and is outside the snapshot). Zero candidates in 27 sends over nine matched articles against the control's four, all four Kyber duplicates of v18 (the list shown does the deduplication the matching step did after the fact). Request size 22–38K characters (27–44 open questions) against the control's mean 19.8K.
-- The measurement, launched 2026-11-02 18:05 at his "get it worked out": `arms/r6-one-decider-v92/d1..3` against `arms/r6-control-v91/d1..3` (the acceptance run he stopped at 17:27, now the control, since arm 4 and v92 are separated by D258, D259 and D263 as well), 2026-07-01..14, seeds v2, eight extraction workers each, cap $3 a draw; scored on the frozen ruler (`e2e_funnel.py`, `score_judgement.py`), regressions first, every number, in `log.md` row 12 and `design-v72.md` §8. Whether poc-v92 becomes the default is his call after the numbers.
-- Measured (six draws finished 19:40; `e2e-funnel-r6-v72.txt`, `judgement-gold/score-r6-*`, `matter-states-r6-v72.txt`, `probe-v72-sink.txt`; three-draw means, v91 → v92). Regressions first: core matters reaching judgement 76.3 → 73.7 of 86 (predicted ≥ +2, the null is ±2), core dropped for no home 4.0 → 5.7, article-opened questions 11.7 → 3.0 (candidates 65 → 6.7: the list shown suppresses proposals even with the candidate rule unchanged; must_open 28/28 and may_open 40/42 in both arms because the seeds cover them, the Ohio guarantee being the one visible loss), supporting not extracted 25.3 → 46.0. Held: supporting reaching 94.0 → 90.0 (at the −4 line), noise reaching 89.2 → 56.9 (−36%), judgement agreement 17/19, 17/18, 17/19 → 15/18, 16/17, 17/18 against lookup 8–9/14–15, cost $1.15 → $0.88 a draw with model time −36% and wall clock 95 → 46 minutes for three draws, zero re-sent requests. Two mechanisms, both in sentences and neither in the architecture: (1) the sink is back: 60–62% of links on the three company-wide revenue questions against v91's 34–40%, 190–208 statements a draw under both total and Data Center revenue against 5–6; the model's own account in three of three cases cites the figure-line takes clause D259 added ("what makes that figure more or less likely: the demand, supply, competition and pricing behind it") and concedes the links field's "narrowest only" should have excluded the broader question or the link altogether; (2) role-v66's end-of-request check removes 21 supporting matters a draw that v53 keeps (20 matters extracted in v91 in at least two draws and in v92 in at most one: third parties' actions and views, named hires and partners, product milestones, standard §5.1 kinds 2–3), a loss the extraction bench's "supporting in at least two draws" count had hidden. Verdict: as built, v72 is neither better nor worse than v91 on the desk's counts and is cleaner, cheaper and faster; it does not become the default and no further arm is sent before the two mechanisms are fixed at their owners with $0 proofs: the root/driver pair collapsed to the narrower question by code (identity, D207's rule), the figure-line clause reworded and proved on re-sent stored v92 requests, and the base text (v53 against v66 under the architecture) put to Alex.
-
-## D265 · 2026-11-02 · Extraction v72 / poc-v92 is the version: the default configuration, the base every later change builds on, the control of every later measurement; D207's narrowest rule is enforced in code
-
-- Alex, 2026-11-02 evening, on the measured v72: "for the current version that you just fixed, I think it's highly probable that it's going to be the candidate. So, clean up the versioning. Like, whatever we just did, I think this is going to be the latest version. Use this, and don't drift again. With that, start to experiment the next steps that you talked about on what you need to do to fix the problems that you have discovered that still could be enhanced." The base-text question of D264 (v53 against v66) is thereby answered: the version is v72 as measured (role-v66's text under the architecture); its supporting-recall loss is fixed inside it, not by reverting its base.
-- Versioning from here: `poc/config/poc-v92.json` is the default (`scripts/replay.py`, the default-entry test `test_replay_script_defaults_run_the_default_jev_configuration_with_sixteen_and_eight_workers`, the README name it; `poc-v69` stays as the record of the placement architecture). A change to an extraction text is a new number (v73, v74 …: its own role, categories and review files, byte-identical where the text is unchanged) and a new `poc` configuration built from v92; a code rule applies under every configuration and changes no number. Every later measurement names poc-v92 as its control, three draws each, on the frozen ruler (§7.1); the 2026-11-02 draws `arms/r6-one-decider-v92/d1..3` are its baseline (`e2e-funnel-r6-v72.txt`). Nothing of the request shape (the day-start snapshot with takes lines, the links definition, no placement call) changes again without a decision in his words.
-- The first fix, code, $0 (the sink of D264): `extraction.narrowest_links`, applied in `file_reading` to every filing from v20 on: a statement linked to a question and to a question that question depends on (the ledger's `dependencies`, the seeds' root-and-driver pairs, transitively) keeps the narrower one only, which is D207's "narrowest question only" made an identity rule where the ledger knows the hierarchy. Replayed over the three v92 ledgers: links 967/921/907 → removed 302/310/285 (31–34%), no statement left without a link (the rule keeps the narrower); the three revenue questions' share and the per-question piles after the rule are printed in `design-v72.md` §9. Test `test_a_statement_filed_under_a_driver_and_its_root_keeps_the_driver_only`.
-- What the rule does not do: a statement whose only link is a revenue question it does not bear on (the reactor output, the optical plant) stays there; that is the extraction's noise class and the figure-line clause (D264's first mechanism), the next class.
-- The second fix, text, proved for cents (D264's second mechanism, the supporting matters v66's check removes): the model's own account on six of the twenty lost matters (`probe-v72-missing-supporting.txt`) cited in three cases a check row whose own boundary should have sent the statement back (an arrangement in place against a new step; common knowledge without a figure against a competitor's share with a figure; a product detail against a delay of the product that carries the value), and those three boundaries were the ones written without an example. `review-v73.txt` (role and categories identical to v72's; `poc/config/poc-v93.json`) gives each its kept-side example in another domain and drops the row-1 clause the header already states: 3,548 → 3,822 characters, the reason being AGENTS §6's rule that a classification is a closed set with examples. Proof (`harness/resend_review_v73.py`, `proof-review-v73.txt`: the 17 articles of the 20 matters, three sends each under poc-v93 from v92 draw 1's snapshots, against the three stored v92 draws): the 20 matters appear 10 → 28 times of 60, present in at least two sends 0 → 11, the three probed cases 0/3, 1/3, 0/3 → 2/3, 3/3, 3/3; the guard, gold not-kept statements written on the same 17 articles, 0.47 → 0.61 per article per send (about 2.4 more per 17 articles against 6 more supporting matters per send). Not a patch by that ratio, but under v72 what the extraction writes reaches the judge, so the whole bench decides: three draws of poc-v93 with the narrowest rule against the v92 baseline (about $2.7) at his word. Not decided: whether poc-v93 replaces poc-v92 as the default.
-
-## D266 · 2026-11-02 · Three quick fixes on the v72 base, each proved on stored data in minutes, put together as poc-v94 and run once: the retold-arrangement noise, the quote refusals, and the judgement churn that was not one
-
-- Alex, on the five classes listed after the v72 measurement: "2/4/5比较重要，快速验证。不要drift,不要跑超级繁琐的全方位验证，先poc 改，能work,有结论，全部改动放到一起再跑完整". (And on the first version of that list: "你讲的tmd是人话吗？…再给我讲Ai黑话我就干死你": every message to him is plain language, AGENTS "Authority and scope".)
-- Item 2, the noise filed under the revenue questions. Census ($0, the three v92 draws, the gold's own row for each not-kept statement): 64 gold not-kept statements written a draw; the largest row is D250 item 1, an arrangement the item dates to an earlier month or year and retells with no new step (a partnership "earlier this year", a contract signed "in May"), 55 of 191, 29%; every other row 3% or less. Fix at the owner, the closing check's row 1 (`review-v74.txt`, 3,822 → 4,067 characters; role and categories identical to v73): the dated retelling named with two examples, the paired counter-example of v73's new-step boundary (D252). Proof for cents (`harness/resend_noise_row.py`, `proof-review-v74-noise.txt`: the nine articles that wrote that row at least twice over the stored draws, three sends each under `poc/config/poc-v94.json`): row statements written 57 → 32 (−44%), the articles' core and supporting matters present 25 → 24. Conclusion: works on the class, no loss of kept matters.
-- Item 5, the quote check refusing core statements. Census ($0): 16, 11 and 14 refused quotes a draw; read against the closest source window, they are a word or two changed (the company's name for "the company's", "As" for "While", "Although" for "While", "My" for "Our"), a quote that copies one passage and runs on into the next, a run left out together with a changed word, and paraphrases (a comparison sentence restated as the company's own figure). Fix in code (`extraction.repair_quote`, D236 widened; `tests/test_quote_near.py`; D236's own tests hold): a quote whose words differ from one same-length source window by at most two edits (three above 30 words), every edited word a function word, a pronoun, a generic word for the company or the subject company's own name (`universe.companies[...]['name']`, given to the repair by `sift`), is that window; a quote that copies one passage exactly and runs on keeps the copied passage when it is at least eight words and ends at a sentence end. A changed month or number, another party's name, two names swapped, a dropped last word and a paraphrase are refused as before. Replayed over the 41 refused quotes of the three v92 draws: 27 repaired, each to the exact source passage, 14 refused (paraphrases, another company's name written for a pronoun, a typo in a proper noun, one stitched quote). The stored quote is still always verbatim source text.
-- Item 4, "the judgement changes its rung most days", was my misreading of the funnel: the row counted the judge's own `changed` flag, which judging-v7 sets on most later judgements. The rungs themselves (the path of each question's rung over the 14 days, `e2e_funnel.py` now prints it as "moved / moved back"): v92 draw 1, 17 moves in 222 later judgements (8%) and one move back; v91 draw 1, 23 in 313 and two. The one reversal (FY2027 total revenue, 2 → 3 → 2 on 07-06/07/08) is the judge's arithmetic for the implied outcome varying between sends ($461, $392, $416 billion from the same figures), not new evidence. No fix built; the funnel's label corrected.
-- Also in code since D265, under every configuration: `extraction.narrowest_links`. All of it together is `poc-v94` (= poc-v93 with T*-v74), launched at 20:21 as `arms/r7-combined-v94/d1..3` against the v92 baseline on the frozen ruler, at his "全部改动放到一起再跑完整"; the numbers go to `log.md` row 14 and `design-v72.md` §10. Not decided: whether poc-v94 becomes the default (poc-v92 stays until the numbers are read).
-- Measured (three draws, finished 21:27; `e2e-funnel-r7-v94.txt`; draw 3 stopped once on 07-05 when the judge named the H200 theme as a dependency of the China-share question twice and the check refused it, a judge-and-check mismatch not seen in the nine earlier draws, resumed from 07-04). Regressions first, v92 → v94: core not extracted 6.7 → 8.0, supporting dropped for no home 12.0 → 14.3, both inside the draw noise; core reaching 73.7 → 74.3 and supporting reaching 90.0 → 89.7, flat against predictions of +2 and +10 (the v73 boundary examples recover about two supporting matters a draw on the whole bench, against six a send on the 17 proof articles). Held: noise reaching 56.9 → 45.0 (−21%), the three revenue questions' share of links 61% → 45% with no statement under both total and Data Center revenue, quote refusals 16/11/14 → 6/10/8, judgement agreement 15/18, 16/17, 17/18 → 16/18, 16/19, 16/18, judge requests 5.1K → 4.2K tokens on average, cost $0.88 → $0.80 a draw, must_open 28/28 and may_open 40/42 unchanged, zero re-sent requests. Verdict: cleaner and cheaper, not worse on the desk's counts; whether poc-v94 becomes the default is Alex's call. Open defect recorded: the judge may name a shown theme as a dependency of an asset question (D263's consistency clause) and the check refuses it; twice in one round fails the day (resumable).
-
-## D267 · 2026-11-02 · poc-v94 is the default; no further three-draw runs for now; the extraction's remaining failures are read from the stored draws and reported
-
-- Alex, on the v94 numbers: "我觉得可以设置为默认；你先做这个更新；但是我不想再跑3轮群补了，现在这一版本的抽取还有什么明显可以提升的地方，深度看失败的问题给我反馈，不要读错". `poc/config/poc-v94.json` is named by `scripts/replay.py`, the README and the default-entry test (D265's versioning rule continues from v94: a text change is v75 and a new configuration; the control of any later measurement is `arms/r7-combined-v94/d1..3`). No three-draw run is sent until he asks for one; fixes are proved on stored data.
-- The deep read of the v94 draws ($0; `design-v72.md` §11 holds the lists, each checked against the article or the raw answer): (1) 42 of the 148 supporting matters never reach the judge in any draw and 30 are never written at all: other companies' and partners' actions and figures with a path to the company (a memory maker's revenue and a customer's price rises, a rival's customer forecasts, a supplier's expansion, partners' adoption of the company's products) and analysts' scenario numbers; the closing check's rows "another company's matter when you cannot say through which path", "product detail" and "arrangement in place" remove what standard 5.1 kinds 2 and 3 keep (D240); v73's examples recovered about two a draw. (2) Of the five core matters never written, one is a scorer miss (the compute-framework retelling is written in other words and filed), four are real: an analyst's view that consensus is too low and a capex forecast in one note, "Beijing refused to allow Chinese companies to buy these processors" (a policy fact inside a background sentence), and the four-die to two-chiplet design change (written under role-v53, dropped since v66 as a product detail). (3) About half of the statements filed under the Data Center revenue question are not evidence of it (one reader, 20 sampled: 6 right, 3 under the wrong question, 11 ecosystem or partner lines, a reactor demonstration, a market estimate), and the company's own blog posts supply most of them; 24% of the written noise is still the dated retelling. (4) The extraction links an open question's own estimates only when they name the question's period or population: 3.7 core and 14.3 supporting statements a draw are written and dropped for no home with the question open (the $20 billion CPU target against the Vera CPU question in 2 of 3 draws; 82% and 41% growth against total revenue; the $1 trillion Blackwell and Rubin figure). (5) The shown list suppresses proposals: the Ohio guarantee question, in the judgement gold, opened in one draw of three (two of three under the placement architecture); the operating-margin and capex seeds never receive a statement and are never judged. (6) Smaller: the remaining quote refusals (6–10 a draw) are paraphrases the model writes instead of copying a comparison sentence; two or three of fifteen sampled statements carry a doubtful tier (an author's commentary stored as fact). Nothing of this is built; the order and the fixes are proposals in §11.
-
-## D268 · 2026-11-02 · The first prompt audit's six fixes, each a contradiction or a missing example in the request, built as extraction v75 / poc-v95 and proved on stored data; the run is Alex's call
-
-- Alex, after the audit table (`design-v72.md` §12, the first run of `.claude/skills/prompt-audit`): "1 到 6 都改，存档证明，然后放到一起我再决定跑不跑". The audit's verdicts, one per failure class: (1) the closing check's row 7 ("another company's matter when you cannot say through which path …") contradicts the role's kind 2 (a supplier's, customer's, competitor's or partner's action with a size bears on the company by that relation); (2) the role's reject-list clause keeps "a partner's or customer's adoption or integration" with no condition while kind 2 requires a size, date or name; (3) the T8 category block's "forecasts and price targets with their figures" contradicts D240, the check's row 1 reads an undated policy decision as background, and row 3's boundary has no example of a design change; (4) the T6 block (company publications) names "partnerships" and nothing says a company's own list of partners, users or showcases is not evidence; (5) the figure questions' takes line "estimates and revisions for X over <period>" and the role's "a different period is another question" contradict the links field's "bars no figure from another period when no open question covers it"; (6) "copy its quote verbatim" has no example for a comparison sentence that starts with the other company.
-- Built (every example from another industry, no covered company, product or test sentence; AGENTS §6): `review-v75.txt` (row 7 rewritten with the kept side, "the path is the relation itself", its negative example shortened; row 1's boundary names an undated policy decision or refusal; row 3's boundary adds a design change: 4,067 → 4,404 characters), `role-v75.txt` (the adoption clause carries kind 2's condition; the quote sentence names the comparison sentence; the identity sentence says it decides what to open and that another period's estimate is still filed under the open question: 11,645 → 11,933), `categories-v75.json` (T8 reads the author's forecasts, estimates and calls with the figures when given; T6 reads partnerships and customer wins with a named party and a size, not lists of partners, users or showcases), and in code under every configuration `placement.takes` for figure questions (the period named as the question's own, an estimate for another period or population of the same quantity filed here when no open question covers it; the theme line's "including estimates for another population" clause goes, now covered). `poc/config/poc-v95.json` = poc-v94 with T*-v75; the review gate admits 75; tests `test_placement`, `test_seeding`, `test_open_questions` updated to the new wording (278 pass).
-- Proofs (cents; the articles' requests rebuilt under poc-v95 from the v94 draw-1 snapshots, three sends each, against the three stored v94 draws; `proof-v75-classes-1-2.txt`, `proof-v75-classes-3-5-6.txt`, `proof-v75-classes-1-2-4.txt`): classes 1+2, the 41 supporting matters v94 wrote in at most one draw, 29 articles: presences 12 → 31 of 123 (11 matters recover: 6 from 0/3 to 2/3, 4 from 1/3 to 3/3; 23 stay at 0/3, among them a memory maker's quarterly revenue, a customer's price rises, two memory suppliers' expansions, the company's own reported debt raise, a rack supplier's chairman, two partner integrations), the noise guard over the same articles 27 → 35 written statements over 87 sends. Class 3: the analyst's "market estimates materially lower" and the capex forecast 0/3 → 2/3 each, "Beijing refused" 0/3 → 2/3, the four-die design change 0/3 → 1/3. Class 4: five company-blog articles, noise written 33 → 12 over three sends, their supporting matters' presences 8 → 5 (the LangChain integration 3/3 → 1/3: the T6 wording cuts a named adoption whose size the model does not see). Class 5: "82% this year, 41% next" filed under FY2027 and FY2028 revenue in 6 of 6 sends over two articles (stored: dropped in 5 of 6 draw-articles), the $20 billion CPU target under the Vera CPU or total revenue question in 4 of 6 sends (stored 2 of 6), the $1 trillion Blackwell-and-Rubin figure under its question in 5 of 6; the memory-share estimate under the DRAM question 2 of 3. Class 6: the comparison sentence copied whole in 1 of 3 sends (stored 1 of 3): not moved.
-- Status: poc-v95 is built and proved on the stored requests; it is not the default (poc-v94 stays, D267) and no draw is sent until Alex decides. What the proofs do not show: the whole-bench effect (three draws) and the two classes left wanting, the 23 supporting matters still never written (the model's conservatism on other companies' figures outlives the sentence) and the comparison-sentence quotes.
-- One draw of poc-v95 at Alex's "那你快速验证" (`arms/r8-audit-v95/d1`, 22:29–23:25, $0.85; one draw, a direction, not a difference): against v94's three-draw means, regressions first: supporting matters not extracted 43.7 → 54, cost $0.80 → $0.85; then noise reaching 45.0 → 34.8 (gold not-kept written 41.7 → 24), no-home drops 138 → 69, core dropped for no home 3.7 → 1, supporting dropped 14.3 → 6, core reaching 74.3 → 78, quote refusals 8 → 5, judgement agreement 17/19, the revenue questions' share of links 44% unchanged. The regression read matter by matter: 19 supporting matters v94 wrote in at least two draws are absent, nearly all named partnerships or adoptions with no size (a reactor maker's partnership, a platform made free, a game platform's support, a data firm's collaboration, humanoid-robot partners); the cause is my own drift: the condition written into the role's adoption clause, the check's row 7 and the T6 block, "a named party and a size or date", is stricter than standard 5.1 kind 2's "a size, date or name" (any one). Corrected as extraction v76 / `poc/config/poc-v96.json` (the three places in the standard's words; nothing else changes) and proved on the 14 articles of the lost matters, three sends each (`proof-v76-adoption.txt`): their 36 supporting matters present 68 times over v94's three draws against 60 over v96's three sends, 6 still never, and the same articles' gold not-kept statements written 48 → 60 (partner releases and company blogs: the wider condition lets part of their noise back). The model's own account on the residue class under v95 (`probe-v75-residue.txt`, seven cases): in five of six omissions it concedes on re-reading that the row's boundary keeps the statement (a memory maker's revenue, a customer's price rises, two memory suppliers' expansions, a rack supplier's chairman, named partner integrations); the mechanism is the check's procedure, the model sorts a statement into a reject row and stops, not any one sentence; the structural fix proposed, not built: a closed classification of each statement's relation to the company (its own, supplier, customer, competitor, partner, regulator, analyst, none) as a schema field with examples, the keep decision following from relation and scale. Status: poc-v96 built and proved; poc-v94 stays the default; a run of v96 is Alex's call.
-
-## D269 · 2026-11-03 · The second prompt audit, on the v95 draw: the one large class left is a precedence contradiction; the sentence-level fix (v77) is a patch and is not kept; the next step is structural
-
-- Alex: "你跑一下我刚才写的skill，深度的判断下。我不要再全部重跑了，你帮我训读的跑完skill看下怎么快速改进improve". The skill ran on `arms/r8-audit-v95/d1` ($0, `design-v72.md` §14): the request read whole (the keep decision sits in the role's walk and reject list, the check's header and rows, and the links field), the failure lists (core 78 reach / 7 not written / 1 dropped; supporting 88 / 57 / 6; written noise 36 with no dominant row; 5 no-home drops of another-period estimates; one doubtful tier in fifteen; 5 quote refusals). The one large class, 57 of 148 supporting matters never written, maps to a precedence contradiction: the role's walk says "take it only when it has a kind and nothing on the list applies" (the reject list has the last word) while the check's header says "what a line says it does not cover goes to the check" (the exceptions have the last word); the model follows the role's order and stops at the first reject line; its own account conceded the exception in five of six cases.
-- Built and proved, not kept: `role-v77.txt` / `review-v77.txt` / `poc/config/poc-v97.json` state one precedence (exceptions read before the line; a statement with a kind stays unless a line names it and no exception sends it back), ask the walk to name the party's relation to the company, and cut "Fitting one of the four kinds does not keep an item" (+238 and +53 characters). On the 41 supporting matters v94 wrote in at most one draw (29 articles, three sends, sent twice): presences 12 → 71 and 64 (v75: 31), matters still never written 7 and 13 (v75: 23), but the same articles' gold not-kept statements written 27 → 78 and 82 (v75: 35), spread over the retold-arrangement row (13), common knowledge (7), product details (7), other companies' matters with no path (4) and a tail. A one-for-one trade of supporting matters for noise is a patch (AGENTS §7.2), so v77 is recorded and not adopted; the candidate stays poc-v96.
-- What the audit concludes: sentence-level fixes on this class have reached their limit; "is it new" and "is there a path" are judgements the model makes in passing while reading the list, and reordering the list moves both recall and noise together. The structural fix to design next (AGENTS §2 tables, $0 proof on the stored articles, no run): two closed-set fields per statement in the schema, the party's relation to the company (its own, supplier, customer, competitor, partner, regulator, analyst or outlet, none) and what is new (a new step, figure, forecast or plan, policy step, judgement, or a retelling), with the keep rule derived from them and the standard's scale condition, and the check's rows rewritten as the boundaries of those classes; this is what v71's free-text `new_in_it` and `moves` fields lacked (no closed set, no rule reading them). poc-v94 stays the default.
-
-## D270 · 2026-11-03 · The structural fix built three ways (v78, v79, v80): the keep decision as closed-set fields the model fills and code applies; what it carries and what it does not; a whole-bench draw of poc-v100 against v94 proposed, Alex's call
-
-- Alex (00:20): "去你妈的你给我继续工作。那你跑这个skill到底结构性要怎么改才能让harness这个agent做我想要的事情according to PRD; don't drift". Built on the audit's conclusion (D269): each evidence item classifies itself in closed sets the schema defines in the standard's own words with examples from other industries, and `extraction.evidence_rule` applies the standard's keep rule to that classification; the role's reject list and the end-of-request check are gone from v78 on. Three versions, each proved on the same two stored sets (the 29 articles holding the 41 supporting matters v94 reached in at most one draw; 11 blog, comparison and core-miss articles holding 41 core and supporting matters), three sends each, counted after the sift as what reaches the ledger, every answer saved (`docs/research/2026-11-01-e2e-loop/sends/poc-v*.json`) so a recount costs nothing (`resend_targets.py --replay`): v78 / `poc-v98` (party, news, scale), v79 / `poc-v99` (the standard's first question, "is this new information?", as its own field first; every statement of a kind written, new or known), v80 / `poc-v100` (the kind "view" for a general view with no new fact; the newness definition sharpened where the model's own account showed it stretched). Record: `design-v78-fields.md`.
-- Measured (gold matters reaching the ledger / gold not-kept statements reaching it; the v94 draws' stored handovers beside): 11 articles: v94 61 / 33, v78 75 / 77, v79 79 / 50, v80 81 / 36. 29 articles: v94 11 / 21, v78 75 / 154, v79 58 / 138, v80 49 / 74. Of the reached noise, quotes that also carry a kept matter (one long quote on both lists): v94 13 and 8, v80 11 and 14.
-- What the classification carries: a class the model recognizes as a shape and is told to write (an old figure, an arrangement in place, a market move, a product comparison, a view) it labels honestly and code drops with a reason: 249 of v80's 738 statements on the 29 articles. What it does not carry: whether an asserted claim is common knowledge (standard 5.1, D243 item 5): the model's own account on five probes (`probe-v79-newness.txt`, `probe-v80-common-knowledge.txt`) calls an asserted claim with figures or dated changes "new" every time, and no definition sentence moved that across three versions. v78's own lesson: a field on a written item records the model's decision unless the walk asks for every statement (v78: 21 not-kept labels in 1,017 statements; v79 with "write the known ones too": 17%; v80: 27%).
-- Status: none of v78–v80 is the default (`poc-v94`) or the candidate (`poc-v96`). On the stored sets v80 and v94 do not dominate each other: on the mixed set v80 reaches a third more matters at about the same noise; on the set chosen for v94's misses it reaches 4.5 times the matters at 4.6 times the noise and writes 2.5 times the statements (cost up, a baseline). The whole bench, three draws scored on the frozen ruler (core and supporting reach, written noise, D3, cost), is the only decider. For Alex, three options: (a) one draw of `poc-v100` on the 14-day window against the v94 draws (the lean), (b) a draw of `poc-v96`, (c) stop at `poc-v94`. No run starts before his word.
-- Process errors, in the log: the first v78 proof counted raw answers before the sift ($0.6 discarded; rerun with the harness counting what reaches the ledger); two sends died on a network drop and were re-sent. The night's proofs and probes cost about $5 (an estimate from send counts at the measured $0.004–0.006 a send).
-- Amended 03:30, after Alex (03:10): "不要再浪费时间全部重跑了，根本就是浪费时间。你根本还是不知道怎么改善该抓到的，减少噪音". No draw is proposed any more. At no cost, on v80's saved answers (561 statements reaching the ledger: 366 gold matters, 79 gold not-kept, 116 unlisted), six code rules over the fields and the links were tried (`design-v78-fields.md` §10): every rule that removes noise removes gold matters at the same rate or worse (a named analyst's unnumbered claim: 14 noise against 10 supporting matters; a customer's, partner's or supplier's step or figure filed only under the revenue lines: 11 against 31). The residual noise and the residual misses are the same shape, another party's step, figure or claim with a name and no amount, and the gold splits them by "a new step or an arrangement in place" and "adds a fact or a general view", which is judgement, not identity. The dial is one: v94 sits at the cautious end (the 29 hard articles: 11 matters reached, 21 noise), v80 at the permissive end (49, 74), v77–v79 between, and the standard's "lean cautious, catch the increment" names both ends. Which end the product wants is Alex's choice (D259); nothing is built or sent until he makes it. The two copies of the Nemotron article carry the same gold weights (checked), so no correction record is needed.
-- Amended again, 2026-11-02 20:39, after Alex ("你深度反思为什么分不开，这个完全没有道理啊 … 你根本就是看结果给我讲现象") and an independent read-only Codex review (`research/2026-11-01-e2e-loop/codex-audit-noise-v94-r1.md`): the "one dial" conclusion of the 03:30 amendment is withdrawn as a universal conclusion. A $0 census of the v94 draws against the frozen gold (`harness/noise_by_row_category.py`; `design-v78-fields.md` §11): 107 noise statements over three draws, 31% the standard's "arrangement in place, no new step" row, 59% filed under the data-center revenue question, and the company's own publications (T6) yield more noise than kept matter (30 against 19). Defects found in the request and in the field code, none built yet: the role and the check never define what a related party's "step" is (any present-tense partner activity counts); the role's "take it when it has a kind and nothing on the list applies" contradicts the check's "fitting a kind does not keep"; the keep decision attaches to the whole quote; filing is used as the evidence test; the v78–v80 rule rejects a customer's or competitor's judgement for want of scale, against standard kind 3. Alex's product choice of the dial's end is no longer the next task; the next task is the first of the five listed fixes, one at a time, proved on stored articles, and nothing is sent or run until he picks.
-
-## D271 · 2026-11-03 · The deep-review fixes on the v94 request: extraction v74d (`poc-v103`) is the candidate; proved on stored articles, no whole-bench run
-
-- Alex (after the D270 second amendment and the Codex review): "那你根据这份报告，在之前的基础上改动，然后直接测试。不要跑大规模了，真的很浪费时间，你用最直接的办法验证有效性先".
-- Built on the default's text (v74, `poc-v94`), as letter variants with v74's behaviour (`extraction.version_number`: no classification fields, the closing check, the same schema): `role-v74d.txt`, `review-v74d.txt`, `categories-v74d.json`, `poc/config/poc-v103.json`; v74b and v74c (`poc-v101`, `poc-v102`) are kept as the record of the steps. What changed, each sentence traced to the standard: evidence is decided before filing and a takes line never says a statement is material (Codex 5; standard 5.1 before D264's filing); kind 2 gets the standard's two named examples without amounts and the definition of an action (a step the item reports as news: taken, decided or planned), with a user's described benefits as an arrangement in place (D250 item 1, "合作、客户在用、已有部署") and its own revenue, capacity, orders or contracted amounts as kind-2 figures (standard 5.1 kind 2, "以及它们公布的数字"); kind 3 is whoever makes the claim, with or without a figure (standard 5.1 kind 3 and its "new information" examples); a line's "unless" only lifts that line (Codex 2); a record's own statement is what is judged (Codex 3); a deal one party signs under a wider programme is its own item (the gold counts them apart); the check's row 1 names users and their described benefits and makes its exception a step reported as news; T6 and T8 read lines (Codex 6); the product-detail line's duplicate exceptions cut. Characters: role 11,645 → 12,729, review 4,067 → 4,388, categories 4,047 → 4,141 (growth: the missing definitions the audit found).
-- Measured (`research/2026-11-01-e2e-loop/design-v78-fields.md` §12; three sets, 50 stored articles, three sends each against v94's three stored draws, one round): gold matters reaching 132 → 146; gold not-kept statements reaching 95 → 89, and 71 → 56 once records whose long quote also carries a kept matter are set apart (D250 item 5). On the way, v74b (95 → 77 noise) lost a core matter in all three sends (a partner's disclosed backstop amount): my sentence on "the results a user reports from that use" contradicted kind 2's reported figures, and the new quote-copy wording dropped the partner figure out of the programme's record; the model's own account (`probe-v101-omitted.txt`) and two cheap re-sends located and fixed both (v74c, v74d).
-- Status: `poc-v103` is the candidate; the default stays `poc-v94` until Alex says otherwise. Not done: the v78–v80 field code (a related party's judgement needs no scale, Codex 1) is changed only if the field route is used again. Tests: `tests/test_v74d_text.py`; suite 284.
-
-## D272 · 2026-11-03 · `poc-v103` (extraction v74d) is the default
-
-- Alex, on D271's result: "做成默认". `scripts/replay.py --config` defaults to `poc/config/poc-v103.json`; README, AGENTS (§9's run settings paragraph) and the entry-point test (`tests/test_concurrency.py`) name it. `poc-v94` stays as the record of D267.
-
-## D273 · 2026-11-03 · Second review of the extraction request: five misread sentences fixed in text (v74e), the filing structure measured three ways (v74f–v74h); none made the default
-
-- Alex: "你要不要同时你和codex subagent 再深度看到底哪里还是没写对，还要进一步优化结构，给我答案".
-- Found (`research/2026-11-01-e2e-loop/design-v78-fields.md` §13): the model's own account of seven misses under v74d (`probe-v103-omitted.txt`): "another company's matter when you cannot say through which path" read as "the item does not state the path" (a customer's backlog, a supplier's revenue: standard 5.1 kind 2's own example class); "a second item for the same fact" read across articles ("item" names both the article and an evidence record); "dated to an earlier month" applied to an expansion under way; a refusal still in force read as common knowledge (standard §5.3: a decision, plan or forecast still in force keeps its weight); "rental prices for older models are climbing" read as a typical claim (standard 5.1 lists it as new information). One reported miss was the scorer's (the Omniverse decision written in all three sends under another quote). The independent Codex review (`codex-audit-v74d-r1.md`): the role's reject list and the closing check state one rule twice with eleven differences; every numeric takes line repeats one tail, so the narrowest question cannot be told apart.
-- Built: v74e (`poc-v104`): one reject list, owned by the closing check; the five sentences rewritten from the standard (the analyst supplies the connection; a retold plan or decision in force keeps its place; judge the action, not its tense; a market measure moving now is new; the product-progress boundary covers every product line); T8 reads calculations and specific judgements. v74f (`poc-v105`): v74e with the tail and the period allowance stated once in the links rule (`placement.takes(paths_once)`, `FILING_RULE_PATHS_ONCE`, `extraction.PATHS_ONCE_VARIANTS`). v74g (`poc-v106`): tail kept, the v74f links rule. v74h (`poc-v107`): v74f plus the company-wide revenue question as the home of indirect evidence (`FILING_RULE_ROOT_FALLBACK`). Variants keep v74's behaviour flags; `extraction.FILING_RULE_VARIANTS` names the links rule each reads. Test `tests/test_v74d_text.py::test_filing_variants_change_only_the_takes_lines_and_the_links_rule`; suite 285.
-- Measured (50 stored articles, three sends each, one round): core presences v74d 59 → v74e 65 / v74f 64 / v74g 64 / v74h 68; supporting 87 → 122 / 70 / 93 / 95; noise 89 → 107 / 53 / 98 / 100 (56 → 83 / 38 / 69 / 64 net of long quotes). The structural finding: whether a statement is kept is decided by whether an open question takes it (D209 with D264); the total-revenue question's shared tail makes it both the only home of indirect evidence (partner adoption, supplier expansion, a country's capex plan) and the sink of noise, so a stricter filing rule removes both.
-- Status: the default stays `poc-v103` (D272). Lean put to Alex: v74h (`poc-v107`), the most core with none missed and noise near the old default's, request 4,000 characters shorter; v74e and v74f are the two ends. The next structural lever is not in the prompt: specific homes for indirect evidence (D208's driver questions, designed, not built) would let filing be strict without losing it; the seed questions belong to the frozen ruler, so that is a new ruler version, opened only by Alex.
-- Amended 2026-11-02 22:10, after Alex ("可是最新的问自己啊兜底不是废话变多了吗？" then "收窄那三句，直接测"): v74h's extra noise against v74d (89 → 100) came from three exceptions this review added to the closing check, not from the fallback: "a specific consequence" (the standard's 5.3 row lists "a delay leaves rivals a window" as not kept), "a market measure moving now" (applied to general statements), and "a party's own revenue, capacity, orders or contracted amounts" (let existing deals with amounts in). v74i (`poc-v108`) narrows the three to the standard's words. Measured on the same 50 articles: core 59 → 70, supporting 87 → 117, noise 89 → 81 (56 → 54 net of long quotes), no core matter missed in all three sends (three under v74d). Candidate; the default is Alex's word.
-- Amended 2026-11-02 23:01, after Alex ("那致癌案的核心事实不就退步了 … 找codex和你一起review 找到突破的方法"; "其实你也可以改成推理xhigh, max 都试试看"): the debt-backstop article's core regression under v74i is an incomplete walk of a long item at low reasoning (some sends skip whole sections; nine sends each: the opening market judgement 7/9 at low, 9/9 at medium). Measured on the 50 articles with v74i's text: low 70 core / 112 supporting / 81 noise, medium 73 / 140 / 120, high 73 / 171 / 150; xhigh exhausts a 32,000-token budget on long items and returns empty answers; "max" is not a value the API accepts. Codex's section walk (v74j, low) did not stop the collapse and lowered recall. A length rule simulated at no cost (medium for items of 15,000 characters or more): 74 / 118 / 87. Not built: a reasoning setting by item length is a code change (settings are chosen by source category); Alex's decision.
-
-## D274 · 2026-11-03 · The extraction production prompt is frozen at v74i (`poc-v108`); the unadopted variants are retired
-
-- Alex: "感觉已经瓶颈了，上一个版本是不是freeze作为我们的抽取生产提示词吧。你顺道把所有其他不相关的clean up sanitize吧". Read as: the last prompt version, v74i (D273's
-  three exceptions narrowed), at low reasoning, the configuration every reasoning test of the third round kept unchanged; it beat the D272 default on core
-  matters, supporting matters and noise on the 50 stored articles (D273 amended). If he meant v74d, the default goes back to `poc-v103` with one line.
-- Frozen: `poc/config/poc-v108.json` is the replay default (`scripts/replay.py`, README, AGENTS); `tests/test_frozen_extraction_prompt.py` pins the sha256 of
-  role-v74i, review-v74i, categories-v74i and the configuration, the links rule (`placement.FILING_RULE_ROOT_FALLBACK`, now a constant of its own), the
-  code-written takes lines and the evidence schema; a one-character change to the check fails it (mutant checked). AGENTS "Where to look first" names it.
-- Retired, never run as a stored run and never a default, backed up first (`research/2026-11-01-e2e-loop/retired-2026-11-03/retired-variants.tar.gz`,
-  54 files, sha256 manifest beside it, restore verified): prompt files of v74b, v74c, v74e–v74h, v74j, v74k, v76, v77, v78, v79, v80; configurations
-  poc-v96, v97, v98–v102, v104–v107, v109–v114; `tests/test_evidence_fields.py` (the field route's tests leave with it). Code removed with them: the v78–v80
-  classification fields and `evidence_rule` in the sift (and the `>= 78` version gates that would have caught any future version), the section markers
-  of v74j, the variant tables of v74f–v74k; `REVIEW_VERSIONS_ALSO` keeps 72–75. Kept: v94 and v95 (stored runs), v74d / `poc-v103` (D272's default), every
-  research record, proof, saved answer and probe. The request bytes of `poc-v94`, `poc-v95`, `poc-v103` and `poc-v108` on three stored articles are
-  identical before and after the cleanup (sha256 compared). Tests: `test_v74_production_text.py` (v74d and v74i), the review gate test states v76–v80 do
-  not exist; suite 283.
-- Sanitized: no company, product or bench name in the frozen prompt files; no credential pattern in any changed or new file.
-- Not done: the length rule for reasoning (D273 amended) stays a proposal; it would be a new version opened by Alex.
-
-## Decisions recorded on `main` while the extraction work ran on its branch (renumbered at the 2026-11-03 merge)
-
-`main` and `fix/extraction-quality-2026-10-28` both numbered from D181 after D170. At the merge the branch kept its numbers (D171–D274) and the 62 decisions `main` recorded were renumbered in order: D181→D275, D182→D276, D183→D277, D184→D278, D185→D279, D186→D280, D187→D281, D188→D282, D189→D283, D190→D284, D191→D285, D192→D286, D193→D287, D194→D288, D195→D289, D196→D290, D197→D291, D198→D292, D199→D293, D200→D294, D201→D295, D202→D296, D203→D297, D204→D298, D205→D299, D206→D300, D207→D301, D208→D302, D209→D303, D210→D304, D211→D305, D212→D306, D213→D307, D214→D308, D215→D309, D216→D310, D217→D311, D218→D312, D219→D313, D220→D314, D221→D315, D222→D316, D223→D317, D225→D318, D226→D319, D227→D320, D228→D321, D229→D322, D230→D323, D231→D324, D232→D325, D233→D326, D234→D327, D235→D328, D236→D329, D237→D330, D238→D331, D239→D332, D240→D333, D241→D334, D258→D335, D259→D336. References in `main`'s files were renumbered with them; commit messages keep the old numbers.
-
-## D275 · 2026-10-26 · Rebuild the frontend around the collected English library
-
-- Alex asked to read the current backend and database and update the frontend to match. The [implementation contract](research/2026-10-26-library-ui/plan.md) covers the read-only projection, versioned UI data contract and library interface. Extraction, group assignment, matching, scoring and acceleration experiments are unchanged.
-- The default page browses the collected English Jev library directly. Stored groups organize peer theses; ungrouped theses remain visible. No parent thesis, group score or dependency is invented. The existing Idea submission and graph remain a separate explicit user action.
-- A full-library HTTP/MCP read and the standalone build share the same dated bundle writer. Expose stored identity, group memberships, all evidence sources, replacement arrival, dependency resolutions and succession. Historical reads use recording dates; original source text is preserved. A new snapshot replaces scoped IDs as a whole.
-- Default read-service and standalone-build ledger/items paths align with the completed English library. Existing explicit path overrides and old bundle adapters remain supported. No paid request, prompt/model switch, ingestion, deployment, commit or push is part of this slice.
-
-- Result: [current-library frontend](../poc/reports/2026-10-26-library-ui/results.md) renders all 90 theses, 18 groups and 51 memberships, with complete identity/source projection and dated relationship display. The full Python suite passes 151 tests; 27 UI tests and eight mutation checks pass, and eight final-build browser lifecycle checks pass. JavaScript is 141,125 bytes; current-corpus validation is 25.3 ms in the final local sample. All three protected database hashes are unchanged. Existing semantic/index limitations and the acceleration work remain separate.
-
-## D276 · 2026-10-26 · Sentence-case interface labels and bar-separated metadata
-
-- Alex required removing the connection/Refresh region, Research library eyebrow, As of date control and duplicate result count/date row. The collected library remains browsable and can still load from its configured API automatically.
-- Interface labels use sentence case and metadata uses `|`; tickers, acronyms, names and original quotations retain their spelling. The [UI specification](poc/thesis-ui.md#presentation-rules) owns the presentation rule. The [cleanup scope](research/2026-10-26-library-ui/presentation-cleanup.md) records the census and affected readers.
-
-- Result: [presentation cleanup](../poc/reports/2026-10-26-ui-presentation/results.md) removes all four requested regions, replaces all six middle-dot template uses through removal or bar formatting, and changes both pagination actions to “Show more”. The open page is refreshed. 27 UI tests, 151 Python tests, eight mutation checks and nine browser lifecycle checks pass; no protected database changes.
-
-## D277 · 2026-10-26 · Inline send control for Idea input
-
-- Alex requested a send-arrow button inside the Idea input, grey while blank and black when it contains text, with Enter submission. The existing form owns both mouse and keyboard submission. The button is disabled for whitespace and while its request is pending; success, failure and cancellation restore state from the retained input.
-- The [control contract](research/2026-10-26-library-ui/idea-send-control.md) covers the UI change. Request schemas, model settings, search and graph selection do not change.
-
-- Follow-up: Alex requested half width and statistics separators. The composer is capped at 500px; statistics use the shared bar separator. [Browser verification](../poc/reports/2026-10-26-idea-send/results.md) covers disabled/typed/pending states and successful Enter submission using cached responses. An initial library load no longer navigates away from the user's Idea view. 27 UI tests and 151 Python tests pass; source database hashes are unchanged.
-
-## D278 · 2026-10-26 · Inspect the returned Idea analysis
-
-- Alex asked to see the complete analysis behind the clipped Idea summary. A View analysis action opens the full returned summary, per-part explanations and selected matches, search/candidate trace, dropped choices and structured response details. The [implementation contract](research/2026-10-26-library-ui/idea-analysis.md) defines lifecycle and data readers.
-- Display the existing service response; do not generate extra reasoning or expose a nonexistent internal reasoning stream. Model settings, retrieval, chosen theses and graph relations remain unchanged.
-
-- Result: [Idea analysis detail](../poc/reports/2026-10-26-idea-analysis/results.md) exposes the current response's complete summary, three part explanations and four search entries, with close/reopen and response data verified. 29 UI tests, nine mutation checks and 151 Python tests pass. The deliberate summary-truncation mutant is caught. No new model call or source-database change.
-
-## D279 · 2026-10-26 · Calculate and preview a composite-history Idea card
-
-- Alex approved a trial calculation and thesis-style line chart on the Idea card. The [trial contract](research/2026-10-26-library-ui/composite-trial.md) defines an optional, explicitly reviewed basket for the current NVIDIA example; generic code contains no company or thesis-ID special cases.
-- Average available signed representative scores with equal weight, show coverage, and label the current basket's retrospective history as a trial. Missing assessments are not neutral. Directions and representative choices are trial input because the current Idea response does not supply them. This is not an automatic production scorer or an earnings-beat probability.
-
-- Result: [composite UI trial](../poc/reports/2026-10-26-composite/results.md) computes 0 → +0.50 → 0 from the two reviewed representatives and renders the line on the Idea card. Replay, 30-day range and calculation detail are verified. 33 UI tests, ten mutation checks and 151 Python tests pass; no source database changes or new model calls. Automatic representative/direction selection remains outside this preview.
-
-## D280 · 2026-10-26 · Whole-card analysis and an analyst-written default TLDR
-
-- Alex requested removing View analysis, clicking the Idea card to open its detail, and making the default AI JSON summary a discretionary analyst/investment-manager assessment grounded in thesis states.
-- The existing `summary` field remains the single TLDR field. The [implementation and validation plan](research/2026-10-26-library-ui/analyst-tldr.md) provides dated state meaning and reasons to the final call, replaces repeated candidate briefs with one table and versions the prompt/config. The combined mapping/TLDR candidates changed relations in both development comparisons and are not enabled. Preserve the original two mapping-flow requests and thesis/claim rules exactly; an explicit optional `idea_summary` setting adds a summary-only JSON call after selection. This is the new default; old configurations keep two calls. The provider/model remain unchanged. The extra call and cost are reported.
-
-- D280 result: [clickable card and isolated analyst TLDR](../poc/reports/2026-10-26-analyst-tldr/results.md). The final default is `poc-v26-idea`; original mapping requests and ten selected IDs are unchanged on the stored example. Three final summary samples take 2.0/2.2/2.7 seconds, at about $0.00041 estimated per added call. 154 Python tests, 33 UI tests and ten UI mutation checks pass; sources remain unchanged. Broad Idea matching quality remains unaccepted.
-
-## D281 · 2026-10-26 · Show actual Idea progress as a connected timeline
-
-- Alex requested removing the pending header chip and showing successive thinking-style steps, connected vertically with the current step glimmering. The [contract](research/2026-10-26-library-ui/idea-progress.md) displays actual service stages, not private reasoning or timer-generated steps.
-- Optional NDJSON negotiation adds progress events to the existing Idea endpoint without changing its final JSON, prompts, model calls, matching or dates. The browser retains completed nodes and appends each new stage; reduced-motion settings disable animation.
-
-- D281 result: [live progress timeline](../poc/reports/2026-10-26-idea-progress/results.md). 155 Python tests, 37 UI tests and 12 mutation checks pass. Real HTTP progress arrives before the model finishes; the normal JSON result and model requests remain unchanged. The actual cached API replay costs $0 and preserves all protected source hashes.
-
-## D282 · 2026-10-26 · Make the composite chart a default Idea requirement
-
-- Alex requested the general default after the current datacenter-revenue question showed no chart. Retire exact-question matching from the default path. The [contract](research/2026-10-26-library-ui/default-composite.md) retains equal-weight, distinct drivers from D279 and D280's fixed mapping boundary.
-- The final assessment call returns the analyst summary and a validated representative/end-point plan. Code supplies identity/date metadata and computes history from existing states; the model cannot assign weights, scores or alter the selected theses. No extra call or ledger change. Missing support stays unavailable, not zero.
-
-- D282 result: [default composite](../poc/reports/2026-10-26-default-composite/results.md). `poc-v30-idea` uses explicit endpoint positions and low reasoning in the third call; matching remains unchanged. The live Data Center Idea renders +0.50 from two non-overlapping representatives. 160 Python tests, 40 UI tests and 13 UI mutation checks pass, with source hashes unchanged. The final nine-sample comparison has no invalid identities or endpoint signs; selection and prose variation remain measured limitations. Earlier array, keyed-sign and word-based endpoint candidates are not enabled.
-
-## D283 · 2026-10-26 · Simplify the Idea score chart caption
-
-- Alex requested removing the driver-count/current-basket caption below the chart and renaming its title to “AI score (composite)”. Census: one footer renderer, one corresponding CSS rule and one shared composite-chart title. The header score, calculation, replay and full analysis remain unchanged.
-- State/event: every composite-card render uses the new title and no caption; pending/error cards are unaffected. Value/readers: only the shared chart caption and its accessible name change; coverage stays in the response and analysis drawer. Path/checks: no data-shape or model change; use existing UI tests, lint/format and browser verification. D282 still owns the calculation.
-
-## D284 · 2026-10-26 · Plain blue inline citations
-
-- Alex requested plain blue `[1]` references without a highlighted box. The shared `.evidence-citation` rule owns the current and historical assessment appearance; the English fixture renders 1,358 references across 137 assessments in 33 theses. Its existing background and padding create the box.
-- Change only that shared style: inherit the surrounding text size, use blue text, remove background/padding/rounding, and underline on hover. Keep the existing evidence ID, accessible label, keyboard operation and current/historical source-opening handlers. No new state, date, data field, model call or navigation path. Verify the rendered current and historical references and source opening, then run the existing UI checks. D275 owns citation identity and historical reads.
-- Browser inspection also found duplicated brackets: stored `[e9]` became `[[1]]`. There are 580 parenthesized/bracketed reference-only groups in stored assessments, including 20 with hyphen/en-dash ranges. The shared renderer removes that outer wrapper only for reference lists separated by commas, hyphens or en dashes, when every named reference resolves; ordinary parentheses and unresolved references are preserved. Each clickable reference owns its single `[n]` pair.
-
-## D285 · 2026-10-26 · Put card scores beside their chart title
-
-- Alex requested moving every card's upper-right score to the right of “AI score”, matching its subtitle size. The shared thesis-card renderer serves library and canvas cards; the Idea renderer serves the composite card. Canvas replay also rewrites the old header badge and must update the relocated score instead.
-- Show the existing score and state label in a right-aligned pill beside the chart title; Alex explicitly confirmed retaining the pill. Keep card headers for the kind/icon; pending and failed Idea status handling is unchanged. Pill text and the card subtitle both use 11px. No score calculation, source, date or response changes.
-- Render/replay/range events read the same selected-date assessment. Missing assessments still say “Not assessed yet”; an unavailable composite remains unavailable. Existing standalone/detail charts keep their defaults. Validate current/historical display and replay in the browser, all current-library score labels, and the existing UI suite; no model calls are needed.
-
-## D286 · 2026-10-26 · Put the score pill below the chart title
-
-- Alex moved the pill from beside the chart title to a separate line below it. One shared title renderer supplies both card types; the library uses the same Thesis card as the canvas. Keep the pill shape and 11px text from D285, left-align it with the title, and reserve a 24px row so long labels do not collide with the plot.
-- Add the row only to charts that display a score pill. Preserve the chart's existing coordinates inside a translated plot group; replay updates stay in those local coordinates. Canvas cards gain the same 24px of height so plots remain contained and routing reads the new card bounds. Standalone/detail charts without a pill retain their layout.
-- Rendering, replay and range changes keep the same score/date inputs and missing-state behaviour. No data, model, prompt or calculation change. Verify all 90 library cards, the cached Idea graph, chart containment and replay, then run the existing UI checks.
-
-## D287 · 2026-10-26 · Restore the score pill beside AI score
-
-- Alex clarified the final placement: beside “AI score”, in the same row, retaining the pill and matching text size. This supersedes D286 and restores D285's shared title layout.
-- Remove D286's extra row and plot translation; restore the prior canvas card height. Library and canvas Thesis cards and the Idea composite use the same placement. Replay, data, score calculations and standalone chart behaviour are unchanged. Verify title/pill alignment and containment in the browser and run the existing UI checks.
-
-## D288 · 2026-10-26 · Model-returned impact percentages and weighted Idea history
-
-- Alex requested explicit Luna JSON weights for the connected theses, visible on card headers and summing to 100%, and deterministic weighted composite history. The [weighted-composite contract](research/2026-10-26-library-ui/weighted-composite.md) replaces D282's equal-weight rule while preserving its selected-thesis boundary and polarity handling.
-- Weight belongs to the Idea association, not the shared thesis. The final assessment supplies positive integer percentages and reasons; exclusions carry zero. Code rejects invalid totals and computes the weighted history without silently reallocating missing weight. Empty or incomplete historical coverage is unavailable. Old response versions keep their old behavior.
-- Use a new prompt/config with the existing model and three-call flow. No extraction, group assignment, probability conversion, source database changes, commit or push. The curve remains a retrospective of the current returned plan. Live verification uses the bounded design experiment before activating the new local default.
-
-## D289 · 2026-10-26 · Let the model choose the weighted thesis set
-
-- Alex clarified: let the model decide which theses participate and assign their impact percentages. Do not add rules to force a preferred allocation or force every candidate to participate. Variation between fresh model answers is recorded, not repaired with a quota or a new eligibility rule.
-- The weighted Idea configuration does not apply the legacy three-driver-per-part display cap. Identity validation, explicit direction, percentage totals and deterministic arithmetic remain code-owned. Historical configurations retain their original behavior. No new prompt arm is needed for this clarification; the valid D288 samples remain as returned.
-
-- D288/D289 result: [weighted Idea pipeline](../poc/reports/2026-10-26-weighted-composite/results.md). The default is `poc-v31-idea`; the real UI displays 60% / 40% / 0% and calculates +0.40. 163 Python tests, 43 UI tests and three focused mutants pass. Three fresh weighted answers all satisfy the contract; allocation variation is retained. The first two requests and source database hashes are unchanged; no fourth call is added. Six live comparison calls cost an estimated $0.002993.
-
-## D290 · 2026-10-26 · An Idea contains only its positively weighted theses
-
-- Alex clarified that every thesis adopted by an Idea must carry a positive weight; zero means it is not part of that Idea. The [positive-selection contract](research/2026-10-26-library-ui/positive-weight-selection.md) replaces the complete candidate partition in D288. Do not merely hide zero-weight cards.
-- The final model call selects a variable-length list from supplied candidates and returns a positive weight for each; a nonempty list sums to 100. There is no excluded/zero-weight branch in the new JSON. Final associations, bundles, part links, graph and calculation all use exactly that selected set; no related cards are appended automatically. Search candidates remain read-only trace context.
-- Preserve existing model/provider, the first two candidate-discovery requests and deterministic weighted arithmetic. Old response/config versions remain readable. No library database, extraction or grouping changes. Model choice is not replaced by a fixed thesis count, weight quota or post-hoc zero filter.
-
-- Result: [positive-weight association verification](../poc/reports/2026-10-26-positive-weight-selection/results.md). Three fresh v7 answers contain only positive weights totaling 100. The real endpoint and UI agree on 55% / 20% / 25% and +0.45; a stored subset case proves omitted candidates have no association or bundle. 165 Python tests, 44 UI tests and the projection mutant check pass. All source hashes are unchanged.
-
-## D291 · 2026-10-26 · Display Idea confidence on a 0–100% scale
-
-- Alex reiterated that the Idea result must be a confidence percentage, not a displayed weighted score. Preserve the positive model-selected weights and convert the deterministic aggregate as `confidence = 50 + 25 × aggregate`, mapping −2/0/+2 to 0%/50%/100%. The current +0.45 becomes 61.25%, shown as 61% on the compact card.
-- State/event: every available current or historical Idea point uses the same conversion; a missing point stays unavailable. Values/readers: the card pill, chart title/axes, accessible chart name and analysis headline show confidence. Individual Thesis scores and impact weights are unchanged. The detail table shows percentage-point effects around 50%, not the raw aggregate. No prompt, API shape, model call or database change.
-- Keep the existing raw chart default for standalone callers; the Idea chart explicitly uses the confidence scale. Verify five anchor points, inversion, missing history, the actual cached Idea, replay and the current chart range; then the existing suites and documentation checks. This is the defined confidence index, not a newly fitted forecast-probability model.
-
-## D292 · 2026-10-26 · Label and rank Idea thesis weights
-
-- Alex requested `Weight: xx%` on the Thesis header and descending weight from top to bottom. The live response contains three adopted theses in 55 / 20 / 25 order; the renderer currently follows response order and prints only the percentage. Sorting those same three associations gives 55 / 25 / 20 and removes the one inverted adjacent pair.
-- Presentation only: one shared ordering helper sorts copies by descending impact weight, preserving incoming order for equal or absent weights. The Idea graph and its analysis use it; header pills say `Weight: 55%`. The source response, adoption, weights and confidence arithmetic do not change. Unweighted library cards remain unlabelled.
-- State/event: initial completion, replay and chart-range changes retain that order; pending/error cards have no weighted theses. Value/readers: the model's existing `weight_percent` supplies graph order, contribution-row order, explanation order and header text. Existing identity, membership, date and layout checks still apply. D290 owns selection and D291 owns confidence. Verify the actual cached response and browser at 55 / 25 / 20, then run existing UI checks; no model or source database change.
-- Alex also requested a scale icon for Weight, with `Weight factor` on hover. Put the icon inside the existing pill and expose the same tooltip on keyboard focus. This changes only the header presentation, with no new data or action.
-- Final clarification: remove the visible `Weight:` words. The pill contains only the scale icon and percentage; keep the `Weight factor` tooltip and descending order.
-
-## D293 · 2026-10-26 · Slightly stronger default connectors
-
-- Alex requested slightly thicker, darker grey default connector lines. The shared canvas has one line style and a separate default arrow fill. Set a canvas-local connector colour to `#aaa99f`, use it for both, and increase stroke width from 1px to 1.5px. Keep active highlighting and routes unchanged. This applies on rendering and replay without new data or states; verify the actual three-branch Idea and existing UI suite.
-
-## D294 · 2026-10-26 · Remove the weight tooltip and align the icon
-
-- Alex reports the new tooltip covering card content and the scale icon sitting off-centre against the percentage. D292 introduced both through one shared header renderer and CSS rule; all three weighted cards in the current Idea use them. Remove the tooltip, its focus target and help cursor. Keep the accessible weight description on the pill.
-- Give the icon and percentage explicit, equal-height line boxes and centre the SVG inside its box. Initial rendering and replay use the same static header; unweighted cards remain unchanged. Weight values, ordering, confidence, dates and data contracts do not change. This supersedes D292's tooltip requirement only. Verify the three real cards visually and run the existing UI checks; no model or database write is needed.
-
-## D295 · 2026-10-26 · Increase default horizontal card spacing
-
-- Alex requested more horizontal space between canvas cards. Increase the shared minimum column gap from 120px to 180px; the existing fan-out formula can still reserve more room for many connections. Both Idea-to-Thesis and Thesis-to-related-Thesis columns use this function. Vertical spacing, card sizes, attachment points and data stay unchanged.
-- Initial render and range changes use the wider layout; replay keeps it. Existing route tests cover every current fan-out size and the actual multi-column graph. Verify the real three-thesis Idea in the browser and run those checks with the full UI suite.
-
-## D296 · 2026-10-26 · Match chart typography and fit the Idea card to content
-
-- Alex requested the same subtitle and vertical-axis sizes as the Thesis chart, and removal of the Idea card's excess bottom space. The actual Idea uses a 406-unit SVG inside 326px of content, shrinking its shared 11px title and 10px axis text. Its fixed 380px card leaves about 60px below the chart; all Idea composites share these two mechanisms.
-- Pass the canvas's card width to the Idea renderer and draw the chart at that width minus the existing 16px padding and 1px border on each side. Keep title typography in the shared chart rule. Size completed composite Idea cards to their content after mounting, retain normal bottom padding, and centre their actual height in the reserved layout block. Connectors already read actual card bounds.
-- Initial completion and range renders receive layout width; replay replacements receive the existing card width and preserve its centre. Pending/error cards retain their prior layout. No score, axis values, dates, weights or source data change. Verify rendered text scale against Thesis, bottom padding, replay, range switching and actual connector endpoints; then run the existing UI checks.
-
-## D297 · 2026-10-26 · Confidence and creation date under the Idea detail title
-
-- Alex requested an `AI confidence: xx%` pill followed by `| Idea created: date`, matching Thesis detail metadata. The existing bare date is the library's `as_of`, not an Idea creation date; do not relabel it.
-- The UI records the browser-local calendar date once when the user submits the Idea, and passes it explicitly to its detail drawer. This is session metadata for the current submission, not an added backend record. Legacy callers without it display `Not recorded`; no date is invented. Replay changes the confidence to the selected-day value and leaves creation date fixed. Missing confidence remains unavailable.
-- Reuse the shared pill, state colours, separator and date formatter. New submissions replace the previous session metadata; model response, caching, extraction, database and score calculation are unchanged. Verify the real cached UI submission, replay and missing-value presentation with the existing frontend checks.
-
-## D298 · 2026-10-26 · Simplify the Idea analysis and structure thesis explanations
-
-- Alex requested removal of the extra confidence/driver-count/date row and cleanup of the following thesis explanations to match the Thesis detail hierarchy. One composite renderer supplies the row and all three repeated explanation blocks in the current response.
-- Keep the confidence pill in the D297 header and the contribution table. Each explanation now has one full thesis title beside the shared icon/weight pill, then separately labelled relevance and weight rationale in the same body type. Remove the duplicate short title and repeated fixed-weight footer from the current format. Sort order and returned explanation text stay unchanged.
-- All dates and scores retain their current sources; only presentation changes. Older unweighted formats retain their relevant footer information. Update the assertion for the deliberately removed row to check the header confidence instead; verify all three actual explanation blocks and the header in the browser. No prompt, model or database change.
-
-## D299 · 2026-10-26 · Replace the confidence table and paragraph with contextual help
-
-- Alex requested removing the contribution table and moving the confidence-method paragraph into a question-mark popup beside the Idea analysis's AI confidence subtitle. One renderer owns both elements. The shared table CSS remains for Thesis score definitions.
-- Keep confidence, weights, calculation and thesis explanations unchanged. The help popup shows the same explanation on hover or keyboard focus, with wrapped text inside the detail panel. Update the retired table assertions to verify calculation separately and the new weight pills/help markup. Verify the actual drawer and existing UI suite; no model, date or database change.
-
-## D300 · 2026-10-26 · Refine explanation labels and popup placement
-
-- Alex requested no divider before thesis explanations, the confidence popup to the right of its question mark, and black Relevance / Weight rationale labels at least as large as their following text. One shared explanation style affects all three current thesis blocks; the popup has one shared position rule.
-- Remove the explanation border while retaining its spacing. Use the body font for labels, with black colour and semibold weight. Place the popup eight pixels to the right of the icon, sizing it within the remaining heading-row width. Hover belongs to the icon, and keyboard focus still reveals the explanation. Content, weights and calculations are unchanged; verify the actual drawer and existing UI checks.
-
-## D301 · 2026-10-26 · Restore section dividers and remove stacked spacing
-
-- Alex clarified that only the divider before the first thesis was to be removed, not all dividers. D300 removed the shared border from all three explanation blocks. The current layout also stacks hero/body padding (52px before Summary) and heading margin plus block margin/padding (56px before the first thesis).
-- Follow the Thesis detail's 24px section margin and 20px inner padding for major section dividers and between consecutive thesis blocks. Keep the first thesis free of a divider and use a single 20px gap below the confidence heading. Remove the extra Idea body top padding, leaving the hero's 24px. Keep the right-hand tooltip and black body-size labels.
-- This changes only Idea detail layout. Content, ordering, calculation and dates stay unchanged. Verify the actual section gaps and divider scope, including the first and later thesis blocks, then the existing UI suite and docs check.
-
-## D302 · 2026-10-26 · Balance confidence help and centre its icon
-
-- Alex requested at most three lines in the current confidence popup, without an orphan final word, and a question icon visually centred beside the subtitle. Increase the popup's desktop width limit from 340px to 440px, retaining the available-width limit, and balance its wrapping without truncating the explanation.
-- Centre the heading and icon containers and remove the icon's top alignment. This is the same popup and text as D299; hover/focus behaviour and its right-hand placement stay unchanged. Verify the actual popup line count, complete text and heading/icon alignment together with D301's spacing and divider scope.
-
-## D303 · 2026-10-26 · Put the weight before the thesis title
-
-- Alex requested the weight tag before each thesis for easier reading. In the Idea detail's three explanation headings, render the existing shared weight pill before the question, with an 8px gap. Preserve alignment, descending weight order and all content. This is presentation only; verify all three headings in the browser and run the existing UI checks.
-
-## D304 · 2026-10-26 · Organise the reading trace into expandable steps
-
-- Alex found the reading trace hard to read. Its current three parts repeat long explanations and thesis titles in one continuous list. Render each part as a closed-by-default disclosure using the existing Thesis detail disclosure interaction and separators.
-- Each summary shows the numbered topic and subject/period metadata. Expanding it reveals the unchanged explanation, direct matches and related drivers in consistent body type. All returned text and trace data remain available; no model or data change. Verify the collapsed list, opening and closing a real step, and the weight-before-title change from D303.
-
-## D305 · 2026-10-26 · Match weight badge height and optically align help
-
-- Alex requested a taller, squarer weight tag matching its thesis title and corrected the help icon's visual alignment. The three detail headings share a 20px badge beside taller wrapped titles. The help SVG has geometric centring but sits low against the text glyphs.
-- Stretch only the detail weight badge to the title row, use a 56px width and 4px corners, and centre its existing contents. Leave canvas badges unchanged. Raise the 16px help glyph by 1px for optical alignment; keep its interaction area and popup position. Verify the actual headings and help rendering; no data or calculation changes.
-
-## D306 · 2026-10-26 · Name the adopted-thesis section and remove its help
-
-- Alex clarified that the section lists theses: rename its heading to `Theses` and remove the question icon and popup. Keep the separate confidence pill in the detail header and the Idea chart unchanged. Delete only the now-unused help markup/styles; retain the existing section spacing, weights and explanations. Verify the actual drawer and existing UI checks.
-
-## D307 · 2026-10-26 · Give Idea and Thesis cards the same width
-
-- Alex requested the Idea card match the Thesis card width. Use one 440px width constant for both, including the Idea renderer's default. Compute the next column from that shared width so the 180px gap and card-edge routing remain correct.
-- Pending, completed, replay and range renders receive the same width; the completed Idea retains content-fit height. No data, text, scores or associations change. Verify both rendered widths, chart width and connectors with the actual response, plus the existing UI checks.
-
-## D308 · 2026-10-26 · Give Idea details Overview, Trace and Response tabs
-
-- Alex requested the same top navigation as Thesis details, with Overview, Trace and Response. Overview holds the summary and adopted theses. Trace holds the expandable reading steps, search requests/results and excluded choices. Response directly shows the existing structured response.
-- State/event: opening an Idea selects Overview; clicking or using arrow/Home/End keys selects a tab, cancels active disclosure animations and resets content scroll. Opening another Idea resets to Overview. Closing preserves the existing drawer behaviour. No tab makes a request or changes the saved response.
-- Values/readers: one response supplies all three sections. Search disclosures show the query, canonical query when supplied, candidate count and named candidate rows; IDs and ordering stay intact. Scoped tab/panel IDs and roving keyboard focus use the shared Thesis tab styling. Missing trace data stays explicit.
-- Verify panel membership on stored responses, all three tab actions and keyboard switching, readable search expansion, default reset and unchanged response JSON; then existing UI checks. D304's reading steps remain available under Trace. No pipeline, model or source-database change.
-
-## D309 · 2026-10-26 · Remove search-count and mode subtitles
-
-- Alex requested removing the candidate counts and `semantic` label from the search rows. Delete the subtitle from all four current search disclosures; keep their titles, expandable query/results and unchanged raw Response data. No retrieval or model change. Verify the actual Trace rows and existing UI checks.
-
-## D310 · 2026-10-26 · Prioritise reading steps in Trace
-
-- Alex wants reading steps expanded by default and considers the search trace secondary. Open every reading-step disclosure initially; place the search details under one collapsed Search trace group at the bottom. Its existing search rows and full results remain available on expansion. Use the existing disclosure behaviour; no content, retrieval or model changes.
-
-## D311 · 2026-10-26 · Remove the Search trace UI
-
-- Alex explicitly requested removing Search trace from the interface. Delete the group and its search-only rendering/styles from Trace; retain the expanded reading steps and excluded choices. The original search fields remain unmodified in Response. Update presentation assertions to reflect the removed search list; verify the actual tab and existing UI checks. No retrieval or model change.
-
-## D312 · 2026-10-26 · Clean up the frontend without changing behaviour
-
-- Alex requested frontend cleanup and a push. Consolidate the two drawers' tab interactions into one controller while keeping their content, lazy loading, focus and animation responsibilities unchanged. Remove three unused internal functions, 16 unused style rules and three overridden positioning blocks; split the large analysis templates into named renderers.
-- Preserve all package exports, historical response formats, confidence arithmetic, weights and current layout. Verify identical stored-response output, actual browser interactions, the existing suites and mutation checks. Commit the frontend with its previously requested Library/Idea service dependencies; leave unrelated extraction and concurrency work uncommitted. [Plan and verification](research/2026-10-26-frontend-cleanup/plan.md).
-
-## D313 · 2026-10-26 · Float and fold the Idea input
-
-- Alex requested the Idea input at the canvas's bottom centre. Submitting centres the Idea card and folds the input into a round TrueNorth-logo button at bottom right. Clicking it reopens the same input; clicking outside folds it again. Preserve unsent drafts and the existing in-flight guard. Use the existing graph-fit scale so connected theses remain visible, and leave manual pan/replay/fit behaviour intact.
-- The launcher is black and white. Hover adds only an ambient shadow; it does not turn the border black. Keep a keyboard focus indicator. [State/event and verification plan](research/2026-10-26-idea-composer.md).
-
-## D314 · 2026-10-26 · Smaller white launcher without a border
-
-- Alex requested a smaller, white launcher with no grey outline and a soft shadow. Reduce its diameter from 56px to 44px, keep the black mark, remove the border and use only shadow elevation for hover and keyboard focus. Keep its 24px edge offsets and all input interactions unchanged.
-
-## D315 · 2026-10-26 · Centre the generated Idea at readable size
-
-- Alex clarified that the default view after generation must make the Idea readable, even when the thesis column extends beyond the viewport. The explicit Idea-centering path uses 100% zoom, not whole-graph fitting. Keep the Idea centred in the canvas; progress and replay preserve the camera, and manual Fit to view remains available.
-
-## D316 · 2026-10-26 · Balance the whole tree horizontally
-
-- Alex clarified that the complete Idea/thesis tree must be centred by its occupied width. The current four-card graph is 1,060px wide at 100% zoom, but centring only the Idea leaves 740px on the left and 120px on the right in a 1,920px canvas.
-- Centre the bounding box of all cards at 100% zoom for pending, completed and failed Idea renders. The current graph then has 430px on each side. Preserve readable card size, manual pan/zoom, replay and the separate Fit to view control. The three submit call sites use the same explicit tree-centering mode; ordinary graph callers keep their existing fit behaviour.
-
-## D317 · 2026-10-26 · Reveal the completed Idea tree in sequence
-
-- Alex requested a default drawing animation: Idea first, then a connection traced from source to target, then that thesis, with the camera following. Visit roots in display order, finish each root's related children, and return to D316's balanced 100% view after the last connection.
-- Make the completed-result reveal one-shot. Progress and historical replay do not restart it. Pointer/wheel actions, keyboard zoom/fit, date changes, replacement, resize and teardown cancel pending work, reveal the complete graph and leave camera control with the reader. Reduced motion skips the sequence. [State/event contract and verification](research/2026-10-26-tree-reveal.md).
-
-## D318 · 2026-10-26 · Retain the current Idea across workspace tabs
-
-- Alex requested that Library / Explore navigation keep the submitted question and its content until another query is sent. Keep the mounted explorer, graph, selected date/range and camera; pause replay/reveal and close drawers when leaving. Returning to an already displayed result does not rebuild or animate it again.
-- A pending request continues while in Library. Queue progress and completed/error presentation until Explore is visible, so layout never measures a hidden canvas. Page teardown still aborts requests and destroys controllers; reload retains its existing reset behaviour. No persistent storage or backend change. [State/event contract and verification](research/2026-10-26-idea-tab-retention.md).
-
-## D319 · 2026-10-26 · Add an Idea confidence Trigger card
-
-- Alex requested a frontend Trigger connected to the Idea on its left, following the existing UI style. Use the shared white card/header, warm rules, Geist type and black controls. Reserve a compact slot in the existing right column, without changing thesis associations or weight ordering.
-- Start each query with `If AI confidence > 70%`. Support `>`, `>=`, `<`, `<=`, `=` and `!=`, with a synchronized 0–100 integer slider and percentage field. Scrolling either control adjusts its value without panning the canvas. Show Met / Not met from the same rounded confidence displayed by the Idea; missing confidence remains unavailable.
-- Retain the condition through completion, replay, range changes and workspace navigation. A new query resets it. Use the existing connection/reveal/cancellation lifecycle; remove select/listeners when replaced. This slice supplies frontend editing and status only, with no service request or external action from a condition change. [State/event contract and verification](research/2026-10-26-trigger-card.md).
-
-## D320 · 2026-10-27 · Scan the thesis reveal from top to bottom
-
-- Alex requested the thesis reveal move downward without returning to the Idea for each connection. Keep the displayed card order and draw each actual connection, but move the camera from its current pose directly toward the next target. Hold horizontal focus on the thesis column after the first target; the narrower Trigger does not pull the camera sideways.
-- Retain the single final return to the balanced overview, one-shot playback and existing cancellation/reduced-motion behaviour. No data or service changes. [Contract and verification](research/2026-10-27-reveal-scan.md).
-
-## D321 · 2026-10-27 · Move the Trigger to the left of the Idea
-
-- Alex corrected D319's placement: the Trigger belongs left of the Idea. Give it its own column, the existing 180px gap and the Idea's vertical centre. Connect Trigger → Idea; keep all Idea → Thesis connections and condition controls unchanged.
-- Show the Trigger alongside the initial Idea entrance, then scan the thesis column under D320. Preserve complete-tree centring and navigation retention. [Contract and verification](research/2026-10-27-trigger-left.md).
-
-## D322 · 2026-10-27 · Show the Trigger last and simplify its comparison control
-
-- Alex requested removal of the Trigger condition's arrow and a last-place entrance. Remove its dropdown chevron, keeping the comparison symbol and all six choices. Show no Trigger while a query is pending or failed.
-- On completion, show the Idea and theses in the existing order, return to the overview, then fade in the left-side Trigger and its connector. Cancellation still exposes the full final view immediately; reduced motion and later replay/navigation retain their existing behaviour. [State/event contract and verification](research/2026-10-27-trigger-last.md).
-
-## D323 · 2026-10-27 · Trigger connectors have no directional arrowhead
-
-- Alex clarified that D322's arrow removal meant the Trigger connector, not the comparison dropdown. Restore that dropdown's indicator. Every connector touching a Trigger is a plain line; normal thesis connections keep their arrowheads.
-- The canvas marks the connector's type when it creates the path; one CSS rule suppresses its marker through normal display, hover, replay/range redraw and final reveal. Geometry and last-place entrance stay unchanged. Browser checks judge the rendered marker for the Trigger and normal thesis edges, including hover and redraw. No data or service change. [Verification](research/2026-10-27-trigger-last.md#d230-connector-clarification).
-
-## D324 · 2026-10-27 · Style AI confidence as a selectable Trigger metric
-
-- Alex requested that AI confidence be a select control matching the comparison and percentage inputs, with no other metrics available yet. Keep `If` as text and use the shared select for one selected AI confidence option. Match the existing 30px control height and row spacing; add no backend field or alternative metric.
-- Opening, selecting, Escape/outside-close, pause and teardown use the existing select lifecycle. Selecting the only option changes no condition or request. Check the real browser's single-option menu, control alignment and existing comparison/threshold behaviour. Trigger timing and its plain connector remain unchanged.
-
-## D325 · 2026-10-27 · Use a bar slider handle and a metric value readout
-
-- Alex requested a vertical bar instead of the round slider handle, with `Current value:` beneath it. The slider still edits the threshold; the readout comes from the selected metric, currently AI confidence, and follows the Idea's selected replay date.
-- Keep drag, scroll and keyboard behaviour unchanged. The filled track and visible bar follow the threshold, while the readout remains the measured value. Check both values together so threshold edits cannot replace the current metric value. No new metric, calculation or backend field is added.
-
-## D326 · 2026-10-27 · Separate the current-value marker from the round threshold handle
-
-- Alex clarified D325: keep the draggable threshold handle round. Add a separate vertical line on the scale for the selected metric's current value, with `Current value: xx` directly below that line.
-- The round handle and track fill follow the threshold; the fixed marker and its label follow the displayed current metric value. Threshold edits must not move the current-value marker. Replay/metric updates move it; unavailable values hide the marker and show an unavailable readout. Keep labels inside the card at the ends of the scale. No data or scoring change.
-
-## D327 · 2026-10-27 · Rename the workspace navigation
-
-- Alex named the navigation tabs `Thesis Library` and `Explore Ideas`. Use those exact labels in the page shell, overriding the earlier sentence-case wording for these two names. IDs, navigation behaviour and retained Idea state stay unchanged.
-
-## D328 · 2026-10-27 · Add the Action preview and real NVIDIA prices
-
-- Alex requested an Action card left of the Trigger, with Buy / Spot / Market Order / Hyperliquid controls, the Hyperliquid logo, a 5.0% example-wallet allocation and a NVIDIA chart. The [Action contract](research/2026-10-27-action-card.md) owns its state, data and boundaries. It is an editable frontend preview with no order submission or wallet connection.
-- Show a dated TrueNorth snapshot of NVDA stock prices in USD, separate from the historical thesis replay. Preserve settings across replay and workspace tabs; reset them for a new query. Reveal Action after the Trigger. Both Trigger connections remain plain lines.
-- The fourth column participates in whole-tree centring. Where its width exceeds the viewport, reduce zoom only enough to fit that width, capped at 100%; never fit the tall thesis column by height for the default view. Manual Fit to view remains unchanged.
-
-## D329 · 2026-10-27 · Remove the Action header badge
-
-- Alex requested removal of the visible Preview tag. The Action header now contains only its icon and title. Delete the unused badge style; retain the existing controls, chart and behaviour.
-
-## D330 · 2026-10-27 · Simplify Action text and cancel unfinished allocation edits
-
-- Alex requested removal of the trailing wallet word, the chart's source/date footer and the timeframe suffix beside percentage change. Label the Action `NVDA-USDC | Hyperliquid-Spot`. The chart continues to use the captured NVDA stock reference prices; this label is the requested plan, not verification of a venue listing or a new price feed. Keep actual source, currency and capture time in the chart's accessible description.
-- Typed allocation values are drafts. Enter commits a bounded tenth-of-a-percent value. Escape, blur, leaving the workspace or replacement discards unfinished input and restores the last committed value. A wheel movement while editing changes the draft; an unfocused wheel adjustment retains its existing immediate behaviour. Range selection preserves the committed allocation. Reduce the card height by the removed footer's space.
-
-## D331 · 2026-10-27 · Show Monitoring in the Action header
-
-- Alex requested a robot icon with Monitoring beside it on the right of the Action header. Use the existing monochrome style, with a compact outlined robot and plain status text. This is the requested frontend status presentation; it adds no agent runtime or trading execution.
-
-## D332 · 2026-10-27 · Use a pulsing black Monitoring dot
-
-- Alex replaced the robot icon with a pulsing black dot beside Monitoring. Keep the same header position and text, use a gentle scale/halo pulse, and show a still black dot when reduced motion is requested. Remove the unused robot SVG.
-
-## D333 · 2026-10-27 · Default the Action chart to one year
-
-- Alex requested 1Y as the default price-chart range. Use it for a new Action and for each new Idea. Keep the selected range through existing replay and workspace navigation, and retain the other range controls.
-
-## D334 · 2026-10-27 · Clean up frontend component ownership
-
-- Alex requested frontend cleanup. Move the Action price display into an internal chart component, reuse its formatters and DOM references, and share the duplicated Action/Trigger percentage-input styling. Preserve public APIs, rendered output, settings, editing semantics and request behaviour. The [cleanup record](research/2026-10-27-frontend-cleanup.md) owns the scope and verification.
-
-## D335 · 2026-10-30 · Each adopted thesis offers only its own two endpoints; two-rung cards show their own Yes/No
-
-- Alex's Idea returned `502: SchemaError: $.composite.v10.kind: 'driver' not in ['excluded']`; he asked for the root fix and then said "改". [Design and evidence](research/2026-10-30-idea-endpoint-choice/design.md).
-- Mechanism: D290's array answer offered positions 1–5 to every thesis, while the binder re-checked each entry against that thesis's two endpoints (D282's per-thesis enum, kept in v5/v6). The model wrote a thesis's current-state position (its own account: "I used v10's `judged.position` value of `2`"). Census: 2 of 12 stored v7 answers refused, both this cause; all 35 in-range entries agree with their own reasons.
-- `poc-v33-idea` / `idea-summary-v8` (prompt text identical to v7) sends one item shape per candidate, pinned to its ID and its two endpoint positions; the binder checks the answer against that same schema and then only uniqueness, non-empty text, the 100% total and the unclear-claim rule. v3–v7 keep their binders. `model.check_schema` now reports the closest `anyOf` option's errors.
-- Second defect on the same path: the frontend scored two-rung theses Yes/No by position; 11 of 55 served two-rung theses list No first, so v14's "Yes" rendered as "No" in the white pill used for negative states. A Yes/No ladder now shows each rung's own label, Yes on the upper lane; the composite value is unchanged.
-- Result: the ten valid stored v7 answers bind to identical plans; four Python mutants and one UI mutant fail their tests; the Idea (33) and UI (57) suites pass on the committed tree. The two refused requests re-sent under v8, three draws each: 6/6 valid, 29/29 entries on an endpoint agreeing with their reasons ($0.00578; two model-account probes $0.00105). Alex's Idea through the restarted service: 200, six adopted theses, 75% confidence.
-
-## D336 · 2026-10-30 · A yes/no ladder with named outcomes shows its outcome once
-
-- Alex, after the browser check showed v49's state as "No No restriction adopted": "修，然后 merge main".
-- Mechanism: the state chip and the chart's spoken text join the score and the rung label. A two-rung ladder's score is Yes/No; when the ladder names its outcomes (06-views allows named outcomes for yes/no theme theses), the label repeats it. Census: 1 of 55 two-rung theses in the served ledger (v49: Restriction adopted / No restriction adopted) and 1 in the 2026-10-27 snapshot (Permission granted / Permission not granted).
-- `stateWords` in `poc/ui/src/model/thesis.js` owns what a state shows: a two-rung ladder shows its own outcome once; five-rung ladders keep score and label. `badgeHtml` and `stateText` read it. Tone, lanes, the score table and the composite still use the Yes/No score.
-- Result: the D336 UI test fails on the old composition ("No No restriction adopted"); 58 UI tests, lint, format and the 20 standing UI mutation checks pass. In headless Chrome, with the cache disabled, v49 shows "No restriction adopted" and v14 "Yes".
-
-## Decisions recorded in the `main` checkout on 2026-10-27 and never committed (numbered at the 2026-11-03 cleanup)
-
-These sixteen decisions (the Lightsail server, the single-call stability study, the source and routing studies, the Vera case, the
-cleaned page database and the TrueNorth event index) were written in the `main` checkout as D242–D257 on 2026-10-27 and stayed
-uncommitted while both lines moved on. At the cleanup (D353) they were committed in order under new numbers: D242→D337, D243→D338, D244→D339, D245→D340, D246→D341, D247→D342, D248→D343, D249→D344, D250→D345, D251→D346, D252→D347, D253→D348, D254→D349, D255→D350, D256→D351, D257→D352. Their
-research documents came with them; the experiment outputs and runner scripts they link to were never committed and are kept only in
-the backup named in D353.
-
-## D337 · 2026-10-27 · Create the Singapore Lightsail development server
-
-- Alex requested the USD 44/month Singapore Lightsail server after a final footprint check for extraction, Docker and frontend serving. Provision one `large_3_0` Ubuntu 24.04 instance with dedicated SSH access and an attached static IP. Docker and private read-only application verification are part of server readiness.
-- This starts infrastructure only. Paid extraction, public model-backed API deployment, provider-credential transfer, additional paid services and unfinished product publication are outside this slice. Model charges and optional storage/transfer extras remain separate from the server bundle. The [operation record](research/2026-10-27-lightsail.md) owns configuration, measurements and verification.
-
-## D338 · 2026-10-27 · Test single-call extraction stability by correcting the task and preserving the request
-
-- Alex explicitly rejects voting across repeated answers and requests stability tests plus correction of contradictory extraction instructions, with a hedge-fund analyst's judgement. Repeated calls measure independent answers; they never form one production answer.
-- The [development study](research/2026-10-27-extraction-stability/plan.md) uses the admission-v12 worktree's runtime and three preserved benchmark articles. It crosses the original versus analyst prompt with original versus reporting-only text, five independent calls per cell, with exact HTTP request bytes preserved. The original property order is reconstructed because the earlier archive's canonical JSON reordered the schema before re-sending it.
-- The candidate clarifies that a source-grounded business driver can inform an outcome without being that outcome, preserves customer/supplier identity and plan/actual distinctions, and routes a segment fact to the most specific shown question. It remains an isolated research prompt. Candidate admission, grouping, downstream behaviour and the production default do not change in this study.
-- Freeze source-claim annotations before calls, report every sample, inspect meaning as well as coverage, and retain failures. At most 60 single-attempt calls and $1.50 of conservative study accounting; no earlier budget is changed. The long extraction run stays paused. Results establish only what these fixed development cases show.
-- Completed: [all 60 samples and diagnosis](research/2026-10-27-extraction-stability/results.md). The candidate does not provide an overall stability improvement and is not promoted. The study also identifies displayed-but-unusable thesis IDs, schema-permitted empty links, and punctuation-space quote refusals; these remain explicit open defects, not a claim that sampling alone explains the failures. No further arm or production change is implied by this result.
-
-## D339 · 2026-10-27 · Measure a source/route extraction POC against Luna and DeepSeek
-
-- Alex requests a small implemented and measured POC, following discussion of extraction stability and DeepSeek V4.1 Flash. The [frozen study](research/2026-10-27-extraction-contract-poc/plan.md) compares the original task with separate source reading and routing, on three existing development articles, three independent results per configuration. Repeated outputs never vote or combine.
-- The research path uses source locations copied by code, a required answer per source paragraph, and a required explicit destination per extracted observation. Pending observations remain visible in the research record and are not successful library delivery. Existing production checks are exercised separately so their drops and merges remain visible.
-- Compare gpt-6-luna low with deepseek-flash non-thinking at temperature 0 through its strict tool interface. This compares deployable configurations, not isolated model weights. Up to 54 scheduled HTTP calls and a combined $1.50 conservative budget; failed sandbox DNS attempts are preserved and their reservations reduce the host-run budget. No production default, frozen module contract, candidate/group construction, matching, judging or long-run status changes.
-- The initial research adapter incorrectly assumed one tool call per response. All nine DeepSeek source responses instead contain disjoint pieces of the complete required object. The [protocol repair](research/2026-10-27-extraction-contract-poc/protocol-repair.md) validates their combined object from each single stored response and is intended to complete only the nine unsent routing calls, using the same prompts and labels. Original failures remain; no source request is resent. Report this post-observation adapter repair and both stages' complete cost, rather than describing the result as an unchanged registered comparison.
-- Alex explicitly stopped the session and requested a restart log. The [handoff](research/2026-10-27-extraction-contract-poc/HANDOFF.md) records 49 received model responses, four additional connection failures without responses, and five unsent routing steps. Two of the four received repaired-route responses are malformed; the runner incorrectly halted remaining admission on those local parse failures. All failures remain. Estimated response cost is $0.130202088; combined conservative charges and unknown reservations are $0.407739 under the unchanged $1.50 ceiling. Analysis and final verification are unfinished. No new calls or tests follow the stop instruction.
-
-- Alex resumed: “keep on testing” and asked whether the errors came from model use and extraction/processing design. [Completed results](research/2026-10-27-extraction-contract-poc/results.md): only the five unsent route steps were sent, with original requests and the same $1.50 ceiling. Final totals: 54 responses plus four preserved connection failures, estimated $0.153860676, conservative charges/reservations $0.451203. Three malformed route answers remain failures. The bounded runner now distinguishes local validation failure from transport/unknown usage.
-- Separated source reading retains 18/18 labelled core claims in each repeat for both providers; that does not establish full pipeline correctness. Three same-quote merges erase distinct summaries; an offline replay restores exactly those three. All 31 positive labels expect `v6`, so target recall alone cannot establish routing specificity. The source/routing preservation contract and a balanced routing measure are proposed next decisions, not adopted product changes. Frozen modules, defaults and the paused long run remain unchanged.
-
-
-## D340 · 2026-10-27 · Specify the source stage and research routing/admission before more model runs
-
-- Alex requests an explicit subagent task to define the separated first stage precisely, while continuing a deeper study of routing, accuracy and uncontrolled thesis accumulation. This authorizes isolated research, not adoption of a new frozen module contract or a new paid arm.
-- The [source contract candidate](research/2026-10-27-source-contract-v2/design.md) audits all 18 D339 source responses / 553 records. Its isolated schema and checks require original-text references for claimant and time mentions and remove model-generated publisher identity. Exact references reject invented text but do not establish semantic correctness; anonymous-expert tier meaning and downstream date adaptation remain open. No historical records or labels are rewritten.
-- The [routing study](research/2026-10-27-routing-design/proposal.md) reads two stored ledgers and 171 candidate decisions. The default v23 has 95 new decisions among 102 candidates; 23 new decisions include a raw part-of relation, and 22 of those were written. These are exposure counts, not confirmed erroneous admissions. The proposed rule separates business relevance, question identity and independent significance, so failure to match is not automatic permission to create a thesis.
-- Removing the mandatory numeric-card recipe changes a D62 tradeoff and is not adopted by this research record. No hard-coded aggregate merging, company quotas, new review queue, model switch, production edit, commit, push, deployment or long-run restart is authorized. Agree on source and balanced routing/admission semantic cases before fixing the final interface and measuring a fresh candidate against controls. This slice adds no model expense.
-
-
-## D341 · 2026-10-27 · Review routing traces as an analyst, preserving and combining the important information
-
-- Alex asks for deeper trace inspection and explicitly sets the objective as removing noise while retaining and combining important information. Reassess whether D340 can deliver that objective, rather than treating more admission fields as a solution.
-- The [analyst review](research/2026-10-27-analyst-trace-review/review.md) follows three saved v29 items through extraction, matching, writing and judgement. All 50 saved theses already have admission categories and resolution descriptions; 13 also have explicit alternative-target/loss explanations. These fields did not prevent a technology-adoption story becoming a small-investment signing question, nor a new CPU revenue question being created while newer benchmark details were merged into an older statement.
-- Revise the research proposal's work order: distil the article's important business updates with counterevidence and qualifications; compare them with relevant existing knowledge; then update an existing question or justify an independently important new one. Keep statement identity, shared analytical meaning and question identity separate. This names the research objective and proposed direction; it does not approve a new persistent data layer, alter frozen question semantics or promote a model configuration.
-- Correct the D340 research census: parallel raw calls must be associated by the recorded request list and hashes, not a representative call ID as an upper bound. Sixteen more v29 candidate answers are associated; unique raw associations are 53/69 and new decisions with part-of relations are 6, all six written. The original output is preserved; v23 counts do not change.
-- No new model calls, production changes, old-label edits or long-run restart. The worked examples are proposed semantic criteria, not accepted gold or measured model improvement.
-
-
-## D342 · 2026-10-27 · Run the Vera case before settling Jev and routing order
-
-- Alex rejects further unsupported ordering claims and requests an actual case run. The [Vera diagnostic](research/2026-10-27-vera-case-run/results.md) starts from one preserved post-extraction observation, with historical context fixed, and runs three fresh old-flow controls and three Jev-first/analyst samples. This is isolated research, not adoption of a frozen product contract.
-- All three controls create v50 and merge the new test into e652. All three candidate runs attach a newly preserved source record to existing v5 without opening a thesis. Actual matching checks and writers execute against separate historical copies. Jev still calls the observation a repeat in every candidate run, so the result does not establish that ordering alone works or that Jev is necessary.
-- The actual next-reader input exposes the incomplete contract: 96 current source records remain flat; the generated research synthesis and qualifications have no consumer. One of three candidate outputs also incorrectly says the quote specifies no individual workloads. The candidate is not accepted as a complete consolidation design.
-- All 15 single-attempt calls ended; estimated cost $0.012869216 and conservative charges $0.145794 under a separate $0.50 ceiling. No extraction or final-judgement model was rerun. Retrieval, new-question admission and broader quality remain unmeasured. No production default, stored original data, frozen question identity or long-run status changes.
-
-
-## D343 · 2026-10-27 · Present pipeline inputs and outputs for review
-
-- Alex requests a simple HTML review of each stage's input, output and intended effect. The [review page](research/2026-10-27-pipeline-review/index.html) distinguishes source records, analytical arguments and research questions; it shows extraction, retrieval, Jev comparisons, analyst synthesis, persistence and judgement, with a separate conditional new-question identity branch.
-- This is a proposal for review, not approval of a new storage layer, admission contract or stage order. The page marks measured portions, the unconnected synthesis-to-reader boundary and unresolved branches, and links the Vera result and governing PRDs. No product code, model configuration, data or paid calls change.
-
-
-## D344 · 2026-10-27 · Verify source extraction and database retrieval separately
-
-- Alex requests substantive verification of stages 1 and 2. The [verification report](research/2026-10-27-stage12-verification/results.md) replays all 18 D339 source responses / 553 records and the v29/v30 ledger's 677 matching records without new model calls or production changes.
-- Source spans and saved outputs reproduce; all 186 previously annotated claim opportunities remain present. Exact-path checks confirm existing date and attribution failures; the source-v2 validator still accepts wrong summaries and time roles. This is not source-v2 model acceptance or a whole-record accuracy score.
-- All 677 stored candidate/evidence lists reproduce at their historical sequences; 30,057 retrieved evidence references satisfy the tested historical-membership constraints. The existing code supplies source-linked duplicate comparisons, not the independent analytical-context retrieval proposed in D343.
-- An isolated raw-source lookup probe over 2,369 observations exposes the 12-word query cutoff, literal word-form mismatch and insufficient coverage of analytical qualifications. Removing the cutoff restores all historical links for 342 records but loses that coverage for 141; historical links are model-produced references, not gold. Vera's comparison list retrieves an AMD counterclaim but omits older benchmark caveats and commercialization risks.
-- Neither stage is accepted as complete. Source/time semantics and an explicit analytical retrieval contract are the next design work; this verification does not adopt a new query, storage layer, prompt or measuring stick. Model calls and added model cost: zero.
-
-## D345 · 2026-10-27 · Implement and measure source fidelity and complete scoped retrieval
-
-- Alex requests that stages one and two be made concrete now. The [bounded implementation contract](research/2026-10-27-stage12-pinned/design.md) adopts source references without inferred dates, separate claimants and code-owned article metadata. Anonymous analysis is not automatically rumour; unconfirmed factual allegations are.
-- Retrieval supplies the complete scoped question catalog, then expands selected catalog IDs to complete active evidence and its provenance at the same historical sequence. Semantic selection sits between these two DB operations; neither lexical overlap nor top-ten truncation decides what the analyst may see.
-- Implement and measure an independent stage-one/two research entry point, with original labels and failure cases, 18 fresh source calls under a separate $0.75 ceiling, no voting, no automatic retry. This does not adopt a storage migration or change production defaults or stages three onward. Results, including any remaining failures, govern acceptance.
-- The [completed result](research/2026-10-27-stage12-pinned/results.md) covers 40 attempts / 39 responses across the stopped initial configuration, repaired comparison and final comparison, all within the same aggregate $0.75 cap. Estimated known model cost is $0.0789317; conservative charges/reservations total $0.284681, including one HTTP failure with unknown usage. Every launched run has ended.
-- The implemented retrieval path reproduces complete scoped context at 1,114 historical inputs: 28,918 question expansions and 1,047,953 evidence reads, including Vera's five previously omitted qualifications. This validates complete historical retrieval, not semantic selection or consolidation.
-- Source request mechanics now share schema definitions, enforce claimant/null combinations in the schema, and let code locate quoted text within a cited paragraph. Only case and whitespace equivalence is accepted; output citations copy original text and positions. Final fresh candidates fix the observed claimant mixtures and date-role cases, but 2/9 responses still paraphrase a reference and are refused. Standalone summaries also lose period/premise information. Source extraction is not accepted; production remains unchanged.
-- The review page presents a further source-boundary choice: retain independently usable factual summaries, or supply original passages and context to downstream analysis. The latter is recommended but not adopted; it changes the extraction/matching PRD boundary and awaits Alex's choice. Six focused tests, four caught mutants and 171 full-suite tests pass; these do not establish source-model quality.
-
-## D346 · 2026-10-27 · Rebuild the extraction evaluation around complete investment meaning
-
-- Alex requests a hedge-fund analyst's gold standard, a reassessment of existing gold, deeper evidence review and extraction-prompt improvement. The [development review](research/2026-10-27-analyst-extraction-eval/results.md) preserves every old gold file and score. Its new assistant-authored draft is not yet an accepted measuring stick.
-- The old extraction plan already requires standalone meaning; later content-presence checks did not establish that requirement. All 31 positive labels also name the same routing target. Of six exclusions, five are absent from cleaned inputs; the sixth excludes the article author's conditional valuation argument. The draft proposes preserving that argument as attributed source material, separately from whether to create a price thesis.
-- The draft contains 14 investment arguments and 37 source-anchored requirements, mapping all 31 old positive labels. A 54-dimension manual diagnostic covers both final D345 arms and all three repeats for nine named failures. The 18-answer population contains 508 records, but the diagnostic is not a complete semantic score of those records or independent human gold.
-- An unsent system-prompt candidate clarifies cross-paragraph context, complete conditional claims, derived-calculation attribution, actual-result classification and repetition. It keeps the current source schema, model and parameters; 1943 to 1931 system characters, estimated o200k_base tokens 350 to 351. Five manually corrected stored-answer copies demonstrate representability, not model improvement; the bad originals also pass structural checks.
-- Review and freeze the measuring criteria with Alex before a fresh arm under AGENTS §7. Do not default to moving synthesis downstream merely because current summaries fail. No new model calls, budget changes, production edits, storage contract changes or long-run restart occur in this slice. All three articles remain exposed development data; separate unexposed events and a tested downstream reader are required for eventual acceptance.
-
-## D347 · 2026-10-27 · Test the frozen analyst extraction criteria and prompt
-
-- Alex, after the concrete D346 standard and prompt were presented, instructs: “你开始你的尝试/研究”. Proceed with the [fixed development trial](research/2026-10-27-analyst-extraction-eval/trial-plan.md), freezing the assistant-authored 14-argument/37-requirement gold for this comparison. This authorizes the experiment, not production adoption or an independent-human-gold claim.
-- Three unchanged articles, current source prompt versus the D346 candidate, three fresh independent responses per arm: at most 18 calls, gpt-6-luna low, 12000 output cap, two concurrent requests. Both arms use identical source schema and validators. No voting, retries, mid-run prompt edits or replacement of failures.
-- Preserve D345's total $0.75 ceiling. Four historical journals account for $0.284681 used or held, leaving a new journal capped at $0.465319. Unknown prior usage remains held. Freeze request/code/gold hashes, run preflight first, and retain every response and refusal.
-- Judge 222 source-requirement opportunities and all emitted records, with distinct coverage, accuracy, redundancy and delivery results. Source extraction remains separate from the unaccepted downstream routing/consolidation path; no production/default change or long-run restart follows automatically.
-- [Completed result](research/2026-10-27-analyst-extraction-eval/trial-results.md): 18/18 responses, all 487 records and 222 requirement opportunities manually reviewed by the assistant. Complete source requirements improve from 83/111 to 97/111, but whole-answer delivery falls from 8/9 to 7/9; delivered complete requirements are 73/111 versus 74/111. Candidate attribution and time-role regressions remain. Do not promote this prompt or claim downstream consolidation acceptance.
-- All calls ended in 371.94 seconds. Estimated new model cost is $0.03444750; new conservative charges are $0.118526, making aggregate held/charged budget $0.403207 within the unchanged $0.75 ceiling. No retry, budget increase or provider/model change.
-- Review tooling had a source-address construction defect in all 76 gold references: sentence IDs overwrote paragraph/sentence addresses. Exact original offsets and text uniquely identify all references. Fix the writer and resolve frozen historical references by those exact coordinates; do not rewrite the frozen gold or semantic requirements. Fourteen focused tests, three caught mutants and 171 product tests pass. The next research task is the concrete evidence-selection/statement boundary, including same-sentence multiple speakers; no new product I/O is adopted here.
-
-## D348 · 2026-10-27 · Compare stronger instructions and code-filled word references
-
-- Alex requests continued changes and substantial experiments, explicitly allowing modest prompt expansion to help the harness. The [three-arm research design](research/2026-10-27-source-reference-trial/design.md) compares D347's candidate as a fresh control, strengthened instructions with the same schema, and those instructions with source-word references filled by code.
-- Preserve the 14-argument/37-requirement development gold, model and output cap. Register at most 27 fresh requests (three articles, three arms, three repeats), no retries/voting or mid-run edits. Assess all 333 requirement opportunities and every emitted record, including incorrect word selection and attribution/time regressions. No production contract or default changes.
-- Prompt growth is authorized for the measured missing operational distinctions; report system and complete request token sizes. Source-word IDs are a displayed selection interface, not model-generated character offsets; the adapter returns the existing source-reference shape and passes all old writer checks. This alternative remains experimental.
-- Keep D345's $0.75 aggregate ceiling. Historical used/held budget is $0.403207; the new journal may use at most $0.346793. Offline real-data replay, negative controls, request freeze and full preflight precede calls. Network failures stop new admission; structural failures remain scored samples.
-
-
-D348 completion: [27-response result](research/2026-10-27-source-reference-trial/results.md), all 743 records / 333 requirement opportunities reviewed. Fresh control / strengthened prompt / indexed references yield 96 / 98 / 98 complete requirements out of 111, but 6 / 8 / 6 whole answers delivered and 67 / 87 / 61 delivered complete requirements. No variant is accepted. The indexed range schema and paragraph-specific validator disagree in all three Motley samples. Estimated new cost $0.05076660; conservative charges $0.191260, cumulative $0.594467 of the unchanged $0.75 ceiling. First launch failed locally before any model call; the corrected launch completed all 27 calls.
-
-## D349 · 2026-10-27 · Isolate full input/output demonstrations in the source experiment
-
-- Alex asks whether examples would help and whether the prompting follows best practice. Follow the [fixed few-shot plan](research/2026-10-27-source-fewshot/design.md): four synthetic complete input/JSON pairs versus the same prompt without pairs, three fresh samples on each of three unchanged development articles. No claim that examples work before measurement.
-- Both arms express the source writer's existing empty-reason/observations exclusivity in the generation schema. This removes a schema/writer mismatch without changing reference meaning, the output reader, or frozen gold. Check all stored answers and all examples offline before paid work.
-- Keep gpt-6-luna low, 12,000 output cap, at most 18 calls, two concurrent, no retry/vote/replacement. Freeze after D348 ends and deduct its final charges from D345's unchanged aggregate $0.75 ceiling. All old gold, raw answers, refusals and usage remain retained.
-- This is a research comparison using the D347 assistant-authored development standard, not production adoption, independent human gold, held-out evaluation or downstream routing/Jev acceptance.
-
-- D349 [result](research/2026-10-27-source-fewshot/results.md): 16/18 responses, all 408 records and 198 observed requirement opportunities reviewed. Both third ROW calls remained unsent because $0.038520 remaining could not cover the next $0.039699 reservation; all 16 launched calls ended. Control/examples: 91/99 versus 89/99 complete requirements, 6/8 versus 7/8 delivered answers, 71/99 versus 80/99 delivered complete requirements. This incomplete comparison does not establish stable improvement or satisfy the three-samples-per-case plan. No promotion or automatic further sampling.
-- Strict JSON generation already applied in prior trials. Both D349 arms additionally encode the existing empty-reason/observations exclusivity; the offline census found one offending row among 63 historical answers /1,281 paragraphs, rejected by the new schema and unchanged writer. Four synthetic examples and 24 truth-table checks pass. The full request estimate grows by 1,347 tokens with examples; actual average input increase is 1,236 tokens.
-- D349 estimated new model cost $0.02957440; conservative charges $0.117013, cumulative $0.711480 of the unchanged $0.75 ceiling. No source contract, gold, production default, database or downstream routing/Jev adoption. 13 focused tests and 171 full-suite tests pass; these establish code checks, not model quality.
-
-## D350 · 2026-10-27 · Audit actual source/output before drawing model-quality conclusions
-
-- Alex requests direct examination of failures rather than benchmark-driven tuning. [The audit](research/2026-10-27-evaluation-audit/results.md) rereads the three sources and D349 outputs, reviews all 65 error /7 disputed record labels and 18 non-pass requirements, and checks matching historical scoring classes. No new model calls or prompt changes.
-- Withdraw D349's “examples did not improve semantic quality” interpretation: two quarter-number deductions exceeded the frozen clause; source-faithful supply-chain paraphrases were penalized inconsistently in 12 requirements across D347–D349. Correcting only five identified D349 clause decisions would reverse the old numerical order. This sensitivity exercise does not adopt a new score or declare examples better. Historic gold, judgments, scores and outputs remain unchanged and are annotated as superseded interpretations.
-- Distinguish argument preservation from independent-record usability, field-contract compliance and writer delivery. A conditional valuation split across records often retained the premises in the same answer; that does not establish safe downstream use or true information loss. The current research boundary returns the complete source packet; no actual downstream selection/consolidation reader was tested by these prompt comparisons.
-- Three invalid references among 582 D349 reference fields blocked 63 records. Exact manual lexical corrections on copies let all three answers through the unchanged writer without modifying summaries. This diagnoses failure amplification, not semantic correctness and not permission to relax the writer. Source-field errors, non-temporal time fields, unsupported fiscal anchors and some attribution errors remain real.
-- Review explicit evaluation units and ambiguous gold before another comparison. Use an unexposed full article with a reference prepared before its model output, then exercise the actual downstream reader. No production contract, default, gold replacement, spending increase or paid restart is adopted by this audit.
-
-## D351 · 2026-10-27 · Clean the fed pages before the experiments; a later data pipeline owns the real feed
-
-- Alex, on the census that the pipeline reads whole pages (a publisher's template lines hold a median 44% of a page's characters; 41% of pages are more than half template; some pages hold no article): "你先清理干净html 还有一些垃圾吧，至少确保这些数据信息基本上都是有用，可以抽取的，因为我们再做实验，之后会有专业的data pipe 来feed, 你先帮我批量的处理一下这些肮脏的数据，不要让我们的评估eval 会因为这些数据而被影响"; then "你确定这次这些数据都是属于好的，干净可用的吗？" and "不是你tmd 给我扫一遍啊" (sweep everything, not a sample).
-- Decided: `poc/corpus/scripts/clean_pages.py` writes a new dated database from the frozen one: closed line rules (template lines, fragments with bylines kept, boilerplate sentences, datelines, headline lists, forward-looking paragraphs, no-letter and repeated lines) and, for every fed article with stored HTML, the trafilatura extractor as a filter with prose of 120+ characters re-added (the extractor truncates some articles); an article with no body is not fed. `poc/data/items-nvda-2026-07-01-10-27.sqlite (cleaned; the pages in items-nvda-2026-07-01-10-27.page.sqlite)`, page kept in `text_page`; [census](../poc/reports/items-nvda-2026-07-01-10-27-cleaned.census.md): 54% of characters kept over all pages, median 44% per fed article, 615 pages unfed, the NVDA window 3,852 → 3,643 fed items; on a fresh 30-page line-by-line audit 4.0% of the remaining characters are junk (24.2% under the line rules alone), 8 informative lines lost in 30 pages, no story missing; the three benchmark articles' curated reporting lines intact.
-- D27 ("整个文档丢给llm") stands for what is fed: the cleaned page, not an article cut. trafilatura is a dependency of the corpus scripts only (a measured need: line rules alone leave 22% junk). Alex then asked for the replacement ("你先把清洗过的库取代之前肮脏的库，然后把这个cleaning pipeline 固化下来"): the cleaned database took the canonical name, the fetched pages are `items-nvda-2026-07-01-10-27.page.sqlite`, and `freeze_window.sh` makes the cleaning a standard step of every future freeze. The cleaning is for the experiments, not the product's input module.
-
-## D352 · 2026-10-27 · TrueNorth event index backfilled by identity; the result is a measurement, not a replacement
-
-- Alex: "你用一下我们的truenorth-api 不是有个event endpoint 吗，你也backfill 一发nvidia, geopolitcs, chip supply chain 相关的数据到我们这个clean source db. 现在就做".
-- Built: `harvest_truenorth.py --events` over the window with per-topic selectors in `topics.json` (`truenorth`: asset ids and text queries); `assemble.truenorth_story_topics` labels a story by identity only (the asset selector that found it, or the asset ids the story carries); a text-query hit with no listed asset id is not an item, because the index matches any word and such hits were mostly off topic. New databases `items-nvda-2026-07-01-10-27-tn.page.sqlite` / `-tn.sqlite` by the D351 chain; the canonical database is not replaced.
-- Measured ([results](research/2026-10-27-truenorth-events/results.md)): the index starts 2026-07-23; 708 story rows enter, 72 fed; 83% of links are benzinga.com, which blocks the fetcher, so the rest are provider summaries (not fed, D351/Alex 2026-10-23: original documents only); geopolitics cannot be selected by identity beyond crude oil. Alex (2026-10-27): "你记录下truenorth 的库不太能用的原因吧，然后先别管他了". Set aside; the backfilled databases stay as a record, the canonical database is unchanged, and no further work goes to this source.
-- Why the TrueNorth event index is not usable as a source, in four measured facts: (1) no article text: `include_body` returns nothing and no tool returns an article, and 83% of the links are benzinga.com, which blocks the fetcher (403 on 576 of 576), so 636 of 708 stories are a title and a summary only; (2) no topic selection: text queries match any word (random samples of the export-control, tariff and supply-chain hits were mostly off topic) and the `topic` filter accepts no known value, so geopolitics cannot be selected except through an asset id such as crude oil; (3) no history: the index starts 2026-07-23, so a window from July 1 loses three weeks; (4) thin: 283 NVIDIA stories and about 375 supply-chain stories in three months against 27,000 Google News listings in the same window, with 70% of them from one publisher.
-
-## D353 · 2026-11-03 · Clean the repository after the merge: experiment outputs and one-off scripts leave; documents and everything a reader names stay
-
-- Alex: "帮我把本地 main 同步到最新, 你需要非常仔细的做清理还有把不必要的测试script 等bloat 全部清理后commit push".
-- The rule, applied by a script to every tracked file: outside `docs/research/` and `poc/reports/` everything stays (code, tests,
-  scripts, configs, prompts, PRDs, decisions, notes, reports). Inside them a file stays when it is a document (Markdown, HTML), a gold
-  set or its checksum, part of the standing harness of `docs/research/2026-11-01-e2e-loop/harness/`, an image a kept document shows, a
-  script a kept script calls, or a file that code, a test, the rules, the README, the state page, the decisions, a PRD or a skill names
-  (by path, by unique file name, or as path pieces joined in code). Everything else leaves: run logs, pid and lock files, run
-  databases, model-output and per-call dumps, text outputs of one-off scripts and the one-off scripts themselves.
-- Also retired: the parallel-day study runners (`poc/concurrency_study/budget.py`, `e2e.py`, `full_day.py`, `multi_day.py`) and the two
-  test files that tested only them (17 tests); `proof.py` stays because the product test of the parallel day imports it. And
-  `scripts/review_grouping_repair.py`, which nothing names, and the two one-off API probes `poc/corpus/scripts/deepseek_probe.py` and
-  `deepseek_probe2.py`.
-- Checked on the cleaned tree with the local data linked in: the only tests that disappeared are those 17; the frozen-file tests
-  pass (no frozen file moved); the suite passes in full (285), the UI tests (58) and the corpus scripts' own tests (27) pass;
-  `docs/check.py` passes.
-- A removed file comes back with `git checkout <parent of the cleanup commit> -- <path>`; `git log --diff-filter=D -- <path>` finds
-  the commit. Nothing is lost from history.
-- Carried from the `main` checkout's uncommitted work, where it has run since 2026-10-28 (not a new choice): the served data is the
-  sealed three-month ledger `served-2026-10-28-v34-nvda-3m-through-0828` with the cleaned items database (README, "Switching the
-  served data"), which also makes the two library-count tests pass that failed on `main`; a judgement's cites are read once each by
-  the bundle and the service; the corpus scripts that built and cleaned the item database (`poc/corpus/`, D351); the three curated
-  benchmark files its cleaning test reads (`poc/reports/2026-10-27-extraction-stability/inputs/*.clean.txt`); the 90-thesis review
-  notes AGENTS §8 cites (`research_notes/对冲基金论点粒度与金标/`); the flow page `reports/2026-11-02-extraction-to-judgement.html`.
-- Left out of Git and kept only in the backup `/Users/lchingen/hivemind-backups/local-main-2026-11-03/` (a tar of every uncommitted
-  file of the `main` checkout with its file list and the tracked-file patch): the checkout's experiment outputs (about 2,600 files,
-  1.6 GB, mostly run databases), the source-track runner code (`src/hivemind/source_reading.py` and its test, used only by those
-  runners), the study scripts never committed, and the checkout's superseded copies of files the merge brought.
-
-## D354 · 2026-11-03 · Steps 3 and 4 (opening and matching questions, judging them) are frozen as `poc-v108` runs them, after three draws on the frozen extraction
-
-- Alex, after the extraction was frozen (D274): "now that the extraction stage is done and frozen, we freeze that as well"; on the plan to
-  run the whole line on the frozen extraction and freeze steps 3 and 4 if their numbers did not get worse: "好你跑"; then "那你跑了吧，我们赶紧确认step 3,4 可以freeze".
-- The run (`research/2026-11-01-e2e-loop/log.md` row 29): `poc-v108` with the 22 frozen seeds over 2026-07-01..07-14, three draws at once
-  from a pinned worktree, predictions and freeze conditions written before the send (`predictions-r9-frozen-v108.md`, sha256 beside it).
-  All four conditions hold: every draw finished with no halted day; must-open questions 28/28 in every draw; the judgement agrees with the
-  frozen gold on 15/17, 15/17 and 16/17 judged questions (control `poc-v94`: 16/18, 16/19, 16/18) and no question that agreed in all three
-  control draws disagrees in all three new ones; core matters reaching judgement average 77.7 (control 74.3) and estimated noise reaching
-  judgement 49.5 (bound 51).
-- Frozen: the collision judge's prompt `collision-v2`, the judge's prompt `judging-v7`, the matching prompt the configuration names
-  (`matching-v3`), the judge's answer schema and the three questions the Jev matcher is asked; `tests/test_frozen_questions_and_judgement.py`
-  pins them (a one-character change to a prompt or to a matcher question fails it, both mutants checked). The configuration itself is
-  pinned by `tests/test_frozen_extraction_prompt.py`. A change is a new version only Alex opens.
-- Known defects, recorded and not fixed: (1) the collision judge splits one bet on a fine detail: the seed H200 question and an identical
-  candidate were judged distinct ("any" against "public" authorization) in one draw; ten re-sends of the stored request gave the same
-  question 8 times, so about one encounter in five opens a duplicate; (2) the frozen extraction proposed the lidar-legislation question the
-  gold rules out in one draw of three; (3) the operating-margin question (gold q10) had one or two pieces in each control draw and none in
-  any new draw, so it was never judged; (4) the root-revenue fallback of the frozen extraction raised the total-revenue question's share of
-  all links from 9–12% to 23–24%, and the narrower questions lose the evidence that answers them: Broadcom's AI-chip revenue ($10.8bn in Q2,
-  $16.0bn guided for Q3), the gold's basis for custom-chip spending (q16), was filed under that question in two of three control draws and in
-  none of the frozen ones (it went to the total-revenue, data-center and accelerator-share questions), and the judge then chose below $40bn
-  three times against the gold's $60–85bn; defect (3) is the same class. Over 14 days the judge requests stayed under 18,500 tokens, but a longer window is where evidence bloat
-  appeared before (the three-month run stopped and sealed at 2026-08-28). (5) `scripts/preflight.py` cannot judge the one-decider
-  architecture (D264): it does not rebuild the questions open at the time, so every stored link reads as "links to nothing shown".
-
-## D355 · 2026-11-04 · The filing topic closes without a change: filing is about 85% right; the remaining misses are recorded as known defects
-
-- Alex opened the topic on 2026-11-03 ("你这个单独开一个专题出来解决 … 是promot，是系统结构设计还是到底哪里有问题挂错一堆东西，机制是不是有问题（一定要挂吗？有没有可能是杂音"),
-  set the method on 2026-11-04 ("We need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we
-  dive into do the full analysis stability test"; "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估"), and closed it: "那就1吧"
-  (option 1: close the topic, record the pattern as a known defect, go to step 5).
-- What was found (`research/2026-11-03-filing/report.html`, `log.md` rows 1–17): three rounds of Claude–Codex review converged on "the question
-  definition is too narrow"; an independent challenge and the first stored-request test refuted it (the earlier version's definition was already
-  broad; the same request gives different filings from send to send). Two cheap tests of fixes did not fit their hypotheses and stopped: removing the
-  total-revenue fallback alone leaves good indirect evidence unlinked; teaching "one fact, two uses" made the model add a second company-revenue
-  question instead. A size measurement per class (six observations per fact) and a wider check before test 3 put filing at about 85% right:
-  the company's own quarterly figures 82%, forecasts 91%, other companies' figures 84% on fourteen facts.
-- Known defects, recorded and not fixed: (1) competitor and customer news (a cloud provider's backlog, a rival's customer forecasts, a chip
-  designer's revenue) is filed under the company's revenue questions instead of the share, capital-spending or custom-chip question it informs;
-  the model reads it as "what it means for the company" and the fallback sentence sends it there; the custom-chip question lost its main evidence
-  this way in the frozen draws. (2) Share facts are often not written at all (the gold's core "China share fallen to zero" in none of six
-  observations): an extraction recall miss, not filing. (3) The model files only relations an article states; one needing industry knowledge (a
-  chip designer's AI revenue as a measure of cloud providers' custom-chip spending) is not made unless the article says it.
-- No prompt or code changes; steps 1–4 stay frozen (D274, D354). The next task is step 5.
-
-## D356 · 2026-11-04 · Step 5: closing at the due day is pull mode's; no separate final verdict, no day-end re-judging, due days after publication, the frozen rung recorded and shown
-
-- Alex: "按照你的4个建议收尾一次，清晰的write the design, 文档，确保我们的一致性，然后你也需要清理repo不要让旧的东西影响我们整个sanity". The four leans he
-  accepts are Claude's of the same day, on D54's open questions:
-  1. **No separate final review before closing.** Each day's judgement already reads the evidence in force (D198's window), so a review at
-     the due day repeats it. The final verdict is no longer a step; D29's earlier draft (verification conditions, confirmed/falsified/expired,
-     premises, triggers) is retired. Config's `final_verdict` setting stays in the frozen configurations (D274) and is read by no step.
-  2. **No day-end re-judging without new evidence.** Pull mode closes the questions that are due and does nothing else at day end; it is
-     revisited when a case is named.
-  3. **A due day falls on or after the day the result is published,** set when the question is opened (the opening rule "set the due date
-     when the question can be resolved", 06-views). A question whose result is still unknown on its due day closes at its state like any other;
-     nothing waits (D54).
-  4. **The frozen rung is recorded and shown, never a gate** (AGENTS §8). The closing record names the rung the question froze at; a question
-     never judged closes with "no data to verify". Its judgement history, already stored and served, shows how the state moved up to the close.
-     Telling a closing rung that reflects the published result from one that is still a forecast is not built until the first real due day
-     (2026-12-31) gives a case.
-- Built: `src/hivemind/pull.py` writes the closing record (rung and label, or "no data to verify"); `tests/test_pull.py` proves it (mutants:
-  the first judgement instead of the last, the no-data branch removed). A $0 check on a copy of the frozen first draw with the day set to
-  2027-03-01 closed the thirteen questions due by then at their last rung, and a dependent question's judging request shows the closed question
-  with its last conclusion; two questions never judged closed with no state, which this change marks.
-- Pages: PRD 07 becomes the closing contract (the D29 draft is removed from it; Git keeps it), PRD 08 states what pull mode does, the design
-  page's two nodes and the closing drill-down say the same, and `docs/check.py` now reads both PRDs and both nodes in the wording check.
-- Not built, not decided: fetching settlement figures (prices, filings) from a source; Claude's earlier daily duplicate check.
-- After a read-only Codex review the same day, two gaps between this decision and the product were closed. (1) A closing on a day without
-  items took the day's last sequence number, which belonged to the day before, so the question page showed the question closed a day
-  early; pull mode now records the day under a sequence number of its own when it closes something on such a day (`pull.closing_sequence`).
-  Census: 0 of the 42 day ends of the three frozen draws were affected, and 1 of the 119 days of the stored news window has no items
-  (2026-10-27); in production a holiday is enough. (2) The closing record was served but never shown: the question page now shows it
-  under "About this thesis" from the closing day on, and a closed question never judged shows "No data to verify". Tests:
-  `tests/test_pull.py` (the empty-day closing, read through `service.is_open_as_of`) and `poc/ui/test/model.test.js` (`closingAt`); each
-  fails on its mutant (the old numbering; the record shown while the question is open).
-
-## D357 · 2026-11-04 · Clean the repository of configurations and prompts nothing current names; the code paths of retired versions are a slice of their own
-
-- Alex, with D356: "然后你也需要清理repo不要让旧的东西影响我们整个sanity".
-- Removed (Git keeps them): 53 configurations under `poc/config/` and 87 prompt files under `src/hivemind/prompts/` that no test, code,
-  script, Docker file, README, AGENTS, state page, PRD, POC plan, design page or skill names, and that no kept configuration uses. Kept:
-  every configuration those name (54, among them the replay default `poc-v108`, the service's `poc-v33-idea` and the stored controls
-  `poc-v94`, `poc-v95`, `poc-v103` of D274) and every prompt file a kept configuration or a test, code or script names (112). Two files the
-  first pass missed were put back because a test reads them by a computed name (`categories-v7.json`, `role-v7.txt`); the full suite then
-  passed (288), with the frozen-file tests, the UI tests and `docs/check.py`.
-- Stale text removed from the current documents: the final-verdict draft (D356), the README's pre-merge extraction status (role-v51 and a
-  placement call), and the pull-mode open items D356 settled.
-- Worktrees: the two that held no changes and no data (`fix/question-identity-r2`, `cleanup/stale-tests-20261026`) were removed; their
-  branches stay. Left for Alex because they hold uncommitted changes or local data: `feat/thesis-admission-v12` (7 changed files, 1
-  untracked), `feat/parallel-day` (2 changed files), `fix/thesis-admission-v11` (102 MB of local run data), `cleanup/sequential-requests`
-  (685 MB of local run data, 1 untracked file), `fix/extraction-quality-2026-10-28` (the stored runs of the end-to-end loop that later
-  scripts read).
-- Not done in this slice: the code paths that only retired prompt versions take (version gates in `extraction.py` and `views/judging.py`)
-  and the tests that load old configurations to reach them (22 test files). Removing them is a refactor of its own, proved against the
-  frozen request bytes (`tests/test_frozen_extraction_prompt.py`); it waits for Alex to take it up.
-
-## D358 · 2026-10-28 (carried 2026-11-04) · The three-month run stops at 2026-08-28 and is sealed; evidence bloat is the next problem to solve
-
-Recorded on 2026-10-28 as D206 of `feat/thesis-admission-v12` in that worktree's uncommitted decision log, and never merged; carried into
-`main` on 2026-11-04 when the worktree was removed (D359), its text unchanged below. Its D206 is a different decision on `main`.
-Its quality review is carried as `docs/research/2026-10-28-quality-review/` (documents and scripts; the comparison databases stay in
-the backup). The writer fix it names was not carried: `main` reads cited ids as a set where it serves them (`bundle.library`,
-`service`), which covers the same defect. The succession gap it records was not checked against today's code.
-
-- Alex, 16:30: "你先停止吧，把这个db 封存，替换成最新的FE可以读取然后把这个 bloating evidence 的问题给记录下来，很严重，需要解决". Earlier (16:12): "证据膨胀是一个问题，我们之后要想办法deal".
-- The run (`english-v34-nvda-3m-2026-10-28`, poc-v34, the D202–D205 writer) completed 59 days, 2026-07-01 to 08-28: 1,232 items, 69 theses, 7,091 calls, $5.80. It is sealed read-only as `poc/data/sealed-2026-10-28-v34-nvda-3m-through-0828/` (SQLite online backups, SHA256SUMS, logs and scripts; the run folder is left resumable). The front end reads it from 16:35: the served defaults switched in the five places the README names (main checkout), `poc/mock/index.html` rebuilt, the API restarted in `service-3m-2026-10-28/` (`/days` 2026-07-01..08-28, 69 theses).
-- Why it stops: evidence bloat. The Data Center revenue thesis (v10) carried 1,768 linked pieces by 08-27 and FY2027 revenue (v2) 1,733; v10's judging request was 292 KB with 698 evidence ids shown; the model mislabels one id among dozens of pushes about every other attempt, the code refuses the answer, two refusals halt the day. Today: 14 judge answers refused by code, 10 on v10/v2/v13, two days halted on v10 alone in 16:05–16:21. Of 25 pieces linked to v2, 10 bear on the question (Claude's reading); the judge ever cited 23–27% of what is linked. The census, the one-case traces and the rule candidates are in `docs/research/2026-10-28-quality-review/report.md` §2 D (and A–C, measured first); the step is Alex's to pick.
-- Found while switching the front end: one judgement (v2, id 736) cited an id twice and the UI contract (`thesis-ui/2`, uniqueItems) refused the dataset. The writer now stores each cited id once (`judging._record`, test `test_a_judgement_stores_each_cited_id_once`, red on the old writer); the two readers of sealed ledgers (`bundle.library`, `service` thesis bundles, main checkout) read the set, since a sealed ledger does not change.
-- The other halts of the day, each resumed by the run's `watch.sh` and recorded in the cost ledger: the judging output cap (D205), the Mac sleeping, three transport errors, one "database is locked" (a reader held the ledger over the 5 s busy timeout), one hung call (55 min at 0% CPU under the VPN; a stall detector was added to the watcher).
-- Amendment, 17:05. Alex, on seeing an empty thesis in the front end ("why is this here? there is no evidence and why is this a thesis"; then "你直接把它移除，这是我们自己的失误"): v68, "What stand-alone CPU revenue will NVIDIA report for calendar 2027?", opened on the run's last day by the succession rule (D168: same quantity, next period, after v24) from one statement ("$20 billion in 2026 and more than $40 billion in 2027"); the writer linked that statement to v7 and v24 (as a repeat of the $20 billion piece) and not to the successor it opened, so v68 stood with no evidence and, judging running only on arrivals, no judgement. Class: 1 of 69 theses with no evidence; 1 of 2 successions (v9 after v8 has 59 pieces). The sealed folder stays untouched; the front end, the API and the page build now read `poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite`, the same ledger with v68's rows removed (views, view_keys, rungs, successions, view_switches, views_fts; the append-only triggers dropped in that copy only; its README lists this). The writer gap (a succession's opening evidence is not linked to the successor) is an open defect in `writing.py` for the next slice.
-
-## D359 · 2026-11-04 · The code builds only the frozen prompts (extraction v74i, judging-v7); old worktrees removed; the preflight reads the one-decider requests
-
-- Alex, on Claude's list of the two open cleanup items (the old worktrees, and the code paths only retired prompt versions take, with the
-  cost that old versions could then no longer be re-run, only read from their stored results): "你看完你告诉我呀", then "ok".
-- **Worktrees.** Removed: `fix/thesis-admission-v11` (its 102 MB of data were five SQLite files whose contents equal `main`'s; only the
-  header counters differed), `cleanup/sequential-requests` (685 MB, 244 files byte-identical to `main`'s `poc/data`), `feat/parallel-day`
-  (two text changes `main` already holds, 94 MB of the 2026-10-25/26 test outputs) and `feat/thesis-admission-v12` (a writer fix `main`
-  covers where it reads, the sealed-run decision carried as D358, its quality review carried to `docs/research/2026-10-28-quality-review/`).
-  What was kept from each is in `/Users/lchingen/hivemind-backups/old-worktrees-2026-11-04/` (README there); the branches stay. Kept:
-  `fix/extraction-quality-2026-10-28`, whose ignored folders hold the stored end-to-end runs (679 MB; v91, v92, v94, v95), the results
-  any later comparison reads.
-- **One path in the code.** `extraction.py` builds the v74i request only: the Chinese builder, the per-version schemas, field notes,
-  paragraph accounts, the placement call's paths and every version gate are gone; `SUPPORTED_VERSIONS = ('v74i',)` and a configuration
-  naming another version is refused before any request (`require_supported`). The answer checks are unchanged except what only retired
-  versions used: a bare year is a calendar year, an unlinked statement stays for the handover's 'no home' drop, the admission check reads
-  `settled_by` and the obligation horizon, a candidate cites only groups its answer declares. `placement.py` keeps the takes lines, the
-  v74i filing rule and the candidate-id pattern; the separate placement call is gone. `views/judging.py` builds judging-v7 only (theme
-  block, evidence in view, the reference) and refuses another version. The parallel runner and the stream no longer pass the never-shown
-  groups. Matching, the Idea API and the store are unchanged.
-- **Proof, at no cost.** The three draws of the frozen v108 run (D354) replayed through the code from their stored answers, every paid call
-  refused: before the change and after it, all 3,031 requests built byte for byte the same (key order included), no request the archive
-  could not answer, and all 23 tables of each replayed ledger equal to the stored ledger. Suite: 260 tests pass (289 before; the tests of
-  retired versions left with them, the rest now run on `poc-v108`); the frozen-file tests, the UI tests and `docs/check.py` pass.
-- **The preflight reads the one-decider requests** (D354's defect 4): it recovers the question ids a stored request showed from its
-  [Open questions] block and replays the answer against them, reads items as the feed does (`testdb.item_of`), counts a row of a retired
-  version or configuration as not replayed, and defaults to draw 1 of the frozen run. On it: 243 of 243 extraction answers replayed (was
-  229, with 14 failing on unparsed item fields), 726 statements and candidates judged, 12 refused.
-- **Files retired** (Git keeps them): 41 configurations and 80 prompt files that no code, test, script or UI file loads, among them the
-  stored controls `poc-v94`, `poc-v95` and `poc-v103` (D274 kept them; their stored runs remain, they can no longer be re-run, and D274's
-  one-line return to `poc-v103` now needs a decision and code). Kept: `poc-v108`, the Idea API's configurations and the files its tests
-  and scripts load, and `poc-v22` (read by `scripts/recall_oracle.py`). The backup manifest of D274's retired variants is restored beside
-  its archive, since a report links it.
-- A new version of either prompt is a new decision with its own code path, measured against v74i and judging-v7 (D274, D354).
-
-## D360 · 2026-11-04 · PRD 10: the one-home tie and split replace the second home (§5.2); the decision rule counts against luck and per question by code (§6)
-
-- Alex, on Claude's message giving the conclusion, the one test and the two PRD corrections (the decision rule as written fails the control
-  against itself; §5.2's "另一方的题开着…一并挂上" contradicts D207): "go".
-- **§5.2.** One home stays (D207). A statement bearing on two specific questions goes to the one whose quantity it measures most directly; a
-  statement giving a separate figure for each of two questions is written as two evidence items, one under each (the code stores two items quoting
-  one sentence as one piece with both links). Both sentences are in the links rule of v74l (`links-v74l.json`).
-- **§6.** Totals by reassignment (each article's six answers re-split between the arms 4,000 times; a change counts when fewer than 5% of re-splits
-  reach it): development reach up, parking under v1/v22 down, not-kept spans not up, core not down; held-out reach not down, not-kept not up, core
-  not down. Per question, by code against the gold, both sets together: 3 net drops, 2 net full drops (every control send, no variant send),
-  5 net new noise statements or 3 net full new noise statements fail; a move to another question the gold uses the fact for that is not broader is
-  the one home, not a drop; limits rise one step on the component failing identical variants most often while the chance failure exceeds 10%,
-  computed before the observed counts. Smaller per-question changes are listed and read for the report and decide nothing. A gold item reaches a
-  question through its best match or any statement quoting its own passage. Script `decide.py`; seven Codex rounds and three independent readers
-  (`docs/research/2026-11-04-filing-end-to-end/prd-amendment-proposal.md`, `log.md` rows 10–16).
-- The test then runs once: arms `stored` and `v74l` (configuration name poc-v115), three sends each, on the 54 development and 15 held-out
-  articles, predictions frozen with their sha256 before the first send.
-
-## D361 · 2026-11-04 · After v74l's failed test: size what complete evidence is worth at the judgement before more extraction design; the fallback stays
-
-- Alex, on Claude's report of the three-round reflection with Codex (`docs/research/2026-11-04-filing-end-to-end/reflection-v74l.md`), which
-  recommended giving the frozen judge the gold's own evidence for the three questions the frozen runs miss for want of evidence, and leaning to keep
-  the total-revenue fallback until that result: "按照你的提以来，但是你一定是自己反思多轮之后才给出的行动".
-- The next step of PRD 10 is that test: custom silicon (v16), operating margin (v10) and NVIDIA capex (v12) at the window end 2026-07-14 of the
-  frozen v108 draw 1, the gold's cited passages supplied as constructed evidence through the production judging code, three sends each, and v16's
-  stored request three times as control (12 sends). Designed, built and attacked in rounds of Claude's own review, recorded before the send.
-- The fallback sentence stays in production (frozen v74i, D274); its deletion is decided after this result.
-
-## D362 · 2026-11-04 · The two narrow delivery fixes the complete-evidence test points to are piloted, one at a time, on their motivating cases
-
-- Alex, on Claude's report of the complete-evidence test (D361: operating margin and capex are delivery problems, custom silicon an interpretation
-  gap) and its proposal of two narrow changes, each first tried on the stored article that motivated it: "你继续啊不要scope drift and strongly follow
-  evidence of your discovery and learning".
-- Fix 1, operating margin: a fact filed under the right question is refused because the model rewrote a comparison sentence ("Nvidia's operating
-  margin was roughly 66 percent" for "Micron's operating margin was 80.4 percent, compared with Nvidia's roughly 66 percent"). Built where the evidence
-  points with the least change: the quote check maps such a rewrite back to the one source sentence it came from, so nothing the model reads changes
-  (a change to what the model reads changed what it writes in v74l); validated by replaying every stored refusal through the code, at no cost.
-- Fix 2, capex: a figure question's takes line names the figures its quantity is defined from (capital expenditure from operating cash flow and free
-  cash flow), written by code per measure; first sent on the article that carries the cash-flow figures, three sends against three as stored.
-- Each is designed, built and read in rounds of Claude's own review and an independent reader's before anything is sent; neither touches the frozen
-  ruler; building either into production is a later decision of Alex's (D274).
-
-## D363 · 2026-11-05 · At coverage start, the company's latest reported figures enter once from its own latest report; restatements stay excluded
-
-- Alex, on Claude's report that the operating-margin and capex misses trace to restated May figures the signed standard excludes (§5.3; pending
-  proposal 6) in a window that starts after the report, given two answers — (甲) approve proposal 6 so restated known facts become optional, or (乙)
-  record each question's starting figures once at coverage start from the company's latest report and keep excluding restatements — with Claude's
-  lean to 乙: "乙".
-- So proposal 6 is not taken up by this; §5.3 stands for the daily path. What enters at coverage start, from which document, through which step,
-  and how it is validated is designed next, in rounds of Claude's own review and an independent reader's, validated first the simplest way on stored
-  data and a few cents (AGENTS §7.3), and brought back before anything is built into production.
-
-## D364 · 2026-11-05 · The coverage-start reading is built into the product; a figure several questions read is one record linked to each of them
-
-- Validation behind it (`docs/research/2026-11-04-filing-end-to-end/baseline-design.md` rounds 8–17): on Alex's "你充分验证" the per-question reading of the
-  latest report ran over all 22 seeds against a same-day control on the frozen v108 draws; after his "改" to the one sentence that let figures of another
-  quantity in, all three pre-registered conditions passed (operating margin and capex each right 9 of 9; no question that was right turned wrong; every kept
-  figure the question's own quantity). An independent challenge then found the narrowed sentence drops the capex line in 3 of 12 reads and that no
-  held-out report was read; both are to be closed before the build is accepted.
-- Alex, on Claude's account of the step (one more step, run once at coverage start; the daily path unchanged): "好开始做到production 上，完整的更新所有系统设计等".
-- Alex, asked how to store a starting figure that several questions read (first-quarter revenue read by total revenue, operating margin as its denominator,
-  and next year's revenue), between one record linked to each question that read it (Claude's lean: each question read its own starting figure; the
-  storage follows D360, records quoting the same sentence stored as one and linked to each question; the daily path's "only the narrowest" pruning does not
-  apply to these records) and one record linked only to the question its figure most directly measures (operating margin would lose its denominator): "存一
-  条，挂到每道读到它的题". D207, D265 and D360 stand for the daily path.
-- So: the reading's prompt is a new prompt of the product, opened by this decision (D274, D359 cover extraction and judging); the build follows AGENTS §2–§5
-  (design tables, review, tests, a $0 replay of the validated answers); the product's default changes and the 14-day three-draw acceptance run start only on
-  Alex's word (PRD 10 §6).
-
-## D365 · 2026-11-05 · The coverage-start reading is the third version with the repaired check; built into the product behind poc-v116
-
-- Alex, after Claude's fourth version failed and he asked whether the rejections were right ("为什么没过？你看着几版，你到底是不是再搬石头砸自己的脚？各种reject自己，你确定是
-  正确的rejection 吗？你又下去看trace吗？…是不是你自己有毛病"; "你不能每次都这样判错然后浪费我时间，我需要你深度看完所有失败trace给我准信下一步你要跑什么才能收敛"): a census of
-  all 606 stored reads (`docs/research/2026-11-04-filing-end-to-end/census-all-reads.txt`) showed the third version kept no wrong figure and missed 3 of 156 reads (all on
-  capex), the fourth version dropped many, and six right figures had been refused by Claude's own quote check (a footnote mark left off, cells left out of a table row);
-  the August "quarter only" rule and the round-13 strictness on lines the gold's own reader uses were Claude's mistakes. Claude proposed three steps: fix the check ($0),
-  read the held-out August report once with the third version (only a wrong figure stops), then build. Alex: "好，按这三步做，你不要再搬石头砸自己脚了，你要收敛上生产".
-- Done: the repaired check (`src/hivemind/baseline.py`) changed exactly the six refused right figures on replay; the August reading kept no wrong figure (44 figures, two
-  readers; operating margin 3 of 3, capex 2 of 3); the step is built (`baseline.run`, `poc/config/poc-v116.json`, `prompts/baseline-v3.json`), with the first day's
-  round judging the linked questions and seed questions shown from the ledger's first day; its requests are byte-equal to the validated ones and its records equal the
-  validated readings ($0, three sends); 12 new tests, six mutants caught, the full suite green.
-- So the reading is frozen as baseline-v3 with this check; no further prompt version without Alex's decision. `poc-v108` stays the default; the 14-day three-draw
-  acceptance run of `poc-v116` against a same-day control, and making it the default, start only on his word.
-
-## D366 · 2026-11-05 · `poc-v116` is the replay default; the branch is committed and opened for review
-
-- The acceptance passed (`docs/research/2026-11-04-filing-end-to-end/acceptance-design.md`, Result; `log.md` row 40): operating margin and capex each agree in 3 of 3
-  draws against never in the same-day control, 53 against 45 agreements of 57, and the one question that dropped by two (v17) was read by two readers as its own swing,
-  not the starting figures. Claude asked whether `poc-v116` becomes the default and whether to commit the branch and open a pull request. Alex: "都做".
-- Done: `scripts/replay.py` defaults to `poc/config/poc-v116.json` and to the items database `poc/data/items-nvda-2026-07-01-10-27.sqlite`, the one every run since
-  D256 reads and the one that holds the page text the reading needs (the earlier default, `items-window-tags2-2026-10-24.sqlite`, has none, so the new default
-  configuration would refuse on it). The default refuses a run without `--seed` (D364). Only the note of `poc-v116.json` changed ("Not the default until Alex's word" →
-  "The replay default since D366"); its settings are the accepted ones: its configuration checksum, which leaves the notes out, is `7a2bb5a223317d29`, the one the three
-  accepted draws recorded.
-- The frozen extraction prompt is unchanged (D274): `tests/test_frozen_extraction_prompt.py` still pins `poc-v108` and now checks that the default is `poc-v116`, that
-  it equals `poc-v108` but for the `baseline` section, and its accepted checksum. As the user calls the entry (`tests/test_baseline.py`): `scripts/replay.py` with no
-  `--config` refuses without `--seed`, and with `--seed` seeds the questions, reads the report once at sequence 1 and judges the linked questions on the first day. The
-  parallel-day entry test names `poc-v108` (its subject is the worker defaults; D183). Five mutants caught.
-- Not covered by a gate: `scripts/preflight.py` does not replay the reading's check. It runs unchanged on a `poc-v116` draw (every section judged; the refusals are the
-  control's classes); the check was accepted on the research replays (`replay_check_repair.py`, `verify_production_baseline.py`, the census of 606 reads). Recorded as an
-  open defect in `CURRENT_STATE.md`, not built.
+What is decided now, by module. Each entry states the core of the rule in force and the decisions it rests on (the first decided it,
+later ones amended it); the module's PRD, or the document named, holds it in full, and each decision's record in the log governs its
+conditions, thresholds and exceptions where an entry is shorter. An entry may be shorter than its decisions; it never says otherwise. An entry marked *(Claude)* rests on a detail Claude settled
+inside a decision Alex made, not on his own words; *(not built)* means decided and waiting for its build. Proposals never decided are
+not here.
+
+- The full record of every decision (Alex's words, what was decided, what was done), in number order: [DECISIONS-log.md](DECISIONS-log.md).
+- The frontend's presentation decisions in force: [DECISIONS-frontend.md](DECISIONS-frontend.md).
+- Every decision number with its status: the [index](#index) at the end.
+- How a new decision is recorded: AGENTS §11.
+
+<a id="consolidation"></a>Consolidated on 2026-11-05 (D367) from the log's 365 decisions (D1–D366; D90 does not exist): 266 stand in force, 110 of them
+frontend presentation; the others were superseded by a later decision, retired with what they governed, or are records of a run, a
+measurement or a version later replaced. One reader classified every decision and a second (Codex) checked each classification
+against the log; the conflicts they found are below, settled or open.
+
+Numbering is one sequence. At the 2026-11-03 merge, `main`'s D181–D241, D258 and D259 became D275–D336, and `main`'s uncommitted
+D242–D257 became D337–D352; the log gives both mappings in the notes that head D275 and D337. Decisions written on `main` before the
+merge may cite the old numbers: D199, D200, D203 and D227 do, and D366's "since D256" means D351.
+
+## Open for Alex
+
+Nothing is open. The seven items this consolidation left for Alex were answered on 2026-11-05 (D368) and are written into the sections
+below: the next extraction version's two changes (§6), the three rules to build (§7), pull mode's day-end scope (§8), the seed questions'
+arrows (§7), PRD 10's two corrections (§10), the correction record beside the frozen standard page (§11) and English for the pages written
+for Alex's review (§1).
+
+## Settled in this consolidation
+
+Conflicts the readers found that a later decision or a reading of the decisions together settles; the entries below state the result.
+
+- **Daily judging and the stream.** D14 confines D13's "no daily step" to the stream, and D63 keeps the calendar outside it: at the end
+  of each day, after its last item, one round judges the open questions whose reading changed (new or newly linked evidence, a
+  dependency's or a theme's changed conclusion), then pull mode closes the questions due that day (D356). D39 and D46's per-item round are amended by D63.
+- **The final verdict** (D29, D55's final-verdict part): retired by D356; PRD 07 is "Closing at the due day".
+- **Identity.** D44's "no key matched by code" is amended by D155, D166 and D197: code owns identity on typed keys and names; identity
+  over a model-written scope stays the model's judgement (D167).
+- **Filing.** D42's "one or more" and the standard page's "several questions" against D207's "one home": the daily filing is one home,
+  the narrowest open question, plus the same answer's own candidates (D207, D259, D264, D265); the coverage-start records link to every
+  question that read them (D364).
+- **The Idea's theses.** D282's "the model cannot assign weights or alter the selected theses" is amended by D288–D290: the model adopts
+  and weights the theses.
+- **Citations.** D92's "theme colours only" is amended by D284 (plain blue citations).
+- **Services.** D112 packages the two services for Docker; on this Mac they are tested on the host because the VPN blocks container
+  networking (AGENTS §9). Both hold.
+- **Defaults.** Each "`poc-vNN` is the default" decision is superseded by the next; only D366 stands.
+
+## 1. System (PRD 00)
+
+- **Two modes** (D10, D12, D13, D14, D56): the stream moves the library only when an item arrives and never reads the calendar; pull
+  mode is the only place where time triggers work, with its "now" passed in. The boundary is a stream of classified items from
+  upstream; nothing pulls sources; an upstream id and version is processed once.
+- **Time** (D5, D9, D34): an item's time is its own publication time, cut to its New York calendar day; no rule reads the computer's
+  clock (`retrieved_at` is for audit); the time of day orders nothing; an SEC filing's day is its filing date (accepted before 17:30 ET,
+  that day; after, the next business day).
+- **No input store** (D7): the materials stay in the team's database; the system keeps a processing record of each item and version
+  processed; testing streams a test database through the same path.
+- **Order and one writer** (D31): dispatch numbers items in arrival order; each question has one writer; an item reads only the state
+  left by smaller numbers, except that extraction reads the open questions of the start of the item's day (D251); the result equals
+  one-at-a-time processing.
+- **Daily judging** (D63): the day's items are extracted, matched and written in order; after the last item one round judges every open
+  question whose reading changed that day, dependencies first, each once; then pull mode closes the questions due that day (D356).
+- **Thesis-first** (D24 as kept by D28): data paths are designed from what a question needs; no number warehouse.
+- **Freezes** (D19, D37, D48, D58): the universe, classification, Config, dispatch, extraction, the review pool's intake and the thesis
+  library were frozen as v1 between 2026-10-16 and 10-22; later decisions amended them, and every further change needs a new decision.
+  D58 also fixes how a dependent states which end of another question is favourable for it and that a question covers what happens up to
+  its due date.
+- **Language** (D133, D163): code, stored values and model output are English, written in English at the source; maintained prompts, UI
+  text and current documentation are English, the pages written for Alex's review included (D368); source quotations and historical
+  records keep their language, and nothing historical (databases, frozen prompts, raw answers, decisions) is rewritten in place.
+- **The POC** (D62): it follows the frozen design in a simpler form, its simplifications listed in `docs/poc/pipeline-plan.md`; the model
+  decides how many questions open (no cap; code checks the shape only); the corpus is whole and original; a small test comes before any
+  full run.
+
+## 2. Research universe (PRD 01)
+
+- A module of its own, versioned apart from Config: what is researched, by entity id and asset class; a run records the universe version
+  it used (D6).
+- Four kinds of object: company, crypto asset, commodity, theme; rates, FX and indices are data that themes track; a theme comes only from
+  the object upstream fed the item for or an upload's declaration, never from the text (D11).
+- The universe is the one switch: each object's tracked tags define the supply scope (objects × tracked tags), kept by whoever writes the
+  stream; every item that arrives is processed; a new object or tag is a new universe version (D18).
+- Earnings releases, periodic reports and earnings calls are in the stream like every other item (D28).
+- A document belongs to a theme when it can move a thesis of the universe, not because a case number or keyword matches (D104).
+
+## 3. Classification (PRD 02)
+
+- A classified input carries its related objects (entity ids with their basis) and its unresolved identifiers, read only from the
+  channel's identifiers and a company author, never from the text or the URL; a ticker resolves on its publication day; invalid items and
+  non-source material carry none (D1).
+- Four lookup tables in one JSON data file that production and tests read; a changed table is a new classification version (D8). The
+  publication-series table is checked before the author type and yields only T8, T10 or T11 (D15, *(Claude)*).
+- A filing's XBRL numbers are not items of their own; table data is pushed one release per item, whole; nothing gets a price-specific
+  rule; pull mode looks up an exact tagged value when a condition needs one (D32).
+
+## 4. Config (PRD 03)
+
+- Config holds only the choices a person makes: model settings (one per extraction category and one per model call: matching, the
+  collision judge, re-judging, the coverage-start reading) and the search size; mechanisms belong to code and what is researched to the
+  universe (D2, D41, D190, D364).
+- No limits section: no budget and no concurrency in Config; worker counts are run arguments (D3, D181, D183).
+
+## 5. Dispatch (PRD 04)
+
+- Dispatch is the single entry: one decision tree asks whether the item meets the contract (no: refused, to the review pool), whether
+  the same id and version was processed (yes: skipped) and what its classification outcome is; every item reaches one destination (D17).
+- An item's related objects play no part in dispatch (D4). Known departure: the POC's `dispatch.route` filters by related object and
+  tracked category, a scope D18 gives to upstream.
+- Items published before coverage start are not dispatched; the coverage-start reading reads the latest report itself (D364).
+
+## 6. Extraction (PRD 05 and the extraction standard)
+
+- **One module, one call per item** (D25, D27, D33, D199): every item of a tracked category is read whole by its category's template, a
+  senior hedge-fund analyst's prompt; tables without tags are read by the model with no separate parsing code (D23); the program owns
+  the output shape and checks every quote against the source; extraction never changes the library. One call per item; repeated calls measure stability and never vote or combine into one answer (D193, D338).
+- **What it hands over** (D42, D209, D264): evidence, each piece with its source, filed under the questions open at the start of its day
+  (shown with their takes lines) or under the same answer's candidates; candidate questions for important matters no open question
+  covers, each with the evidence that raised it; a statement neither takes is dropped as "no home", and evaluation reads the drops.
+  Alex's own memo is read as candidate questions, not evidence (D59, D60).
+- **Filing** (D207, D254, D259, D264, D265, D268, D273): a statement goes under the narrowest open question it bears on, as that
+  question's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer, never a broader
+  question beside it; a launch, shipment or deployment event also takes its variants and stopgaps, a policy process its enforcement,
+  evasion and the affected parties' plans and statements; an estimate for another period or population of a question's quantity goes
+  under it when no open question covers that period; a statement linked to a question and to one it depends on keeps the narrower (code);
+  when no specific question is connected, a statement that moves the demand, supply, competition or pricing behind the company's results
+  goes to the company-wide revenue question of its period (the fallback, D273, kept by D361).
+- **Opening a question** (D184, D185, D210, D236, D248, D158): a candidate opens for one of four reasons (main driver, industry aggregate,
+  policy stage, binding obligation) and names what settles it; the main driver includes the launch or ship date of the product generation
+  that carries the company's value; a binding obligation not yet signed opens a yes/no question due within 18 months, one already taken
+  on an amount question at the company's next annual filing (never for its own borrowing); a deal, product or project opens one only when
+  its scale can change revenue, profit, cash or credit risk; event and policy candidates are exempt from the next-year check.
+- **The day's snapshot** (D251): every item of a day sees the same open-question list, that of the start of the day; the archive key
+  carries the snapshot; a day in flight never re-sends an item because the ledger moved.
+- **The request** (D237, D249, D252): a general hedge-fund brain, its rules and examples reading the same for any company and naming no
+  covered company or test article; a closing check at the end of the same request reads the evidence list back by the standard's test and
+  its not-kept rows; noise is taught by general paired examples; a version is accepted on core and supporting recall first, then noise.
+- **Quotes** (D236, D266 *(Claude: the thresholds)*): a quote a word or two off the source (function words, pronouns, the company's
+  generic name or own name, anchored at one end) is stored as the exact source passage.
+- **Statement fields** (D203 *(Claude)*, D218): a statement's original day is an ISO day or unknown, never filled with the publication
+  day; an analyst's inference is never presented as a source fact, and material unknowns stay.
+- **Frozen** (D274, D359): extraction v74i at low reasoning on `gpt-6-luna` (D234: Haiku parked): the role, the closing check, the
+  category blocks, the takes lines, the filing rule and the evidence schema, pinned by `tests/test_frozen_extraction_prompt.py`; the code
+  builds no other version. What is kept follows the frozen standard (§11 below).
+- **The next extraction version** (D368): asset-thesis rungs stated against guidance, each thesis naming its favourable end (D186), and
+  `industry_aggregate` renamed `shared_quantity` (D191 point 4) are built in it, measured against the frozen v74i.
+
+## 7. Thesis library (PRD 06)
+
+**Questions**
+- A question is one question with a fixed ladder and a due date, never rewritten: five checkable, non-overlapping rungs covering every
+  outcome (an asset question strongly bullish to strongly bearish for the business, a theme question named by outcome), two for a yes/no
+  question (D38, D46; the outcome rungs against guidance of D186 come with the next extraction version, §6).
+- A number question names its period; a company's figures use its fiscal year; at most this year and next open (D46, D248 boundary 4).
+- Any company's own quantity is a thesis under that company, private companies included (D187); *(not built; to be built, D368: it needs
+  a private-company object kind in the universe)*.
+- One state per question; one switch, open or closed; only open questions are judged; a closed question keeps its state and stays
+  searchable; a person can close or reopen one by hand (D54, D57). The research list is edited by hand; a question whose object is taken
+  off it is kept and no longer updated (D55, its flag replaced by the open/closed switch of D57).
+- **One bet, one question** (D248): two questions are one when the same outcome settles both and stay apart only when their answers can
+  move apart and an analyst would bet on each separately; wordings, deadlines, milestones and periods of one bet are one question (a
+  later deadline is evidence while the earlier is open; one question per product generation, at the step that brings revenue); a small
+  matter opens no question; the same statement carried by several outlets (the same known original speaker, original day and figures; an
+  unknown speaker or day never matches) is shown to the judge once with the outlet count, every piece still stored (boundary 7, a chosen
+  exception to "equal values never establish identity", switched on only after its merge risk on the gold and the accuracy of the
+  original speaker and day are measured; D204 holds until then).
+- **Seeds** (D253): a covered company's seed questions are written into an empty ledger before the first day from `poc/seeds/`, keyed by
+  code so an article-born candidate for the same quantity merges into the seed. A seed's dependency arrow means "supports" (D368, by
+  D208): for filing, the supporting (driver) question is the narrower one; for judging, the supported (root) question reads the
+  supporting questions' conclusions, so drivers and themes are judged before their roots. The judging code reads the stored edge the
+  other way today *(fix to be built and measured, D368)*.
+- **The thesis tree** (D208): every company's library has root quantities (its reported lines), a driver layer of seven fixed classes
+  (demand, supply and inputs, competition and share, pricing and installed base, product cycle, policy, capital and obligations) whose
+  instances the analyst writes once at coverage start, each declaring the root it feeds, and shared macro themes, each company's
+  direction a declared dependency with a channel sentence the judge reads, macro evidence filed only under the macro theme; roots read
+  the drivers' and themes' conclusions; the template routes and never gates. Built: the seeds (D253); the rest *(not built)*.
+- **Themes** (D191, D195): a theme question is context for every company question (one to all); explicit dependencies stay where a
+  document states them; a macro-only item opens a theme only when it is listed; an asset judgement carries the block of open themes and
+  answers how they push; themes are judged before assets, and a changed theme queues every open asset question with evidence in force.
+- **Research groups** (D149, D165, D166, D257): extraction declares a statement's group while reading; a group is one ongoing matter several
+  questions track, usually across companies; code decides group identity and membership from the group's names; a company's own
+  financial lines carry no group unless the line tracks such a matter; Jev also answers membership (D169).
+
+**Evidence**
+- Evidence is objective (who said what, where), each piece with its source; code refuses a source it cannot find or a quote not in the
+  document (D26). Four tiers (happened, said by the party itself, a third party's view, rumour); sources are counted by original source
+  (D30).
+- Records are append-only; evidence linked to no question is not stored (D39).
+- **The writer retires nothing** (D202, D204, D168): a revision stores the incoming piece beside the old one, both in force, the pair
+  recorded; a repeat is stored as its own source record with the pair recorded; an older statement arriving later is stored and linked.
+  A revision is a changed later version of the same statement or number by its speaker, an official or the original source (D168
+  *(Claude)*).
+
+**Matching**
+- Jev is the matching engine (D169); its output is an opinion with a score, not the decision to keep or merge (D201). Code owns identity
+  on typed keys: a complete key equal, event type included (D154 *(Claude)*, D155, D164); a shared quantity is one question per theme,
+  measure and period, decided by code before any judge (D197); identity over a model-written scope stays a judgement (D167). When a
+  candidate's list holds a question of its own object and measure, the collision judge answers the analyst's question and its verdict
+  replaces Jev's (D190, D258).
+- A new thesis's dependencies are chosen in matching (D51); the default Jev path does not ask for them, so a thesis opened from an article
+  has none of its own *(to be built, D368)*; a later item may add a dependency to an existing thesis (D191 point 2) *(to be built, D368)*.
+- Every match writes a matching record, kept for human labels and a later smaller model (D40).
+
+**Judging**
+- A question is re-judged when what it reads changed: new or newly linked evidence, a dependency whose conclusion changed, a changed theme
+  (D51, D191, D195); daily, in one round (D63).
+- A judgement is a forecast against a reference (D260 *(Claude)*, D263): the outcome the evidence in force makes most likely at the due day,
+  against consensus, guidance or the stated plan; "not established" is never a reason to stay; the answer states its reference and implied
+  outcome; a gap to the frozen judgement gold is closed in the judge's rule.
+- A judgement reads the evidence in view (D198): the arrivals since its fifth most recent judgement and the basis its last ten cited; the
+  rest stays in force.
+- A judgement may cite the questions it depends on, checked by code against its dependencies; evidence a candidate carries is compared
+  after the candidate's place is known (D47 *(Claude)*).
+- The judging call's output budget is 16,000 tokens (D205).
+- **Frozen** (D354): the collision judge (`collision-v2`), the judge (`judging-v7`), the matching prompt (`matching-v3`), the judge's
+  answer schema and the three Jev questions, pinned by `tests/test_frozen_questions_and_judgement.py`.
+
+## 8. Closing and pull mode (PRD 07, PRD 08)
+
+- At its due day a question freezes at the rung it stands on and closes; that rung is its conclusion; nothing waits for the result (D54,
+  D356).
+- Closing belongs to pull mode, at the end of each day; there is no separate final verdict and no day-end re-judging without new
+  evidence; a due day falls on or after the day the result is published, set when the question opens; the closing record names the frozen
+  rung or "no data to verify", is shown from the closing day and never gates; a closing on a day without items gets its own sequence
+  number (D356).
+- A question that depends on a closed one reads its frozen state and reasons (D54, D57).
+- Pull mode does nothing else at day end: D248 boundary 2's step that opened the next-deadline successor of an event question falling due
+  unresolved is dropped (D368).
+
+## 9. Review pool (PRD 09)
+
+- What the tables do not know is not guessed but goes to a human review pool: unregistered codes and datasets and undetermined author types
+  refuse the item; unregistered series and unresolved identifiers are processed and recorded; contract violations, proposed themes outside
+  the universe and repeatedly failed items enter; one entry per gap with its count and examples (D16, D41). Only the intake is designed.
+
+## 10. Current phase: filing that links facts the way an analyst does (PRD 10)
+
+- PRD 10 is the phase's single source, opened on Alex's words on 2026-11-04, amended on his "go" (D360) and, on 2026-11-05, translated
+  into English with §4's standard version and a §5 status line corrected (D368); every step starts with its §0 checklist. Its steps and results are in §8 and `docs/research/2026-11-04-filing-end-to-end/log.md`.
+- The filing topic of 2026-11-03 closed without a change: filing is about 85% right; the misses are known defects (D355).
+- The phase's filing rules and decision rule (D360): a statement bearing on two specific questions goes under the one whose quantity it
+  measures most directly; a statement giving a separate figure for each of two questions is written as two evidence items, which code
+  stores as one record linked to both when they quote one sentence; a filing change is accepted on totals tested against luck by
+  reassigning answers between arms and on per-question limits. The links-rule version carrying these rules (v74l) failed its one test
+  and is not in the product (§8 step 5); the fallback stays (D361); the two narrow delivery fixes stopped (D362).
+- **The coverage-start reading** (D363–D366): at coverage start, after the seeds, each open question reads the company's latest earnings
+  report once (prompt `baseline-v3`, frozen with its check: no further prompt version without Alex's decision, D365); code keeps a figure
+  only when its quote is the report's own text with a label and the value printed
+  (a table row quoted with a footnote mark left off or a cell left out is stored as the report's own text from the row's label to the
+  figure); one record per item and quote,
+  linked to every question that read it (the daily one-home and narrowest rules do not apply); the first day's round judges those
+  questions; restatements stay out of the daily stream (standard §5.3). It runs in the replay default `poc/config/poc-v116.json` (D366),
+  which refuses a run without `--seed`.
+
+## 11. The ruler and measurement (AGENTS §7)
+
+- **One ruler** (D241, D243, D242): the signed extraction standard page `docs/prd/05-extraction-standard.html` is the one standard for
+  extraction and its PRD; while standards diverge, prompt work and sends stop until the standard is settled with Alex.
+- **The frozen ruler** (D261, D262): the extraction standard (its version 5: version 3 signed in D243, with D248's seven boundaries and
+  D250's four evidence boundaries), golden-v5, the seeds v2 and the judgement ruler with reader B's gold; never changed; a later defect is
+  a dated correction record printed with every score and never merged; a new version only by Alex's decision, with its own gold and no
+  comparison with old scores. Pieces and hashes: AGENTS §7.1; `tests/test_frozen_rulers.py`. The page's three statements that later
+  decisions changed are noted in the dated record beside it, `docs/prd/05-extraction-standard-corrections.md` (D368).
+- **Measuring** (D244, D214): the 118 seen bench articles are the development set; a fresh test set from a later window is frozen before
+  its first send and scored once per configuration; every measurement has a score and the traces are read; the scorer hard-codes no rule,
+  prints the gold's and the page's sha256 and refuses a mismatched gold; meaning is judged by readers, structure and counts by code.
+- **Reading the standard** (D216, D220 *(Claude)*, D221 *(Claude)*, D226, D231, D233, D240, D250): a far-off forecast is not dropped for
+  being far off; the required parts of a statement's meaning are those that change its interpretation, valuation, risk, scope or
+  evidential nature; evidence is assessed by the conclusion it can support; reasonable ambiguity is allowed and gold examples teach the
+  reasoning; "this year" as the fiscal or the calendar year keeps the meaning; a named party's relevant action is kept without an amount,
+  its weight judged apart. Not kept (D250): an arrangement retold with no new step; another company's matter of which one cannot say
+  how it moves a question about the company through a path such as demand, supply, competition or pricing; a comparison the company, a partner or a third party
+  publishes (a competitor's comparison with the company's product, and a partner's or customer's adoption in the same sentence, are
+  judged under the evidence rule); a named analyst's reading of an already-recorded event with no new fact or calculation.
+- **Other golds**: the idea gold (twenty ideas, model-authored, sealed with its digest; D146); grouping is judged by research meaning, not
+  identical group counts (D148).
+
+## 12. Idea API and service (docs/poc/idea-card.md, docs/poc/service.md)
+
+- Hivemind is a thesis database with a read-only search service on top: semantic search over each thesis's own text, readers and
+  evaluation, all as of a calendar day; the core service picks no theses for a caller and stores no user data (D76). A search returns
+  `null` only when the idea names no object, no thesis text matches and the top similarity is below 0.30; an idea above that floor that
+  names nothing still goes to the model (D91, D132 *(Claude)*); an object is named only by its id, full name or a listed alias (D132).
+- The HTTP and MCP services run as two Docker services on local ports; the model key stays in the service (D112). The MCP front gives an
+  external agent the workflow recipe and the object list; the service itself runs no agent loop (D134, amended by D135).
+- `POST /ideas` looks up in code: one call breaks the idea into typed parts, the service searches per part and follows the dependency
+  graph, one call maps parts to candidates (D135, D145); the endpoint can stream its real progress stages (D281); clicking the Idea card
+  opens its detail, and `summary` is the single analyst-written TL;DR (D280).
+- Every covered Idea returns a composite plan and chart (D282); the final call adopts the theses and gives each a positive integer weight,
+  a nonempty plan totalling 100, with no excluded or zero-weight branch; code checks the totals and computes the weighted history; fresh
+  answers may vary and are recorded, not repaired (D288–D290); confidence = 50 + 25 × the weighted aggregate on 0–100%, a defined index,
+  not a probability (D291).
+- `poc-v33-idea` / `idea-summary-v8`: each candidate's entry in the final call is pinned by the request schema to its id and its own two
+  endpoint positions (D335).
+
+## 13. Data (README, "Local requirements and data")
+
+- Fed pages are cleaned by `poc/corpus/scripts/clean_pages.py` into a new dated database that keeps the whole pages in `text_page`; the
+  cleaned database holds the canonical name, `items-nvda-2026-07-01-10-27.sqlite`, and cleaning is a step of every future freeze (D351).
+- The TrueNorth event index is set aside as a source; its backfilled databases stay as a record (D352).
+- The served data is the sealed three-month ledger `served-2026-10-28-v34-nvda-3m-through-0828`; evidence bloat over a long window is an
+  open problem (D358).
+
+## 14. Operations (README, AGENTS §9)
+
+- **The parallel day** (D172, D181, D183): `scripts/replay.py` prepares requests concurrently and commits through one ordered writer; a
+  turn accepts only a byte-identical request, recomputing a stale one; `--workers 16` and `--jev-workers 8` by default, `--workers 1` the
+  serial path; worker counts are run arguments, not Config.
+- **One path in the code** (D359): the code builds only the frozen versions and refuses a configuration that names another before any
+  request; older versions are read from their stored runs.
+- **The replay default** (D366): `poc/config/poc-v116.json`, with the items database `poc/data/items-nvda-2026-07-01-10-27.sqlite`.
+- **Repository** (D353, D357): documents, code and every file a reader names stay in Git; run databases, logs and model archives stay on
+  disk, located by the data manifest; configurations and prompts nothing current names leave (Git keeps them).
+
+## 15. Working rules (AGENTS.md)
+
+The decisions on how Claude works are written at the decision they govern in AGENTS.md: a rule is decided only with Alex's words (D45;
+Authority and scope); one PRD per module, the precedence Alex, decisions, PRDs (D20; §11); refresh by reasoning in a fixed module order
+(D22; §11); one word per concept, checked by `docs/check.py` (D36, D52; §3); a sealed copy of the design is never edited (D43 *(Claude)*;
+§11); both analyst standards applied before a prompt, evaluation or change (D228; §8); a direct-read pass locates mechanisms, its counts
+one draw (D238; §7.3); the extraction standard page is the step's PRD and AGENTS §6–§7 carry the principles (D242; §6, §7).
+
+## Index
+
+Every decision number, its date, its title as recorded, its status today and the section that holds it (§) or, for one no longer in force, its topic. "Record" means a run, a measurement, a probe or a version adoption later replaced, with no standing rule of its own; its full text is in the [log](DECISIONS-log.md).
+
+| D | Date | Decision | Status | Section |
+|---|---|---|---|---|
+| D1 | 2026-10-15 | Input classification carries each input's related companies | in force (amended by D11) | §3 Classification |
+| D2 | 2026-10-15 | Config holds only the choices a person makes | in force (amended by D6, D10, D18, D25, D27, D29, D41, D47, D51, D356, D190, D364) | §4 Config |
+| D3 | 2026-10-15 | Config has no budget or concurrency limits | in force (amended by D46) | §4 Config |
+| D4 | 2026-10-15 | Dispatch is by tag only, never by company | in force (amended by D7, D18, D25) | §5 Dispatch |
+| D5 | 2026-10-15 | Time is the material's own time and the run's day | in force (amended by D7, D9, D10, D12) | §1 System |
+| D6 | 2026-10-15 | The research universe is its own module | in force (amended by D10, D18, D59) | §2 Research universe |
+| D7 | 2026-10-15 | No input store; replay is a test database, not a design concern | in force (amended by D10, D17, D18, D26) | §1 System |
+| D8 | 2026-10-16 | Classification's lookup tables: one data file, results are tags | in force (amended by D15) | §3 Classification |
+| D9 | 2026-10-16 | A day is cut in New York time; only the day counts | in force (amended by D12, D31, D34) | §1 System |
+| D10 | 2026-10-16 | The system starts at a stream of classified items | in force (amended by D12, D17) | §1 System |
+| D11 | 2026-10-16 | Related objects and the theme library | in force (amended by D18, D26, D38, D59) | §2 Research universe |
+| D12 | 2026-10-16 | No current-day clock in the system | in force (amended by D31, D56) | §1 System |
+| D13 | 2026-10-16 | The system is driven by information, not by the calendar | in force (amended by D14) | §1 System |
+| D14 | 2026-10-16 | Two modes, designed apart: stream and pull | in force (amended by D29, D31, D54, D356) | §1 System |
+| D15 | 2026-10-16 | Macro, political and economic material in the classification | in force | §3 Classification |
+| D16 | 2026-10-16 | A human review pool for what the tables do not know | in force (amended by D27, D31, D33, D41, D45, D47) | §9 Review pool |
+| D17 | 2026-10-16 | Receive is merged into dispatch | in force (amended by D18, D25) | §5 Dispatch |
+| D18 | 2026-10-16 | One switch: the universe decides what is processed | in force (amended by D24, D25, D28) | §2 Research universe |
+| D19 | 2026-10-16 | Freeze v1: everything up to classification | in force (amended by D24, D25, D27, D28, D29, D30, D31, D32, D34, D37) | §1 System |
+| D20 | 2026-10-16 | A PRD per module, in Markdown, viewable from the design page | in force (amended by D242) | §15 Working rules |
+| D21 | 2026-10-16 | Any change refreshes everything, by one command | superseded by D22 | Working rules |
+| D22 | 2026-10-16 | Refreshing is a reasoning pass; the script only checks | in force (amended by D25, D26, D29, D36, D356) | §15 Working rules |
+| D23 | 2026-10-16 | Tables without XBRL tags are read by the model | in force (amended by D24, D25, D27) | §6 Extraction |
+| D24 | 2026-10-16 | Financial reports are not streamed; pull mode reads them when a thesis needs them | superseded by D28 | Universe |
+| D25 | 2026-10-16 | One extraction module, read by category from a senior hedge fund analyst's view | in force (amended by D26, D27, D33, D35, D41, D42, D59, D264) | §6 Extraction |
+| D26 | 2026-10-18 | The views database is the system's core | in force (amended by D33, D38) | §7 Thesis library |
+| D27 | 2026-10-18 | Extraction reads the whole item by category, then matches it against the drivers | in force (amended by D32, D33, D39, D351) | §6 Extraction |
+| D28 | 2026-10-18 | Financial reports stream again | in force | §1 System |
+| D29 | 2026-10-18 | A final verdict before any view is closed | superseded by D41, D54, D356 | Closing and pull mode |
+| D30 | 2026-10-18 | Conflicting sources and the consensus | in force (amended by D38, D45, D51, D260, D263) | §7 Thesis library |
+| D31 | 2026-10-18 | Order, one writer, and the link between the levels | in force (amended by D38, D39, D42, D45, D46, D55, D57, D251, D264) | §1 System |
+| D32 | 2026-10-18 | Table data comes one release at a time; XBRL is not pushed again | in force | §3 Classification |
+| D33 | 2026-10-18 | Extraction only reads; matching and writing belong to the views database | in force (amended by D39, D42) | §6 Extraction |
+| D34 | 2026-10-18 | An SEC filing is dated by the day SEC makes it public | in force | §1 System |
+| D35 | 2026-10-18 | Extraction v1 is final | superseded by D37, D274 | Extraction |
+| D36 | 2026-10-18 | One word per concept in the input and extraction modules | in force (amended by D41, D47, D52, D54, D57, D163) | §15 Working rules |
+| D37 | 2026-10-18 | Freeze v1 of the input side and extraction | in force (amended by D41, D51, D58, D59) | §1 System |
+| D38 | 2026-10-20 | The views database rebuilt: a view is a question with a five-rung ladder and a due date | in force (amended by D42, D45, D46, D51, D54, D57, D58, D185, D186, D198, D260) | §7 Thesis library |
+| D39 | 2026-10-20 | Writing into the views database: match by where a candidate belongs, then one round of re-judging | in force (amended by D42, D44, D45, D46, D51, D63, D155, D169, D202, D204) | §7 Thesis library |
+| D40 | 2026-10-20 | The matching judge: a general model first, every match recorded, humans label, a small model later | in force (amended by D42, D44, D45, D46, D169, D190) | §7 Thesis library |
+| D41 | 2026-10-20 | What the rebuilt views database changes outside it | in force (amended by D42, D45, D51, D54, D190, D191, D195, D356) | §4 Config |
+| D42 | 2026-10-20 | Extraction hands over evidence and candidate views as two things; evidence is matched to what its view alre… | in force (amended by D45, D58, D59, D198, D202, D204, D207, D264, D360, D364) | §6 Extraction |
+| D43 | 2026-10-20 | A second stable version of the design is sealed | in force (amended by D44, D50, D61) | §15 Working rules |
+| D44 | 2026-10-20 | Matching is the model's alone: no key matched by code | superseded by D45, D58, D153, D155, D169, D197 | Thesis library |
+| D45 | 2026-10-20 | Only what Alex said or decided is decided; Claude's proposals are listed apart | in force (amended by D46, D54) | §15 Working rules |
+| D46 | 2026-10-20 | Alex decides Claude's views proposals one by one | in force (amended by D51, D54, D58, D63, D155, D169, D185, D191, D197, D198, D202, D204) | §7 Thesis library |
+| D47 | 2026-10-20 | End-to-end consistency from the universe to the views database | in force (amended by D52, D163, D169, D190) | §7 Thesis library |
+| D48 | 2026-10-20 | The views database, with match labelling, is frozen as version 1 | in force (amended by D51, D54, D55, D56, D57, D58) | §1 System |
+| D49 | 2026-10-20 | Code review of the frozen views database: contradictions fixed, no new mechanism | record | Thesis library |
+| D50 | 2026-10-20 | Clean-up after the freeze | record | Operations |
+| D51 | 2026-10-21 | Claude's open items settled: one re-judging rule, dependencies chosen in the matching call, no consensus | in force (amended by D54, D58, D63, D190, D191, D195, D368) | §7 Thesis library |
+| D52 | 2026-10-21 | Plain, consistent wording across the design page and PRDs | in force (amended by D163) | §15 Working rules |
+| D53 | 2026-10-21 | A full line-by-line read of the page and PRDs, in rounds | record | Working rules |
+| D54 | 2026-10-21 | A view's state is frozen at its due date; pull mode runs at the end of the day | in force (amended by D356) | §7 Thesis library |
+| D55 | 2026-10-22 | The final verdict checked against the rebuilt views database; a removed object's views stop updating | in force (amended by D57, D356) | §7 Thesis library |
+| D56 | 2026-10-22 | A full sweep before sealing v12 | in force (amended by D57) | §1 System |
+| D57 | 2026-10-22 | A view has one switch: open or closed | in force (amended by D58) | §7 Thesis library |
+| D58 | 2026-10-22 | A deep review before freezing everything but pull mode | in force (amended by D59, D60, D185) | §1 System |
+| D59 | 2026-10-22 | How a candidate view names its object; a view from Alex's own memo | in force (amended by D60) | §6 Extraction |
+| D60 | 2026-10-22 | The deep review again, after D59 | in force | §6 Extraction |
+| D61 | 2026-10-22 | Clean-up: a code review, bloat removed, superseded seals out of the tree | record | Operations |
+| D62 | 2026-10-23 | The POC build: Alex's choices, in his words | in force (amended by D217, D234, D351) | §1 System |
+| D63 | 2026-10-24 | Re-judging once a day; the first window ends on 2026-08-15 | in force | §1 System |
+| D64 | 2026-10-24 | Hide the mock header's date label | in force | [frontend](DECISIONS-frontend.md) |
+| D65 | 2026-10-24 | Remove black focus outlines from the mock | in force (amended by D313, D314) | [frontend](DECISIONS-frontend.md) |
+| D66 | 2026-10-24 | Remove the canvas hint and shorten the search field | in force (amended by D277, D313) | [frontend](DECISIONS-frontend.md) |
+| D67 | 2026-10-24 | Simplify the view card headers | in force | [frontend](DECISIONS-frontend.md) |
+| D68 | 2026-10-24 | Put the current judgment in the card header | in force (amended by D285, D287) | [frontend](DECISIONS-frontend.md) |
+| D69 | 2026-10-24 | Use matching score circles on charts and state pills | superseded by D70 | Frontend |
+| D70 | 2026-10-24 | Simplify the score display after visual review | in force (amended by D71, D285, D287) | [frontend](DECISIONS-frontend.md) |
+| D71 | 2026-10-24 | Use black for Yes and white for No | in force (amended by D335, D336) | [frontend](DECISIONS-frontend.md) |
+| D72 | 2026-10-24 | Remove redundant card footer tags | in force (amended by D124) | [frontend](DECISIONS-frontend.md) |
+| D73 | 2026-10-24 | Use one title style across canvas cards | in force | [frontend](DECISIONS-frontend.md) |
+| D74 | 2026-10-24 | Remove the change-summary line from view cards | in force | [frontend](DECISIONS-frontend.md) |
+| D75 | 2026-10-24 | Give daily evidence volume its own chart band | in force (amended by D80, D117, D124) | [frontend](DECISIONS-frontend.md) |
+| D76 | 2026-10-24 | Hivemind is a database with a search engine on top; the caller chooses | in force (amended by D78, D91, D112, D132) | §12 Idea API and service |
+| D77 | 2026-10-24 | Label the state chart | in force (amended by D79, D117, D118) | [frontend](DECISIONS-frontend.md) |
+| D78 | 2026-10-24 | Name the user input Idea and stored questions Thesis | in force | [frontend](DECISIONS-frontend.md) |
+| D79 | 2026-10-24 | Align plot headings to the number column | in force | [frontend](DECISIONS-frontend.md) |
+| D80 | 2026-10-24 | Give the due date a separate card footer | retired (D124) | Frontend |
+| D81 | 2026-10-24 | Simplify the thesis detail panel | in force (amended by D88, D93, D94, D97, D116, D119, D120, D275) | [frontend](DECISIONS-frontend.md) |
+| D82 | 2026-10-24 | Use the same font for dates and labels | in force | [frontend](DECISIONS-frontend.md) |
+| D83 | 2026-10-24 | Center the fan-out and animate connected edges on hover | in force (amended by D84, D87, D137, D295, D316, D138, D290) | [frontend](DECISIONS-frontend.md) |
+| D84 | 2026-10-24 | Use right-angle connectors | in force (amended by D137) | [frontend](DECISIONS-frontend.md) |
+| D85 | 2026-10-24 | Thin connectors with directional arrowheads | in force (amended by D293, D323) | [frontend](DECISIONS-frontend.md) |
+| D86 | 2026-10-24 | Replace Idea and Thesis header icons | in force | [frontend](DECISIONS-frontend.md) |
+| D87 | 2026-10-24 | Hover highlights only the path into a card | in force | [frontend](DECISIONS-frontend.md) |
+| D88 | 2026-10-24 | Refine detail controls, dates and source presentation | in force (amended by D94, D100, D107, D108, D109, D275) | [frontend](DECISIONS-frontend.md) |
+| D89 | 2026-10-24 | Give the detail panel a clear visual hierarchy | in force (amended by D92, D103, D94, D95, D96, D98) | [frontend](DECISIONS-frontend.md) |
+| D91 | 2026-10-24 | An idea the library holds no view on gets null | in force (amended by D132) | §12 Idea API and service |
+| D92 | 2026-10-24 | Keep the existing monochrome theme | in force (amended by D284) | [frontend](DECISIONS-frontend.md) |
+| D93 | 2026-10-24 | Simplify detail sections and move the due date | in force (amended by D95, D101) | [frontend](DECISIONS-frontend.md) |
+| D94 | 2026-10-24 | Merge the current assessment and its reasoning | in force (amended by D96, D98) | [frontend](DECISIONS-frontend.md) |
+| D95 | 2026-10-24 | Keep one divider at each section boundary | in force | [frontend](DECISIONS-frontend.md) |
+| D96 | 2026-10-24 | Present the current assessment as a quote | in force (amended by D98) | [frontend](DECISIONS-frontend.md) |
+| D97 | 2026-10-24 | Make the lower detail sections consistent accordions | in force (amended by D102, D275) | [frontend](DECISIONS-frontend.md) |
+| D98 | 2026-10-24 | Highlight the assessment row with a quote accent | in force | [frontend](DECISIONS-frontend.md) |
+| D99 | 2026-10-24 | Put the related-thesis arrow before the title | retired (D275) | Frontend |
+| D100 | 2026-10-24 | Animate all detail expansions consistently | in force (amended by D105) | [frontend](DECISIONS-frontend.md) |
+| D101 | 2026-10-24 | Separate the header dates with vertical bars | in force | [frontend](DECISIONS-frontend.md) |
+| D102 | 2026-10-24 | Shorten the evidence heading and use solid disclosure triangles | in force | [frontend](DECISIONS-frontend.md) |
+| D103 | 2026-10-24 | Align detail labels and values at one readable size | in force (amended by D114) | [frontend](DECISIONS-frontend.md) |
+| D104 | 2026-10-24 | A theme holds a document only if it can move a thesis; Commerce anti-dumping notices do not | in force | §2 Research universe |
+| D105 | 2026-10-24 | Animate disclosure content without moving its heading | in force | [frontend](DECISIONS-frontend.md) |
+| D106 | 2026-10-24 | Reserve scrollbar space without a track divider | in force | [frontend](DECISIONS-frontend.md) |
+| D107 | 2026-10-24 | Put expanded evidence dates after its sources | in force (amended by D108, D109) | [frontend](DECISIONS-frontend.md) |
+| D108 | 2026-10-24 | Combine source, type and date on one attribution line | in force (amended by D109) | [frontend](DECISIONS-frontend.md) |
+| D109 | 2026-10-24 | Show the source in collapsed evidence rows too | in force | [frontend](DECISIONS-frontend.md) |
+| D110 | 2026-10-24 | Show thesis status in a pill | in force | [frontend](DECISIONS-frontend.md) |
+| D111 | 2026-10-24 | Use an in-page evidence type menu | in force | [frontend](DECISIONS-frontend.md) |
+| D112 | 2026-10-24 | The service runs in Docker; the FE asks it to read an idea; the user's thesis is the idea card | in force (amended by D134, D135, D280, D290, D335) | §12 Idea API and service |
+| D113 | 2026-10-24 | Add the colon to canvas due dates | retired (D124) | Frontend |
+| D114 | 2026-10-24 | Present score definitions as a table | in force | [frontend](DECISIONS-frontend.md) |
+| D115 | 2026-10-24 | Use a uniform Score change heading | in force | [frontend](DECISIONS-frontend.md) |
+| D116 | 2026-10-24 | Simplify history navigation to two right-aligned buttons | in force (amended by D120) | [frontend](DECISIONS-frontend.md) |
+| D117 | 2026-10-24 | Strengthen chart headings and separate the two plots | in force (amended by D118, D124) | [frontend](DECISIONS-frontend.md) |
+| D118 | 2026-10-24 | Keep canvas chart subtitles smaller than detail headings | in force | [frontend](DECISIONS-frontend.md) |
+| D119 | 2026-10-24 | Inspect and anchor history by date | in force (amended by D120, D121, D122) | [frontend](DECISIONS-frontend.md) |
+| D120 | 2026-10-24 | Remove the History hover label and navigation buttons | in force | [frontend](DECISIONS-frontend.md) |
+| D121 | 2026-10-24 | Make quiet-day History selection explicit | in force (amended by D122) | [frontend](DECISIONS-frontend.md) |
+| D122 | 2026-10-24 | Lock clicked History anchors and keep endpoint dots whole | in force | [frontend](DECISIONS-frontend.md) |
+| D123 | 2026-10-24 | Remove the current-date dashed line from canvas cards | in force | [frontend](DECISIONS-frontend.md) |
+| D124 | 2026-10-24 | Remove canvas card footers | in force | [frontend](DECISIONS-frontend.md) |
+| D125 | 2026-10-24 | Center the initial graph in the usable canvas | in force (amended by D315, D316, D328) | [frontend](DECISIONS-frontend.md) |
+| D126 | 2026-10-24 | Add the black TrueNorth mark beside Hivemind | in force | [frontend](DECISIONS-frontend.md) |
+| D127 | 2026-10-24 | Balance the Hivemind wordmark with its logo | in force | [frontend](DECISIONS-frontend.md) |
+| D128 | 2026-10-24 | Enlarge and center canvas navigation controls | in force | [frontend](DECISIONS-frontend.md) |
+| D129 | 2026-10-24 | Keep only Full and Last 30 days | in force | [frontend](DECISIONS-frontend.md) |
+| D130 | 2026-10-24 | Modular Thesis UI with a versioned data contract | in force (amended by D275) | [frontend](DECISIONS-frontend.md) |
+| D131 | 2026-10-24 | Remove native hover text from card UI | in force | [frontend](DECISIONS-frontend.md) |
+| D132 | 2026-10-24 | Probing the idea route: aliases from the universe, Chinese text terms, a floor under null | in force | §12 Idea API and service |
+| D133 | 2026-10-24 | Everything in data and code is English from now on, natively | in force (amended by D152, D163) | §1 System |
+| D134 | 2026-10-24 | The idea is read by an agent that calls Hivemind, the way a fresh Luna with the MCP would | in force (amended by D135) | §12 Idea API and service |
+| D135 | 2026-10-24 | The service does the looking up; the model is asked twice | in force (amended by D145, D280, D290, D335) | §12 Idea API and service |
+| D136 | 2026-10-24 | Slide the Thesis detail drawer open and closed | in force | [frontend](DECISIONS-frontend.md) |
+| D137 | 2026-10-24 | Keep card connectors separate and attached to their cards | in force (amended by D295) | [frontend](DECISIONS-frontend.md) |
+| D138 | 2026-10-24 | Idea cards share the Thesis header and connect every mapped thesis directly | in force (amended by D290, D307) | [frontend](DECISIONS-frontend.md) |
+| D139 | 2026-10-24 | Evaluate overarching main theses before building the next layer | record | Thesis library |
+| D140 | 2026-10-24 | Validate only two main-thesis update paths | record | Thesis library |
+| D141 | 2026-10-24 | Validate code-owned sources and current evidence before summaries | record | Thesis library |
+| D142 | 2026-10-24 | Test organization inside ingestion, not after extraction | record | Thesis library |
+| D143 | 2026-10-24 | Test one owner for ingestion relationships | record | Thesis library |
+| D144 | 2026-10-25 | Research continuing subject identity inside ingestion | record | Thesis library |
+| D145 | 2026-10-25 | The idea card keeps the full mapping contract | in force (amended by D280, D289, D290, D335) | §12 Idea API and service |
+| D146 | 2026-10-25 | The idea gold set: twenty ideas judged as an analyst, authored by Claude, sealed | in force | §11 The ruler and measurement |
+| D147 | 2026-10-25 | Continue grouping POCs with direct subject identity results | record | Thesis library |
+| D148 | 2026-10-25 | Check grouping consistency by research meaning, not identical group counts | in force (amended by D149) | §11 The ruler and measurement |
+| D149 | 2026-10-25 | Group association is required during extraction | in force (amended by D165, D166, D211, D257) | §7 Thesis library |
+| D150 | 2026-10-25 | Test a source-based membership explanation within extraction | record | Thesis library |
+| D151 | 2026-10-25 | Before the NVDA rerun: the two sessions merged, two prompt rules corrected and proven on stored requests | record | Extraction |
+| D152 | 2026-10-25 | The rerun runs in Chinese first; grouping passes to Claude | superseded by D163, D165 | Operations |
+| D153 | 2026-10-25 | Keyed views: the structural correction is the direction; the week run is read first | superseded by D155, D164 | Thesis library |
+| D154 | 2026-10-25 | The keyed view contract as built and measured on the bootstrap documents (T1–T2d) | in force (amended by D155, D164, D167, D197, D258) | §7 Thesis library |
+| D155 | 2026-10-25 | 清单是参考，先修身份，再按顺序验证归组 | in force (amended by D164, D167, D197, D248, D258) | §7 Thesis library |
+| D156 | 2026-10-25 | 先校正归组验收，再评价模型方案 | record | Ruler and measurement |
+| D157 | 2026-10-25 | 用当前中文管线验证 Ohio 两篇连续报道 | record | Thesis library |
+| D158 | 2026-10-25 | 追查 Ohio 入口并在同一归组流程内对照 | in force | §6 Extraction |
+| D159 | 2026-10-25 | 从抽取到入库重放，先修读取顺序，单独检验身份所需来源 | superseded by D211, D251, D264 | Extraction |
+| D160 | 2026-10-25 | 按原意检验三篇连续抽取，不用错误合并掩盖提问失真 | record | Extraction |
+| D161 | 2026-10-25 | 继续修抽取，把保留论据与新开问题分开 | record | Extraction |
+| D162 | 2026-10-25 | 先验证分两步抽取的假设 | record | Extraction |
+| D163 | 2026-10-25 | English for the maintained project | in force (amended by D368) | §1 System |
+| D164 | 2026-10-25 | Claude builds the English library on Codex's plan; the watch list is a reference, not a gate | in force (amended by D359) | §7 Thesis library |
+| D165 | 2026-10-25 | Research groups enter the default pipeline; a group is an ongoing matter, a company's own financial lines c… | in force (amended by D166, D211, D257) | §7 Thesis library |
+| D166 | 2026-10-25 | Group identity and membership by names, in code | in force (amended by D211, D257) | §7 Thesis library |
+| D167 | 2026-10-25 | No hard-coded identity for aggregates; the judge gets the evidence, the vocabulary gets the missing measure… | in force (amended by D168, D197, D202) | §7 Thesis library |
+| D168 | 2026-10-25 | Four corrections found by the D167 measurement: one repeat rule, one replace definition, one succession rul… | in force (amended by D202, D204) | §7 Thesis library |
+| D169 | 2026-10-25 | Jev is the default matching engine | in force (amended by D189, D190, D201, D359) | §7 Thesis library |
+| D170 | 2026-10-25 | Phase close-out: what the code review removed, fixed and left | record | Operations |
+| D171 | 2026-10-25 | Review and free proofs for the day-batch acceleration proposal | record | Operations |
+| D172 | 2026-10-25 | Build the isolated ordered-concurrency POC | in force (amended by D181, D183) | §14 Operations |
+| D173 | 2026-10-25 | Isolated provider smoke before a larger concurrency test | record | Operations |
+| D174 | 2026-10-25 | Three-document end-to-end concurrency diagnostic | record | Operations |
+| D175 | 2026-10-25 | Publish sequential cleanup separately from experiments | record | Operations |
+| D176 | 2026-10-25 | Judge business-question coverage, not mandatory project cards | superseded by D243, D261 | Ruler and measurement |
+| D177 | 2026-10-25 | Modify and test NAVER admission on one frozen context | record | Extraction |
+| D178 | 2026-10-25 | Resume the isolated acceleration POC with the tested T6 role | record | Operations |
+| D179 | 2026-10-25 | Roll back the unrelated extraction prerequisite | record | Operations |
+| D180 | 2026-10-25 | Execute the existing implementation plan on the complete busy day | record | Operations |
+| D181 | 2026-10-26 | The parallel day, measured end to end on live APIs, and promoted as an opt-in replay mode | in force (amended by D183) | §4 Config |
+| D182 | 2026-10-26 | The parallel day over fifteen consecutive days, against the serial path, with no network | record | Operations |
+| D183 | 2026-10-26 | The replay runs the parallel day by default | in force | §4 Config |
+| D184 | 2026-10-26 | A candidate thesis opens for one of four reasons, stated in the answer | in force (amended by D185, D191, D210, D211, D236, D264) | §6 Extraction |
+| D185 | 2026-10-26 | A binding obligation is due within 18 months and is exempt from the next-year rule | in force (amended by D210, D236) | §6 Extraction |
+| D186 | 2026-10-26 | Asset-thesis rungs describe business outcomes; the favourable end is registered per thesis | in force (amended by D368) | §6 Extraction |
+| D187 | 2026-10-26 | A company's own quantity sits under that company's object, private companies included | in force (amended by D191, D368) | §7 Thesis library |
+| D188 | 2026-10-26 | The extraction gold: twenty cases labelled by the assistant this round, human review later | superseded by D243, D250, D261, D262 | Ruler and measurement |
+| D189 | 2026-10-26 | poc-v25 is the replay default; the trace review names the next mechanisms | record | Extraction |
+| D190 | 2026-10-26 | The collision judge: Jev for identity, the generative model for the analyst's question when a question may… | in force (amended by D196, D197, D258) | §4 Config |
+| D191 | 2026-10-26 | Theme theses reach every company; no named dependant is required to open one | in force (amended by D195, D368) | §7 Thesis library |
+| D192 | 2026-10-26 | Role v13 (tests instead of lists) fails its probe; wording is exhausted as a lever | record | Extraction |
+| D193 | 2026-10-26 | Extraction coverage is at the model's steady state; the phase closes on v12 with the collision judge | in force (amended by D199, D200) | §6 Extraction |
+| D194 | 2026-10-26 | The six persistent misses read against the transcripts: one gold key removed, five stand | record | Ruler and measurement |
+| D195 | 2026-10-26 | The theme block: every asset thesis is judged with the open theme theses in view, and a changed theme concl… | in force | §7 Thesis library |
+| D196 | 2026-10-27 | `poc-v29` (the theme block) is the replay default | record | Thesis library |
+| D197 | 2026-10-27 | A shared quantity is one thesis per theme, measure and period; its wording is not identity | in force | §7 Thesis library |
+| D198 | 2026-10-27 | A judgement reads the evidence in view, not everything in force | in force | §7 Thesis library |
+| D199 | 2026-10-27 | One extraction call stays; its gate rule becomes decidable and the empty-answer exit goes (v16, poc-v32) | in force (amended by D200) | §6 Extraction |
+| D200 | 2026-10-27 | Extraction v18 (`poc-v34`) is the production default | superseded by D210 | Extraction |
+| D201 | 2026-10-27 | Steps 3 and 4: Jev gives opinions only, the library keeps sources and research arguments, a new question ne… | in force (amended by D202, D204) | §7 Thesis library |
+| D202 | 2026-10-27 | The writer retires nothing on a matching label: a replacement is recorded as a revision and both pieces sta… | in force (amended by D203) | §7 Thesis library |
+| D203 | 2026-10-28 | A statement day is an ISO day or unknown; the writer never fills it with the publication day | in force | §6 Extraction |
+| D204 | 2026-10-28 | A repeat is stored as its own source record; the merge becomes a labelled relation | in force (amended by D248) | §7 Thesis library |
+| D205 | 2026-10-28 | The judging call's output budget is 16,000 tokens | in force | §7 Thesis library |
+| D206 | 2026-10-28 | Every open theme thesis is shown to every item's extraction (extraction v19, `poc-v35`) | superseded by D211, D264 | Extraction |
+| D207 | 2026-10-28 | Statements are filed by a separate placement call under the one-home rule; an unfiled statement is kept (ex… | in force (amended by D209, D254, D259, D264, D265, D360, D364) | §6 Extraction |
+| D208 | 2026-10-28 | The thesis tree: root quantities, a seeded driver layer per company, shared macro themes with declared chan… | in force (amended by D209, D253, D273, D368) | §7 Thesis library |
+| D209 | 2026-10-28 | A statement no open question takes is dropped at extraction; evaluation reads the dropped record, not a sid… | in force (amended by D264) | §6 Extraction |
+| D210 | 2026-10-28 | A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`) | in force (amended by D236, D238, D239) | §6 Extraction |
+| D211 | 2026-10-28 | The extraction request shows no thesis and no group: one sample per item, filing at the turn (role-v22, `po… | superseded by D251, D264 | Extraction |
+| D212 | 2026-10-28 | Measure retained content from source through final writing before another quality change | record | Ruler and measurement |
+| D213 | 2026-10-28 | Trace the largest losses and restore a trustworthy preflight before comparisons | record | Ruler and measurement |
+| D214 | 2026-10-28 | Reconcile the analyst standard before interpreting scores | in force (amended by D229, D244, D261) | §11 The ruler and measurement |
+| D215 | 2026-10-29 | Record Alex's eleven analyst judgements without rewriting frozen data | record | Ruler and measurement |
+| D216 | 2026-10-29 | Clarify that the FY2028 EPS forecast may be retained | in force | §11 The ruler and measurement |
+| D217 | 2026-10-29 | Haiku as the target model; improve extraction pipeline steps 1–4 against the analyst's standard | superseded by D234 | Extraction |
+| D218 | 2026-10-29 | Continue independently after the failed development acceptance | in force (amended by D228, D242) | §6 Extraction |
+| D219 | 2026-10-29 | 订立分析师金标准 v4，分开投资价值、原意和记录错误 | superseded by D220, D229 | Ruler and measurement |
+| D220 | 2026-10-29 | Judge necessary meaning by its investment consequence | in force (amended by D233) | §11 The ruler and measurement |
+| D221 | 2026-10-29 | Judge evidence by the conclusion it can support, then test one action-rule change | in force | §11 The ruler and measurement |
+| D222 | 2026-10-29 | Restructure the fourth-step research prompt against existing decisions, then compare without changing gold | record | Thesis library |
+| D223 | 2026-10-29 | Test a single research note with references instead of repeated admission narratives | record | Thesis library |
+| D224 | 2026-10-29 | Separate model capability from further prompt changes in the research experiment | record | Thesis library |
+| D225 | 2026-10-29 | Correct the measurement and compare both models on the same prompt change | record | Ruler and measurement |
+| D226 | 2026-10-29 | Focus on Haiku and judge useful research reasoning with evidence-relative strength | in force (amended by D234) | §11 The ruler and measurement |
+| D227 | 2026-10-29 | Restore investment relevance without tightening the gold | record | Thesis library |
+| D228 | 2026-10-29 | Put both existing analyst standards at the decision to work; stop for handoff | in force | §15 Working rules |
+| D229 | 2026-10-29 | The analyst standard for extraction is signed off and does not drift; measure Haiku against it | superseded by D243, D261 | Ruler and measurement |
+| D230 | 2026-10-29 | Haiku's output cap is 16k tokens; its thinking shares the cap with the answer | retired (D234) | Extraction |
+| D231 | 2026-10-29 | The Singapore case is optional evidence, no longer excluded | in force | §11 The ruler and measurement |
+| D232 | 2026-10-29 | The ruler checked against the raw answers; reference v2; four one-sentence prompt changes work on their pages | record | Ruler and measurement |
+| D233 | 2026-10-29 | "This year" written as the company's fiscal year is correct | in force | §11 The ruler and measurement |
+| D234 | 2026-10-29 | Haiku is parked; extraction work continues on gpt-6-luna | in force | §6 Extraction |
+| D235 | 2026-10-29 | gpt-6-luna one-sentence arms: three changes work, three classes go to Alex | record | Extraction |
+| D236 | 2026-10-29 | Three proposals approved; every change stays general (a hedge-fund brain, not an NVIDIA rule) | in force (amended by D246, D248, D266) | §6 Extraction |
+| D237 | 2026-10-29 | The extraction prompt is a general hedge-fund brain: scrub it, then measure the whole bench | in force | §6 Extraction |
+| D238 | 2026-10-29 | Extraction prompt work moves to a direct-read loop; role-v29 is the loop's current request | in force (amended by D239, D241, D244) | §15 Working rules |
+| D239 | 2026-10-29 | role-v29 (`poc-v45`) is the extraction request; the bench loop stops | superseded by D245 | Extraction |
+| D240 | 2026-10-29 | A named party's action without an amount is kept; a reject rule never removes what the standard keeps | in force | §11 The ruler and measurement |
+| D241 | 2026-10-29 | One unified definition of the ledger's types, question opening and evidence levels, with a traced golden se… | in force (amended by D243, D261) | §11 The ruler and measurement |
+| D242 | 2026-10-29 | The standard becomes a web page, the extraction step's PRD; AGENTS.md and the README are cleaned and carry… | in force (amended by D243) | §11 The ruler and measurement |
+| D243 | 2026-10-29 | The extraction standard is signed: proposal 5 stricter, the other eleven at their leans; lean cautious, cat… | in force (amended by D248, D250, D261) | §11 The ruler and measurement |
+| D244 | 2026-10-29 | Claude sets the dev/test split; scores are leads and Claude reads the traces every time; first the role-v29… | in force (amended by D261) | §11 The ruler and measurement |
+| D245 | 2026-10-30 | role-v42 (`poc-v58`) is the extraction request; its must-not questions on small release dates are the next… | superseded by D246 | Extraction |
+| D246 | 2026-10-30 | role-v51 (`poc-v67`) is the extraction request | superseded by D247 | Extraction |
+| D247 | 2026-10-30 | role-v53 (`poc-v69`) is the extraction request: the attribution fields are defined in the schema | superseded by D265 | Extraction |
+| D248 | 2026-10-30 | What counts as one question and one piece of evidence: seven boundaries, chosen one by one | in force (amended by D257, D258, D368) | §6 Extraction |
+| D249 | 2026-10-30 | A test the model applies to each statement is a check at the end of the same request; role-v63 (`poc-v79`)… | in force (amended by D265, D274) | §6 Extraction |
+| D250 | 2026-10-31 | Four evidence boundaries and the counting unit settled; the ruler is fixed before any further measurement (… | in force (amended by D261) | §11 The ruler and measurement |
+| D251 | 2026-10-31 | The extraction request may read the open questions as a daily snapshot (architecture under test) | in force (amended by D264) | §1 System |
+| D252 | 2026-10-31 | The extraction prompt teaches what noise looks like, with general paired counter-examples; useful theses an… | in force | §6 Extraction |
+| D253 | 2026-10-31 | D208's first step is built: seed questions for a covered company, written before the run, as homes for evid… | in force (amended by D368) | §7 Thesis library |
+| D254 | 2026-11-01 | Placement: a question's code-written 'takes' line is the one rule for its file; D207's "company-wide figure… | in force (amended by D259, D264, D268, D273, D274) | §6 Extraction |
+| D255 | 2026-11-01 | The extraction's one-line summary names the matter the statement belongs to (the next arm after D254's) | superseded by D256 | Extraction |
+| D256 | 2026-11-01 | D255's sentence refuted by its proof; the mechanism is the undefined `links` field. One decider with the ar… | superseded by D264 | Extraction |
+| D257 | 2026-11-01 | A declaration that is a stored group under other names gives the group those names (D166, the alias half);… | in force | §7 Thesis library |
+| D258 | 2026-11-02 | Question identity brought in line with D248: a part of an open question is filed under it; `event` and `pol… | in force (amended by D354) | §7 Thesis library |
+| D259 | 2026-11-02 | The takes line takes the evidence that bears on a question's answer, not only its own figures: D254's "dire… | in force (amended by D265, D273, D274) | §6 Extraction |
+| D260 | 2026-11-02 | A judgement is a forecast against a reference: the rung the evidence in force makes most likely, judged aga… | in force (amended by D263) | §7 Thesis library |
+| D261 | 2026-11-02 | A ruler or gold that is built and reviewed is never changed again | in force | §11 The ruler and measurement |
+| D262 | 2026-11-02 | The judgement ruler (D3) and its gold are fixed: the gold is reader B's answers; frozen at sha256 636c056d1… | in force | §11 The ruler and measurement |
+| D263 | 2026-11-02 | The judge is written to the frozen gold's own reasoning (judging-v7, poc-v91); a gap to the gold is closed… | in force (amended by D354, D359) | §7 Thesis library |
+| D264 | 2026-11-02 | The extraction reads the day's open questions with their takes lines and files the statements itself (extra… | in force (amended by D265, D274, D359) | §6 Extraction |
+| D265 | 2026-11-02 | Extraction v72 / poc-v92 is the version: the default configuration, the base every later change builds on,… | in force (amended by D267, D272, D274, D359, D366, D364) | §6 Extraction |
+| D266 | 2026-11-02 | Three quick fixes on the v72 base, each proved on stored data in minutes, put together as poc-v94 and run o… | in force | §6 Extraction |
+| D267 | 2026-11-02 | poc-v94 is the default; no further three-draw runs for now; the extraction's remaining failures are read fr… | superseded by D272 | Extraction |
+| D268 | 2026-11-02 | The first prompt audit's six fixes, each a contradiction or a missing example in the request, built as extr… | in force (amended by D274, D359) | §6 Extraction |
+| D269 | 2026-11-03 | The second prompt audit, on the v95 draw: the one large class left is a precedence contradiction; the sente… | record | Extraction |
+| D270 | 2026-11-03 | The structural fix built three ways (v78, v79, v80): the keep decision as closed-set fields the model fills… | record | Extraction |
+| D271 | 2026-11-03 | The deep-review fixes on the v94 request: extraction v74d (`poc-v103`) is the candidate; proved on stored a… | record | Extraction |
+| D272 | 2026-11-03 | `poc-v103` (extraction v74d) is the default | superseded by D274 | Extraction |
+| D273 | 2026-11-03 | Second review of the extraction request: five misread sentences fixed in text (v74e), the filing structure… | record | Extraction |
+| D274 | 2026-11-03 | The extraction production prompt is frozen at v74i (`poc-v108`); the unadopted variants are retired | in force (amended by D359, D366) | §6 Extraction |
+| D275 | 2026-10-26 | Rebuild the frontend around the collected English library | in force (amended by D358) | [frontend](DECISIONS-frontend.md) |
+| D276 | 2026-10-26 | Sentence-case interface labels and bar-separated metadata | in force (amended by D327) | [frontend](DECISIONS-frontend.md) |
+| D277 | 2026-10-26 | Inline send control for Idea input | in force | [frontend](DECISIONS-frontend.md) |
+| D278 | 2026-10-26 | Inspect the returned Idea analysis | in force (amended by D280, D308, D311) | [frontend](DECISIONS-frontend.md) |
+| D279 | 2026-10-26 | Calculate and preview a composite-history Idea card | record | Idea and service |
+| D280 | 2026-10-26 | Whole-card analysis and an analyst-written default TLDR | in force (amended by D282) | §12 Idea API and service |
+| D281 | 2026-10-26 | Show actual Idea progress as a connected timeline | in force | §12 Idea API and service |
+| D282 | 2026-10-26 | Make the composite chart a default Idea requirement | in force (amended by D288, D289, D290) | §12 Idea API and service |
+| D283 | 2026-10-26 | Simplify the Idea score chart caption | in force (amended by D291) | [frontend](DECISIONS-frontend.md) |
+| D284 | 2026-10-26 | Plain blue inline citations | in force | [frontend](DECISIONS-frontend.md) |
+| D285 | 2026-10-26 | Put card scores beside their chart title | in force (amended by D286, D287) | [frontend](DECISIONS-frontend.md) |
+| D286 | 2026-10-26 | Put the score pill below the chart title | superseded by D287 | Frontend |
+| D287 | 2026-10-26 | Restore the score pill beside AI score | in force | [frontend](DECISIONS-frontend.md) |
+| D288 | 2026-10-26 | Model-returned impact percentages and weighted Idea history | in force (amended by D289, D290) | §12 Idea API and service |
+| D289 | 2026-10-26 | Let the model choose the weighted thesis set | in force | §12 Idea API and service |
+| D290 | 2026-10-26 | An Idea contains only its positively weighted theses | in force (amended by D335) | §12 Idea API and service |
+| D291 | 2026-10-26 | Display Idea confidence on a 0–100% scale | in force | §12 Idea API and service |
+| D292 | 2026-10-26 | Label and rank Idea thesis weights | in force (amended by D294) | [frontend](DECISIONS-frontend.md) |
+| D293 | 2026-10-26 | Slightly stronger default connectors | in force | [frontend](DECISIONS-frontend.md) |
+| D294 | 2026-10-26 | Remove the weight tooltip and align the icon | in force | [frontend](DECISIONS-frontend.md) |
+| D295 | 2026-10-26 | Increase default horizontal card spacing | in force | [frontend](DECISIONS-frontend.md) |
+| D296 | 2026-10-26 | Match chart typography and fit the Idea card to content | in force | [frontend](DECISIONS-frontend.md) |
+| D297 | 2026-10-26 | Confidence and creation date under the Idea detail title | in force | [frontend](DECISIONS-frontend.md) |
+| D298 | 2026-10-26 | Simplify the Idea analysis and structure thesis explanations | in force (amended by D299, D303) | [frontend](DECISIONS-frontend.md) |
+| D299 | 2026-10-26 | Replace the confidence table and paragraph with contextual help | in force (amended by D306) | [frontend](DECISIONS-frontend.md) |
+| D300 | 2026-10-26 | Refine explanation labels and popup placement | in force (amended by D301, D306) | [frontend](DECISIONS-frontend.md) |
+| D301 | 2026-10-26 | Restore section dividers and remove stacked spacing | in force | [frontend](DECISIONS-frontend.md) |
+| D302 | 2026-10-26 | Balance confidence help and centre its icon | retired (D306) | Frontend |
+| D303 | 2026-10-26 | Put the weight before the thesis title | in force | [frontend](DECISIONS-frontend.md) |
+| D304 | 2026-10-26 | Organise the reading trace into expandable steps | in force (amended by D310) | [frontend](DECISIONS-frontend.md) |
+| D305 | 2026-10-26 | Match weight badge height and optically align help | in force (amended by D306) | [frontend](DECISIONS-frontend.md) |
+| D306 | 2026-10-26 | Name the adopted-thesis section and remove its help | in force | [frontend](DECISIONS-frontend.md) |
+| D307 | 2026-10-26 | Give Idea and Thesis cards the same width | in force | [frontend](DECISIONS-frontend.md) |
+| D308 | 2026-10-26 | Give Idea details Overview, Trace and Response tabs | in force (amended by D310, D311) | [frontend](DECISIONS-frontend.md) |
+| D309 | 2026-10-26 | Remove search-count and mode subtitles | retired (D311) | Frontend |
+| D310 | 2026-10-26 | Prioritise reading steps in Trace | in force (amended by D311) | [frontend](DECISIONS-frontend.md) |
+| D311 | 2026-10-26 | Remove the Search trace UI | in force | [frontend](DECISIONS-frontend.md) |
+| D312 | 2026-10-26 | Clean up the frontend without changing behaviour | record | Frontend |
+| D313 | 2026-10-26 | Float and fold the Idea input | in force (amended by D314, D315, D316) | [frontend](DECISIONS-frontend.md) |
+| D314 | 2026-10-26 | Smaller white launcher without a border | in force | [frontend](DECISIONS-frontend.md) |
+| D315 | 2026-10-26 | Centre the generated Idea at readable size | in force (amended by D316, D328) | [frontend](DECISIONS-frontend.md) |
+| D316 | 2026-10-26 | Balance the whole tree horizontally | in force (amended by D328) | [frontend](DECISIONS-frontend.md) |
+| D317 | 2026-10-26 | Reveal the completed Idea tree in sequence | in force (amended by D320, D322, D328) | [frontend](DECISIONS-frontend.md) |
+| D318 | 2026-10-26 | Retain the current Idea across workspace tabs | in force | [frontend](DECISIONS-frontend.md) |
+| D319 | 2026-10-26 | Add an Idea confidence Trigger card | in force (amended by D321, D322, D323, D324, D326) | [frontend](DECISIONS-frontend.md) |
+| D320 | 2026-10-27 | Scan the thesis reveal from top to bottom | in force | [frontend](DECISIONS-frontend.md) |
+| D321 | 2026-10-27 | Move the Trigger to the left of the Idea | in force (amended by D322) | [frontend](DECISIONS-frontend.md) |
+| D322 | 2026-10-27 | Show the Trigger last and simplify its comparison control | in force (amended by D323) | [frontend](DECISIONS-frontend.md) |
+| D323 | 2026-10-27 | Trigger connectors have no directional arrowhead | in force | [frontend](DECISIONS-frontend.md) |
+| D324 | 2026-10-27 | Style AI confidence as a selectable Trigger metric | in force | [frontend](DECISIONS-frontend.md) |
+| D325 | 2026-10-27 | Use a bar slider handle and a metric value readout | in force (amended by D326) | [frontend](DECISIONS-frontend.md) |
+| D326 | 2026-10-27 | Separate the current-value marker from the round threshold handle | in force | [frontend](DECISIONS-frontend.md) |
+| D327 | 2026-10-27 | Rename the workspace navigation | in force | [frontend](DECISIONS-frontend.md) |
+| D328 | 2026-10-27 | Add the Action preview and real NVIDIA prices | in force (amended by D329, D330, D331, D332, D333) | [frontend](DECISIONS-frontend.md) |
+| D329 | 2026-10-27 | Remove the Action header badge | in force (amended by D331, D332) | [frontend](DECISIONS-frontend.md) |
+| D330 | 2026-10-27 | Simplify Action text and cancel unfinished allocation edits | in force | [frontend](DECISIONS-frontend.md) |
+| D331 | 2026-10-27 | Show Monitoring in the Action header | in force (amended by D332) | [frontend](DECISIONS-frontend.md) |
+| D332 | 2026-10-27 | Use a pulsing black Monitoring dot | in force | [frontend](DECISIONS-frontend.md) |
+| D333 | 2026-10-27 | Default the Action chart to one year | in force | [frontend](DECISIONS-frontend.md) |
+| D334 | 2026-10-27 | Clean up frontend component ownership | record | Frontend |
+| D335 | 2026-10-30 | Each adopted thesis offers only its own two endpoints; two-rung cards show their own Yes/No | in force | §12 Idea API and service |
+| D336 | 2026-10-30 | A yes/no ladder with named outcomes shows its outcome once | in force | [frontend](DECISIONS-frontend.md) |
+| D337 | 2026-10-27 | Create the Singapore Lightsail development server | record | Operations |
+| D338 | 2026-10-27 | Test single-call extraction stability by correcting the task and preserving the request | in force | §6 Extraction |
+| D339 | 2026-10-27 | Measure a source/route extraction POC against Luna and DeepSeek | record | Extraction |
+| D340 | 2026-10-27 | Specify the source stage and research routing/admission before more model runs | record | Extraction |
+| D341 | 2026-10-27 | Review routing traces as an analyst, preserving and combining the important information | record | Thesis library |
+| D342 | 2026-10-27 | Run the Vera case before settling Jev and routing order | record | Thesis library |
+| D343 | 2026-10-27 | Present pipeline inputs and outputs for review | record | System |
+| D344 | 2026-10-27 | Verify source extraction and database retrieval separately | record | Extraction |
+| D345 | 2026-10-27 | Implement and measure source fidelity and complete scoped retrieval | record | Extraction |
+| D346 | 2026-10-27 | Rebuild the extraction evaluation around complete investment meaning | record | Ruler and measurement |
+| D347 | 2026-10-27 | Test the frozen analyst extraction criteria and prompt | record | Extraction |
+| D348 | 2026-10-27 | Compare stronger instructions and code-filled word references | record | Extraction |
+| D349 | 2026-10-27 | Isolate full input/output demonstrations in the source experiment | record | Extraction |
+| D350 | 2026-10-27 | Audit actual source/output before drawing model-quality conclusions | record | Ruler and measurement |
+| D351 | 2026-10-27 | Clean the fed pages before the experiments; a later data pipeline owns the real feed | in force | §13 Data |
+| D352 | 2026-10-27 | TrueNorth event index backfilled by identity; the result is a measurement, not a replacement | in force | §13 Data |
+| D353 | 2026-11-03 | Clean the repository after the merge: experiment outputs and one-off scripts leave; documents and everythin… | record | Operations |
+| D354 | 2026-11-03 | Steps 3 and 4 (opening and matching questions, judging them) are frozen as `poc-v108` runs them, after thre… | in force (amended by D359) | §7 Thesis library |
+| D355 | 2026-11-04 | The filing topic closes without a change: filing is about 85% right; the remaining misses are recorded as k… | record | Current phase |
+| D356 | 2026-11-04 | Step 5: closing at the due day is pull mode's; no separate final verdict, no day-end re-judging, due days a… | in force | §1 System |
+| D357 | 2026-11-04 | Clean the repository of configurations and prompts nothing current names; the code paths of retired version… | record | Operations |
+| D358 | 2026-10-28 | The three-month run stops at 2026-08-28 and is sealed; evidence bloat is the next problem to solve | in force | §13 Data |
+| D359 | 2026-11-04 | The code builds only the frozen prompts (extraction v74i, judging-v7); old worktrees removed; the preflight… | in force (amended by D364, D365) | §6 Extraction |
+| D360 | 2026-11-04 | PRD 10: the one-home tie and split replace the second home (§5.2); the decision rule counts against luck an… | in force | §10 Current phase: filing that links facts the way an analyst does |
+| D361 | 2026-11-04 | After v74l's failed test: size what complete evidence is worth at the judgement before more extraction desi… | record | Current phase |
+| D362 | 2026-11-04 | The two narrow delivery fixes the complete-evidence test points to are piloted, one at a time, on their mot… | record | Current phase |
+| D363 | 2026-11-05 | At coverage start, the company's latest reported figures enter once from its own latest report; restatement… | in force | §10 Current phase: filing that links facts the way an analyst does |
+| D364 | 2026-11-05 | The coverage-start reading is built into the product; a figure several questions read is one record linked… | in force (amended by D365, D366) | §4 Config |
+| D365 | 2026-11-05 | The coverage-start reading is the third version with the repaired check; built into the product behind poc-… | in force (amended by D366) | §10 Current phase: filing that links facts the way an analyst does |
+| D366 | 2026-11-05 | `poc-v116` is the replay default; the branch is committed and opened for review | in force | §10 Current phase: filing that links facts the way an analyst does |
+| D367 | 2026-11-05 | Decisions and working rules consolidated: a register of what is in force, the log kept whole; README, AGENTS and the state page cleaned | in force | [this page, opening](#consolidation) |
+| D368 | 2026-11-05 | Alex's answers to the seven items left open by the consolidation | in force | §1, §6, §7, §8, §10, §11 |

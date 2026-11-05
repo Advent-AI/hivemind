@@ -1,87 +1,69 @@
-# POC pipeline: a minimal implementation of the design
+# POC pipeline: the implementation of the design
 
-Updated October 27, 2026. This is the working implementation overview. The original plan and detailed run history are preserved in the [historical snapshot](pipeline-plan-history-2026-10-25.zh.md). The original fifteen-task plan is `docs/superpowers/plans/2026-10-23-nvda-poc.md`; this shorter plan takes precedence where updated by recorded decisions. The [current state](../CURRENT_STATE.md) owns open defects and the next task.
+Updated November 5, 2026. This is the working implementation overview: what each stage does in code and where it is specified. The PRDs own what each module must do, [decisions](../DECISIONS.md) own what is decided, and the [current state](../CURRENT_STATE.md) owns open defects and the next task. The original plan and the run history up to October 25 are preserved in the [historical snapshot](pipeline-plan-history-2026-10-25.zh.md); the original fifteen-task plan is `docs/superpowers/plans/2026-10-23-nvda-poc.md`.
 
-## Current result
+## What runs
 
-Since 2026-11-05 the replay's default configuration is `poc/config/poc-v116.json` (D366): `poc-v108` (D274), the frozen production extraction prompt (extraction v74i on the one-decider architecture, D264; Jev matching with the collision judge, D190; judging-v7, D263), plus the coverage-start reading, which after `--seed` reads the company's latest earnings report once for each question and links the figures it keeps (D364, D365; PRD 05, "Coverage-start reading"). The replay prepares extraction requests 16 at a time (`scripts/replay.py --workers`, D183; 1 is the serial path) and closes due questions at the end of each day (D356). The two paragraphs below are history: they describe the service and the replay as they stood on `main` before that merge.
+The replay default is `poc/config/poc-v116.json` (D366): the frozen production extraction prompt with Jev matching and judging-v7 (`poc-v108`, D274), plus the coverage-start reading (D363–D365). The code builds only these versions and refuses a configuration that names another (D359).
 
-The English library (D163–D166) runs end to end on extraction v10 (`role-v10`, `categories-v10`). D169 makes Jev the default matching engine: `poc/config/poc-v23.json` (extraction v10, `matching.engine: "jev"`, `jev-1.14.0`) is the replay default; the generative matcher remains the configured alternative (`poc-v23-llm`). The separate Idea API uses `poc-v33-idea` under D290 and D335; its [contract](idea-card.md) owns discovery, adoption and weights. The measurement behind the matching default (build log rows 41–49, `poc/reports/2026-10-25-benchmark-v23/`): two arms on the same extraction over the seed, the week of July 24–31 and August 1–15, scored per state against golds read from the texts. Jev matching equals the generative call on evidence and candidates, groups far better (required members 35/38 against 18/28), and costs 45% less at 4.8 times the speed; its two weak states, replacement and succession, were root-caused and corrected in D168 (probes on the stored requests: wrong replacements 17 to 1, successions 0/3 to 3/3). Open, shared by both engines: the same figure in another document judged new; one matter held by several groups; decisions naming a candidate of the same answer. The ledgers, archives and traces of the phase are listed in the [data manifest](../research/2026-10-25-english/data-manifest.md).
-
-Sequential replay was then the default. D180's isolated concurrency study completed a 53-item recorded-response comparison with identical logical records, plus a separate live matching-throughput measurement. It does not establish a fresh whole-pipeline speedup or promote concurrency. The NAVER v11 prompt is also experimental; neither study changes the replay configuration above.
-
-Earlier in the phase, D162's [two-step extraction comparison](../../poc/reports/2026-10-25-source-first-01/results.md) failed end-to-end acceptance and no experimental role or grouping path was promoted from it.
-
-## Placement and the thesis tree (D206–D208, October 28)
-
-History: the placement call and the configurations below were retired with every extraction version other than v74i (D359).
-
-From D207 to D210 the default configuration was `poc/config/poc-v36.json`. Extraction v20 shows every open theme thesis to every item (D206) and files statements by a separate placement call: the sift keeps a statement for the placer, and the placement call (`hivemind/placement.py`) files each statement under the open questions, reading the item's title line, the statements and each question's code-written 'takes' line (key, event type, research-group names). The rule is the placement prompt the configuration names, `placement-narrow-v1`: one home, the narrowest question that names the matter; company-wide figure questions take only their own figures and guidance. A statement filed nowhere was first stored in `unplaced_statements`; since D209 it is dropped with the reason `no home`, and evaluation reads the drops. The extraction's own links are its first opinion; links to its candidates survive, the placer decides the rest. Matching, the writer and judging are unchanged.
-
-Measured on a frozen gold of 26 statements over three draws and on the first week's 255 in-call pieces ([routing-analysis](../research/2026-10-28-extraction-quality/routing-analysis.md)): core statements filed right 55% → 82%, wrong links 9 → 3, links to the two revenue sinks 63/60/44 → 6/1/5, junk placed down a third, every decisive matter statement placed; one week through the whole path costs the same ($0.22).
-
-Designed, not built (D208): the thesis tree — root quantities, a per-company driver layer seeded from the analyst's framework at coverage start with dependencies to the roots, shared macro themes with declared channels; root judgements read driver and theme conclusions. No re-placement of dropped statements (D209).
-
-## Group during extraction
-
-D149 requires the model to organise questions while reading the original item: Rubin shipments and SK factory deployment keep separate theses while sharing a group for the ongoing matter. It is implemented in the default pipeline: extraction (prompt v7 and later) cites shown groups or declares new ones with aliases (D165, D166); `views/groups.py` decides group identity by names in code and plans memberships, which `views/writing.py` commits with the theses; from D169 the Jev engine also answers membership for every candidate (basis `jev`). Measured over the week and August: required members 35/38 with Jev, 18/28 with extraction-time grouping alone. Open: one matter can still end up in several groups (the capex matter holds two in the Jev arm), and moving membership wholly from extraction to matching is part of the queued day-batch shape.
-
-The research harness that explored grouping before it entered the pipeline (`poc/hierarchy_study/`, D146–D162: isolated handoffs, member context, reason-first association, subject names, the Ohio sequence, source-first extraction; none adopted) was removed at the close-out (D170). Its code and tests are in commit `f4ff787`; its results stay in `poc/reports/` and the decisions.
+| Stage | What it does | Code | Specified in |
+|---|---|---|---|
+| Seed questions | Optional, before the first day: the questions an analyst would hold for a covered company, written into an empty ledger (D253) | `seeding.py`, `poc/seeds/` | PRD 06 |
+| Coverage-start reading | Once per ledger, after the seeds: each open question reads the company's latest earnings report before coverage start, when one is found (otherwise the step records that none was found and the run goes on); the figures code keeps become evidence linked to every question that read them (D363–D365) | `baseline.py`, `prompts/baseline-v3.json` | PRD 05, "Coverage-start reading" |
+| Dispatch | Each item in order: three questions, a sequence number, a processing record; items before coverage start are not dispatched | `dispatch.py` | PRD 04 |
+| Extraction | One call per item reads the whole item with the questions open at the start of its day and their takes lines, and files each statement under the questions it bears on; a statement no question takes is dropped as no home (D209, D264); extraction v74i at low reasoning (D274) | `extraction.py`, `placement.py` (the takes lines and the links rule) | PRD 05 and the extraction standard |
+| Matching and writing | Jev asks each candidate's relation to the listed theses and each evidence piece's relation to its thesis's pieces (D169); the collision judge decides when a candidate collides with an open question (D190); themes are written first | `views/jev_matching.py`, `views/matching.py`, `jev.py`, `views/writing.py`, `views/groups.py` | PRD 06 |
+| Judging | Once at the end of each day, the open questions whose evidence changed, dependencies first (D63); judging-v7 reads the evidence in view (D198, D263) | `views/round.py`, `views/judging.py` | PRD 06 |
+| Pull mode | At the end of each day, every question whose due day has come closes at the rung it stands on; one never judged closes with "no data to verify"; nothing is re-judged (D356) | `pull.py` | PRD 08 |
+| Replay | Items advance by day with a future-input guard; a run cannot start before a completed day; the parallel day prepares extraction requests early and re-checks each at its turn (D181–D183) | `replay.py`, `parallel_day.py`, `scripts/replay.py` | D159, D183 |
 
 ## Product path and POC simplifications
 
-The governing design is PRDs 00–06 and 08, with later decisions including D63, D149, D155 and D159. The old repository contributes requirements and two mechanisms: request-keyed model caching/archive and append-only historical records. Its debates, loop and readmodel are not ported. The corpus is the team's source store; the pipeline retrieves originals by ID rather than copying them into the thesis ledger.
+The old repository contributes requirements and two mechanisms: request-keyed model caching and archive, and append-only historical records. Its debates, loop and read model are not ported. The corpus is the team's source store; the pipeline retrieves originals by id rather than copying them into the thesis ledger.
 
-| Module | POC path | Limit or deliberate simplification |
-|---|---|---|
-| Research universe | `poc/universe.json`: NVDA, peers and themes with categories/references | Manually maintained POC list |
-| Classification | Corpus assembly supplies categories, subjects, copies and feed flags | Tables cover acquired channels, not full upstream design |
-| Dispatch | Three questions, arrival sequence, processing records and review pool | Return-to-upstream is recorded, not notified |
-| Extraction | Whole item, five prompt blocks, category content, JSON schema and source checks | Prompt quality remains experimental; corpus coverage varies by category |
-| Thesis storage | Append-only SQLite tables with mutation-refusal triggers; full-text search | No human labels or trained smaller model; input supersession remains a recorded limitation |
-| Matching | Jev by default (D169): per candidate one call asking the relation to each listed thesis and membership of each shown group; per evidence piece one call against its thesis's top-ranked pieces; code owns the key rules, succession direction and the checks shared with the generative matcher (ID, open-state, universe, succession and cycle) | Evidence recall@10 measured apart (36/36 and 46/49); the same figure in another document is still often judged new |
-| Writing | Themes first; repeated sources, date-ordered replacement, dependency/succession writes and waiting-year binding | Single process; no distributed queues |
-| Rejudgement | Dependency order, evidence in force plus replaced predecessor, dependency conclusions and prior conclusion for comparison | D63 explicitly changes cadence to once per day before pull, using `round.judge_day` |
-| Pull | Once per calendar day, freeze due questions at their rung and close them with a closing record; a question never judged closes with "no data to verify" (D356) | No separate final verdict, no day-end re-judging (D356) |
-| Replay | Items advance by day with future-input guard; cannot replay before a completed day; day-zero snapshot for agents | D159: an accepted extraction answers the request built after each preceding write; the parallel day, on by default (D183; `--workers 1` serial), prepares requests early and re-checks each at its turn, 4.46× on the busy July 27 day with the same ledger for the same answers, and the same ledger over fifteen days (D182, about 2.8× estimated); failures stop the day |
-| Agent layer | Reads day-zero snapshot and later judgements, keeps its own store | Initial consent mode is ask-first |
-| Experience measurements | Changed judgements/exit conditions, last check, event records | Replay cannot measure live latency; settlement-value checks and hit records are later work |
-
-The source check currently verifies quotations. Do not infer from that that generated numerical summaries are checked: D162 demonstrated a tenfold summary error despite an exact original quote.
-
-## Identity and volume
-
-The model determines which questions to propose; there is no per-company quota. Prompt rules define a question, verifiable ladder, due date and quarterly evidence. D155 supplies bounded code-owned duplicate identity and treats research lists as references, not admission gates. See the [grouping plan](grouping-improvement-plan.md) for exact scope, period, event-type and legacy-key rules.
+| Module | Limit or deliberate simplification |
+|---|---|
+| Research universe | `poc/universe.json` (NVDA, peers and themes) is a manually maintained POC list |
+| Classification | Corpus assembly supplies categories, subjects, copies and feed flags; the tables cover acquired channels, not the full upstream design |
+| Dispatch | Return-to-upstream is recorded, not notified |
+| Extraction | One company and one window measured; quotations are checked against the source, generated summaries and numbers are not (an exact quote does not prove an accurate summary) |
+| Thesis storage | Append-only SQLite tables with mutation-refusal triggers and full-text search; no human labels or trained smaller model yet |
+| Matching | The same figure in another document is still often judged new (build log row 49) |
+| Writing | Single process; no distributed queues |
+| Pull mode | No separate final verdict and no day-end re-judging (D356) |
+| Replay | Replay cannot measure live latency; model knowledge can extend beyond a replay window, so the input guard is not proof against model look-ahead |
 
 ## Model and configuration
 
-Extraction and judging run on OpenAI `gpt-6-luna` (D62); matching runs on TypeSafe's Jev `jev-1.14.0` (D169). Keep provider/model explicit; never switch silently. `poc-v116` is the default configuration (D366; history in the paragraph at the top); `poc-v16`/`role-v5` was the latest adopted extraction configuration before D163. Costs are computed from the archives' tokens at the published rates in `hivemind.model.PRICES`, never from an archive's stored cost. Experimental D160–D162 roles are not the default. Earlier DeepSeek comparisons and their original costs/results are historical evidence, not current availability or pricing claims. They are preserved in the snapshot.
+Extraction, the coverage-start reading and judging run on OpenAI `gpt-6-luna` (D62); matching runs on TypeSafe's Jev `jev-1.14.0` (D169). Keep provider and model explicit; never switch silently. Measurements report cost from the archives' tokens at the published rates in `hivemind.model.PRICES`, never from an archive's stored cost; the replay's spend cap and daily log read the archive's stored `cost_usd`. The Idea API runs `poc-v33-idea` (D290, D335).
 
-D63 sets daily judgement: finish that day's item writes, gather changed theses, judge once in dependency order, then pull. Record the day judgement under `day:<date>` with the last sequence. Resume must not judge an already completed day twice. The historical run introduced daily judgement during the replay; its ledger retains both item- and day-labelled judgements from July 29, as measured in the [library build trace](../research/2026-10-25-english/english-library.md). Do not compare the old run as if it used one configuration.
+## Run settings and timing
+
+`scripts/replay.py` prepares extraction requests 16 at a time (`--workers`; `--workers 1` is the serial path; the measurement launcher passes its `HIVEMIND_WORKERS` there), sends Jev matching 8 at a time (`--jev-workers`) and judgements 32 at a time (`judging.JUDGE_WORKERS`; a day's round judges one dependency level at a time, themes before assets; on the 2026-11-02 runs a round held up to 40 judgements in two levels). A model call times out after 180 s and is tried up to three times (`model.openai_transport`); a Jev call after 60 s, also up to three times (`jev.transport`). The slowest honest answers seen take about 40 s (a judgement) to 60 s (an extraction). A measurement runs its three draws at the same time, one launcher each (`docs/research/2026-11-01-e2e-loop/harness/run_arm.sh`); no rate-limit error (HTTP 429) has been seen, at peaks of about 170 concurrent requests over three draws.
+
+Measured on 2026-11-02 (arm 4, before the one-decider architecture: three draws of 14 days, 243 items each): 75 minutes of wall clock for all three against 3.3 hours of model time a draw (extraction 243 calls, 15 s on average; placement 212 calls, 9.4 s; Jev matching 461 calls, 1.6 s; judgements 356 calls, 16 s). About 45 minutes a draw was the serial chain at each item's turn (placement about 9 s, matching and the write about 3 s), because the separate placement call read the questions open at that moment; a day's judging round took about 16 minutes at 6 workers and about 2 at 32. The one-decider architecture (D264) removed the placement call from the chain: the extraction reads the day-start list and files the statements itself. The 14-day, three-draw acceptance of 2026-11-05 cost about $0.8 a draw at published rates.
 
 ## Verification and run discipline
 
-Before paid work, run `scripts/preflight.py` over stored extraction answers and matching records, inspect every changed refusal class, and prove the decisive case on stored data. A cached replay establishes code behaviour, not model consistency.
+The working rules own the procedure (AGENTS §5 and §7): replay stored answers through the current checks with `scripts/preflight.py` before any paid run and read every changed refusal (it does not yet replay the coverage-start reading's check); prove the decisive case on stored data; a cached replay establishes code behaviour, not model consistency; a comparison of totals uses three draws beside a fresh control; no prompt or package code changes while a run is live.
 
-Use a small, registered comparison before a larger run. Each treatment needs a fresh control and at least three samples. Keep source inputs, prompts, schemas, limits and semantic expectations fixed. Record raw answers, checks, final writes, cost and failure reasons. Do not change prompts during a run or automatically repeat a failed acceptance.
-
-The original product acceptance includes:
+The original product acceptance also includes:
 
 - Valid judgement citations to evidence in force and dependency theses; first judgements and score changes declare a changed conclusion.
 - Cached replay without model calls and with the same result.
 - No reads of future items during replay.
 - A labelled table for twenty user ideas, source-backed trigger records and false all-clear days.
 
-Those are separate from extraction/grouping semantic acceptance. Missing gold or unexercised paths must be reported, not counted as passed.
+Missing gold or unexercised paths are reported, not counted as passed.
 
 ## Service and frontend
 
-The read-only service provides the complete dated library, search, historical thesis/evidence reads and numeric claim evaluation. The UI opens that library and offers a separate Idea flow with weighted theses and historical confidence. Its Trigger and Action controls are frontend previews. See [service](service.md), [Idea card](idea-card.md) and [Thesis UI](thesis-ui.md) for their owned contracts, and the [README](../../README.md#run-the-service-for-testing) for host startup and local-data requirements. Historical mock iterations are preserved in the snapshot; superseded layouts and local matching rules are not the current specification.
+The read-only service provides the complete dated library, search, historical thesis and evidence reads and numeric claim evaluation. The UI opens that library and offers a separate Idea flow with weighted theses and historical confidence; its Trigger and Action controls are frontend previews. See [service](service.md), [Idea card](idea-card.md) and [Thesis UI](thesis-ui.md) for their contracts, and the [README](../../README.md#run-the-service-for-testing) for host startup and local-data requirements.
 
 ## Known limits
 
-Prompt quality can produce missing, overly broad or trivial questions. Exact quotes do not prove accurate summaries. Code keys do not prove semantic identity or correct grouping. Corpus classification covers only observed channels. Some original-source locations and input supersession paths remain simplified. Event-dependency succession and large-library recall need path-specific validation. Model knowledge can extend beyond a replay window, so a chronological input guard is not proof against model look-ahead. Live latency cannot be measured from replay. Consult current state before launching further work.
+Prompt quality can produce missing, overly broad or trivial questions. Code keys do not prove semantic identity or correct grouping; one matter can still end up in several research groups. Corpus classification covers only observed channels. Some original-source locations and input supersession paths remain simplified. Event-dependency succession and large-library recall need path-specific validation. Consult the current state before launching further work.
 
 ## Historical records
 
-The [snapshot](pipeline-plan-history-2026-10-25.zh.md) preserves the initial build sequence, three replay attempts, model comparisons, preflight diagnosis, daily-judgement change, sealed-run results, corpus-tag corrections and early UI iterations. Their original language, numbers and paths remain intact. Current instructions above and later decisions supersede historical proposals to rerun or tune.
+The [snapshot](pipeline-plan-history-2026-10-25.zh.md) preserves the initial build sequence, the early replays, model comparisons, the preflight diagnosis, the daily-judgement change, sealed-run results, corpus-tag corrections and early UI iterations, in their original language. The configurations, prompt versions and mechanisms retired since (the separate placement call, extraction versions before v74i, judging versions before v7) are recorded in the [decision log](../DECISIONS-log.md); current instructions above supersede historical proposals to rerun or tune.

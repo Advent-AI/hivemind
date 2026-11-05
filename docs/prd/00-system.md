@@ -1,6 +1,6 @@
 # System overview
 
-> Status: foundation frozen; pull mode and closing at the due day decided and built (D54, D356). Universe, classification, Config, dispatch, extraction and human-review intake froze on October 18, 2026; the library and matching labels on October 20; the full review completed October 22. D149 adds extraction-time grouping; D165 integrates it into the default pipeline. English edition: October 25, 2026 (D163).
+> Status: foundation frozen; pull mode and closing at the due day decided and built (D54, D356). Universe, classification, Config, dispatch, extraction and human-review intake froze on October 18, 2026; the library and matching labels on October 20; the full review completed October 22. D149 adds extraction-time grouping; D165 integrates it into the default pipeline. Corrected to D63, D198, D202, D204, D169, D190, D251, D260, D264 on 2026-11-05 (D367). English edition: October 25, 2026 (D163).
 > Design page: `docs/system-design.html` → New → Open system PRD. Recorded decisions take precedence over this document.
 
 ## Purpose
@@ -34,7 +34,7 @@ Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
 | Research universe | Extraction | All themes for candidate selection in block 3 |
 | Config | Extraction, library, coverage-start reading | Model settings version; library search result count |
 | Coverage-start reading | Library | Once at coverage start, each open question's starting figure from the company's latest earnings report, linked to every question that read it (D363, D364) |
-| Library | Extraction | Open subject theses and their dependencies: question, focus, due date and links; available groups under the library contract, in block 5 |
+| Library | Extraction | The theses of the item's subjects and every theme thesis open at the start of the item's day, each with its takes line, in block 5 (D251, D264); no list of stored groups |
 | Library | Matching labels | Comparison records for human labels and future smaller-model training |
 | Dispatch, extraction, library | Human review | Unresolved items, proposed themes and repeated failures |
 
@@ -44,7 +44,7 @@ Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
 |---|---|---|
 | Trigger | An item arrives | Day-end or scheduled interval |
 | Initiator | Upstream delivery | System scheduling |
-| Work | Read evidence/candidates and associations, preserve associations while matching identity, rejudge changed inputs under library rules | At the end of each day, close the questions that are due at their rung; re-judge nothing (D356) |
+| Work | Read evidence/candidates and associations, preserve associations while matching identity, rejudge changed inputs in one round after the day's last item, the day passed in (D63), under library rules | At the end of each day, close the questions that are due at their rung; re-judge nothing (D356) |
 | Calendar | Never reads it | Sole time-driven module; receives “now” explicitly |
 
 ## Principles
@@ -53,10 +53,10 @@ Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
 2. A thesis is a judgement; evidence records who said what in which item. Only incoming information creates evidence. Theses cannot prove each other.
 3. Retain sources for every thesis, evidence item and information-triggered change, including the location in the original.
 4. The stream is driven by incoming information, not the calendar. No input means no stream work; pull mode owns time.
-5. Dispatch sequence determines order. Read earlier sequences plus the current round's own writes, with results equivalent to serial processing. Append knowledge without rewriting history. Log obsolete late statements; accept newly learned matters with their actual dates.
+5. Dispatch sequence determines order. Read earlier sequences plus the item's own writes (extraction reads the theses open at the start of the item's day, D251), with results equivalent to serial processing. Append knowledge without rewriting history. Store a late older statement as one more piece with its actual date, never as revising a newer one (D202); accept newly learned matters with their actual dates.
 6. The research universe alone chooses subjects and categories. Upstream supplies only that scope; process every supplied item.
 7. At matching time, open one thesis per subject and focus, with separate current/next-year numeric periods; manual reopening is excluded. D155 governs the POC's bounded code-owned identity. Search finds comparisons, not final identity. Resolve an evidence item's thesis before searching within it.
-8. Fix questions and ladders in advance, and freeze the state when due. Rungs are verifiable outcomes. Append records and retain closed theses and replaced evidence.
+8. Fix questions and ladders in advance, and freeze the state when due. Rungs are verifiable outcomes. Append records and retain closed theses; the writer retires no evidence (D202).
 9. Do not guess unresolved identifiers or rules; use human review.
 10. Do not copy whole source material into the library. Retrieve it from the team's source store by ID.
 
@@ -91,6 +91,7 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | Dataset / data interface | Registered collection of table data / access channel | Confusing either with category |
 | Prompt template / prompt / upload template | Shared five-block structure / assembled category instructions / upload table format | Unqualified template |
 | Role | Senior hedge-fund analyst in prompt block 1 | Identity, which names a record or subject |
+| Takes line | The code-written sentence under each open thesis in block 5 saying what its file holds (D254, D259, D264) | — |
 | Thesis / candidate thesis | An immutable question, ladder and due date / extraction's proposed uncovered question, including personal-memo judgements | Calling every quoted opinion a thesis; naked candidate where ambiguous |
 | Opinion | An author's, analyst's or media commentator's view | Confusing it with a stored thesis |
 | Statement | What a source party says | — |
@@ -104,23 +105,25 @@ Use one term per concept in the maintained design. `docs/check.py` checks termin
 | Trigger card | A frontend condition comparing an Idea's displayed confidence with a chosen percentage; the frontend specification owns its controls and status | Treating a met condition as an executed action |
 | Action card | An editable frontend plan preview beside the Trigger, with a separately dated price chart; the frontend specification owns its fields | Treating a preview as an executable order or a connected wallet |
 | Freeze | Preserve the current state and reasons at the due date, then close | A separate confirmed/falsified verdict in the current design |
-| Unavailable answer / pending publication | Proposed pull-mode cases, not yet approved | Treating proposals as implemented states |
-| Evidence tier | Fact, party statement, third-party view or rumour; only facts can establish the outcome | Mixing tiers with thesis kinds |
+| Unavailable answer / pending publication | Settled by D356: a question whose result is still unknown on its due day closes at its state; nothing waits for the result | Treating a question as waiting for its result |
+| Evidence tier | Fact, party statement, third-party view or rumour; the judgement weighs each by tier and novelty in its forecast of the outcome (D260) | Mixing tiers with thesis kinds |
 | Link | Evidence linked to a thesis, with its judgement-specific push | Treating push as intrinsic to evidence |
 | Theme block | The open, judged theme theses shown to an asset thesis's judgement, one to all; the judgement states each theme's push on it | Theme context, macro block, theme dependency |
 | Search / comparison list | Find plausible matches / top N shown to matching | Treating search ranking as identity |
 | Open / closed | The lifecycle switch; only open theses update; closed theses remain searchable | Active thesis, inactive thesis |
-| Repeat / replace / new evidence | Same existing statement / a later statement superseding it / another event, period or speaker | Counting repeated references as independent evidence |
-| Replaced | Historical evidence no longer in force, kept for traceability | Deleted evidence |
+| Repeat / replace / new evidence | Matching's three evidence decisions: the same claim, stored as its own piece with the pair recorded (D204) / a changed later version of the same statement or number, stored beside it as a revision (D202) / another event, period or speaker | Counting repeats as independent evidence |
+| Revision | The pair a replace decision records: the later piece revises the earlier and both stay in force; the writer retires nothing (D202) | Deleted evidence; a replaced piece that no longer counts |
 | Dependency | A thesis reads another's conclusion with a specified direction; no cycles | Premise in the current design |
-| Succession / chain | Next period of the same focus / its ordered sequence; evidence replacement also forms chains | Confusing succession with dependency |
+| Succession / chain | Next period of the same focus / its ordered sequence; evidence revisions also form chains | Confusing succession with dependency |
 | Matching / matching record | Decide destinations and retain inputs, answers, checks and writes | Inferring identity solely from similar wording |
+| Jev / collision judge | The default matching engine, whose relations and scores are opinions code turns into decisions (D169, D201) / the generative call that answers the analyst's question for a candidate whose list holds a thesis of its own subject and measure, its verdict replacing Jev's (D190, D258) | One general-purpose model call deciding all matching |
 | Merge | A candidate joins an open thesis or a part of it, inheriting its ladder and due date | Rewriting the target's identity |
 | Source reference | Upstream ID, category, publication day, location and quote/cell | — |
-| Original source | Who first said it and when; used for independence and replacement ordering | Counting each retelling independently |
+| Original source | Who first said it and when; used for independence and revision ordering | Counting each retelling independently |
 | Standalone summary | Evidence readable without its source; used by matching and rejudgement | — |
 | Duplicate check | Proposed scheduled consolidation of duplicate open theses; not yet approved | Treating it as implemented |
-| Rejudgement / round | Recompute from evidence in force and dependencies / all changes from one item | Incremental score arithmetic |
+| Rejudgement / round | Recompute from the evidence in view and dependencies / the day's one judging round, after its last item (D63) | Incremental score arithmetic; a round per item |
+| Evidence in view | What a judgement reads: the arrivals since its fifth most recent judgement and the basis its last ten judgements cited; the rest stays in force, carried by the previous conclusion (D198) | All evidence in force as what a judgement reads |
 | Matching labels / smaller model | Human-labelled destinations / future faster model trained from them | Assuming labels already provide acceptance |
 | Code | Programmed rules, distinct from model judgement | — |
 | Family / group | Five classification families / twelve theme-library groups | Calling theme groups categories |

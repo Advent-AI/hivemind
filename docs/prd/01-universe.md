@@ -1,6 +1,6 @@
 # Research universe
 
-> Status: first version frozen, October 18, 2026; specific themes remain a draft. English edition: October 25, 2026 (D163).
+> Status: first version frozen, October 18, 2026; specific themes remain a draft. English edition: October 25, 2026 (D163); corrected to D191 and D195 on 2026-11-05 (D367); a private-company object kind is decided, to be built (D187, D368).
 > Design page: `docs/system-design.html` → New → Research universe. Recorded decisions take precedence over this PRD.
 
 ## Purpose
@@ -76,8 +76,8 @@ D155's POC entries include research references without changing this information
 4. Upstream supplies only subjects and categories covered by the universe. Test code follows the same scope. Every supplied item is processed.
 5. Adding a subject or changing tracked categories creates a new version. Upstream backfills relevant historical items under the new universe.
 6. Rates, exchange rates and indices belong to themes, such as the US Treasury yield curve or US dollar strength, rather than separate subject kinds.
-7. Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry.
-8. Macro and geopolitical themes connect to companies through thesis dependencies. A theme thesis describes an outcome without calling it good or bad. An asset thesis records which theme theses it reads and which end of each is bullish for it. A changed conclusion triggers the library’s rejudgement rules for dependent theses.
+7. Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry. Decided, to be built (D187, D368): the own quantity of any company is a thesis under that company, private companies included, which needs a private-company object kind here.
+8. Macro and geopolitical themes reach companies one to all: every open, judged theme thesis is shown to every asset thesis’s judgement (the theme block), and that judgement states how each theme pushes on it (D191, D195). Explicit dependencies stay only where a document states them. A theme thesis describes an outcome without calling it good or bad. A changed theme conclusion queues every open asset thesis with evidence in force for rejudgement in the same round.
 <!-- /generated: rules -->
 
 ## Examples
@@ -107,8 +107,9 @@ D155's POC entries include research references without changing this information
 - D16: unresolved identifiers go to human review. D18: the universe alone selects subjects/categories and supplies defaults.
 - D19, D37: first-version freeze; changes need a decision.
 - D24/D28: the earlier exclusion of financial reports was reversed; company defaults include T1, T2 and T4.
-- D26/D41/D42: macro effects reach companies through dependencies; use company as the subject kind.
+- D26/D41/D42: macro effects reach companies through dependencies (replaced by D191 and D195, below); use company as the subject kind.
 - D45/D46: the model selects dependency direction and code prevents cycles.
 - D47: distinguish unresolved identifiers and new themes from resolvable out-of-universe assets.
 - D51/D58/D60: dependent open theses follow the library's rejudgement rule; a changed conclusion is broader than a changed rung.
 - D59: all themes appear in extraction block 3.
+- D191/D195: a theme thesis is context for every company thesis, one to all: every open, judged theme thesis is shown to each asset thesis's judgement (the theme block), which states how each theme pushes on it; a changed theme conclusion queues every open asset thesis with evidence in force; explicit dependencies stay only where a document states them.

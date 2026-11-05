@@ -1,6 +1,6 @@
 # Closing at the due day
 
-> Status: decided and built (D54, D356). English edition: November 4, 2026.
+> Status: decided and built (D54, D356). Corrected to D198 on 2026-11-05 (D367). English edition: November 4, 2026.
 > This page replaces the final-verdict draft (D29), which D356 retired; Git keeps the earlier text.
 > Design page: `docs/system-design.html` → New → Closing at the due day → Details. Recorded decisions take precedence.
 
@@ -26,7 +26,7 @@ Closing at the due day | Has this open question's due day come? (Pull mode, at t
 
 <!-- generated: rules -->
 1. A question has one state and no separate result: the rung it stands on at the end of its due day is its conclusion (D54).
-2. There is no separate final review: each day's judgement already reads the evidence in force (D356).
+2. There is no separate final review: each day's judgement already reads the evidence in view, D198's window (D356).
 3. Nothing waits. Decisive information arrives as evidence by the end of the due day; a question whose result is still unknown closes at its state (D54).
 4. Due days are set when a question is opened, on or after the day its result is published (D356).
 5. The closing record is shown, never a gate; a question never judged shows “no data to verify” (D356).

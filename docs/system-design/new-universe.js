@@ -1,5 +1,5 @@
 // The New design's research universe: the objects the system researches, the kinds of information tracked for each, and
-// the theme library among them. Edit the data at the top; the drill-down renders it. Decisions D6, D11, D18, D26 and D28 in
+// the theme library among them. Edit the data at the top; the drill-down renders it. Decisions D6, D11, D18, D26, D28, D191 and D195 in
 // docs/DECISIONS.md. The texts are for a reader who did not follow the discussion: plain words, no field names.
 (function () {
   'use strict';
@@ -47,8 +47,8 @@
     'Upstream supplies only subjects and categories covered by the universe. Test code follows the same scope. Every supplied item is processed.',
     'Adding a subject or changing tracked categories creates a new version. Upstream backfills relevant historical items under the new universe.',
     'Rates, exchange rates and indices belong to themes, such as the US Treasury yield curve or US dollar strength, rather than separate subject kinds.',
-    'Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry.',
-    'Macro and geopolitical themes connect to companies through thesis dependencies. A theme thesis describes an outcome without calling it good or bad. An asset thesis records which theme theses it reads and which end of each is bullish for it. A changed conclusion triggers the library’s rejudgement rules for dependent theses.',
+    'Do not add subjects automatically. Unresolved identifiers and themes outside the universe go to the human review pool. Resolvable companies, cryptocurrencies or commodities outside the universe, such as Samsung, only receive a processing-log entry. Decided, to be built (D187, D368): the own quantity of any company is a thesis under that company, private companies included, which needs a private-company object kind here.',
+    'Macro and geopolitical themes reach companies one to all: every open, judged theme thesis is shown to every asset thesis’s judgement (the theme block), and that judgement states how each theme pushes on it (D191, D195). Explicit dependencies stay only where a document states them. A theme thesis describes an outcome without calling it good or bad. A changed theme conclusion queues every open asset thesis with evidence in force for rejudgement in the same round.',
   ];
 
   const design = window.HIVEMIND_DESIGNS.new;

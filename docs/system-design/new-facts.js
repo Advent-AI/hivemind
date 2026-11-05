@@ -1,9 +1,11 @@
 // The New design's extraction module, the views database and closing at the due day (decisions D26-D45, D54, D356). Extraction reads
-// every item whole, by its category, as a senior hedge fund analyst, with the open views of the item's objects and the
-// views they depend on (prompt part 5), and hands over two things with their sources: evidence attached to one of those
-// views or to a candidate view, and candidate views with extraction-owned subject memberships (D149). A view is a question with a
-// ladder and a due date; the model matches each candidate to views found by search (the same view, its next period, or
-// a new view) and each piece of evidence to the evidence its view already holds (repeat, replacement, or new evidence);
+// every item whole, by its category, as a senior hedge fund analyst, with the views of the item's objects and every theme
+// view open at the start of the item's day and their takes lines (prompt part 5; D251, D264), and hands over two things
+// with their sources: evidence filed under the narrowest of those views it bears on or under a candidate view, and
+// candidate views with extraction-owned subject memberships (D149). A view is a question with a ladder and a due date;
+// Jev, with the collision judge, matches each candidate to views found by search (the same view, its next period, or
+// a new view) and each piece of evidence to the evidence its view already holds (repeat, revision, or new evidence;
+// D169, D190, D202, D204); the views are judged once a day (D63);
 // evidence pushes the view's state, which is frozen at the due date (D54), and views are linked by dependencies and
 // chained by succession. Only what Alex said or decided is written as decided (D45); Claude's proposals he has not
 // decided are kept apart in VIEWS_PROPOSED. Closing at the due day is pull mode's: a due question freezes at its rung
@@ -20,7 +22,7 @@
     { part: "What this category is and how to read it", content: "The category definition and reading method; for example, attribute opinions and estimates to their author rather than treating them as completed facts.", source: "Owned by classification; not redefined here" },
     { part: "Subjects", content: "The item's related subjects plus every theme in the research universe. Select an existing theme for a theme candidate when applicable; otherwise describe the new issue clearly.", source: "Item metadata; themes from the research universe" },
     { part: "What to extract from this category", content: "One row per category in the table below.", source: "Extraction module" },
-    { part: "Existing theses and research groups", content: "Open theses for the item's subjects and their dependencies, with dependency links. Supply only question, focus and due date, not states or evidence. Also supply available research groups under the library's grouping contract.", source: "Thesis library" },
+    { part: "Open theses at the start of the day", content: "The theses of the item's subjects and every theme thesis open at the start of the item's day, the same list for every item of that day, each with a code-written takes line saying what its file holds. No states, evidence, dependency links or list of stored research groups; a candidate declares its group by name and scope.", source: "Thesis library, read once per day (D251, D264)" },
   ];
 
   // D149 requires extraction-owned membership; D147/D148 remain isolated implementations and measurements.
@@ -33,10 +35,10 @@
   const GROUP_RELATIONS = [
     "D149 requirement: organise theses by the continuing business process they discuss, called a research group. Vera Rubin readiness and customer deployment can share a group while shipment dates, SK factory launch and OpenAI deployment retain separate questions, ladders and due dates. A group may start with one thesis; a thesis may belong to several groups. A group has no state or ladder, creates no automatic dependency and is not an overarching investment thesis for an agent.",
     "Associate by business process, across companies and industries, not merely by company. A customer deployment explicitly using Rubin can join Rubin; NVIDIA PC chips cannot join just because they share a company. OpenAI deployment cannot join an SK-specific group merely because both involve Rubin. A group does not replace a research-universe theme.",
-    "Before the full-text call, code supplies available group IDs, names and scopes. Search is not restricted by company. During that call, extraction references shown groups or declares new named and scoped groups. A candidate that tracks an ongoing matter (a product rollout and its deployments, a deal, a policy process, an investment or demand cycle) cites one or more groups, each shown or declared, without repeats; a company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and cite none unless the line itself tracks such a matter (D165). Code validates the references before writing, and creates a declared group only when a written thesis that tracks a matter cites it, so a company's lines alone never found a group. Declare a new group if none fits; do not force an approximate fit.",
+    "The full-text call shows no list of stored groups; an open thesis's takes line names the groups it belongs to (D264). During that call, extraction declares named and scoped groups. A candidate that tracks an ongoing matter (a product rollout and its deployments, a deal, a policy process, an investment or demand cycle) cites one or more groups it declared, without repeats; a company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and cite none unless the line itself tracks such a matter (D165). Code validates the references before writing, folds a declared group into a stored one by its names (D166, D257), and creates a declared group only when a written thesis that tracks a matter cites it, so a company's lines alone never found a group.",
     "Matching still decides thesis/evidence identity and dependencies; it does not reread association fields to regroup. After creation, succession or merging, the writer resolves candidate IDs to final thesis IDs and local group IDs to stored group IDs, then stores membership. Candidates failing source checks or ultimately skipped do not become members. Do not create empty groups for unused declarations or reject other valid memberships because of them.",
     "Store each group/member pair once, with input ID and sequence number under the library's ordering and historical-read rules. Commit groups and memberships atomically with theses and evidence; roll all back on failure. Never mark a partial write complete. Redelivery must not duplicate membership; use existing dispatch and recovery.",
-    "Groups do not copy evidence. Read sources through members' real evidence links, filtered by the requested sequence and excluding evidence already replaced at that point. No link means no evidence. A new member or an existing thesis change flag updates its groups. A repeated quote only adds a source and does not trigger an update. Evidence-only articles update existing memberships without inventing theses or groups.",
+    "Groups do not copy evidence. Read sources through members' real evidence links, filtered by the requested sequence and excluding evidence a legacy replacement record had retired by then (no new one is written, D202). No link means no evidence. A new member or an existing thesis change flag updates its groups. A repeated quote is stored as its own piece with the pair recorded (D204) and updates a group only through its thesis's change flag. Evidence-only articles update existing memberships without inventing theses or groups.",
     "Acceptance measures source-supported membership and evidence retention, not identical names, IDs or group counts on every run. Report omissions, check refusals, missed associations and wrong associations separately. Preserve Rubin shipment/customer-deployment relationships and check wrong links to unrelated products or customer-specific groups. Multi-company and large-library behaviour is not yet validated.",
     "Historical implementation reference: D147's isolated grouping prototype and its field names are preserved in the research records. D165 and D169 subsequently integrated grouping into the default pipeline. See docs/poc/pipeline-plan.md for the current implementation and measured limits; the old prototype does not establish large-library recall.",
     "See docs/poc/grouping-improvement-plan.md for gaps and steps. D148 member context and D150 reason-first output did not solve wrong grouping. D152's four name-selection responses to the third article created no candidates, so new membership was unexercised. Preserve all prior responses and results. Overarching thesis generation, MCP presentation and historical backfill are outside that implementation scope."
@@ -73,7 +75,7 @@
       { answer: "2 How to read this category", label: "Media reporting", note: "From classification: opinion and analysis belong to T8; registered publication series use their category; remaining media material belongs here." },
       { answer: "3 Subjects", label: "Subjects of this report", note: "Filled by code, such as NVDA and AMD, plus all universe themes" },
       { answer: "4 What to extract", label: "What happened, when and who was involved; attribution and original sources", note: "Official confirmation is fact; unnamed-source claims are rumours" },
-      { answer: "5 Existing theses and research groups", label: "Open theses for the report's subjects and their dependencies", note: "Filled by code with dependency links, questions, focus and due dates. For example, NVDA FY2027 China revenue versus FY2026 and its chip-export-licence dependency. Also include available research groups." },
+      { answer: "5 Open theses at the start of the day", label: "Every NVDA and AMD thesis and every theme thesis open at the start of the report's day", note: "Filled by code once per day, each thesis with its takes line: for example NVDA FY2027 China revenue (“takes: revenue figures, guidance, estimates and revisions for NVIDIA China, this question's period …”) and the chip-export-licensing theme thesis. No states, evidence, dependency links or list of stored research groups." },
     ],
   };
 
@@ -83,13 +85,13 @@
     "For theme candidates, select from block 3 or describe a new issue if absent. For companies, cryptocurrencies and commodities, provide the relevant symbol or name. Code resolves reference data and accepts registered names only, as classification does.",
     "The user's own memo (T8 authored by the user) yields candidate judgements, not evidence. These candidates may have no evidence. Once opened, their state is “not yet judged” until evidence first links to them.",
     "Code defines and validates output fields for evidence, candidates and associations, necessary new groups and sources. Do not restate the shape in prompts.",
-    "Test each category's prompt on stored items before settling its wording. Config records each version; a change creates a new version.",
+    "The production prompt is frozen at extraction v74i (D274); a change is a new version Alex opens, measured against it, and Config records each version.",
   ];
 
   // Extraction, step by step: it only reads; matching and writing happen in the views database.
   const EXTRACT_STEPS = [
-    { code: '1', name: "Build the prompt", who: "Code", does: "Use the category's content in the shared template. The library supplies block 5: open subject theses, their dependencies and existing groups needed for association." },
-    { code: '2', name: "Read", who: "Model", does: "Read the whole item. Return evidence linked to block-5 theses or current candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources." },
+    { code: '1', name: "Build the prompt", who: "Code", does: "Use the category's content in the shared template. The library supplies block 5 once per day: the item's subjects' theses and every theme thesis open at the start of the item's day, each with its takes line (D251, D264); no dependency links and no list of stored groups." },
+    { code: '2', name: "Read", who: "Model", does: "Read the whole item. Return evidence, each piece filed under the narrowest block-5 thesis it bears on and the answer's candidates it supports (D207, D264), and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources." },
     { code: '3', name: "Check sources and group references", who: "Code", does: "Check that the quote or cell exists in the item and that cited numbers appear there. Evidence must link to block-5 theses or current candidates. Reject source mismatches with reasons. Validate association references under the library's complete handoff contract." },
     { code: '4', name: "Hand off to the library", who: "Code", does: "Hand off evidence, candidates, associations and necessary group definitions with the sequence number. Matching decides identity; writing preserves membership." },
   ];
@@ -98,7 +100,7 @@
   const EXTRACT_TWO = [
     { aspect: "What it is", evidence: "A statement or number from the item: who said what or what happened", candidate: "A complete question to track: subject, question, ladder, due date and research-group association" },
     { aspect: "How common", evidence: "Present in almost every item", candidate: "Few: important questions uncovered by block 5; also all judgements from the user's memo" },
-    { aspect: "Links", evidence: "One or more block-5 theses, or current candidates", candidate: "Carries initiating evidence; candidates from the user's memo may omit it" },
+    { aspect: "Links", evidence: "One home: the narrowest block-5 thesis it bears on, plus the answer's candidates it supports (D207, D264)", candidate: "Carries initiating evidence; candidates from the user's memo may omit it" },
     { aspect: "In the library", evidence: "Compare against its thesis's existing evidence: repeat, replacement or new", candidate: "Decide existing identity or a part of it, succession, new thesis or skip. Preserve associations with the final thesis; matching does not regroup." },
     { aspect: "Example", evidence: "The 8-K statement that H20 exports to China require a licence", candidate: "What will the China export-licence regime for chips covered by the April 2025 rule be on April 15, 2026?" },
   ];
@@ -107,7 +109,7 @@
   const EXTRACT_SORT_TREE = {
     label: "Read a statement or number", question: "Which thesis does it concern?", note: "Judgements in the user's memo bypass this tree: all become candidates and may lack evidence",
     children: [
-      { answer: "A thesis in block 5", label: "Evidence: link to that thesis", note: "Link only to the thesis directly discussed, not also to theses that depend on it", act: true },
+      { answer: "A thesis in block 5", label: "Evidence: file it under the narrowest one it bears on", note: "As that thesis's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer; that thesis only, never a broader one beside it, plus the answer's candidates it supports (D207, D259, D264). When no specific thesis is connected, a statement that moves the demand, supply, competition or pricing behind the company's results goes to the company-wide revenue thesis of its period (D273, D361).", act: true },
       { answer: "Not in block 5, but important", label: "Candidate thesis with this statement as evidence", note: "Return its group association during extraction. The library later decides existing identity or new thesis. A thesis covers only up to its due date; events after that date belong here too.", act: true },
       { answer: "Neither", label: "Do not extract", note: "Background or boilerplate" },
     ],
@@ -140,11 +142,11 @@
         note: "T6 other company publication: H20 exports to China require a licence; expected charges up to approximately $5.5 billion",
         children: [
           { answer: "Candidate: theme thesis", label: "What will China export licensing for chips covered by the April 2025 rule, including H20 and MI308, look like on April 15, 2026?", note: "Event thesis. Five rungs: full ban; licences required and none issued; licences issued with some conditions; all issued licences unconditional; no licence required. Due April 15, 2026. Quote: “…requires a license for export to China … of the Company’s H20 integrated circuits…”. NVIDIA discloses the licence requirement, classified as fact. The library opens thesis #1.", act: true },
-          { answer: "Candidate: NVDA asset thesis", label: "How will NVDA FY2026 China revenue compare with FY2025?", note: "Numeric thesis. Five rungs: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Due on the FY2026 annual earnings date. Quote: “…up to approximately $5.5 billion of charges…”. This is a company expectation, classified as a party statement. The library opens #2, dependent on #1.", act: true },
+          { answer: "Candidate: NVDA asset thesis", label: "How will NVDA FY2026 China revenue compare with FY2025?", note: "Numeric thesis. Five rungs: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Due on the FY2026 annual earnings date. Quote: “…up to approximately $5.5 billion of charges…”. This is a company expectation, classified as a party statement. The library opens #2; its dependency on #1 would be chosen in matching (D51), which the default Jev path does not yet do, and the licence theme reaches #2 through the theme block (D191, D195).", act: true },
         ],
       },
       {
-        answer: "NVIDIA statement, July 14, 2025", label: "Block 5 contains #2 and its dependency #1", question: "One evidence item, no candidate",
+        answer: "NVIDIA statement, July 14, 2025", label: "Block 5 shows #1 and #2, open at the start of the day, with their takes lines", question: "One evidence item, no candidate",
         children: [
           { answer: "Evidence", label: "Link to #1", note: "Party statement: NVIDIA says the US government assured it that H20 export licences to China will be granted (July 14, 2025)", act: true },
         ],
@@ -152,10 +154,10 @@
     ],
   };
 
-  const EXAMPLE_NOTE = "Each evidence item records upstream ID, paragraph and exact quotation. Code checks that “$5.5 billion” appears in the quoted sentence. The first item sees an empty library, so important questions become candidates. The second sees the licence thesis and links NVIDIA's statement directly. The library compares candidates with searched theses and evidence within its thesis. Both candidates join the chip-licensing-and-China-business group; the evidence-only second item updates existing membership. Grouping does not replace #2's dependency on #1. The NVDA example uses the same process as equities, futures and cryptocurrencies.";
+  const EXAMPLE_NOTE = "Each evidence item records upstream ID, paragraph and exact quotation. Code checks that “$5.5 billion” appears in the quoted sentence. The first item sees an empty library, so important questions become candidates. The second sees the licence thesis and links NVIDIA's statement directly. The library compares candidates with searched theses and evidence within its thesis. Both candidates join the chip-licensing-and-China-business group; the evidence-only second item updates existing membership. Grouping is not a dependency: it neither creates nor replaces one. The NVDA example uses the same process as equities, futures and cryptocurrencies.";
 
   const EXTRACT_OPEN = [
-    "Validate each category prompt on stored items before settling it; record its version in Config.",
+    "The asset-ladder and shared-quantity changes Alex decided (D186, D191 point 4) are built in the next extraction version (D368; DECISIONS §6).",
   ];
 
   // ------------------------------------------------------------------ views database (D38–D45)
@@ -170,8 +172,8 @@
           {
             answer: "Thesis", label: "A question + a ladder + a due date", note: "Immutable once written. Five rungs, or two for yes/no. When matching opens a thesis, only one may be open for the same subject and focus at a time.",
             children: [
-              { answer: "State", label: "The thesis's current ladder rung", note: "Evidence pushes towards either end; the model judges from facts. A thesis from the user's memo is not yet judged until evidence first links to it.", act: true },
-              { answer: "Link", label: "Evidence", note: "Store evidence once with sources and tier. Its push belongs to the link. Replaced evidence remains in history and no longer counts.", act: true },
+              { answer: "State", label: "The thesis's current ladder rung", note: "Evidence pushes towards either end; the model forecasts the rung most likely at the due date, against a reference (D260). A thesis from the user's memo is not yet judged until evidence first links to it.", act: true },
+              { answer: "Link", label: "Evidence", note: "Store evidence once with sources and tier. Its push belongs to the link. Nothing is retired: a revised piece stays in force beside its revision, the pair recorded (D202).", act: true },
               { answer: "Dependency", label: "Another thesis", note: "Direction specifies which end of the other thesis is bullish for an asset thesis, or whether the two ladders have the same or opposite orientation for a theme thesis.", act: true },
               { answer: "Succession", label: "The previous period's thesis", note: "Successive periods of the same focus form a chain", act: true },
             ],
@@ -221,7 +223,7 @@
   };
 
   const LADDER_RULES = [
-    "A ladder has five rungs. Asset theses run from strongly bullish to strongly bearish, describing business impact; theme theses name five ordered outcomes without good/bad labels. Use two rungs for yes/no rather than forcing five: bullish/bearish for assets; named outcomes for themes, such as signed by the deadline/not signed.",
+    "A ladder has five rungs. Asset theses run from strongly bullish to strongly bearish, describing business impact; theme theses name five ordered outcomes without good/bad labels. Use two rungs for yes/no rather than forcing five: bullish/bearish for assets; named outcomes for themes, such as signed by the deadline/not signed. Decided for the next extraction version (D186, D368): asset rungs state the business outcome against guidance (above, near, below) and each thesis names its favourable end.",
     "Each rung is verifiable: a numeric interval or event stage. Rungs must be exhaustive and non-overlapping, so exactly one applies at expiry. For example: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Every boundary belongs to one rung. “Up a lot/a little” cannot be checked. Avoid vague partial outcomes; specify the partial state, such as conditional licences, as a distinct rung. State the comparison underlying neutral.",
     "One ladder concerns one thing. Separate numeric and event questions and connect them with dependencies. Likewise, separate components that can move in opposite directions, such as H20 and Blackwell chip classes.",
     "The extraction model writes the candidate's ladder. A new thesis adopts it unchanged until expiry. A merged candidate uses the existing thesis's ladder and due date.",
@@ -231,29 +233,29 @@
 
   // The state on a ladder (D45: where it is now is a proposal, in VIEWS_PROPOSED).
   const POSITIONS = [
-    { position: "State", means: "Our judgement of the thesis's current rung; evidence pushes toward either end", moves: "The model judges at low temperature from facts. Reconsider all evidence still in force, including each item's replaced predecessor to show the change, plus current dependency states and reasons and, for an asset thesis, the theme block. Do not increment or decrement the previous score. Cite evidence and compare with the conclusion before this round to state whether it changed. Do not rejudge if only source references were added and dependency conclusions did not change.", example: "After the 8-K: strongly bearish" },
+    { position: "State", means: "Our judgement of the thesis's current rung; evidence pushes toward either end", moves: "The model judges at low temperature: the outcome the evidence in force makes most likely at the due date, against a reference (below). It reads the evidence in view, the arrivals since its fifth most recent judgement and the basis its last ten judgements cited, the request naming how many more pieces stay in force (D198); a revision is shown beside the piece it revises and a repeat beside the piece the matcher read it as, both in force (D202, D204); plus current dependency states and reasons and, for an asset thesis, the theme block. Do not increment or decrement the previous score. Cite evidence and compare with the conclusion before this round to state whether it changed. Do not rejudge if only source references were added and dependency conclusions did not change.", example: "After the 8-K: strongly bearish" },
   ];
 
   // How a judgement shows its sources and how code checks them (D46).
   const STATE_RULES = [
     "Every judgement states its basis in a fixed response shape: evidence IDs such as e12 and e15, plus dependency thesis IDs such as #1 when their changes triggered rejudgement.",
-    "Code checks cited IDs against records: evidence must belong to this thesis and not be replaced; cited theses must be its dependencies. Accept only if all checks pass. Otherwise record the reason and ask for one corrected judgement. If that also fails, use normal failure handling: retry from this step, then human review after repeated failure. This checks references, not whether the judgement is correct, like verifying a cited page exists.",
+    "Code checks cited IDs against the request that was sent: evidence must be among the pieces shown to this thesis (D198); cited theses must be its dependencies. Accept only if all checks pass. Otherwise record the reason and ask for one corrected judgement. If that also fails, use normal failure handling: retry from this step, then human review after repeated failure. This checks references, not whether the judgement is correct, like verifying a cited page exists.",
     "Each judgement also declares whether the conclusion changed and explains why, comparing with the state and reasons before this round, including during retries. That earlier conclusion is for comparison, not incremental scoring. A rung change or a material change in the supporting facts/numbers counts: AMZN capex guidance moving from 12% to 25% growth changes the conclusion even within one rung. Repetition does not. A changed conclusion triggers dependent theses in the same round. Code requires changed=true for a first judgement or rung change; otherwise refuse under the same correction rules.",
     "For historical judgement, read the records saved on that date. Do not ask the model again; a new sample can differ.",
     "The rung is a forecast against a reference (D260): the outcome the evidence in force makes most likely at the due date, judged against what the market expects (consensus, guidance, the stated plan or deadline). The judgement names the reference and its rung and the outcome the evidence implies (a figure or date derived from reported figures, guidance and quantified revisions), and moves when the implied outcome crosses a rung boundary. A consensus figure alone keeps the judgement at the reference's rung and is not the reason to stay once other evidence has arrived; \"not established\" is confidence, not a reason to stay. From judging-v6 the reference and the implied outcome are required fields of the answer, stored beside the rung; an empty one is refused.",
   ];
 
   const TIERS = [
-    { tier: "Fact", examples: "Official actions, published figures and completed transactions", counts: "Can establish which rung holds and move the state" },
-    { tier: "Party statement", examples: "Company guidance, management statements and official speeches", counts: "Can move the state only" },
-    { tier: "Third-party view", examples: "Sell-side analysts, media analysis and experts", counts: "Can move the state only" },
-    { tier: "Rumour", examples: "Unnamed-source claims and unattributed statements", counts: "Can move the state only" },
+    { tier: "Fact", examples: "Official actions, published figures and completed transactions", counts: "Fixes what is known; the forecast starts from it" },
+    { tier: "Party statement", examples: "Company guidance, management statements and official speeches", counts: "The strongest input to the forecast" },
+    { tier: "Third-party view", examples: "Sell-side analysts, media analysis and experts", counts: "Moves the forecast in proportion to its specificity" },
+    { tier: "Rumour", examples: "Unnamed-source claims and unattributed statements", counts: "Moves the forecast in proportion to its specificity" },
   ];
 
   const TIER_RULES = [
-    "The model determines the size of the push and gives reasons. No tier has a fixed score.",
-    "Count independent original sources. Twenty outlets retelling one exclusive are twenty references to one evidence item, not twenty independent confirmations.",
-    "Tier follows who confirmed it. An unnamed-source report that Commerce is issuing licences is a rumour. An official or company confirmation is factual evidence replacing it. The rumour remains a rumour in history.",
+    "The model determines the size of the push and gives reasons, by tier and novelty: a repeat, another outlet or an opinion with no new fact or calculation moves nothing (D260). No tier has a fixed score.",
+    "Count independent original sources. Twenty outlets retelling one exclusive are twenty pieces, each related to the one it repeats (D204), and one source, not twenty independent confirmations (D30).",
+    "Tier follows who confirmed it. An unnamed-source report that Commerce is issuing licences is a rumour. An official or company confirmation is factual evidence recorded as a revision of it, both in force (D202). The rumour stays a rumour.",
     "Store evidence once without an intrinsic direction. Each rejudgement writes its push on the evidence–thesis link. One statement can affect multiple theses differently.",
   ];
 
@@ -284,9 +286,9 @@
     "Theme theses do not judge outcomes as good or bad. Each dependent asset thesis records its direction: rate cuts are bullish for Ethereum and bearish for JPM.",
     "A dependency has one direction. An apparent “good first, bad later” relationship needs an intermediate thesis: steel tariffs raising domestic steel prices and weakening downstream steel demand are separate paths.",
     "Dependencies and the theme block are the two ways theses influence each other; succession only orders periods. B depending on A means B reads A's conclusion. The theme block (D191, D195) shows every open, judged theme thesis to every asset thesis's judgement, one to all, and the judgement states which way each theme it weighed pushes it; no edge is written for it. Keep B's direct evidence separate from dependency states and reasons. A's conclusion can affect B like evidence but is not stored as evidence: external events and statements are evidence, whereas A is our own judgement. Treating it as evidence would let the system convince itself.",
-    "Count a statement once. A statement about A is A's evidence, including when two candidates arise from one item. B learns it through A's conclusion. Only statements directly about B are B's evidence. If B does not depend on A, the statement may also directly evidence B. Choose dependencies only when B is created.",
+    "Count a statement once. A statement about A is A's evidence, including when two candidates arise from one item. B learns it through A's conclusion. Daily filing gives a statement one home: the narrowest open thesis it bears on, as that thesis's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer, plus the same answer's candidates (D207, D259, D264, D265); a coverage-start record is one record linked to every thesis that read it (D364). Dependencies are chosen only when B is created; a later item adding a dependency to an existing thesis is decided (D191 point 2) and to be built (D368).",
     "Rejudge an open thesis when its inputs change: new evidence, replacement, a new link to existing evidence, a dependency declaring a changed conclusion, or (for an asset thesis) a theme thesis declaring one. Additional source references alone do not count. Binding an awaited A or moving to its successor also changes B's inputs. Closed theses do not update. A memo-derived thesis is first judged when evidence first links to it; before that, it and its dependants see “not yet judged”.",
-    "The matching model chooses dependencies when opening a thesis, stating which conclusions it relies on and each direction. Choose only among searched theses, extraction block-5 theses and candidates opened from the same item; no extra search. Completed events are evidence, not dependencies: today's oil price influencing OPEC output is evidence for the OPEC-output thesis.",
+    "The matching call chooses a new thesis's dependencies, stating which conclusions it relies on and each direction (D51). Choose only among searched theses, extraction block-5 theses and candidates opened from the same item; no extra search. Jev, the default matcher, is not asked for them, so on the default configuration only seed theses carry dependencies (D253); building the choice on the Jev path is decided (D368). A seed's dependency arrow means \"supports\" (D368, by D208): for filing, the supporting (driver) thesis is the narrower one; for judging, the supported (root) thesis reads the supporting theses' conclusions, so drivers and themes are judged before their roots. The judging code reads the stored edge the other way today; the fix is to be built and measured (D368). Completed events are evidence, not dependencies: today's oil price influencing OPEC output is evidence for the OPEC-output thesis.",
     "Before adding an edge or following it to a successor, code checks for cycles. Refuse a cycle and ask the model to correct it; persistent cycles follow normal failure handling. Apparently mutually dependent questions indicate poorly defined theses.",
   ];
 
@@ -297,23 +299,23 @@
     "Keep ladder orientation across succession: a strongly bullish first rung remains strongly bullish, although thresholds can change. Dependencies retain their direction; reversing the ends would break it.",
   ];
 
-  // Writing what extraction hands over, one item per round: candidate views first, then evidence.
+  // Writing what extraction hands over, one item at a time, candidate views first, then evidence; the rejudgement round runs once a day (D63).
   const INTAKE_STEPS = [
     { code: '1', name: "Check sources", who: "Code", does: "Reject sources absent from processing records and record the reason" },
-    { code: '2', name: "Receive evidence", who: "Code", does: "Retries do not duplicate evidence. A revised input updates only its own source reference. A revised retelling does not alter the original evidence. If the revision is from the original source, compare its statements normally and replace changed statements." },
+    { code: '2', name: "Receive evidence", who: "Code", does: "Retries do not duplicate evidence. A revised input updates only its own source reference. A revised retelling does not alter the original evidence. If the revision is from the original source, compare its statements normally: a changed statement is stored as a revision of the old one, both in force (D202)." },
     { code: '3', name: "Search", who: "Code", does: "Use a search engine such as Elasticsearch; semantic versus keyword search remains open. Search all open and closed theses for each candidate and take top N, initially 10 in Config. Search evidence only within its linked thesis, also top N. Evidence linked to candidates waits for their destinations, even if also linked to existing theses. Empty lists still proceed to matching." },
-    { code: '4', name: "Match", who: "Model", does: "The model does not read the original item. Show each existing thesis's subject, question, focus, ladder, due date and open/closed state. In one call: (1) decide candidate identity or a narrower part, succession with unchanged ladder orientation but new thresholds, new thesis for distinct or merely similar questions, or skip overly broad questions, numbers beyond this/next year and the same period of a closed thesis; give reasons; (2) choose dependencies and directions among searched, block-5 and same-item new theses; (3) compare evidence linked only to existing theses. Evidence linked to candidates waits for their destinations, then searches all linked existing theses together and uses one further comparison call. Evidence linked only to new theses is new evidence." },
+    { code: '4', name: "Match", who: "Model", does: "The matcher does not read the original item. Jev answers, with a score, each candidate's relation to every thesis on its list (shown with its subject, question, focus, ladder, due date and open/closed state) and each piece of evidence's relation to every stored piece on its list under each linked thesis; code turns the answers into the destinations below and owns identity on typed keys (D155, D169, D197). When a candidate's list holds a thesis of its own subject and measure, the collision judge, one generative call, answers the analyst's question for those theses under D248's test, and its verdict replaces Jev's (D190, D258). Jev is not asked for dependencies. Evidence linked to candidates waits for their destinations, then searches all linked existing theses together and is compared once more. Evidence linked only to new theses is new evidence." },
     { code: '5', name: "Validate", who: "Code", does: "Destination IDs must be in the shown lists or the relevant thesis's evidence. Merge only into open theses. New subjects must resolve within the universe using classification's identifier rules; otherwise skip. Dependencies must reference shown theses or an explicit awaited chain/year and remain acyclic. Return invalid answers for correction." },
-    { code: '6', name: "Write to the library", who: "Code", does: "Resolve extraction's group associations to final theses and save them in this step. Each subject has its own writing queue; write theme theses before asset theses. Save new theses with their dependency edges. A repeat adds a source reference and any new thesis link. For replacement, order by when the statement was made: later statements supersede earlier ones. A late-arriving older statement is logged, not inserted. Carry the old evidence's other thesis links to its replacement. An original-source revision that omits a statement without replacing it marks it replaced. If compared data changes before writing, repeat matching only for the affected part." },
-    { code: '7', name: "Run a rejudgement round", who: "Model", does: "Rejudge only open theses whose inputs changed: new/replaced/newly linked evidence, or a changed dependency conclusion, newly created awaited thesis or successor. Judge dependencies first, then theme theses before asset theses, and each thesis once per round. Extra source references alone do not trigger it. Memo-derived theses without evidence stay not yet judged. Each judgement declares whether its conclusion changed; changed conclusions propagate to dependants, and a theme's to every open asset thesis (D195). The round's queue is read from the ledger, so a resumed round recovers what an earlier commit queued." },
+    { code: '6', name: "Write to the library", who: "Code", does: "Resolve extraction's group associations to final theses and save them in this step. Each subject has its own writing queue; write theme theses before asset theses. Save new theses with their dependency edges. Store every incoming piece once, as its own record with all its links (D204): a repeat also records the pair as the same claim; a replacement is linked wherever the piece it revises is linked and the pair is recorded as a revision, ordered by when each statement was made, both in force (D202); an older statement arriving later is stored and linked as one more piece, with no revision recorded. The writer retires nothing. If compared data changes before writing, repeat matching only for the affected part." },
+    { code: '7', name: "Run the day's rejudgement round", who: "Model", does: "Once a day, after the day's last item (D63), rejudge only open theses whose inputs changed that day: new or newly linked evidence (a repeat or a revision is a new piece), or a changed dependency conclusion, newly created awaited thesis or successor. Judge dependencies first, then theme theses before asset theses, and each thesis once per round; each judgement reads the evidence in view (D198). Extra source references alone do not trigger it. Memo-derived theses without evidence stay not yet judged. Each judgement declares whether its conclusion changed; changed conclusions propagate to dependants, and a theme's to every open asset thesis (D195). The round's queue is read from the ledger, so a resumed round recovers what an earlier commit queued." },
   ];
 
   // Two lanes, one shape: a candidate view and a piece of evidence are each compared with what is already there.
   const INTAKE_SHAPE = [
     { aspect: "Comparison set", views: "Top N search results from the entire thesis library", evidence: "Top N evidence results within its thesis" },
     { aspect: "Decision", views: "Existing identity or part, succession, new thesis or skip", evidence: "Repeat, replace or new evidence" },
-    { aspect: "Chain", views: "Succession: Fed year-end 2026 rate → 2027 → 2028", evidence: "Replacement: AMZN capex guidance 12% growth → 25%" },
-    { aspect: "What counts as current", views: "Open theses on the chain; numeric theses may have one for this year and one for next year", evidence: "Evidence not replaced; replacements also form a chain" },
+    { aspect: "Chain", views: "Succession: Fed year-end 2026 rate → 2027 → 2028", evidence: "Revision: AMZN capex guidance 12% growth → 25%, both in force" },
+    { aspect: "What counts as current", views: "Open theses on the chain; numeric theses may have one for this year and one for next year", evidence: "Every stored piece stays in force; revisions form a chain the judge reads (D202)" },
     { aspect: "Search scope", views: "Entire thesis library, open and closed", evidence: "Only evidence within its thesis, not the entire library" },
   ];
 
@@ -333,16 +335,16 @@
 
   // Step 4: where a piece of evidence goes, against the evidence its view already holds.
   const EVIDENCE_OUTCOMES = [
-    { outcome: "Repeat", when: "The same evidence already exists under the thesis: a retelling, the same number in text and table, or the same speaker repeating the same statement", writes: "Add a source reference, not another evidence item. Existing links do not trigger rejudgement; a new thesis link changes that thesis's inputs and does." },
-    { outcome: "Replace", when: "A later account of the same matter: a speaker revises guidance, forecast or event progress; an official confirms/denies a rumour; or the original source revises its statement", writes: "Order by statement date. Later statements replace earlier ones, which remain in history; rejudge. A late-arriving older statement is only logged and does not trigger rejudgement." },
+    { outcome: "Repeat", when: "The same evidence already exists under the thesis from another input: a retelling, or the same speaker repeating the same statement (within one input, the same number in text and table is one piece with several quotes)", writes: "Store it as its own piece with its own source and links, and record the pair as the same claim (D204). The judge sees the pair labelled as the matcher's opinion and counts one claim; its links queue their theses for the day's round." },
+    { outcome: "Replace", when: "A later account of the same matter: a speaker revises guidance, forecast or event progress; an official confirms/denies a rumour; or the original source revises its statement", writes: "Store the later statement beside the earlier one and record the pair as a revision, ordered by statement date; both stay in force (D202); rejudge. A late-arriving older statement is stored and linked as one more piece, with no revision recorded." },
     { outcome: "New evidence", when: "Anything else: a new event, another period's figure or another speaker's statement, including disagreement. Uncertainty also means new evidence.", writes: "Add it alongside existing evidence and rejudge" },
   ];
 
   const EVIDENCE_NOTES = [
     "First resolve the evidence's thesis destination from extraction or candidate matching. Search the top N evidence items still in force within that thesis and ask the model to compare. Unlike candidate-thesis search, evidence search never spans the whole library.",
     "Store evidence once even when linked to several theses. Compare all those theses' evidence together. If any link is to a candidate, wait for that candidate's destination.",
-    "Carry other thesis links from replaced evidence to the replacement and rejudge open linked theses; otherwise they would retain only an obsolete statement.",
-    "Replacement applies to a statement or number, not the whole report. A revised sell-side revenue forecast replaces that forecast while other arguments remain in force.",
+    "A revision is linked wherever the piece it revises is linked, and those open theses are rejudged, so each sees the change (D202).",
+    "Replacement applies to a statement or number, not the whole report. A revised sell-side revenue forecast is recorded as a revision of that forecast; both stay in force, as do the report's other arguments.",
     "Matching reads the evidence summary, speaker, original source and statement date, not the full original item. When uncertain, treat it as new evidence; both then remain available for judgement.",
   ];
 
@@ -354,41 +356,41 @@
         answer: "NVIDIA 8-K, April 15, 2025", label: "Empty library; two candidates arrive", question: "Empty comparison lists; open both as new theses",
         children: [
           { answer: "#1 Theme thesis", label: "China export licensing for this chip class: event", note: "Evidence: H20 exports to China require a licence (fact)", act: true },
-          { answer: "#2 NVDA asset thesis", label: "FY2026 China revenue: numeric", note: "Evidence: expected charges up to approximately $5.5 billion (party statement); depends on #1, with easing bullish", act: true },
+          { answer: "#2 NVDA asset thesis", label: "FY2026 China revenue: numeric", note: "Evidence: expected charges up to approximately $5.5 billion (party statement); the licence theme #1 reaches it through the theme block (an explicit dependency, easing bullish, would be chosen in matching, D51, not yet on the default Jev path)", act: true },
         ],
       },
       {
         answer: "AMD 8-K, April 16, 2025", label: "AMD has no existing theses; two candidates arrive", question: "Match",
         children: [
-          { answer: "Candidate: MI308 export licensing to China", label: "Merge into #1", note: "Search finds #1. The model identifies the same question: the same chip class under the same rule. AMD's MI308 statement is new evidence. #1 is rejudged but declares its conclusion unchanged: an additional affected model does not change the key facts or rung. #2 is therefore not rejudged.", act: true },
+          { answer: "Candidate: MI308 export licensing to China", label: "Merge into #1", note: "Search finds #1. The model identifies the same question: the same chip class under the same rule. AMD's MI308 statement is new evidence. #1 is rejudged in that day's round but declares its conclusion unchanged: an additional affected model does not change the key facts or rung. #1 therefore queues no rejudgement of #2.", act: true },
           { answer: "Candidate: AMD 2025 China revenue", label: "New thesis #3", note: "AMD has no open thesis; evidence is expected charges up to approximately $800 million (party statement)", act: true },
         ],
       },
       {
-        answer: "Reuters, April 16, 2025, retelling NVIDIA's 8-K", label: "Existing context: #2 and its dependency #1", question: "Match",
+        answer: "Reuters, April 16, 2025, retelling NVIDIA's 8-K", label: "Existing context: #2 and the licence theme #1", question: "Match",
         children: [
-          { answer: "Evidence links to #1 and #2", label: "Both are repeats", note: "The original source is the same NVIDIA 8-K and both statements already exist under #1 and #2. Add a source reference to each; neither thesis is rejudged.", act: true },
+          { answer: "Evidence links to #1 and #2", label: "Both are repeats", note: "The original source is the same NVIDIA 8-K and both statements already exist under #1 and #2. Each retelling is stored as its own piece under its thesis, with the pair recorded as the same claim (D204). Both theses are rejudged in that day's round, #2 for this piece alone; the judge counts one claim, so neither conclusion changes.", act: true },
         ],
       },
     ],
   };
 
-  // One view's evidence over half a year: how repeats and replacements keep it current (numbers illustrative).
+  // One view's evidence over half a year: how repeats and revisions are recorded, every piece staying in force (numbers illustrative).
   const EVIDENCE_EXAMPLE = [
     { item: "February 5 call: capex guidance up 12%", matched: "New evidence; none previously under this thesis", store: "Add g1", rejudge: "Rejudge" },
-    { item: "February 6 Reuters report retells the guidance", matched: "Repeat of g1", store: "Add a source reference to g1", rejudge: "No rejudgement" },
+    { item: "February 6 Reuters report retells the guidance", matched: "Repeat of g1", store: "Add r1, recorded as the same claim as g1", rejudge: "Rejudge; one claim, conclusion unchanged" },
     { item: "March 10 Morgan Stanley forecast: up 18%", matched: "New evidence from another speaker", store: "Add m1", rejudge: "Rejudge" },
-    { item: "April 30 call: guidance revised to 25% growth", matched: "Replace g1", store: "g2 is in force; g1 is replaced", rejudge: "Rejudge, reading “12% → 25%”" },
-    { item: "May 2 Morgan Stanley forecast revised to 27%", matched: "Replace m1", store: "m2 is in force; m1 is replaced", rejudge: "Rejudge" },
-    { item: "Arrives May 20: Morgan Stanley's February forecast", matched: "Late older statement; Morgan Stanley already revised it in March (m1) and May (m2)", store: "Do not insert this forecast. Log it as superseded and unused; m2 remains in force.", rejudge: "No rejudgement" },
-    { item: "June 10 meeting reiterates “still around 25%”", matched: "Repeat of g2", store: "Add a source reference to g2, latest June 10", rejudge: "No rejudgement" },
+    { item: "April 30 call: guidance revised to 25% growth", matched: "Replace g1", store: "Add g2 beside g1, both in force; the revision g1 → g2 is recorded", rejudge: "Rejudge, reading “12% → 25%”" },
+    { item: "May 2 Morgan Stanley forecast revised to 27%", matched: "Replace m1", store: "Add m2 beside m1, both in force; the revision m1 → m2 is recorded", rejudge: "Rejudge" },
+    { item: "Arrives May 20: Morgan Stanley's February forecast", matched: "Late older statement; Morgan Stanley already revised it in March (m1) and May (m2)", store: "Add m0 as one more piece with its February date; no revision is recorded and the late-statement log keeps a row", rejudge: "Rejudge; m2 is still the latest forecast, so the conclusion stays" },
+    { item: "June 10 meeting reiterates “still around 25%”", matched: "Repeat of g2", store: "Add j1, recorded as the same claim as g2", rejudge: "Rejudge; one claim, conclusion unchanged" },
   ];
 
-  const EVIDENCE_EXAMPLE_NOTE = "After six months the thesis may have dozens of evidence items. Rejudgement reads those still in force: company guidance of 25% growth (12% in February), Morgan Stanley's 27% forecast (18% in March), plus other speakers and events.";
+  const EVIDENCE_EXAMPLE_NOTE = "After six months the thesis may have dozens of evidence items, all in force. A rejudgement reads those in view, the arrivals since its fifth most recent judgement and the basis its last ten judgements cited (D198), each revision beside the piece it revises: company guidance of 25% growth revising February's 12%, Morgan Stanley's 27% forecast revising March's 18%, plus other speakers and events.";
 
   // The judge of step 4, its records, and the labels that will train a faster model.
   const JUDGE_STEPS = [
-    { code: '1', name: "Large-model matching", who: "Model", does: "Start with a general-purpose model using Config's matching settings" },
+    { code: '1', name: "Jev and the collision judge", who: "Model", does: "Jev answers under Config's matching setting (D169); for a candidate whose list holds a thesis of its own subject and measure, the collision judge, a generative model under Config's collision setting, answers for those theses and its verdict replaces Jev's (D190, D258)" },
     { code: '2', name: "Record every comparison", who: "Code", does: "Record what the model saw, what it returned and what was ultimately stored" },
     { code: '3', name: "Human labelling", who: "Person", does: "Label two sets: code-refused decisions from validation step 5 and periodic random samples. People supply the correct outcome." },
     { code: '4', name: "Train a smaller model", who: "Code", does: "Use human labels to train a faster, smaller model" },
@@ -399,7 +401,7 @@
     { part: "Which item", meaning: "Upstream ID and sequence number" },
     { part: "Received input", meaning: "Preserve extraction's candidates, associations, new group definitions and evidence exactly. Separately record the matching-model input." },
     { part: "Shown to the model", meaning: "Ranked top N thesis matches per candidate; top N evidence matches within each thesis; extraction block-5 theses and same-item new theses available for dependency selection" },
-    { part: "Decision maker", meaning: "Large model, future smaller model or person" },
+    { part: "Decision maker", meaning: "Jev or the collision judge, a future smaller model, or a person" },
     { part: "Request and response", meaning: "Actual request, raw response and Config version identifying model, prompt and temperature" },
     { part: "Decision", meaning: "Each candidate's destination and reason; new-thesis dependencies and directions; evidence repeat/replacement/new decisions; validation results and refusal reasons" },
     { part: "Stored result", meaning: "What was finally written to the library" },
@@ -438,22 +440,22 @@
   const EVIDENCE_FIELDS = [
     { part: "Quotation", meaning: "The original sentence or table cell" },
     { part: "Standalone summary", meaning: "A sentence understandable without the original: who, what, how much and which period. Matching and rejudgement read it." },
-    { part: "Source", meaning: "Upstream ID, category, publication day and location. Retellings, repeated numbers in text/tables and repeated statements add source references to the same evidence item." },
+    { part: "Source", meaning: "Upstream ID, category, publication day and location. A number repeated in text and tables within one item adds references to the same piece; a retelling or repeated statement in another item is its own piece, with the pair recorded as the same claim (D204)." },
     { part: "Speaker", meaning: "The person or organisation making the statement" },
-    { part: "Original source", meaning: "For a retelling, identify who originally said it and on which day. Count independent sources and order replacements by that origin." },
+    { part: "Original source", meaning: "For a retelling, identify who originally said it and on which day. Count independent sources and order revisions by that origin." },
     { part: "Tier", meaning: "Fact, party statement, third-party view or rumour" },
     { part: "Event time", meaning: "When the event happened or takes effect; for a number, the period it describes" },
-    { part: "Replaced", meaning: "The replacing evidence, where a speaker revises a statement/number, an official confirms/denies a rumour, or the original source revises/deletes it. Deletion has no replacement evidence. Replaced evidence no longer counts but remains in history." },
+    { part: "Revises", meaning: "The earlier piece this one revises, where a speaker revises a statement/number, an official confirms/denies a rumour, or the original source revises it. The pair is recorded and both stay in force; the writer retires nothing (D202)." },
   ];
 
   const ORDER_RULES = [
     "Only incoming information creates evidence. Theses send notifications, not evidence, so they cannot prove themselves.",
     "One queue writes each thesis: the theme's queue for theme theses; the company, cryptocurrency or commodity queue for asset theses. Within an item, write themes before assets. Rejudgement order follows dependencies under the round rule. Other queues send requests, such as dependency changes or replacement links, to the owning queue with the item's sequence number.",
-    "Order by sequence, never the computer clock. An item reads only records from earlier sequences plus its own round's writes. The result must match serial processing. If concurrent work changes anything it read, including search lists, before commit, redo the affected work.",
-    "One item's changes form a round. Finish evidence links, thesis creation, succession and dependencies, then rejudge in dependency order. Dependants read conclusions freshly judged in that round. Judge each thesis once. A widely depended-on thesis such as the Fed rate triggers each dependant once only if it declares its conclusion changed; otherwise propagation stops.",
+    "Order by sequence, never the computer clock. An item reads only records from earlier sequences plus its own writes, except that extraction reads the theses open at the start of the item's day (D251). The result must match serial processing. If concurrent work changes anything it read, including search lists, before commit, redo the affected work.",
+    "A day's items form one round: each item's evidence links, thesis creation, succession and dependencies are written in sequence order, and after the day's last item the round rejudges in dependency order (D63). Dependants read conclusions freshly judged in that round. Judge each thesis once. A widely depended-on thesis such as the Fed rate triggers each dependant once only if it declares its conclusion changed; otherwise propagation stops.",
     "Append-only records: questions, ladders and due dates are immutable. Matching, rejudgement, succession, closure, reopening and labels append records with sequence numbers.",
-    "The timeline only appends, never rewrites past knowledge. A late statement already superseded by a newer one is logged as superseded and unused, not added to the thesis. Previously unknown information counts normally with its true date. The evidence-matching model distinguishes these cases; add no separate rule.",
-    "A revised input changes only its own source reference. Revising a retelling does not change original evidence. For an original-source revision, changed statements are replaced and deleted statements marked replaced. Rejudge each open thesis linked to affected statements once. A retelling-reference change alone does not trigger rejudgement. Keep old judgement records unchanged.",
+    "The timeline only appends, never rewrites past knowledge. A statement older than one already stored on the same matter is stored and linked as one more piece with its true date, and no revision is recorded (D202); previously unknown information counts normally with its true date.",
+    "A revised input changes only its own source reference. Revising a retelling does not change original evidence. For an original-source revision, a changed statement is stored as a revision of the old one, both in force; nothing is retired (D202). Rejudge each open thesis linked to affected statements once. A retelling-reference change alone does not trigger rejudgement. Keep old judgement records unchanged.",
     "On failure, record the item's completed step and retry from the failed step, replacing only that attempt's own result. Repeated failures go to human review.",
     "Trace both directions: a thesis to all information that affected it; an item to theses it created and all evidence it sourced, including repeats.",
   ];
@@ -483,7 +485,7 @@
 
   const CLOSING_RULES = [
     "A question has one state and no separate result: the rung it stands on at the end of its due day is its conclusion (D54).",
-    "There is no separate final review: each day's judgement already reads the evidence in force (D356).",
+    "There is no separate final review: each day's judgement already reads the evidence in view, D198's window (D356).",
     "Nothing waits. Decisive information arrives as evidence by the end of the due day; a question whose result is still unknown closes at its state (D54).",
     "Due days are set when a question is opened, on or after the day its result is published (D356).",
     "The closing record is shown, never a gate; a question never judged shows “no data to verify” (D356).",
@@ -581,7 +583,7 @@
       container.innerHTML = `
         <div class="drill">
           <h2 class="drill__title">Extraction: read each category into evidence and candidates</h2>
-          <p class="drill__intro">Give the model the entire item and its category prompt, alongside existing theses, to read as a senior hedge-fund analyst. Return evidence supporting or weakening existing theses or current candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their prompt rule. Each candidate carries a group association under the contract below. Retain sources. The library owns matching and writing.</p>
+          <p class="drill__intro">Give the model the entire item and its category prompt, alongside the theses open at the start of its day with their takes lines, to read as a senior hedge-fund analyst. Return evidence, each piece filed under the narrowest open thesis it bears on or the answer's candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their prompt rule. Each candidate carries a group association under the contract below. Retain sources. The library owns matching and writing.</p>
           <p class="drill__status"><span class="pill pill--strong">First version frozen · 2026-10-18</span>Decided: whole-item reading, one prompt per category with a shared structure, model-judged theses and objective evidence, source references, read-only extraction, evidence separate from complete candidates. Category prompt wording still needs validation.</p>
           <h3 class="drill__heading drill__heading--spaced">Determine group associations during extraction</h3>
           <ul class="drill__rules">${listItems(EXTRACT_RELATIONS, escapeHtml)}</ul>
@@ -631,7 +633,7 @@
         <div class="drill">
           <h2 class="drill__title">Thesis library</h2>
           <p class="drill__intro">Create, update and close theses here. A thesis has a question, ladder and due date; evidence moves its state, which freezes when due. Search and compare both extraction outputs: candidates against existing theses for merge, succession, creation or skip; evidence within its thesis for repeat, replacement or addition. An extra source reference alone does not trigger rejudgement. Preserve sources and extraction-owned group associations under the rules below. Records are append-only.</p>
-          <p class="drill__status"><span class="pill pill--strong">First version frozen · 2026-10-20</span>Only recorded decisions are included. Changes need a new decision. Open questions and two pull-mode proposals are listed at the end.</p>
+          <p class="drill__status"><span class="pill pill--strong">First version frozen · 2026-10-20</span>Only recorded decisions are included. Changes need a new decision. Open questions and one proposal are listed at the end.</p>
           <h3 class="drill__heading drill__heading--spaced">Research groups: associate during extraction</h3>
           <ul class="drill__rules">${listItems(GROUP_RELATIONS, escapeHtml)}</ul>
           <h3 class="drill__heading drill__heading--spaced">Structure</h3>
@@ -655,7 +657,7 @@
           <ul class="drill__rules">${listItems(CHAIN_RULES, escapeHtml)}</ul>
           <h3 class="drill__heading drill__heading--spaced">Intake: search then compare candidates and evidence</h3>
           ${table(['', "Candidate thesis", "Evidence"], INTAKE_SHAPE.map((row) => [row.aspect, row.views, row.evidence]), escapeHtml)}
-          <h3 class="drill__heading drill__heading--spaced">One item entering the library: a round</h3>
+          <h3 class="drill__heading drill__heading--spaced">One item entering the library, then the day's round</h3>
           <p class="flow-legend">Black boxes are model steps; grey boxes are code.</p>
           ${flow(stepCards(INTAKE_STEPS), '→', escapeHtml)}
           <h3 class="drill__heading drill__heading--spaced">Step 4: candidate destinations</h3>
@@ -669,7 +671,7 @@
           <h3 class="drill__heading drill__heading--spaced">Example: evidence updates for AMZN 2026 capex (illustration)</h3>
           ${table(["Item", "Evidence comparison", "Library result", "Rejudgement"], EVIDENCE_EXAMPLE.map((row) => [row.item, row.matched, row.store, row.rejudge]), escapeHtml)}
           <p class="drill__footnote">${escapeHtml(EVIDENCE_EXAMPLE_NOTE)}</p>
-          <h3 class="drill__heading drill__heading--spaced">Matching and labelling: start with a large model, train a smaller one later</h3>
+          <h3 class="drill__heading drill__heading--spaced">Matching and labelling: Jev and the collision judge now, a smaller model trained from labels later</h3>
           <p class="flow-legend">Black boxes are model steps; grey boxes are code or people.</p>
           ${flow(stepCards(JUDGE_STEPS), '→', escapeHtml)}
           <h3 class="drill__heading drill__heading--spaced">Matching-record fields</h3>

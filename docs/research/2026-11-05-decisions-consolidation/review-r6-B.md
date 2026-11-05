@@ -1,0 +1,3 @@
+- **Serious — [2026-10-23-nvda-poc.md:3](/Users/lchingen/hivemind/docs/superpowers/plans/2026-10-23-nvda-poc.md:3)：历史说明仍把完整模型调用记录的要求归给了不完整的出处。** 说明写道，原先归给 AGENTS §6 的“完整模型调用记录”，其出处是 PRD 03；但 [PRD 03](/Users/lchingen/hivemind/docs/prd/03-config.md:37) 只要求记录 Config 版本和校验和，没有要求记录原始请求、原始回答、提示词字符数和 token 数。历史计划的[第 23 行](/Users/lchingen/hivemind/docs/superpowers/plans/2026-10-23-nvda-poc.md:23)要求的是全部这些内容。**修正：**说明 PRD 03 仅支持版本和校验和；其余记录要求另给核实过的出处，若没有找到就明确写出处未确认。
+
+serious: 1, wording: 0
