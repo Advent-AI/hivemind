@@ -1,0 +1,19 @@
+Read-only design review. Do not edit files and make no paid model calls; read-only shell is fine. Repository: the current directory.
+
+Review the third draft of docs/research/2026-11-04-argument-record/design.md (Chinese); the findings of rounds 1 and 2 are in codex-review-r1.md and codex-review-r2.md beside it and section 11 lists how each was answered. Check that each answer holds against the code, and look for anything still missing, for the "argument record" (one versioned card per
+research question that the daily judgement reads and rewrites). Read first: AGENTS.md (§2 design tables, §3, §7.1 frozen ruler, §8),
+docs/DECISIONS.md entries D12, D13, D54, D59, D63, D168, D198, D201, D202, D204, D207, D209, D260, D261, D262, D274, D354, D356, D358,
+D359, and the code it would change: src/hivemind/views/judging.py, src/hivemind/views/round.py, src/hivemind/views/store.py,
+src/hivemind/pull.py, src/hivemind/service.py, src/hivemind/prompts/judging-v7.txt.
+
+Report, short, each item with the design section and the decision or code line it rests on:
+1. Any part that contradicts a recorded decision or AGENTS rule (in particular: the stream never reads the calendar; no re-judging
+   without new evidence; code owns identity never importance; frozen files never change; one state per question; writer never deletes).
+2. Any state or event the state-by-event table misses, or handles in a way that loses data, double-writes, or breaks resume
+   (for example: a question that depends on itself through a cycle, a question opened and judged the same day, a theme thesis, a
+   replaced piece that the card cites, a resumed day, a manual close or reopen, the first day with seeds, a judging refusal).
+3. Any reader of the judgements or evidence the design forgets (search the code for readers of judgements and of the evidence-in-view
+   window), and anything in the existing checks or the judgement scorer that the new shape would break.
+4. Whether the claim that request size stays bounded holds, given how arrivals, dependencies, themes and the first judgement work.
+5. Whether "no periodic update" is right, or a case exists where the card must change without a new judgement.
+Out of scope: the extraction, matching and Idea modules; wording and style. If nothing serious remains, say so.

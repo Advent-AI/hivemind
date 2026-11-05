@@ -1,0 +1,20 @@
+You are a read-only reviewer. Repository: /Users/lchingen/hivemind (branch main). Do not edit anything.
+
+SCOPE: the design of a paid validation test and its scripts, before anything is sent. Read:
+- docs/research/2026-11-04-filing-end-to-end/baseline-design.md, section "第 8 轮" (round 8) — the design under review; earlier sections are its history (the pilot on two questions).
+- Scripts in docs/research/2026-11-04-filing-end-to-end/: baseline_read.py (the reading's request text SYSTEM/TASK/SCHEMA, unchanged since the pilot, and its code check kept_figures, changed in round 8 from "the quote's last number is the value" to "the value is one number printed in the quote"), baseline_controls.py (the $0 cases for that check), baseline_all.py (the reading over 22 questions x 2 report items x 3 sends), baseline_all_judge.py (builds the window-end judging requests: control = the stored last request; arm n = same request plus reading send n's kept figures at the head of the evidence block), baseline_all_send.py (sends and scores), baseline_all_measure.py (the three pass conditions).
+- $0 outputs: baseline-all-check.txt, baseline-controls-v2.txt, baseline-all-synthetic-reading.json and baseline-all-synthetic-judge-requests.json (requests built from SYNTHETIC reading results, only to exercise the builder).
+
+GOVERNING DOCUMENTS: AGENTS.md (§1, §2, §5, §6 "Check before the send", §7.1 the frozen ruler, §7.2, §7.3), docs/prd/10-filing-phase.md (§4 "对照：当天原样重发 3 次。不和存档比", §6, §7), docs/DECISIONS.md D363 (the mandate: at coverage start record each question's starting figures once from the company's latest report; the daily path keeps excluding restatements). Production code the scripts call: src/hivemind/views/judging.py (_lines_english, evidence_in_view, check_answer, evidence_shown_in), src/hivemind/model.py (build_request, request_identity), the frozen scorer docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py.
+
+OUT OF SCOPE (not findings): the frozen ruler and gold themselves, the frozen extraction prompt, the links rule v74l, the dependency-arrow question, whether to build this into production, the wording style of the documents, anything about other companies.
+
+WHAT TO LOOK FOR (serious findings only: things that would make the test's result wrong, misleading, or not what the design says):
+1. Does the code do what round 8 says? (document rule; request bytes equal to the pilot's; the check; the insertion; v10/v12 construction; which questions are sent; send counts; scoring = the frozen scorer's rule for numeric and yes/no; the changed-rule fix; the permutation rule; the three conditions.)
+2. Can the test pass while the reading is unsafe, or fail while it is safe? Attack the decision rule (null rate, power, what "agrees in control" means, refused answers, reading sends with no figure, questions never sent).
+3. Does anything from the gold or reader B's reasoning leak into any request?
+4. Does any request ask for something a check refuses, or does the check refuse what a prompt-following answer would write?
+5. Is the comparison fair: control and arm differ only by the records? Anything about how the stored request is reused (the previous-conclusion line, the "not shown" line, theme and dependency blocks) that biases the comparison?
+6. Anything the design claims as measured that has no script behind it.
+
+OUTPUT: a numbered list. For each: severity (serious / minor), the claim, the evidence (file:line or quoted text you read), and what would fix it. Say explicitly if you find nothing serious. Keep it under 900 words.

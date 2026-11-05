@@ -80,7 +80,7 @@ The foundational design was frozen on October 22, 2026; pull mode and closing at
 |---|---|
 | Research universe | First version frozen; specific themes remain a draft |
 | Upstream classification, Config, dispatch | First versions frozen |
-| Extraction | Frozen at `poc-v108` (D274): extraction v74i, one decider (D264) that files each statement under the questions open at the start of its day; the step's standard is `docs/prd/05-extraction-standard.html` and its frozen ruler (AGENTS §7.1) |
+| Extraction | Frozen at `poc-v108` (D274): extraction v74i, one decider (D264) that files each statement under the questions open at the start of its day; the step's standard is `docs/prd/05-extraction-standard.html` and its frozen ruler (AGENTS §7.1). At coverage start each question reads the company's latest earnings report once (D364, D365; `poc-v116`, the replay default since D366) |
 | Thesis library and matching records | Foundation frozen; matching on Jev (D169) with the collision judge (D190); listed open questions pending |
 | Human review pool | Intake frozen; output not yet designed |
 | Pull mode and closing at the due day | Decided and built: at the end of each day a due question freezes at its rung and closes; no separate final verdict (D54, D356) |
@@ -97,7 +97,7 @@ The default backend reads these local files:
 |---|---|
 | Collected thesis ledger | `poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite` |
 | Source items | `poc/data/items-nvda-2026-07-01-10-27.sqlite` (cleaned pages, D351; the whole pages as fetched are in `items-nvda-2026-07-01-10-27.page.sqlite`, column `text_page`) |
-| Replay configuration | `poc/config/poc-v108.json`: the frozen production extraction prompt (D274) and Jev matching |
+| Replay configuration | `poc/config/poc-v116.json` (D366): `poc-v108`, the frozen production extraction prompt (D274) with Jev matching, plus the coverage-start reading (D364, D365) |
 | Idea configuration | `poc/config/poc-v33-idea.json`: two discovery calls and a final adoption/weighting call |
 | Derived service index and Idea archive | `poc/data/service-english/` by default; overridable per run |
 
@@ -171,7 +171,7 @@ Inspect changed refusals before continuing. For an authorized replay, use a new 
 python3 "$repo/scripts/replay.py" --help
 ```
 
-The default replay configuration is `poc-v108`, the frozen production extraction prompt (D274; `tests/test_frozen_extraction_prompt.py` pins it). The replay runs the parallel day by default (D183); `--workers 1` runs the serial path. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
+The default replay configuration is `poc-v116` (D366): `poc-v108`, the frozen production extraction prompt (D274), plus the coverage-start reading, which reads the company's latest earnings report once after `--seed` and refuses a run without it (D364); `tests/test_frozen_extraction_prompt.py` checks it adds nothing else. The default items database is `poc/data/items-nvda-2026-07-01-10-27.sqlite`, which holds the page text the reading needs. The replay runs the parallel day by default (D183); `--workers 1` runs the serial path. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
 
 ## Build and check
 

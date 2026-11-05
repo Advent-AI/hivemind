@@ -148,6 +148,7 @@ AVOIDED_WORDS = [
     (r"(?i)\b(?:theme context|macro block)\b", "theme block"),
     (r"(?i)\b(?:verification|confirmation|falsification) conditions?\b", "ladder conditions"),
     (r"(?i)\b(?:thes(?:is|es)\s+(?:is|are|was|were|has been|have been)\s+(?:confirmed|falsified)|(?:confirmed|falsified)\s+thes(?:is|es))\b", "a frozen thesis state, not a separate verdict"),
+    (r"(?i)\bbaseline (?:figures?|numbers?|values?)\b", "starting figure"),
 ]
 WORD_CONTROLS = [
     ("Open a company view.", "Open an asset thesis."),
@@ -172,6 +173,7 @@ WORD_CONTROLS = [
     ("The theses are falsified.", "The theses are closed with their frozen states."),
     ("Read the confirmed thesis.", "Read the frozen thesis."),
     ("Read the falsified thesis.", "The official confirmed the event; rejudge the thesis."),
+    ("Record each question's baseline figure.", "Record each question's starting figure."),
 ]
 # The views database's page data (D38-D42): rendered into docs/prd/06-views.md and read by the wording check.
 VIEWS_CONSTANTS = ["VIEW_TREE", "VIEW_KINDS", "KIND_NOTE", "LADDER_EXAMPLES", "LADDER_RULES", "POSITIONS", "TIERS", "TIER_RULES",

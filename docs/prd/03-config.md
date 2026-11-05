@@ -16,7 +16,7 @@ The old system had five overriding configuration layers and several presets. Mul
 |---|---|---|
 | Version | Every settings change creates a new version. | Created when settings change |
 | Checksum | Calculated from the complete configuration and recorded with every model call, including extraction, matching and rejudgement, so the exact version can be traced. | Calculated by code |
-| Model settings and search result count | Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching and rejudgement settings. Config also sets the search result count, initially 10. Prompt content belongs to the extraction and thesis library modules. A settings version is immutable; a change creates a new one. | Chosen by a person |
+| Model settings and search result count | Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching and rejudgement settings. An optional coverage-start reading setting (model, prompt version, reasoning effort, temperature) turns on the once-only reading of the company's latest report at coverage start (D364); a version without it has no such step. Config also sets the search result count, initially 10. Prompt content belongs to the extraction and thesis library modules. A settings version is immutable; a change creates a new one. | Chosen by a person |
 <!-- /generated: schema -->
 
 ## Rules

@@ -1,0 +1,18 @@
+Read-only code review before a paid run, third round. The findings of rounds 1 and 2 are in docs/research/2026-11-04-argument-record/codex-code-review-r1.md and -r2.md and the fixes are in design.md section 11 (the rows marked 代码审查 r1 and r2); check each fix holds, then look for anything still wrong. Do not edit files and make no paid model calls; read-only shell and running the test suite
+(python3 -m pytest -q -p no:cacheprovider) are fine. Repository: the current directory; the change is uncommitted (git diff, git status).
+
+The change implements judging-v8, the "argument card", as designed in docs/research/2026-11-04-argument-record/design.md (Chinese;
+sections 3-6 are the contract) with the validation choices in log.md (the card is written in the same call as the judgement; a new
+piece stays in view for three judgements). Files: src/hivemind/views/judging.py (the v8 path beside the frozen v7 path), 
+src/hivemind/views/store.py (arguments table, arrival_use_json column, latest_argument, claim_numbers_used),
+src/hivemind/prompts/judging-v8.txt (v7's text with three changes), poc/config/poc-v109.json, scripts/preflight.py (item F and item A's
+schema), tests/test_argument_card.py, tests/test_preflight_replay.py.
+
+Report, short, most serious first, each with file and line and a concrete failing case:
+1. Any way the v8 path can write inconsistent data (a judgement without its card or the reverse, a claim id reused, cites that disagree
+   with the card), lose data, or break resume (a round resumed at the same sequence number, a refused answer, a crash).
+2. Any request the v8 code can build that its own checks would refuse for a well-behaved answer, or any breach the checks miss.
+3. Any change to judging-v7 behaviour (the frozen path must build byte-identical requests and accept the same answers).
+4. Anything in the v8 prompt or schema that contradicts the code's checks, the design, or the v7 rules it keeps.
+5. Anything in preflight item F that would misjudge a stored answer.
+Out of scope: extraction, matching, the Idea API; service and UI readers of the card (a later slice); wording and style.

@@ -3827,3 +3827,105 @@ the backup). The writer fix it names was not carried: `main` reads cited ids as 
   and scripts load, and `poc-v22` (read by `scripts/recall_oracle.py`). The backup manifest of D274's retired variants is restored beside
   its archive, since a report links it.
 - A new version of either prompt is a new decision with its own code path, measured against v74i and judging-v7 (D274, D354).
+
+## D360 · 2026-11-04 · PRD 10: the one-home tie and split replace the second home (§5.2); the decision rule counts against luck and per question by code (§6)
+
+- Alex, on Claude's message giving the conclusion, the one test and the two PRD corrections (the decision rule as written fails the control
+  against itself; §5.2's "另一方的题开着…一并挂上" contradicts D207): "go".
+- **§5.2.** One home stays (D207). A statement bearing on two specific questions goes to the one whose quantity it measures most directly; a
+  statement giving a separate figure for each of two questions is written as two evidence items, one under each (the code stores two items quoting
+  one sentence as one piece with both links). Both sentences are in the links rule of v74l (`links-v74l.json`).
+- **§6.** Totals by reassignment (each article's six answers re-split between the arms 4,000 times; a change counts when fewer than 5% of re-splits
+  reach it): development reach up, parking under v1/v22 down, not-kept spans not up, core not down; held-out reach not down, not-kept not up, core
+  not down. Per question, by code against the gold, both sets together: 3 net drops, 2 net full drops (every control send, no variant send),
+  5 net new noise statements or 3 net full new noise statements fail; a move to another question the gold uses the fact for that is not broader is
+  the one home, not a drop; limits rise one step on the component failing identical variants most often while the chance failure exceeds 10%,
+  computed before the observed counts. Smaller per-question changes are listed and read for the report and decide nothing. A gold item reaches a
+  question through its best match or any statement quoting its own passage. Script `decide.py`; seven Codex rounds and three independent readers
+  (`docs/research/2026-11-04-filing-end-to-end/prd-amendment-proposal.md`, `log.md` rows 10–16).
+- The test then runs once: arms `stored` and `v74l` (configuration name poc-v115), three sends each, on the 54 development and 15 held-out
+  articles, predictions frozen with their sha256 before the first send.
+
+## D361 · 2026-11-04 · After v74l's failed test: size what complete evidence is worth at the judgement before more extraction design; the fallback stays
+
+- Alex, on Claude's report of the three-round reflection with Codex (`docs/research/2026-11-04-filing-end-to-end/reflection-v74l.md`), which
+  recommended giving the frozen judge the gold's own evidence for the three questions the frozen runs miss for want of evidence, and leaning to keep
+  the total-revenue fallback until that result: "按照你的提以来，但是你一定是自己反思多轮之后才给出的行动".
+- The next step of PRD 10 is that test: custom silicon (v16), operating margin (v10) and NVIDIA capex (v12) at the window end 2026-07-14 of the
+  frozen v108 draw 1, the gold's cited passages supplied as constructed evidence through the production judging code, three sends each, and v16's
+  stored request three times as control (12 sends). Designed, built and attacked in rounds of Claude's own review, recorded before the send.
+- The fallback sentence stays in production (frozen v74i, D274); its deletion is decided after this result.
+
+## D362 · 2026-11-04 · The two narrow delivery fixes the complete-evidence test points to are piloted, one at a time, on their motivating cases
+
+- Alex, on Claude's report of the complete-evidence test (D361: operating margin and capex are delivery problems, custom silicon an interpretation
+  gap) and its proposal of two narrow changes, each first tried on the stored article that motivated it: "你继续啊不要scope drift and strongly follow
+  evidence of your discovery and learning".
+- Fix 1, operating margin: a fact filed under the right question is refused because the model rewrote a comparison sentence ("Nvidia's operating
+  margin was roughly 66 percent" for "Micron's operating margin was 80.4 percent, compared with Nvidia's roughly 66 percent"). Built where the evidence
+  points with the least change: the quote check maps such a rewrite back to the one source sentence it came from, so nothing the model reads changes
+  (a change to what the model reads changed what it writes in v74l); validated by replaying every stored refusal through the code, at no cost.
+- Fix 2, capex: a figure question's takes line names the figures its quantity is defined from (capital expenditure from operating cash flow and free
+  cash flow), written by code per measure; first sent on the article that carries the cash-flow figures, three sends against three as stored.
+- Each is designed, built and read in rounds of Claude's own review and an independent reader's before anything is sent; neither touches the frozen
+  ruler; building either into production is a later decision of Alex's (D274).
+
+## D363 · 2026-11-05 · At coverage start, the company's latest reported figures enter once from its own latest report; restatements stay excluded
+
+- Alex, on Claude's report that the operating-margin and capex misses trace to restated May figures the signed standard excludes (§5.3; pending
+  proposal 6) in a window that starts after the report, given two answers — (甲) approve proposal 6 so restated known facts become optional, or (乙)
+  record each question's starting figures once at coverage start from the company's latest report and keep excluding restatements — with Claude's
+  lean to 乙: "乙".
+- So proposal 6 is not taken up by this; §5.3 stands for the daily path. What enters at coverage start, from which document, through which step,
+  and how it is validated is designed next, in rounds of Claude's own review and an independent reader's, validated first the simplest way on stored
+  data and a few cents (AGENTS §7.3), and brought back before anything is built into production.
+
+## D364 · 2026-11-05 · The coverage-start reading is built into the product; a figure several questions read is one record linked to each of them
+
+- Validation behind it (`docs/research/2026-11-04-filing-end-to-end/baseline-design.md` rounds 8–17): on Alex's "你充分验证" the per-question reading of the
+  latest report ran over all 22 seeds against a same-day control on the frozen v108 draws; after his "改" to the one sentence that let figures of another
+  quantity in, all three pre-registered conditions passed (operating margin and capex each right 9 of 9; no question that was right turned wrong; every kept
+  figure the question's own quantity). An independent challenge then found the narrowed sentence drops the capex line in 3 of 12 reads and that no
+  held-out report was read; both are to be closed before the build is accepted.
+- Alex, on Claude's account of the step (one more step, run once at coverage start; the daily path unchanged): "好开始做到production 上，完整的更新所有系统设计等".
+- Alex, asked how to store a starting figure that several questions read (first-quarter revenue read by total revenue, operating margin as its denominator,
+  and next year's revenue), between one record linked to each question that read it (Claude's lean: each question read its own starting figure; the
+  storage follows D360, records quoting the same sentence stored as one and linked to each question; the daily path's "only the narrowest" pruning does not
+  apply to these records) and one record linked only to the question its figure most directly measures (operating margin would lose its denominator): "存一
+  条，挂到每道读到它的题". D207, D265 and D360 stand for the daily path.
+- So: the reading's prompt is a new prompt of the product, opened by this decision (D274, D359 cover extraction and judging); the build follows AGENTS §2–§5
+  (design tables, review, tests, a $0 replay of the validated answers); the product's default changes and the 14-day three-draw acceptance run start only on
+  Alex's word (PRD 10 §6).
+
+## D365 · 2026-11-05 · The coverage-start reading is the third version with the repaired check; built into the product behind poc-v116
+
+- Alex, after Claude's fourth version failed and he asked whether the rejections were right ("为什么没过？你看着几版，你到底是不是再搬石头砸自己的脚？各种reject自己，你确定是
+  正确的rejection 吗？你又下去看trace吗？…是不是你自己有毛病"; "你不能每次都这样判错然后浪费我时间，我需要你深度看完所有失败trace给我准信下一步你要跑什么才能收敛"): a census of
+  all 606 stored reads (`docs/research/2026-11-04-filing-end-to-end/census-all-reads.txt`) showed the third version kept no wrong figure and missed 3 of 156 reads (all on
+  capex), the fourth version dropped many, and six right figures had been refused by Claude's own quote check (a footnote mark left off, cells left out of a table row);
+  the August "quarter only" rule and the round-13 strictness on lines the gold's own reader uses were Claude's mistakes. Claude proposed three steps: fix the check ($0),
+  read the held-out August report once with the third version (only a wrong figure stops), then build. Alex: "好，按这三步做，你不要再搬石头砸自己脚了，你要收敛上生产".
+- Done: the repaired check (`src/hivemind/baseline.py`) changed exactly the six refused right figures on replay; the August reading kept no wrong figure (44 figures, two
+  readers; operating margin 3 of 3, capex 2 of 3); the step is built (`baseline.run`, `poc/config/poc-v116.json`, `prompts/baseline-v3.json`), with the first day's
+  round judging the linked questions and seed questions shown from the ledger's first day; its requests are byte-equal to the validated ones and its records equal the
+  validated readings ($0, three sends); 12 new tests, six mutants caught, the full suite green.
+- So the reading is frozen as baseline-v3 with this check; no further prompt version without Alex's decision. `poc-v108` stays the default; the 14-day three-draw
+  acceptance run of `poc-v116` against a same-day control, and making it the default, start only on his word.
+
+## D366 · 2026-11-05 · `poc-v116` is the replay default; the branch is committed and opened for review
+
+- The acceptance passed (`docs/research/2026-11-04-filing-end-to-end/acceptance-design.md`, Result; `log.md` row 40): operating margin and capex each agree in 3 of 3
+  draws against never in the same-day control, 53 against 45 agreements of 57, and the one question that dropped by two (v17) was read by two readers as its own swing,
+  not the starting figures. Claude asked whether `poc-v116` becomes the default and whether to commit the branch and open a pull request. Alex: "都做".
+- Done: `scripts/replay.py` defaults to `poc/config/poc-v116.json` and to the items database `poc/data/items-nvda-2026-07-01-10-27.sqlite`, the one every run since
+  D256 reads and the one that holds the page text the reading needs (the earlier default, `items-window-tags2-2026-10-24.sqlite`, has none, so the new default
+  configuration would refuse on it). The default refuses a run without `--seed` (D364). Only the note of `poc-v116.json` changed ("Not the default until Alex's word" →
+  "The replay default since D366"); its settings are the accepted ones: its configuration checksum, which leaves the notes out, is `7a2bb5a223317d29`, the one the three
+  accepted draws recorded.
+- The frozen extraction prompt is unchanged (D274): `tests/test_frozen_extraction_prompt.py` still pins `poc-v108` and now checks that the default is `poc-v116`, that
+  it equals `poc-v108` but for the `baseline` section, and its accepted checksum. As the user calls the entry (`tests/test_baseline.py`): `scripts/replay.py` with no
+  `--config` refuses without `--seed`, and with `--seed` seeds the questions, reads the report once at sequence 1 and judges the linked questions on the first day. The
+  parallel-day entry test names `poc-v108` (its subject is the worker defaults; D183). Five mutants caught.
+- Not covered by a gate: `scripts/preflight.py` does not replay the reading's check. It runs unchanged on a `poc-v116` draw (every section judged; the refusals are the
+  control's classes); the check was accepted on the research replays (`replay_check_repair.py`, `verify_production_baseline.py`, the census of 606 reads). Recorded as an
+  open defect in `CURRENT_STATE.md`, not built.

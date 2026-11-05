@@ -8,7 +8,7 @@
   const CONFIG_SCHEMA = [
     { item: 'Version', meaning: 'Every settings change creates a new version.', source: 'Created when settings change' },
     { item: 'Checksum', meaning: 'Calculated from the complete configuration and recorded with every model call, including extraction, matching and rejudgement, so the exact version can be traced.', source: 'Calculated by code' },
-    { item: 'Model settings and search result count', meaning: 'Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching and rejudgement settings. Config also sets the search result count, initially 10. Prompt content belongs to the extraction and thesis library modules. A settings version is immutable; a change creates a new one.', source: 'Chosen by a person' },
+    { item: 'Model settings and search result count', meaning: 'Extraction has settings per category: model, prompt version, reasoning effort and temperature (lower temperature makes answers more stable). The thesis library has separate matching and rejudgement settings. An optional coverage-start reading setting (model, prompt version, reasoning effort, temperature) turns on the once-only reading of the company\'s latest report at coverage start (D364); a version without it has no such step. Config also sets the search result count, initially 10. Prompt content belongs to the extraction and thesis library modules. A settings version is immutable; a change creates a new one.', source: 'Chosen by a person' },
   ];
 
   // The dispatch tree. A branch asks one question; each child is one answer (`answer`). A child without children is
@@ -112,7 +112,7 @@
       container.innerHTML = `
         <div class="drill">
           <h2 class="drill__title">Config: settings a person chooses</h2>
-          <p class="drill__intro">Config owns human-selected settings: extraction settings per category, matching, rejudgement and the search result count; a final-verdict setting stays in the frozen versions and is read by no step (D356). Extraction defines what each category yields and how prompts are assembled. The research universe defines subjects and tracked categories.</p>
+          <p class="drill__intro">Config owns human-selected settings: extraction settings per category, matching, rejudgement, the optional coverage-start reading and the search result count; a final-verdict setting stays in the frozen versions and is read by no step (D356). Extraction defines what each category yields and how prompts are assembled. The research universe defines subjects and tracked categories.</p>
           <div class="drill__columns drill__columns--schema">
             <section>
               <h3 class="drill__heading">Recorded settings</h3>

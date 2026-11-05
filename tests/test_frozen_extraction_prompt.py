@@ -8,7 +8,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import extraction, placement  # noqa: E402
+from hivemind import config, extraction, placement  # noqa: E402
 
 FROZEN_FILES = {
     'src/hivemind/prompts/role-v74i.txt': '12fb59cb8fccff9c176ea938549d47143bc1260322647afa38b81d44dbeef594',
@@ -19,6 +19,7 @@ FROZEN_FILES = {
 FILING_RULE_SHA = 'ed22acea4f152ec8bf20e59fcf21cb8fa3620ce8fa6e0db94d4dd183437b8658'
 TAKES_SHA = '0a4020e48b3c107302530762c433b8543e8859319924507fd6742aa30620c77e'
 SCHEMA_SHA = '983d022b55fa003f1f0b462a9c983b63b77b2e8796f0525d1b9b65c7be84c4f5'
+ACCEPTED_CHECKSUM = '7a2bb5a223317d29'   # poc-v116's settings as the 2026-11-05 acceptance draws recorded them (config.load: every key but the notes)
 VIEWS = [{'view_id': 'v1', 'object_id': 'ABC', 'due_day': '2027-02-28', 'question': 'q', 'key': {'measure': 'segment_revenue', 'scope': 'Cloud', 'period_start': '2026-02-01', 'period_end': '2027-01-31'}},
          {'view_id': 'v2', 'object_id': 'ABC', 'due_day': '2027-02-28', 'question': 'q', 'key': {'measure': 'event', 'event_type': 'launch', 'scope': 'Model X'}},
          {'view_id': 'v3', 'object_id': 'ABC', 'due_day': '2027-02-28', 'question': 'q', 'key': {'measure': 'policy_event', 'scope': 'Export licence'}}]
@@ -40,8 +41,13 @@ def test_the_code_written_parts_of_the_frozen_request_are_unchanged():
     assert extraction.SUPPORTED_VERSIONS == ('v74i',)
 
 
-def test_the_replay_default_is_the_frozen_configuration():
+def test_the_replay_default_runs_the_frozen_configuration():
+    """D366: the replay default is poc-v116 with the settings accepted on 2026-11-05: the frozen poc-v108 plus the coverage-start reading and nothing else."""
     source = open(os.path.join(ROOT, 'scripts', 'replay.py'), encoding='utf-8').read()
-    assert "default=os.path.join(ROOT, 'poc', 'config', 'poc-v108.json')" in source
-    settings = json.load(open(os.path.join(ROOT, 'poc', 'config', 'poc-v108.json')))['extraction']
+    assert "default=os.path.join(ROOT, 'poc', 'config', 'poc-v116.json')" in source
+    assert config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v116.json')).checksum == ACCEPTED_CHECKSUM
+    default, frozen = (json.load(open(os.path.join(ROOT, 'poc', 'config', name))) for name in ('poc-v116.json', 'poc-v108.json'))
+    without = lambda settings, *keys: {k: v for k, v in settings.items() if k not in ('version', '_note') + keys}
+    assert without(default, 'baseline') == without(frozen) and default['baseline']['prompt_version'] == 'baseline-v3'
+    settings = frozen['extraction']
     assert {s['prompt_version'].split('-')[1] for s in settings.values()} == {'v74i'} and {s['reasoning_effort'] for s in settings.values()} == {'low'}

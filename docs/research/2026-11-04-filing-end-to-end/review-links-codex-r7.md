@@ -1,0 +1,7 @@
+**No serious findings in the round-6 fixes. The decision rule is ready for the test.**
+
+- **Passage matching:** `i130` now reaches the margin question in all three control sends. Removing the margin statement in memory changes that to **0/3**. I found no false credit in the sampled newly credited matches, including `i151`, `i163`, `i173`, and `i197`. [Implementation](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/measure_filing.py:106)
+- **Complete losses and noise:** Moving `i227` and `i183` away from their question now produces two complete losses and fails. Exhaustive reassignment of that two-article example gives **1/400**, matching 0.25%. Three complete noise additions also fail independently of the ordinary five-noise limit. [Counting](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/decide.py:126)
+- **Calibration and adjustment:** The saved **8.1% and 10.0%** combined rates reproduce exactly. At 4,000 reassignments, the rates are **8.7%** and **6.1% after adjustment**; the second comparison raises the ordinary noise limit from five to six. Reassignments and limit selection occur before the observed comparison, as written. [Decision order](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/decide.py:218)
+
+The calibration correctly reports the unanswered held-out set as **UNEXERCISED**, rather than passed. No files were edited and no model calls were made.

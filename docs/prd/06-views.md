@@ -329,6 +329,7 @@ Choose storage location and database during implementation.
 |---|---|
 | Extraction | Receive sourced evidence, candidates, associations and necessary group definitions. Supply open subject theses and their dependencies: question, focus, due date and links, without states/evidence, plus available groups under this contract. |
 | Config | Read matching/rejudgement settings and search count; record the version with every call. |
+| Coverage-start reading | Receive, once at coverage start, each open question's starting figure from the company's latest earnings report as evidence linked to every question that read it (D363, D364; the one-home rule of the daily stream does not apply to these records); the records are written without matching, each linked to the questions whose reading kept it; the first day's round judges those questions. Seed questions and these records are shown from the ledger's first day. |
 | Pull mode | At the end of each day, close the questions that are due at the rung they stand on, with a closing record (D54, D356). |
 | Human review pool | Send proposed out-of-universe themes and repeated failures. Resolvable out-of-universe assets receive only processing-log entries. |
 | Matching labels | Supply every comparison record; receive human labels and, later, a smaller model. |

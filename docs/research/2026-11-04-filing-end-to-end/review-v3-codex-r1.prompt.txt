@@ -1,0 +1,16 @@
+You are a read-only reviewer. Repository: /Users/lchingen/hivemind. Do not edit anything; send no model request.
+
+SCOPE: a one-sentence change to a research prompt and the test of it, before anything is sent. Read section "第 14 轮" of docs/research/2026-11-04-filing-end-to-end/baseline-design.md (the change, its prompt audit, the trial and the registered test, all written before sending), and round 13 just above it (the failure that motivated it: 5 of 53 kept figures were another quantity; the model's own account in probe-baseline-account.md names the old sentence). Code: baseline_read.py (LINES_V2, LINES_V3, TASK_V3; SYSTEM, TASK, SCHEMA and the check kept_figures unchanged), baseline_all.py (the --task and --questions options; build() refuses a request that differs from the second version beyond its task text), baseline_v3_pilot.py (the trial's four conditions). The rest of the test (baseline_all_judge.py, baseline_all_send.py, baseline_all_measure.py, classify-reader.prompt.txt) is unchanged since rounds 8-12, which you reviewed in review-all-codex-r1..r4.md.
+
+GOVERNING: AGENTS.md §6 (the prompt carries the standard, not new rules; audit the whole request both directions; a prompt serves every company, no company/product/number and no bench example; a classification is a closed set; never grow a prompt without a written reason; a request never asks for what a check refuses; check before the send) and §7.3 (one change at a time; send the changed request on the motivating cases before a registered test); D363 in docs/DECISIONS.md (the baseline's mandate). Alex approved this exact meaning: "只写算出它的那几行，或换了名字的同一个量；更大的行、旁边的行都不写" (write only the lines it is computed from, or the same quantity under another name; do not write a broader line or a neighbouring line).
+
+OUT OF SCOPE: the frozen ruler and gold, the frozen extraction prompt, the links rule, the dependency arrows, production build, document style, other companies.
+
+LOOK FOR (serious = would make the trial or the registered test wrong or misleading, or the prompt wrong):
+1. Does LINES_V3 say what Alex approved, and nothing else? Could a careful model now drop what v10 (operating margin: operating income and revenue) or v12 (capex: "Purchases related to property and equipment and intangible assets") need? Could it invite new wrong figures elsewhere (share questions v6, v17; yes/no questions; other-party themes)?
+2. Does any sentence of the whole request now contradict another, or ask for something kept_figures refuses?
+3. Is it general (reads the same for any company and industry)?
+4. Is the version plumbing right (only the task text differs; the second version still rebuilds byte for byte), and are the trial's conditions computed as written?
+5. Is the plan sound: trial first, stop if it fails; then the registered test identical to round 8 except the sentence, every question with a figure judged again with a same-day control?
+
+OUTPUT: numbered findings with severity (serious / minor), evidence (file:line or quote), fix. Say explicitly if nothing serious. Under 600 words.

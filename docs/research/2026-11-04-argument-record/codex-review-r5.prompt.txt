@@ -1,0 +1,25 @@
+Read-only review. Do not edit files and make no paid model calls; read-only shell is fine, and you may run the two scripts below
+(they open the databases read-only). Repository: the current directory.
+
+Material, in docs/research/2026-11-04-argument-record/: design.md (sixth draft of the "argument card": one versioned card per research
+question that the daily judgement reads and rewrites in the same call), simulation.md (a no-cost logical simulation on stored runs and
+a walk through every pipeline mechanism), simulate_inputs.py and reach_back.py (the scripts behind it), and codex-review-r1..r4.md
+(earlier rounds and how each was answered, design.md section 11). The proposal was also added to the architecture as a proposal:
+docs/system-design/new-facts.js (VIEWS_PROPOSED), the generated block in docs/prd/06-views.md, and docs/CURRENT_STATE.md item 5.
+Governing rules: AGENTS.md, docs/DECISIONS.md (D12, D13, D54, D59, D63, D168, D195, D198, D201, D202, D204, D260, D261, D262,
+D274, D354, D356, D358, D359). Code it touches: src/hivemind/views/judging.py, round.py, store.py, writing.py, src/hivemind/pull.py,
+src/hivemind/service.py, scripts/preflight.py.
+
+Data: poc/data/e2e-r9-frozen-v108-2026-11-03/d1..d3 (14 days, v108) and poc/data/sealed-2026-10-28-v34-nvda-3m-through-0828 (59 days,
+older pipeline). Usage: python3 <script> <views.sqlite> <archive.sqlite> [question ids]; python3 reach_back.py <views.sqlite> 40.
+
+Report, short, each item with its section and what it rests on:
+1. Is the simulation method sound? Does it measure what simulation.md says, are the numbers reproducible, and are its conclusions
+   stated no stronger than the data supports (in particular the proxy "the card cites what the previous judgement cited")?
+2. Walk the whole pipeline with the card in place (simulation.md section 5): any mechanism whose interaction with the card is wrong or
+   missing, any new failure the two simulation-driven changes introduce (pushes limited to the card's citations; arrival use recorded
+   by code instead of written by the model), and whether any reader of pushes would break.
+3. Any remaining contradiction with a recorded decision or AGENTS rule, or anything design.md, simulation.md and the architecture
+   proposal text say differently from each other.
+4. Is the overall conclusion "feasible, with these stated limits" justified, or is there a reason it would not work?
+Out of scope: extraction, matching, the Idea API; wording and style. If nothing serious remains, say so.

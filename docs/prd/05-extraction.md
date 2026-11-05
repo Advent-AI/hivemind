@@ -157,6 +157,44 @@ A source reference
 - Extraction does not mutate the library. Return evidence, candidates and associations together without a separate clustering call. Reference and semantic criteria are owned by the [grouping contract](06-views.md#research-groups-associate-during-extraction); similar names or equal counts do not prove correct grouping.
 - Retry from the failed step and replace only that attempt's own result.
 
+## Coverage-start reading (D363, D364)
+
+Built 2026-11-05 (`src/hivemind/baseline.py`; configuration `poc/config/poc-v116.json`; validation record `docs/research/2026-11-04-filing-end-to-end/baseline-design.md`
+rounds 8-26; design with its four tables `production-design.md` there). The daily stream keeps out restatements of figures the company has already reported (extraction
+standard §5.3), so a question whose decisive figure was last reported before coverage started would wait a quarter for evidence. This step closes that gap once.
+
+**When.** At coverage start, after the seed questions are written and before the first day's items; once per ledger, and only on a ledger that has processed nothing yet.
+A resumed run skips it; a run cannot start after an unfinished coverage-start day (that day's judging round judges the starting figures).
+
+**What it reads.** The company's earnings-release items (category T1, the company's ticker among the item's subjects) of the latest publication day before coverage
+start; of that day the filed items when the day also has newsroom or investor-site copies. Their page text with tables (the cleaned text drops tables); a missing page
+text refuses the step before any model call.
+
+**The reading.** Each open question reads each item once, one question at a time, for the figure its quantity stands at in the report's most recent period; when the report
+does not state the quantity under the question's name, only the lines it is computed from or the line that is the same quantity under another name — never a broader
+line that holds other things, or a line next to it. Example: an operating-margin question writes the quarter's operating income and revenue; a capital-spending question
+writes "Purchases related to property and equipment and intangible assets"; a question on one product's revenue, which the report does not state, writes nothing. The
+prompt is `prompts/baseline-v3.json` with the schema in code; the code builds no other version.
+
+**What code keeps (identity only).** A figure whose quote is the report's own text (at least eight characters), carries a label, and prints the figure written as the
+value. A table row quoted with a footnote mark left off or a cell left out is stored as the report's exact row from its label to the figure. Refused figures are dropped
+with their reasons in the step's processing record. Which question a figure belongs to, and which column it is from, stay the reading's.
+
+**What it writes.** One evidence record per item and quote, linked to every question that read it (D364: first-quarter revenue read by total revenue, operating margin and
+next year's revenue is one record with three links; the daily stream's one-home rule does not apply to these records): fact tier, the company as speaker and original
+source, the report's day, the item as source, the model's one-line with the unit added when the value has no scale of its own. One processing record (step
+`baseline`, dated the coverage-start day, with its own sequence number) names the questions linked, the figures kept and refused, and the empty readings; the first day's
+judging round judges those questions with the day's other changes.
+
+**Measured.** On the frozen v108 ledgers, May 20, 2026 report: operating margin and capex each judged inside the gold range 9 of 9 (before: never judged); no question
+that was right turned wrong; every kept figure the question's own quantity (two readers). On the held-out August 26 report: no wrong figure among 44; the operating-margin
+lines read 3 of 3, capex 2 of 3. About three cents per company. Accepted end to end on 2026-11-05: three draws of the 14-day window against `poc-v108` re-run in the same
+hours, scored on the frozen judgement ruler: operating margin and capex each inside the gold range 3 of 3 (never judged in the control), 53 against 45 agreements of 57,
+no question made wrong by the starting figures (`acceptance-design.md` there). The replay default since D366.
+
+**Known gaps (written down, not built).** The capital-spending line is missed in about one read in six (a miss leaves the question as it was); a labelled guidance figure
+the reading keeps is written with the fact tier; later reports reach the questions through the daily stream only; `scripts/preflight.py` does not replay the reading's check (the research replays do).
+
 ## Open questions
 
 <!-- generated: open -->
@@ -178,6 +216,7 @@ A source reference
 - D59/D60: subject identification and personal-memo candidates; no judgement before evidence first links; wording and diagram alignment without new rules.
 - D149: associations are required extraction output; D165 integrates them into the default implementation.
 - D155: current POC identity/reference changes are described in the improvement plan, not evidence of grouping acceptance.
+- D363/D364: the coverage-start reading of the company's latest report, once per ledger; a figure several questions read is one record linked to each.
 
 <a id="抽取时同时确定研究归属"></a>
 
