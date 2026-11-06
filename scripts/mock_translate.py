@@ -128,7 +128,7 @@ def main():
     parser.add_argument('--data', default=os.path.join(ROOT, 'poc', 'mock', 'data.json'))
     parser.add_argument('--out', default=os.path.join(ROOT, 'poc', 'mock', 'data.en.json'))
     parser.add_argument('--cache', default=os.path.join(ROOT, 'poc', 'mock', 'translations.json'), help='key -> English, kept between runs')
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v2.json'))
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v118-from-v2.json'))
     parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'archive.sqlite'))
     parser.add_argument('--dry', action='store_true')
     parser.add_argument('--limit', type=int, default=0, help='stop after N batches')
@@ -152,7 +152,7 @@ def main():
     if args.dry:
         return
     cfg = config.load(args.config)
-    setting = config.Setting(name='translate', model='gpt-6-luna', prompt_version='translate-v1', temperature=0.2, reasoning_effort='low', max_output_tokens=16000)
+    setting = config.Setting(name='translate', model='gpt-6-luna', prompt_version='translate-v1', reasoning_effort='low', max_output_tokens=16000)
     archive = model.Archive(args.archive)
     cost = 0.0
     for n, batch in enumerate(batches(todo, done), 1):

@@ -8,8 +8,7 @@ reason, never as rules.
 
 ## Where to look first
 
-- **The ruler is frozen** (§7.1; D261, D262): every measurement uses it as it is, and no file of it changes. Read §7.1 before any gold,
-  score, judge, prompt or acceptance work.
+- **The ruler is frozen** (§7.1; D261, D262): current measurements use it as it is, and no file of it changes. D372 combines the existing gold's core and supporting counts without changing the gold; optional entries remain neutral. Read §7.1 before any gold, score, judge, prompt or acceptance work.
 - **The production configuration is frozen.** The replay default `poc/config/poc-v116.json` (D366) is `poc-v108`, the extraction
   production prompt frozen at v74i, low reasoning (D274; Alex, 2026-11-03: "感觉已经瓶颈了，上一个版本是不是freeze作为我们的抽取生产提示词吧"),
   plus the coverage-start reading baseline-v3 (D364, D365); opening, matching and judging are frozen as it runs them (D354). No piece is
@@ -231,7 +230,7 @@ Verify at the point the change touches, at the sharpest level that shows it work
 
 - **One ruler.** Every gold, judge, prompt and acceptance uses the one standard named before the first arm. A second ruler in use (an old
   reference, a judge's rubric, a prompt's own categories) is a defect, fixed before anything is measured (D241, Alex: "我们今天一直浪费时间在不同标准之间来回").
-- **The frozen ruler (D261, D262; 2026-11-02)** is that standard for every measurement. Its pieces, with the hashes code checks:
+- **The frozen ruler (D261, D262; 2026-11-02)** remains the standard for existing measurements and historical comparisons until a separately reviewed replacement is established. For future evidence scoring (D372), combine the existing gold's core and supporting as helpful, treat its not-kept entries as unhelpful, and leave optional entries neutral; this does not alter the frozen files. Its pieces, with the hashes code checks:
   1. The extraction standard: `docs/prd/05-extraction-standard.html`, its version 5 (version 3 as signed in D243, with D248's seven
      boundaries and D250's four evidence boundaries and counting unit); the gold `docs/research/2026-10-29-ledger-standard/golden-v5/` (dev sha256 `6f9476bb…`, test `af2145cd…`, recorded
      in `golden-v5.sha256`). There is no version 6.
@@ -248,8 +247,8 @@ Verify at the point the change touches, at the sharpest level that shows it work
   with its reason and its before and after, printed with every score and never merged in. Every measurement names the gold version it used. A new piece (the D2
   matter-to-question mapping, not yet built, is one) is an addition recorded as such, never an edit of these. A new version of any piece
   exists only by Alex's decision, derives its gold from scratch, and old scores are never compared with it. A disagreement between the
-  system and the gold is a gap in the system to close (D263), never a case for the ruler; when the gold and the standard disagree, two
-  standards conflict, or readers disagree about what is right, the arms stop and the ruler is settled with Alex (D241: "你停下手边的工作先把我这个事情完整深度的给做好").
+  system and the gold is a gap in the system to close (D263), never a case for the ruler. A suspected inconsistency between gold and
+  standard no longer stops an arm: record the concern separately, continue scoring on the unchanged frozen gold, and disclose it with the results (D373).
   What it measures: extraction against the gold's items, questions against must_open / may_open, the judgement at the window end
   2026-07-14 against reader B's ranges (a numeric question agrees when the gold range overlaps the chosen rung's band, a yes/no question
   when the answers match). What it does not measure: the judgement's daily path, and whether evidence was filed under the right question.
@@ -283,7 +282,7 @@ Verify at the point the change touches, at the sharpest level that shows it work
 ### 7.2 Reading results
 
 - **A score is a lead; the traces are the measurement.** Every measurement has a score, and every time you read the traces yourself: the
-  raw answer beside the article for every missed core or supporting entry, and a sample of the extras and of the hits. The scorer
+  raw answer beside the article for every missed helpful entry, and a sample of the extras and of the hits; historical gold keeps its original labels. The scorer
   hard-codes no rule of the standard: it reads the gold file it is given, prints the gold's and the standard's sha256, and refuses a gold
   made for another version; scores are compared only on the same gold. Alex, 2026-10-29 (D244): "我觉得这是最容易出错的问题；你非常容易写死，我们在改的过程中如果drift你会一直用久的标准来衡量，这边需要有打分，但是“一定”要你自己下去看trace这是必须，记起来".
 - **The ruler counts only what it was built to count.** Before a quality claim, a reader who did not write the change also reads the
@@ -291,7 +290,7 @@ Verify at the point the change touches, at the sharpest level that shows it work
   (Alex, 2026-10-30: "现在到底质量怎么样你深度的解析不要只是看尺子").
 - Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind a metric's largest
   values before reading it, and write down what a derived number reduces to.
-- **Report every number, regressions first.** Core and supporting apart, no composite; one quantity per table column. A comparison of
+- **Report every number, regressions first.** For future evidence evaluation, combine the existing gold's core and supporting entries as helpful, use its not-kept entries as unhelpful, and leave optional entries neutral (D372). Count one research matter in one article (D250), not raw sentences. Retain the old labels and scores in historical results, and do not silently relabel the frozen gold. One quantity per table column. A comparison of
   totals uses three draws; a count from one draw is labelled one draw and shows a mechanism, not a difference between arms. Lead with the
   mechanism and the share of its class it explains, then the fix.
 - **Read what was dropped.** A statement the pipeline drops is thrown away with its reason, never parked on a side list; evaluation

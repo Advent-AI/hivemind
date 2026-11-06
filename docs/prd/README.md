@@ -9,7 +9,7 @@ Each module has one Markdown specification. Select a module on `docs/system-desi
 | 02-classification.md | Upstream classification | First version frozen |
 | 03-config.md | Config | First version frozen |
 | 04-dispatch.md | Dispatch | First version frozen |
-| 05-extraction.md | Extraction (read-only), and the coverage-start reading | Foundation frozen; groups declared during extraction in the default pipeline (D165); the production prompt frozen at v74i (D274); coverage-start reading built (D364), accepted and in the replay default (D366) |
+| 05-extraction.md | Extraction (read-only) | Foundation frozen; v74i prompt remains in use; separate report import retired and v117 replay not yet accepted end to end (D370) |
 | 05-extraction-standard.html | Extraction standard: ledger records, question types and opening, evidence and weight, golden set, prompt measurement | Signed (D243), open it in a browser; the one measuring standard for extraction, replacing `docs/research/2026-10-29-analyst-standard/standard.md` (D229) |
 | 05-extraction-standard-corrections.md | Dated corrections to the frozen standard page: the statements later decisions changed, read with the page and never merged into it | Three records, 2026-11-05 (D368) |
 | 06-views.md | Thesis library and matching records | Foundation frozen; group handoff and storage in the default pipeline (D165); other open items are in the PRD |
@@ -17,6 +17,7 @@ Each module has one Markdown specification. Select a module on `docs/system-desi
 | 08-pull-mode.md | Pull mode | Decided and built (D54, D356) |
 | 09-review-pool.md | Human review pool | First version frozen; intake defined, output deferred |
 | 10-filing-phase.md | Current phase: filing that links facts the way an analyst does (in English since D368) | In progress since 2026-11-04; read before every step |
+| 11-production-experiments-from-split.md | Production experiments drawn from the failed split extraction: what to try on production, the evidence for each, and what not to repeat | Proposed 2026-11-06 (D378); each experiment opens only on Alex's word |
 
 ## Maintenance rules
 

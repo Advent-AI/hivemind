@@ -28,7 +28,7 @@ def main():
     parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'views.sqlite'))
     parser.add_argument('--agent', default=os.path.join(ROOT, 'poc', 'data', 'agent.sqlite'))
     parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'agent-archive.sqlite'))
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v1.json'))
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v118-from-v1.json'))
     parser.add_argument('--beliefs', default=os.path.join(ROOT, 'poc', 'eval', 'beliefs.csv'))
     parser.add_argument('--objects', default='NVDA')
     parser.add_argument('--user'); parser.add_argument('--view'); parser.add_argument('--rung', type=int)

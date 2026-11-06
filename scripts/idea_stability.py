@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'sealed-2026-10-24-run3-through-0815', 'views.sqlite'))
     parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-window.sqlite'))
     parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service', 'search-index.sqlite'))
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v9.json'))
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v118-from-v9.json'))
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--samples', type=int, default=3)
     parser.add_argument('--out', default=os.path.join(ROOT, 'poc', 'data', 'service', 'stability'), help='fresh archives, one per sample, named by config version')

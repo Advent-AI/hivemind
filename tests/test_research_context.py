@@ -1,6 +1,7 @@
 """Step 2 reader (D250 ported under D201): the catalog is the open questions in scope before a sequence number, the expansion is
 every active piece of the chosen questions with sources, predecessors and the latest judgement, nothing from after that number."""
 import os
+import json
 import sys
 import pytest
 
@@ -34,7 +35,7 @@ def make_ledger(path):
     db.commit();db.close()
 
 
-def test_complete_scoped_history_and_explicit_limit(tmp_path):
+def test_complete_scoped_history_and_catalog_selection(tmp_path):
     """D250 catalog scope, no future leakage, all evidence beyond top ten."""
     path=tmp_path/'views.sqlite';make_ledger(path)
     uni=universe.Universe({'version':'test','companies':[{'id':'NVDA'},{'id':'AMD'}],
@@ -50,7 +51,84 @@ def test_complete_scoped_history_and_explicit_limit(tmp_path):
         assert all(s['input_id']!='test:future' for e in result['evidence'] for s in e['sources'])
         with pytest.raises(ValueError,match='from this historical catalog'):
             reader.expand(['v5'])
+        with pytest.raises(ValueError,match='distinct IDs'):
+            reader.expand(['v1','v1'])
         assert reader.expand([])['evidence']==[]
-    with context.Reader(path,20,['NVDA'],uni,evidence_limit=100) as reader:
-        with pytest.raises(context.ContextTooLarge,match='complete context requires'):
-            reader.expand(['v1'])
+
+
+def test_complete_evidence_is_not_rejected_when_it_exceeds_one_megabyte(tmp_path):
+    """D376: the complete evidence and original source survive above the retired byte limit."""
+    path=tmp_path/'views.sqlite';make_ledger(path)
+    db=store.open_db(str(path))
+    count=1800
+    def original_quote(n):
+        return (f'The company disclosed supply agreement number {n}. ' +
+                'The agreement covers additional capacity over several years and remains subject to the terms disclosed. '*8)
+    for n in range(count):
+        evidence_id=f'bulk{n}'
+        store.add_evidence(db,evidence_id=evidence_id,quote=original_quote(n),one_line=f'The company disclosed supply agreement {n}.',
+                           speaker='Example News',original_who='Example Company',original_day='',tier='fact',event_time='',seq=10,input_id='news:2026-08-12')
+        store.add_source(db,evidence_id,'news:2026-08-12','T7','2026-08-12','paragraph 7',10)
+        store.link(db,evidence_id,'v1',10)
+    store.add_source(db,'bulk1799','news:2026-08-13','T7','2026-08-13','paragraph 12',11)
+    db.commit();db.close()
+    uni=universe.Universe({'version':'test','companies':[{'id':'NVDA'},{'id':'AMD'}],
+                           'themes':[{'id':'ai-capex','name':'AI capex'}]})
+    with context.Reader(path,20,['NVDA'],uni) as reader:
+        result=reader.expand(['v1'])
+    bulk={e['evidence_id']:e for e in result['evidence'] if e['evidence_id'].startswith('bulk')}
+    originals={e['evidence_id']:e for e in result['evidence'] if e['evidence_id'].startswith('e')}
+    assert len(json.dumps(result,ensure_ascii=False).encode())>1000000
+    assert set(bulk)=={f'bulk{n}' for n in range(count)}
+    assert set(originals)=={f'e{n}' for n in range(2,16)}
+    for n in range(2,16):
+        e=originals[f'e{n}']
+        assert e['quote']==f'CPU benchmark caveat {n}'
+        assert [(s['input_id'],s['category'],s['publication_day'],s['location']) for s in e['sources']] == [
+            ('test:source','T6','2026-08-12','paragraph 1')]
+    predecessor=originals['e2']['replaced'][0]['evidence']
+    assert predecessor['evidence_id']=='e1' and predecessor['quote']=='CPU benchmark caveat 1'
+    assert [(s['input_id'],s['category'],s['publication_day'],s['location']) for s in predecessor['sources']] == [
+        ('test:source','T6','2026-08-12','paragraph 1')]
+    for n in range(count):
+        e=bulk[f'bulk{n}']
+        assert e['quote']==original_quote(n)
+        assert (e['sources'][0]['input_id'],e['sources'][0]['category'],e['sources'][0]['publication_day'],e['sources'][0]['location']) == ('news:2026-08-12','T7','2026-08-12','paragraph 7')
+    assert [(s['input_id'],s['category'],s['publication_day'],s['location']) for s in bulk['bulk1799']['sources']] == [
+        ('news:2026-08-12','T7','2026-08-12','paragraph 7'),('news:2026-08-13','T7','2026-08-13','paragraph 12')]
+
+
+def test_complete_catalog_is_not_rejected_when_it_exceeds_150kb(tmp_path):
+    """D377: large catalogs retain every scoped question and allow direct evidence expansion."""
+    path=tmp_path/'views.sqlite';make_ledger(path)
+    db=store.open_db(str(path))
+    count=400
+    def question(n):
+        return (f'Will the company complete capacity plan {n}? ' +
+                'The question tracks disclosed delivery plans and their commercial consequences. '*6)
+    for n in range(count):
+        store.create_view(db,view_id=f'v{1000+n}',object_id='NVDA',object_kind='company',kind='asset',
+                          looks_at=f'Capacity plan {n}',question=question(n),due_day='',year='',rungs=[],
+                          seq=10,input_id='news:2026-08-12',created_at='2026-08-12T00:00:00Z')
+    db.commit();db.close()
+    uni=universe.Universe({'version':'test','companies':[{'id':'NVDA'},{'id':'AMD'}],
+                           'themes':[{'id':'ai-capex','name':'AI capex'}]})
+    with context.Reader(path,20,['NVDA'],uni) as reader:
+        catalog=reader.catalog()
+        result=reader.expand(['v1'])
+    assert len(json.dumps(catalog,ensure_ascii=False).encode())>150000
+    questions={q['view_id']:q for q in catalog['questions']}
+    assert set(questions)=={'v1','v3','v4'} | {f'v{1000+n}' for n in range(count)}
+    for n in range(count):
+        q=questions[f'v{1000+n}']
+        assert q=={'view_id':f'v{1000+n}','object_id':'NVDA','object_kind':'company','kind':'asset',
+                   'looks_at':f'Capacity plan {n}','question':question(n),'due_day':'','year':'',
+                   'created_seq':10,'created_from_input':'news:2026-08-12','created_at':'2026-08-12T00:00:00Z',
+                   'open':True,'rungs':[],'key':None,'dependencies':[]}
+    assert questions['v1']['dependencies'][0]['resolved_to']=='v3'
+    assert {e['evidence_id'] for e in result['evidence']}=={f'e{n}' for n in range(2,16)}
+    with context.Reader(path,20,['NVDA'],uni) as reader:
+        direct=reader.expand(['v1'])
+    assert direct==result
+    with context.Reader(path,1,['NVDA'],uni) as reader:
+        assert reader.catalog()['questions']==[] and reader.expand([])['evidence']==[]

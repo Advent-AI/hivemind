@@ -3986,3 +3986,104 @@ the backup). The writer fix it names was not carried: `main` reads cited ids as 
      quotes kept in their own language. What is said to him keeps the plain-language rule (AGENTS, Authority and scope).
 - Recorded in the same change: `docs/DECISIONS.md` (the open items cleared into their sections), AGENTS §11, the README, PRD 10, the
   correction record and `docs/CURRENT_STATE.md` (the builds of items 1, 2 and 4 are the next tasks, in an order given there).
+
+## D369 · 2026-11-05 UTC · Capture core and supporting evidence without a strict boundary; retain the MXC case
+
+- Alex: “我觉得往后核心和辅助其实只要是捕捉到就好，不用真的严格区分了，把它作为decision, 因为这两个边界很模糊，我觉得没必要纠结到死” and “我觉得留下辅助，只要LLM自己的判断是相关且逻辑清晰就好”.
+- For future extraction evaluation, evidence that the standard would keep as core or supporting is assessed together for whether it was captured. Do not make a hard pass/fail distinction between those two weights. This does not establish that every statement is relevant, change the optional or excluded boundary, replace source tiers, or remove checks for meaning, attribution, uncertainty, errors and delivery. Historical scores retain their original definitions and are not compared as if this was their ruler.
+- In the reviewed Microsoft MXC example, retain the reported announcement as supporting evidence. The model may judge relevance using a clear logical connection; an unquantified indirect connection is not automatically rejected. A proposed NVIDIA demand effect is an inference, not a fact attributed to Microsoft; the article does not say MXC requires NVIDIA hardware. This is not permission to accept unrelated material or to hard-code a list or new mandatory output field.
+- The frozen standard v5, golden-v5, seeds and historical results remain byte-for-byte unchanged (D261/D262). Applying this decision to a new real-article gold requires a separate evaluation version under D261. Alex asked for a real-article gold; treating that as authorization to develop the separate version is an implementation interpretation, not a quotation from his decision. It still needs its own traced references, independent review and Alex's sign-off before scoring. The experimental evidence comparison has not been sent.
+
+
+## D370 · 2026-11-05 UTC · Remove the separate earnings-report import
+
+- Alex: “我觉得财报这个基本是没有的，我觉得可以记录下，删除这个财报倒入的环节。重新整理现在的系统设计”. He also previously directed removal of the 22 artificial preset questions and confirmed that extraction should read the existing research library.
+- Remove the separate coverage-start report reading tied to seeded questions and do not add an earnings report as background to each news extraction request. This supersedes D363–D366 to the extent they require that separate report import and seeded default. An earnings release or filing arriving as an actual input remains a normal item under D28; existing research questions remain extraction context. Historical seeds, gold, results and records remain historical, not a new active starting library.
+- Evidence is bounded: a diagnostic with three archived NVDA articles, the same 68-question 2026-08-28 library, two arms and three draws gave 14/27 complete matters without the appended report versus 13/27 with it; one report-arm answer supplied an unestablished CFO statement date. This tested adding a report to extraction, not the distinct D363–D366 coverage-start mechanism; the removal of both is Alex's decision, not a claim that the experiment directly tested both. The library is historical and not the complete article-day state. See `../hivemind-no-preseed-evidence-review/docs/research/2026-11-05-real-input-evidence/existing-library-results-2026-11-05.md` in the local worktree.
+- Implementation and rollout status must be stated separately from this decision. The frozen earlier rulers and scores stay unchanged; no conclusion about other companies or report-as-source inputs is implied.
+
+
+## D371 · 2026-11-05 UTC · Track present and forward-looking financial information
+
+- Alex: “收入和财务这边对于当下，未来应该都是需要track 的，你应该要修改”. This is the product decision for the financial extraction and filing issue discussed immediately before it.
+- Present and forward-looking financial performance, estimates and guidance need to be tracked as evidence relevant to investment questions; a quarterly period is not itself a reason to withhold information from a related annual question. Do not confuse retaining and connecting evidence with automatically opening a separate question for every line. The research model continues to judge relevance and the strength of the connection; do not hard-code company, item or metric-specific importance. Existing research questions remain context; the separate report import and 22 preset questions remain retired under D370.
+- The frozen earlier standard, gold and scores remain unchanged. Where the new decision changes how present financial context is treated, use a dated decision/correction and a separately versioned evaluation; never silently relabel old gold or compare scores across rulers. Implementation and diagnostic evidence must be recorded separately.
+
+## D372 · 2026-11-05 UTC · Score future evidence by usefulness, not core versus supporting
+
+- Alex: “我们金标的打分只要量化好有帮助/没帮助就好，至于是核心还是辅助我们不用特别分开因为这样造成不必要的ambiguity,这是之后量测的准则你记录好”.
+- For future evidence measurement, the scoring distinction is whether a statement is helpful or not helpful to the investment-research task. Do not separately classify or score helpful evidence as core versus supporting. Quantify useful evidence captured or missed and unhelpful evidence returned, with the evaluated population and counting unit stated; inspect the source and output, not only aggregate numbers. A statement's source tier and faithful attribution, conditions and dates remain separate properties, not a proxy for usefulness.
+- This amends D369's combined reporting: the future scoring categories are helpful / not helpful, not core / supporting. It does not silently reclassify old optional or excluded cases, settle the separate open question about three question-gold items, or authorize invented shortcut rules. A new reference must decide usefulness from the actual source under the new criterion, with its unit and decisions documented and reviewed.
+- This is Alex's decision to open the changed evaluation criterion under D261. Frozen standard and golden-v5 files and historical scores are not edited or relabelled. Any new ruler/gold is a distinct version derived from source, independently reviewed and signed before scoring; historical and new-version scores are never represented as directly comparable. The new gold/scorer have not yet been built or validated.
+
+- Clarification of the initial D372 wording above: Alex decided the **scoring distinction**, not a blanket prohibition on descriptive core/supporting labels. Exact metrics and counting unit were not specified by this message; they remain for the future evaluation design and must respect the applicable documented unit. His future criterion does not itself establish that a new gold has already been scoped, created or approved. The prior optional cases are not automatically classified either way. The old frozen ruler continues to govern its historical and currently defined measurements until an independently reviewed replacement is established under D261; old files and scores are not changed. This clarification supersedes any broader reading of the preceding bullets.
+
+- Alex confirmed the existing-gold counting approach: “对啊，就记数就好了”, in response to the explicit mapping just shown to him. Read the frozen gold as it is: combine its core and supporting entries for the helpful count, use its not-kept entries for unhelpful, and keep existing optional entries neutral (no penalty). Report the aggregation under the same named frozen gold; do not create or edit a gold file merely to combine counts. The existing D250 unit remains one research matter in one article, not a mechanical count of sentences. This clarification supersedes the earlier suggestion that using this aggregation requires a newly derived gold. A changed scoring definition must still be identified when comparing historical numbers, and the separate dispute about three question-gold entries is not resolved by this evidence-scoring decision.
+
+## D373 · 2026-11-05 UTC · Continue scoring when gold is disputed
+
+Alex: “删除金表不一致停止问题；我们要跑完打分；原本的不用跑了吧？结果都有了你combine 一下正确的有帮助/没帮助就可以了；新的prompt测试可以开始打分；你先跑几个看看有没有什么问题”. Remove the gold-inconsistency stop; use the existing frozen gold unchanged and disclose unresolved source/gold concerns alongside scores. D372 combines existing core and supporting as helpful, not-kept as not helpful, and optional remains neutral. Reuse the old stored results where the input and scoring context actually match; first run a few new split-prompt cases, then inspect source, output and failures. This does not adjudicate the three disputed question entries or alter gold, prior scores, the unit, production configuration, or deployment.
+
+## D374 · 2026-11-05 · Remove the misleading sampling setting
+
+Alex: “干掉所有的tempaerature 参数这个confusing了”. Model settings and requests no longer use the sampling-temperature field. New replay and Idea defaults remove it while keeping the same OpenAI model, prompts and reasoning settings. Historical configuration files and archived requests remain unchanged so their recorded checksums and frozen references remain verifiable. OpenAI requests did not send the field before this decision; the alternate-provider path previously did, and now uses the provider default. This does not establish that either default is semantically accepted end to end.
+
+## 2026-11-05 · Incomplete thesis details do not block admission
+
+Alex: “down the road, we can always have agents do research individually to get the actual dates and information that didn't go in while this time it was going in the thesis DB. So you need to alleviate these options as conditional. Don't hardgate it based on the manual code that you're implementing right now. Update the PRD and then get the POC started for seven days.” The previously discussed design is accepted with date, check material, period and ladder conditional on available information. A worthwhile new question and source evidence must be stored without inventing missing details. Later research may fill them. A date estimate is not an exact source fact and its arrival alone does not resolve the question. A question without a usable ladder cannot receive a ladder judgement; it remains available for further evidence. This decision changes the product design, not the signed frozen extraction ruler or historical scores. The seven-day split POC starts from real pre-period research state and carries actual written questions forward; it is an experiment, not deployment.
+
+## D375 · 2026-11-05 · Read the latest committed research library before each item
+
+Alex: “这个很重要。。。确实应该要拿最新的题库，你帮我修改这个之前的PRD decision”. Before each item, extraction reads the questions committed before that item's dispatch sequence, including questions opened earlier the same day. For the split design, the new-viewpoint call and the existing-viewpoint evidence call share that exact per-item snapshot and can run in parallel with each other. The next item reads again after preceding writes. Dispatch sequence owns order; the computer clock does not. This supersedes D251's once-daily question snapshot and amends D264's snapshot timing; other extraction and filing decisions are unchanged unless separately superseded.
+
+The previous implementation and the stopped seven-day run used day-start snapshots. This record is a design decision, not a claim that the production default has changed or that a new experiment has passed. Historical requests, results, frozen gold and the signed standard remain unchanged. The split POC and its evidence must demonstrate same-day visibility, failure recovery and correct matching before acceptance.
+
+## D376 · 2026-11-05 · Remove the evidence reader's size rejection
+
+Alex: “读取器的傻逼限制是什么？你在这个agent 跑的同时，把这个限制给移除”. Remove the evidence-expansion byte limit from the research reader. Return the selected questions' complete evidence and provenance, even above the old 1,000,000-byte limit; do not truncate, summarize or replace it with another arbitrary limit. This supersedes the evidence-expansion limit and refusal in `docs/research/2026-10-27-stage12-pinned/design.md`; the separate catalog limit was not part of this request. Historical results and frozen rulers do not change. Implementation and verification take place in a separate worktree while the seven-day run keeps its pinned code. The experiment's reader failure and the size census are in `docs/research/2026-11-05-reader-limit/`.
+
+## D377 · 2026-11-05 · Remove the question-catalog size rejection
+
+Alex: “问题目录本身还有一个单独的 150 KB 限制 这个也是个傻逼的东西，移除”. Remove the research reader's 150,000-byte question-catalog rejection. Return the complete in-scope historical question catalog; no truncation, summarization or replacement limit. This supersedes the catalog-limit portion of D376 and the earlier size refusal in `docs/research/2026-10-27-stage12-pinned/design.md`. D376's removal of the evidence-expansion limit remains in force. Historical results, frozen rulers, prompts and the currently running seven-day worktree remain unchanged. The isolated implementation and tests are recorded in `docs/research/2026-11-05-catalog-limit/`.
+
+## D378 · 2026-11-06 · The split extraction is sealed as a failed experiment; its useful lessons become production experiments (PRD 11)
+
+Alex, 2026-11-06, after the split's benchmark and one screened revision: "我觉得你把拆分版学到的东西，有用的给cherry pick 出来，做一个PRD我们来给到生产版来实验；你现在封存拆分版并且清理赶紧并标注失败的实验吧".
+Earlier the same day, on the benchmark's result: "所以拆分版成本更高，效果也没有更好" and "好，按1试一次".
+
+- Decided: the split extraction (one call for new questions, one for evidence on existing questions, then record preparation) is a failed
+  experiment and is sealed. It is not promoted, not merged, and its configurations are not run again.
+- The record: branch `fix/no-preseed-evidence-review` of the worktree `hivemind-no-preseed-evidence-review`, tag
+  `split-extraction-failed-sealed-2026-11-06`, seal note `docs/research/SEALED-FAILED-split-extraction-2026-11-06.md` there. The plan's decisions
+  adopted for the split on 2026-11-05 (recorded there "to number at merge") lapse with it.
+- Evidence:
+  - Window benchmark against poc-v108, three draws each: helpful matters 156, 156, 159 against 166, 170, 162, so the stop line fired; judgement 44
+    against 47; cost about 15% higher; more questions worth opening (25 against 6) and more not worth opening (17 against 6).
+  - The screened revision (keep-then-file evidence call) reached production's helpful level (92.0 against 94.0) and kept more of what the
+    standard rejects than production (22–23 against 17.3 a send, after a blind reader checked every not-kept match).
+  - Reviewed with Codex in rounds r7–r25 of `docs/research/2026-11-05-production-plan/review-log.md`, in that worktree.
+- Done: `docs/prd/11-production-experiments-from-split.md`, which records:
+  - E1, helpful statements dropped as no home, diagnosed first;
+  - E2, the analyst review with relation definitions for duplicate questions;
+  - E3, ladder code checks with D186;
+  - E4, the judge's theme-as-dependency refusals;
+  - E5, D203's revision day;
+  - E6, the measurement kit;
+  - the ideas measured and not worth an experiment, and the lessons for any prompt change.
+  Each experiment is a new production version only Alex opens (D359).
+
+## D379 · 2026-11-06 · The current version is sealed; Alex re-plans the system design
+
+Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存这个版本吧。我要重新梳理系统设计。你先把当前的收尾，commit push".
+
+- Decided: work stops at the state of 2026-11-06 and is sealed as it is; no experiment of PRD 11 is open; the next work starts from Alex's
+  re-planned system design.
+- Done:
+  - main's working tree, all of it (D369–D379, PRD 11 with the E1 diagnosis, `docs/research/2026-11-06-e1-no-home-drops/`, the configs and
+    tests of D370–D377), committed on branch `seal/2026-11-06` with tag `sealed-2026-11-06`, pushed; not merged into `main`. The full suite
+    passed before the commit (283 tests).
+  - The sealed split (D378): branch `fix/no-preseed-evidence-review` and tag `split-extraction-failed-sealed-2026-11-06`, pushed.
+  - Two side worktrees' uncommitted experiments committed as records on their own branches and pushed, not merged: the unkeyed
+    duplicate-question matching prototype (`fix/matching-identity-2026-11-05`) and the 2026-11-04 judging-v8 run worktree
+    (`exp/run-v109-judging-v8-2026-11-04`).
+  - Kept on disk and out of Git: the 2026-11-05 handoff bundle, raw Codex transcripts and resend checkpoints (`.gitignore`, data manifest).

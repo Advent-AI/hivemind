@@ -60,3 +60,9 @@ Taken out of Git on 2026-11-01 (kept on disk; `.gitignore` now excludes every `*
 ## Traces and reports
 
 Per-item trace pages are generated from a ledger and its archive by `scripts/trace_items.py`; the ones built this phase stay on disk under `poc/reports/*/trace*/` and are git-ignored. The benchmark reports, probes and recall oracles of rows 41–49 are in `poc/reports/2026-10-25-*` (in Git, except the three recall-oracle call archives `poc/reports/2026-10-25-recall-oracle*/archive.sqlite`, 6–10 MB each, which stay on disk and in the backup); the golds they score against are in `poc/eval/gold/` with `SHA256SUMS`.
+
+Kept on disk at the 2026-11-06 seal (D379; `.gitignore`): the Codex-to-Claude handoff bundle `reports/claude-handoff-2026-11-05/` and its
+archive `reports/claude-handoff-2026-11-05.tar.gz` (about 550 MB together: database copies, patches of the two worktrees' uncommitted work at
+the time, context files; its `README.md` is the handoff note), the raw Codex transcripts `docs/research/**/*codex*.log` (the review answers
+are the `.md` or `.out` files beside them, in Git) and the resend scripts' resume checkpoints `docs/research/**/*.partial.json` (the finished
+answer files are in Git). Not backed up elsewhere.

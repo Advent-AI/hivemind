@@ -1,0 +1,319 @@
+{
+  "max_completion_tokens": 12000,
+  "messages": [
+    {
+      "content": "You are a senior hedge-fund analyst reading one item for the subjects it concerns ([Subjects]); \"the company\" below is a subject company. The research questions open on these subjects at the start of the item's day are listed under [Open questions], each with its takes line, which says what belongs in that question's file. Your first job is evidence: decide by the rules below which statements are material, then file each one through its links, as the schema's links field says: the narrowest open question whose takes line covers it, your own candidate, or both. A takes line says where a material statement goes, never that a statement is material. Your second job is candidates: the important questions this item raises, for one of four reasons; a question that is already open is folded into it by code afterwards, so propose it when the item raises it.\n\nEvidence: what to keep\n- A material statement is one of four kinds. (1) The company's own figure, guidance or decision: \"same-store sales rose 4.2% in the quarter\"; \"management guided full-year revenue to $12–13 billion\"; \"the board approved a $10 billion buyback\". (2) A customer's, supplier's, competitor's or partner's action or reported figure with a size, date or name that bears on the company's demand, supply, input costs, competition, prices or products: \"the largest customer said it will cut orders by a fifth next year\"; \"a bank chose a rival's system\"; \"a software firm is integrating the company's model into its government systems\"; \"the main supplier said its capacity will double by 2027\"; \"a rival cut list prices 15% in Europe\"; \"the largest customer reported its order backlog doubled to $40 billion\". An action is a step the item reports as news: taken, decided or planned (an order, a contract, a selection, an integration under way, an expansion, a cut, a price change, a deployment plan). A party that already uses, hosts, runs or has built on the company's products, and the benefits it describes from that use (faster, cheaper, more accurate), describe an arrangement in place, which is background; its own revenue, capacity, orders or contracted amounts are figures under (2) (\"a hospital chain uses the company's scheduling software and reports shorter waits\"). (3) A named party's new claim or estimate about the company or its industry, with or without a figure, whether an analyst, a customer's or rival's executive or an official makes it: \"the CFO said plants built a decade ago still run at full capacity\"; \"an analyst raised next year's EPS estimate to $4.10\"; \"an analyst said the bank's loan losses next quarter will come in well above consensus\"; \"a short seller accused the company of overstating receivables by $2 billion\"; \"an analyst valued the shares at $80, 15 times next year's earnings of $5.30\". (4) A policy or regulatory decision or step, including one still in force that the item reports: \"the regulator approved the drug for a second indication\"; \"the government required licences for exports of the product\"; \"the regulator still bars sales of the drug in the country\".\n- Go through the item from its first paragraph to its last. The four kinds describe what material statements usually look like; they do not decide what is kept. Take a statement when an analyst following the company would write it in this week's notes because it makes some question's answer more or less likely, and no row of the closing check at the end of this request rejects it; a row's \"it does not cover\" clause sends the statement back to that test and keeps it only where the row says so. Most of an item is background, but a page with eight statements that pass yields eight evidence items, not a selection.\n\nHow to write evidence\n- One evidence item records one statement, and that statement is what you judge: a figure, date or comparison in the neighbouring words does not make another claim in the same quote new or material. Copy its quote verbatim, without translation. Separately write a standalone summary in one_line: who did or said what, how much and for which period, naming the measure even when a neighbouring sentence gives it.\n- Identify the speaker and, for a retelling, the original speaker and statement day. Use the schema's tier: fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials' remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources or calls unconfirmed; an announcement or completed deal the item reports is a fact even when the reporter names no source.\n- Use only this item's information. Report plans as plans; do not infer committed funding, orders, deliveries or revenue.\n\nWhich questions to propose\n- Open a candidate only for one of four reasons, named in opens_as. main_driver: an annual quantity that carries the company's value (the segment that carries the business, gross margin, capital spending), whether or not the company guides it, or the date by which the generation of the company's own product that carries that quantity launches or starts shipping (a carmaker's next vehicle platform; not a feature, content or software update, regional service or variant of a product already on sale); the question's ranges settle it, not a guidance figure. Not every reported or guided line. industry_aggregate: one aggregate quantity for one calendar year, such as the combined capital spending of named companies. policy_stage: a stage of a policy process, with the authority that decides it named. binding_obligation: an obligation a universe company takes on in its own name: a guarantee or credit support for another party's debt, lease or revenue, financing it extends to others, a purchase commitment or a backstop of customers' capacity or revenue, whether or not the item gives its amount; or an equity stake whose size is stated and is not yet completed. Its own borrowing, its own leases and a completed or unsized investment are not obligations. Not yet signed: a yes/no question due on a day after the item by which the signing can be checked, at most 18 months out. Already taken on, as one deal or as a programme: a financing_amount question on the amount the obligation reaches at the company's next annual filing, settled by that filing's commitments note; the announcement itself is evidence to it.\n- A number, a financial line, a target or a named customer project does not by itself open a thesis; a customer's purchase or rollout plan is evidence to the supplier's demand and product theses unless it changes the supplier's own cash or credit risk.\n- For every candidate: settled_by names the public material that resolves it (an annual report, a filing's note, an official decision). A different population, source, estimate, wording or direction of a question is the same question; a different quantity, period or decision is another.\n- A yearly metric asks for a quantity over a defined fiscal or calendar period and keeps the current/next-year limit. A milestone asks whether a specified event or project reaches a defined state by a deadline; a numeric completion target can define that state without becoming a yearly metric. Do not repackage a beyond-horizon annual forecast as an event. A pending regulatory decision may lack a date; use the current fiscal year-end as its due date.\n- Do not propose theses about quarterly figures or guidance, undated subjects such as moats or strategy, executive appointments, shareholder votes or bylaws, routine litigation procedure, or buyback authorisations.\n\nHow to write a candidate thesis\n- One thesis concerns one figure for a named period or one event. Separate independently meaningful outcomes.\n- Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date.\n- A question about a company's revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it. A theme thesis asks what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company.\n- Write generated descriptions in English.\n- Define concrete, verifiable conditions now. Do not propose a ladder whose thresholds depend on an unspecified future target.\n- Use five rungs; only a yes/no question about an event has two. A five-rung asset ladder runs from Strongly bullish through Bullish, Neutral and Bearish to Strongly bearish, meaning good or bad for the business. A theme ladder runs between two ends of an outcome range; label the outcomes, without assigning business sentiment. Conditions must not overlap or leave gaps: exactly one must hold when resolved. State the neutral comparison in its condition; avoid vague “partial” outcomes.\n- Set the due date when the question can be resolved. For a figure, use its publication date. Company figures use the company's fiscal year: “this year” contains the item's publication day, and “next year” follows it. Other figures use calendar years. For an event, name the date at which its outcome is assessed.\n\nResearch groups\n- A research group is one ongoing matter in the world that several questions track together: a product rollout and its customer adoption, a financing or acquisition deal, a policy process, an investment or demand cycle. It usually spans companies and themes. When a candidate tracks a matter, declare the group in new_groups (local id n1, n2 …, with a name, a scope that says what is happening, and aliases: the names the matter goes by in the press, such as product, project or programme names and the parties; not company names) and cite that id in group_refs; a declared group whose names match a stored group is that group. A company's own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and carry no group: leave their group_refs empty unless the line itself tracks such a matter. A company is not a group, and a thesis is not a group.\n\nIdentity fields and numeric bounds\n- Select the closest measure allowed by the schema. Scope is its actual segment, product, population or event subject. Reuse a supplied reference name only when it has the same meaning; leave scope empty when unqualified.\n- period_start and period_end describe the period the figure covers. Convert fiscal years using the supplied fiscal-year note. Calendar year 2026 is 2026-01-01 through 2026-12-31. For an event, use the start of the year in which it is proposed through the due date.\n- Identify the accounting basis and unit. For event or policy_event, select the event type; otherwise use n/a.\n- Each numeric rung has an inclusive lower bound lo and exclusive upper bound hi, in the stated unit. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest numeric range has lo null, the highest hi null. Both bounds are null for yes/no outcomes.\n",
+      "role": "system"
+    },
+    {
+      "content": "[Category and how to read it] T6. Other company publications: releases, blogs, 8-K bodies and non-earnings exhibits, and official company posts. Events that occurred are facts; company statements about the future are party statements.\n\n[Subjects] The objects this item concerns: NVDA. For a candidate thesis about a company, object is its ticker; about a theme, choose an id from this list, or state what the matter is when none fits:\n  - chip-export-controls: Chip export controls\n  - ai-capex: AI capital spending\n  - custom-silicon: Custom silicon at cloud providers\n  - semiconductor-cycle: Semiconductor cycle\n  - fed-policy-rate: Fed policy rate\n  - us-inflation: US inflation\n  - us-recession-risk: US recession risk\n  - us-china-tariffs: US–China tariffs\n  - taiwan-strait: Taiwan Strait\n  - middle-east-conflict: Middle East conflict and oil prices\n  - russia-ukraine-war: Russia–Ukraine war\n  - supply-chain-shift: Supply-chain shift and shipping\nFiscal-year note (a numeric thesis takes its year and due date from it):\nNVDA's fiscal year ends in month 1 and is named for the calendar year in which it ends: FY2027 runs from 2026-02 to 2027-01; the publication day 2026-07-01 falls in FY2027, so this year is FY2027 and next year is FY2028; FY2027's full-year figures are published in the annual report around 2027-02; use that day as the due date.\n\n[What to read out] Events, including executive changes, acquisitions, new products, buybacks, new partnerships, investments and financing guarantees with their terms (not lists of customers or partners already using the products); published operating figures; amounts and timetables.\n\n[Research reference] Existing quantities and scopes (measure[scope](event_type)). Reuse a name only when the meaning is the same; propose important questions outside the list as usual, with their actual scope:\n  - NVDA: total_revenue; segment_revenue; gross_margin; operating_margin; operating_expense_growth; tax_rate; capex; product_revenue[Blackwell+Rubin]; product_revenue[Vera]; shipments_or_capacity[Rubin]; event[Rubin](shipment); event[Rubin](launch); event[H20/H200 China](licence); event[SK Telecom AI factory](deployment)\n\n[Open questions at the start of 2026-07-01]\n  - v1 (NVDA, due 2027-02-28): What will Nvidia's total revenue be in FY2027?\n      takes: total_revenue figures, guidance, estimates and revisions for Nvidia FY2027 total revenue, this question's period 2026-02-01..2027-01-31\n  - v2 (NVDA, due 2027-02-28): What Data Center segment revenue will NVIDIA report for FY2027?\n      takes: segment_revenue figures, guidance, estimates and revisions for Data Center, this question's period 2026-02-01..2027-01-31\n  - v3 (NVDA, due 2027-02-28): What non-GAAP gross margin will NVIDIA report for FY2027?\n      takes: gross_margin figures, guidance, estimates and revisions for NVIDIA FY2027 non-GAAP gross margin, this question's period 2026-02-01..2027-01-31\n  - v4 (ai-capex, due 2027-12-31): How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026?\n      takes: spend_total figures, guidance, estimates and revisions for Combined data-center capital expenditures of the four largest AI hyperscalers, this question's period 2026-01-01..2026-12-31\n  - v5 (semiconductor-cycle, due 2028-01-31): How will server DRAM and HBM contract prices in calendar 2027 compare with calendar 2026?\n      takes: price figures, guidance, estimates and revisions for server DRAM and HBM contract prices, this question's period 2027-01-01..2027-12-31\n  - v6 (NVDA, due 2027-03-31): What share of calendar-2026 data-center AI accelerator spending will NVIDIA hold, by the first published full-year estimate?\n      takes: figures, guidance, estimates and revisions for share of data-center AI accelerator spending, this question's period 2026-01-01..2026-12-31\n  - v7 (NVDA, due 2026-12-31): Will Nvidia begin shipping its Rubin generation by December 31, 2026?\n      takes: steps, dates, delays, cancellations, design or configuration changes, variants and stopgaps of this event, confirmations and denials, and named customers' statements about receiving it: Rubin\n  - v8 (chip-export-controls, due 2027-01-31): Will Chinese authorities issue any authorization for Chinese companies to import Nvidia H200 chips by January 31, 2027?\n      takes: the decisions, drafts, approvals, denials and deadlines of this process, its enforcement and evasion, any statement of whether and how much the permitted or restricted activity is actually happening, and the affected parties' own plans and statements about it: China authorization of Nvidia H200 imports\n  - v9 (NVDA, due 2027-02-28): What total amount of financing commitments and capacity backstops to customers and partners will NVIDIA report outstanding at its FY2027 year-end?\n      takes: financing_amount figures, guidance, estimates and revisions for financing commitments and capacity backstops to customers and partners, this question's period 2026-02-01..2027-01-31\n  - v10 (NVDA, due 2027-02-28): What non-GAAP operating margin will NVIDIA report for FY2027?\n      takes: operating_margin figures, guidance, estimates and revisions for NVIDIA FY2027 non-GAAP operating margin, this question's period 2026-02-01..2027-01-31\n  - v11 (NVDA, due 2027-02-28): What non-GAAP diluted earnings per share will NVIDIA report for FY2027?\n      takes: figures, guidance, estimates and revisions for non-GAAP diluted EPS, this question's period 2026-02-01..2027-01-31\n  - v12 (NVDA, due 2027-02-28): How much will NVIDIA spend on capital expenditures in FY2027?\n      takes: capex figures, guidance, estimates and revisions for NVIDIA FY2027 capital expenditures, this question's period 2026-02-01..2027-01-31\n  - v13 (ai-capex, due 2028-12-31): How much will the largest AI hyperscalers spend on data-center capital expenditures in calendar 2027?\n      takes: spend_total figures, guidance, estimates and revisions for five hyperscalers, this question's period 2027-01-01..2027-12-31\n  - v14 (supply-chain-shift, due 2027-03-31): What CoWoS advanced-packaging capacity will TSMC reach by the end of calendar 2026, in wafers a month?\n      takes: capacity figures, guidance, estimates and revisions for CoWoS, this question's period 2026-01-01..2026-12-31\n  - v15 (semiconductor-cycle, due 2027-03-31): By how much will worldwide semiconductor industry revenue grow in calendar 2026 over 2025?\n      takes: growth_rate figures, guidance, estimates and revisions for industry revenue, this question's period 2026-01-01..2026-12-31\n  - v16 (custom-silicon, due 2027-03-31): How much will cloud providers spend on custom AI silicon (ASICs) in calendar 2026?\n      takes: spend_total figures, guidance, estimates and revisions for Spending on custom AI silicon (ASICs) at cloud providers in calendar 2026, this question's period 2026-01-01..2026-12-31\n  - v17 (NVDA, due 2027-03-31): What share of China's calendar-2026 data-center AI accelerator spending will NVIDIA hold, by the first published full-year estimate?\n      takes: figures, guidance, estimates and revisions for share of China data-center AI accelerator spending, this question's period 2026-01-01..2026-12-31\n  - v18 (NVDA, due 2027-12-31): Will NVIDIA begin shipping its Rubin Ultra generation, in Kyber NVL144 racks, by December 31, 2027?\n      takes: steps, dates, delays, cancellations, design or configuration changes, variants and stopgaps of this event, confirmations and denials, and named customers' statements about receiving it: Rubin Ultra\n  - v19 (NVDA, due 2027-02-28): How much revenue will NVIDIA report from standalone Vera CPUs in FY2027?\n      takes: product_revenue figures, guidance, estimates and revisions for Vera, this question's period 2026-02-01..2027-01-31\n  - v20 (NVDA, due 2027-02-28): How much revenue will NVIDIA report from Blackwell and Rubin products in FY2027?\n      takes: product_revenue figures, guidance, estimates and revisions for Blackwell+Rubin, this question's period 2026-02-01..2027-01-31\n  - v21 (NVDA, due 2027-06-30): Will the SK Telecom AI factory built with NVIDIA GPUs begin operating by June 30, 2027?\n      takes: steps, dates, delays, cancellations, design or configuration changes, variants and stopgaps of this event, confirmations and denials, and named customers' statements about receiving it: SK Telecom AI factory\n  - v22 (NVDA, due 2028-02-28): What will Nvidia's total revenue be in FY2028?\n      takes: total_revenue figures, guidance, estimates and revisions for Nvidia FY2028 total revenue, this question's period 2027-02-01..2028-01-31\n\n[Research groups] None yet. For a candidate that tracks an ongoing matter (a product rollout, a deal, a policy process, an investment or demand cycle), declare the group in new_groups (local ids n1, n2 …) and cite it in group_refs; leave group_refs empty for a company's own financial lines.\n\n[Item] id gnews:c4c5dee99841cc96d12fdfc1, category T6, author developer.nvidia.com (company), published 2026-07-01, title: Mastering Agentic Techniques: AI Agent Reinforcement Learning | NVIDIA Technical Blog\n\nBy Sylendran Arunagiri\nReinforcement learning with verifiable rewards (RLVR) using group relative policy optimization (GRPO) enables enterprises to specialize open models such as Nemotron for accurate, domain-specific agents.\nA practical RLVR workflow starts with a clear task, a trustworthy verifier, and a small baseline model, then iterates through supervised fine-tuning if needed, GRPO training, and held-out evaluation.\nNVIDIA NeMo RL and NeMo Gym provide scalable post-training workflows and environment infrastructure that connect agents, tools, and verifiers for reproducible RL runs.\nContinuous improvement for long-running agents turns production failures into regression tests, buckets failure modes, and applies the lightest fix — prompt changes, SFT, DPO, or RLVR — while versioning tuned checkpoints for safe rollback.\nFollow the Workplace Assistant tutorial to train Nemotron Nano 9B v2 with GRPO for tool-calling across project-management workflows.\nReinforcement learning (RL) is central to aligning language models , from reinforcement learning with human feedback (RLHF) within AI assistants to newer reinforcement learning with verifiable rewards (RLVR) workflows for reasoning and agent tasks.\nRL is now becoming a practical technique for specialized AI where enterprises need more accurate agents for domain-specific workflows. Open models provide more control over data, IP, and deployment, while RL turns domain success criteria into training signals.\nFrontier labs have shown RL can improve general model capabilities. OpenAI trained their o-series models with large-scale RL, and DeepSeek-R1 showed how group relative policy optimization (GRPO) and verifiable rewards improve math, code, and reasoning behavior.\nNVIDIA Nemotron 3 Super was post-trained using multi-environment RL across 21 NVIDIA NeMo Gym verifiers and 37 datasets, generating about 1.2 million environment rollouts.\nThis guide helps model-builders, research teams, and agent developers decide when to use RL and how to run a first verifiable RL training loop for long-running agents .\nOrganizations need specialized agents for workflows such as security triage, scientific discovery, CLI automation, customer support, data analysis, and internal tool use. Customizing open models like Nemotron makes this practical. Teams can specialize for accuracy and speed while keeping control over data, IP, and deployment.\nPrompting, RAG , and tools can get you far. Think of the model as the agent’s brain, the agent harness as its body, and tools as the workspace it can act in. Improving the harness or adding tools can help, but it doesn’t always change model behavior. If the agent repeats tool-call mistakes, fails in long workflows, formats outputs incorrectly, or chooses the wrong strategy, you need a training signal. That is where RL fits.\nRL lets you define success, generate attempts, score them, and update model weights so successful behavior becomes more likely. In agentic systems, that reward can come from a verifier: code that scores outputs or trajectories using tests, tool execution, schema validation, simulators, reward models, LLM-as-judge review, human preference labels, or other task-specific feedback.\nNemotron , NVIDIA NeMo RL , and NVIDIA NeMo Gym provide open models, post-training workflows, and environment infrastructure that work with ecosystem tools such as OpenRLHF, PrimeIntellect, SGLang, Unsloth, veRL, and vLLM.\nRAG, prompting, SFT, and RL: When to use what\nAvoid starting with: “Which algorithm should I use?”\nStart with: “What behavior do I want to increase, and how will I measure it?”\nHere is an example decision matrix:\nSFT (with LoRA or QLoRA for efficient adaptation)\nUse SFT when you have demonstrations of desired behavior, such as instruction following, multi-turn conversations, output schemas, tool-call formats, or domain workflows.\nUse DPO when you have preference pairs, where one answer is better than another.\nUse RLHF when nuanced human preferences cannot be captured by rules and you can support preference data, reward models, and careful training infrastructure.\nUse RLVR when correctness can be checked algorithmically, such as valid JSON, correct CLI commands, passing tests, exact math answers, successful tool calls, or simulator outcomes.\nThe best method depends on the signal you have. For verifiable tool-use and agent workflows, a common starting path is: SFT if needed → GRPO with verifiable rewards → evaluate → inspect failures → repeat.\nGRPO is a good default for RLVR or verifiable tasks\nFor RLVR workflows, GRPO is often practical to start with. It generates multiple completions per prompt, scores them with a verifier, and updates the model based on relative performance within the group. Compared with PPO-style RLHF, GRPO has fewer moving parts and works naturally with rule-based rewards, becoming a default for many agentic RL examples.\nNewer variants continue to emerge as RL training systems mature. For example, dynamic sampling policy optimization ( DAPO ) builds on GRPO with dynamic sampling and asymmetric clipping to preserve useful learning signal and exploration diversity, while group sequence policy optimization ( GSPO ) optimizes at the sequence level instead of the token level to improve training stability, especially for Mixture-of-Experts (MoE) models.\nThe rest of this guide focuses on a practical RLVR workflow using GRPO and environment-based evaluation.\nAn RL training run for LLMs or agents has seven parts:\nThis RL 101 Glossary provides a detailed understanding of each component and how they work together.\nStart with evaluation before training. Run the current model on a held-out task set, inspect failures, and profile the verifier or reward function before updating weights. RL works best when the model can sometimes produce the right behavior but doesn’t do so reliably. If the reward is wrong, RL will optimize the wrong behavior.\nThe common challenges that developers face with RL are around data, environment design, reward design, and compute decisions.\nFor SFT, you need input-output examples that teach the model the desired behavior. For RLVR, you need tasks, environment logic with verifiers and tools that can score outputs. Synthetic data generation helps expand coverage when real examples are sparse: generate task variants, edge cases, tool-call scenarios, and expected outputs, then filter them with validators, reward models, or LLM-as-judge review.\nNVIDIA NeMo Data Designer can help generate structured task datasets from scratch or seed data, control relationships between fields, batch generation, and validate outputs against specifications. NeMo Gym can then run those tasks through environments to generate scored trajectories from models or teacher agents, which can be used for SFT demonstrations, preference pairs, or RL rollouts.\nSynthetic data is not ground truth. Keep a small human-quality seed set, deduplicate aggressively, hold out eval tasks, and inspect failure cases before using as training data.\nAgentic RL needs environments, not just datasets\nFor simpler single-turn tasks, a static dataset may be enough:\n{\"prompt\": \"Return valid JSON for this command...\", \"answer\": \"...\"}\nFor agentic RL spanning across single-step/turn, multi-step, and multi-turn workflows, you need an environment defining the:\nFor example, a long-running coding agent may need many tool calls before tests pass; a data analysis agent may need to inspect files, run queries, generate charts, and validate results; a scientific agent may need to search literature, call simulators, and revise hypotheses.\nThe environment can be simple or complex: a parser plus answer checker for math, unit tests for code generation, or a sandbox with tools, files, turn limits, and task-specific success criteria for long-running agents.\nEvals and environments are two sides of the same system. A good eval conveys whether the model succeeded, and a good RL environment turns that signal into training data.\nNeMo Gym provides a scalable, reproducible way to build environments that connect agents, models, external systems, tools, and verifiers, with tutorials for single-step, multi-step, stateful, real-world, and LLM-as-judge environments.\nReward and verifier design: Start simple\nReward design is where many RL projects get overcomplicated.\nStart with the simplest reward that proves the loop works. For RLVR, this can start with binary: +1 if the output passes the verifier, 0 otherwise\n+0.1 selected the right tool\n+0.2 produced valid intermediate artifact\n+0.3 passed partial test\n+1.0 completed task\n-1.0 unsafe action\nToo much shaping can teach the model to optimize the checklist instead of the task. Good reward functions have three properties:\nThey measure the real task.\nThey are hard to game/hack.\nThey fail visibly when wrong.\nBefore training, run your reward function against 50-100 model outputs and inspect the scores manually. If the reward disagrees with your judgment, fix the reward.\nCompute: Budget for training and rollouts\nRL cost comes from two workloads: rollout and training. Both are affected by batch size, model size and sequence lengths. Rollout cost specifically scales with number of tool calls, conversation turns and environment steps. Inference software such as vLLM improves rollout latency while NeMo Gym improves tool calls orchestration.\nAlternately, training cost scales with dataset size and number of policy updates. Training software such as Megatron and NeMo Automodel improve throughput. RL frameworks such as NeMo RL build on top of these inference and training softwares, enabling an efficient loop for optimal model learning.\nGPU needs vary by workload. A small adapter-based ~1B-8B experiment can start on a single modern GPU or small multi-GPU node. Larger models, full fine-tuning, long-context tasks, high rollout counts, or multi-step agent environments need multiple GPUs. When compute is limited, reduce model size, max tokens, generations per prompt, and parallel environments first.\nFor early experiments, start small. Smaller models excel at debugging data, verifiers, environments, and training loops. Complex tasks need a more capable model before the reward curve or held-out evals show meaningful improvement.\nA practical first RL training run is small, verifiable and inspectable\nLet’s build a workplace assistant-style agent that generates correct JSON tool calls from natural-language requests:\nFirst, pipe-clean the setup with the NeMo RL getting-started example.\nThen move to a multi-step example such as the NeMo RL and NeMo Gym Workplace Assistant tutorial , which trains Nemotron Nano 9B v2 with GRPO for tool-calling across project-management workflows. We will start with a simple one-step tool use task which can be extended to multi-step environments too.\nStep 1: Pick one behavior\nChoose one behavior for automatic evaluation.\nExample: Given a natural-language request, produce the correct JSON tool call for an internal CLI or API.\n\"prompt\": \"Create a calendar event for Alex next Tuesday at 2 PM.\",\n\"expected_tool\": \"calendar.create_event\",\n\"time\": \"14:00\"\nStep 2: Run a baseline eval and classify failures\nPrepare separate training and validation task files before training. Run the baseline model on the validation set and measure valid JSON rate, correct tool or command rate, correct argument rate, execution success rate, and unsafe action rate.\nThen inspect outputs and group failures by type: format errors, wrong tool or command, inconsistent success, unsafe actions, or long-horizon failures. Confirm the model has a measurable failure pattern before training.\nThis tells you which training method to use.\nStep 3: Decide whether SFT is needed\nIf the model rarely follows the expected format or tool family, start with SFT. If it can sometimes succeed but is inconsistent, move to RLVR with GRPO.\nA practical path is:\nRLVR with GRPO for reliability improvement\nStep 4: Build the verifier or reward function\nOnce RL is the right next step, turn your eval logic into a reward function. Start simple and deterministic.\ndef reward(output, expected):\nif not is_valid_json(output):\nreturn -1.0\nparsed = json.loads(output)\nscore = 0.0\nif parsed[\"tool\"] == expected[\"expected_tool\"]:\nscore += 0.4\nscore += 0.4 * argument_match(\nexpected[\"expected_args\"]\nif executes_safely(parsed):\nscore += 0.2\nRun this verifier against sample outputs before training. If the reward disagrees with what you would consider correct, fix the verifier first.\nStep 5: Run a small GRPO job\nStart with a small model or adapter-based run. Keep the first run intentionally narrow.\nmodel: nvidia/Nemotron-Nano-9B-v2\nnum_generations_per_prompt: 8\neval_interval: 10\nStep 6: Track the right metrics\nDo not only track training rewards. Track validation reward, success rate, invalid outputs, unsafe actions, latency, and cost. See if validation reward or accuracy improve over the baseline on tasks the model did not train on.\nStep 7: Inspect failures and promote carefully\nSample outputs at every checkpoint. Look for reward hacking, formatting regressions, unsafe actions, or cases where reward improves but real quality gets worse. Ship only after the tuned model beats the baseline on held-out evals without regressing on safety, latency, or general capability checks.\nContinuous improvement for long-running agents\nA long-running agent should improve like a software system. Use RL as a practical loop for continuously improving a production-grade agentic workflow:\nCapture prompts, tool calls, observations, outputs, failures, human interventions, and final outcomes.\nEvery production failure should become a regression test or environment task.\nSeparate format errors, wrong tool choice, bad planning, unsafe actions, retrieval failures, hallucinated APIs, and incomplete execution.\nPrompt or tool change first. SFT for repeated format or domain behavior. DPO for preference quality. RLVR/GRPO when you can verify success.\nKeep a fixed eval set that the model never trains on. Add fresh tasks continuously.\nCompare baseline vs tuned model on success rate, safety failures, cost, latency, and regression tests.\nFor agent specialization, version each tuned checkpoint or adapter so you can compare behavior, roll back safely, and avoid overwriting the base model.\nThe output of this loop is an agent flywheel: production failures become evals, evals become environments, environments generate rewards, rewards improve the model, and the next model is tested before deployment.\nGet started with reinforcement learning for LLMs and agents\nThe shortest path to a useful RL run is a clear task, a trustworthy verifier, a small baseline model, and a held-out eval that tells you whether the model actually got better.\nReady to apply RL to your own models and agents? Accelerate development with NVIDIA NeMo and Nemotron:\nThese tools help developers move from task definition and data generation to training, evaluation, and optimization without rebuilding the full RL stack from scratch.\nSylendran Arunagiri is a technical product marketing manager for the NVIDIA NeMo platform, specializing in agentic AI and generative AI solutions. With hands-on experience in technical product management and AI/ML development, he brings a deep understanding of the field. Sylendran is an alumnus of Carnegie Mellon University, IIM Bangalore, and NIT Surathkal.\n\nReturn evidence and candidates per the JSON schema. A candidate's evidence_ids are its own evidence ids; an evidence item's links are open question ids from [Open questions], this answer's candidate ids (such as c1), or empty. year names the fiscal or calendar year the figure covers (FY2027, or 2026 for a calendar year).\n\nBefore you return the answer, check it once. Read each evidence item back as the analyst following the company and keep it when you would write it in this week's notes because it makes some question's answer more or less likely, about the company or its customers, suppliers, competitors, regulators or the economy. Ask first whether it is new: repeated common knowledge, a long-standing situation retold and an unargued view are noise; guidance, a forecast, a plan or a decision still in force keeps its place even when retold, including a change to a plan, design or schedule that another outlet reported days or weeks before. Judge the action or information itself, not its verb tense, and do not take a statement as old because its date is missing. Fitting one of the four kinds does not keep an item. A missing amount, date or scale never drops an item on its own: a forecast, a rumour, a counter-example or a distant or conditional statement is judged like any other.\nThese are not kept, even when a named party states them. What a row says it does not cover goes back to the test above, unless the row says it is kept:\n- background the analyst already knew, such as the company's history (\"the company was founded in 1998\"); an arrangement the item only describes as in place, even when no date is given: customers or partners that use, host, run or have built on the company's products, and the benefits they describe from that use (\"two airlines fly the planemaker's jets\"; \"three insurers run claims on the company's software and report faster payouts\"); a partnership, contract, plant or investment the item itself dates to an earlier month or year with no new step (\"earlier this year the company partnered with the glassmaker on three plants\"; \"in May it signed a $3 billion cloud contract\"); it does not cover a step the item reports as news, taken, decided, planned or under way (an order, a selection, an integration, an expansion, a deployment), even when it gives no date (\"the retailer's largest supplier is opening its own stores, people familiar said this week\"; \"the two largest cement makers are adding kilns to meet demand\"), nor a customer's, supplier's or partner's newly disclosed revenue, capacity, orders or contracted amount; a deal the item mentions as already existing is an arrangement in place even with its amount (\"a rival airline already leases 40 of the same jets\");\n- a typical claim that is common knowledge, without a figure and a specific account: that a firm leads or competes, that demand is strong or supply tight, a general risk (\"if demand slows it would hurt\"); a number does not lift a familiar position (\"the rival grocer has led this market for years and still holds 40%\"); it does not cover a dated forecast of a shortage, a price or demand (\"the steelmaker expects the shortage to peak next year and last until 2028\"), a competitor's newly reported share, volume or price in the company's market (\"the local rival now holds about half of the regional market, worth about $5 billion\"), nor a reported movement of a named price, rental rate, lead time or order book, even without a figure (\"rental rates for used trucks have been climbing this quarter\"); a general statement that demand stays strong or a product stays popular is not one;\n- a product, game, driver or benchmark specification with no business scale (\"the vacuum runs 60 minutes on a charge\"; \"a benchmark score\"), a retail price detail (\"a retailer marks one model down by $50\"), and a comparison the company, a partner or a third party publishes (\"the maker says its drug works twice as fast as older ones\"; \"a reviewer's test\"); it does not cover a competitor's comparison against the company's product, a partner's or customer's adoption or integration (also when a comparison shares its sentence), a reported launch, shipment, delay or cancellation of any of the company's products or a change to a product plan or configuration, including a reported sign that a planned product is going ahead (\"the long-range version of the jet is likely delayed or limited to a few deliveries\"; \"a parts supplier's catalogue lists the unannounced model\"), nor the company's decision to change the price it charges; uncertainty or a smaller product line does not make it a specification;\n- an unargued view or a quote that only characterises (\"the stock is a hold\"; \"a pivotal moment\"; \"an industry-leading platform\"), and a named analyst's reading of an event already recorded that adds no new fact or calculation (\"the recall shows quality risks are rising\"); it does not cover a reading that adds a new fact or calculation, nor the company's own statement that its plan, schedule or guidance still stands (\"the carmaker said the launch date has not moved\"), which is judged as the plan itself would be; a conditional valuation of the company with its assumptions, derivation and date is kept;\n- a political or strategic stance with no figure and no decision (\"diversifying suppliers will not reduce dependence\"); it does not cover a policy or regulatory step, nor a decision still in force that the item reports;\n- a share-price move, an investor's position or trade, or the market value (\"shares fell 13% this month\"; \"he is short the stock\"); it does not cover the news behind the move;\n- another company's matter that touches none of the company's markets (its valuation, share price, governance or a deal outside them), or that sits next to the company only by sharing an article, an event or an ecosystem; you supply the connection as the analyst and the item need not state it: a customer's spending, orders or backlog bears on demand, a supplier's capacity, output, prices or revenue on supply and input costs, a rival's products, prices or share in the company's markets on competition (\"a large customer's order backlog doubled\"; \"the main supplier's quarterly revenue jumped on demand for the part\");\n- the same fact said again in other words within this item: one deal, hire, programme or reported measure told in several sentences, with its terms, figures and growth rates, is one evidence item; keep the fuller wording (\"a $2 billion order for 120 stores in 15 countries over three years\"; \"cloud revenue of $8 billion, up 30% on the year and 6% on the quarter, 40% of the total\"); a deal one party signs under a wider programme, with its own amount or capacity, is its own evidence item, and a fact another outlet reported before is not a repeat within this item;\n- company boilerplate, bylines, forward-looking-statement text.\nReturn only the evidence items you keep.",
+      "role": "user"
+    }
+  ],
+  "model": "gpt-6-luna",
+  "reasoning_effort": "low",
+  "response_format": {
+    "json_schema": {
+      "name": "extraction",
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "basis": {
+                  "enum": [
+                    "GAAP",
+                    "non_GAAP",
+                    "n/a"
+                  ],
+                  "type": "string"
+                },
+                "due_day": {
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "type": "string"
+                },
+                "event_type": {
+                  "enum": [
+                    "launch",
+                    "shipment",
+                    "licence",
+                    "approval",
+                    "deal_close",
+                    "deployment",
+                    "other",
+                    "n/a"
+                  ],
+                  "type": "string"
+                },
+                "evidence_ids": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "group_refs": {
+                  "items": {
+                    "pattern": "^(?:n[1-9][0-9]*)$",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "asset",
+                    "theme"
+                  ],
+                  "type": "string"
+                },
+                "looks_at": {
+                  "type": "string"
+                },
+                "measure": {
+                  "enum": [
+                    "total_revenue",
+                    "segment_revenue",
+                    "product_revenue",
+                    "gross_margin",
+                    "operating_margin",
+                    "operating_expense_growth",
+                    "total_expenses",
+                    "operating_loss",
+                    "tax_rate",
+                    "capex",
+                    "shipments_or_capacity",
+                    "run_rate",
+                    "design_wins",
+                    "event",
+                    "spend_total",
+                    "market_size",
+                    "project_cost",
+                    "financing_amount",
+                    "price",
+                    "capacity",
+                    "growth_rate",
+                    "policy_event",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string"
+                },
+                "opens_as": {
+                  "enum": [
+                    "main_driver",
+                    "industry_aggregate",
+                    "policy_stage",
+                    "binding_obligation"
+                  ],
+                  "type": "string"
+                },
+                "period_end": {
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "type": "string"
+                },
+                "period_start": {
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "type": "string"
+                },
+                "question": {
+                  "type": "string"
+                },
+                "rungs": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "condition": {
+                        "type": "string"
+                      },
+                      "hi": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "lo": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "condition",
+                      "lo",
+                      "hi"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "settled_by": {
+                  "type": "string"
+                },
+                "unit": {
+                  "enum": [
+                    "USD",
+                    "percent",
+                    "count",
+                    "GW",
+                    "MW",
+                    "TWD",
+                    "multiple",
+                    "n/a"
+                  ],
+                  "type": "string"
+                },
+                "year": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "object",
+                "kind",
+                "looks_at",
+                "question",
+                "rungs",
+                "due_day",
+                "year",
+                "evidence_ids",
+                "measure",
+                "scope",
+                "period_start",
+                "period_end",
+                "basis",
+                "unit",
+                "event_type",
+                "group_refs",
+                "opens_as",
+                "settled_by"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "evidence": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "event_time": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "links": {
+                  "description": "The questions this statement is filed under, decided after you have decided it is evidence: the id of the narrowest open question in [Open questions] whose answer this statement makes more or less likely, as that question's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer; compare the specific questions before a company-wide revenue or margin question and take that one only, never a broader question beside it; a shared company, industry, event or ecosystem is not a connection, and the statement need not repeat the question's words (a variant, sibling or other name of the subject counts); whoever says it, and even when it gives no period, basis or exact amount, because the weight is judged later; an estimate for another period or population of a question's quantity is filed under it when no open question covers that period; when no specific question is connected, a statement that moves the demand, supply, competition or pricing behind the company's results goes to the company-wide revenue question of its period; plus the ids of this answer's candidates the statement supports; empty when no question and no candidate is connected, however important it sounds.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "one_line": {
+                  "type": "string"
+                },
+                "original_day": {
+                  "description": "The day that party made it, as an ISO day when the item gives one (\"signed on 3 March 2026\": 2026-03-03); empty when the item gives none or only a month; the publication day only when the item is that party's own release, filing, call or analysis.",
+                  "type": "string"
+                },
+                "original_who": {
+                  "description": "The party whose statement, figure or action it is, even when the item reports it without attribution (\"the insurer agreed to buy the broker\": the insurer; \"the regulator fined the bank, a newspaper reported\": the regulator); the outlet or author only for its own estimate, analysis or unnamed-source report.",
+                  "type": "string"
+                },
+                "quote": {
+                  "type": "string"
+                },
+                "speaker": {
+                  "description": "Who says it in this item: the outlet, the author or the person quoted.",
+                  "type": "string"
+                },
+                "tier": {
+                  "enum": [
+                    "fact",
+                    "party_statement",
+                    "third_party_view",
+                    "rumour"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "quote",
+                "one_line",
+                "speaker",
+                "original_who",
+                "original_day",
+                "tier",
+                "event_time",
+                "links"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "new_groups": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "aliases": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "id": {
+                  "pattern": "^n[1-9][0-9]*$",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "scope",
+                "aliases"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "evidence",
+          "candidates",
+          "new_groups"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "type": "json_schema"
+  }
+}

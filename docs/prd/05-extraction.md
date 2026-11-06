@@ -1,5 +1,9 @@
 # Extraction
 
+> **D375, 2026-11-05: latest library per item.** Alex confirmed that each item reads the questions committed before its own dispatch sequence, including topics opened earlier on the same day. The split POC's A and B calls receive the same per-item snapshot and may run in parallel. The next item reads after the preceding item's write. This supersedes D251's once-per-day snapshot and amends D264's timing. This is the decided design; the old production code still uses day-start context until implementation and verification. Historical runs and the frozen ruler remain unchanged. The original message is in the decision log.
+
+> **2026-11-05 decision:** A worthwhile new question with its article evidence is handed to the thesis library even when date, check material, period or ladder is unknown. Those fields are conditional, not code gates; later research agents may fill them from information available then. Never invent a date or interval to make a record pass. This supersedes mandatory-field admission clauses in the current implementation for the new design, without editing the frozen extraction ruler or rewriting historical scores. See [Thesis library](06-views.md).
+
 > Status: foundation frozen, October 18, 2026; the production prompt is frozen at extraction v74i (`poc/config/poc-v108.json`, D274) and the code builds no other version (D359). D149 requires extraction-time grouping; D165 integrates it into the default pipeline (poc-v20), with a company's own financial lines carrying no group. English edition: October 25, 2026 (D163); corrected to D207, D209, D211, D251, D259, D264, D265, D273, D274 and D361 on 2026-11-05 (D367).
 > Design page: `docs/system-design.html` → New → Extraction → Details. Recorded decisions take precedence over this PRD.
 > The step's standard (what is kept, how much it weighs, which questions open, the golden set and how a prompt change is measured) is the signed page `05-extraction-standard.html` (D243), which replaces `docs/research/2026-10-29-analyst-standard/standard.md` (D229). Where this PRD differs from it on what is kept, its weight, which questions open or how a change is measured, the page governs; on the request's shape and the pipeline, the decisions in force govern (the page is frozen, D261; its statements later decisions changed are recorded in [05-extraction-standard-corrections.md](05-extraction-standard-corrections.md), D368).
@@ -13,8 +17,8 @@ Read each whole item with its category prompt as a senior hedge-fund analyst. Re
 - Extraction reads; the library compares and stores. Those responsibilities remain separate.
 - Read the complete file with embedded tables, or an entire table release, without separate text/table pipelines.
 - Categories require different reading: news for events and attribution, research for views and ratings, official decisions for actions and effective dates. They share one prompt structure.
-- A thesis is the analyst's judgement expressed as a question, ladder and due date. Evidence is an objective record of who said what in which item. Most items add evidence; fewer create new questions.
-- Evidence matters in relation to a question. Block 5 shows the theses open at the start of the item's day (the item's subjects' own and every theme thesis), each with its question, subject and due date and a line code writes from its key and research group saying what it collects (its takes line); it shows no states, no evidence and no separate list of research groups (D211, D251, D264). The model files each statement under those theses itself, with no separate placement call, so a company statement about assured export licences is filed directly under the licence thesis.
+- A thesis is an analyst's research question; its ladder and due date are recorded when supported and can be absent initially. Evidence records who said what in which item, including relevant attributed opinions. Most items add evidence; fewer create new questions.
+- Evidence matters in relation to a question. The item reads its subjects' open questions and all open theme questions committed immediately before it, including earlier same-day writes, each with its question, subject, available due date and takes line (D264, D375). It shows no states, evidence or separate list of research groups. The model files each statement under those questions itself, with no separate placement call.
 - Important uncovered matters, including another named company, a new material issue or a macro/policy event, become candidates with initiating evidence. The library later determines whether they are existing or new questions.
 - Sources make both theses and evidence traceable to the original text.
 
@@ -25,7 +29,7 @@ The model performs step 2; code performs the others.
 <!-- generated: steps -->
 ```
 An item arrives with category and sequence number
-  ↓ 1 Build the prompt (Code): Use the category's content in the shared template. The library supplies block 5 once per day: the item's subjects' theses and every theme thesis open at the start of the item's day, each with its takes line (D251, D264); no dependency links and no list of stored groups.
+  ↓ 1 Build the prompt (Code): Use the category's content in the shared template. Read the item's subjects' open questions and all open theme questions immediately before this item, including earlier same-day writes. Both experimental split calls use this same per-item snapshot (D375); no dependency links or list of stored groups.
   ↓ 2 Read (Model): Read the whole item. Return evidence, each piece filed under the narrowest block-5 thesis it bears on and the answer's candidates it supports (D207, D264), and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources.
   ↓ 3 Check sources and group references (Code): Check that the quote or cell exists in the item and that cited numbers appear there. Evidence must link to block-5 theses or current candidates. Reject source mismatches with reasons. Validate association references under the library's complete handoff contract.
   ↓ 4 Hand off to the library (Code): Hand off evidence, candidates, associations and necessary group definitions with the sequence number. Matching decides identity; writing preserves membership.
@@ -34,7 +38,7 @@ An item arrives with category and sequence number
 
 ## Two outputs: evidence and candidates
 
-One reading returns evidence, candidates, group associations and necessary new group definitions. Each statement is filed under one home: the narrowest open thesis it bears on, as that thesis's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer, never also a broader thesis beside it, plus the answer's own candidates it supports (D207, D259, D264). When no specific thesis is connected, a statement that moves the demand, supply, competition or pricing behind the company's results goes to the company-wide revenue thesis of its period (D273, kept by D361); a statement nothing takes is dropped as "no home" (D209). Code keeps the narrower of a thesis and one it depends on when a statement is linked to both (D265). The coverage-start reading's records are the one exception: each links to every thesis that read it (D364, below). Candidates are reserved for important uncovered questions, subject to the personal-memo rule. From extraction version 12 (D184) a candidate opens only for one of four admission reasons, stated in the answer: an annual quantity that carries the company's value, guided or not; one industry aggregate per calendar year; a stage of a policy process; a binding obligation a universe company takes on (due within 18 months, D185). The candidate also names the public material that settles it. Code checks the shape of these fields; the model keeps the judgement of importance (D154/D155). A later estimate, another population or another wording of a shown aggregate is evidence to it. The library first resolves a candidate's destination, then compares its evidence within that thesis.
+The existing single-call design returns evidence, candidates, group associations and necessary new group definitions. The two-call split is an experiment, not the accepted production default. Each statement is filed under one home: the narrowest open thesis it bears on, as that thesis's own figure, step or estimate or through the demand, supply, competition or pricing behind its answer, never also a broader thesis beside it, plus the answer's own candidates it supports (D207, D259, D264). When no specific thesis is connected, a statement that moves the demand, supply, competition or pricing behind the company's results goes to the company-wide revenue thesis of its period (D273, kept by D361); a statement nothing takes is dropped as "no home" (D209). Code keeps the narrower of a thesis and one it depends on when a statement is linked to both (D265). Candidates are reserved for important uncovered questions, subject to the personal-memo rule. From extraction version 12 (D184) a candidate opens only for one of four admission reasons, stated in the answer: an annual quantity that carries the company's value, guided or not; one industry aggregate per calendar year; a stage of a policy process; a binding obligation a universe company takes on (due within 18 months, D185). The candidate also names the public material that settles it. Code checks the shape of these fields; the model keeps the judgement of importance (D154/D155). A later estimate, another population or another wording of a shown aggregate is evidence to it. The library first resolves a candidate's destination, then compares its evidence within that thesis.
 
 <!-- generated: two -->
 |  | Evidence | Candidate thesis |
@@ -64,7 +68,7 @@ All categories use these five blocks. Classification owns the category's definit
 | What this category is and how to read it | The category definition and reading method; for example, attribute opinions and estimates to their author rather than treating them as completed facts. | Owned by classification; not redefined here |
 | Subjects | The item's related subjects plus every theme in the research universe. Select an existing theme for a theme candidate when applicable; otherwise describe the new issue clearly. | Item metadata; themes from the research universe |
 | What to extract from this category | One row per category in the table below. | Extraction module |
-| Open theses at the start of the day | The theses of the item's subjects and every theme thesis open at the start of the item's day, the same list for every item of that day, each with a code-written takes line saying what its file holds. No states, evidence, dependency links or list of stored research groups; a candidate declares its group by name and scope. | Thesis library, read once per day (D251, D264) |
+| Open theses before the item | The item's subjects' open questions and all open theme questions committed before this item, including earlier same-day writes, each with its takes line. Both experimental split calls receive the same per-item snapshot. No states, evidence, dependency links or list of stored research groups. | Thesis library, read per item (D375) |
 <!-- /generated: template -->
 
 ## Category-specific prompts
@@ -78,7 +82,7 @@ T7 news prompt (The same template, with news-specific blocks 2 and 4)
 ├─ 2 How to read this category → Media reporting (From classification: opinion and analysis belong to T8; registered publication series use their category; remaining media material belongs here.)
 ├─ 3 Subjects → Subjects of this report (Filled by code, such as NVDA and AMD, plus all universe themes)
 ├─ 4 What to extract → What happened, when and who was involved; attribution and original sources (Official confirmation is fact; unnamed-source claims are rumours)
-└─ 5 Open theses at the start of the day → Every NVDA and AMD thesis and every theme thesis open at the start of the report's day (Filled by code once per day, each thesis with its takes line: for example NVDA FY2027 China revenue (“takes: revenue figures, guidance, estimates and revisions for NVIDIA China, this question's period …”) and the chip-export-licensing theme thesis. No states, evidence, dependency links or list of stored research groups.)
+└─ 5 Open theses before the item → The report's subjects' open questions and all open theme questions committed before this report, including earlier same-day topics (Both experimental split calls share this snapshot; each question has its takes line. No states, evidence, dependency links or list of stored research groups.)
 ```
 
 - Each category has its own prompt using the same template. Blocks 2 and 4 vary by category; block 1 is shared; code fills blocks 3 and 5 for the item.
@@ -122,7 +126,7 @@ What two items yield (Illustration)
 ├─ NVIDIA 8-K, April 15, 2025 → Empty library; no theses in block 5 | Two candidate theses (T6 other company publication: H20 exports to China require a licence; expected charges up to approximately $5.5 billion)
 │   ├─ Candidate: theme thesis → What will China export licensing for chips covered by the April 2025 rule, including H20 and MI308, look like on April 15, 2026? (Event thesis. Five rungs: full ban; licences required and none issued; licences issued with some conditions; all issued licences unconditional; no licence required. Due April 15, 2026. Quote: “…requires a license for export to China … of the Company’s H20 integrated circuits…”. NVIDIA discloses the licence requirement, classified as fact. The library opens thesis #1.)
 │   └─ Candidate: NVDA asset thesis → How will NVDA FY2026 China revenue compare with FY2025? (Numeric thesis. Five rungs: up at least 50%; up 10% to under 50%; change under 10% either way; down 10% to under 80%; down at least 80%. Due on the FY2026 annual earnings date. Quote: “…up to approximately $5.5 billion of charges…”. This is a company expectation, classified as a party statement. The library opens #2; its dependency on #1 would be chosen in matching (D51), which the default Jev path does not yet do, and the licence theme reaches #2 through the theme block (D191, D195).)
-└─ NVIDIA statement, July 14, 2025 → Block 5 shows #1 and #2, open at the start of the day, with their takes lines | One evidence item, no candidate
+└─ NVIDIA statement, July 14, 2025 → Block 5 shows #1 and #2, open immediately before the item, with their takes lines | One evidence item, no candidate
     └─ Evidence → Link to #1 (Party statement: NVIDIA says the US government assured it that H20 export licences to China will be granted (July 14, 2025))
 ```
 
@@ -157,43 +161,9 @@ A source reference
 - Extraction does not mutate the library. Return evidence, candidates and associations together without a separate clustering call. Reference and semantic criteria are owned by the [grouping contract](06-views.md#research-groups-associate-during-extraction); similar names or equal counts do not prove correct grouping.
 - Retry from the failed step and replace only that attempt's own result.
 
-## Coverage-start reading (D363, D364)
+## Separate earnings-report import (removed; D370)
 
-Built 2026-11-05 (`src/hivemind/baseline.py`; configuration `poc/config/poc-v116.json`; validation record `docs/research/2026-11-04-filing-end-to-end/baseline-design.md`
-rounds 8-26; design with its four tables `production-design.md` there). The daily stream keeps out restatements of figures the company has already reported (extraction
-standard §5.3), so a question whose decisive figure was last reported before coverage started would wait a quarter for evidence. This step closes that gap once.
-
-**When.** At coverage start, after the seed questions are written and before the first day's items; once per ledger, and only on a ledger that has processed nothing yet.
-A resumed run skips it; a run cannot start after an unfinished coverage-start day (that day's judging round judges the starting figures).
-
-**What it reads.** The company's earnings-release items (category T1, the company's ticker among the item's subjects) of the latest publication day before coverage
-start; of that day the filed items when the day also has newsroom or investor-site copies. Their page text with tables (the cleaned text drops tables); a missing page
-text refuses the step before any model call.
-
-**The reading.** Each open question reads each item once, one question at a time, for the figure its quantity stands at in the report's most recent period; when the report
-does not state the quantity under the question's name, only the lines it is computed from or the line that is the same quantity under another name — never a broader
-line that holds other things, or a line next to it. Example: an operating-margin question writes the quarter's operating income and revenue; a capital-spending question
-writes "Purchases related to property and equipment and intangible assets"; a question on one product's revenue, which the report does not state, writes nothing. The
-prompt is `prompts/baseline-v3.json` with the schema in code; the code builds no other version.
-
-**What code keeps (identity only).** A figure whose quote is the report's own text (at least eight characters), carries a label, and prints the figure written as the
-value. A table row quoted with a footnote mark left off or a cell left out is stored as the report's own text from the row's label to the figure. Refused figures are dropped
-with their reasons in the step's processing record. Which question a figure belongs to, and which column it is from, stay the reading's.
-
-**What it writes.** One evidence record per item and quote, linked to every question that read it (D364: first-quarter revenue read by total revenue, operating margin and
-next year's revenue is one record with three links; the daily stream's one-home rule does not apply to these records): fact tier, the company as speaker and original
-source, the report's day, the item as source, the model's one-line with the unit added when the value has no scale of its own. One processing record (step
-`baseline`, dated the coverage-start day, with its own sequence number) names the questions linked, the figures kept and refused, and the empty readings; the first day's
-judging round judges those questions with the day's other changes.
-
-**Measured.** On the frozen v108 ledgers, May 20, 2026 report: operating margin and capex each judged inside the gold range 9 of 9 (before: never judged); no question
-that was right turned wrong; every kept figure the question's own quantity (two readers). On the held-out August 26 report: no wrong figure among 44; the operating-margin
-lines read 3 of 3, capex 2 of 3. About three cents per company. Accepted end to end on 2026-11-05: three draws of the 14-day window against `poc-v108` re-run in the same
-hours, scored on the frozen judgement ruler: operating margin and capex each inside the gold range 3 of 3 (never judged in the control), 53 against 45 agreements of 57,
-no question made wrong by the starting figures (`acceptance-design.md` there). The replay default since D366.
-
-**Known gaps (written down, not built).** The capital-spending line is missed in about one read in six (a miss leaves the question as it was); a labelled guidance figure
-the reading keeps is written with the fact tier; later reports reach the questions through the daily stream only; `scripts/preflight.py` does not replay the reading's check (the research replays do).
+There is no separate coverage-start report reading and no report background is automatically appended to a news extraction request. Extraction reads the current item and the existing research library. An earnings release or filing received as an item is still processed as its own source under D28. The former coverage-start design and its historical evidence remain in `docs/research/2026-11-04-filing-end-to-end/baseline-design.md`; the real-news experiment tested appended context, not the former separate starting-figure step.
 
 ## Open questions
 
@@ -218,9 +188,9 @@ the reading keeps is written with the fact tier; later reports reach the questio
 - D155: current POC identity/reference changes are described in the improvement plan, not evidence of grouping acceptance.
 - D184/D185: four admission reasons and the settling material. D211: the fields naming the thesis a candidate would otherwise attach to and what would be lost left the output.
 - D207/D209/D259/D264/D265/D273/D361: one home per statement, the narrowest open thesis it bears on, plus the answer's own candidates; the company-wide revenue thesis takes indirect evidence no specific thesis takes; a statement nothing takes is dropped as "no home"; code keeps the narrower of a thesis and one it depends on.
-- D211/D251/D264: block 5 shows the theses open at the start of the item's day with their takes lines and no list of research groups; the extraction files each statement itself, with no separate placement call.
+- D211/D251/D264: extraction files each statement itself, with takes lines and no separate placement call. D375 supersedes the day-start timing: read the latest committed questions before each item.
 - D274/D359: the production prompt is frozen at v74i; a change is a new version only Alex's decision opens, and the code builds no other.
-- D363/D364: the coverage-start reading of the company's latest report, once per ledger; a figure several questions read is one record linked to each.
+- D370: remove the separate coverage-start reading and the appended report context; reports remain ordinary source items when received.
 
 <a id="抽取时同时确定研究归属"></a>
 

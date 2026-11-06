@@ -1,0 +1,39 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>两路抽取：从 trace 设计 prompt</title><style>*{box-sizing:border-box}body{background:#f4f6f1;color:#213029;margin:0;font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1150px;margin:auto;padding:40px 22px 80px}h1{font-size:34px;line-height:1.25}h2{font-size:24px;margin:40px 0 14px}h3{font-size:19px}.tag{color:#526c5b}.intro{font-size:18px}.card{background:white;border:1px solid #dbe5d8;border-radius:14px;padding:22px;margin:16px 0}.warn{background:#fff7e8;border-color:#ecd9aa}.flow{display:grid;grid-template-columns:1fr 1fr;gap:12px}.box{background:#edf4ec;padding:20px;border-radius:12px}.shared{grid-column:span 2;text-align:center}.arrow{grid-column:span 2;text-align:center;color:#758679;font-size:25px;line-height:1}.pill{display:inline-block;font-size:13px;padding:2px 10px;background:#dbeadc;border-radius:20px;color:#345b3d}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f6f2;padding:18px;border-radius:10px;font:13px/1.65 ui-monospace,monospace}code{background:#f3f5f0;padding:2px 4px;border-radius:4px}pre code{background:none;padding:0}blockquote{margin:12px 0;padding-left:15px;border-left:4px solid #9cb9a0;color:#52645a}a{color:#236c4b}.article p{margin:12px 0}.article h1{display:none}@media(max-width:700px){.flow{display:block}.box{margin:10px 0}.arrow{display:none}}</style></head><body><main><div class="tag">2026-11-05 · 真实回答和代码交接 · 设计建议</div><h1>两路抽取：从 trace 看怎么改</h1><p class="intro">主要问题不只是 prompt：有些信息模型没看到，有些模型找到了，却在交接时被合并或丢弃。</p><div class="card warn"><b>结论边界：</b>新方案只跑了两篇各一次。下面区分已观察到的行为、代码能够证明的原因，以及还要测试的 prompt 改法；模型回看是自述，不是证明。</div><h2>建议的流程</h2><div class="flow"><div class="box shared"><span class="pill">共同输入</span><br><b>文章 + 题库里的具体问题</b><br>看得到范围、期间和已知会计口径</div><div class="arrow">↓ 并行 ↓</div><div class="box"><span class="pill">A · 新观点</span><h3>先理解，再判断是否新问题</h3><p>读完整篇，识别重要变化 → 与已有问题比较具体结果 → 只提出值得独立追踪的问题 → 带上本文相关证据。</p></div><div class="box"><span class="pill">B · 旧观点证据</span><h3>先拆研究事项，再找关联</h3><p>读完整篇，分别识别能帮助已有问题的信息 → 判断关联逻辑 → 保留支持、反对、来源、期间与条件。</p></div><div class="arrow">↓ 交接 ↓</div><div class="box shared"><b>同一句原文可能包含不同事项</b><br>保留各自的意思和关联；同一来源不能被当成独立证实。</div></div><h2>五个发现</h2><div class="card"><p>① A 漏掉“保底承诺有多大”，却提出了两个过远的问题。规则其实写在 prompt 中；重新排序是待验证的方案。</p><p>② 两条有帮助的信息写出来后，因为关联的新问题被拒绝而一起丢掉；这是现有交接机制。</p><p>③ 题库里有 GAAP 口径，模型输入没有。10 篇历史输入中，19 个有 GAAP 的题目条目都没显示该口径；同一题在多篇中重复。</p><p>④ 模型曾正确拆出总收入和数据中心收入，但两条引用同一句，代码合并后只留第一个摘要。</p><p>⑤ 模型把文章中未明确说是同一项目的内容关联在一起，也给一条外部预测填了没有依据的发言日期。</p></div><div class="card article"><h1>两路抽取：从真实 trace 看结构怎么改</h1>
+<p>2026-11-05；范围：抽取两路、输入和交接。只分析和提出建议；没有改生产 prompt、代码或金标。新方案是两篇各一次，不能据此推断普遍效果。三次模型回看属于对已保存回答的事后自述，不是可独立验证的模型内部推理。</p>
+<h2>1. 新观点漏掉了承诺金额</h2>
+<p>第一篇原文报道公司已经对云客户承担 GPU 容量的最低收入保底。文章前题库 <code>v1</code> 问的是：到期限前是否存在一项特定计划的担保。gold 要求的问题是：已承担的保底计划在下一份年报中的承诺金额是多少。前者是有没有，后者是多大，不能只因为都提担保就认为答案相同。</p>
+<p>新 A 的原始答案没有这个金额问题；却提出 2028 年 AI 年支出及 2029 年 AI 债务两个问题。现有提示词已经写了“已承担的一个计划可以问下次年报里的金额”和“年度量限今年/明年”，代码在 <code>extraction.sift</code> 把这两题拒绝。因此，现象成立，但不能说提示词完全没有这些规则，也不能仅凭一次断言漏题的原因是题库干扰。</p>
+<p>对已保存对话继续询问，模型承认“有没有”不等于“多少”、应考虑已有承诺金额，也承认两个远期问题违反已有规则。它没有可靠解释最初为什么没执行规则；这是自述，不是原因证明。存档：<code>poc/data/parallel-restructure-trace-probes-2026-11-05-v1/response-0.json</code>。</p>
+<p><strong>建议：重排 A 的任务，而不是继续增加条文。</strong> 先找文章中会改变收入、盈利、现金或信用风险、竞争地位的重要变化；再把它与已有问题比较：旧问题究竟问的是什么结果？新文章提出的是否为可独立变化、可核对的另一结果？最后只对通过标准的问题写格式和关联本文证据。用跨行业的“是否签约 vs 已签义务达到多少”对照例子教比较，说明有数字或不同措辞不自动开题。A 的现有 19 个必填字段仍要满足；把发现和复杂格式分开的进一步调用只是候选设计，尚未实施或证明需要。</p>
+<h2>2. 两条远期信息被丢，是交接机制，不只是 prompt</h2>
+<p>A 写出了两条 source-backed 2028/2029 预测，但是只允许把证据挂到本次的新候选；两个候选被 <code>sift</code> 根据期限拒绝，<code>file_reading</code> 发现没有有效链接，将两条证据以 <code>no home</code> 丢弃。源文件：<code>src/hivemind/extraction.py</code> 中 <code>sift</code> 与 <code>file_reading</code>；真实原始答案与交接在小测试目录的第一篇 A 结果。</p>
+<p>B 同时只找已有题库证据，没有返回这两条。是否有真实、逻辑清楚的已有问题适合接收它们，需要逐个判断；不能因为想保留就乱挂。若确实既无已有问题也不足以开新题，当前 D209 明确丢弃；单改两份 prompt 无法保证留下这类材料。是否改变这个行为是产品设计选择，不在本次已授权的两路分工里自动决定。</p>
+<h2>3. B 看不到题库里已经记录的会计口径</h2>
+<p>第二篇文章写季度收入指引 $91bn、非 GAAP 毛利率 75%。已有 <code>v6</code> 在库中 <code>basis=GAAP</code>，但实际发给模型的文字只有“FY2027 gross margin”，连 <code>takes</code> 行也不含 GAAP。模型把这条非 GAAP 季度指引连到 <code>v6</code>。回看时模型明确说它所见的问题没有会计口径，不能知道那道题是 GAAP；它也说关联本身不是在断言两种口径相同。自述见 <code>response-1.json</code>。</p>
+<p>代码链：<code>src/hivemind/extraction.py:399</code> 使用 <code>placement.question_lines</code>；<code>src/hivemind/placement.py:19</code> 的 <code>takes()</code> 读取量、范围、期间，但没有输出 <code>key.basis</code>。对之前 10 篇 B 的已保存请求和题库逐行核对：334 个文章-问题输入中，19 个条目的结构化 key 有 GAAP，19 个对应的问题行没有显示 GAAP；这些是重复出现的题库条目，不代表 19 个独立问题。</p>
+<p><strong>建议：输入先给足，再要求模型判断。</strong> 对有明确口径的问题向两路展示真实口径、量、范围和期间；缺失则说未知，不编造。季度数字可以帮助判断全年；非 GAAP 和 GAAP 不能当成同一个数，但如果存在清楚解释，也不应机械禁止间接关联。这个字段需要改输入组装代码；只改自然语言 prompt，模型仍看不到原始口径。</p>
+<h2>4. 模型拆好了，交接又把两个意思合并</h2>
+<p>真实旧 B 诊断中，文章一句话同时说公司总收入 $81.6bn、数据中心收入 $75.2bn。模型在 control 第三次回答拆成两条：<code>e1</code> 总收入 → <code>v2</code>，<code>e2</code> 数据中心 → <code>v10</code>，两条引用同一句原文。<code>extraction.sift</code> 按相同 quote 合并，留下 <code>e1</code> 的总收入摘要，合并链接为 <code>v2</code>、<code>v10</code>，<code>e2</code> 被记作 <code>same quote as e1</code>。treatment 第三次出现同一现象。真实存档位于 <code>poc/data/parallel-b-link-2026-11-05-v2/gnews_3df0bbc8aff2c1d008bc0a32-{control,treatment}-3/result.json</code>。</p>
+<p>离线副本用本次真实 B 回答构造：同一句的收入和毛利率分别用两个不同的原文子串时，两条各自通过；两条引用同一句时，第二条被合并，只留第一条摘要和两个链接。<code>src/hivemind/views/judging.py:130</code> 显示后续判断同时读取摘要与最多 400 字引用，因此不能说它一定完全看不到第二个数字；但可确认第二条独立摘要被丢。实际判断质量的影响尚未测试。</p>
+<p><strong>建议：B 先按不同研究事项抽取，再分别判断归属；交接不能只凭相同引用就认定两条意思相同。</strong> 仍要保留一段里两个相关数字属于同一事项时的合并空间。不要要求模型机械裁剪每个引文作为永久修法；应先验证下游能保留不同事项的摘要、原文和来源。如何决定“同一事项”需要明确设计，不能由代码硬编码重要性。</p>
+<h2>5. 关联、来源和不确定性</h2>
+<p>第一篇 B 将六条与 NVIDIA 保底有关的内容关联到 <code>v1</code>，但 <code>v1</code> 限定特定 AI Compute Partnership。原文没有把文章的保底计划命名为该计划。模型回看承认其关联是推断；不能因此一律否认间接相关，但不能把“可能相关”写成原文确认是同一个计划。<code>response-2.json</code>。</p>
+<p>同一回答 <code>e5</code> 说 Firmus 预计六年收入 $25–30bn，并将原始声明日写成文章发布日 2026-07-06。原文有 6 月 29 日的项目公告，但没有明确给这项收入预期的原始发言日期。模型回看承认日期没有依据。现有请求和 schema 本来已经说未知留空，所以不能说再加一条“不要编造日期”必然解决。不同来源内容也不能被合写成同一说话人的原话。</p>
+<p><strong>建议：B 的流程里把“文章实际说了什么”与“为什么能帮助这个问题”分开判断。</strong> 关联可以是有理由的间接关系；假设、作者分析、第三方转述不能升级成公司确认。保存的事实记录要完整保留说话者、适用期间、条件与不确定性。是否需要额外输出解释字段属于输出协议变更，不应在本次分析中悄悄增加。</p>
+<h2>建议的两路结构</h2>
+<pre><code class="language-text">同一篇文章 + 已有问题（含名称、具体结果、期间、口径和范围）
+                         |
+       ┌─────────────────┴─────────────────┐
+       ↓                                   ↓
+A 新观点                               B 已有观点的证据
+读完整篇，识别重要变化                 读完整篇，识别各个研究事项
+比较已有问题的具体结果                 问每件事对哪道已有问题有何帮助
+只开值得独立追踪且可核对的问题         保留支持、反对和合理间接信息
+带回本文相关证据                       留下原文、来源、期间与条件
+       └─────────────────┬─────────────────┘
+                         ↓
+               交接按事项保留、检查链接
+               （同引用不自动等于同一事项）
+</code></pre>
+<p>这些是基于 trace 的方案和待验证假设，不是已证明更优的新版本。一次测试的模型输出不能推出所有文章都会这样。三次回看共 29,257 输入、1,646 输出 token，按 <code>model.PRICES</code> 估算成功响应约 $0.00375；它们没有重跑金标或新抽取。</p>
+</div><p>原始逐条审查：<a href="../../hivemind-no-preseed-evidence-review/docs/research/2026-11-05-parallel-refinement/trace-structure-review.zh.md">完整 trace 记录</a> · <a href="2026-11-05-split-small-test.html">两篇测试及原始输出</a> · <a href="2026-11-05-restructured-prompts.html">当前两份实验 prompt</a></p></main></body></html>

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-The system's only entry point asks three questions in sequence to determine each item's destination. Items published before coverage start are not dispatched; the coverage-start reading reads the company's latest earnings report directly, once, before the first item (D364; [extraction](05-extraction.md#coverage-start-reading-d363-d364)).
+The system's only entry point asks three questions in sequence to determine each item's destination. Items published before coverage start are not dispatched; the separate coverage-start report reading is retired (D370; [extraction](05-extraction.md#separate-earnings-report-import-removed-d370)).
 
 The old system spread routing across daily steps, channel-specific text/table rules, filename-based model routing and category lists in nine modules. This design gives that decision one tree.
 
