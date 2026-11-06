@@ -5,35 +5,19 @@ Catalog selection is a semantic job outside this module. No lexical filtering,
 ranking, model call or top-N truncation is performed here.
 """
 import copy
-import json
 from .views import store
-
-
-class ContextTooLarge(ValueError):
-    pass
-
-
-def bounded(value, limit):
-    size = len(json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode())
-    if size > limit:
-        raise ContextTooLarge(f'complete context requires {size} bytes; limit is {limit}')
-    return value
 
 
 class Reader:
     """One read transaction, one explicit exclusive sequence boundary and scope."""
 
-    def __init__(self, path, before_seq, object_ids, universe, *, catalog_limit=150000,
-                 evidence_limit=1000000):
+    def __init__(self, path, before_seq, object_ids, universe):
         if type(before_seq) is not int or before_seq < 1:
             raise ValueError('before_seq must be a positive owned sequence number')
         if not object_ids or any(not universe.has(x) for x in object_ids):
             raise ValueError('explicit, known research objects required')
-        if catalog_limit < 1 or evidence_limit < 1:
-            raise ValueError('positive context limits required')
         self.seq = before_seq
         self.scope = sorted(set(object_ids) | set(universe.themes))
-        self.catalog_limit, self.evidence_limit = catalog_limit, evidence_limit
         self.db = store.open_read_only(path)
         self.db.execute('begin')
         self._catalog = None
@@ -83,7 +67,6 @@ class Reader:
                     selected[vid] = self.question(by_id[vid])
         payload = {'before_seq': self.seq, 'object_ids': self.scope,
                    'questions': list(selected.values()), 'complete': True}
-        bounded(payload, self.catalog_limit)
         self._catalog = selected
         return copy.deepcopy(payload)
 
@@ -111,5 +94,5 @@ class Reader:
             judgements = self.rows('select * from judgements where view_id=? and seq<? order by seq desc,judgement_id desc limit 1', (vid,self.seq))
             questions.append(dict(copy.deepcopy(self._catalog[vid]), evidence_ids=[r['evidence_id'] for r in ids],
                                   latest_judgement=judgements[0] if judgements else None))
-        return bounded({'before_seq': self.seq, 'questions': questions,
-                        'evidence': list(evidence.values()), 'complete': True}, self.evidence_limit)
+        return {'before_seq': self.seq, 'questions': questions,
+                'evidence': list(evidence.values()), 'complete': True}

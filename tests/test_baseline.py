@@ -202,40 +202,4 @@ def test_only_the_validated_prompt_is_built(tmp_path):
     assert config.load(str(V116)).baseline.prompt_version == 'baseline-v3'
 
 
-def test_replay_refuses_the_step_without_seeds(tmp_path):
-    """Design, Entry, as the user calls it: scripts/replay.py with its default configuration (poc-v116, D366) and no --seed refuses before any call."""
-    result = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'replay.py'), '--from', START, '--until', START,
-                             '--views', str(tmp_path / 'run' / 'views.sqlite'), '--archive', str(tmp_path / 'run' / 'archive.sqlite'),
-                             '--testdb', str(tmp_path / 'items.sqlite')], capture_output=True, text=True, cwd=str(tmp_path))
-    assert result.returncode != 0 and 'give --seed' in (result.stderr + result.stdout)
-
-
-def test_replay_with_its_defaults_reads_the_report_after_seeding_and_judges_those_questions_on_the_first_day(tmp_path, monkeypatch):
-    """Design, Entry and Judging, as the user calls it (D366): scripts/replay.py with no --config and a --seed seeds the questions, runs the
-    coverage-start reading once at sequence 1 before the first day, and the first day's round judges the questions it linked."""
-    import re
-    import runpy
-    items_database(str(tmp_path / 'items.sqlite'))
-    read, sent = fake_transport()
-
-    def send(provider, request, timeout=600):
-        if request['response_format']['json_schema']['name'] != 'judgement':
-            return read(provider, request)
-        shown = re.findall(r'^- (e\d+) \[', request['messages'][1]['content'], re.M)
-        answer = {'rung': 1, 'reference': 'the market expects a higher figure', 'implied_outcome': 'the figure the report gives',
-                  'reasons': 'The latest report gives the starting figure.', 'cites': shown, 'cites_views': [], 'pushes': [], 'changed': True,
-                  'why_changed': 'First judgement.', 'theme_pushes': []}
-        return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 10, 'completion_tokens': 5}}
-    monkeypatch.setattr(model, 'openai_transport', send)
-    monkeypatch.setattr(sys, 'argv', ['replay.py', '--from', START, '--until', START, '--seed', str(SEED), '--testdb', str(tmp_path / 'items.sqlite'),
-                                      '--views', str(tmp_path / 'run' / 'views.sqlite'), '--archive', str(tmp_path / 'run' / 'archive.sqlite')])
-    runpy.run_path(str(ROOT / 'scripts' / 'replay.py'), run_name='__main__')
-    conn = store.open_db(str(tmp_path / 'run' / 'views.sqlite'))
-    step = conn.execute("select sequence_no, reason from processing_steps where step='baseline'").fetchone()
-    assert step is not None, 'the coverage-start reading did not run'
-    assert step['sequence_no'] == 1 and sorted(json.loads(step['reason'])['changed']) == ['v1', 'v10', 'v12'] and len(sent) == 22 * 2
-    assert sorted(r[0] for r in conn.execute('select view_id from judgements where publication_day=?', (START,))) == ['v1', 'v10', 'v12']
-    assert [r[0] for r in conn.execute('select day from days_completed')] == [START]
-
-
 PROMPT_SHA256 = 'a38f684bfc60fa5698a3d4c374fd52cc8187d27bd62129311f24483fd7377a5b'   # baseline-v3.json as validated (rounds 14-16, 24-26)

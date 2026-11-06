@@ -2,7 +2,7 @@
 
 D112–D145; English edition and current-document refresh, October 25, 2026 (D163). A user supplies an **idea**; the library contains **theses**. The service reads the idea against those records and returns the information the frontend needs. User text does not become a stored thesis merely by opening an Idea card.
 
-The default is `poc/config/poc-v33-idea.json`: two candidate-discovery calls (`idea-v7`) followed by one final adoption and weighting call (`idea-summary-v8`, D290, D335). The model/provider and reasoning settings are unchanged. Older configurations, including v31 and v32, retain their original response contracts.
+The default is `poc/config/poc-v118-idea.json`: two candidate-discovery calls (`idea-v7`) followed by one final adoption and weighting call (`idea-summary-v8`, D290, D335). The model/provider and reasoning settings are unchanged from v33. Older configurations retain their original response contracts.
 
 ## Request path
 

@@ -9,7 +9,7 @@ Each module has one Markdown specification. Select a module on `docs/system-desi
 | 02-classification.md | Upstream classification | First version frozen |
 | 03-config.md | Config | First version frozen |
 | 04-dispatch.md | Dispatch | First version frozen |
-| 05-extraction.md | Extraction (read-only), and the coverage-start reading | Foundation frozen; groups declared during extraction in the default pipeline (D165); the production prompt frozen at v74i (D274); coverage-start reading built (D364), accepted and in the replay default (D366) |
+| 05-extraction.md | Extraction (read-only) | Foundation frozen; v74i prompt remains in use; separate report import retired and v117 replay not yet accepted end to end (D370) |
 | 05-extraction-standard.html | Extraction standard: ledger records, question types and opening, evidence and weight, golden set, prompt measurement | Signed (D243), open it in a browser; the one measuring standard for extraction, replacing `docs/research/2026-10-29-analyst-standard/standard.md` (D229) |
 | 05-extraction-standard-corrections.md | Dated corrections to the frozen standard page: the statements later decisions changed, read with the page and never merged into it | Three records, 2026-11-05 (D368) |
 | 06-views.md | Thesis library and matching records | Foundation frozen; group handoff and storage in the default pipeline (D165); other open items are in the PRD |

@@ -34,8 +34,8 @@ counts come from the three same-day production draws of the benchmark (`runs/con
 
 - **Problem.** Production's extraction writes a statement, finds no open question to file it under, and drops it (D209). The three window draws
   dropped 441 statements this way, about 147 a draw. Independent readers put 60 of production's 213 missed helpful-matter draws down as "written,
-  then dropped by a check", almost all of them no home. On the 30 test articles it was 36 of 68. This is production's largest recall loss in the
-  benchmark.
+  then dropped by a check", almost all of them no home. On the 30 test articles it was 36 of 68. On the window it is the second recall loss after
+  "the model did not write it" (116 of 213); on the test articles it is the largest. (Corrected 2026-11-06: this line first called it the largest.)
 - **What the split showed.**
   - Opening more questions and offering homeless statements to the item's new questions recovered some of these.
   - It also opened questions the standard would not open (17 of 44), and half its new questions had no ladder.
@@ -48,6 +48,12 @@ counts come from the three same-day production draws of the benchmark (`runs/con
   - The packets already exist: `docs/research/2026-11-06-architecture-benchmark/results/traces-window-control.json` and
     `traces-test-control.json`.
   - The larger class picks the experiment: a link-rule fix, or an opening fix, each with its own audit (AGENTS §6).
+- **Result of the diagnosis (2026-11-06; `docs/research/2026-11-06-e1-no-home-drops/`).** 57 matters, two readers, 44 of 54 agreed: link misses
+  17 (4 core), opening misses 3 (1 core), and a third class, 24 small matters the standard's §6 itself drops (none core); 10 disputed, all on the
+  fallback or the indirect clause; 3 quote refusals. Opening is not the experiment. Of the link misses, 12 are the question's own quantity in
+  another period or quarter, or a variant of a tracked product; the model's account says it read the question's period, population or named
+  configuration as a boundary. Only 8 of their 13 dropped window draws were lost to the product (5 reached the question from another
+  article), and no lost window judgement is shown to follow from them. Any fix is a new extraction version only Alex opens (D359).
 - **Not to repeat.** A gate that keeps only statements connected to an existing question (§4).
 
 ### E2 · Duplicate questions: the analyst review with relation definitions

@@ -26,7 +26,7 @@ def main():
     parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-window.sqlite'))
     parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service', 'search-index.sqlite'))
     parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service', 'idea-archive.sqlite'))
-    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v9.json'))
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v118-from-v9.json'))
     parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
     parser.add_argument('--probes', default=os.path.join(ROOT, 'poc', 'eval', 'idea-probes-2026-10-24.json'))
     parser.add_argument('--k', type=int, default=20)

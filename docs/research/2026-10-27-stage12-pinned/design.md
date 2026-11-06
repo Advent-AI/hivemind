@@ -1,5 +1,7 @@
 # 第一步保真，第二步取全
 
+> **2026-11-05, D376–D377:** Alex directed removal of both the 1,000,000-byte evidence-expansion rejection and the 150,000-byte question-catalog rejection described below. The earlier measurements and design text remain a historical record; the updated behavior and verification are in `../2026-11-05-reader-limit/design.md` and `../2026-11-05-catalog-limit/design.md`.
+
 Alex 要求把第一、二步做实。本轮实现独立、可运行的两步入口；不把尚未实现的第三步选择、第四步合并或新观点写入冒充已经完成。
 
 例如 Vera 的厂商性能测试，第一步留下厂商归属和测试条件；第二步先给出已有问题目录，选中 CPU 问题后，取回该问题全部有效来源，包含旧的测试限制和商业化风险。第二步不把相似词多等同于投资上重要。

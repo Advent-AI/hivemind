@@ -40,11 +40,8 @@ Research universe: what to research and which information categories to track
   ↓ determines what upstream supplies
 Upstream (outside this system): obtain information and classify it
   ↓
-Seed questions for a covered company, written before the first day (optional, --seed)
-  ↓
-Coverage-start reading (once): each open question reads the company's latest
-  earnings report, when one is found; the figures code keeps become evidence
-  linked to the questions
+Start with an empty ledger or a supplied, article-created research library.
+The default does not build a cold-start library or import the former preset questions.
   ↓
 Each day, in order:
   Dispatch: validate each item, assign a sequence number and route it
@@ -83,7 +80,7 @@ The foundational design was frozen on October 22, 2026; later decisions authoriz
 | Human review pool | Intake frozen; output not yet designed |
 | Pull mode and closing at the due day | Decided and built: at the end of each day a due question freezes at its rung and closes; no separate final verdict (D54, D356) |
 
-The production configuration is `poc/config/poc-v116.json`, the replay default (D366). Every measurement uses one frozen ruler: the extraction standard [`docs/prd/05-extraction-standard.html`](docs/prd/05-extraction-standard.html) (its version 5: version 3 as signed in D243, with D248's and D250's boundaries) with its golden set golden-v5, the seed questions and the judgement gold ([AGENTS §7.1](AGENTS.md); D261, D262). Tests fail when a piece of either moves (`tests/test_frozen_rulers.py`, `tests/test_frozen_extraction_prompt.py`, `tests/test_frozen_questions_and_judgement.py`, `tests/test_baseline.py`). Maintained documentation, new product text and pages written for Alex's review are in English (D163, D368); historical records and quotations keep their original language.
+The replay default is `poc/config/poc-v118.json` (D370); it removes seeded starting questions and the separate coverage-start report import. It has not been accepted end to end. Every measurement uses one frozen ruler: the extraction standard [`docs/prd/05-extraction-standard.html`](docs/prd/05-extraction-standard.html) (its version 5: version 3 as signed in D243, with D248's and D250's boundaries) with its golden set golden-v5, the seed questions and the judgement gold ([AGENTS §7.1](AGENTS.md); D261, D262). Tests fail when a piece of either moves (`tests/test_frozen_rulers.py`, `tests/test_frozen_extraction_prompt.py`, `tests/test_frozen_questions_and_judgement.py`, `tests/test_baseline.py`). Maintained documentation, new product text and pages written for Alex's review are in English (D163, D368); historical records and quotations keep their original language.
 
 ## Local requirements and data
 
@@ -95,8 +92,8 @@ The default backend reads these local files:
 |---|---|
 | Collected thesis ledger | `poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite` |
 | Source items | `poc/data/items-nvda-2026-07-01-10-27.sqlite` (cleaned pages, D351, with the whole pages as fetched in column `text_page`; also kept apart in `items-nvda-2026-07-01-10-27.page.sqlite`) |
-| Replay configuration | `poc/config/poc-v116.json` (D366): the frozen production extraction prompt with Jev matching and judging-v7 (`poc-v108`, D274), plus the coverage-start reading (D364, D365) |
-| Idea configuration | `poc/config/poc-v33-idea.json`: two discovery calls and a final adoption/weighting call |
+| Replay configuration | `poc/config/poc-v118.json` (D370): v108 extraction, matching and judging settings without seeded starting questions or separate report import |
+| Idea configuration | `poc/config/poc-v118-idea.json`: two discovery calls and a final adoption/weighting call |
 | Derived service index and Idea archive | `poc/data/service-english/` by default; overridable per run |
 
 `poc/data/` is excluded from Git. A fresh clone includes the standalone demo, not these databases. Use the [data manifest](docs/research/2026-10-25-english/data-manifest.md) to locate preserved runs, or supply your own files with the documented CLI options. Keep provider credentials in the owner-only local file `~/.config/hivemind/credentials.json`, outside the repository.
@@ -163,15 +160,15 @@ python3 "$repo/scripts/preflight.py" \
   --items "$repo/poc/data/items-nvda-2026-07-01-10-27.sqlite"
 ```
 
-Inspect changed refusals before continuing; the preflight does not yet replay the coverage-start reading's check. A replay is a paid run: it starts only when authorized, in a new dated folder, with the agreed spending cap. The default configuration needs a seed file:
+Inspect changed refusals before continuing. A replay is a paid run: it starts only when authorized, in a new dated folder, with the agreed spending cap. The default starts without seeded questions and can read an existing article-created library:
 
 ```sh
 python3 "$repo/scripts/replay.py" --from 2026-07-01 --until 2026-07-14 --only NVDA --cap 3 \
-  --seed "$repo/poc/seeds/nvda-2026-07-01-v2.json" \
   --views /absolute/path/to/new-run/views.sqlite --archive /absolute/path/to/new-run/archive.sqlite
 ```
 
-`--cap` is checked after each item: the run stops as soon as an item takes the spend past it; a day's judging round runs after the last item without a check, calls already sent in parallel are still paid, and the coverage-start reading is not counted, so it is not a hard limit on the whole run. The default configuration is `poc-v116` and the default items database `poc/data/items-nvda-2026-07-01-10-27.sqlite`, which holds the page text the coverage-start reading needs; a run of `poc-v116` without `--seed` is refused (D364). The replay runs the parallel day by default (D183); `--workers 1` runs the serial path; `--help` lists the options. Measurements run three draws at once with `docs/research/2026-11-01-e2e-loop/harness/run_arm.sh`, scored by `docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py`. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
+`--cap` is checked after each item: parallel calls already sent and the day's judging round can exceed it, so it is not a hard whole-run limit. The default is `poc-v118`; the default input database is `poc/data/items-nvda-2026-07-01-10-27.sqlite`. A ledger containing the retired seeded questions is refused. Earnings releases still enter as actual source items; a report is not appended as background to other items. The new replay default is not accepted end to end. The historical seeded judgement scorer requires its frozen seeds and therefore is not a valid scorer for the new no-seed run. The [pipeline guide](docs/poc/pipeline-plan.md) describes the stages.
+
 
 ## Build and check
 

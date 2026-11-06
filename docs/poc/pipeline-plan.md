@@ -4,12 +4,10 @@ Updated November 5, 2026. This is the working implementation overview: what each
 
 ## What runs
 
-The replay default is `poc/config/poc-v116.json` (D366): the frozen production extraction prompt with Jev matching and judging-v7 (`poc-v108`, D274), plus the coverage-start reading (D363–D365). The code builds only these versions and refuses a configuration that names another (D359).
+The replay default is `poc/config/poc-v118.json` (D370, D374): the frozen v108 extraction, matching and judging settings without seeded questions, a separate coverage-start report reading or the unused sampling setting. Existing article-created questions remain context. An earnings release can still enter as a source item. This configuration is not yet accepted end to end.
 
 | Stage | What it does | Code | Specified in |
 |---|---|---|---|
-| Seed questions | Optional, before the first day: the questions an analyst would hold for a covered company, written into an empty ledger (D253) | `seeding.py`, `poc/seeds/` | PRD 06 |
-| Coverage-start reading | Once per ledger, after the seeds: each open question reads the company's latest earnings report before coverage start, when one is found (otherwise the step records that none was found and the run goes on); the figures code keeps become evidence linked to every question that read them (D363–D365) | `baseline.py`, `prompts/baseline-v3.json` | PRD 05, "Coverage-start reading" |
 | Dispatch | Each item in order: three questions, a sequence number, a processing record; items before coverage start are not dispatched | `dispatch.py` | PRD 04 |
 | Extraction | One call per item reads the whole item with the questions open at the start of its day and their takes lines, and files each statement under the questions it bears on; a statement no question takes is dropped as no home (D209, D264); extraction v74i at low reasoning (D274) | `extraction.py`, `placement.py` (the takes lines and the links rule) | PRD 05 and the extraction standard |
 | Matching and writing | Jev asks each candidate's relation to the listed theses and each evidence piece's relation to its thesis's pieces (D169); the collision judge decides when a candidate collides with an open question (D190); themes are written first | `views/jev_matching.py`, `views/matching.py`, `jev.py`, `views/writing.py`, `views/groups.py` | PRD 06 |
@@ -35,7 +33,7 @@ The old repository contributes requirements and two mechanisms: request-keyed mo
 
 ## Model and configuration
 
-Extraction, the coverage-start reading and judging run on OpenAI `gpt-6-luna` (D62); matching runs on TypeSafe's Jev `jev-1.14.0` (D169). Keep provider and model explicit; never switch silently. Measurements report cost from the archives' tokens at the published rates in `hivemind.model.PRICES`, never from an archive's stored cost; the replay's spend cap and daily log read the archive's stored `cost_usd`. The Idea API runs `poc-v33-idea` (D290, D335).
+Extraction and judging run on OpenAI `gpt-6-luna` (D62); matching runs on TypeSafe's Jev `jev-1.14.0` (D169). Keep provider and model explicit; never switch silently. Measurements report cost from the archives' tokens at the published rates in `hivemind.model.PRICES`, never from an archive's stored cost; the replay's spend cap and daily log read the archive's stored `cost_usd`. The Idea API runs `poc-v118-idea` (D290, D335, D374).
 
 ## Run settings and timing
 
@@ -45,7 +43,7 @@ Measured on 2026-11-02 (arm 4, before the one-decider architecture: three draws 
 
 ## Verification and run discipline
 
-The working rules own the procedure (AGENTS §5 and §7): replay stored answers through the current checks with `scripts/preflight.py` before any paid run and read every changed refusal (it does not yet replay the coverage-start reading's check); prove the decisive case on stored data; a cached replay establishes code behaviour, not model consistency; a comparison of totals uses three draws beside a fresh control; no prompt or package code changes while a run is live.
+The working rules own the procedure (AGENTS §5 and §7): replay stored answers through the current checks with `scripts/preflight.py` before any paid run and read every changed refusal ; prove the decisive case on stored data; a cached replay establishes code behaviour, not model consistency; a comparison of totals uses three draws beside a fresh control; no prompt or package code changes while a run is live.
 
 The original product acceptance also includes:
 
