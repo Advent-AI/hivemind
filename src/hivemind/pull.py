@@ -27,9 +27,10 @@ def closing_sequence(conn, day, seq):
     return own
 
 
-def end_of_day(conn, day, seq):
-    due = [row for row in conn.execute('select view_id, due_day from views where due_day <= ? order by created_seq', (day,)).fetchall()
-           if store.is_open(conn, row['view_id'])]
+def end_of_day(conn, day, seq, *, unresolved_views=()):
+    unresolved = set(unresolved_views)
+    due = [row for row in conn.execute("select view_id, due_day from views where due_day <> '' and due_day <= ? and exists (select 1 from rungs where rungs.view_id=views.view_id) order by created_seq", (day,)).fetchall()
+           if row['view_id'] not in unresolved and store.is_open(conn, row['view_id'])]
     if due:
         seq = closing_sequence(conn, day, seq)
     for row in due:

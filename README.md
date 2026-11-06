@@ -163,15 +163,14 @@ python3 "$repo/scripts/preflight.py" \
   --items "$repo/poc/data/items-nvda-2026-07-01-10-27.sqlite"
 ```
 
-Inspect changed refusals before continuing; the preflight does not yet replay the coverage-start reading's check. A replay is a paid run: it starts only when authorized, in a new dated folder, with the agreed spending cap. The default configuration needs a seed file:
+Inspect changed refusals before continuing; the preflight does not yet replay the coverage-start reading's check. A replay is a paid run: it starts only when authorized, in a new dated folder, with the agreed spending cap. The default configuration starts without predefined questions:
 
 ```sh
 python3 "$repo/scripts/replay.py" --from 2026-07-01 --until 2026-07-14 --only NVDA --cap 3 \
-  --seed "$repo/poc/seeds/nvda-2026-07-01-v2.json" \
   --views /absolute/path/to/new-run/views.sqlite --archive /absolute/path/to/new-run/archive.sqlite
 ```
 
-`--cap` is checked after each item: the run stops as soon as an item takes the spend past it; a day's judging round runs after the last item without a check, calls already sent in parallel are still paid, and the coverage-start reading is not counted, so it is not a hard limit on the whole run. The default configuration is `poc-v116` and the default items database `poc/data/items-nvda-2026-07-01-10-27.sqlite`, which holds the page text the coverage-start reading needs; a run of `poc-v116` without `--seed` is refused (D364). The replay runs the parallel day by default (D183); `--workers 1` runs the serial path; `--help` lists the options. Measurements run three draws at once with `docs/research/2026-11-01-e2e-loop/harness/run_arm.sh`, scored by `docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py`. The [pipeline guide](docs/poc/pipeline-plan.md) describes the implemented stages. `scripts/benchmark_states.py`, `scripts/score_evidence_gold.py` and `scripts/recall_oracle.py` measure separate parts of the result; `scripts/trace_items.py` renders per-item traces.
+`--cap` is checked after each item, not as a hard total cap. The default configuration is `poc-v117`, which retains the v108 extraction, matching and judgement settings and does not inject predefined questions. The entry refuses an existing ledger containing seeded question origins, empty question origins or question IDs absent from the supplied items database. This is not a full audit of evidence provenance or historical dates. The old v116 configuration and the old seeded harness and judgement scores are historical and cannot be used through this replay entry. The parallel day is the default; `--workers 1` runs the serial path. The [pipeline guide](docs/poc/pipeline-plan.md) describes the historical stages; the no-seed change and real-article experiment are being reviewed in `docs/research/2026-11-05-real-input-evidence/design.md`.
 
 ## Build and check
 

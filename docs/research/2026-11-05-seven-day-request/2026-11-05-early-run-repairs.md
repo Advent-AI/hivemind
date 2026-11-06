@@ -1,0 +1,26 @@
+# Early run: empty A candidate and missed duplicate review
+
+At sequence 1212 the new run stopped before metadata: A returned a question whose `why_not_already_covered` says it is already covered and should not be opened, and whose evidence array is empty. The actual prompt says return an empty question list when there is no new question, but its schema permits a question with zero evidence; metadata cannot represent that handover. Of 85 old A answers (46 questions) and eight new A answers (five questions), this was the only question with no evidence. Its B answer has six evidence records and must not be discarded. The user requested new questions together with article evidence; an empty question list remains valid.
+
+At sequence 1209 in the same run, A proposed acquisition completion beside an existing question on the agreement for that acquisition. A considered them separate, although the existing collision-v3 judge previously called the corresponding signing/completion case one transaction. Jev's highest relation to the existing question was `part_of` at 0.44. The unkeyed review only received Jev same/part relations at 0.5 or above, so the analyst judge never saw the existing question and the new one opened. This leaves a likely duplicate in the ledger. In 46 saved old candidate calls there were four additional below-0.5 same/part comparisons, all on requests that already had other above-0.5 peers; this is a count of comparisons offered to review, not a count of errors.
+
+## Repair to prove
+
+1. The experimental A request's question schema requires at least one evidence item per proposed question. An empty `questions` array still means pass. This is the output shape the task already requires, not a test of importance. On the 85 old and eight new saved A answers, only the stopped response should fail. Re-send the exact 1212 A request with only this schema change; it should pass as an empty question list or return a genuinely source-backed proposed question. Preserve the B answer.
+2. On the unkeyed path, send all open questions whose strongest Jev relation is same/part to the existing analyst review, even when its probability is below 0.5. This does not lower the merge threshold or merge by score: the analyst review decides whether the question is covered. It adds the previously hidden possible relationship to an already-existing review mechanism. Real stored candidate and existing-question texts must demonstrate the signing/completion case changes to merge, and the prior distinct-year and two-item tests must remain correct. Missing or contradictory analyst replies still refuse the item.
+
+**Do not implement proposal 2 as a fix:** the decisive saved 1209 request was sent to collision-v3 with v64 shown. This time the judge answered `distinct_question_same_matter`: it reasoned that the signing can occur without the completion. An earlier related 1243 probe had answered `same_question`. Therefore routing the case to the judge did not reliably flip it, and neither a lower threshold nor the model's answer proves the question granularity is right. The A model and one judge draw considered signing and completion independently material; another judge draw treated them as one transaction. The user wants the same event's stages tracked together but the available case-specific decision is not sufficient to settle every signing/closing distinction. Preserve this disagreement as an open semantic concern; make no matching change based on the 0.44 example. The saved probe is `poc/data/collision-low-confidence-probe-2026-11-05/`.
+
+Repair 1 verification: of 93 saved A answers with 51 proposed questions, exactly the stopped answer failed the new schema. The exact stopped request was re-sent with only `minItems: 1` added. It passed the new schema and returned a different question about platform neutrality with source-backed evidence, rather than the original self-contradictory empty-evidence candidate. This is one model draw and does not establish that the new question is an appropriate investment thesis. The saved request and answer are in `poc/data/a-evidence-required-probe-2026-11-05/`.
+
+The new run stops at 7/470 and is retained as historical evidence. Since v72 was opened in this run and can affect later snapshots, a new clean run must start from the same original 68 questions after both repairs. The frozen ruler is not modified. B's ID repair and its six-evidence real probe remain as recorded separately.
+
+| Condition | Outcome |
+| --- | --- |
+| No new question | `questions=[]`; B continues with its existing-question evidence. |
+| New question with source-backed evidence | Metadata, matching and writer continue as before. |
+| New question with no evidence | The model/schema refuses rather than presenting an invalid handover. |
+| Unkeyed possible same/part match at any confidence | Analyst review receives the candidate and the existing open question; it decides merge or new. |
+| Different, unrelated or closed question | Existing matching behavior; no code decision on investment importance. |
+| Review failure or incomplete result | No matching decision is written; original calls are preserved. |
+| Restart | The new run reads the original seed and its own latest committed writes, never the contaminated stopped ledger. |

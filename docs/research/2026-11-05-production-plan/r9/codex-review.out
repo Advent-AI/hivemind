@@ -1,0 +1,62 @@
+**还有阻塞项，暂时不应开始付费运行。** 新版解决了不少上一轮的问题，但目前仍不能确认每次运行都使用同一套输入，也不能从阅读材料中还原完整的模型回答。
+
+例如，窗口运行会记录起始资料的哈希，却没有在续跑时核对它；测试文章使用的原文数据库也没有纳入续跑核对。资料在两次运行之间变化时，一次结果可能混入不同版本。
+
+## 我重跑的检查
+
+- **新版抽取检查通过**：73 条成功抽取均找到对应记录，73 份交接结果一致；21 条需要准备新问题，另 52 条按设计不需要；拒绝 0 条。这证明了该检查覆盖到的内容一致，不证明原始网络请求字节一致，也不包含所有曾被拒绝的回答。
+- **历史记录比较通过**：用恢复旧写入方式的那份重放，比较脚本退出码为 0。两边列出的表一致；其中 `research_subjects` 是一边缺表、另一边为空，脚本按相同处理。比较也有意排除了时间戳。
+- **当前代码的重放仍有差异**：我重跑比较，退出码为 1；四条 `revisions.said_day` 不同，其余列出的表一致。恢复旧写入方式的重放解释了差异来源，但不能把当前代码的重放称为完全相同。
+- 没有运行付费请求，也没有修改文件。
+
+## 上一轮逐项核对
+
+### 第一轮带入的九项
+
+| 项目 | 状态 | 本轮读到的依据 |
+|---|---|---|
+| 1. 测试文章缺失 | **已解决** | [测试文章脚本:62](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_test_articles.py:62)读取冻结测试集；[设计:110](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:110)让测试集退步触发停止。 |
+| 2. 同配置波动和结论 | **基本解决** | [设计:79](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:79)写出六次结果及样本限制；[设计:105](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:105)不再宣称两种架构一样好。停止线的授权仍需见下文。 |
+| 3. 抽取和最终写入分开计数 | **部分解决** | [测量脚本:80](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:80)分别计算交接与写入结果；但阅读材料还不能完整还原回答和丢失原因，见下文。 |
+| 4. 问题覆盖的计数方法 | **已解决** | [测量脚本:74](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:74)调用原有方法；[设计:131](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:131)明确它只是计数辅助，盲读决定问题是否合适。 |
+| 5. 历史重放比较 | **部分解决** | [设计:57](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:57)记录了恢复旧写入方式后的成功比较；[第 61 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:61)也披露了当前代码的四处差异。但约定要求当前比较所用的程序重现存档记录；见下文。 |
+| 6. 被拒绝回答的重放范围 | **已解决** | [运行脚本:45](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:45)把结论限定在这份存档，不再声称能还原所有存档的顺序。 |
+| 7. 每条遗漏的阅读材料 | **部分解决** | [阅读材料脚本:51](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:51)覆盖任一次遗漏，并支持测试集；但[第 29 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:29)只摘取部分回答字段，没有完整原答和准备记录。 |
+| 8. 披露和版本固定 | **部分解决** | [测量脚本:133](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:133)打印标准、金标和 D373 提醒；但设计哈希文件尚不存在，部分实际输入和评分代码也未固定。 |
+| 9. 付费前检查和结果归因 | **部分解决** | [设计:16](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:16)正确把结果归于整个架构；新版检查也能重建交接结果，但尚未完成约定的原始请求和被拒回答检查。 |
+
+### 第二轮新增的五项
+
+| 项目 | 状态 | 本轮读到的依据 |
+|---|---|---|
+| 1. 抽取检查不完整 | **部分解决** | [检查脚本:91](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:91)核对成功抽取和交接数量；[第 120 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:120)比较交接内容。但[第 38 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:38)仍只查排序后的请求身份，也未逐项复查回答格式和曾被拒的回答。 |
+| 2. 结论可能掩盖退步 | **基本解决** | [设计:100](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:100)要求先报告退步、实际差异和历史波动；[第 107 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:107)增加窗口和测试集停止条件。停止线是否已获 Alex 决定仍需确认。 |
+| 3. 续跑混用版本 | **部分解决** | [测试文章脚本:71](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_test_articles.py:71)现在核对已有记录；[窗口运行脚本:147](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:147)也核对代码。但仍有未覆盖的输入和旧存档路径，见下文。 |
+| 4. 双方共同遗漏的事实未必被读 | **部分解决** | [设计:115](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:115)要求阅读每一次遗漏，也要求抽读命中和额外内容；但脚本给读者的回答并不完整。 |
+| 5. 付费前固定版本 | **未解决** | [设计:49](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:49)要求 `benchmark-design.sha256`；该文件目前不存在。 |
+
+## 剩余阻塞或严重问题
+
+1. **阻塞：付费前检查还没有证明实际发送内容，也没有完整复查被拒回答。**  
+   [preflight_split.py:38](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:38)用排序后的请求哈希查存档；实际发送在 [model.py:125](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/model.py:125)按构建顺序序列化，而存档身份在 [model.py:206](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/model.py:206)排序。两份请求内容相同不证明当时发送的字节顺序相同。检查也没有对重建出的回答调用格式检查，且以成功抽取为人口，没有把曾被拒绝的 split 回答逐项列出。原计划的 [C-6](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-final.md:64)要求这些检查。  
+   **修复：**用可验证的生产顺序证据比较重建请求；对 A、B 和准备回答运行相应格式及内容检查，列出存档中曾被拒绝、无法重建或未检查的回答。若历史存档没有保留发送顺序，就明确这一限制，不能把排序后的哈希当作字节证明。
+
+2. **严重：版本和输入固定不完整，续跑仍可能混入不同材料。**  
+   [bench_run.py:89](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:89)固定代码和脚本，但窗口续跑只比较这些文件和配置；它没有核对第一次记录的起始资料哈希，也没有固定运行实际读取的 [universe.json](/Users/lchingen/hivemind-no-preseed-evidence-review/poc/universe.json)。测试脚本在 [第 63 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_test_articles.py:63)直接读取原文数据库，却没有把该数据库哈希写入续跑记录。评分脚本还从另一个工作目录导入计数代码，见 [bench_measure.py:27](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:27)，这些文件也不在运行固定范围内。  
+   **修复：**在首次运行前固定设计、两套原文、起始资料、universe、标准和实际使用的评分代码；每次续跑和评分时核对首次记录。生成并核验设计要求的哈希文件。
+
+3. **严重：新的窗口运行可能复用旧回答。**  
+   [bench_run.py:145](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:145)只在已有记录数据库但没有运行记录时拒绝；如果目录里只有旧 `archive.sqlite`，它仍可继续，而 [model.py:216](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/model.py:216)会直接复用其中的回答。这会使本应重新发送的一次运行混入旧回答。  
+   **修复：**新运行要求目录中的记录和存档都不存在；续跑时核对存档属于首次运行。仅历史离线重放显式允许导入存档。
+
+4. **严重：遗漏阅读材料不是完整原答，无法可靠判断事实在哪一步消失。**  
+   [bench_traces.py:29](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:29)只摘取 A 的问题和引文，以及 B 或旧抽取的少数字段；它不提供完整回答、准备新问题的回答或对应请求标识。[第 20 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:20)找不到原文时还会给空段落而不拒绝。读者因此可能无法区分模型没写、后续处理丢掉、或只是计数没认出。  
+   **修复：**每次遗漏附完整原答及存档定位信息、准备回答、完整交接与丢弃原因，以及可定位的原文；找不到任何一项时明确拒绝或列为未完成。用现有存档检查一条已知遗漏和一条被丢弃的事实。
+
+5. **严重：当前重放没有满足原定的完全重现条件。**  
+   [原计划:78](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-final.md:78)要求比较所用程序重现存档记录。恢复旧写入方式后的成功结果证明四处日期差异来自哪一行，但实际待测代码仍产生四处差异。  
+   **修复：**把当前程序的结果明确标为“除四处日期外一致”，并在启动前按原计划处理这一例外；不要将旧写入方式的成功重放当作当前程序完全重现。
+
+6. **严重：停止线尚缺明确的决定记录。**  
+   新设计的停止线比上一轮更诚实，但 [原计划:96](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-final.md:96)把验收阈值列为 Alex 的决定。我在本次审阅的材料中没有看到他对新版窗口及测试集停止线的明确决定。  
+   **修复：**在固定设计和付费运行前核对并记录该决定；如果已有原话，直接引用。六次历史结果只能提供粗略波动范围，不能单独决定可接受的损失。

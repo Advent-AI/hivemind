@@ -1,0 +1,17 @@
+You are an independent, read-only reader. You did not write these questions, the prompts that produced them, or the ruler. The questions come from two systems mixed in random order; nothing tells you which system wrote which.
+
+Files in the working directory:
+- packet-1.json: "questions" (items Q01...), each with its ledger label (X or Y), created_seq, the question, why_it_matters, the opening article's header line and its opening passages; "ledgers": for X and for Y, every question in that ledger with its id, created_seq, subject and question.
+- standard.txt: the signed extraction standard's sections 3 and 4 and its D248 table (Chinese). This is the only ruler.
+
+Covered companies: NVDA (NVIDIA), TSM (Taiwan Semiconductor Manufacturing), AMD (Advanced Micro Devices), AVGO (Broadcom), MU (Micron Technology), INTC (Intel), ASML (ASML Holding), MSFT (Microsoft), GOOGL (Alphabet), AMZN (Amazon), META (Meta Platforms), ORCL (Oracle), CRWV (CoreWeave), SMCI (Super Micro Computer), DELL (Dell Technologies). Themes: chip-export-controls (Chip export controls), ai-capex (AI capital spending), custom-silicon (Custom silicon at cloud providers), semiconductor-cycle (Semiconductor cycle), fed-policy-rate (Fed policy rate), us-inflation (US inflation), us-recession-risk (US recession risk), us-china-tariffs (US–China tariffs), taiwan-strait (Taiwan Strait), middle-east-conflict (Middle East conflict and oil prices), russia-ukraine-war (Russia–Ukraine war), supply-chain-shift (Supply-chain shift and shipping).
+
+For each question in packet-1.json, judge:
+1. duplicate_of: the id of a question in the SAME ledger with a LOWER created_seq that the same outcome would settle, under standard section 4 ("同一题、续期，还是另一题": another estimate, source, wording, direction, population or proxy of one aggregate; a step, deadline or milestone of one event; a deal under a plan already opened). The same quantity for another period (next fiscal or calendar year, another meeting) is NOT a duplicate. Otherwise "none".
+2. opens: "yes" when the standard opens it: it fits one of the five reasons of section 3 (A main-driver annual quantity; B product generation's revenue step; C binding obligation; D shared quantity; E policy stage) AND passes section 4 (the answer can change a position in a covered company or theme; checkable with public material on a date; a big bet, not trivia; not on the not-to-open list; within the year limits: this or next fiscal year for a company quantity, this or next calendar year for a shared one). Otherwise "no".
+3. reason_code: if opens is yes, the letter A-E; if no, one of: not_a_reason (fits none of the five), too_small, customer_plan, quarterly, beyond_year_limit, product_feature_or_test, same_as_open.
+4. note: one sentence naming the standard line you applied.
+
+Judge from what the packet shows; do not assume facts it does not show. Out of scope: any code, prompt or other module; do not suggest fixes or comment on the systems.
+Output: exactly one JSON object per line, for every item, in item order, and nothing else:
+{"item": "Q01", "duplicate_of": "none", "opens": "yes", "reason_code": "A", "note": "..."}

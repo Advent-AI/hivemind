@@ -49,7 +49,7 @@ def calendar_days(from_day, until_day):
 
 
 def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day, day0=None, spend_cap_usd=None,
-        transport=None, log=print, only_objects=None, max_items_per_day=None, day_runner=None):
+        transport=None, log=print, only_objects=None, max_items_per_day=None, day_runner=None, matching_workers=1):
     items_db = testdb.open_db(testdb_path)
     conn = store.open_db(views_path)
     refuse_unfinished_parallel(conn)
@@ -92,7 +92,8 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
             processed += 1
             to_run.append((item, route))
         results = (day_runner(conn, archive, cfg, universe, to_run, day=day, transport=transport, log=log) if day_runner else
-                   (round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
+                   (round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log,
+                                     matching_workers=matching_workers)
                     for item, route in to_run))
         finished = 0
         try:

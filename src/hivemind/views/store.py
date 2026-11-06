@@ -36,6 +36,9 @@ TABLES = {
     'thesis_group_members': 'id integer primary key autoincrement, group_id text, view_id text, seq integer, input_id text, basis text',
     # D166 (2026-11-01): the names a later declaration gives a stored group, appended once each; a group's aliases are its creation's plus these
     'thesis_group_aliases': 'id integer primary key autoincrement, group_id text, alias text, seq integer, input_id text',
+    # 2026-11-05 plan (C-7): a research subject the split extraction created (a company or matter outside the configured universe), kept with
+    # the ledger so a restart resolves it to the same id
+    'research_subjects': 'object_id text primary key, name text, kind text, created_seq integer, created_from_input text',
 }
 
 INDEXES = [

@@ -1,0 +1,19 @@
+第四版解决了文字和原因判断的问题，但**测试条件还有严重问题**，暂不适合作为可执行的下一步提交给 Alex。
+
+例如，文中一处允许新版本的错误信息率高于参考值一个自身波动范围，另一处却说只要高于参考值就失败。这两条会对同一个结果给出相反结论。
+
+1. **“新披露的事实”措辞：已解决。** [第 165–168 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:165)明确说，不能仅因安排已经存在就排除新披露的事实，仍须按标准及其他边界判断。
+
+2. **测试的抽样、覆盖和自身波动：部分解决。** [第 172–188 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:172)固定了文章、盲读抽样来源和不足 20 条时的处理，也加入了同日自身比较。我核对了名单：40 篇开发文章互不重复，按种子从排序后的 118 篇中抽取；测试文章覆盖全部 30 篇；其中 29 篇开发文章有标准答案中的有用事实。
+
+   仍需修正：
+
+   - [第 190–194 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:190)的错误信息失败线互相矛盾：一处允许参考比例加自身波动，另一处不允许高于参考比例。应写成同一条明确的失败线，并检查现有版本和自身比较时是否也能通过；仅加波动范围不一定足够。
+   - [第 179–180 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:179)说会调整自身比较会触及的线，但[第 189–195 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:189)同时要求每次都优于现有版本，并限制盲读结果。应逐项写明如何用六次现有版本结果检查这些条件，以及自身比较失败时如何处理；否则仍可能把正常波动判成失败。
+   - [第 186–188 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:186)允许不足 20 条时全部阅读，但[第 195 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:195)仍用“20 条中差 2 条”作界线。应明确不同样本量下如何比较比例，以及没有可读样本时不能作出通过判断。
+   - [第 176 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:176)把标准答案没有列出有用事实的 11 篇说成“没有任何东西应被保留”。这与文中[第 59–63 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:59)对未匹配记录的盲读结果不符。应改成“标准答案未列出有用事实；新增内容仍需按标准判断”。
+
+3. **把损失归因于第一句话的表述：已解决。** [第 156–159 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:156)现在说它是最强线索，解释了多少损失尚未量出；试验只能说明整个指令块会影响答案。
+
+我同意对结果的主要解读，也同意把“先判断事实是否值得记录，再决定归到哪里”作为建议方向。**测试条件修正并复核后**，才能把这份建议和测试一起作为下一步提交给 Alex。本轮只读，未修改文件或发送模型请求。
+

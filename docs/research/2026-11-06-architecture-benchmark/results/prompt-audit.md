@@ -1,0 +1,29 @@
+# Prompt audit after the architecture benchmark (AGENTS §6; `.claude/skills/prompt-audit/SKILL.md`)
+
+Measurement: `results-reading.md` (poc-split-v3; three window draws and three test draws against the frozen poc-v108). The whole B request as the
+model reads it: `b-request-dump.md`. Blind second reader: `prompt-audit-b-reader.out` (read-only Codex; it did not write the prompt). The standard is
+the signed page `docs/prd/05-extraction-standard.html`, version 5. Its keep rule: "一个在追这家公司的分析员读到会记进本周笔记的陈述，就留；留下以后另判分量"
+(a statement an analyst following the company would write in this week's notes is kept; its weight is judged after). Its flow puts filing after
+keeping: kept → "归档：挂到最窄的那个已开问题 D207；没有问题接，记 no home 扔掉，评估时逐条读 D209" (file under the narrowest open question; with no home,
+drop and read it at evaluation).
+
+## Failure classes of this measurement, in the order of the loss
+
+| Failure class (count) | The request sentence(s), quoted | The standard's line | Verdict | The model's own account |
+|---|---|---|---|---|
+| 1. B does not write statements the standard keeps (window: 192 of the split's 240 missed draws; 51 of 64 on the 27 matters the control reached and the split did not, per the readers) | System: "Your task is to find article statements that help answer an existing question."; "For each matter, compare the exact question, subject, period and any accounting basis shown."; "Judge that connection from the supplied material and the question; shared names or an ecosystem alone do not establish it." | The keep rule above decides keeping by what an analyst would note; filing to the narrowest open question comes after keeping (D207, D209) | **keeps narrower.** B's first test of a statement is its connection to an open question, so a statement an analyst would note, but whose link B doubts, is not written. The frozen role carries the standard's order: "Your first job is evidence: decide by the rules below which statements are material, then file each one through its links"; "A takes line says where a material statement goes, never that a statement is material." | Four stored requests (`../probes/b-omission-account-2026-11-06.json`): a competitor's stockpile was left out under an exclusion "too broad[ly]" applied; a cancelled product design was left out because no question matched ("The item should therefore have been returned with its links empty"); a supplier's margin forecast was left out because "the article does not connect" it to the nearest question |
+| 2. B leaves an unconnected statement unlinked although its links field files it under the company-wide revenue question | System: "When no supplied question is connected, leave links empty; do not create a question."; links field: "when no specific question is connected, a statement that moves the demand, supply, competition or pricing behind the company's results goes to the company-wide revenue question of its period" | D273, D361 (the fallback, kept by plan decision 2) | **contradiction** inside the request. A one-sentence change on 20 stored items, two sends each, recovered no more lost matters (13, 11 against 12, 10 of 27) and wrote more not-kept entries: real, but not the cause of class 1 | — |
+| 3. B joins separated paragraphs into one quote (test: 1, 1, 2 a draw) | Closing check: "one deal, hire, programme or reported measure told in several sentences, with its terms, figures and growth rates, is one evidence item; keep the fuller wording"; system: "Copy its quote verbatim" | Quotes are exact source spans (§5; D236, D266) | **misread** where two sentences meet; the same two sentences are in the frozen request, whose model quoted one sentence | "No instruction led me to join those paragraphs. That was an error." (`../probes/b-quote-account-2026-11-06.json`) |
+| 4. A opens questions the standard would not (blind reader: 17 of 44, against 6 of 12 for the control) | A prompt (split-a-v3): the opening reasons and the not-open list | §4: "主体、量或事件、时间依据都能在原文找到" (9 of the 17: a period, basis or figure the source does not give); §3 C, a deal "规模要大到能改变公司的收入、利润、现金或信用风险" (3: one US$500 million investment, once a draw); company quantities in the company's fiscal year (2); §3 B, a product question asks for the revenue step, usually first shipment (1); no stated effect on the business (1) | **not yet audited sentence by sentence**; the A request is the next audit after B | not asked |
+| 5. Record preparation leaves new questions without a ladder (21 of 44 have one; the control's 12 of 12) | Preparation: "Return an empty rungs array when the source gives no such reference; never invent a reference figure." | The incomplete-details record (date and ladder optional); 06-views D260 (judged against a reference) | **sampler, partly.** The same stored request gave no rungs once and five once; a reworded reference sentence lost two control ladders (`../probes/reference-sentence-2026-11-06.json`) | The reference read narrowly ("a forecast, not a reference"; a July reading "not a December 2026 reference") |
+
+## What a fix must satisfy (AGENTS §6)
+
+- It must come from the standard's line, not from the articles that failed. Class 1's line is the keep rule and its order: keep first, file
+  second. The frozen role already states this, and it is production text.
+- It must cut at least as much as it adds. B's system prompt is 5,104 characters; the frozen role is 11,028, and about half of it opens questions,
+  which B does not do.
+- The one-sentence contradiction (class 2) is cut in the same change; it is a contradiction whether or not it moves the score.
+- The probe that swapped in the whole frozen role on 20 items chosen by the split's misses shows that B's instruction block moves these answers
+  (lost matters recovered 18, 21 against 10, 10; not-kept 12, 12 against 5, 6). It does not prove a particular sentence, the size of a full-window
+  effect, or that any edited text works.

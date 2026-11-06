@@ -41,7 +41,6 @@ class Setting:
     name: str
     model: str
     prompt_version: str
-    temperature: float
     reasoning_effort: str
     max_output_tokens: int
     engine: str = 'llm'       # matching only: 'llm' (the generative call) or 'jev' (TypeSafe Jev, views/jev_matching.py)
@@ -65,6 +64,7 @@ class Config:
     collision: Setting = None # D190: the analyst question asked of the generative model when a candidate lists a thesis of its own object and measure; absent: Jev alone
     placement: Setting = None # 2026-10-28: the call that files an item's statements under existing theses (extraction v20); absent before v20
     baseline: Setting = None  # D364: the coverage-start reading of the company's latest report (hivemind.baseline); absent: no such step
+    split: dict = None        # 2026-11-05 plan: the split extraction (hivemind.split): 'a' new questions, 'b' evidence for existing questions, 'preparation' record fields; absent: the single extraction call
 
     def extraction_setting(self, category):
         setting = self.extraction.get(category)
@@ -73,7 +73,7 @@ class Config:
         return setting
 
 
-REQUIRED = ('model', 'prompt_version', 'temperature', 'reasoning_effort', 'max_output_tokens')
+REQUIRED = ('model', 'prompt_version', 'reasoning_effort', 'max_output_tokens')
 
 
 def _setting(name, raw):
@@ -86,7 +86,7 @@ def _setting(name, raw):
     if engine not in ENGINES:
         raise ConfigError(f'setting {name}: engine {engine!r} is not one of {ENGINES}')
     return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
-                   temperature=float(raw['temperature']), reasoning_effort=str(raw['reasoning_effort']),
+                   reasoning_effort=str(raw['reasoning_effort']),
                    max_output_tokens=int(raw['max_output_tokens']), engine=engine)
 
 
@@ -108,10 +108,20 @@ def load(path):
     collision = _setting('collision', raw['collision']) if 'collision' in raw else None
     placement = _setting('placement', raw['placement']) if 'placement' in raw else None
     baseline = _setting('baseline', raw['baseline']) if 'baseline' in raw else None
+    split = None
+    if 'split' in raw:
+        if not isinstance(raw['split'], dict) or set(raw['split']) != {'a', 'b', 'preparation'}:
+            raise ConfigError("split must name exactly the settings 'a', 'b' and 'preparation'")
+        split = {part: _setting(f'split.{part}', raw['split'][part]) for part in ('a', 'b', 'preparation')}
+        if baseline is not None:
+            raise ConfigError('split does not run the retired coverage-start reading (D370)')
+        for setting in split.values():
+            if not os.path.exists(prompt_path(setting.prompt_version + '.txt')):
+                raise ConfigError(f'{setting.name}: prompt {setting.prompt_version}.txt does not exist')
     _prompt_files(extraction, matching, rejudging, idea, idea_summary, collision, placement)       # final_verdict is kept in the file but no POC step calls it
     if baseline is not None and not os.path.exists(prompt_path(baseline.prompt_version + '.json')):
         raise ConfigError(f'baseline: prompt {baseline.prompt_version}.json does not exist')
     return Config(version=str(raw['version']), checksum=checksum, provider=str(raw['provider']),
                   search_top_n=int(raw['search_top_n']), extraction=extraction,
                   matching=matching, rejudging=rejudging, final_verdict=_setting('final_verdict', raw['final_verdict']), idea=idea, idea_summary=idea_summary, collision=collision, placement=placement,
-                  baseline=baseline)
+                  baseline=baseline, split=split)

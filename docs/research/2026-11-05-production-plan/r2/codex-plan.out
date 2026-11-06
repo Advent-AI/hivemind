@@ -1,0 +1,65 @@
+**生产计划 v1 还不能作为上线计划。** 最关键的问题是：它让部分测试先通过，却没有证明事实送到了正确的问题、判断用对了事实，或新问题能走完生命周期。下面的例子来自保存的记录；这些记录是一轮诊断，不能当作生产质量的总体比例。
+
+1. **Blocker｜新问题可能收不到同一篇文章里的重要事实。**  
+   例如，[第 1240 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1240.json)中，A 新开了台积电年度收入问题；B 找到了“Apple 新一代处理器计划使用台积电 2 纳米工艺”，但因为 B 只看到了文章处理前的问题库，这句话被标为“没有现有问题接收”而丢弃。合并重复引文不会找回它。[计划第 1 步](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:65)的测试只要求一条记录带两个链接，完全可以在这个缺陷存在时通过。  
+   **修改计划：**先确定 A 新开问题后，B 已发现但没有旧问题接收的事实如何接受相关性判断；用第 1240 条经过真实写入和每日判断验证。不要用公司或产品清单决定相关性。
+
+2. **Blocker｜分组合约仍未决定，计划却写成已经同意。**  
+   [原型代码](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-seven-day-request/split_seven_day_poc.py:299)对新问题固定写入空的 `group_refs`，也没有新分组；[Claude 的回应 C4](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/r2/claude-responses.md:55)仍在问由哪一步创建分组。[PRD 05](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/prd/05-extraction.md:13)要求抽取时给出关联及必要的新分组；计划却在[第 2 节](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:30)写“groups as agreed”，没有具体规则。  
+   **修改计划：**先按现有 PRD 写清分组的输入、创建、匹配、写入和重启后的读取，再设计测试。执行已有分工属于 Claude 应自行落实的事项；要改变分工才需要 Alex 决定。
+
+3. **Blocker｜读取长文件不完整，计划完全漏掉。**  
+   [第 1280 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1280.json)的 40 万字符之后有采购承诺的存货范围和未来 12 个月期限；A、B 和准备步骤在[发送前截断](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-seven-day-request/split_seven_day_poc.py:41)，上限见[代码](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/extraction.py:19)。前文另有 342 亿美元数字，所以不能说整个承诺完全不可见，但后文的范围和期限确实没有发送。[PRD 05](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/prd/05-extraction.md:17)要求读取完整文件和表格。  
+   **修改计划：**把完整输入作为上线前的明确契约，先普查受截断影响的文件，再证明长文件末尾的相关内容能到达处理步骤；上下文限制无法满足时应明确拒绝或回到 Alex，而不是静默截断。
+
+4. **Serious｜“选最窄问题”的修复不能解决只选错一个问题。**  
+   [第 1211 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1211.json)把“超大规模客户收入 487 亿美元”只送到总收入问题，没有送到数据中心收入问题。[`narrowest_links`](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/extraction.py:55)只能在已经给出的多个链接中删除祖先；它不能创造缺失链接。因此[计划的第 1 步](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:65)即使通过，窄问题仍可能缺事实。  
+   **修改计划：**区分“同时选了宽、窄两个问题”和“只选了宽问题”，分别普查并追到 B 的实际请求；验证最终写入的目标和每日判断收到的内容。
+
+5. **Serious｜重复事实的处理只覆盖相同引文，覆盖不了同一事实的不同长度引用。**  
+   [Claude 已承认](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/r2/claude-responses.md:10)除了完全相同的引文，还有 8–15 对一段包含另一段的引文。[计划](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:30)只明确了规范化后相同的引文如何合并。[第 1252 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1252.json)中 A、B 对同一竞争发展写出重叠记录。相同引文的测试可以通过，而重复事实仍在。  
+   **修改计划：**先逐条读包含关系的实例，区分真正重复与长引文多出的独立事实；再定义保留什么、如何保留来源和链接。不要把“文本包含”直接当作“事实相同”。
+
+6. **Serious｜判断把“至少多少”当成一个有上限的结果，准备步骤的测试抓不到。**  
+   [第 1249 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1249.json)原文是“超过 2000 亿美元”，判断却选择了“2000 亿至低于 2500 亿美元”；[第 1253 条](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1253.json)也把“超过”当成有上限的结果。[计划第 2 步](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:66)只拒绝以底线作点估计的结果区间；即使区间本身合法，冻结的判断仍可能这样推断。  
+   **修改计划：**把这两条作为从原文、已存证据到真实判断理由的端到端检查，统计同类情况；先查判断收到的材料及其理由。判断模块已冻结，如证明必须改变判断行为，应带证据交 Alex 决定。
+
+7. **Serious｜数字区间“文字与边界一致”仍可能算错。**  
+   [第 1280 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1280.json)以 390.63072 亿美元为基数，称中间范围是上下 5%，但下界写成 370.099184 亿，正确的 95% 是 371.099184 亿。把数字边界重新打印成文字，可以消除文字冲突，却不能证明 5% 算对。  
+   **修改计划：**在测试中从来源基数、比例和单位独立算出预期边界，并验证判断实际看到的值；不要只检查区间连续、方向正确或文字由边界生成。
+
+8. **Serious｜日期方案可能让尚未解决的问题提前结束，而且“无日期”不等于代码必然漏关。**  
+   [回应 A9](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/r2/claude-responses.md:18)建议从预计报告月份生成分析员检查日期。[现有日终代码](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/pull.py:30)会关闭到期且有结果区间的开放问题；而[11 月 5 日决定](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/DECISIONS-log.md:4027)明确说估计日期本身不代表问题已解决。同一段代码也显示，没有结果区间的问题即使有日期也不会被关闭。  
+   **修改计划：**在请 Alex 决定新增检查日期行为前，先画出估计日期、实际材料是否到达、无结果区间、日终关闭和后续补充信息的状态表；用真实日终路径测试。不能仅给现有 `due_day` 填估计值。
+
+9. **Serious｜“有开题理由”不能证明问题有可核对的答案；但也不能恢复缺细节就拒绝的旧门槛。**  
+   [第 1251 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1251.json)开了“收入中来自受融资客户的占比”，准备步骤说看年报，但没有证明年报会披露这个占比。[计划](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:21)把解决办法写为“开题理由”，[回应 C5](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/r2/claude-responses.md:57)却仍在询问如何核对。另一方面，[11 月 5 日决定](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/DECISIONS-log.md:4027)允许值得追的问题暂缺日期、材料或结果区间。  
+   **修改计划：**区分“暂时不知道在哪里核对”和“现有回答错误地声称某份材料能核对”。普查并让独立读者检查声明的材料；未知保持未知，不因缺字段自动拒绝。
+
+10. **Serious｜共享数量的自动合并缺少反例验证，不能把本例直接判为违反 D197。**  
+    [第 1250 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1250.json)把“五家公司的总资本开支”合并到“四家公司的数据中心资本开支”；A 自己指出第五家的变化可能让两者分开。[代码](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-seven-day-request/split_seven_day_poc.py:247)赋予宽泛的 `spend_total` 键后，[匹配代码](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/views/jev_matching.py:119)先于分析员审查自动合并。D197 确实规定同一共同量的不同人群可作为同一问题，故单凭人数不同不能证明此例错；但这里还改变了**总开支与数据中心开支**，Claude 尚未证明其始终属于同一量。  
+    **修改计划：**保留 D197，先用独立标注的真实同主题、同年配对检查不同量被误合并和同量未合并的情况，再决定键能否表达这些区别。不要新增按公司或重要性分类的清单。
+
+11. **Serious｜来源、数字含义和不确定性错误只被写成“提示词审计”，没有进入验收。**  
+    [第 1252 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1252.json)把作者“我猜很多机构正在寻找其他平台”写成机构确实正在寻找；[第 1280 条](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1280.json)把增加的 153 亿美元写得像总额。[标准 §5.4](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/prd/05-extraction-standard.html:408)要求保留数字含义和不确定性。计划第 2 步的测试只检查区间和是否提出问题，以上错误照样可以通过。  
+    **修改计划：**按来源、日期、期间、数字口径和不确定性普查 A、B 的已存记录；逐类从原文追到最终摘要及判断输入，并让独立读者检查。提示词审计是必要步骤，不是结果已正确的证明。
+
+12. **Serious｜恢复测试可以通过，却仍违反同日顺序或丢失已完成工作。**  
+    [计划第 4 步](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:68)只要求“一次中断后，恢复账本等于不中断账本”。若两条路径都让第二篇文章看不到第一篇新开的问题，它们依然相等，仍违反 [D375](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/DECISIONS-log.md:4031)。上一轮还指出两个写入者、配置变化、部分完成的 A/B、准备步骤和日终判断均未得到实际事务验证。  
+    **修改计划：**先完成状态与事件表并审查实际事务边界；测试第二篇 A、B 都看到第一篇已提交的新问题，再分别覆盖中断、拒绝重试、配置或输入变化、竞争写入者和未完成的一天。冻结这些契约后再移动代码。
+
+13. **Serious｜验收写了“三次和对照”，但没有说清能证明什么。**  
+    [现有判断评分程序](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py:38)要求 22 个原始问题的编号和文字完全一致；[生产 replay](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/replay.py:29)拒绝带预置问题的账本，而 [D370](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/DECISIONS-log.md:3998)已退役预置问题。[计划第 7 步](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:71)没有预先定义如何对无预置问题的真实路径计算漏开问题、事实送达和判断，也没有要求独立读完整文章找出遗漏。此前“新问题 3/22 不应开”和“事实 16/30 有帮助”只审了产出，不能衡量漏掉了什么。  
+    **修改计划：**先把历史评分与无预置问题的端到端检查各自能证明的事、输入、计数和限制写清；沿用冻结材料时按 D372/D373 合并计数、披露争议，不改文件。若需要新的评分标准或改变验收行为，提交具体方案给 Alex；上线批准仍属 Alex。
+
+14. **Serious｜计划把已决定的事重新当成选择，同时把新规则当成已决定。**  
+    [计划 §4](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:51)再次列出“是否让 A、B 看全部开放问题”，但 [11 月 5 日记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/DECISIONS-log.md:4045)已记下 Alex 的选择。应先实测容量、成本和无法容纳时的失败方式；若要改成筛选列表，那才是改变行为、需要他决定。反过来，[计划 §2](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:33)把“没有指引、共识或目标时用去年值，否则不设结果区间”写成既定契约；[PRD 06](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/prd/06-views.md:78)要求说明比较基准，但没有列出这套排他顺序。它可能把其他可核对基准挡掉。  
+    **修改计划：**保留已决定的全量读取；先统计基准类型和反例。若要引入排他的基准规则，把行为变化及证据交 Alex，不能以 PRD 示例代替决定。
+
+15. **Serious｜第 2 步直接安排改提示词和付费重发，顺序早于诊断与审计。**  
+    [计划](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:15)自己写明 A 漏开问题的原因“待追查”，却在[第 2 步](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/plan-v1.md:66)安排修改开头一句并重发几个促成改动的案例。[第 1234 条记录](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1234.json)确实只提出了云收入问题，但记录本身没有证明单数措辞造成漏提总收入。[AGENTS §1、§6](/Users/lchingen/hivemind-no-preseed-evidence-review/AGENTS.md:49)要求先追完整请求、原始回答、检查及模型选择原因，并在改提示词前完成审计。  
+    **修改计划：**先完成各问题类别的普查、原因追踪、四张设计表和独立审查；再确定单一改动及反例，先做免费重放和 preflight。付费重发及最终验收按现有授权和停止条件执行。
+
+**建议顺序：**先完成第 1–3 项涉及的输入、事实交接和分组合约，并解决第 12 项的顺序与恢复设计；随后诊断归档、来源、匹配和判断的已知错误；再设计验证与版本化实现；最后完成 Alex 决定的验收和上线步骤。这个顺序避免在事实如何进入问题、问题如何保存和恢复仍未确定时，先把原型搬进生产。
+
+本次是只读审查：我核对了保存的记录、代码和决定，没有修改文件，也没有运行模型或测试。

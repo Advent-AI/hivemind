@@ -1,0 +1,1136 @@
+[
+ {
+  "seq": 1206,
+  "lane": "B",
+  "class": "wrong-evidence-home",
+  "severity": "serious",
+  "evidence": "1206.json e2: “Nvidia guided the current quarter to $108 billion.” B links this company-wide figure to both v2, total revenue, and v10, Data Center revenue.",
+  "rule": "D207 and the signed standard §§5–6: file a statement under the narrowest open question it bears on.",
+  "mechanism": "B links the company-wide guidance to the segment question even though the passage gives no segment figure; v2 directly asks for total revenue."
+ },
+ {
+  "seq": 1207,
+  "lane": "drop",
+  "class": "fiscal-year-drop",
+  "severity": "serious",
+  "evidence": "1207.json c1: “What year-over-year total revenue growth will NVIDIA report for FY2028?” was dropped because “year 2028 is beyond next year”.",
+  "rule": "Signed standard §§3–4: a company's annual quantity uses its fiscal year and may cover the current or next fiscal year.",
+  "mechanism": "Record preparation returned bare “2028”, which the confirmation run treated as a calendar year. split-v2-design.md §6 records a subsequent correction; the stored confirmation trace still shows the drop."
+ },
+ {
+  "seq": 1207,
+  "lane": "B",
+  "class": "unhelpful-revenue-link",
+  "severity": "serious",
+  "evidence": "1207.json e3: “CME Group plans to launch futures on Oct. 5 tied to the hourly rental cost of Nvidia's H100 and B200 graphics processors, pending regulatory approval.” It was linked to v2, FY2027 total revenue.",
+  "rule": "Signed standard §§5.1 and 5.3: a kept statement must help answer a question; D273 and D361 retain the revenue fallback for relevant demand, supply, competition or pricing.",
+  "mechanism": "B appears to apply the broad revenue fallback to an announcement of a proposed trading instrument without identifying how that announcement changes the revenue outcome."
+ },
+ {
+  "seq": 1207,
+  "lane": "B",
+  "class": "unhelpful-revenue-link",
+  "severity": "serious",
+  "evidence": "1207.json e5: “Nvidia's revenue and hyperscaler capex tell you what's been booked; the compute curve tells you what's actually being consumed and what someone will pay for it a year out,” was linked to v2, FY2027 total revenue.",
+  "rule": "Signed standard §§5.1 and 5.3: general background without a concrete development that helps answer the question is not kept.",
+  "mechanism": "B treats an explanation of what a future market could indicate as evidence about the company's revenue, without an actual curve or change in demand."
+ },
+ {
+  "seq": 1208,
+  "lane": "B",
+  "class": "unsupported-official-attribution",
+  "severity": "serious",
+  "evidence": "1208.json e2: the article says “Also announced recently is a $12.9 billion acquisition of AI specialist Hugging Face.” The summary says “NVIDIA recently announced a $12.9 billion acquisition of Hugging Face” and assigns original_who “NVIDIA” and tier “fact”.",
+  "rule": "Signed standard §§2 and 5.4: preserve the original speaker and the evidential nature of the statement; do not turn an inference into a sourced fact.",
+  "mechanism": "B inferred that NVIDIA made the announcement, although the sentence does not identify who announced it. This stronger attribution also reaches matching."
+ },
+ {
+  "seq": 1208,
+  "lane": "matching",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "1208.json e2 has original_day “”; matching returns “replace” against e4002 with said_day “2026-08-29”.",
+  "rule": "D203: an unknown original statement day stays unknown; D202 requires a later account for a revision.",
+  "mechanism": "src/hivemind/views/jev_matching.py:265 substitutes the article publication day when original_day is empty, exposing the replacement decision to an unsupported date."
+ },
+ {
+  "seq": 1209,
+  "lane": "A",
+  "class": "missing-new-question",
+  "severity": "serious",
+  "evidence": "1209.json: “Nvidia expects around 70% revenue growth next fiscal year, well above what Wall Street expected.” A opens only the supply-commitment question; the earlier FY2028 revenue-growth candidate was dropped at seq 1207.",
+  "rule": "Signed standard §§3–4: a value-driving company quantity for the next fiscal year can open when no existing question covers that annual outcome.",
+  "mechanism": "A did not propose the FY2028 revenue question despite receiving the current library and a forecast for that year. The trace does not establish why."
+ },
+ {
+  "seq": 1209,
+  "lane": "record_preparation",
+  "class": "unusable-question",
+  "severity": "serious",
+  "evidence": "1209.json v70 asks “How much has NVIDIA committed to memory and advanced-packaging supply through 2032, as disclosed by its FY2027 annual report?” It was written with due_day “”, rungs [] and judgements [].",
+  "rule": "Signed standard §§3–4 and D210: an assumed obligation opens as an amount with five outcomes and a check at the next annual report.",
+  "mechanism": "The preparation request permits an empty date and an empty ladder when it finds no reference; build_handover accepts both and writes the question. The trace does not establish that a precise ladder can be derived from this article."
+ },
+ {
+  "seq": 1209,
+  "lane": "B",
+  "class": "wrong-population-evidence",
+  "severity": "serious",
+  "evidence": "1209.json e4: “Nvidia’s CFO Colette Kress expects the top five hyperscalers to spend nearly $800 billion on capital spending in 2026. In 2027? Over $1.3 trillion.” It is linked to v4 and v5, which ask for four hyperscalers' data-center capital expenditure.",
+  "rule": "Signed standard §5.4: preserve the population and what a figure measures; D259 permits related-population evidence without making the populations identical.",
+  "mechanism": "B links the five-company, total-capital-spending forecast to the four-company, data-center-spending questions without establishing the difference in coverage. The retained summary preserves the five-company wording, but the links leave the comparison to the reader."
+ },
+ {
+  "seq": 1210,
+  "lane": "A",
+  "class": "missing-new-question",
+  "severity": "serious",
+  "evidence": "1210.json: “Kress spoke about 70% total revenue growth in fiscal 2028”; A proposes no questions, and the FY2028 revenue-growth candidate from seq 1207 was not opened.",
+  "rule": "Signed standard §§3–4: a value-driving company quantity for the next fiscal year can open when no existing question covers that annual outcome.",
+  "mechanism": "A did not propose the FY2028 revenue question despite the explicit forecast and the absence of that question from the library. The trace does not establish why."
+ },
+ {
+  "seq": 1210,
+  "lane": "B",
+  "class": "quote-summary-mismatch",
+  "severity": "serious",
+  "evidence": "1210.json handover e1 quotes “During second-quarter earnings, Nvidia CFO Colette Kress revealed that the company will be spending $279 billion on supply commitments over the next few years -- up from $119 billion only three months earlier. The reason for the jump is primarily about memory.” Its one_line additionally says “with $92 billion due in the rest of FY2027 and $87 billion and $88 billion in FY2028 and FY2029, respectively”.",
+  "rule": "Signed standard §2: a record carries a verbatim passage and a standalone summary of that statement.",
+  "mechanism": "B combined separated passages into one quote; source_quote retained the intact opening passage, while build_handover kept the longer summary unchanged. The additional amounts occur elsewhere in the article, but not in the retained quote."
+ },
+ {
+  "seq": 1210,
+  "lane": "drop",
+  "class": "quote-refusal",
+  "severity": "serious",
+  "evidence": "1210.json b6: “The bulk of Nvidia's memory spend will almost certainly land between SK Hynix and Micron Technology.” Handover drops it as “B quote absent from sent article”; the article contains the same sentence with stock tickers inserted after the two company names.",
+  "rule": "Signed standard §5.1 and D209: a helpful statement for an existing question should be kept; D236 and D266 require storage of the exact source passage.",
+  "mechanism": "source_quote does not reconcile the intervening stock-ticker markup with B's otherwise faithful quotation. The author's estimate is lost from v29, the question about a memory-supply commitment with SK Hynix."
+ },
+ {
+  "seq": 1210,
+  "lane": "B",
+  "class": "wrong-obligation-scope",
+  "severity": "serious",
+  "evidence": "1210.json e1: “the company will be spending $279 billion on supply commitments over the next few years ... The reason for the jump is primarily about memory.” It is filed under v70, “How much has NVIDIA committed to memory and advanced-packaging supply through 2032”.",
+  "rule": "Signed standard §5.4: preserve what a figure measures and its scope; §5.1 requires a link that helps answer the question.",
+  "mechanism": "B treats the broader total for supply commitments as though it measured the memory-and-advanced-packaging subset. “Primarily” does not establish that the full $279 billion belongs to that subset."
+ },
+ {
+  "seq": 1211,
+  "lane": "B",
+  "class": "wrong-evidence-home",
+  "severity": "serious",
+  "evidence": "1211.json e9: “Within the data center book, hyperscale customers contributed $48.7 billion of revenue -- an increase of 102% year over year” was linked to v2, total revenue, rather than v10, Data Center revenue.",
+  "rule": "D207 and signed standard §§5–6: file helpful evidence under the narrowest open question it bears on.",
+  "mechanism": "B selected the broad company-revenue question even though the passage expressly identifies the narrower segment."
+ },
+ {
+  "seq": 1211,
+  "lane": "B",
+  "class": "wrong-evidence-home",
+  "severity": "serious",
+  "evidence": "1211.json e7: “Operating income rose 19% sequentially and 124% year over year to $63.7 billion” was linked to v13, “What profit will NVIDIA report for FY2027?”, but not v25, “What operating margin will NVIDIA report for FY2027?”",
+  "rule": "Signed standard §5.1 and D259: retain figures that help answer an existing question; D207 calls for the narrowest applicable question.",
+  "mechanism": "B did not connect operating income to the operating-margin question, even though the same article supplies total revenue needed to interpret the figure."
+ },
+ {
+  "seq": 1211,
+  "lane": "record_preparation",
+  "class": "unusable-question",
+  "severity": "serious",
+  "evidence": "1211.json v71 asks “What gross margin will NVIDIA report for FY2028?” and was written with due_day “”, rungs [] and judgements []; the source says margin is expected to bottom “between 71% and 72% by the fourth quarter before recovering in fiscal 2028”.",
+  "rule": "Signed standard §§3–4 require five outcomes and a check date for an annual quantity. The preparation request permits a recent or part-year figure as a stated comparison.",
+  "mechanism": "Record preparation left the ladder empty despite receiving the near-term margin outlook; build_handover accepts an empty ladder and date."
+ },
+ {
+  "seq": 1211,
+  "lane": "B",
+  "class": "wrong-obligation-scope",
+  "severity": "serious",
+  "evidence": "1211.json e15: “Nvidia's commitments for critical components increased from $119 billion last quarter to $279 billion,” “primarily related to the procurement of memory.” It is filed under v70's memory-and-advanced-packaging amount.",
+  "rule": "Signed standard §5.4: preserve the scope of a reported figure.",
+  "mechanism": "B files a total for critical components as evidence for the narrower memory-and-advanced-packaging amount without establishing how much of the total belongs to that subset."
+ },
+ {
+  "seq": 1211,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1211.json: “Kress told investors that Nvidia's commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was ‘primarily related to the procurement of memory.’” _ledger.json stores it as e4229 under v71 and e4241 under v70.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one record; a record can link to relevant questions.",
+  "mechanism": "A and B independently return the same passage. The handover and writer store the two outputs separately rather than reconciling the same article's statement into one record with its applicable links."
+ },
+ {
+  "seq": 1277,
+  "lane": "A",
+  "class": "unsupported-new-question",
+  "severity": "serious",
+  "evidence": "1277.json: “What gross margin will TSMC report for FY2026?”; “The South Korean memory giant is reportedly looking to outsource some base-die production to Intel Foundry beginning with HBM4E”.",
+  "rule": "Signed standard §§3–4: a question needs source support for its subject, measure and period, as well as independent investment significance.",
+  "mechanism": "A inferred a current-year company-wide margin question from a possible future supplier change; the article gives neither a TSMC margin figure nor a stated effect on FY2026 margin."
+ },
+ {
+  "seq": 1277,
+  "lane": "A",
+  "class": "same-fact-two-records",
+  "severity": "serious",
+  "evidence": "1277.json and _ledger.json: “The South Korean memory giant is reportedly looking to outsource some base-die production to Intel Foundry beginning with HBM4E” is stored as e4438 under v89 and e4440 under v79.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one evidence record, which can link to relevant questions.",
+  "mechanism": "A and B independently returned the same matter, and build_handover appended both without reconciling their overlapping passages."
+ },
+ {
+  "seq": 1277,
+  "lane": "A",
+  "class": "same-fact-two-records",
+  "severity": "serious",
+  "evidence": "1277.json and _ledger.json: “TSMC’s HBM4 base die is estimated to cost three to four times more than an SK Hynix-produced core DRAM die” is stored as e4439 under v89 and e4441 under v79.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one evidence record, which can link to relevant questions.",
+  "mechanism": "A and B independently returned the cost comparison; their records survived separately and received different source tiers."
+ },
+ {
+  "seq": 1277,
+  "lane": "B",
+  "class": "wrong-original-speaker",
+  "severity": "serious",
+  "evidence": "1277.json: the passage says “according to a report by Korean outlet Herald Economy”, while B records “original_who”: “SK hynix”.",
+  "rule": "Signed standard §5.4: preserve the original speaker and do not invent attribution.",
+  "mechanism": "B assigned the subject of the report as the original speaker, although the article does not say SK hynix made that statement."
+ },
+ {
+  "seq": 1278,
+  "lane": "B",
+  "class": "future-plan-as-fact",
+  "severity": "serious",
+  "evidence": "1278.json: “MediaTek will adopt the NVIDIA NVLink Fusion™ platform” is stored with “tier”: “fact”. The same announcement at 1279 is stored as “party_statement”.",
+  "rule": "Signed standard §§5.4–5.5: preserve whether a company describes a future plan, and distinguish a party statement from something that has happened.",
+  "mechanism": "B classified the announcement of future adoption as an accomplished fact even though its own event_time says “future adoption and product development”."
+ },
+ {
+  "seq": 1280,
+  "lane": "A",
+  "class": "missing-direct-financial-evidence",
+  "severity": "serious",
+  "evidence": "1280.json: “Years Ended June 30, 2026 … Net sales … 39,063,072”, in a table stated to be in thousands; A opened “What net sales will Super Micro Computer (SMCI) report for FY2027” without citing that FY2026 sales figure.",
+  "rule": "D371 and signed standard §5.1: retain relevant current financial figures as evidence for the related question.",
+  "mechanism": "A selected sales growth and demand passages but omitted the reported sales amount; record preparation nevertheless used $39,063,072,000 as the comparison for the written outcomes."
+ },
+ {
+  "seq": 1280,
+  "lane": "A",
+  "class": "missing-obligation-question",
+  "severity": "serious",
+  "evidence": "1280.json: “we have current obligations related to non-cancelable purchase commitments of $34.2 billion.” The article also reports FY2026 net sales of $39,063,072 thousand.",
+  "rule": "Signed standard §§3 C and 4, D210 and D248 boundary 6: an already-assumed purchase commitment large enough to change cash or credit risk can open an amount question for the next annual report.",
+  "mechanism": "A proposed sales and margin questions but no question about the disclosed commitments. The commitment passage occurs within the text sent to A; the trace does not establish why A omitted it."
+ },
+ {
+  "seq": 1280,
+  "lane": "record_preparation",
+  "class": "incorrect-ladder-arithmetic",
+  "severity": "serious",
+  "evidence": "1280.json v90: “FY2027 net sales are within 5% above or below FY2026 reported net sales of $39,063,072,000”, with lo 37009918400 and hi 41015825600.",
+  "rule": "Signed standard §3 requires checkable, non-overlapping outcomes; META_SYSTEM requires numerical bounds to express the stated conditions.",
+  "mechanism": "The 95% and 105% values are $37,109,918,400 and $41,016,225,600. check_bounds verifies adjacent numeric bounds, but does not check the calculation against the written comparison."
+ },
+ {
+  "seq": 1280,
+  "lane": "record_preparation",
+  "class": "rung-boundary-mismatch",
+  "severity": "serious",
+  "evidence": "1280.json v90: “FY2027 net sales are more than 20% above FY2026 reported net sales of $39,063,072,000” has inclusive lo 46875686400; the adjacent outcome says “up to 20% above” but has exclusive hi 46875686400.",
+  "rule": "Signed standard §3 requires mutually exclusive, checkable outcomes; META_SYSTEM defines lower bounds as inclusive and upper bounds as exclusive.",
+  "mechanism": "The numeric partition and the written conditions disagree at exactly $46,875,686,400; check_bounds checks the numeric partition without comparing it with the conditions."
+ },
+ {
+  "seq": 1280,
+  "lane": "A",
+  "class": "same-fact-two-records",
+  "severity": "serious",
+  "evidence": "1280.json and _ledger.json: “During fiscal year 2026, the computer server industry experienced supply constraints for certain components” is stored as e4447 under v90 and e4453 under v91.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one evidence record, which can link to relevant questions.",
+  "mechanism": "A supplied the same passage separately for both candidates; build_handover created a separate evidence record for each passage."
+ },
+ {
+  "seq": 1280,
+  "lane": "B",
+  "class": "increase-misstated",
+  "severity": "serious",
+  "evidence": "1280.json quotes “increased billing for Hyper Servers, GPU & Super Racks of $15,261.5 million or 83.4% compared to prior year”; B summarizes this as “driven primarily by $15.3 billion of Hyper Servers, GPU and Super Racks”.",
+  "rule": "Signed standard §5.4: preserve what a figure measures in a standalone record.",
+  "mechanism": "B’s summary drops that $15.3 billion is the year-over-year increase, making it read as the total sales amount."
+ },
+ {
+  "seq": 1280,
+  "lane": "A",
+  "class": "article-truncated",
+  "severity": "serious",
+  "evidence": "1280.json: “Purchase Commitments - We have agreements to purchase inventory and non-inventory items primarily through the next 12 months. As of June 30, 2026, these remaining non-cancelable commitments were $ 34.2 billion”; this passage begins after character 400,000.",
+  "rule": "D199 and docs/DECISIONS.md §6: each item is read whole by its extraction request.",
+  "mechanism": "split_seven_day_poc.py item_requests and metadata_request slice the article at extraction.MAX_TEXT_CHARS, which is 400,000. The earlier portion separately reports the $34.2 billion commitment, but the later passage’s inventory and timing details were not sent."
+ },
+ {
+  "seq": 1213,
+  "lane": "A",
+  "class": "lost-uncertainty",
+  "severity": "minor",
+  "evidence": "1213.json: “The company also provided early unofficial fiscal 2028 guidance with revenue expected to be up 70% year-over-year.” A’s stored summary says “an early FY2028 revenue-growth forecast” without “unofficial”.",
+  "rule": "Signed standard §5.2 and §5.4: preserve uncertainty and conditions in a standalone evidence record.",
+  "mechanism": "A’s summary compresses the source’s qualification; record preparation preserves that summary without checking whether the qualification survived."
+ },
+ {
+  "seq": 1213,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1213.json: A records “revenue expected to be up 70% year-over-year” and “more than 100% year-over-year in fiscal 2028 if not for supply constraints” for v72; B records both statements together for v2. _ledger.json stores A’s passages as e4247 and e4248 and B’s combined passage as e4250.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one record; the record can link to relevant questions.",
+  "mechanism": "A and B run against the same prior snapshot and hand their overlapping passages to the writer separately; matching compares B’s record within its existing question, not against A’s new-question passages."
+ },
+ {
+  "seq": 1213,
+  "lane": "matching",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "1213.json: “Nvidia recently reported second-quarter financial results that beat analyst estimates.” has original_day “”, but matching records said_day “2026-08-29” for e3.",
+  "rule": "Signed standard §2 and §5.4 and D203: an unknown original statement date remains unknown and is not filled with the article’s publication date.",
+  "mechanism": "src/hivemind/views/jev_matching.py:265 substitutes the publication day and presents it to the matcher as the date the source stated the information. The stored original_day remains empty, but the matching input and decision carry the unsupported date."
+ },
+ {
+  "seq": 1216,
+  "lane": "matching",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "1216.json: “NVIDIA officially announced DLSS 5 in March and has only committed to a fall 2026 release.” has original_day “”, while matching records said_day “2026-08-29” for e2.",
+  "rule": "Signed standard §2 and §5.4 and D203: do not substitute the publication day for an unknown original statement date.",
+  "mechanism": "src/hivemind/views/jev_matching.py:265 substitutes the publication day before constructing the matcher’s stated-date field; the article identifies the announcement as having occurred in March."
+ },
+ {
+  "seq": 1217,
+  "lane": "matching",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "1217.json: “NVIDIA … brought in US$96.2bn in revenue, beating Wall Street expectations of US$92bn in the second quarter” has original_day “”, but matching records said_day “2026-08-29” for e1.",
+  "rule": "Signed standard §2 and §5.4 and D203: an unknown original statement date remains unknown.",
+  "mechanism": "src/hivemind/views/jev_matching.py:265 substitutes the article’s publication day and presents it to the matcher as the original statement date, although the article does not give the results announcement date."
+ },
+ {
+  "seq": 1218,
+  "lane": "B",
+  "class": "leak-treated-as-rumour",
+  "severity": "minor",
+  "evidence": "1218.json: “on Friday, VideoCardz spotted that following NBA 2K27's early access going live, a DLSS 'neural rendering' DLL was discovered in the build” and RenoDX modders got it working; B stores this account as tier “rumour”.",
+  "rule": "Signed standard §5.2 and §5.5 distinguish an unofficial implementation from an unconfirmed or anonymously sourced claim; source tier follows who confirmed the statement.",
+  "mechanism": "B appears to treat the leaked, unofficial nature of the software as uncertainty about the reported discovery and demonstration, despite the article naming the discoverer and modding community."
+ },
+ {
+  "seq": 1218,
+  "lane": "matching",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "1218.json: the article says “on Friday, VideoCardz spotted” the DLL; B leaves original_day empty, but matching records said_day “2026-08-29” for e1.",
+  "rule": "Signed standard §2 and §5.4 and D203: an unknown original statement date is not replaced with the publication date.",
+  "mechanism": "src/hivemind/views/jev_matching.py:265 substitutes the article’s publication day as the matcher’s stated date, even though the source describes the discovery as occurring earlier."
+ },
+ {
+  "seq": 1220,
+  "lane": "B",
+  "class": "wrong-original-attribution",
+  "severity": "serious",
+  "evidence": "1220.json: “The early access build of NBA 2K27 shipped with a 158MB library called nvngx_dlssnr.dll” is stored with original_who “NBA 2K27”; the article says “VideoCardz spotted the file first”.",
+  "rule": "Signed standard §2 and §5.4: identify the original source or leave it unknown; do not invent an original speaker.",
+  "mechanism": "B puts the name of the game containing the file into the original-speaker field, rather than identifying the reported discoverer or leaving the source uncertain."
+ },
+ {
+  "seq": 1220,
+  "lane": "matching",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "1220.json: “The RenoDX modding community had the library running inside Control the same day” has original_day “”, but matching records said_day “2026-08-29” for e3.",
+  "rule": "Signed standard §2 and §5.4 and D203: an unknown original statement date remains unknown.",
+  "mechanism": "src/hivemind/views/jev_matching.py:265 substitutes the publication day as the matcher’s stated date; the article gives a relative day but no calendar date for the modding event."
+ },
+ {
+  "seq": 1221,
+  "lane": "B",
+  "class": "weak-cpu-revenue-links",
+  "severity": "serious",
+  "evidence": "1221.json links both “Vera is important because there’s only so much memory that you can put in a single server” and “competitors like OpenAI, with its Jalapeño chip, are trying to sidestep the problem by minimizing data movement altogether” to v7, “What revenue will NVIDIA report from stand-alone CPUs for FY2027?”",
+  "rule": "Signed standard §5.1 and D259: evidence must help answer the linked question through a discernible business path.",
+  "mechanism": "B treats general data-orchestration descriptions as evidence for stand-alone CPU revenue, without establishing a connection to CPU sales, pricing or supply."
+ },
+ {
+  "seq": 1221,
+  "lane": "B",
+  "class": "excluded-product-comparison",
+  "severity": "minor",
+  "evidence": "1221.json e3: “By accelerating data operations, Nvidia claims up to 3x improvements in certain workloads”.",
+  "rule": "Signed standard §5.3 and D250 boundary 3 exclude a company’s own product-performance comparison unless the passage also contains a separately helpful action.",
+  "mechanism": "B retains a company performance claim as CPU-revenue evidence without applying the product-detail exclusion."
+ },
+ {
+  "seq": 1223,
+  "lane": "B",
+  "class": "wrong-evidence-home",
+  "severity": "serious",
+  "evidence": "1223.json e4: “I do wonder the extent to which the financial markets have fully priced in Nvidia's financing of their customers” is linked to v1, “Will NVIDIA enter at least one publicly verifiable binding financial guarantee or unsold-capacity purchase commitment under the AI Compute Partnership by 2027-01-31?”",
+  "rule": "Signed standard §5.1 and D207: a statement must help answer the question to which it is filed.",
+  "mechanism": "B connects a general valuation concern about customer financing to a specific partnership guarantee, although the speaker says nothing about that partnership or its commitments."
+ },
+ {
+  "seq": 1223,
+  "lane": "B",
+  "class": "excluded-product-comparison",
+  "severity": "minor",
+  "evidence": "1223.json e9: “the chip reportedly delivers 1.5 to 1.9 times more AI work per watt and up to 3.6 times lower latency than Nvidia's GB200/GB300, while consuming half the power”.",
+  "rule": "Signed standard §5.3 and D250 boundary 3 exclude third-party product comparisons; a comparison made by the competitor itself is assessed separately.",
+  "mechanism": "B files a media-reported performance comparison under total revenue. The separate statement about production and possible competitive pressure is retained as e10."
+ },
+ {
+  "seq": 1223,
+  "lane": "B",
+  "class": "lost-forecast-period",
+  "severity": "serious",
+  "evidence": "1223.json article: “expect roughly 70% sales growth in fiscal 2028 ... and management indicated that without supply constraints, growth would exceed 100%.” B e7 says “the period is not specified.”",
+  "rule": "Signed standard §5.4 requires a record to preserve the period of a forecast.",
+  "mechanism": "B extracts the conditional forecast as a separate passage and fails to carry forward the fiscal 2028 period established in the same sentence."
+ },
+ {
+  "seq": 1227,
+  "lane": "A",
+  "class": "opening-summary-loses-amount",
+  "severity": "serious",
+  "evidence": "1227.json e1 quotes “raise its 2026 capital expenditure forecast toward as much as $205 billion” but its stored one-line summary says only “Reports management’s raised 2026 capex forecast and identifies AI and cloud data-center infrastructure as the spending drivers.”",
+  "rule": "Signed standard §5.4 requires the amount and its upper-limit condition to be preserved in a standalone record.",
+  "mechanism": "A’s what_it_shows omits the amount and its limit; build_handover copies that field directly into one_line."
+ },
+ {
+  "seq": 1227,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1227.json A e1 and B e2 both quote management’s decision to “raise its 2026 capital expenditure forecast toward as much as $205 billion”; _ledger.json stores them separately as e4278 under v73 and e4279 under v4.",
+  "rule": "Signed standard §2 and D250 count one research matter in one article as one record; one record can link to relevant questions.",
+  "mechanism": "A and B produce separate pieces from the same article, and the writer stores each handover piece separately without reconciling them across the two answers."
+ },
+ {
+  "seq": 1227,
+  "lane": "record_preparation",
+  "class": "rung-boundary-mismatch",
+  "severity": "serious",
+  "evidence": "1227.json v73: the neutral condition says “at most 215250000000 USD” while its numeric hi is 215250000000; the next condition says “above 215250000000 USD” while its lo is 215250000000.",
+  "rule": "Signed standard §3 requires outcomes with no gaps or overlaps; META_SYSTEM defines numeric lower bounds as inclusive and upper bounds as exclusive.",
+  "mechanism": "check_bounds checks adjacent numeric bounds but does not check that the written conditions agree with them. At exactly $215.25 billion, the text and numeric fields select different outcomes."
+ },
+ {
+  "seq": 1227,
+  "lane": "judging",
+  "class": "spending-scope-conflated",
+  "severity": "serious",
+  "evidence": "1227.json v73 judgement says “The management reference is its FY2026 capex forecast of up to $205 billion, with a reported range of $195–$205 billion”; cited e4288 in _ledger.json says “Alphabet raised its 2026 AI infrastructure spending forecast to a range of $195 billion to $205 billion.”",
+  "rule": "Signed standard §5.4 requires a record and judgement to preserve what a figure measures; §7 requires the conclusion to follow the cited evidence.",
+  "mechanism": "The judgement treats a range described as AI infrastructure spending as the range for total company capital expenditure without establishing that the scopes are identical."
+ },
+ {
+  "seq": 1228,
+  "lane": "A",
+  "class": "missing-main-driver-question",
+  "severity": "serious",
+  "evidence": "1228.json article: “analysts currently expect fiscal 2027 revenue of 391.1 billion dollars, compared with reported fiscal 2026 revenue of 331.8 billion dollars”; A opens only a question about Azure growth.",
+  "rule": "Signed standard §§3–4: a company’s annual main-driver quantity can open when it has independent investment significance and no open question covers it.",
+  "mechanism": "A identifies the cloud growth question but does not propose a separate Microsoft total-revenue question despite the article’s full-year company forecast. The trace does not establish why."
+ },
+ {
+  "seq": 1228,
+  "lane": "A",
+  "class": "opening-summary-loses-amount",
+  "severity": "serious",
+  "evidence": "1228.json e1 quotes “revenue increased 43% year-over-year in fiscal Q4 2026” but summarizes it as “strong recent Azure growth”; e2 quotes “about 45% in constant currency in fiscal Q1 2027” but summarizes it as “near-term Azure growth guidance”.",
+  "rule": "Signed standard §5.4 requires the amount, period and relevant conditions to be preserved in a standalone record.",
+  "mechanism": "A’s summaries omit both growth rates, and build_handover copies what_it_shows directly into the stored one_line fields."
+ },
+ {
+  "seq": 1228,
+  "lane": "record_preparation",
+  "class": "currency-basis-ambiguity",
+  "severity": "minor",
+  "evidence": "1228.json v74 asks for “year-over-year revenue growth” for FY2027, while its comparison is “45% constant-currency Azure growth guidance for fiscal Q1 2027”; the judgement says the evidence does not quantify an adjustment to the eventual reported full-year figure.",
+  "rule": "Signed standard §4 requires the measurement scope to be clear; §3 requires the middle outcome to state its comparison.",
+  "mechanism": "Record preparation carries a constant-currency quarterly reference into a question that does not specify the currency basis of the annual result."
+ },
+ {
+  "seq": 1229,
+  "lane": "B",
+  "class": "weak-capex-link",
+  "severity": "minor",
+  "evidence": "1229.json: “electricity consumption by data centers is expected to more than double by 2030, rising from 415 to 945 terawatt-hours” is linked to v4, v5 and v60.",
+  "rule": "Standard §5.1 and §5.3 require a connection to the question; D259 permits indirect evidence when it bears on the answer.",
+  "mechanism": "B links a global electricity forecast to spending by four companies and to 2027 spending growth without identifying how it changes those particular estimates. The trace does not establish why B chose the links."
+ },
+ {
+  "seq": 1234,
+  "lane": "A",
+  "class": "missing-main-revenue-question",
+  "severity": "serious",
+  "evidence": "1234.json: “total revenue climbing 24 percent year over year to $119.8 billion in Q2 2026”; A proposes only “What Google Cloud revenue will Alphabet report for fiscal 2026?”",
+  "rule": "Standard §3 A and §4 allow a company's principal annual business measure when it has independent investment significance; D371 keeps current financial information relevant to annual questions.",
+  "mechanism": "A opens a segment-revenue question but does not propose the independently significant company-wide revenue question. The trace does not establish why it omitted it."
+ },
+ {
+  "seq": 1234,
+  "lane": "B",
+  "class": "same-fact-two-homes",
+  "severity": "serious",
+  "evidence": "1234.json: “Google Cloud revenue surged 82 percent to $24.8 billion in Q2 2026 versus the prior-year quarter”; _ledger.json stores it as e4286 under the new Cloud revenue question v75 and e4290 under capital-expenditure question v73.",
+  "rule": "Standard §2 and D250 count one research matter in one article; D207 requires the narrowest applicable home.",
+  "mechanism": "A and B use the same prior library. A attaches the passage to its new question while B independently attaches it to an existing question; the handover and writer retain both records."
+ },
+ {
+  "seq": 1234,
+  "lane": "B",
+  "class": "broader-links-retained",
+  "severity": "serious",
+  "evidence": "1234.json: “Alphabet raised its 2026 AI infrastructure spending forecast to a range of $195 billion to $205 billion” is linked to v4, v60 and v73; v73 asks Alphabet's own FY2026 capital expenditure.",
+  "rule": "D207 and standard §5 require filing under the narrowest applicable question; D259 permits relevant drivers but retains that boundary.",
+  "mechanism": "B supplies all three links and build_handover retains each shown link. The company-specific spending question was already open, so the broader aggregate links duplicate its home."
+ },
+ {
+  "seq": 1234,
+  "lane": "B",
+  "class": "wrong-event-period",
+  "severity": "serious",
+  "evidence": "1234.json: the source says “in Q2 2026 Alphabet raised its 2026 AI infrastructure spending forecast”, while B records “event_time”: “2026-08-29”.",
+  "rule": "Standard §5.4 requires preserving the period of a statement and distinguishes the event's time from the article's publication date.",
+  "mechanism": "B substitutes the article day for the reported quarter; build_handover carries its event_time through."
+ },
+ {
+  "seq": 1234,
+  "lane": "record_preparation",
+  "class": "wrong-original-attribution",
+  "severity": "serious",
+  "evidence": "1234.json: A describes “The article’s journalist, summarizing Alphabet’s second-quarter 2026 results”; record preparation sets “original_who”: “The article’s journalist, summarizing Alphabet’s second-quarter 2026 results.”",
+  "rule": "Standard §5.4 requires preserving the original source and distinguishing the reporter from the party whose result is reported.",
+  "mechanism": "Record preparation copies A's descriptive speaker text into original_who rather than identifying the company as the source of its reported result."
+ },
+ {
+  "seq": 1234,
+  "lane": "A",
+  "class": "summary-loses-figures",
+  "severity": "serious",
+  "evidence": "1234.json: “The reported quarterly revenue and growth provide direct evidence of the segment’s current scale and momentum” summarizes $24.8 billion and 82% growth; “The reported backlog is a demand indicator” summarizes a $514 billion backlog.",
+  "rule": "Standard §5.4 requires a record to preserve the measure, amount and period and be understandable on its own.",
+  "mechanism": "A's what_it_shows becomes the stored one_line in build_handover, so both summaries omit the figures needed to understand the records without rereading their quotes."
+ },
+ {
+  "seq": 1234,
+  "lane": "record_preparation",
+  "class": "rung-boundary-mismatch",
+  "severity": "serious",
+  "evidence": "1234.json: the top rung says revenue is “more than 10% above” $99.2 billion, but its inclusive lo is 109120000000.",
+  "rule": "Standard §3 requires mutually exclusive outcomes; META_SYSTEM specifies inclusive numeric lower bounds and exclusive upper bounds.",
+  "mechanism": "At exactly $109.12 billion the numeric fields select the top rung while its written condition excludes that value. check_bounds checks numeric partitioning, not agreement with the condition."
+ },
+ {
+  "seq": 1234,
+  "lane": "judging",
+  "class": "unsupported-forecast",
+  "severity": "serious",
+  "evidence": "1234.json v75: “Q2 revenue of $24.8 billion grew 82% year over year, supporting a FY2026 forecast above that flat annualized pace” and “I infer about $105 billion for FY2026”.",
+  "rule": "Standard §5.4 and §7 require an inference to preserve the evidence's limits and support the resulting judgement.",
+  "mechanism": "The judgement treats growth against the prior-year quarter as support for a specific full-year amount above four times the current quarter. The cited quarterly figure and backlog do not establish the first-half total or the future quarterly path needed for that inference."
+ },
+ {
+  "seq": 1235,
+  "lane": "record_preparation",
+  "class": "overlapping-outcomes",
+  "severity": "serious",
+  "evidence": "1235.json: “Below estimated pace” and “Within estimated pace” both have lo 1825000000 and hi 3650000000; the written v76 has “rungs”: [] and “judgements”: [].",
+  "rule": "Standard §3 and the record-preparation request require mutually exclusive outcomes covering the range.",
+  "mechanism": "Record preparation generates overlapping ranges. build_handover detects the overlap and clears the entire ladder, leaving the question unable to receive a ladder judgement."
+ },
+ {
+  "seq": 1235,
+  "lane": "record_preparation",
+  "class": "wrong-subject",
+  "severity": "serious",
+  "evidence": "1235.json: “object”: “new”, “new_subject”: “Strait of Hormuz crude oil transit”; the written question uses object_id “research:8edbf702da685c85ee40”.",
+  "rule": "split-v2-design.md §3 and META_SYSTEM require choosing a listed subject when one fits.",
+  "mechanism": "Record preparation creates a new subject instead of choosing the existing middle-east-conflict subject, separating related research."
+ },
+ {
+  "seq": 1235,
+  "lane": "record_preparation",
+  "class": "wrong-original-attribution",
+  "severity": "serious",
+  "evidence": "1235.json: “Tehran has already warned that major U.S. attacks on Iranian energy or civilian infrastructure would be met with strikes against comparable infrastructure across the region”; record preparation sets “original_who”: “The journalist”.",
+  "rule": "Standard §5.4 requires recording the original speaker and distinguishing that speaker from the reporting journalist.",
+  "mechanism": "Record preparation treats the journalist as the source of a warning attributed to Tehran. The article does not identify the individual official, so that more specific identity remains unknown."
+ },
+ {
+  "seq": 1237,
+  "lane": "A",
+  "class": "commentary-without-new-fact",
+  "severity": "minor",
+  "evidence": "1237.json, e8: \"You are basically setting yourself up so that if you don't hike in September, people may ask what's going on,\" said Adam Posen, president of the Peterson Institute for International Economics.",
+  "rule": "docs/prd/05-extraction-standard.html §5.3 and D250: a named analyst's interpretation of an already-recorded event is not kept when it adds no new fact or calculation.",
+  "mechanism": "A kept an outside interpretation of the speech alongside the underlying statements, although this passage adds no new fact or calculation."
+ },
+ {
+  "seq": 1238,
+  "lane": "B",
+  "class": "wrong-period-filing",
+  "severity": "serious",
+  "evidence": "1238.json, e4: \"NVIDIA expects its revenue for the next fiscal year to surge by 70%.\" The handover links it to v2, FY2027 revenue; 1244.json identifies the same 70% next-fiscal-year guidance as FY2028 and links it to v72.",
+  "rule": "docs/prd/05-extraction-standard.html §5.1 and D259: file helpful evidence under the narrowest question it bears on; an open question for the stated period takes precedence.",
+  "mechanism": "B linked the forecast to the earlier annual-revenue question despite the existing question for the forecast period. The trace does not establish why B chose v2."
+ },
+ {
+  "seq": 1239,
+  "lane": "record_preparation",
+  "class": "reversed-revenue-outcomes",
+  "severity": "blocker",
+  "evidence": "1239.json, c1: \"Strongly bullish: FY2026 total revenue is below 7011000000 USD\"; \"Strongly bearish: FY2026 total revenue is at least 8118000000 USD.\"",
+  "rule": "docs/DECISIONS.md §7 and split_seven_day_poc.py META_SYSTEM: a company outcome runs from strongly bullish to strongly bearish according to what is good or bad for the business.",
+  "mechanism": "Record preparation reversed the business meaning of the revenue ranges. The structural ladder checks accepted them, and v78 was written with the reversed labels."
+ },
+ {
+  "seq": 1240,
+  "lane": "B",
+  "class": "unrelated-company-filing",
+  "severity": "serious",
+  "evidence": "1240.json, B e1: \"in Q2 2026 the company paid NT$36 billion in bonuses, representing a 50.6 percent increase compared with Q2 2025 bonuses of NT$24 billion.\" It was filed under v78, ON Semiconductor FY2026 revenue.",
+  "rule": "docs/prd/05-extraction-standard.html §§5.1 and 5.3 and D250: another company's information needs an identifiable path to the question being answered.",
+  "mechanism": "B linked TSMC employee compensation to ON Semiconductor revenue without an evident demand, supply, competition or pricing connection. The trace does not establish why B chose v78."
+ },
+ {
+  "seq": 1240,
+  "lane": "B",
+  "class": "unrelated-company-filing",
+  "severity": "serious",
+  "evidence": "1240.json, B e2: \"Taiwan Semiconductor Manufacturing generated NT$1.2 trillion in second-quarter revenue, up 36 percent year over year from its Q2 2025 base\" was filed under v78, ON Semiconductor FY2026 revenue.",
+  "rule": "docs/prd/05-extraction-standard.html §§5.1 and 5.3 and D250: another company's information needs an identifiable path to the question being answered.",
+  "mechanism": "B treated TSMC's revenue as evidence for a different company's revenue without establishing a relevant connection."
+ },
+ {
+  "seq": 1240,
+  "lane": "B",
+  "class": "unrelated-company-filing",
+  "severity": "serious",
+  "evidence": "1240.json, B e3: \"Taiwan Semiconductor Manufacturing's operating profit reached NT$766 billion, with bonuses accounting for 4.7 percent of that operating profit\" was filed under v78, ON Semiconductor FY2026 revenue.",
+  "rule": "docs/prd/05-extraction-standard.html §§5.1 and 5.3 and D250: another company's information needs an identifiable path to the question being answered.",
+  "mechanism": "B linked TSMC's operating profit and compensation ratio to ON Semiconductor revenue without establishing a relevant connection."
+ },
+ {
+  "seq": 1240,
+  "lane": "B",
+  "class": "same-fact-two-records",
+  "severity": "serious",
+  "evidence": "1240.json: A e1 and B e2 both quote \"Taiwan Semiconductor Manufacturing generated NT$1.2 trillion in second-quarter revenue, up 36 percent year over year\"; _ledger.json writes e4310 under v79 and e4312 under v78.",
+  "rule": "D207 and docs/DECISIONS.md §6: daily evidence goes to the narrowest relevant question; D248 distinguishes one statement from multiple records of it.",
+  "mechanism": "A and B use the same pre-item library. Their overlapping passages are passed independently to the writer, which stores two records and leaves the B copy under the unrelated question."
+ },
+ {
+  "seq": 1240,
+  "lane": "drop",
+  "class": "new-question-evidence-lost",
+  "severity": "serious",
+  "evidence": "1240.json, B e4: \"a new generation of Apple processors, including the M6 base-tier chip, is planned on TSMC's 2-nanometer process\"; handover: \"no existing question linked\".",
+  "rule": "docs/prd/05-extraction-standard.html §5.1 and D240: a named customer's relevant action can be helpful evidence without an amount; D209 drops a statement only when no question takes it.",
+  "mechanism": "B could link only to questions open before the item, while A opened v79, TSMC FY2026 revenue, from the same article and did not include this customer demand passage. It consequently never reached the new question."
+ },
+ {
+  "seq": 1240,
+  "lane": "judging",
+  "class": "growth-applied-twice",
+  "severity": "blocker",
+  "evidence": "1240.json, v79 judgement: \"Carrying the reported 36% year-over-year growth forward implies about NT$6.53 trillion (NT$4.8T × 1.36).\"",
+  "rule": "docs/prd/05-extraction-standard.html §7 and D218: distinguish what the source establishes from an inference and support the conclusion.",
+  "mechanism": "The judgement annualized a current quarter that already included the reported year-over-year growth, then applied that historical growth again to the current pace without evidence of an equivalent further increase. judging-v7 instructs the model to carry growth forward; the calculation selects the highest outcome."
+ },
+ {
+  "seq": 1242,
+  "lane": "B",
+  "class": "missed-customer-evidence",
+  "severity": "serious",
+  "evidence": "1242.json: \"Xiaomi's recently unveiled Xring O3 processor, developed in partnership with TSMC.\" B returned no evidence; v79, TSMC FY2026 revenue, was already open.",
+  "rule": "docs/prd/05-extraction-standard.html §5.1 and D240: a named customer's relevant action can be kept without a disclosed amount; D259 permits evidence bearing on demand.",
+  "mechanism": "B omitted a recently unveiled customer processor associated with the foundry, so the existing TSMC revenue question did not receive this demand signal. The trace does not establish which instruction caused the omission."
+ },
+ {
+  "seq": 1243,
+  "lane": "B",
+  "class": "unsupported-source-attribution",
+  "severity": "serious",
+  "evidence": "1243.json, B's quote includes \"Nvidia is slated to buy Hugging Face for $12.9 billion\" and a separate CNBC source confirming that acquisition \"has been part of ongoing and recent talks\". The handover keeps only the first sentence while recording original_who as \"an unnamed source cited by CNBC reporters\".",
+  "rule": "docs/DECISIONS.md §6 and D218: preserve the original source and do not present an inference as a source fact.",
+  "mechanism": "source_quote retained the exact opening passage when the submitted quote ran on across non-contiguous text, but the handover retained B's attribution for the omitted CNBC passage. The stored source attribution therefore connects CNBC's unnamed source to a price that the cited source is not shown to have confirmed."
+ },
+ {
+  "seq": 1245,
+  "lane": "B",
+  "class": "wrong-narrower-question",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1245.json, e2: \"CEO Jensen Huang has told investors he expects $1 trillion in combined Blackwell and Rubin chip sales between 2025 and the end of 2027\"; linked to v2.",
+  "rule": "Signed standard §5.1 and D207: file helpful evidence under the narrowest existing question it bears on. v10 asks about Data Center revenue; v2 asks about total revenue.",
+  "mechanism": "B files a data-center product sales forecast under the broader total-revenue question. The D273 fallback retained by D361 permits the broad revenue destination."
+ },
+ {
+  "seq": 1246,
+  "lane": "B",
+  "class": "wrong-narrower-question",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1246.json, e7: \"Management continues to see around $20 billion in total server CPU demand and preliminarily expects CPU revenue to more than double in fiscal 2028.\"; linked only to v72.",
+  "rule": "Signed standard §5.1 and D207: file helpful evidence under the narrowest existing question it bears on. v7 tracks stand-alone CPU revenue; v72 tracks total FY2028 revenue.",
+  "mechanism": "B sends a CPU-specific demand and revenue outlook to total revenue despite the existing CPU question. The broad fallback can attract evidence away from a narrower question."
+ },
+ {
+  "seq": 1246,
+  "lane": "B",
+  "class": "missed-existing-evidence",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1246.json, article: \"the next-generation Vera CPU was already in full production at the end of the second quarter.\" B does not include this statement.",
+  "rule": "Signed standard §5.1: retain a concrete product or supply development an analyst would note when it can make an existing question's answer more or less likely; v7 tracks stand-alone CPU revenue.",
+  "mechanism": "B captured the adjacent trailing CPU revenue and demand forecast but omitted the production status of the next-generation CPU. The trace does not establish which request instruction caused the omission."
+ },
+ {
+  "seq": 1249,
+  "lane": "B",
+  "class": "wrong-narrower-question",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1249.json, e4: \"Nvidia still controls roughly three-quarters of global AI accelerator revenue, even after its share has fallen from a peak near 87% as AMD and hyperscaler custom chips start to nibble at the edges.\"; linked to v2.",
+  "rule": "Signed standard §5.1 and D207: file evidence under the narrowest existing question it bears on. v10 tracks Data Center revenue, while v2 tracks total revenue.",
+  "mechanism": "B places competition and share evidence for the data-center accelerator business under total revenue. The fallback can select the broader question."
+ },
+ {
+  "seq": 1249,
+  "lane": "judging",
+  "class": "lower-bound-treated-as-point",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1249.json, v80: \"The reference is the article’s forecast of more than $200 billion, corresponding to rung 3’s $200 billion–below $250 billion band.\" The cited article says \"more than $200 billion\" and gives no upper bound.",
+  "rule": "Signed standard §5.4 requires preserving a statement's limits; §7 and D218 require the judgement to be supported by the evidence.",
+  "mechanism": "Record preparation uses an open-ended floor as the comparison for a bounded middle range, and judging selects that range despite acknowledging that the source has no upper bound."
+ },
+ {
+  "seq": 1249,
+  "lane": "B",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1249.json and _ledger.json: \"The AI accelerator market is expected to grow from more than $200 billion in 2026 to over $430 billion by 2035.\" was written as e4338 under v80 and e4345 under v72.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one evidence record; D207 calls for the narrowest home.",
+  "mechanism": "A and B read the same pre-item library in parallel. build_handover appends their passages separately, so B cannot see the new question A opens and the writer stores the same passage twice."
+ },
+ {
+  "seq": 1250,
+  "lane": "A",
+  "class": "duplicate-aggregate-proposal",
+  "severity": "minor",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1250.json, c1: \"How much will the five top hyperscalers spend on capital expenditures in calendar 2027?\" Existing v5 asks how much the four largest AI hyperscalers will spend on data-center capital expenditures in calendar 2027. Matching merged c1 into v5.",
+  "rule": "Signed standard §§3 and 4 and D197: another population or proxy of the same shared aggregate in the same year is evidence for the existing aggregate question.",
+  "mechanism": "The A request permits a separate question when another outcome could change independently, but does not state the specific rule treating another population of the same aggregate as evidence. Matching applies the shared-quantity key and prevents a second question from being written."
+ },
+ {
+  "seq": 1250,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1250.json and _ledger.json: \"On the Q2 2027 earnings call, Chief Financial Officer Colette Kress mentioned that the five top hyperscalers will spend $1.3 trillion on capital expenditures in 2027.\" was written as both e4346 and e4350 under v5.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one evidence record.",
+  "mechanism": "The merged A passage and B passage enter separate handover records. Matching marks both as repeats of earlier evidence but the writer still stores both copies from this same article."
+ },
+ {
+  "seq": 1251,
+  "lane": "B",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1251.json and _ledger.json: \"According to the latest guidance from chief financial officer Colette Kress, around 25% of Nvidia's sales in fiscal 2028 will come from customers it has financed in some way.\" was written as e4351 under v81 and e4359 under v72.",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one evidence record; D207 calls for the narrowest home.",
+  "mechanism": "A opens v81 while B independently files the same passage under the existing total-revenue question. The handover retains both records."
+ },
+ {
+  "seq": 1251,
+  "lane": "judging",
+  "class": "financing-amount-misinterpreted",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1251.json, v81 judgement: \"the $168 billion estimate is explicitly conditional on revenue exceeding $670 billion and is consistent with roughly 25%\"; the article says \"around $168 billion could be funded by its own balance sheet,\" while the 25% figure is sales from customers NVIDIA has financed in some way.",
+  "rule": "Signed standard §§5.4 and 7: preserve what a figure measures and distinguish an attributed inference from what the cited evidence establishes.",
+  "mechanism": "The judgement treats the author's estimated amount funded as supporting the share of revenue from financed customers. A customer's revenue and the amount NVIDIA finances are different quantities; the cited calculation does not establish that they are equal."
+ },
+ {
+  "seq": 1252,
+  "lane": "A",
+  "class": "missing-product-question",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1252.json, article: \"CEO Elon Musk said early this year that the electric vehicle company could be mass-manufacturing and selling its humanoid assistants by the end of 2027\" and could \"eventually account for the vast majority of Tesla's market value.\" A proposes no Tesla product question.",
+  "rule": "Signed standard §§3 B and 4: a principal product milestone that could change an investment decision and can be checked publicly may open when no existing question covers it. D155 says companies outside the initial list cannot be ignored.",
+  "mechanism": "A proposes an NVIDIA market-share question but misses the separately stated Tesla commercialization milestone. The trace does not establish the cause of the omission."
+ },
+ {
+  "seq": 1252,
+  "lane": "B",
+  "class": "lost-uncertainty",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1252.json, article: \"I'm betting that many of these institutions are already shopping around for other platforms.\" B's e7 summary says \"poor AI returns on investment are prompting many AI-using institutions to shop for alternative platforms.\"",
+  "rule": "Signed standard §5.4: preserve the original statement's uncertainty and distinguish an author's view from an established event.",
+  "mechanism": "B converts the author's speculation into an asserted current customer action. The A summary of the same passage correctly says it is not confirmed switching."
+ },
+ {
+  "seq": 1252,
+  "lane": "B",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "docs/research/2026-11-05-production-plan/traces/split-v2-confirm-first100-2026-11-05/1252.json and _ledger.json: A's e4361 and e4362 and B's e4366 repeat the article's account that \"alternatives are quickly coming into the mix\" and that the cloud-provider chips were \"built from the ground up as alternatives to Nvidia's expensive hardware.\"",
+  "rule": "Signed standard §2 and D250: one research matter in one article is one evidence record; D207 calls for the narrowest home.",
+  "mechanism": "A and B independently extract overlapping passages about the same competitive development, and build_handover appends them without reconciling the article-level matter."
+ },
+ {
+  "seq": 1253,
+  "lane": "judging",
+  "class": "lower-bound-treated-as-point",
+  "severity": "serious",
+  "evidence": "1253.json, v83: “The guidance supports revenue above $40 billion, but does not quantify growth beyond doubling enough to imply at least $45 billion.” The judgement selects the $40 billion to below $45 billion outcome.",
+  "rule": "Standard §5.4 requires preserving a statement’s limits; §7 and D218 require the judgement to distinguish evidence from inference.",
+  "mechanism": "The source says revenue will more than double, which leaves the upper end open. The judgement treats that lower bound as sufficient to select a bounded outcome."
+ },
+ {
+  "seq": 1253,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1253.json: “Kress said Nvidia not only still expects $20 billion in CPU revenue in its fiscal 2027, but expects that number to more than double in fiscal 2028.” The ledger stores this statement as e4368 under v83 and e4373 under v7.",
+  "rule": "Standard §2 and D250: one research matter in one article is one record; a record can link to relevant questions.",
+  "mechanism": "A and B independently return overlapping passages, and the handover writes both as separate evidence records."
+ },
+ {
+  "seq": 1253,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1253.json: “Now, his new estimate is $210 billion, due to the rise of AI agents.” The ledger stores the same server CPU market estimate as e4370 under v83 and e4374 under v7.",
+  "rule": "Standard §2 and D250: one research matter in one article is one record; a record can link to relevant questions.",
+  "mechanism": "A and B independently return the same passage, and the handover writes both records."
+ },
+ {
+  "seq": 1253,
+  "lane": "A",
+  "class": "background-kept-as-evidence",
+  "severity": "minor",
+  "evidence": "1253.json, A e2: “If the market keeps growing, there should be plenty of room for AMD and Intel to get their piece of the pie.”",
+  "rule": "Standard §5.3 excludes general background and a named analyst’s interpretation without a new fact or calculation.",
+  "mechanism": "A retains a generic conditional interpretation as evidence for v83; its passage review does not remove it."
+ },
+ {
+  "seq": 1253,
+  "lane": "record_preparation",
+  "class": "unsupported-statement-time",
+  "severity": "minor",
+  "evidence": "1253.json, A e1: “expects that number to more than double in fiscal 2028”; record preparation sets event_time to “Kress said last quarter; the report gives no exact day.” The article applies “last quarter” to the earlier FY2027 projection.",
+  "rule": "Standard §2 and §5.4 require the original timing and the limits of a statement to be preserved.",
+  "mechanism": "Record preparation appears to transfer the timing of the earlier FY2027 projection to the combined statement that also contains the FY2028 expectation."
+ },
+ {
+  "seq": 1253,
+  "lane": "matching",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "1253.json, handover e7 has original_day “”; matching supplies said_day “2026-08-30” and returns “replace” for the server CPU market estimate.",
+  "rule": "D203 requires an unknown original statement day to remain unknown; D202 distinguishes a later revision from a repeat or different statement.",
+  "mechanism": "src/hivemind/views/jev_matching.py:265 substitutes the article publication day when original_day is empty, so the comparison receives a date the source did not establish. The trace alone does not establish whether the replacement verdict would change without it."
+ },
+ {
+  "seq": 1254,
+  "lane": "A",
+  "class": "background-kept-as-evidence",
+  "severity": "minor",
+  "evidence": "1254.json, A e3: “An AI cloud is an emerging kind of intermediary, one that buys Nvidia's chips, packs them into clusters, and leases capacity to companies that never need to negotiate with a chip designer directly.”",
+  "rule": "Standard §5.3 excludes general background and descriptions of existing arrangements without a new action.",
+  "mechanism": "A retains an explanation of a business model as evidence for v84."
+ },
+ {
+  "seq": 1254,
+  "lane": "A",
+  "class": "background-kept-as-evidence",
+  "severity": "minor",
+  "evidence": "1254.json, A e4: “Manufacturers running digital twins on the factory floor, a bank assessing risk , or a government designing a sovereign cluster is far more complex than a corporation simply increasing its operating budget to rent incremental storage on AWS.”",
+  "rule": "Standard §5.3 excludes general background without a new fact or concrete development.",
+  "mechanism": "A retains illustrative customer descriptions as evidence for v84, although the passage does not report a new customer action or figure."
+ },
+ {
+  "seq": 1254,
+  "lane": "record_preparation",
+  "class": "wrong-original-attribution",
+  "severity": "serious",
+  "evidence": "1254.json, A e1 reports the quarterly company figures; record preparation assigns “original_who”: “Adam Spatacco”, “original_day”: “2026-08-30”, and “tier”: “fact”.",
+  "rule": "Standard §2 and §5.4 require the original speaker and date; an unknown original date stays unknown.",
+  "mechanism": "Record preparation attributes figures reported from NVIDIA’s earnings to the article author and uses the article date as their original date."
+ },
+ {
+  "seq": 1254,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1254.json: “The AI Clouds, Industrial, and Enterprise group (ACIE) generated $40.3 billion, an increase of 25% from last quarter and 138% year over year.” The ledger stores it in e4375 under v84 and e4381 under v10.",
+  "rule": "Standard §2 and D250: one research matter in one article is one record; a record can link to relevant questions.",
+  "mechanism": "A includes the customer-group figures in its opening passage and B returns the ACIE figure separately; both survive as records with different original attribution."
+ },
+ {
+  "seq": 1254,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1254.json: “Hyperscale customers generated $48.7 billion in revenue, up 13% sequentially and 102% from a year ago.” The ledger stores it in e4375 under v84 and e4380 under v10.",
+  "rule": "Standard §2 and D250: one research matter in one article is one record; a record can link to relevant questions.",
+  "mechanism": "A’s combined passage and B’s separate hyperscaler passage both survive as records."
+ },
+ {
+  "seq": 1254,
+  "lane": "judging",
+  "class": "past-growth-extrapolated",
+  "severity": "serious",
+  "evidence": "1254.json, v84: “Carrying the reported 25% sequential growth forward gives an implied FY2027 total of about $185.9 billion, above rung 1's $177.32 billion boundary.”",
+  "rule": "Standard §7 and D218 require the judgement to distinguish source evidence from inference and explain the support for its conclusion; D260 asks for the outcome the evidence makes most likely.",
+  "mechanism": "The judgement repeats one observed quarter’s growth rate for both remaining quarters and selects the strongest outcome. The cited passages give no forecast that this rate will persist; judging-v7 asks the model to carry guided growth forward, but this growth was observed rather than guided."
+ },
+ {
+  "seq": 1255,
+  "lane": "B",
+  "class": "missing-supply-evidence",
+  "severity": "serious",
+  "evidence": "1255.json: “The company is partnering with NVIDIA to build three advanced optical-manufacturing facilities in North Carolina and Texas. The project is expected to create more than 3,000 jobs and expand Corning’s U.S. optical-manufacturing capacity tenfold.” B returns no evidence.",
+  "rule": "Standard §5.1 keeps a concrete named-party plan an analyst would note; D259 permits evidence bearing on supply behind an existing question.",
+  "mechanism": "B does not connect the NVIDIA-linked optical capacity plan to an existing data-center or networking question. The trace does not establish why it omitted the passage."
+ },
+ {
+  "seq": 1256,
+  "lane": "B",
+  "class": "quote-summary-mismatch",
+  "severity": "minor",
+  "evidence": "1256.json, e1 quotes “Nvidia (NasdaqGS: NVDA) agreed to acquire AI platform Hugging Face for US$12.9b in a cash and stock deal announced on 27 August 2026.” Its one_line adds “remains subject to regulatory approvals.”",
+  "rule": "Standard §2 requires a verbatim passage and a standalone summary of the recorded statement with accurate sourcing.",
+  "mechanism": "B combines the deal announcement and an approval condition from a separate article sentence into a summary whose retained quote contains only the first."
+ },
+ {
+  "seq": 1257,
+  "lane": "B",
+  "class": "wrong-evidence-home",
+  "severity": "serious",
+  "evidence": "1257.json: “During TSMC's last quarterly conference call, CEO C.C. Wei told investors that he expects elevated chip demand to last through at least 2029 or 2030.” B links it to v2, NVIDIA FY2027 total revenue; v79 already asks for TSMC fiscal 2026 total revenue.",
+  "rule": "D207 and D259 require helpful evidence to go to the narrowest existing question it bears on.",
+  "mechanism": "B uses NVIDIA’s broad revenue question for a foundry CEO’s demand outlook without selecting the existing question about that foundry’s own revenue."
+ },
+ {
+  "seq": 1258,
+  "lane": "B",
+  "class": "multiple-existing-homes",
+  "severity": "serious",
+  "evidence": "1258.json: “The companies also plan to bring new Vera-based CPUs into Amazon's cloud to support increasingly advanced AI applications.” The ledger links e4387 to v7, v24 and v83.",
+  "rule": "D207, D259 and D360 specify one narrowest existing home for daily filing, with the same answer’s new candidates as a separate allowance.",
+  "mechanism": "B returns three existing-question links for one undated deployment plan, and build_handover preserves all of them."
+ },
+ {
+  "seq": 1258,
+  "lane": "B",
+  "class": "multiple-existing-homes",
+  "severity": "serious",
+  "evidence": "1258.json: “Nvidia and AWS have built one of the great growth engines of the AI era, and demand is running ahead of every forecast.” The ledger links e4389 to v2, v4, v5 and v10.",
+  "rule": "D207, D259 and D360 specify one narrowest existing home for daily filing.",
+  "mechanism": "B returns four existing-question links, including both broad company revenue and narrower questions, and build_handover preserves them."
+ },
+ {
+  "seq": 1259,
+  "lane": "drop",
+  "class": "helpful-evidence-dropped",
+  "severity": "serious",
+  "evidence": "1259.json: “SWI Group … has announced that it has become a member of the NVIDIA Cloud Partner (NCP) program as a Preferred Partner.” The article also says it plans to deploy NVIDIA GPUs in its AI factories. Handover drops the passages as “no existing question linked”.",
+  "rule": "Standard §5.1 and D240 keep relevant named-party actions even without an amount; D209 requires missed helpful drops to be identified.",
+  "mechanism": "B produces passages but gives them no existing-question link, so the handover drops the new partner action and its stated deployment plan instead of filing the demand evidence."
+ },
+ {
+  "seq": 1260,
+  "lane": "B",
+  "class": "unhelpful-revenue-share-link",
+  "severity": "minor",
+  "evidence": "1260.json: “As of June 30, the company held $63.44 billion in public stock across eight positions as shown below.” B links it to v81, “What share of NVIDIA’s FY2028 revenue will come from customers it has financed in some way?”",
+  "rule": "Standard §5.1 and D259 require a statement to bear on the linked question through an identifiable path.",
+  "mechanism": "B treats the total value of a mixed investment portfolio as evidence for a future share of revenue from financed customers. The total does not identify customer financing or the revenue share."
+ },
+ {
+  "seq": 1263,
+  "lane": "B",
+  "class": "unhelpful-evidence",
+  "severity": "serious",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1263.json, e3: “The next day she toured the Beijing robot exhibition, drawing onlookers the way her father does on his Asia trips, watching robots do flying kicks and stopping by the booths of Chinese companies built on Nvidia technology.” Filed under v2, NVIDIA FY2027 total revenue.",
+  "rule": "docs/prd/05-extraction-standard.html §5.1 and §5.3: keep statements an analyst would note for a question; background without a connection to its answer is not evidence.",
+  "mechanism": "B treated a visit to an exhibition as a revenue driver without showing how the visit changes NVIDIA's revenue."
+ },
+ {
+  "seq": 1263,
+  "lane": "B",
+  "class": "weak-period-link",
+  "severity": "minor",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1263.json, e2: “But Jensen Huang expects it to grow ten-fold within a decade.” Filed under v72, NVIDIA FY2028 total revenue.",
+  "rule": "docs/prd/05-extraction-standard.html §5.1 and D259: evidence must have a logical connection to the answer; distant forecasts may be retained but their weight is judged separately.",
+  "mechanism": "B linked a decade-long physical-AI forecast to next year's company-wide revenue without a trajectory for that year. It is at most a weak indication of longer-term opportunity."
+ },
+ {
+  "seq": 1265,
+  "lane": "B",
+  "class": "invented-statement-date",
+  "severity": "serious",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1265.json: “Colette Kress, Nvidia's chief financial officer, told analysts the company expects revenue growth of 70% in its 2028 financial year” and “Huang said demand was much greater than 70%”; both records set original_day to “2026-08-27”.",
+  "rule": "docs/prd/05-extraction-standard.html §2 and D220: preserve the original statement day; leave it unknown when the article does not state it.",
+  "mechanism": "B appears to have used the August 27 share-price move as the day of both remarks, although the article does not say they were made that day."
+ },
+ {
+  "seq": 1266,
+  "lane": "A",
+  "class": "missed-annual-revenue-question",
+  "severity": "serious",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1266.json: “The company guided to $3.15 billion for Q3 revenue, and increased their fiscal 2027 and fiscal 2028 revenue expectations to approximately $12 billion and $18 billion.” A returned “questions”: [].",
+  "rule": "docs/prd/05-extraction-standard.html §3 A and §4: an important company-wide annual business quantity can merit its own question when its outcome can move independently of existing questions; company quantities use this or next fiscal year.",
+  "mechanism": "A did not propose tracking Marvell's annual revenue despite the article's two explicit annual expectations. The open NVIDIA accelerator-share question v82 does not settle Marvell's revenue."
+ },
+ {
+  "seq": 1266,
+  "lane": "B",
+  "class": "broader-question-also-linked",
+  "severity": "serious",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1266.json, e5: “Broadcom's fiscal Q2 AI semiconductor revenue grew 143% year-over-year to reach $10.8 billion … Broadcom projects $16 billion for its Q3 AI semiconductor revenue”. The writer linked it to both v2, NVIDIA total revenue, and v82, NVIDIA's accelerator-market share.",
+  "rule": "docs/prd/05-extraction-standard.html §5.1 and the filing rule in D207: use the narrowest connected question; do not also file the same competition evidence under a broader company-wide revenue question.",
+  "mechanism": "B returned both links, and the handover retained them because the existing narrowing check did not recognise these two questions as a broader and narrower pair."
+ },
+ {
+  "seq": 1266,
+  "lane": "matching",
+  "class": "different-facts-marked-repeat",
+  "severity": "serious",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1266.json, e5: “Broadcom projects $16 billion for its Q3 AI semiconductor revenue”; Jev marked the whole passage repeat of e808, whose stored quote says “AVGO printed $10.8 billion in AI semiconductor revenue last quarter, up 143%”.",
+  "rule": "docs/prd/05-extraction-standard.html §2 and D202/D204: distinguish the same statement from an additional or revised statement; retain each source record and its relationship faithfully.",
+  "mechanism": "Jev matched the shared Q2 figure and labelled the entire passage a repeat even though it also contains a separate Q3 forecast. The writer stores both records, but their repeat relationship misdescribes the new information."
+ },
+ {
+  "seq": 1266,
+  "lane": "matching",
+  "class": "different-facts-marked-repeat",
+  "severity": "serious",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1266.json, e6: “Revenue for Q2 grew by 50 percent to $11.54 billion, with Data Center revenue more than doubling to $6.72 billion. Management projects Q3 revenue at $13 billion”; Jev marked it repeat of e3072: “AMD’s data centre revenue more than doubled last quarter to $6.7bn.”",
+  "rule": "docs/prd/05-extraction-standard.html §2 and D202/D204: a repeat relationship must describe the same statement, not erase distinctions between additional figures and guidance.",
+  "mechanism": "Jev matched the overlapping Data Center figure and treated a passage containing total revenue and separate Q3 guidance as the same statement. The writer retains both records, but the relationship is misleading."
+ },
+ {
+  "seq": 1267,
+  "lane": "B",
+  "class": "missed-deal-development",
+  "severity": "serious",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1267.json: “In early negotiations, Nvidia had planned to spend billions of dollars to purchase licenses for some of Perplexity's technology and absorb some of its employees. But the talks ultimately pivoted toward a more conventional equity investment path.” B did not return this passage for v62, the pending Perplexity equity investment.",
+  "rule": "docs/prd/05-extraction-standard.html §5.1: retain a named party's reported action or change in a pending arrangement when it helps assess an open question; preserve uncertainty.",
+  "mechanism": "B captured the financing-round valuation but missed the reported change in the negotiations' structure, which helps explain the proposed equity transaction."
+ },
+ {
+  "seq": 1268,
+  "lane": "record_preparation",
+  "class": "non-standalone-summary",
+  "severity": "minor",
+  "evidence": "traces/split-v2-confirm-first100-2026-11-05/1268.json, e1: the source gives “operating income … $8.8 billion” and margin “35.6% from 20.7%”; the stored one_line says only “The Q2 operating income and margin expansion support the possibility of a higher FY2026 margin, though the quarter does not establish the full-year result.”",
+  "rule": "docs/prd/05-extraction-standard.html §2: evidence needs a standalone summary of the statement, alongside the quote and provenance.",
+  "mechanism": "A's what_it_shows interpretation was copied into the stored summary without the reported figures. The exact figures remain in the quote and are available to the judge."
+ },
+ {
+  "seq": 1270,
+  "lane": "B",
+  "class": "unhelpful-evidence",
+  "severity": "serious",
+  "evidence": "1270.json: “Residents will save $15 a month because of the growth, an amount negotiated up from $8.” B links it to v4, v5 and v16.",
+  "rule": "Signed standard §5.1 and §5.3: evidence must help answer the question; unrelated details are not kept.",
+  "mechanism": "B files a local electricity-customer benefit under questions about four hyperscalers’ spending and compute capacity without a connection to those outcomes."
+ },
+ {
+  "seq": 1270,
+  "lane": "B",
+  "class": "unhelpful-evidence",
+  "severity": "serious",
+  "evidence": "1270.json: “The amount of money paid and the amount of relief given to residents will remain unchanged should the project be delayed or canceled.” Also: “OpenAI will be charged with the cost of installing the power grid it will use to operate.” Both are linked to v4, v5 and v16.",
+  "rule": "Signed standard §5.1 and §5.3; D259: an indirect link must make the answer to the question more or less likely.",
+  "mechanism": "B files contract terms about OpenAI and local electricity customers under the four named hyperscalers’ spending and capacity questions without showing how the terms affect those questions."
+ },
+ {
+  "seq": 1270,
+  "lane": "B",
+  "class": "unhelpful-evidence",
+  "severity": "serious",
+  "evidence": "1270.json: “The deal commits OpenAI to 3.1 gigawatts, about 14% of Georgia Power’s total capacity” is linked to v4, v5 and v16; the approval of the same OpenAI contract is also linked to v60.",
+  "rule": "Signed standard §5.1 and D250 boundary 2: another party’s information needs a discernible path to the question it is filed under.",
+  "mechanism": "The output treats an OpenAI power commitment as evidence for spending, spending growth and compute capacity of other companies; the article does not establish their participation or quantify an effect on them."
+ },
+ {
+  "seq": 1271,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1271.json: A and B both quote “the headline PCE price index rose to 3.7% year-on-year in July”; _ledger.json stores the same reading as e4423 for v86 and e4425 for v77.",
+  "rule": "Signed standard §2: one statement in one article is one evidence record, which may link to relevant questions.",
+  "mechanism": "A and B independently return the same reading, and split_seven_day_poc.py build_handover appends their evidence separately without reconciling the shared statement."
+ },
+ {
+  "seq": 1271,
+  "lane": "judging",
+  "class": "unsupported-precision",
+  "severity": "serious",
+  "evidence": "1271.json v86: “About 3.4% year over year in December 2026: carrying forward July's 0.2% month-on-month increase implies a roughly 2.4% annualized monthly pace ... the evidence does not provide the prior-year monthly comparison needed for a precise calculation.”",
+  "rule": "Signed standard §5.4 and §7: preserve the limits of evidence and support the conclusion it is used for.",
+  "mechanism": "The judgement selects a specific December year-over-year rate and outcome from one monthly change, although it acknowledges that the prior-year comparisons needed for the calculation are missing."
+ },
+ {
+  "seq": 1273,
+  "lane": "record_preparation",
+  "class": "inverted-revenue-ladder",
+  "severity": "blocker",
+  "evidence": "1273.json v87: “Strongly bullish: FY2026 AI-related semiconductor revenue is below $18 billion” and “Strongly bearish: FY2026 AI-related semiconductor revenue is at least $24 billion.”",
+  "rule": "split_seven_day_poc.py META_SYSTEM requires a company outcome’s labels to mean good or bad for the business; signed standard §4 requires meaningful outcomes.",
+  "mechanism": "Record preparation reverses the business meaning of the revenue ranges. The ladder and numeric-bound checks accept the ordered labels and partition without detecting that inversion."
+ },
+ {
+  "seq": 1273,
+  "lane": "judging",
+  "class": "lower-bound-treated-as-point",
+  "severity": "serious",
+  "evidence": "1273.json v87: the source says revenue “could exceed $20 billion”; the judgement says the evidence supports “an outcome just over the guidance threshold” and chooses $20 billion to below $22 billion.",
+  "rule": "Signed standard §5.4 and §7: preserve the limits of a statement and support the conclusion drawn from it.",
+  "mechanism": "The judgement turns an open-ended forecast into a bounded outcome without evidence establishing that revenue is more likely to remain below $22 billion."
+ },
+ {
+  "seq": 1275,
+  "lane": "matching",
+  "class": "same-article-evidence-duplicated",
+  "severity": "serious",
+  "evidence": "1275.json: A and B both quote “2026 capex $60–$64B”; _ledger.json stores e4432 under v88 and e4436 under v79.",
+  "rule": "Signed standard §2: one statement in one article is one evidence record, which may link to relevant questions; D259 permits the same answer’s own candidate alongside an existing question.",
+  "mechanism": "A and B use the same prior library and their outputs are appended independently, so the writer receives two records for the same statement."
+ },
+ {
+  "seq": 1275,
+  "lane": "B",
+  "class": "weak-future-period-link",
+  "severity": "serious",
+  "evidence": "1275.json: “6nm Xring O100 NPU for on-device LLMs (planned next year), and 3nm Xring D100 for AVs (planned next year)” is filed under v79, TSMC’s FY2026 total-revenue question; B notes that the article “does not specify orders or revenue for these planned chips.”",
+  "rule": "Signed standard §5.1 and D259: a driver must make the linked outcome more or less likely; D250 boundary 2 requires a discernible path for another company’s activity.",
+  "mechanism": "B links a customer’s next-year product plans to the current-year revenue question without identifying a current-year order, shipment or revenue effect."
+ },
+ {
+  "seq": 1275,
+  "lane": "matching",
+  "class": "unsupported-repeat",
+  "severity": "serious",
+  "evidence": "1275.json marks “Q2 sales +$40.2B” as repeat of e4310. B dates that statement “Q2 2025”; _ledger.json e4310 reports “Q2 2026” revenue of NT$1.2 trillion.",
+  "rule": "D202 and D204: a repeat is a matching opinion about the same statement, while both source records remain stored; signed standard §5.4 preserves period and quantity.",
+  "mechanism": "Jev labels the two statements same_statement at 0.77 despite the periods recorded in the trace differing. The article’s period is ambiguous, so the available text does not establish that they are the same statement."
+ },
+ {
+  "seq": 1275,
+  "lane": "judging",
+  "class": "guidance-boundary-mismatch",
+  "severity": "minor",
+  "evidence": "1275.json v88: the judgement says “TSMC’s FY2026 guidance is $60–$64 billion, which is rung 3”; rung 3 is “at least $60,000,000,000 and below $64,000,000,000,” while rung 4 starts at $64 billion.",
+  "rule": "Signed standard §5.4 preserves the source’s limits; META_SYSTEM requires each numeric upper bound to be exclusive.",
+  "mechanism": "The judgement treats the entire stated guidance range as belonging to rung 3 even though its $64 billion endpoint falls in rung 4."
+ }
+]

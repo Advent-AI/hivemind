@@ -1,0 +1,15 @@
+**还不能开始付费运行：来源核对和阅读材料各有一项严重缺口。** 例如，两次 split 运行使用了不同版本的同一提示词，只要它们之间排着一次 control，评分检查就可能放过。
+
+| 第五轮问题 | 状态 | 依据 |
+|---|---|---|
+| 回答格式检查 | **已解决** | [preflight_split.py 第 53 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:53)检查重放回答的格式；[第 153 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:153)拒绝没有检查对象的情况。 |
+| 评分材料与运行时不一致 | **部分解决** | [bench_measure.py 第 131 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:131)拒绝缺少记录的运行，也核对评分文件；但运行之间的比较仍有缺口，见下方。 |
+| 新运行复用旧回答 | **已解决** | [bench_run.py 第 148 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:148)禁止在线导入存档，[第 160 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:160)拒绝跨离线、在线模式续跑；评分也拒绝含离线记录的窗口运行。 |
+| 遗漏的阅读材料 | **部分解决** | [bench_traces.py 第 53 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:53)开始核对各阶段的回答数，但还不能可靠指出每一段或每次空回答，见下方。 |
+
+1. **严重：共同使用的文件没有在每两次运行之间核对。** [bench_measure.py 第 143 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:143)只比较输入顺序中相邻的两次运行。若顺序是 split、control、split，而两次 split 固定了不同版本的 split 专用提示词，两次相邻比较都看不到差异，因为 control 没固定这个文件；评分仍会称核对通过。内存中的例子复现了这一点。**修复：**对每个文件比较所有固定了它的运行，不依赖运行的排列顺序。
+
+2. **严重：空回答和缺失段仍可能没有未读标记。** [bench_traces.py 第 54 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:54)只数该阶段有回答的调用，没有将调用对应到具体段，也没有单独标记 split 的空回答。我用一段文章的内存例子核对：A 先留下一个空回答，之后得到一个有效回答，B 也有回答；结果保留了 `null`，却没有 `UNREAD`。实际代码确实会在无法解析回答时留下空记录，见 [model.py 第 227 行](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/model.py:227)。重复或被拒的回答也可能让总数掩盖另一段缺失，影响读者判断漏掉事实的原因。**修复：**逐段、逐阶段对应调用，并按设计标出每个没有回答的调用。
+
+`benchmark-design.sha256` 中 **11 个文件全部核对通过**。本轮没有付费调用，也没有修改文件。
+

@@ -1,0 +1,1660 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>拆分观点和证据 · POC</title><style>*{box-sizing:border-box}body{font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f6f2;color:#172825;margin:0}main{max-width:1360px;margin:auto;padding:36px 26px 100px}h1{font-size:34px;line-height:1.2;margin:12px 0}h2{font-size:25px;margin:36px 0 12px}h3{font-size:21px;margin:0}.lead{font-size:19px;color:#50615b;max-width:960px}.tag{display:inline-block;border-radius:30px;background:#dcebe0;color:#2d6244;padding:4px 12px;font-weight:700}.card,.case{background:#fff;border:1px solid #dde5de;border-radius:16px;padding:22px;margin:14px 0}.warning{background:#fff8e6;border-left:5px solid #c48a25}.flow{display:grid;grid-template-columns:1fr 1fr;gap:14px}.box{border:1px solid #cbdad1;border-radius:12px;background:#eff6f0;padding:18px}.shared{grid-column:span 2;text-align:center;background:#e1eee6}.arrow{grid-column:span 2;text-align:center;font-size:24px;color:#64816f;line-height:1}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.arm{border:1px solid #e1e8e1;border-radius:12px;padding:15px;min-width:0}.arm h4{margin:0;font-size:17px}.meta,small{color:#65746d}.ev,.question{border-top:1px solid #e6ece6;padding:12px 0}.ev p,.question p{margin:5px 0}.evtop{display:flex;justify-content:space-between;gap:8px;font-size:13px}.evtop span{color:#397051}blockquote{margin:8px 0;border-left:3px solid #c2d4c5;padding-left:10px;color:#64736b;font-size:13px}details{margin:10px 0}summary{cursor:pointer;color:#28634e;font-weight:650}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6f3;border-radius:8px;padding:14px;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.case-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}.number{font-size:13px;color:#38745b;font-weight:800}.takeaway{background:#f0f6f0;padding:13px;border-radius:8px}.case>details>summary{font-size:18px}a{color:#256b51}@media(max-width:900px){.three,.flow{display:block}.box,.arm{margin:10px 0}main{padding:20px 15px}.arrow{margin:8px}}</style><main><span class="tag">真实 POC · 2026-11-05 · 每组各跑一次</span><h1>把新观点和已有观点的证据分开</h1><p class="lead">同一篇文章、同一份最新题库，交给两条同时运行的 prompt。下面可以逐篇看原文、模型原始回答、保留下来的证据和被丢掉的内容。</p><div class="card warning"><b>目前的结论：拆分值得继续研究，但这次不能证明更好。</b>微软的全年收入新问题在拆分版里漏了；已有问题的证据有找得更完整的例子，也有遗漏和关联不清楚的例子。4 篇文章、每组 1 次，只是诊断。还没有跑真实的匹配、写入和最终判断。</div><h2>流程怎么走</h2><div class="flow"><div class="box shared"><b>同一篇真实文章 + 文章到来前的已有问题快照</b><br>两路看到完全相同的输入；不带 22 个预设题，也不额外导入财报。</div><div class="arrow">↓ 同时开始 ↓</div><div class="box"><b>A · 找新观点</b><p>找题库没有的新问题，并把这篇文章里能支持或反驳它的证据一起带出来。</p></div><div class="box"><b>B · 找旧观点的证据</b><p>只找能支持或反驳已有问题的文章信息，不创建问题。</p></div><div class="arrow">↓ 两路完成后汇合 ↓</div><div class="box shared"><b>按各自编号检查原文、保留关联，再并排展示</b><br>重复原句只标为可能重叠，不偷偷合并。真正的匹配、入库和判断还没在这个 POC 中验证。</div></div><div class="card"><b>为什么 A 一定要带证据？</b> B 开始时看不到 A 刚创建的问题；如果 A 只提问题，不带文章证据，那些证据可能没有地方去。</div><h2>测试发现</h2><div class="card warning"><b>需要处理的编号风险：</b>一次真实输出把新问题编号为 n1。现有 handover 代码有一处只按 c+数字识别新问题。用这次输出构造失败场景时，问题被丢掉后，证据仍可能指向不存在的 n1；本次真实输出中的 n1 仍然存活，未实际出现这条失败。它说明接入生产前需要修好并验证，而不是说此次已写入错误数据。</div><div class="card"><b>测试条件：</b>4 篇历史文章；单 prompt 4 次，两个并行 prompt 各 4 次。每次是一轮。题库从过去测试记录中重建到文章到来之前，每篇 69 个问题，属于实验配置；生产当前不一定这样读取。微软文章上游只标了 AI 资本开支，本实验为三组统一补了 MSFT 标签。文章及日期来自保存的数据，未另行核实原始报道。<a href="independent-review.md">查看独立逐条复核</a>。</div><h2>逐篇看原文和输出</h2><article class="case"><div class="case-head"><span class="number">01</span><h3>Microsoft stock pushes toward record levels as AI cloud growth and new partnership fuel momentum</h3></div><p class="takeaway">单 prompt 开了 FY2027 总收入问题，但季度总收入及下一季度收入指引均因没有关联问题而丢弃。新观点 prompt 开了 Azure 收入问题并保留两条 Azure 证据，但没有开总收入问题；旧观点 prompt 找到一条资本开支信息。</p><p class="meta">文章 ID gnews:d144b91986c520ea36e718cf · 历史处理序号 1229 · 快照 69 个问题</p><details><summary>查看完整文章原文</summary><pre>Microsoft stock pushes toward record levels as AI cloud growth and new partnership fuel momentum
+Sie befinden sich hier: Startseite &gt; Börse &gt; Corporate News &gt; Microsoft stock pushes toward record levels as AI cloud ...
+Published on 08/29/2026 at 07:12 | Editorial responsibility: Rafael Müller, Editor-in-Chief AD HOC NEWS
+Microsoft stock continues its post-earnings advance, with strong fiscal Q4 2026 cloud and AI metrics and a fresh multi-year AI partnership helping drive shares toward the $515 mark.
+Microsoft Corporation (US5949181045) Börsen-Editorial: Monitor mit SOFTWARE, CLOUD, AI und NASDAQ-Charts im Dunkel, Illustration mit AI erstellt.
+Microsoft Corp. (US5949181045) stock is pushing toward record territory in late August 2026, supported by strong fiscal fourth-quarter earnings and accelerating demand for the company’s AI-driven cloud services as of August 29, 2026.
+Recent reporting on market data shows Microsoft shares trading in the low-$510s to mid-$510s range, after the stock climbed 1.68% on August 28, 2026, and traded at $515.30 intraday on August 29, 2026, on the Nasdaq.
+The latest leg of the move comes on the back of Microsoft’s fiscal fourth-quarter 2026 results for the period ended June 30, 2026, which delivered double-digit growth in revenue and profits and clear evidence that its AI strategy is translating into tangible cloud and software demand.
+AI-fueled earnings beat in fiscal Q4 2026
+The core fundamental driver behind the current strength in Microsoft stock is the company’s fiscal fourth-quarter 2026 earnings release covering the three months ended June 30, 2026.
+An earnings breakdown summarizing the official release indicates that Microsoft generated Q4 fiscal 2026 revenue of $90.01 billion, up from $76.44 billion in the same quarter a year earlier, representing an 18% year-over-year increase and a revenue beat of $2.39 billion versus consensus expectations of $87.62 billion. The detailed earnings summary also notes that non-GAAP diluted earnings per share reached $4.74 in the quarter, rising from $3.86 in fiscal Q4 2025, a 23% increase.
+Further analysis of the quarter shows that Microsoft’s cloud and AI businesses were central to this performance. According to a fundamentals overview, Microsoft Cloud revenue climbed 27% in fiscal Q4 2026 to $59.3 billion, while Intelligent Cloud revenue rose 32% to $39.3 billion in the same period. One recent analysis highlights that Azure and other cloud services revenue increased 43% year-over-year in fiscal Q4 2026, helping the company cross $100 billion in annual Azure revenue for the first time and driving a commercial backlog that reached $678 billion.
+These figures underscore how AI-related workloads are now a key growth engine for Microsoft. In fiscal Q4 2026, Productivity and Business Processes revenue increased 14% to $37.8 billion, while More Personal Computing revenue declined 4% to $12.9 billion, showing that cloud and productivity software are increasingly shaping the company’s earnings profile.
+On the bottom line, Microsoft’s net income surged 31% in fiscal Q4 2026 to $35.8 billion, while GAAP diluted earnings per share reached $4.81, 32% above the prior-year quarter’s value, reflecting both operational strength and favorable impacts from investment-related gains.
+Microsoft’s cash generation remains robust. In fiscal Q4 2026, the company produced $19.6 billion in free cash flow, while cash and cash equivalents stood at $20.9 billion at June 30, 2026, with short-term investments of $55.9 billion, giving the company ample financial flexibility to fund AI infrastructure, acquisitions, and shareholder returns.
+Guidance and analyst expectations point to sustained growth
+Looking ahead, management guidance and external consensus figures suggest that Microsoft expects the AI and cloud momentum to carry into fiscal 2027.
+For the fiscal first quarter of 2027, management projects revenue in a range of $89.85 billion to $90.95 billion, indicating that quarterly revenue is expected to remain around the $90 billion mark even after the strong fiscal Q4 2026 performance. The same guidance overview reports that Azure growth is anticipated to be about 45% in constant currency in fiscal Q1 2027, reinforcing the view that cloud and AI workloads will continue to drive top-line expansion.
+On a full-year basis, analysts currently expect fiscal 2027 revenue of 391.1 billion dollars, compared with reported fiscal 2026 revenue of 331.8 billion dollars, implying year-over-year growth of roughly 18%, in line with the pace seen in the latest quarter.
+Consensus for fiscal 2027 adjusted earnings per share stands at $19.59, and current Wall Street estimates point to a continued double-digit expansion in profitability that helps justify Microsoft’s premium valuation multiples.
+Valuation metrics based on recent market data show Microsoft trading at 28.14 times trailing GAAP earnings and 11.31 times trailing sales. While these multiples are elevated versus many traditional software peers, the market appears willing to pay for Microsoft’s scale, recurring revenue base, and demonstrated ability to monetize AI across cloud, productivity software, and developer tools.
+Assessments using proprietary intrinsic-value measures indicate that Microsoft shares around the low-$510s to mid-$510s are modestly below a modeled fair value of $579.76 per share, suggesting that, at current prices, the stock trades with a modest discount to one widely followed fair-value estimate.
+Longest winning streak of 2026 and AI partnership catalyst
+Market performance data show that Microsoft shares have recently notched their longest winning streak of 2026, extending gains to six consecutive sessions through August 28, 2026, as strong Azure growth and new AI initiatives helped ease prior concerns about the impact of AI-related capital spending on margins.
+During this streak, Microsoft shares rose 1.75% on August 27, 2026, followed by a 1.68% gain on August 28, 2026, taking the stock into the $513 to $514 price range and marking a recovery of nearly 50% from a low reached in June 2026. A recent market performance article attributes part of this latest move to a newly announced multi-year AI partnership with HUMAIN, a Saudi Arabian entity focused on AI development.
+The HUMAIN partnership, announced on August 27, 2026, is designed to extend Microsoft’s Azure Foundry and Microsoft 365 Copilot offerings to support Arabic-language AI models and solutions. This initiative fits into Microsoft’s broader strategy to position Azure as the default platform for AI workloads across regions and languages, and it adds another potential revenue stream from customized AI deployments in the Middle East.
+Investors have also reacted positively to the fact that Microsoft did not materially raise its data center spending guidance for the year alongside its fiscal Q4 2026 results, in contrast with some other AI infrastructure providers that have substantially lifted capital expenditure plans. That restraint suggests Microsoft aims to scale AI infrastructure in a disciplined way, balancing growth opportunities with margin preservation.
+Sector-wide performance offers additional context. Recent US market coverage notes that, as of August 28, 2026, major US stock indices closed lower, with the S&amp;P 500 down modestly, even as large technology companies mostly gained. Microsoft rose 1.68% on that date, while other large-cap tech names such as Apple, Alphabet, and Meta also advanced, indicating that investors continue to favor leading AI and cloud platforms despite broader market volatility.
+The combination of a record backlog of $678 billion in commercial cloud commitments and multiple new AI partnerships, including the HUMAIN deal, strengthens the narrative that Microsoft’s future revenue streams are increasingly tied to long-duration AI and cloud contracts.
+Cloud, AI, and productivity products as growth engines
+At the product level, Microsoft’s AI-enhanced cloud and productivity offerings are central to the company’s growth story and help explain why recent market data show shares trading close to their 52-week high.
+One flagship product that embodies Microsoft’s AI strategy is Microsoft 365 Copilot, the company’s AI assistant integrated into Word, Excel, PowerPoint, Outlook, and Teams. Microsoft’s investor and product materials describe how Microsoft 365 Copilot uses large language models connected to organizational data to help users draft documents, analyze spreadsheets, create presentations, and manage communications more efficiently.
+In the fiscal Q4 2026 period, Productivity and Business Processes revenue, which includes Office Commercial and Office Consumer, rose 14% to $37.8 billion, providing quantitative evidence that AI-enhanced productivity products such as Microsoft 365 Copilot are contributing to segment growth.
+On the cloud side, Azure’s 43% revenue growth in fiscal Q4 2026 and Microsoft Cloud’s 27% overall revenue increase to $59.3 billion demonstrate that enterprises are increasingly deploying AI workloads and mission-critical applications on Microsoft’s infrastructure.
+The HUMAIN partnership deepens this trend by bringing Azure Foundry and Microsoft 365 Copilot into new geographies and language contexts, expanding the addressable market for Microsoft’s AI stack.
+For developers, Azure provides tools and services for building, training, and deploying AI models, while GitHub and GitHub Copilot further embed AI into coding workflows, giving Microsoft a multi-layered presence across the AI value chain.
+Closing view on Microsoft stock and current market level
+As of intraday trading on August 29, 2026, recent quote data indicate that Microsoft stock traded at $515.30 on the Nasdaq, up $10.24 or 2.03% on the day, as investors continued to digest the company’s strong fiscal Q4 2026 earnings and AI announcements.
+The shares have climbed 30% in the past month according to recent performance commentary, and they are up more than 31% over the past six months, reflecting a sustained rerating as markets price in higher long-term AI and cloud growth.
+For investors, the key current numbers are the fiscal Q4 2026 revenue of $90.01 billion, the 23% year-over-year increase in non-GAAP diluted EPS to $4.74, and the 43% growth in Azure and other cloud services revenue, all of which indicate that Microsoft’s AI-first strategy is delivering both top-line expansion and profitability improvements.
+With management guiding for fiscal Q1 2027 revenue between $89.85 billion and $90.95 billion and Azure growth of about 45% in constant currency, the latest earnings cycle suggests that Microsoft’s AI and cloud momentum is likely to remain a central theme for the stock in coming quarters.
+More on Microsoft stock and its AI-powered growth trajectory is available in the detailed earnings and market performance analyses referenced above.
+Microsoft 365 Copilot showcases AI productivity
+Microsoft 365 Copilot stands out as a representative product for Microsoft’s AI strategy, bringing generative AI capabilities to the company’s core productivity suite.
+The product integrates large language models with Microsoft Graph and Microsoft 365 apps, enabling business users to draft emails, summarize documents, generate presentations, and analyze data using natural-language prompts.
+By embedding Copilot into widely used applications such as Word, Excel, PowerPoint, and Teams, Microsoft aims to make AI a daily tool for knowledge workers and to deepen customer engagement with its subscription-based productivity offerings.
+Fiscal Q4 2026 segment data, including the 14% revenue increase in Productivity and Business Processes to $37.8 billion, suggest that AI enhancements to Microsoft 365 and related services are contributing to the company’s growth in this area.
+Microsoft stock price level as of August 29, 2026
+Based on recent market data for August 29, 2026, Microsoft stock traded at $515.30 on the Nasdaq as of 12:25 p.m. Eastern time, with the move reflecting continued investor enthusiasm for the company’s AI and cloud trajectory.
+At this price, Microsoft shares are trading close to their 52-week high and modestly below one modeled intrinsic value estimate of $579.76 per share, with fiscal Q4 2026 revenue growth of 18% and Azure revenue growth of 43% providing the fundamental backdrop for the valuation.
+Price (as of August 29, 2026, 12:25 p.m. ET): $515.30 USD
+Market cap: Data based on recent sources indicating valuation in the multi-trillion-dollar range as of late August 2026
+Index membership: S&amp;P 500, Dow Jones Industrial Average, Nasdaq-100</pre></details><details><summary>查看这篇文章看到的完整题库</summary><pre>v1 | Will NVIDIA enter at least one publicly verifiable binding financial guarantee or unsold-capacity purchase commitment under the AI Compute Partnership by 2027-01-31?
+v2 | What will NVIDIA report as total revenue for FY2027?
+v3 | Will the Chinese government permit NVIDIA H200 sales in China by 2026-12-31?
+v4 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026?
+v5 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2027?
+v6 | What gross margin will NVIDIA report for FY2027?
+v7 | What revenue will NVIDIA report from stand-alone CPUs for FY2027?
+v8 | Will NVIDIA launch its Rubin Ultra high-density rack design by 2027-12-31?
+v9 | Will NVIDIA release the Kyber rack-scale architecture by 2028-12-31?
+v10 | What Data Center segment revenue will NVIDIA report for FY2027?
+v11 | Will China formally authorize H200 imports for the named AI companies by 2027-01-31?
+v12 | Will NVIDIA complete the reported purchase of about US$500 million of Firmus preference shares by 2026-12-31?
+v13 | What profit will NVIDIA report for FY2027?
+v14 | Will China formally permit selected companies, including Alibaba Group Holding, to purchase Nvidia H200 chips by 2027-01-31?
+v15 | Will the French competition authority conclude its antitrust investigation into NVIDIA by 2027-01-31?
+v16 | How much incremental compute capacity will Google, Amazon, Microsoft, and Meta add in calendar 2027?
+v17 | Will the US Commerce Department issue a binding rule or other binding restriction implementing its May 2026 guidance on advanced AI-chip transfers to overseas subsidiaries of Chinese companies by 2027-01-31?
+v18 | By 2027-01-31, will NVIDIA ship Rubin GPUs for Noetra’s planned Japan AI factory deployment?
+v19 | Will NVIDIA launch any of the GeForce RTX 50 SUPER models by 2027-01-31?
+v20 | Will NVIDIA begin sampling its Vera Rubin platform by 2026-12-31?
+v21 | Will NVIDIA begin shipping Vera Rubin systems to customers by 2026-12-31?
+v22 | Will NVIDIA launch DLSS 5 by 2026-12-31?
+v23 | Will the U.S. Senate approve the Remote Access Security Act by 2027-01-31?
+v24 | What revenue will NVIDIA report from stand-alone server CPUs for calendar 2026?
+v25 | What operating margin will NVIDIA report for FY2027?
+v26 | Will NVIDIA complete its planned $1 billion investment in NAVER by 2027-01-31?
+v27 | Will the U.S. government formally adopt a ban on Chinese AI models by 2027-01-31?
+v28 | Will SK Telecom&#x27;s first AI data center in South Korea enter service by 2027-12-31?
+v29 | Will NVIDIA enter a publicly verifiable binding purchase commitment for memory supply with SK Hynix by 2027-01-26?
+v30 | How much capital expenditure will NVIDIA report for FY2027?
+v31 | Will Nvidia enter a publicly verifiable binding guarantee or backstop for OpenAI&#x27;s Ohio data center lease or construction debt by 2027-01-27?
+v32 | Will NVIDIA enter a publicly verifiable binding financing arrangement for OpenAI&#x27;s purchase of NVIDIA AI chips by 2027-01-27?
+v33 | Will NVIDIA enter a publicly verifiable binding financing obligation for OpenAI data centers by 2027-07-27?
+v34 | Will NVIDIA enter a publicly verifiable binding equity investment in Safe Superintelligence by 2027-01-27?
+v35 | Will the U.S. government formally adopt a restriction on access to Chinese open-source AI models by 2027-01-31?
+v36 | Will NVIDIA launch its Rosa CPU as part of the Feynman data center platform by 2028-12-31?
+v37 | Will NVIDIA enter a publicly verifiable binding lease commitment for the Hut 8 Texas data center by 2027-01-28?
+v38 | Will Taiwan’s government adopt its own restrictions on AI-chip sales to China by 2027-01-31?
+v39 | Will the U.S. administration formally adopt a ban on open-weight AI models from China by 2027-01-31?
+v40 | Will the federal authority allocate access to the government-controlled power supply for the southern Ohio data-center site by 2027-01-31?
+v41 | Will the U.S. Commerce Department publish its framework for reviewing the safety of cutting-edge AI models by January 31, 2027?
+v42 | Will the U.S. Commerce Department make a public decision allocating power access at the Pike County, Ohio data-center site by 2026-12-31?
+v43 | Will NVIDIA enter a publicly verifiable binding lease for the 5853 Rue Ferrari building by 2027-01-29?
+v44 | Will U.S. Commerce Secretary Howard Lutnick approve the final arrangement for the Pike County, Ohio data-center campus by 2027-01-31?
+v45 | Will Taiwan formally adopt a criminal ban on all AI-chip exports to China by 2027-01-31?
+v46 | Will the U.S. Department of Commerce conclude its investigation into Chinese firms&#x27; access to advanced U.S. chips by 2027-01-31?
+v47 | Will NVIDIA enter a publicly verifiable binding equity investment in Kawasaki Heavy Industries’ shipbuilding business by 2027-01-30?
+v48 | Will the U.S. administration formally decide to prohibit Chinese open-weight AI models by 2027-01-31?
+v49 | Will the Commerce Department formally adopt a measure restricting Chinese AI developers’ access to Nvidia-powered computing capacity hosted outside China by 2027-01-31?
+v50 | Will NVIDIA enter a publicly verifiable binding funding obligation as part of the reported $500 billion AI infrastructure financing partnership by 2027-08-10?
+v51 | Will NVIDIA enter a publicly verifiable binding equity investment in Lancium by 2027-02-16?
+v52 | Will NVIDIA complete its announced $1.5 billion investment in SB Energy by 2027-02-17?
+v53 | Will NVIDIA complete a publicly verifiable binding equity investment in Groq by 2027-08-17?
+v54 | Will the U.S. Senate pass the Remote Access Security Act by 2027-01-31?
+v55 | Will NVIDIA enter a publicly verifiable binding equity investment in Mercor by 2027-08-19?
+v56 | Will NVIDIA enter a publicly verifiable binding equity investment in Anthropic by 2027-08-19?
+v57 | Will NVIDIA ship its adapted LPU variant to Chinese clients by 2026-12-31?
+v58 | Will NVIDIA complete a publicly verifiable binding equity investment in Poolside by 2027-02-21?
+v59 | Will NVIDIA enter a publicly verifiable binding equity investment in Cloverleaf Infrastructure by 2027-08-21?
+v60 | What will the year-over-year growth rate in hyperscaler capital expenditure be in calendar 2027?
+v61 | Will the Groq 3 LPX rack deployment at Nebius be online by 2026-12-31?
+v62 | Will NVIDIA enter a publicly verifiable binding equity investment in Perplexity AI by 2027-08-24?
+v63 | Will NVIDIA enter a publicly verifiable binding obligation to pay Poolside $6 billion for a license by 2027-08-24?
+v64 | Will NVIDIA enter a publicly verifiable binding agreement to acquire Hugging Face by 2027-08-26?
+v65 | What networking revenue will NVIDIA report for FY2027?
+v66 | Will the U.S. administration formally decide to restrict support for applications or models built on Chinese-origin open-source foundation models by 2027-01-31?
+v67 | Will the U.S. administration formally announce new tariffs on semiconductors by 2027-01-31?
+v69 | Will NVIDIA enter a publicly verifiable binding equity investment in Bloom Energy by 2027-08-28?
+v70 | What year-over-year growth rate will NVIDIA report for total revenue in FY2028?</pre></details><div class="three"><section class="arm"><h4>单 prompt 对照</h4><p class="meta">原始抽取 13 条 · 检查后 2 条 · 新问题 1 个</p><div class="question"><b>新问题 c1</b><p>What total revenue will Microsoft report for FY2027?</p><small>关联证据：e10</small></div><div class="ev"><div class="evtop"><b>e10</b><span>关联：c1</span></div><p>Analysts estimated Microsoft FY2027 revenue at $391.1 billion, about 18% above reported FY2026 revenue.</p><blockquote>analysts currently expect fiscal 2027 revenue of 391.1 billion dollars, compared with reported fiscal 2026 revenue of 331.8 billion dollars, implying year-over-year growth of roughly 18%</blockquote><small>来源：ad-hoc-news.de · 原始发言人：Analysts · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>e13</b><span>关联：v4</span></div><p>Microsoft did not materially increase its data-center spending guidance alongside its FY2026 Q4 results.</p><blockquote>Investors have also reacted positively to the fact that Microsoft did not materially raise its data center spending guidance for the year alongside its fiscal Q4 2026 results</blockquote><small>来源：ad-hoc-news.de · 原始发言人：Microsoft · 原始日期：未写 · 类型：fact</small></div><details><summary>被丢掉或合并的内容（11）</summary><pre>[
+  [
+    &quot;e1&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e2&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e3&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e4&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e5&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e6&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e7&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e8&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e9&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e11&quot;,
+    &quot;no home&quot;
+  ],
+  [
+    &quot;e12&quot;,
+    &quot;no home&quot;
+  ]
+]</pre></details><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;e1&quot;,
+      &quot;quote&quot;: &quot;Microsoft generated Q4 fiscal 2026 revenue of $90.01 billion, up from $76.44 billion in the same quarter a year earlier, representing an 18% year-over-year increase and a revenue beat of $2.39 billion versus consensus expectations of $87.62 billion.&quot;,
+      &quot;one_line&quot;: &quot;Microsoft reported FY2026 Q4 revenue of $90.01 billion, up 18% year over year.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;FY2026 Q4, quarter ended 2026-06-30&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e2&quot;,
+      &quot;quote&quot;: &quot;The detailed earnings summary also notes that non-GAAP diluted earnings per share reached $4.74 in the quarter, rising from $3.86 in fiscal Q4 2025, a 23% increase.&quot;,
+      &quot;one_line&quot;: &quot;Microsoft&#x27;s non-GAAP diluted EPS was $4.74 in FY2026 Q4, up 23% year over year.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;FY2026 Q4, quarter ended 2026-06-30&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e3&quot;,
+      &quot;quote&quot;: &quot;Microsoft Cloud revenue climbed 27% in fiscal Q4 2026 to $59.3 billion, while Intelligent Cloud revenue rose 32% to $39.3 billion in the same period.&quot;,
+      &quot;one_line&quot;: &quot;Microsoft Cloud revenue rose 27% to $59.3 billion and Intelligent Cloud revenue rose 32% to $39.3 billion in FY2026 Q4.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;FY2026 Q4, quarter ended 2026-06-30&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e4&quot;,
+      &quot;quote&quot;: &quot;Azure and other cloud services revenue increased 43% year-over-year in fiscal Q4 2026, helping the company cross $100 billion in annual Azure revenue for the first time and driving a commercial backlog that reached $678 billion.&quot;,
+      &quot;one_line&quot;: &quot;Azure and other cloud services revenue grew 43% year over year in FY2026 Q4; annual Azure revenue exceeded $100 billion for the first time and commercial backlog reached $678 billion.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;FY2026 Q4, quarter ended 2026-06-30&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e5&quot;,
+      &quot;quote&quot;: &quot;Productivity and Business Processes revenue increased 14% to $37.8 billion, while More Personal Computing revenue declined 4% to $12.9 billion&quot;,
+      &quot;one_line&quot;: &quot;Microsoft&#x27;s Productivity and Business Processes revenue rose 14% to $37.8 billion, while More Personal Computing revenue fell 4% to $12.9 billion in FY2026 Q4.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;FY2026 Q4, quarter ended 2026-06-30&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e6&quot;,
+      &quot;quote&quot;: &quot;Microsoft’s net income surged 31% in fiscal Q4 2026 to $35.8 billion, while GAAP diluted earnings per share reached $4.81, 32% above the prior-year quarter’s value, reflecting both operational strength and favorable impacts from investment-related gains.&quot;,
+      &quot;one_line&quot;: &quot;Microsoft&#x27;s net income rose 31% to $35.8 billion and GAAP diluted EPS rose 32% to $4.81 in FY2026 Q4.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;FY2026 Q4, quarter ended 2026-06-30&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e7&quot;,
+      &quot;quote&quot;: &quot;In fiscal Q4 2026, the company produced $19.6 billion in free cash flow, while cash and cash equivalents stood at $20.9 billion at June 30, 2026, with short-term investments of $55.9 billion&quot;,
+      &quot;one_line&quot;: &quot;Microsoft generated $19.6 billion of free cash flow in FY2026 Q4 and had $20.9 billion cash and cash equivalents plus $55.9 billion short-term investments at 2026-06-30.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;FY2026 Q4 and 2026-06-30&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e8&quot;,
+      &quot;quote&quot;: &quot;For the fiscal first quarter of 2027, management projects revenue in a range of $89.85 billion to $90.95 billion&quot;,
+      &quot;one_line&quot;: &quot;Microsoft management guided FY2027 Q1 revenue to $89.85–$90.95 billion.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft management&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;FY2027 Q1 guidance&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e9&quot;,
+      &quot;quote&quot;: &quot;The same guidance overview reports that Azure growth is anticipated to be about 45% in constant currency in fiscal Q1 2027&quot;,
+      &quot;one_line&quot;: &quot;Microsoft management expected Azure revenue growth of about 45% in constant currency in FY2027 Q1.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft management&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;FY2027 Q1 guidance&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e10&quot;,
+      &quot;quote&quot;: &quot;analysts currently expect fiscal 2027 revenue of 391.1 billion dollars, compared with reported fiscal 2026 revenue of 331.8 billion dollars, implying year-over-year growth of roughly 18%&quot;,
+      &quot;one_line&quot;: &quot;Analysts estimated Microsoft FY2027 revenue at $391.1 billion, about 18% above reported FY2026 revenue.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Analysts&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;As of 2026-08-29&quot;,
+      &quot;links&quot;: [
+        &quot;c1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e11&quot;,
+      &quot;quote&quot;: &quot;Consensus for fiscal 2027 adjusted earnings per share stands at $19.59&quot;,
+      &quot;one_line&quot;: &quot;Consensus estimated Microsoft FY2027 adjusted EPS at $19.59.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Analysts&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;As of 2026-08-29&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e12&quot;,
+      &quot;quote&quot;: &quot;The HUMAIN partnership, announced on August 27, 2026, is designed to extend Microsoft’s Azure Foundry and Microsoft 365 Copilot offerings to support Arabic-language AI models and solutions.&quot;,
+      &quot;one_line&quot;: &quot;Microsoft and HUMAIN announced a multi-year partnership on 2026-08-27 to extend Azure Foundry and Microsoft 365 Copilot for Arabic-language AI models and solutions.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft and HUMAIN&quot;,
+      &quot;original_day&quot;: &quot;2026-08-27&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Announced 2026-08-27&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;e13&quot;,
+      &quot;quote&quot;: &quot;Investors have also reacted positively to the fact that Microsoft did not materially raise its data center spending guidance for the year alongside its fiscal Q4 2026 results&quot;,
+      &quot;one_line&quot;: &quot;Microsoft did not materially increase its data-center spending guidance alongside its FY2026 Q4 results.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;With FY2026 Q4 results&quot;,
+      &quot;links&quot;: [
+        &quot;v4&quot;
+      ]
+    }
+  ],
+  &quot;candidates&quot;: [
+    {
+      &quot;id&quot;: &quot;c1&quot;,
+      &quot;object&quot;: &quot;MSFT&quot;,
+      &quot;kind&quot;: &quot;asset&quot;,
+      &quot;looks_at&quot;: &quot;Microsoft FY2027 total revenue&quot;,
+      &quot;question&quot;: &quot;What total revenue will Microsoft report for FY2027?&quot;,
+      &quot;rungs&quot;: [
+        {
+          &quot;label&quot;: &quot;Strongly bullish&quot;,
+          &quot;condition&quot;: &quot;FY2027 total revenue is at least $420 billion.&quot;,
+          &quot;lo&quot;: 420000000000,
+          &quot;hi&quot;: null
+        },
+        {
+          &quot;label&quot;: &quot;Bullish&quot;,
+          &quot;condition&quot;: &quot;FY2027 total revenue is at least $400 billion and below $420 billion.&quot;,
+          &quot;lo&quot;: 400000000000,
+          &quot;hi&quot;: 420000000000
+        },
+        {
+          &quot;label&quot;: &quot;Neutral&quot;,
+          &quot;condition&quot;: &quot;FY2027 total revenue is at least $380 billion and below $400 billion.&quot;,
+          &quot;lo&quot;: 380000000000,
+          &quot;hi&quot;: 400000000000
+        },
+        {
+          &quot;label&quot;: &quot;Bearish&quot;,
+          &quot;condition&quot;: &quot;FY2027 total revenue is at least $360 billion and below $380 billion.&quot;,
+          &quot;lo&quot;: 360000000000,
+          &quot;hi&quot;: 380000000000
+        },
+        {
+          &quot;label&quot;: &quot;Strongly bearish&quot;,
+          &quot;condition&quot;: &quot;FY2027 total revenue is below $360 billion.&quot;,
+          &quot;lo&quot;: null,
+          &quot;hi&quot;: 360000000000
+        }
+      ],
+      &quot;due_day&quot;: &quot;2027-07-27&quot;,
+      &quot;year&quot;: &quot;FY2027&quot;,
+      &quot;evidence_ids&quot;: [
+        &quot;e10&quot;
+      ],
+      &quot;measure&quot;: &quot;total_revenue&quot;,
+      &quot;scope&quot;: &quot;&quot;,
+      &quot;period_start&quot;: &quot;2026-07-01&quot;,
+      &quot;period_end&quot;: &quot;2027-06-30&quot;,
+      &quot;basis&quot;: &quot;GAAP&quot;,
+      &quot;unit&quot;: &quot;USD&quot;,
+      &quot;event_type&quot;: &quot;n/a&quot;,
+      &quot;group_refs&quot;: [],
+      &quot;opens_as&quot;: &quot;main_driver&quot;,
+      &quot;settled_by&quot;: &quot;Microsoft FY2027 annual report&quot;
+    }
+  ],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>新观点 + 文章证据</h4><p class="meta">原始抽取 2 条 · 检查后 2 条 · 新问题 1 个</p><div class="question"><b>新问题 c1</b><p>What revenue will Microsoft report from Azure for FY2027?</p><small>关联证据：e1, e2</small></div><div class="ev"><div class="evtop"><b>e1</b><span>关联：c1</span></div><p>A recent analysis reported that Microsoft Azure and other cloud services revenue grew 43% year over year in fiscal Q4 2026, and that annual Azure revenue crossed $100 billion for the first time.</p><blockquote>One recent analysis highlights that Azure and other cloud services revenue increased 43% year-over-year in fiscal Q4 2026, helping the company cross $100 billion in annual Azure revenue for the first time</blockquote><small>来源：AD HOC NEWS · 原始发言人：The recent analysis referenced by AD HOC NEWS · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>e2</b><span>关联：c1</span></div><p>A guidance overview reported that Microsoft management anticipated Azure revenue growth of about 45% year over year in constant currency in fiscal Q1 2027.</p><blockquote>The same guidance overview reports that Azure growth is anticipated to be about 45% in constant currency in fiscal Q1 2027</blockquote><small>来源：AD HOC NEWS · 原始发言人：Microsoft management · 原始日期：未写 · 类型：party_statement</small></div><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;e1&quot;,
+      &quot;quote&quot;: &quot;One recent analysis highlights that Azure and other cloud services revenue increased 43% year-over-year in fiscal Q4 2026, helping the company cross $100 billion in annual Azure revenue for the first time&quot;,
+      &quot;one_line&quot;: &quot;A recent analysis reported that Microsoft Azure and other cloud services revenue grew 43% year over year in fiscal Q4 2026, and that annual Azure revenue crossed $100 billion for the first time.&quot;,
+      &quot;speaker&quot;: &quot;AD HOC NEWS&quot;,
+      &quot;original_who&quot;: &quot;The recent analysis referenced by AD HOC NEWS&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Fiscal Q4 2026; annual Azure revenue through fiscal 2026&quot;,
+      &quot;links&quot;: [
+        &quot;c1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e2&quot;,
+      &quot;quote&quot;: &quot;The same guidance overview reports that Azure growth is anticipated to be about 45% in constant currency in fiscal Q1 2027&quot;,
+      &quot;one_line&quot;: &quot;A guidance overview reported that Microsoft management anticipated Azure revenue growth of about 45% year over year in constant currency in fiscal Q1 2027.&quot;,
+      &quot;speaker&quot;: &quot;AD HOC NEWS&quot;,
+      &quot;original_who&quot;: &quot;Microsoft management&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal Q1 2027&quot;,
+      &quot;links&quot;: [
+        &quot;c1&quot;
+      ]
+    }
+  ],
+  &quot;candidates&quot;: [
+    {
+      &quot;id&quot;: &quot;c1&quot;,
+      &quot;object&quot;: &quot;MSFT&quot;,
+      &quot;kind&quot;: &quot;asset&quot;,
+      &quot;looks_at&quot;: &quot;Microsoft Azure revenue&quot;,
+      &quot;question&quot;: &quot;What revenue will Microsoft report from Azure for FY2027?&quot;,
+      &quot;rungs&quot;: [
+        {
+          &quot;label&quot;: &quot;Strongly bearish&quot;,
+          &quot;condition&quot;: &quot;FY2027 Azure revenue is below $110 billion.&quot;,
+          &quot;lo&quot;: null,
+          &quot;hi&quot;: 110000000000
+        },
+        {
+          &quot;label&quot;: &quot;Bearish&quot;,
+          &quot;condition&quot;: &quot;FY2027 Azure revenue is at least $110 billion and below $120 billion.&quot;,
+          &quot;lo&quot;: 110000000000,
+          &quot;hi&quot;: 120000000000
+        },
+        {
+          &quot;label&quot;: &quot;Neutral&quot;,
+          &quot;condition&quot;: &quot;FY2027 Azure revenue is at least $120 billion and below $130 billion.&quot;,
+          &quot;lo&quot;: 120000000000,
+          &quot;hi&quot;: 130000000000
+        },
+        {
+          &quot;label&quot;: &quot;Bullish&quot;,
+          &quot;condition&quot;: &quot;FY2027 Azure revenue is at least $130 billion and below $140 billion.&quot;,
+          &quot;lo&quot;: 130000000000,
+          &quot;hi&quot;: 140000000000
+        },
+        {
+          &quot;label&quot;: &quot;Strongly bullish&quot;,
+          &quot;condition&quot;: &quot;FY2027 Azure revenue is at least $140 billion.&quot;,
+          &quot;lo&quot;: 140000000000,
+          &quot;hi&quot;: null
+        }
+      ],
+      &quot;due_day&quot;: &quot;2027-07-27&quot;,
+      &quot;year&quot;: &quot;FY2027&quot;,
+      &quot;evidence_ids&quot;: [
+        &quot;e1&quot;,
+        &quot;e2&quot;
+      ],
+      &quot;measure&quot;: &quot;segment_revenue&quot;,
+      &quot;scope&quot;: &quot;Azure&quot;,
+      &quot;period_start&quot;: &quot;2026-07-01&quot;,
+      &quot;period_end&quot;: &quot;2027-06-30&quot;,
+      &quot;basis&quot;: &quot;n/a&quot;,
+      &quot;unit&quot;: &quot;USD&quot;,
+      &quot;event_type&quot;: &quot;n/a&quot;,
+      &quot;group_refs&quot;: [],
+      &quot;opens_as&quot;: &quot;main_driver&quot;,
+      &quot;settled_by&quot;: &quot;Microsoft FY2027 annual report&quot;
+    }
+  ],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>已有观点的证据</h4><p class="meta">原始抽取 1 条 · 检查后 1 条 · 新问题 0 个</p><div class="ev"><div class="evtop"><b>gnews:d144b91986c520ea36e718cf-1</b><span>关联：v4</span></div><p>Microsoft did not materially raise its data-center spending guidance for the year alongside its fiscal Q4 2026 results; the article does not specify the spending amount or year.</p><blockquote>Investors have also reacted positively to the fact that Microsoft did not materially raise its data center spending guidance for the year alongside its fiscal Q4 2026 results, in contrast with some other AI infrastructure providers that have substantially lifted capital expenditure plans.</blockquote><small>来源：ad-hoc-news.de (Rafael Müller) · 原始发言人：Microsoft · 原始日期：未写 · 类型：party_statement</small></div><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;gnews:d144b91986c520ea36e718cf-1&quot;,
+      &quot;quote&quot;: &quot;Investors have also reacted positively to the fact that Microsoft did not materially raise its data center spending guidance for the year alongside its fiscal Q4 2026 results, in contrast with some other AI infrastructure providers that have substantially lifted capital expenditure plans.&quot;,
+      &quot;one_line&quot;: &quot;Microsoft did not materially raise its data-center spending guidance for the year alongside its fiscal Q4 2026 results; the article does not specify the spending amount or year.&quot;,
+      &quot;speaker&quot;: &quot;ad-hoc-news.de (Rafael Müller)&quot;,
+      &quot;original_who&quot;: &quot;Microsoft&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Alongside Microsoft’s fiscal Q4 2026 results; reported 2026-08-29.&quot;,
+      &quot;links&quot;: [
+        &quot;v4&quot;
+      ]
+    }
+  ]
+}</pre></details></section></div></article><article class="case"><div class="case-head"><span class="number">02</span><h3>Wissner-Gross: Nvidia&#x27;s $96B Quarter Could Mask a &#x27;Financial Engineering&#x27; Boom</h3></div><p class="takeaway">旧观点 prompt 把 FY2028 增长约 70%、市场预期 44%、无供应约束超过 100% 一起挂到已有问题 v70。对照也挂到 v70，但摘要没写 44%。旧观点一路把若干宽泛的循环融资观点挂到具体担保问题 v1；相关性要谨慎核查。</p><p class="meta">文章 ID gnews:8f8a2d115ab834c7026aefd1 · 历史处理序号 1224 · 快照 69 个问题</p><details><summary>查看完整文章原文</summary><pre>Wissner-Gross: Nvidia&#x27;s $96B Quarter Could Mask a &#x27;Financial Engineering&#x27; Boom
+Nvidia&#x27;s latest quarterly report—$96.2 billion in revenue, up 106% year-over-year—looks like a triumph, but it has triggered a debate among the tech elite about whether the AI infrastructure boom is as healthy as it appears. In a wide-ranging discussion on the Moonshots podcast, physicist and AI researcher Alexander Wissner-Gross voiced concern that a portion of Nvidia&#x27;s explosive demand may be &quot;artificially propped up through financial engineering,&quot; raising the specter of a future correction. His co-hosts, including Salim Ismail and Dave Blundin, countered that the AI economy has become a self-sustaining circular system, resilient to legacy market shocks. The conversation explored Nvidia&#x27;s structural vulnerability to TSMC, its strategic pivot from chipmaker to an &quot;operating system for intelligence,&quot; and a potential acquisition of Hugging Face. It also placed OpenAI&#x27;s new Jalapeno inference chip and Apple&#x27;s lagging AI strategy in context, while examining how the U.S.-China AI divergence—revenue-maximization versus world-modeling—could determine which nation reaches recursive self-improvement first.
+Nvidia just posted a quarter so large it out-earns the GDP of most countries on Earth. $96.2 billion in revenue. Net income of $59.7 billion. A forward guidance of $108 billion. And yet, on a recent episode of the Moonshots podcast, the sharpest minds in the room were not popping champagne. They were asking a quietly terrifying question: what if some of this unprecedented demand is a mirage—an artifact of circular financing rather than genuine economic need?
+&quot;I&#x27;d be the last person to suggest that this is one big wash trade circular financing scheme,&quot; said Alexander Wissner-Gross, a physicist and AI researcher, &quot;but I do wonder the extent to which the financial markets have fully priced in Nvidia&#x27;s financing of their customers.&quot; His concern cuts to the heart of the AI boom. Nvidia, the single most valuable company in the world by market heft, is not just selling chips. It is increasingly acting as a bank, deploying capital in checks ranging from $5 billion to $20 billion—dwarfing the rest of the economy, as host Peter Diamandis noted—partially to ensure its own customers can afford to buy its products.
+The Circular Economy: A Bug or a Feature?
+Wissner-Gross&#x27;s warning is stark. &quot;I&#x27;d like to see no hiccups in this singularity,&quot; he said. &quot;I would not like to discover 2 to 3 years from now that some or a large portion of all of this demand at the infra layer was being artificially propped up through financial engineering.&quot; It is the kind of systemic risk that keeps regulators up at night: a company whose revenue growth is so tightly coupled to its own investments that the line between vendor and creditor blurs.
+The mechanism at the center of that worry can be drawn as a loop:
+If the loop only holds up because Nvidia keeps refilling its own customers&#x27; wallets, revenue growth stops being evidence against a bubble — it becomes the bubble&#x27;s engine.
+But not everyone on the podcast agrees that circularity is a problem. Dave Blundin, an AI investor, offered a more provocative reframe. &quot;Every economy is circular in nature. You know, dollars just move in a circle,&quot; he argued. His analogy: if a civilization on Alpha Centauri achieved superintelligence, it would build a vast internal economy and &quot;not give a rat&#x27;s ass about Earth.&quot; The AI economy, in his view, is becoming that civilization—a closed loop that generates its own demand and cares little about the legacy economy. It is a seductive idea. It is also, according to Wissner-Gross, exactly the kind of thinking that could mask a bubble.
+Even if the worst-case scenario materializes, Wissner-Gross is not predicting a crash. &quot;If there is a correction, it will be a mini winter, not a full winter,&quot; he said, because the underlying resource is too fundamental. &quot;Compute is fundamentally substituting for real estate and human labor and other raw inputs as the fundamental substrate for human civilization.&quot; In other words, even if the financing is frothy, the product is not a fad. Nvidia&#x27;s guidance supports this. The company told investors to expect roughly 70% sales growth in fiscal 2028—far above Wall Street&#x27;s 44% consensus—and management indicated that without supply constraints, growth would exceed 100%.
+For all of Nvidia&#x27;s dominance, the podcast identified a critical vulnerability that does not get enough attention: Taiwan Semiconductor Manufacturing Company (TSMC). Nvidia has no real manufacturing diversification. It is roughly one-third of TSMC&#x27;s output, an arrangement that makes vertical integration a delicate dance. Nvidia cannot afford to alienate its sole supplier, so any attempt to move up the value chain must be quiet. The company&#x27;s other supposed vulnerability—the erosion of its CUDA software moat—was debated at length.
+Salim Ismail, a former Singularity University executive, was blunt about Nvidia&#x27;s strategic shift. &quot;Nvidia is trying to move out of just being a chip company to trying to become literally an operating system for the whole of intelligence,&quot; he said. The playbook, according to Ismail, could involve acquiring Hugging Face, the popular open-source AI model repository. He compared the potential move to Microsoft&#x27;s acquisition of GitHub—a purchase that bought developer loyalty as much as technology. By owning the layer where developers share models, Nvidia would cement its position as the platform through which AI is built, not just the company that sells the silicon.
+Blundin went further, arguing the CUDA moat is already dead for inference—the process of running trained models—and has a limited lifespan for training. The new moat, he contends, is interconnect. Jensen Huang&#x27;s masterstroke was the acquisition of Mellanox, which gave Nvidia control over the high-speed networking needed to bind together enormous GPU clusters. Training next-generation models requires coherent clusters of 100,000 to several million GPUs. That scale is Nvidia-only territory. It is a hardware moat that companies like AMD and custom-silicon efforts from Google and Amazon cannot easily replicate.
+OpenAI&#x27;s Jalapeno and the Coming Hyperscaler War
+The competitive landscape is shifting fastest at the inference layer, where OpenAI&#x27;s new custom chip, Jalapeno, is making waves. Developed with Broadcom, the chip reportedly delivers 1.5 to 1.9 times more AI work per watt and up to 3.6 times lower latency than Nvidia&#x27;s GB200/GB300, while consuming half the power. The most startling figure cited on the podcast: a claimed 54x throughput increase compared to existing architectures when running both open-source and closed models.
+Wissner-Gross sees a wild possibility emerging from this. &quot;We&#x27;re in such a crazy future where I could imagine a world where say an OpenAI compute cloud hosts an Anthropic model and OpenAI and Anthropic win at the same time,&quot; he said. It is a scenario that would have been unthinkable two years ago: OpenAI, the model lab, becoming a hyperscaler that serves its rivals. If Jalapeno&#x27;s performance claims hold, OpenAI would have the economic incentive to rent out its cheap, efficient inference capacity. The chip moved from idea to production in months—a testament to AI-assisted chip design—and it puts pressure on Nvidia&#x27;s 90%-of-inference market share.
+Meanwhile, Blundin was scathing about Apple&#x27;s response to the AI moment. Commenting on the new Mac Studio with M5 Ultra and 512GB of unified memory, he said, &quot;They don&#x27;t even deserve to be a Mag 7 company anymore... the best they can do in the age of AI is add a bunch more RAM to a machine that they already had.&quot; Wissner-Gross traced Apple&#x27;s neural engine hardware lineage back to the cancelled Apple car project and argued the company &quot;fumbled the ball&quot; on AI software despite having superior hardware.
+The American and Chinese Paths to Superintelligence
+The most analytically rich portion of the discussion concerned the divergence between American and Chinese AI strategies. Chinese firms like Alibaba are giving away model weights for free and pouring resources into video generation and world models. Alibaba&#x27;s Wan 3.0 can generate 30-second videos from documents and spreadsheets for a few cents per second. According to one report cited on the podcast, video generation now represents roughly 70% of all AI token consumption in China—driven by short-form content and robotics—growing faster than code generation grew in the US.
+Wissner-Gross offered a unifying theory: American labs are revenue-maximizing, while Chinese labs are not. OpenAI abandoned aggressive video research partly because Anthropic &quot;ran away with their lunch&quot; on code generation, which commands far higher revenue per token. Chinese labs, facing enterprise trust barriers that limit sales of models like Kimi or Qwen, pivoted to video—a global product with no security concerns. The strategic question is which path reaches artificial general intelligence first. America optimizes for better code, which could accelerate recursive self-improvement. China optimizes for modeling the physical world, which could accelerate embodied AI and robotics.
+~70% of all AI tokens in China
+Alibaba&#x27;s Wan 3.0: 30-second video from a document or spreadsheet, cents per second
+Better code -&gt; faster recursive self-improvement
+Better world models -&gt; faster embodied AI and robotics
+The US-China competition has already turned ugly. The podcast detailed a reported bot farm of approximately 200,000 inauthentic accounts—200 of them active—pushing narratives that American AI data centers are driving up electricity prices and hurting communities. &quot;Shocked. Shocked I say that there are foreign influence operations attempting to suppress American AI data center deployment,&quot; Blundin said, his sarcasm underscoring how predictable the tactic was. The counter-narrative, the hosts argued, needs to be told more aggressively. The story of Quincy, Washington, where data centers helped cut the poverty rate from 29.4% to 6.2% and funded a new high school, hospital, and library, is not anecdote—it is a template for the abundance argument.
+Note: Roughly 30 data centers now shoulder an estimated 57% of Quincy&#x27;s property-tax base — the funding mechanism behind that public-infrastructure buildout — up from about six data-center projects when the poverty rate still stood at 29.4%. (CNN Business, August 2026)
+For Peter Diamandis, the conversation kept circling back to one name that serves as a bet on every layer of the stack. &quot;SpaceX is everything,&quot; he said. &quot;It&#x27;s ultimately chips and data centers and models and comms and infrastructure and launch and you get a chance to bet on all of them.&quot; It is, he made clear, his largest financial bet. The numbers are staggering. Elon Musk has projected SpaceX revenue of $3.5 trillion by 2033, a figure that would dwarf any company in history.
+Wissner-Gross sees the most obvious path to that number through a SpaceX-Tesla merger, which would bring Tesla&#x27;s Optimus robot revenue into the SpaceX fold. He predicts such a merger could happen within the next year or two. Beyond that, the Dyson swarm—a network of orbital compute platforms—is the long-term prize. &quot;The Dyson swarm alone could generate trillions of dollars in revenue,&quot; Wissner-Gross said, &quot;while Starlink and cars become rounding errors in Elon&#x27;s ecosystem.&quot; For investors, the takeaway is not to pick a single layer of the AI stack, but to find the companies—like SpaceX or Nvidia—that have positioned themselves to capture value across multiple layers simultaneously.
+Up 106% YoY, more than GDP of most nations
+Nvidia fiscal 2028 growth guidance
+vs. Wall Street consensus of 44%
+SpaceX projected 2033 revenue
+The deepest tension in the entire discussion remains unresolved. Wissner-Gross&#x27;s warning about financial engineering sits uneasily against the collective optimism of the group. But even he concedes that a correction would be brief and shallow. The reason is that AI is not a speculative bet on a single product. It is, as he put it, the &quot;fundamental substrate for human civilization.&quot; The investment implication is not to avoid AI infrastructure. It is to understand which companies are genuinely diversified across the stack—and which are, as Blundin suggested of Apple, merely coasting on past glory. The next two years will determine whether Nvidia&#x27;s circular economy is a sign of structural strength or a house of cards. For now, the numbers speak loudly enough to drown out most doubts.</pre></details><details><summary>查看这篇文章看到的完整题库</summary><pre>v1 | Will NVIDIA enter at least one publicly verifiable binding financial guarantee or unsold-capacity purchase commitment under the AI Compute Partnership by 2027-01-31?
+v2 | What will NVIDIA report as total revenue for FY2027?
+v3 | Will the Chinese government permit NVIDIA H200 sales in China by 2026-12-31?
+v4 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026?
+v5 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2027?
+v6 | What gross margin will NVIDIA report for FY2027?
+v7 | What revenue will NVIDIA report from stand-alone CPUs for FY2027?
+v8 | Will NVIDIA launch its Rubin Ultra high-density rack design by 2027-12-31?
+v9 | Will NVIDIA release the Kyber rack-scale architecture by 2028-12-31?
+v10 | What Data Center segment revenue will NVIDIA report for FY2027?
+v11 | Will China formally authorize H200 imports for the named AI companies by 2027-01-31?
+v12 | Will NVIDIA complete the reported purchase of about US$500 million of Firmus preference shares by 2026-12-31?
+v13 | What profit will NVIDIA report for FY2027?
+v14 | Will China formally permit selected companies, including Alibaba Group Holding, to purchase Nvidia H200 chips by 2027-01-31?
+v15 | Will the French competition authority conclude its antitrust investigation into NVIDIA by 2027-01-31?
+v16 | How much incremental compute capacity will Google, Amazon, Microsoft, and Meta add in calendar 2027?
+v17 | Will the US Commerce Department issue a binding rule or other binding restriction implementing its May 2026 guidance on advanced AI-chip transfers to overseas subsidiaries of Chinese companies by 2027-01-31?
+v18 | By 2027-01-31, will NVIDIA ship Rubin GPUs for Noetra’s planned Japan AI factory deployment?
+v19 | Will NVIDIA launch any of the GeForce RTX 50 SUPER models by 2027-01-31?
+v20 | Will NVIDIA begin sampling its Vera Rubin platform by 2026-12-31?
+v21 | Will NVIDIA begin shipping Vera Rubin systems to customers by 2026-12-31?
+v22 | Will NVIDIA launch DLSS 5 by 2026-12-31?
+v23 | Will the U.S. Senate approve the Remote Access Security Act by 2027-01-31?
+v24 | What revenue will NVIDIA report from stand-alone server CPUs for calendar 2026?
+v25 | What operating margin will NVIDIA report for FY2027?
+v26 | Will NVIDIA complete its planned $1 billion investment in NAVER by 2027-01-31?
+v27 | Will the U.S. government formally adopt a ban on Chinese AI models by 2027-01-31?
+v28 | Will SK Telecom&#x27;s first AI data center in South Korea enter service by 2027-12-31?
+v29 | Will NVIDIA enter a publicly verifiable binding purchase commitment for memory supply with SK Hynix by 2027-01-26?
+v30 | How much capital expenditure will NVIDIA report for FY2027?
+v31 | Will Nvidia enter a publicly verifiable binding guarantee or backstop for OpenAI&#x27;s Ohio data center lease or construction debt by 2027-01-27?
+v32 | Will NVIDIA enter a publicly verifiable binding financing arrangement for OpenAI&#x27;s purchase of NVIDIA AI chips by 2027-01-27?
+v33 | Will NVIDIA enter a publicly verifiable binding financing obligation for OpenAI data centers by 2027-07-27?
+v34 | Will NVIDIA enter a publicly verifiable binding equity investment in Safe Superintelligence by 2027-01-27?
+v35 | Will the U.S. government formally adopt a restriction on access to Chinese open-source AI models by 2027-01-31?
+v36 | Will NVIDIA launch its Rosa CPU as part of the Feynman data center platform by 2028-12-31?
+v37 | Will NVIDIA enter a publicly verifiable binding lease commitment for the Hut 8 Texas data center by 2027-01-28?
+v38 | Will Taiwan’s government adopt its own restrictions on AI-chip sales to China by 2027-01-31?
+v39 | Will the U.S. administration formally adopt a ban on open-weight AI models from China by 2027-01-31?
+v40 | Will the federal authority allocate access to the government-controlled power supply for the southern Ohio data-center site by 2027-01-31?
+v41 | Will the U.S. Commerce Department publish its framework for reviewing the safety of cutting-edge AI models by January 31, 2027?
+v42 | Will the U.S. Commerce Department make a public decision allocating power access at the Pike County, Ohio data-center site by 2026-12-31?
+v43 | Will NVIDIA enter a publicly verifiable binding lease for the 5853 Rue Ferrari building by 2027-01-29?
+v44 | Will U.S. Commerce Secretary Howard Lutnick approve the final arrangement for the Pike County, Ohio data-center campus by 2027-01-31?
+v45 | Will Taiwan formally adopt a criminal ban on all AI-chip exports to China by 2027-01-31?
+v46 | Will the U.S. Department of Commerce conclude its investigation into Chinese firms&#x27; access to advanced U.S. chips by 2027-01-31?
+v47 | Will NVIDIA enter a publicly verifiable binding equity investment in Kawasaki Heavy Industries’ shipbuilding business by 2027-01-30?
+v48 | Will the U.S. administration formally decide to prohibit Chinese open-weight AI models by 2027-01-31?
+v49 | Will the Commerce Department formally adopt a measure restricting Chinese AI developers’ access to Nvidia-powered computing capacity hosted outside China by 2027-01-31?
+v50 | Will NVIDIA enter a publicly verifiable binding funding obligation as part of the reported $500 billion AI infrastructure financing partnership by 2027-08-10?
+v51 | Will NVIDIA enter a publicly verifiable binding equity investment in Lancium by 2027-02-16?
+v52 | Will NVIDIA complete its announced $1.5 billion investment in SB Energy by 2027-02-17?
+v53 | Will NVIDIA complete a publicly verifiable binding equity investment in Groq by 2027-08-17?
+v54 | Will the U.S. Senate pass the Remote Access Security Act by 2027-01-31?
+v55 | Will NVIDIA enter a publicly verifiable binding equity investment in Mercor by 2027-08-19?
+v56 | Will NVIDIA enter a publicly verifiable binding equity investment in Anthropic by 2027-08-19?
+v57 | Will NVIDIA ship its adapted LPU variant to Chinese clients by 2026-12-31?
+v58 | Will NVIDIA complete a publicly verifiable binding equity investment in Poolside by 2027-02-21?
+v59 | Will NVIDIA enter a publicly verifiable binding equity investment in Cloverleaf Infrastructure by 2027-08-21?
+v60 | What will the year-over-year growth rate in hyperscaler capital expenditure be in calendar 2027?
+v61 | Will the Groq 3 LPX rack deployment at Nebius be online by 2026-12-31?
+v62 | Will NVIDIA enter a publicly verifiable binding equity investment in Perplexity AI by 2027-08-24?
+v63 | Will NVIDIA enter a publicly verifiable binding obligation to pay Poolside $6 billion for a license by 2027-08-24?
+v64 | Will NVIDIA enter a publicly verifiable binding agreement to acquire Hugging Face by 2027-08-26?
+v65 | What networking revenue will NVIDIA report for FY2027?
+v66 | Will the U.S. administration formally decide to restrict support for applications or models built on Chinese-origin open-source foundation models by 2027-01-31?
+v67 | Will the U.S. administration formally announce new tariffs on semiconductors by 2027-01-31?
+v69 | Will NVIDIA enter a publicly verifiable binding equity investment in Bloom Energy by 2027-08-28?
+v70 | What year-over-year growth rate will NVIDIA report for total revenue in FY2028?</pre></details><div class="three"><section class="arm"><h4>单 prompt 对照</h4><p class="meta">原始抽取 10 条 · 检查后 9 条 · 新问题 0 个</p><div class="ev"><div class="evtop"><b>e1</b><span>关联：v2</span></div><p>NVIDIA reported quarterly revenue of $96.2 billion, up 106% year over year.</p><blockquote>Nvidia&#x27;s latest quarterly report—$96.2 billion in revenue, up 106% year-over-year—looks like a triumph</blockquote><small>来源：finance.biggo.com · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>e2</b><span>关联：v13</span></div><p>NVIDIA reported quarterly net income of $59.7 billion.</p><blockquote>Net income of $59.7 billion</blockquote><small>来源：finance.biggo.com · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>e3</b><span>关联：v2</span></div><p>NVIDIA gave forward revenue guidance of $108 billion; the item does not specify the period.</p><blockquote>A forward guidance of $108 billion.</blockquote><small>来源：finance.biggo.com · 原始发言人：NVIDIA · 原始日期：未写 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e4</b><span>关联：v1</span></div><p>Physicist and AI researcher Alexander Wissner-Gross questioned whether financial markets have fully priced in NVIDIA&#x27;s financing of its customers.</p><blockquote>I do wonder the extent to which the financial markets have fully priced in Nvidia&#x27;s financing of their customers.</blockquote><small>来源：Alexander Wissner-Gross, quoted in the Moonshots podcast and retold by finance.biggo.com · 原始发言人：Alexander Wissner-Gross · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>e5</b><span>关联：v1</span></div><p>Finance.biggo.com reported that Peter Diamandis described NVIDIA as deploying $5 billion to $20 billion checks partly to help customers afford NVIDIA products.</p><blockquote>Nvidia, the single most valuable company in the world by market heft, is not just selling chips. It is increasingly acting as a bank, deploying capital in checks ranging from $5 billion to $20 billion—dwarfing the rest of the economy, as host Peter Diamandis noted—partially to ensure its own customers can afford to buy its products.</blockquote><small>来源：finance.biggo.com, relaying Peter Diamandis&#x27;s comment on the Moonshots podcast · 原始发言人：Peter Diamandis · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>e7</b><span>关联：v70</span></div><p>NVIDIA told investors to expect roughly 70% sales growth in FY2028; management indicated growth would exceed 100% without supply constraints.</p><blockquote>The company told investors to expect roughly 70% sales growth in fiscal 2028—far above Wall Street&#x27;s 44% consensus—and management indicated that without supply constraints, growth would exceed 100%.</blockquote><small>来源：finance.biggo.com · 原始发言人：NVIDIA management · 原始日期：未写 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e8</b><span>关联：v64</span></div><p>Salim Ismail said NVIDIA&#x27;s strategy could involve acquiring Hugging Face, comparing the potential move with Microsoft&#x27;s GitHub acquisition.</p><blockquote>The playbook, according to Ismail, could involve acquiring Hugging Face, the popular open-source AI model repository. He compared the potential move to Microsoft&#x27;s acquisition of GitHub—a purchase that bought developer loyalty as much as technology.</blockquote><small>来源：finance.biggo.com, relaying Salim Ismail&#x27;s view on the Moonshots podcast · 原始发言人：Salim Ismail · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>e9</b><span>关联：v2</span></div><p>OpenAI&#x27;s new Jalapeno custom inference chip, developed with Broadcom, was reported to deliver 1.5–1.9 times more AI work per watt, up to 3.6 times lower latency than NVIDIA GB200/GB300, half the power use, and a claimed 54-fold throughput increase versus existing architectures.</p><blockquote>The competitive landscape is shifting fastest at the inference layer, where OpenAI&#x27;s new custom chip, Jalapeno, is making waves. Developed with Broadcom, the chip reportedly delivers 1.5 to 1.9 times more AI work per watt and up to 3.6 times lower latency than Nvidia&#x27;s GB200/GB300, while consuming half the power. The most startling figure cited on the podcast: a claimed 54x throughput increase compared to existing architectures when running both open-source and closed models.</blockquote><small>来源：finance.biggo.com, relaying claims cited on the Moonshots podcast · 原始发言人：The Moonshots podcast speakers; the source of the chip-performance claims is not identified · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>e10</b><span>关联：v2</span></div><p>Finance.biggo.com said OpenAI&#x27;s Jalapeno chip puts pressure on NVIDIA&#x27;s reported 90% share of the inference market.</p><blockquote>it puts pressure on Nvidia&#x27;s 90%-of-inference market share.</blockquote><small>来源：finance.biggo.com · 原始发言人：finance.biggo.com · 原始日期：2026-08-29 · 类型：third_party_view</small></div><details><summary>被丢掉或合并的内容（1）</summary><pre>[
+  [
+    &quot;e6&quot;,
+    &quot;quote not in item&quot;
+  ]
+]</pre></details><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;e1&quot;,
+      &quot;quote&quot;: &quot;Nvidia&#x27;s latest quarterly report—$96.2 billion in revenue, up 106% year-over-year—looks like a triumph&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported quarterly revenue of $96.2 billion, up 106% year over year.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Latest quarter, as described in the item&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e2&quot;,
+      &quot;quote&quot;: &quot;Net income of $59.7 billion&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported quarterly net income of $59.7 billion.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Latest quarter, as described in the item&quot;,
+      &quot;links&quot;: [
+        &quot;v13&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e3&quot;,
+      &quot;quote&quot;: &quot;A forward guidance of $108 billion.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA gave forward revenue guidance of $108 billion; the item does not specify the period.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Forward period not specified&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e4&quot;,
+      &quot;quote&quot;: &quot;I do wonder the extent to which the financial markets have fully priced in Nvidia&#x27;s financing of their customers.&quot;,
+      &quot;one_line&quot;: &quot;Physicist and AI researcher Alexander Wissner-Gross questioned whether financial markets have fully priced in NVIDIA&#x27;s financing of its customers.&quot;,
+      &quot;speaker&quot;: &quot;Alexander Wissner-Gross, quoted in the Moonshots podcast and retold by finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;Alexander Wissner-Gross&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Recent Moonshots podcast episode; date not given&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e5&quot;,
+      &quot;quote&quot;: &quot;Nvidia, the single most valuable company in the world by market heft, is not just selling chips. It is increasingly acting as a bank, deploying capital in checks ranging from $5 billion to $20 billion—dwarfing the rest of the economy, as host Peter Diamandis noted—partially to ensure its own customers can afford to buy its products.&quot;,
+      &quot;one_line&quot;: &quot;Finance.biggo.com reported that Peter Diamandis described NVIDIA as deploying $5 billion to $20 billion checks partly to help customers afford NVIDIA products.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, relaying Peter Diamandis&#x27;s comment on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Peter Diamandis&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Recent Moonshots podcast episode; date not given&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e6&quot;,
+      &quot;quote&quot;: &quot;I&#x27;d like to see no hiccups in this singularity, I would not like to discover 2 to 3 years from now that some or a large portion of all of this demand at the infra layer was being artificially propped up through financial engineering.&quot;,
+      &quot;one_line&quot;: &quot;Wissner-Gross warned that some or a large portion of AI infrastructure demand could prove to have been artificially supported by financial engineering, a risk he said might become apparent in two to three years.&quot;,
+      &quot;speaker&quot;: &quot;Alexander Wissner-Gross, quoted in the Moonshots podcast and retold by finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;Alexander Wissner-Gross&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Recent Moonshots podcast episode; date not given&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e7&quot;,
+      &quot;quote&quot;: &quot;The company told investors to expect roughly 70% sales growth in fiscal 2028—far above Wall Street&#x27;s 44% consensus—and management indicated that without supply constraints, growth would exceed 100%.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA told investors to expect roughly 70% sales growth in FY2028; management indicated growth would exceed 100% without supply constraints.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA management&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;FY2028 guidance; statement date not given&quot;,
+      &quot;links&quot;: [
+        &quot;v70&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e8&quot;,
+      &quot;quote&quot;: &quot;The playbook, according to Ismail, could involve acquiring Hugging Face, the popular open-source AI model repository. He compared the potential move to Microsoft&#x27;s acquisition of GitHub—a purchase that bought developer loyalty as much as technology.&quot;,
+      &quot;one_line&quot;: &quot;Salim Ismail said NVIDIA&#x27;s strategy could involve acquiring Hugging Face, comparing the potential move with Microsoft&#x27;s GitHub acquisition.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, relaying Salim Ismail&#x27;s view on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Salim Ismail&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Recent Moonshots podcast episode; date not given&quot;,
+      &quot;links&quot;: [
+        &quot;v64&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e9&quot;,
+      &quot;quote&quot;: &quot;The competitive landscape is shifting fastest at the inference layer, where OpenAI&#x27;s new custom chip, Jalapeno, is making waves. Developed with Broadcom, the chip reportedly delivers 1.5 to 1.9 times more AI work per watt and up to 3.6 times lower latency than Nvidia&#x27;s GB200/GB300, while consuming half the power. The most startling figure cited on the podcast: a claimed 54x throughput increase compared to existing architectures when running both open-source and closed models.&quot;,
+      &quot;one_line&quot;: &quot;OpenAI&#x27;s new Jalapeno custom inference chip, developed with Broadcom, was reported to deliver 1.5–1.9 times more AI work per watt, up to 3.6 times lower latency than NVIDIA GB200/GB300, half the power use, and a claimed 54-fold throughput increase versus existing architectures.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, relaying claims cited on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;The Moonshots podcast speakers; the source of the chip-performance claims is not identified&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Recent Moonshots podcast episode; date not given&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e10&quot;,
+      &quot;quote&quot;: &quot;it puts pressure on Nvidia&#x27;s 90%-of-inference market share.&quot;,
+      &quot;one_line&quot;: &quot;Finance.biggo.com said OpenAI&#x27;s Jalapeno chip puts pressure on NVIDIA&#x27;s reported 90% share of the inference market.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;2026-08-29&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    }
+  ],
+  &quot;candidates&quot;: [],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>新观点 + 文章证据</h4><p class="meta">原始抽取 0 条 · 检查后 0 条 · 新问题 0 个</p><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [],
+  &quot;candidates&quot;: [],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>已有观点的证据</h4><p class="meta">原始抽取 13 条 · 检查后 13 条 · 新问题 0 个</p><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1</b><span>关联：v2</span></div><p>NVIDIA reported quarterly revenue of $96.2 billion, up 106% year over year; the article does not specify the quarter.</p><blockquote>Nvidia&#x27;s latest quarterly report—$96.2 billion in revenue, up 106% year-over-year—looks like a triumph, but it has triggered a debate among the tech elite about whether the AI infrastructure boom is as healthy as it appears.</blockquote><small>来源：finance.biggo.com · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-2</b><span>关联：v2, v13</span></div><p>NVIDIA reported quarterly net income of $59.7 billion and gave forward revenue guidance of $108 billion; the article does not specify the quarter or guidance period.</p><blockquote>Nvidia just posted a quarter so large it out-earns the GDP of most countries on Earth. $96.2 billion in revenue. Net income of $59.7 billion. A forward guidance of $108 billion.</blockquote><small>来源：finance.biggo.com · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-3</b><span>关联：v1</span></div><p>Alexander Wissner-Gross questioned whether financial markets have fully priced in NVIDIA&#x27;s financing of its customers, raising a concern about the effect of that financing on demand for NVIDIA products.</p><blockquote>&quot;I&#x27;d be the last person to suggest that this is one big wash trade circular financing scheme,&quot; said Alexander Wissner-Gross, a physicist and AI researcher, &quot;but I do wonder the extent to which the financial markets have fully priced in Nvidia&#x27;s financing of their customers.&quot;</blockquote><small>来源：finance.biggo.com, quoting Alexander Wissner-Gross on the Moonshots podcast · 原始发言人：Alexander Wissner-Gross · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-4</b><span>关联：v1</span></div><p>The article says NVIDIA is deploying capital in checks ranging from $5 billion to $20 billion, partly to help its customers afford NVIDIA products; it does not identify specific commitments or counterparties.</p><blockquote>Nvidia, the single most valuable company in the world by market heft, is not just selling chips. It is increasingly acting as a bank, deploying capital in checks ranging from $5 billion to $20 billion—dwarfing the rest of the economy, as host Peter Diamandis noted—partially to ensure its own customers can afford to buy its products.</blockquote><small>来源：finance.biggo.com · 原始发言人：finance.biggo.com · 原始日期：2026-08-29 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-5</b><span>关联：v1</span></div><p>Alexander Wissner-Gross warned that some or a large portion of AI infrastructure demand could be artificially supported by financial engineering, potentially undermining demand for NVIDIA products.</p><blockquote>&quot;I would not like to discover 2 to 3 years from now that some or a large portion of all of this demand at the infra layer was being artificially propped up through financial engineering.&quot;</blockquote><small>来源：finance.biggo.com, quoting Alexander Wissner-Gross on the Moonshots podcast · 原始发言人：Alexander Wissner-Gross · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-6</b><span>关联：v1</span></div><p>AI investor Dave Blundin argued that circular financing is a normal feature of economies, offering a counterpoint to concerns that NVIDIA financing its customers could make AI demand artificially dependent on that financing.</p><blockquote>Dave Blundin, an AI investor, offered a more provocative reframe. &quot;Every economy is circular in nature. You know, dollars just move in a circle,&quot; he argued.</blockquote><small>来源：finance.biggo.com, quoting Dave Blundin on the Moonshots podcast · 原始发言人：Dave Blundin · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-7</b><span>关联：v1</span></div><p>Alexander Wissner-Gross said that if an AI-market correction occurs, he expects a mini winter rather than a full winter, tempering the downside outlook for NVIDIA demand.</p><blockquote>&quot;If there is a correction, it will be a mini winter, not a full winter,&quot; he said, because the underlying resource is too fundamental.</blockquote><small>来源：finance.biggo.com, quoting Alexander Wissner-Gross on the Moonshots podcast · 原始发言人：Alexander Wissner-Gross · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-8</b><span>关联：v70</span></div><p>NVIDIA guided to roughly 70% sales growth in FY2028, compared with Wall Street consensus of 44%; management said growth would exceed 100% without supply constraints.</p><blockquote>The company told investors to expect roughly 70% sales growth in fiscal 2028—far above Wall Street&#x27;s 44% consensus—and management indicated that without supply constraints, growth would exceed 100%.</blockquote><small>来源：finance.biggo.com, reporting NVIDIA&#x27;s guidance and management indication · 原始发言人：NVIDIA · 原始日期：未写 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-9</b><span>关联：v6</span></div><p>The article says NVIDIA accounts for roughly one-third of TSMC&#x27;s output and lacks meaningful manufacturing diversification, indicating substantial reliance on its supplier.</p><blockquote>Nvidia has no real manufacturing diversification. It is roughly one-third of TSMC&#x27;s output, an arrangement that makes vertical integration a delicate dance.</blockquote><small>来源：finance.biggo.com · 原始发言人：finance.biggo.com · 原始日期：2026-08-29 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-10</b><span>关联：v64</span></div><p>Salim Ismail said NVIDIA&#x27;s strategy could involve acquiring Hugging Face; the article describes this as a possibility, not an announced deal.</p><blockquote>The playbook, according to Ismail, could involve acquiring Hugging Face, the popular open-source AI model repository.</blockquote><small>来源：finance.biggo.com, reporting Salim Ismail&#x27;s view on the Moonshots podcast · 原始发言人：Salim Ismail · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-11</b><span>关联：v2, v10</span></div><p>AI investor Dave Blundin argued that CUDA&#x27;s competitive advantage is gone for inference and has a limited lifespan for training, a view that could bear on competition for NVIDIA&#x27;s AI products.</p><blockquote>Blundin went further, arguing the CUDA moat is already dead for inference—the process of running trained models—and has a limited lifespan for training.</blockquote><small>来源：finance.biggo.com, quoting Dave Blundin on the Moonshots podcast · 原始发言人：Dave Blundin · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-12</b><span>关联：v2, v10</span></div><p>The podcast cited a claimed 54-fold throughput increase for OpenAI&#x27;s Jalapeno chip versus existing architectures when running open-source and closed models; the comparison is an unverified performance claim relevant to competition with NVIDIA.</p><blockquote>The most startling figure cited on the podcast: a claimed 54x throughput increase compared to existing architectures when running both open-source and closed models.</blockquote><small>来源：finance.biggo.com, relaying a claim cited on the Moonshots podcast · 原始发言人：OpenAI Jalapeno claim, as cited on the Moonshots podcast; the original claimant is not identified · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:8f8a2d115ab834c7026aefd1-13</b><span>关联：v2, v10</span></div><p>The article says OpenAI&#x27;s Jalapeno chip moved from idea to production in months and could put pressure on NVIDIA&#x27;s stated 90% inference market share if its performance claims hold.</p><blockquote>If Jalapeno&#x27;s performance claims hold, OpenAI would have the economic incentive to rent out its cheap, efficient inference capacity. The chip moved from idea to production in months—a testament to AI-assisted chip design—and it puts pressure on Nvidia&#x27;s 90%-of-inference market share.</blockquote><small>来源：finance.biggo.com · 原始发言人：finance.biggo.com · 原始日期：2026-08-29 · 类型：third_party_view</small></div><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1&quot;,
+      &quot;quote&quot;: &quot;Nvidia&#x27;s latest quarterly report—$96.2 billion in revenue, up 106% year-over-year—looks like a triumph, but it has triggered a debate among the tech elite about whether the AI infrastructure boom is as healthy as it appears.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported quarterly revenue of $96.2 billion, up 106% year over year; the article does not specify the quarter.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;latest quarter, as reported 2026-08-29&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-2&quot;,
+      &quot;quote&quot;: &quot;Nvidia just posted a quarter so large it out-earns the GDP of most countries on Earth. $96.2 billion in revenue. Net income of $59.7 billion. A forward guidance of $108 billion.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported quarterly net income of $59.7 billion and gave forward revenue guidance of $108 billion; the article does not specify the quarter or guidance period.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;latest quarter and forward period unspecified; reported 2026-08-29&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;,
+        &quot;v13&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-3&quot;,
+      &quot;quote&quot;: &quot;\&quot;I&#x27;d be the last person to suggest that this is one big wash trade circular financing scheme,\&quot; said Alexander Wissner-Gross, a physicist and AI researcher, \&quot;but I do wonder the extent to which the financial markets have fully priced in Nvidia&#x27;s financing of their customers.\&quot;&quot;,
+      &quot;one_line&quot;: &quot;Alexander Wissner-Gross questioned whether financial markets have fully priced in NVIDIA&#x27;s financing of its customers, raising a concern about the effect of that financing on demand for NVIDIA products.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, quoting Alexander Wissner-Gross on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Alexander Wissner-Gross&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-4&quot;,
+      &quot;quote&quot;: &quot;Nvidia, the single most valuable company in the world by market heft, is not just selling chips. It is increasingly acting as a bank, deploying capital in checks ranging from $5 billion to $20 billion—dwarfing the rest of the economy, as host Peter Diamandis noted—partially to ensure its own customers can afford to buy its products.&quot;,
+      &quot;one_line&quot;: &quot;The article says NVIDIA is deploying capital in checks ranging from $5 billion to $20 billion, partly to help its customers afford NVIDIA products; it does not identify specific commitments or counterparties.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Current, as described in the 2026-08-29 article&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-5&quot;,
+      &quot;quote&quot;: &quot;\&quot;I would not like to discover 2 to 3 years from now that some or a large portion of all of this demand at the infra layer was being artificially propped up through financial engineering.\&quot;&quot;,
+      &quot;one_line&quot;: &quot;Alexander Wissner-Gross warned that some or a large portion of AI infrastructure demand could be artificially supported by financial engineering, potentially undermining demand for NVIDIA products.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, quoting Alexander Wissner-Gross on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Alexander Wissner-Gross&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Conditional scenario 2–3 years from the podcast statement&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-6&quot;,
+      &quot;quote&quot;: &quot;Dave Blundin, an AI investor, offered a more provocative reframe. \&quot;Every economy is circular in nature. You know, dollars just move in a circle,\&quot; he argued.&quot;,
+      &quot;one_line&quot;: &quot;AI investor Dave Blundin argued that circular financing is a normal feature of economies, offering a counterpoint to concerns that NVIDIA financing its customers could make AI demand artificially dependent on that financing.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, quoting Dave Blundin on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Dave Blundin&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-7&quot;,
+      &quot;quote&quot;: &quot;\&quot;If there is a correction, it will be a mini winter, not a full winter,\&quot; he said, because the underlying resource is too fundamental.&quot;,
+      &quot;one_line&quot;: &quot;Alexander Wissner-Gross said that if an AI-market correction occurs, he expects a mini winter rather than a full winter, tempering the downside outlook for NVIDIA demand.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, quoting Alexander Wissner-Gross on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Alexander Wissner-Gross&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Conditional scenario&quot;,
+      &quot;links&quot;: [
+        &quot;v1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-8&quot;,
+      &quot;quote&quot;: &quot;The company told investors to expect roughly 70% sales growth in fiscal 2028—far above Wall Street&#x27;s 44% consensus—and management indicated that without supply constraints, growth would exceed 100%.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA guided to roughly 70% sales growth in FY2028, compared with Wall Street consensus of 44%; management said growth would exceed 100% without supply constraints.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, reporting NVIDIA&#x27;s guidance and management indication&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;FY2028&quot;,
+      &quot;links&quot;: [
+        &quot;v70&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-9&quot;,
+      &quot;quote&quot;: &quot;Nvidia has no real manufacturing diversification. It is roughly one-third of TSMC&#x27;s output, an arrangement that makes vertical integration a delicate dance.&quot;,
+      &quot;one_line&quot;: &quot;The article says NVIDIA accounts for roughly one-third of TSMC&#x27;s output and lacks meaningful manufacturing diversification, indicating substantial reliance on its supplier.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Current, as described in the 2026-08-29 article&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-10&quot;,
+      &quot;quote&quot;: &quot;The playbook, according to Ismail, could involve acquiring Hugging Face, the popular open-source AI model repository.&quot;,
+      &quot;one_line&quot;: &quot;Salim Ismail said NVIDIA&#x27;s strategy could involve acquiring Hugging Face; the article describes this as a possibility, not an announced deal.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, reporting Salim Ismail&#x27;s view on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Salim Ismail&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Possible future acquisition; no date given&quot;,
+      &quot;links&quot;: [
+        &quot;v64&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-11&quot;,
+      &quot;quote&quot;: &quot;Blundin went further, arguing the CUDA moat is already dead for inference—the process of running trained models—and has a limited lifespan for training.&quot;,
+      &quot;one_line&quot;: &quot;AI investor Dave Blundin argued that CUDA&#x27;s competitive advantage is gone for inference and has a limited lifespan for training, a view that could bear on competition for NVIDIA&#x27;s AI products.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, quoting Dave Blundin on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;Dave Blundin&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;,
+        &quot;v10&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-12&quot;,
+      &quot;quote&quot;: &quot;The most startling figure cited on the podcast: a claimed 54x throughput increase compared to existing architectures when running both open-source and closed models.&quot;,
+      &quot;one_line&quot;: &quot;The podcast cited a claimed 54-fold throughput increase for OpenAI&#x27;s Jalapeno chip versus existing architectures when running open-source and closed models; the comparison is an unverified performance claim relevant to competition with NVIDIA.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com, relaying a claim cited on the Moonshots podcast&quot;,
+      &quot;original_who&quot;: &quot;OpenAI Jalapeno claim, as cited on the Moonshots podcast; the original claimant is not identified&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;,
+        &quot;v10&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:8f8a2d115ab834c7026aefd1-13&quot;,
+      &quot;quote&quot;: &quot;If Jalapeno&#x27;s performance claims hold, OpenAI would have the economic incentive to rent out its cheap, efficient inference capacity. The chip moved from idea to production in months—a testament to AI-assisted chip design—and it puts pressure on Nvidia&#x27;s 90%-of-inference market share.&quot;,
+      &quot;one_line&quot;: &quot;The article says OpenAI&#x27;s Jalapeno chip moved from idea to production in months and could put pressure on NVIDIA&#x27;s stated 90% inference market share if its performance claims hold.&quot;,
+      &quot;speaker&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_who&quot;: &quot;finance.biggo.com&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Jalapeno production transition described as having occurred over months; competitive impact conditional&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;,
+        &quot;v10&quot;
+      ]
+    }
+  ]
+}</pre></details></section></div></article><article class="case"><div class="case-head"><span class="number">03</span><h3>Nvidia&#x27;s CFO Just Explained Why the AI Boom Is Eating Its Gross Margin -- and It&#x27;s a Green Light for Micron</h3></div><p class="takeaway">旧观点 prompt 把 1080 亿美元季度指引挂到全年收入问题，但“假设中国没有计算产品销售”没有关联而被丢弃。新观点 prompt 提出 2790 亿美元采购承诺问题，编号为 n1。对照提出 FY2028 毛利率问题。</p><p class="meta">文章 ID gnews:69d682468e018e0065df5180 · 历史处理序号 1211 · 快照 69 个问题</p><details><summary>查看完整文章原文</summary><pre>Nvidia &#x27;s ( NVDA +2.53% ) fiscal 2027 second-quarter earnings report was less of a quarterly update than it was a reminder that the company sits at the center of the artificial intelligence (AI) infrastructure build-out. Total revenue reached $96.2 billion, more than double the $46.7 billion posted a year ago and up 18% from the prior quarter. The more striking comparison, however, sits inside the underlying mix of Nvidia&#x27;s sales.
+The company&#x27;s data center segment generated $89 billion alone. This single franchise now produces more sales than Nvidia&#x27;s entire company did one year ago. These figures are proving that the hyperscaler capital expenditure (capex) boom is no longer an abstract backdrop. Cloud providers and AI infrastructure developers are adding capacity at full speed, and Nvidia is converting on that spend with unprecedented efficiency.
+With that said, Nvidia&#x27;s print did contain a quieter signal that may matter even more for the next name in the AI chip value chain: Micron Technology ( MU +4.29% ) . Nvidia&#x27;s management guided for a lower gross margin, and the explanation pointed directly at memory. This means that Nvidia is paying a premium for the stacks that sit beside its GPUs, making pricing power flow to memory suppliers like Micron.
+Nvidia&#x27;s blowout quarter underscores its scale and dominance
+Nvidia&#x27;s numbers leave little room for understatement. Gross margin came in at 75%, essentially unchanged sequentially and up by 2.6 points from a year ago. Operating income rose 19% sequentially and 124% year over year to $63.7 billion. Meanwhile, net income was $59.7 billion, or $2.46 per share.
+Within the data center book, hyperscale customers contributed $48.7 billion of revenue -- an increase of 102% year over year. It&#x27;s clear that Nvidia is far from demand constrained, a distinction that showed up in both the beat against its own outlook and the size of the upcoming guide. Guidance is the other half of the print that I am more focused on. For the third quarter, Nvidia expects to generate revenue of $108 billion, plus or minus 2%. Of note, the company is assuming no compute sales to China.
+Perhaps the most revealing line in the company&#x27;s outlook is its gross margin . Generally accepted accounting principles (GAAP) and non-GAAP (adjusted) gross margin are both expected to be 74%, plus or minus 50 basis points. That is a full point below the margin Nvidia just delivered. Furthermore, management explained that gross margin is expected to bottom somewhere between 71% and 72% by the fourth quarter before recovering in fiscal 2028.
+What is eating into Nvidia&#x27;s margin?
+Nvidia Chief Financial Officer Colette Kress was direct about the cause of the eroding margins. The step-down is clearly not a demand problem, nor is it a sudden collapse in Nvidia&#x27;s pricing power with customers. Instead, it has to do with the rising cost of memory.
+High bandwidth memory (HBM) is no longer a commodity add-on in chip clusters. Rather, it has quickly become a co-equal component of the accelerator package. Kress told investors that Nvidia&#x27;s commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was &quot;primarily related to the procurement of memory.&quot;
+I see Nvidia&#x27;s margin cut as a positive signal for Micron. When a customer as large and as sophisticated as Nvidia accepts a lower gross margin outlook and cites memory prices as the culprit, it confirms the bottleneck is moving downstream into DRAM and HBM. Micron is one of a few producers that can supply the stacked memory AI platforms require.
+Higher commitments from Nvidia are, by definition, higher realized average selling prices for memory vendors like Micron on the other side of the purchase order. Said differently, the same hyperscaler capex cycle fueling Nvidia&#x27;s growth is now filling Micron&#x27;s supply. The difference is that Micron is positioned to capture the inflation from component prices that Nvidia can no longer treat as a stable cost.
+Nvidia&#x27;s earnings performance is a preview for Micron
+Investors no longer need to guess whether the AI infrastructure cycle is meaningful enough to reprice memory. Nvidia&#x27;s lower margin guide just confirmed that it is. The dollars leaving Nvidia&#x27;s gross margin are not disappearing. Instead, they accrue to companies like Micron, which are shipping HBM and adjacent DRAM into Nvidia&#x27;s racks.
+In my eyes, the prudent response is to watch Micron with the same intensity reserved for Nvidia. If the cost pressures Nvidia described are real, then Micron is positioned for the kind of print that should reset expectations and, potentially, the stock&#x27;s momentum. The bull thesis around Micron stock is no longer a &quot;hopium trade&quot; attached to a historically cyclical name . Instead, it is quietly becoming an extension of Nvidia&#x27;s own trajectory.
+By Adam Spatacco – Aug 29, 2026 at 11:30AM EST</pre></details><details><summary>查看这篇文章看到的完整题库</summary><pre>v1 | Will NVIDIA enter at least one publicly verifiable binding financial guarantee or unsold-capacity purchase commitment under the AI Compute Partnership by 2027-01-31?
+v2 | What will NVIDIA report as total revenue for FY2027?
+v3 | Will the Chinese government permit NVIDIA H200 sales in China by 2026-12-31?
+v4 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026?
+v5 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2027?
+v6 | What gross margin will NVIDIA report for FY2027?
+v7 | What revenue will NVIDIA report from stand-alone CPUs for FY2027?
+v8 | Will NVIDIA launch its Rubin Ultra high-density rack design by 2027-12-31?
+v9 | Will NVIDIA release the Kyber rack-scale architecture by 2028-12-31?
+v10 | What Data Center segment revenue will NVIDIA report for FY2027?
+v11 | Will China formally authorize H200 imports for the named AI companies by 2027-01-31?
+v12 | Will NVIDIA complete the reported purchase of about US$500 million of Firmus preference shares by 2026-12-31?
+v13 | What profit will NVIDIA report for FY2027?
+v14 | Will China formally permit selected companies, including Alibaba Group Holding, to purchase Nvidia H200 chips by 2027-01-31?
+v15 | Will the French competition authority conclude its antitrust investigation into NVIDIA by 2027-01-31?
+v16 | How much incremental compute capacity will Google, Amazon, Microsoft, and Meta add in calendar 2027?
+v17 | Will the US Commerce Department issue a binding rule or other binding restriction implementing its May 2026 guidance on advanced AI-chip transfers to overseas subsidiaries of Chinese companies by 2027-01-31?
+v18 | By 2027-01-31, will NVIDIA ship Rubin GPUs for Noetra’s planned Japan AI factory deployment?
+v19 | Will NVIDIA launch any of the GeForce RTX 50 SUPER models by 2027-01-31?
+v20 | Will NVIDIA begin sampling its Vera Rubin platform by 2026-12-31?
+v21 | Will NVIDIA begin shipping Vera Rubin systems to customers by 2026-12-31?
+v22 | Will NVIDIA launch DLSS 5 by 2026-12-31?
+v23 | Will the U.S. Senate approve the Remote Access Security Act by 2027-01-31?
+v24 | What revenue will NVIDIA report from stand-alone server CPUs for calendar 2026?
+v25 | What operating margin will NVIDIA report for FY2027?
+v26 | Will NVIDIA complete its planned $1 billion investment in NAVER by 2027-01-31?
+v27 | Will the U.S. government formally adopt a ban on Chinese AI models by 2027-01-31?
+v28 | Will SK Telecom&#x27;s first AI data center in South Korea enter service by 2027-12-31?
+v29 | Will NVIDIA enter a publicly verifiable binding purchase commitment for memory supply with SK Hynix by 2027-01-26?
+v30 | How much capital expenditure will NVIDIA report for FY2027?
+v31 | Will Nvidia enter a publicly verifiable binding guarantee or backstop for OpenAI&#x27;s Ohio data center lease or construction debt by 2027-01-27?
+v32 | Will NVIDIA enter a publicly verifiable binding financing arrangement for OpenAI&#x27;s purchase of NVIDIA AI chips by 2027-01-27?
+v33 | Will NVIDIA enter a publicly verifiable binding financing obligation for OpenAI data centers by 2027-07-27?
+v34 | Will NVIDIA enter a publicly verifiable binding equity investment in Safe Superintelligence by 2027-01-27?
+v35 | Will the U.S. government formally adopt a restriction on access to Chinese open-source AI models by 2027-01-31?
+v36 | Will NVIDIA launch its Rosa CPU as part of the Feynman data center platform by 2028-12-31?
+v37 | Will NVIDIA enter a publicly verifiable binding lease commitment for the Hut 8 Texas data center by 2027-01-28?
+v38 | Will Taiwan’s government adopt its own restrictions on AI-chip sales to China by 2027-01-31?
+v39 | Will the U.S. administration formally adopt a ban on open-weight AI models from China by 2027-01-31?
+v40 | Will the federal authority allocate access to the government-controlled power supply for the southern Ohio data-center site by 2027-01-31?
+v41 | Will the U.S. Commerce Department publish its framework for reviewing the safety of cutting-edge AI models by January 31, 2027?
+v42 | Will the U.S. Commerce Department make a public decision allocating power access at the Pike County, Ohio data-center site by 2026-12-31?
+v43 | Will NVIDIA enter a publicly verifiable binding lease for the 5853 Rue Ferrari building by 2027-01-29?
+v44 | Will U.S. Commerce Secretary Howard Lutnick approve the final arrangement for the Pike County, Ohio data-center campus by 2027-01-31?
+v45 | Will Taiwan formally adopt a criminal ban on all AI-chip exports to China by 2027-01-31?
+v46 | Will the U.S. Department of Commerce conclude its investigation into Chinese firms&#x27; access to advanced U.S. chips by 2027-01-31?
+v47 | Will NVIDIA enter a publicly verifiable binding equity investment in Kawasaki Heavy Industries’ shipbuilding business by 2027-01-30?
+v48 | Will the U.S. administration formally decide to prohibit Chinese open-weight AI models by 2027-01-31?
+v49 | Will the Commerce Department formally adopt a measure restricting Chinese AI developers’ access to Nvidia-powered computing capacity hosted outside China by 2027-01-31?
+v50 | Will NVIDIA enter a publicly verifiable binding funding obligation as part of the reported $500 billion AI infrastructure financing partnership by 2027-08-10?
+v51 | Will NVIDIA enter a publicly verifiable binding equity investment in Lancium by 2027-02-16?
+v52 | Will NVIDIA complete its announced $1.5 billion investment in SB Energy by 2027-02-17?
+v53 | Will NVIDIA complete a publicly verifiable binding equity investment in Groq by 2027-08-17?
+v54 | Will the U.S. Senate pass the Remote Access Security Act by 2027-01-31?
+v55 | Will NVIDIA enter a publicly verifiable binding equity investment in Mercor by 2027-08-19?
+v56 | Will NVIDIA enter a publicly verifiable binding equity investment in Anthropic by 2027-08-19?
+v57 | Will NVIDIA ship its adapted LPU variant to Chinese clients by 2026-12-31?
+v58 | Will NVIDIA complete a publicly verifiable binding equity investment in Poolside by 2027-02-21?
+v59 | Will NVIDIA enter a publicly verifiable binding equity investment in Cloverleaf Infrastructure by 2027-08-21?
+v60 | What will the year-over-year growth rate in hyperscaler capital expenditure be in calendar 2027?
+v61 | Will the Groq 3 LPX rack deployment at Nebius be online by 2026-12-31?
+v62 | Will NVIDIA enter a publicly verifiable binding equity investment in Perplexity AI by 2027-08-24?
+v63 | Will NVIDIA enter a publicly verifiable binding obligation to pay Poolside $6 billion for a license by 2027-08-24?
+v64 | Will NVIDIA enter a publicly verifiable binding agreement to acquire Hugging Face by 2027-08-26?
+v65 | What networking revenue will NVIDIA report for FY2027?
+v66 | Will the U.S. administration formally decide to restrict support for applications or models built on Chinese-origin open-source foundation models by 2027-01-31?
+v67 | Will the U.S. administration formally announce new tariffs on semiconductors by 2027-01-31?
+v69 | Will NVIDIA enter a publicly verifiable binding equity investment in Bloom Energy by 2027-08-28?
+v70 | What year-over-year growth rate will NVIDIA report for total revenue in FY2028?</pre></details><div class="three"><section class="arm"><h4>单 prompt 对照</h4><p class="meta">原始抽取 12 条 · 检查后 12 条 · 新问题 1 个</p><div class="question"><b>新问题 c1</b><p>What gross margin will NVIDIA report for FY2028?</p><small>关联证据：e3, e9</small></div><div class="ev"><div class="evtop"><b>e1</b><span>关联：v2</span></div><p>NVIDIA reported fiscal 2027 second-quarter total revenue of $96.2 billion, up 18% sequentially.</p><blockquote>Total revenue reached $96.2 billion, more than double the $46.7 billion posted a year ago and up 18% from the prior quarter.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：2026-08-29 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>e2</b><span>关联：v10</span></div><p>NVIDIA reported Data Center segment revenue of $89 billion in fiscal 2027 second quarter.</p><blockquote>The company&#x27;s data center segment generated $89 billion alone.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：2026-08-29 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>e3</b><span>关联：v6, c1</span></div><p>NVIDIA management guided to lower gross margin and attributed the pressure to memory costs.</p><blockquote>Nvidia&#x27;s management guided for a lower gross margin, and the explanation pointed directly at memory.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA management · 原始日期：2026-08-29 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e4</b><span>关联：v6</span></div><p>NVIDIA reported a 75% gross margin in fiscal 2027 second quarter, up 2.6 percentage points year over year.</p><blockquote>Gross margin came in at 75%, essentially unchanged sequentially and up by 2.6 points from a year ago.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：2026-08-29 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>e5</b><span>关联：v10</span></div><p>NVIDIA reported $48.7 billion of Data Center revenue from hyperscale customers in fiscal 2027 second quarter, up 102% year over year.</p><blockquote>Within the data center book, hyperscale customers contributed $48.7 billion of revenue -- an increase of 102% year over year.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：2026-08-29 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>e6</b><span>关联：v2</span></div><p>NVIDIA guided fiscal 2027 third-quarter total revenue to $108 billion, plus or minus 2%.</p><blockquote>For the third quarter, Nvidia expects to generate revenue of $108 billion, plus or minus 2%.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA management · 原始日期：2026-08-29 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e7</b><span>关联：v2, v3, v11, v14</span></div><p>NVIDIA&#x27;s fiscal 2027 third-quarter revenue guidance assumes no compute sales to China.</p><blockquote>Of note, the company is assuming no compute sales to China.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA management · 原始日期：2026-08-29 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e8</b><span>关联：v6</span></div><p>NVIDIA guided fiscal 2027 third-quarter GAAP and non-GAAP gross margin to 74%, plus or minus 0.5 percentage points.</p><blockquote>Generally accepted accounting principles (GAAP) and non-GAAP (adjusted) gross margin are both expected to be 74%, plus or minus 50 basis points.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA management · 原始日期：2026-08-29 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e9</b><span>关联：v6, c1</span></div><p>NVIDIA management said gross margin was expected to bottom at 71%–72% by fiscal 2027 fourth quarter and recover in fiscal 2028.</p><blockquote>management explained that gross margin is expected to bottom somewhere between 71% and 72% by the fourth quarter before recovering in fiscal 2028.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA management · 原始日期：2026-08-29 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e10</b><span>关联：v6</span></div><p>NVIDIA CFO Colette Kress attributed the gross-margin decline to rising memory costs, not weaker demand or customer pricing power.</p><blockquote>Nvidia Chief Financial Officer Colette Kress was direct about the cause of the eroding margins. The step-down is clearly not a demand problem, nor is it a sudden collapse in Nvidia&#x27;s pricing power with customers. Instead, it has to do with the rising cost of memory.</blockquote><small>来源：fool.com (analyst) · 原始发言人：Colette Kress, NVIDIA CFO · 原始日期：2026-08-29 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e11</b><span>关联：v6</span></div><p>NVIDIA CFO Colette Kress said commitments for critical components rose from $119 billion to $279 billion quarter over quarter, primarily for memory procurement.</p><blockquote>Kress told investors that Nvidia&#x27;s commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was &quot;primarily related to the procurement of memory.&quot;</blockquote><small>来源：fool.com (analyst) · 原始发言人：Colette Kress, NVIDIA CFO · 原始日期：2026-08-29 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>e12</b><span>关联：v6</span></div><p>The author judged NVIDIA&#x27;s lower margin outlook and memory-cost explanation to indicate that supply constraints and pricing power are shifting downstream to DRAM and HBM suppliers such as Micron.</p><blockquote>When a customer as large and as sophisticated as Nvidia accepts a lower gross margin outlook and cites memory prices as the culprit, it confirms the bottleneck is moving downstream into DRAM and HBM. Micron is one of a few producers that can supply the stacked memory AI platforms require.</blockquote><small>来源：Adam Spatacco, fool.com analyst · 原始发言人：Adam Spatacco · 原始日期：2026-08-29 · 类型：third_party_view</small></div><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;e1&quot;,
+      &quot;quote&quot;: &quot;Total revenue reached $96.2 billion, more than double the $46.7 billion posted a year ago and up 18% from the prior quarter.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported fiscal 2027 second-quarter total revenue of $96.2 billion, up 18% sequentially.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e2&quot;,
+      &quot;quote&quot;: &quot;The company&#x27;s data center segment generated $89 billion alone.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported Data Center segment revenue of $89 billion in fiscal 2027 second quarter.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v10&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e3&quot;,
+      &quot;quote&quot;: &quot;Nvidia&#x27;s management guided for a lower gross margin, and the explanation pointed directly at memory.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA management guided to lower gross margin and attributed the pressure to memory costs.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA management&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter earnings outlook&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;,
+        &quot;c1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e4&quot;,
+      &quot;quote&quot;: &quot;Gross margin came in at 75%, essentially unchanged sequentially and up by 2.6 points from a year ago.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported a 75% gross margin in fiscal 2027 second quarter, up 2.6 percentage points year over year.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e5&quot;,
+      &quot;quote&quot;: &quot;Within the data center book, hyperscale customers contributed $48.7 billion of revenue -- an increase of 102% year over year.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported $48.7 billion of Data Center revenue from hyperscale customers in fiscal 2027 second quarter, up 102% year over year.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v10&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e6&quot;,
+      &quot;quote&quot;: &quot;For the third quarter, Nvidia expects to generate revenue of $108 billion, plus or minus 2%.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA guided fiscal 2027 third-quarter total revenue to $108 billion, plus or minus 2%.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA management&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 third-quarter guidance&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e7&quot;,
+      &quot;quote&quot;: &quot;Of note, the company is assuming no compute sales to China.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA&#x27;s fiscal 2027 third-quarter revenue guidance assumes no compute sales to China.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA management&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 third-quarter guidance&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;,
+        &quot;v3&quot;,
+        &quot;v11&quot;,
+        &quot;v14&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e8&quot;,
+      &quot;quote&quot;: &quot;Generally accepted accounting principles (GAAP) and non-GAAP (adjusted) gross margin are both expected to be 74%, plus or minus 50 basis points.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA guided fiscal 2027 third-quarter GAAP and non-GAAP gross margin to 74%, plus or minus 0.5 percentage points.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA management&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 third-quarter guidance&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e9&quot;,
+      &quot;quote&quot;: &quot;management explained that gross margin is expected to bottom somewhere between 71% and 72% by the fourth quarter before recovering in fiscal 2028.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA management said gross margin was expected to bottom at 71%–72% by fiscal 2027 fourth quarter and recover in fiscal 2028.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA management&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 fourth-quarter and fiscal 2028 outlook&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;,
+        &quot;c1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e10&quot;,
+      &quot;quote&quot;: &quot;Nvidia Chief Financial Officer Colette Kress was direct about the cause of the eroding margins. The step-down is clearly not a demand problem, nor is it a sudden collapse in Nvidia&#x27;s pricing power with customers. Instead, it has to do with the rising cost of memory.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA CFO Colette Kress attributed the gross-margin decline to rising memory costs, not weaker demand or customer pricing power.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;Colette Kress, NVIDIA CFO&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second-quarter earnings discussion&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e11&quot;,
+      &quot;quote&quot;: &quot;Kress told investors that Nvidia&#x27;s commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was \&quot;primarily related to the procurement of memory.\&quot;&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA CFO Colette Kress said commitments for critical components rose from $119 billion to $279 billion quarter over quarter, primarily for memory procurement.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;Colette Kress, NVIDIA CFO&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second-quarter earnings discussion&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e12&quot;,
+      &quot;quote&quot;: &quot;When a customer as large and as sophisticated as Nvidia accepts a lower gross margin outlook and cites memory prices as the culprit, it confirms the bottleneck is moving downstream into DRAM and HBM. Micron is one of a few producers that can supply the stacked memory AI platforms require.&quot;,
+      &quot;one_line&quot;: &quot;The author judged NVIDIA&#x27;s lower margin outlook and memory-cost explanation to indicate that supply constraints and pricing power are shifting downstream to DRAM and HBM suppliers such as Micron.&quot;,
+      &quot;speaker&quot;: &quot;Adam Spatacco, fool.com analyst&quot;,
+      &quot;original_who&quot;: &quot;Adam Spatacco&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;2026-08-29&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    }
+  ],
+  &quot;candidates&quot;: [
+    {
+      &quot;id&quot;: &quot;c1&quot;,
+      &quot;object&quot;: &quot;NVDA&quot;,
+      &quot;kind&quot;: &quot;asset&quot;,
+      &quot;looks_at&quot;: &quot;NVIDIA FY2028 gross margin&quot;,
+      &quot;question&quot;: &quot;What gross margin will NVIDIA report for FY2028?&quot;,
+      &quot;rungs&quot;: [
+        {
+          &quot;label&quot;: &quot;Strongly bullish&quot;,
+          &quot;condition&quot;: &quot;FY2028 gross margin is at least 79%.&quot;,
+          &quot;lo&quot;: 79,
+          &quot;hi&quot;: null
+        },
+        {
+          &quot;label&quot;: &quot;Bullish&quot;,
+          &quot;condition&quot;: &quot;FY2028 gross margin is at least 76% but below 79%.&quot;,
+          &quot;lo&quot;: 76,
+          &quot;hi&quot;: 79
+        },
+        {
+          &quot;label&quot;: &quot;Neutral&quot;,
+          &quot;condition&quot;: &quot;FY2028 gross margin is at least 73% but below 76%.&quot;,
+          &quot;lo&quot;: 73,
+          &quot;hi&quot;: 76
+        },
+        {
+          &quot;label&quot;: &quot;Bearish&quot;,
+          &quot;condition&quot;: &quot;FY2028 gross margin is at least 70% but below 73%.&quot;,
+          &quot;lo&quot;: 70,
+          &quot;hi&quot;: 73
+        },
+        {
+          &quot;label&quot;: &quot;Strongly bearish&quot;,
+          &quot;condition&quot;: &quot;FY2028 gross margin is below 70%.&quot;,
+          &quot;lo&quot;: null,
+          &quot;hi&quot;: 70
+        }
+      ],
+      &quot;due_day&quot;: &quot;2028-02-24&quot;,
+      &quot;year&quot;: &quot;FY2028&quot;,
+      &quot;evidence_ids&quot;: [
+        &quot;e3&quot;,
+        &quot;e9&quot;
+      ],
+      &quot;measure&quot;: &quot;gross_margin&quot;,
+      &quot;scope&quot;: &quot;&quot;,
+      &quot;period_start&quot;: &quot;2027-02-01&quot;,
+      &quot;period_end&quot;: &quot;2028-01-31&quot;,
+      &quot;basis&quot;: &quot;GAAP&quot;,
+      &quot;unit&quot;: &quot;percent&quot;,
+      &quot;event_type&quot;: &quot;n/a&quot;,
+      &quot;group_refs&quot;: [],
+      &quot;opens_as&quot;: &quot;main_driver&quot;,
+      &quot;settled_by&quot;: &quot;NVIDIA FY2028 annual report, reporting the fiscal-year gross margin.&quot;
+    }
+  ],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>新观点 + 文章证据</h4><p class="meta">原始抽取 1 条 · 检查后 1 条 · 新问题 1 个</p><div class="question"><b>新问题 n1</b><p>What amount of purchase commitments for critical components will NVIDIA report in its FY2027 annual report?</p><small>关联证据：e1</small></div><div class="ev"><div class="evtop"><b>e1</b><span>关联：n1</span></div><p>NVIDIA CFO Colette Kress said commitments for critical components rose from $119 billion last quarter to $279 billion, primarily due to memory procurement.</p><blockquote>Kress told investors that Nvidia&#x27;s commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was &quot;primarily related to the procurement of memory.&quot;</blockquote><small>来源：Adam Spatacco, reporting Kress&#x27;s remarks to investors · 原始发言人：Colette Kress · 原始日期：未写 · 类型：party_statement</small></div><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;e1&quot;,
+      &quot;quote&quot;: &quot;Kress told investors that Nvidia&#x27;s commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was \&quot;primarily related to the procurement of memory.\&quot;&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA CFO Colette Kress said commitments for critical components rose from $119 billion last quarter to $279 billion, primarily due to memory procurement.&quot;,
+      &quot;speaker&quot;: &quot;Adam Spatacco, reporting Kress&#x27;s remarks to investors&quot;,
+      &quot;original_who&quot;: &quot;Colette Kress&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;n1&quot;
+      ]
+    }
+  ],
+  &quot;candidates&quot;: [
+    {
+      &quot;id&quot;: &quot;n1&quot;,
+      &quot;object&quot;: &quot;NVDA&quot;,
+      &quot;kind&quot;: &quot;asset&quot;,
+      &quot;looks_at&quot;: &quot;NVIDIA purchase commitments for critical components&quot;,
+      &quot;question&quot;: &quot;What amount of purchase commitments for critical components will NVIDIA report in its FY2027 annual report?&quot;,
+      &quot;rungs&quot;: [
+        {
+          &quot;label&quot;: &quot;Strongly bullish&quot;,
+          &quot;condition&quot;: &quot;The reported amount is below $100 billion.&quot;,
+          &quot;lo&quot;: null,
+          &quot;hi&quot;: 100000000000
+        },
+        {
+          &quot;label&quot;: &quot;Bullish&quot;,
+          &quot;condition&quot;: &quot;The reported amount is at least $100 billion and below $200 billion.&quot;,
+          &quot;lo&quot;: 100000000000,
+          &quot;hi&quot;: 200000000000
+        },
+        {
+          &quot;label&quot;: &quot;Neutral&quot;,
+          &quot;condition&quot;: &quot;The reported amount is at least $200 billion and below $300 billion.&quot;,
+          &quot;lo&quot;: 200000000000,
+          &quot;hi&quot;: 300000000000
+        },
+        {
+          &quot;label&quot;: &quot;Bearish&quot;,
+          &quot;condition&quot;: &quot;The reported amount is at least $300 billion and below $400 billion.&quot;,
+          &quot;lo&quot;: 300000000000,
+          &quot;hi&quot;: 400000000000
+        },
+        {
+          &quot;label&quot;: &quot;Strongly bearish&quot;,
+          &quot;condition&quot;: &quot;The reported amount is at least $400 billion.&quot;,
+          &quot;lo&quot;: 400000000000,
+          &quot;hi&quot;: null
+        }
+      ],
+      &quot;due_day&quot;: &quot;2027-02-24&quot;,
+      &quot;year&quot;: &quot;FY2027&quot;,
+      &quot;evidence_ids&quot;: [
+        &quot;e1&quot;
+      ],
+      &quot;measure&quot;: &quot;financing_amount&quot;,
+      &quot;scope&quot;: &quot;Purchase commitments for critical components&quot;,
+      &quot;period_start&quot;: &quot;2026-02-01&quot;,
+      &quot;period_end&quot;: &quot;2027-01-31&quot;,
+      &quot;basis&quot;: &quot;n/a&quot;,
+      &quot;unit&quot;: &quot;USD&quot;,
+      &quot;event_type&quot;: &quot;n/a&quot;,
+      &quot;group_refs&quot;: [],
+      &quot;opens_as&quot;: &quot;binding_obligation&quot;,
+      &quot;settled_by&quot;: &quot;NVIDIA&#x27;s FY2027 annual report, specifically its commitments disclosure.&quot;
+    }
+  ],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>已有观点的证据</h4><p class="meta">原始抽取 10 条 · 检查后 9 条 · 新问题 0 个</p><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-1</b><span>关联：v2</span></div><p>NVIDIA reported fiscal 2027 second-quarter total revenue of $96.2 billion, up 18% sequentially and more than double the year-earlier $46.7 billion.</p><blockquote>Total revenue reached $96.2 billion, more than double the $46.7 billion posted a year ago and up 18% from the prior quarter.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-2</b><span>关联：v10</span></div><p>NVIDIA&#x27;s Data Center segment generated $89 billion of revenue in fiscal 2027 second quarter.</p><blockquote>The company&#x27;s data center segment generated $89 billion alone.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-3</b><span>关联：v6</span></div><p>NVIDIA reported fiscal 2027 second-quarter gross margin of 75%, essentially flat sequentially and 2.6 percentage points higher year over year.</p><blockquote>Gross margin came in at 75%, essentially unchanged sequentially and up by 2.6 points from a year ago.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-4</b><span>关联：v13, v25</span></div><p>NVIDIA reported fiscal 2027 second-quarter operating income of $63.7 billion, up 19% sequentially and 124% year over year.</p><blockquote>Operating income rose 19% sequentially and 124% year over year to $63.7 billion.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-5</b><span>关联：v13</span></div><p>NVIDIA reported fiscal 2027 second-quarter net income of $59.7 billion, or $2.46 per share.</p><blockquote>Meanwhile, net income was $59.7 billion, or $2.46 per share.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：未写 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-6</b><span>关联：v2</span></div><p>NVIDIA guided fiscal 2027 third-quarter revenue to $108 billion, plus or minus 2%.</p><blockquote>For the third quarter, Nvidia expects to generate revenue of $108 billion, plus or minus 2%.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：未写 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-8</b><span>关联：v6</span></div><p>NVIDIA guided fiscal 2027 third-quarter GAAP and non-GAAP gross margin to 74%, plus or minus 50 basis points.</p><blockquote>Generally accepted accounting principles (GAAP) and non-GAAP (adjusted) gross margin are both expected to be 74%, plus or minus 50 basis points.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA · 原始日期：未写 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-9</b><span>关联：v6</span></div><p>NVIDIA management said gross margin is expected to bottom at 71%–72% by fiscal 2027 fourth quarter before recovering in fiscal 2028.</p><blockquote>Furthermore, management explained that gross margin is expected to bottom somewhere between 71% and 72% by the fourth quarter before recovering in fiscal 2028.</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA management · 原始日期：未写 · 类型：party_statement</small></div><div class="ev"><div class="evtop"><b>gnews:69d682468e018e0065df5180-10</b><span>关联：v6</span></div><p>NVIDIA CFO Colette Kress said commitments for critical components rose from $119 billion in the prior quarter to $279 billion, primarily because of memory procurement, a cost pressure relevant to gross margin.</p><blockquote>Kress told investors that Nvidia&#x27;s commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was &quot;primarily related to the procurement of memory.&quot;</blockquote><small>来源：fool.com (analyst) · 原始发言人：NVIDIA CFO Colette Kress · 原始日期：未写 · 类型：party_statement</small></div><details><summary>被丢掉或合并的内容（1）</summary><pre>[
+  [
+    &quot;gnews:69d682468e018e0065df5180-7&quot;,
+    &quot;no home&quot;
+  ]
+]</pre></details><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-1&quot;,
+      &quot;quote&quot;: &quot;Total revenue reached $96.2 billion, more than double the $46.7 billion posted a year ago and up 18% from the prior quarter.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported fiscal 2027 second-quarter total revenue of $96.2 billion, up 18% sequentially and more than double the year-earlier $46.7 billion.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-2&quot;,
+      &quot;quote&quot;: &quot;The company&#x27;s data center segment generated $89 billion alone.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA&#x27;s Data Center segment generated $89 billion of revenue in fiscal 2027 second quarter.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v10&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-3&quot;,
+      &quot;quote&quot;: &quot;Gross margin came in at 75%, essentially unchanged sequentially and up by 2.6 points from a year ago.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported fiscal 2027 second-quarter gross margin of 75%, essentially flat sequentially and 2.6 percentage points higher year over year.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-4&quot;,
+      &quot;quote&quot;: &quot;Operating income rose 19% sequentially and 124% year over year to $63.7 billion.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported fiscal 2027 second-quarter operating income of $63.7 billion, up 19% sequentially and 124% year over year.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v13&quot;,
+        &quot;v25&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-5&quot;,
+      &quot;quote&quot;: &quot;Meanwhile, net income was $59.7 billion, or $2.46 per share.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA reported fiscal 2027 second-quarter net income of $59.7 billion, or $2.46 per share.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 second quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v13&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-6&quot;,
+      &quot;quote&quot;: &quot;For the third quarter, Nvidia expects to generate revenue of $108 billion, plus or minus 2%.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA guided fiscal 2027 third-quarter revenue to $108 billion, plus or minus 2%.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 third quarter guidance&quot;,
+      &quot;links&quot;: [
+        &quot;v2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-7&quot;,
+      &quot;quote&quot;: &quot;Of note, the company is assuming no compute sales to China.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA&#x27;s fiscal 2027 third-quarter revenue guidance assumes no compute sales to China.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 third quarter guidance&quot;,
+      &quot;links&quot;: []
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-8&quot;,
+      &quot;quote&quot;: &quot;Generally accepted accounting principles (GAAP) and non-GAAP (adjusted) gross margin are both expected to be 74%, plus or minus 50 basis points.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA guided fiscal 2027 third-quarter GAAP and non-GAAP gross margin to 74%, plus or minus 50 basis points.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 third quarter guidance&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-9&quot;,
+      &quot;quote&quot;: &quot;Furthermore, management explained that gross margin is expected to bottom somewhere between 71% and 72% by the fourth quarter before recovering in fiscal 2028.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA management said gross margin is expected to bottom at 71%–72% by fiscal 2027 fourth quarter before recovering in fiscal 2028.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA management&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Fiscal 2027 fourth quarter; recovery expected in fiscal 2028&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:69d682468e018e0065df5180-10&quot;,
+      &quot;quote&quot;: &quot;Kress told investors that Nvidia&#x27;s commitments for critical components increased from $119 billion last quarter to $279 billion, saying it was \&quot;primarily related to the procurement of memory.\&quot;&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA CFO Colette Kress said commitments for critical components rose from $119 billion in the prior quarter to $279 billion, primarily because of memory procurement, a cost pressure relevant to gross margin.&quot;,
+      &quot;speaker&quot;: &quot;fool.com (analyst)&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA CFO Colette Kress&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Compared with the prior quarter&quot;,
+      &quot;links&quot;: [
+        &quot;v6&quot;
+      ]
+    }
+  ]
+}</pre></details></section></div></article><article class="case"><div class="case-head"><span class="number">04</span><h3>I tried NVIDIA&#x27;s DLSS 5 before its official release—it&#x27;s incredible - How-To Geek</h3></div><p class="takeaway">已有问题 v22 是 DLSS 5 是否在年底前发布。两种方法都找到了发布时点及相关信息；新观点一路没有再开问题。对照把提前流出的版本与正式发布时间拆成两条，并行旧证据一路合在一起。</p><p class="meta">文章 ID gnews:6dcaad557a1b21d7b867fe34 · 历史处理序号 1215 · 快照 69 个问题</p><details><summary>查看完整文章原文</summary><pre>By Nick Lewis
+Nick Lewis is an editor at How-To Geek. He has been using computers for 20 years --- tinkering with everything from the UI to the Windows registry to device firmware. Before How-To Geek, he used Python and C++ as a freelance programmer. In college, Nick made extensive use of Fortran while pursuing a physics degree.
+Nick&#x27;s love of tinkering with computers extends beyond work. He has been running video game servers from home for more than 10 years using Windows, Ubuntu, or Raspberry Pi OS. He also uses Proxmox to self-host a variety of services, including a Jellyfin Media Server, an Airsonic music server, a handful of game servers, NextCloud, and two Windows virtual machines.
+He enjoys DIY projects, especially if they involve technology. He regularly repairs and repurposes old computers and hardware for whatever new project is at hand. He has designed crossovers for homemade speakers all the way from the basic design to the PCB.
+Nick enjoys the outdoors. When he isn&#x27;t working on a computer or DIY project, he is most likely to be found camping, backpacking, or canoeing.
+DLSS 5 isn&#x27;t due for an official release until sometime later this year, but an unfinished version that slipped out with NBA 2K27 has allowed the RenoDX modding community to get it running with dozens of games.
+I spent an evening trying it out on as many games as possible, including one from 2003. Even in its unfinished state, DLSS 5 is impressive.
+DLSS 5 aims to revolutionize game graphics
+How does DLSS 5 even work?
+The DLSS 5 reads scene semantics—things like skin, hair, and fabric—and adds lighting and material detail that the engine never actually rendered.
+DLSS 5&#x27;s output is based on the game&#x27;s actual geometry and motion vectors, so you aren&#x27;t flooded with the weird hallucinations that are often common in AI-generated video.
+The result is nearly photorealistic gameplay that doesn&#x27;t reduce your gameplay to single-digit FPS.
+Cyberpunk 2077 looks spectacular
+In Cyberpunk 2077, DLSS 5 makes skin, wet streets, and neon light interactions appear almost like something out of a film. It also does wonders for the random NPCs you encounter as you move through Night City.
+NPCs that were previously dull and forgettable pick up an exceptional amount of detail in their faces and clothing. I could imagine a well-framed screenshot passing as a photograph.
+Baldur&#x27;s Gate 3 looks good, but the style doesn&#x27;t quite match
+The environment in Baldur&#x27;s Gate 3 didn&#x27;t seem to benefit from DLSS 5 as much as games like Cyberpunk 2077 or Grand Theft Auto V did. There were even a few unique bugs, like glowing butterflies.
+However, where DLSS 5 does shine is the characters. It does a good job changing the appearance of the characters without losing the qualities that define them. I was concerned that non-human characters like Lae&#x27;zel would become human-looking, but DLSS 5 actually handled it quite well. The human characters all looked great.
+However, Baldur&#x27;s Gate 3 also has a lot of fantastical elements that DLSS 5 just doesn&#x27;t seem to address.
+It still has problems—the biggest one is &quot;sameness&quot;
+This accidental release isn&#x27;t perfect. In my testing, I noticed that some objects are shimmering or flickering when they shouldn&#x27;t, and faces sometimes do subtly shift, which is more than a little creepy.
+The broader issue is how similar everything looks. Photorealism is a fine look for some games, like Cyberpunk, Death Stranding 2, and Grand Theft Auto V, but it is often conspicuously out of place in games like Baldur&#x27;s Gate 3.
+NVIDIA has stated that there will be tools that give developers control over intensity, color grading, and masking. That is certainly a step in the right direction, but highly-stylized genres will only benefit if developers (or players) get the ability to tweak the DLSS 5&#x27;s art style more specifically.
+DLSS 5 reminds me of DLSS 1
+The original DLSS was rough; DLSS 4 is incredible
+Critics of DLSS 5 have been quick to point out that this technology often produces results that are firmly in uncanny valley territory. Some of the faces it creates are just subtly wrong in a way that is unsettling. It&#x27;s a valid complaint for now, but if history can teach us anything, it&#x27;s that DLSS 5 won&#x27;t remain uncanny for long.
+Consider the original DLSS. DLSS 1 launched in 2018 and was blurry, game-specific, and widely decried. I certainly didn&#x27;t make use of it, and I wasn&#x27;t alone. Since then, however, things have changed enormously. Each subsequent release has improved fidelity and performance. These days, the first thing I do when I fire up a new game is check the DLSS and frame gen settings.
+By Sydney Butler
+The flaws with DLSS 5 are probably going to follow the same pattern. The first generation of new technology is almost always a little clunky. A few iterations down the road, we could plausibly expect per-art-style training, better temporal stability, and better performance.
+AI progress isn&#x27;t slowing down for anyone
+That optimism isn&#x27;t just based on the trajectory of DLSS either. Just a few short years ago, AI video generators couldn&#x27;t even create a stable 5-second video of Will Smith eating spaghetti.
+Winding back the clock further, Google&#x27;s DeepDream was conjuring up psychedelic horrors with dog noses embedded in every dark swirl.
+Today, you can generate a 10-second, 1080p video of Will Smith eating spaghetti and speaking on a mid-range gaming PC that would pass for real unless you looked at it very carefully.
+The &quot;realism gap&quot; has been rapidly narrowing in all fields related to AI image and video generation. DLSS 5 might not be perfect right now, but it seems unlikely that it is fundamentally unfixable given the improvements we&#x27;ve seen elsewhere. We just need to wait for DLSS 5.5 and the right supporting software.
+My RTX 5070 Ti took a real performance hit
+The only real catch I encountered was performance: DLSS 5 caused a pretty significant performance hit. My average FPS in Cyberpunk 2077 dropped from about 170FPS (with frame gen on) to around 115FPS. With my specific card, that isn&#x27;t a deal-breaker, but it is going to be a significant problem on less powerful or older GPUs.
+Anyone using an older GPU, or anything other than a 5080 or 5090 really, is going to have to make concessions. In some cases, I expect they&#x27;ll be well worth it.
+True DLSS 5 will probably be restricted to 50-series GPUs.
+If you&#x27;re going to try to use DLSS 5 today, make sure to toggle on frame gen and upscaling to keep your game playable.
+DLSS 5 makes me miss SLI and Crossfire
+Gamers haven&#x27;t used multiple GPUs for gaming in a long time, but my time spent experimenting with DLSS 5 really made me want to use a second GPU.
+Neural Rendering doesn&#x27;t have to run on the same GPU that is handling your native rasterization, you can actually split those two jobs across two GPUs. In theory, that could yield significant performance gains.
+AI in gaming seems to be begging for a return to the era of specialized accelerator cards, like we used to have for PhysX.
+DLSS 5 is the future, and that&#x27;s probably a good thing
+DLSS 5 reached gamers before it was ready. It is unpolished and resource-hungry, but the core technology is extremely impressive.
+Equating it with garden-variety AI slop misses the point. DLSS 5 is not designed to replace thoughtful art direction or an inspired design—it is just going to change how developers approach implementing their vision going forward. Developers that produce great games will continue to produce great games; developers that produce terrible games will just produce terrible photorealistic games instead.
+My PC has an Intel 14700K and RTX 4070 TI Super. I have to turn off or turn down DLSS settings on most of my games as is. What are the odds of me ever using DLSS 5 on my current rig?...Zero.
+Tried on Fatal Frame II remake on Steam using an RTX 4060 Ti, thanks to a nice mod from Nexus Mods. Changes are amazing! Just don&#x27;t max up things to avoid creepiness... I can play at 1080p @30fps, that is totally fine for me (1440p gives almost 30fps and is noticeable, so for now it&#x27;s just wow! and ok).</pre></details><details><summary>查看这篇文章看到的完整题库</summary><pre>v1 | Will NVIDIA enter at least one publicly verifiable binding financial guarantee or unsold-capacity purchase commitment under the AI Compute Partnership by 2027-01-31?
+v2 | What will NVIDIA report as total revenue for FY2027?
+v3 | Will the Chinese government permit NVIDIA H200 sales in China by 2026-12-31?
+v4 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026?
+v5 | How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2027?
+v6 | What gross margin will NVIDIA report for FY2027?
+v7 | What revenue will NVIDIA report from stand-alone CPUs for FY2027?
+v8 | Will NVIDIA launch its Rubin Ultra high-density rack design by 2027-12-31?
+v9 | Will NVIDIA release the Kyber rack-scale architecture by 2028-12-31?
+v10 | What Data Center segment revenue will NVIDIA report for FY2027?
+v11 | Will China formally authorize H200 imports for the named AI companies by 2027-01-31?
+v12 | Will NVIDIA complete the reported purchase of about US$500 million of Firmus preference shares by 2026-12-31?
+v13 | What profit will NVIDIA report for FY2027?
+v14 | Will China formally permit selected companies, including Alibaba Group Holding, to purchase Nvidia H200 chips by 2027-01-31?
+v15 | Will the French competition authority conclude its antitrust investigation into NVIDIA by 2027-01-31?
+v16 | How much incremental compute capacity will Google, Amazon, Microsoft, and Meta add in calendar 2027?
+v17 | Will the US Commerce Department issue a binding rule or other binding restriction implementing its May 2026 guidance on advanced AI-chip transfers to overseas subsidiaries of Chinese companies by 2027-01-31?
+v18 | By 2027-01-31, will NVIDIA ship Rubin GPUs for Noetra’s planned Japan AI factory deployment?
+v19 | Will NVIDIA launch any of the GeForce RTX 50 SUPER models by 2027-01-31?
+v20 | Will NVIDIA begin sampling its Vera Rubin platform by 2026-12-31?
+v21 | Will NVIDIA begin shipping Vera Rubin systems to customers by 2026-12-31?
+v22 | Will NVIDIA launch DLSS 5 by 2026-12-31?
+v23 | Will the U.S. Senate approve the Remote Access Security Act by 2027-01-31?
+v24 | What revenue will NVIDIA report from stand-alone server CPUs for calendar 2026?
+v25 | What operating margin will NVIDIA report for FY2027?
+v26 | Will NVIDIA complete its planned $1 billion investment in NAVER by 2027-01-31?
+v27 | Will the U.S. government formally adopt a ban on Chinese AI models by 2027-01-31?
+v28 | Will SK Telecom&#x27;s first AI data center in South Korea enter service by 2027-12-31?
+v29 | Will NVIDIA enter a publicly verifiable binding purchase commitment for memory supply with SK Hynix by 2027-01-26?
+v30 | How much capital expenditure will NVIDIA report for FY2027?
+v31 | Will Nvidia enter a publicly verifiable binding guarantee or backstop for OpenAI&#x27;s Ohio data center lease or construction debt by 2027-01-27?
+v32 | Will NVIDIA enter a publicly verifiable binding financing arrangement for OpenAI&#x27;s purchase of NVIDIA AI chips by 2027-01-27?
+v33 | Will NVIDIA enter a publicly verifiable binding financing obligation for OpenAI data centers by 2027-07-27?
+v34 | Will NVIDIA enter a publicly verifiable binding equity investment in Safe Superintelligence by 2027-01-27?
+v35 | Will the U.S. government formally adopt a restriction on access to Chinese open-source AI models by 2027-01-31?
+v36 | Will NVIDIA launch its Rosa CPU as part of the Feynman data center platform by 2028-12-31?
+v37 | Will NVIDIA enter a publicly verifiable binding lease commitment for the Hut 8 Texas data center by 2027-01-28?
+v38 | Will Taiwan’s government adopt its own restrictions on AI-chip sales to China by 2027-01-31?
+v39 | Will the U.S. administration formally adopt a ban on open-weight AI models from China by 2027-01-31?
+v40 | Will the federal authority allocate access to the government-controlled power supply for the southern Ohio data-center site by 2027-01-31?
+v41 | Will the U.S. Commerce Department publish its framework for reviewing the safety of cutting-edge AI models by January 31, 2027?
+v42 | Will the U.S. Commerce Department make a public decision allocating power access at the Pike County, Ohio data-center site by 2026-12-31?
+v43 | Will NVIDIA enter a publicly verifiable binding lease for the 5853 Rue Ferrari building by 2027-01-29?
+v44 | Will U.S. Commerce Secretary Howard Lutnick approve the final arrangement for the Pike County, Ohio data-center campus by 2027-01-31?
+v45 | Will Taiwan formally adopt a criminal ban on all AI-chip exports to China by 2027-01-31?
+v46 | Will the U.S. Department of Commerce conclude its investigation into Chinese firms&#x27; access to advanced U.S. chips by 2027-01-31?
+v47 | Will NVIDIA enter a publicly verifiable binding equity investment in Kawasaki Heavy Industries’ shipbuilding business by 2027-01-30?
+v48 | Will the U.S. administration formally decide to prohibit Chinese open-weight AI models by 2027-01-31?
+v49 | Will the Commerce Department formally adopt a measure restricting Chinese AI developers’ access to Nvidia-powered computing capacity hosted outside China by 2027-01-31?
+v50 | Will NVIDIA enter a publicly verifiable binding funding obligation as part of the reported $500 billion AI infrastructure financing partnership by 2027-08-10?
+v51 | Will NVIDIA enter a publicly verifiable binding equity investment in Lancium by 2027-02-16?
+v52 | Will NVIDIA complete its announced $1.5 billion investment in SB Energy by 2027-02-17?
+v53 | Will NVIDIA complete a publicly verifiable binding equity investment in Groq by 2027-08-17?
+v54 | Will the U.S. Senate pass the Remote Access Security Act by 2027-01-31?
+v55 | Will NVIDIA enter a publicly verifiable binding equity investment in Mercor by 2027-08-19?
+v56 | Will NVIDIA enter a publicly verifiable binding equity investment in Anthropic by 2027-08-19?
+v57 | Will NVIDIA ship its adapted LPU variant to Chinese clients by 2026-12-31?
+v58 | Will NVIDIA complete a publicly verifiable binding equity investment in Poolside by 2027-02-21?
+v59 | Will NVIDIA enter a publicly verifiable binding equity investment in Cloverleaf Infrastructure by 2027-08-21?
+v60 | What will the year-over-year growth rate in hyperscaler capital expenditure be in calendar 2027?
+v61 | Will the Groq 3 LPX rack deployment at Nebius be online by 2026-12-31?
+v62 | Will NVIDIA enter a publicly verifiable binding equity investment in Perplexity AI by 2027-08-24?
+v63 | Will NVIDIA enter a publicly verifiable binding obligation to pay Poolside $6 billion for a license by 2027-08-24?
+v64 | Will NVIDIA enter a publicly verifiable binding agreement to acquire Hugging Face by 2027-08-26?
+v65 | What networking revenue will NVIDIA report for FY2027?
+v66 | Will the U.S. administration formally decide to restrict support for applications or models built on Chinese-origin open-source foundation models by 2027-01-31?
+v67 | Will the U.S. administration formally announce new tariffs on semiconductors by 2027-01-31?
+v69 | Will NVIDIA enter a publicly verifiable binding equity investment in Bloom Energy by 2027-08-28?
+v70 | What year-over-year growth rate will NVIDIA report for total revenue in FY2028?</pre></details><div class="three"><section class="arm"><h4>单 prompt 对照</h4><p class="meta">原始抽取 3 条 · 检查后 3 条 · 新问题 0 个</p><div class="ev"><div class="evtop"><b>e1</b><span>关联：v22</span></div><p>NVIDIA’s DLSS 5 official release is scheduled for later in 2026.</p><blockquote>DLSS 5 isn&#x27;t due for an official release until sometime later this year</blockquote><small>来源：Nick Lewis, How-To Geek · 原始发言人：NVIDIA · 原始日期：未写 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>e2</b><span>关联：v22</span></div><p>An unfinished version of DLSS 5 leaked with NBA 2K27, enabling the RenoDX modding community to run it with dozens of games.</p><blockquote>an unfinished version that slipped out with NBA 2K27 has allowed the RenoDX modding community to get it running with dozens of games.</blockquote><small>来源：Nick Lewis, How-To Geek · 原始发言人：Nick Lewis, How-To Geek · 原始日期：2026-08-29 · 类型：fact</small></div><div class="ev"><div class="evtop"><b>e3</b><span>关联：v22</span></div><p>NVIDIA said it will provide developers with DLSS 5 tools to control intensity, color grading, and masking.</p><blockquote>NVIDIA has stated that there will be tools that give developers control over intensity, color grading, and masking.</blockquote><small>来源：Nick Lewis, How-To Geek · 原始发言人：NVIDIA · 原始日期：未写 · 类型：party_statement</small></div><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;e1&quot;,
+      &quot;quote&quot;: &quot;DLSS 5 isn&#x27;t due for an official release until sometime later this year&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA’s DLSS 5 official release is scheduled for later in 2026.&quot;,
+      &quot;speaker&quot;: &quot;Nick Lewis, How-To Geek&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Later in 2026&quot;,
+      &quot;links&quot;: [
+        &quot;v22&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e2&quot;,
+      &quot;quote&quot;: &quot;an unfinished version that slipped out with NBA 2K27 has allowed the RenoDX modding community to get it running with dozens of games.&quot;,
+      &quot;one_line&quot;: &quot;An unfinished version of DLSS 5 leaked with NBA 2K27, enabling the RenoDX modding community to run it with dozens of games.&quot;,
+      &quot;speaker&quot;: &quot;Nick Lewis, How-To Geek&quot;,
+      &quot;original_who&quot;: &quot;Nick Lewis, How-To Geek&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;fact&quot;,
+      &quot;event_time&quot;: &quot;By 2026-08-29&quot;,
+      &quot;links&quot;: [
+        &quot;v22&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;e3&quot;,
+      &quot;quote&quot;: &quot;NVIDIA has stated that there will be tools that give developers control over intensity, color grading, and masking.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA said it will provide developers with DLSS 5 tools to control intensity, color grading, and masking.&quot;,
+      &quot;speaker&quot;: &quot;Nick Lewis, How-To Geek&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Future; no date stated&quot;,
+      &quot;links&quot;: [
+        &quot;v22&quot;
+      ]
+    }
+  ],
+  &quot;candidates&quot;: [],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>新观点 + 文章证据</h4><p class="meta">原始抽取 0 条 · 检查后 0 条 · 新问题 0 个</p><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [],
+  &quot;candidates&quot;: [],
+  &quot;new_groups&quot;: []
+}</pre></details></section><section class="arm"><h4>已有观点的证据</h4><p class="meta">原始抽取 2 条 · 检查后 2 条 · 新问题 0 个</p><div class="ev"><div class="evtop"><b>gnews:6dcaad557a1b21d7b867fe34-1</b><span>关联：v22</span></div><p>The author reports that DLSS 5 has not yet had its official release, which is expected sometime later in 2026, and that an unfinished version is running in dozens of games through the RenoDX modding community.</p><blockquote>DLSS 5 isn&#x27;t due for an official release until sometime later this year, but an unfinished version that slipped out with NBA 2K27 has allowed the RenoDX modding community to get it running with dozens of games.</blockquote><small>来源：Nick Lewis, How-To Geek author · 原始发言人：Nick Lewis · 原始日期：2026-08-29 · 类型：third_party_view</small></div><div class="ev"><div class="evtop"><b>gnews:6dcaad557a1b21d7b867fe34-2</b><span>关联：v22</span></div><p>NVIDIA said DLSS 5 will include tools allowing developers to control intensity, color grading, and masking; the article gives no release date for those tools.</p><blockquote>NVIDIA has stated that there will be tools that give developers control over intensity, color grading, and masking.</blockquote><small>来源：Nick Lewis, How-To Geek author, relaying NVIDIA&#x27;s statement · 原始发言人：NVIDIA · 原始日期：未写 · 类型：party_statement</small></div><details><summary>查看这一路的完整原始模型回答</summary><pre>{
+  &quot;evidence&quot;: [
+    {
+      &quot;id&quot;: &quot;gnews:6dcaad557a1b21d7b867fe34-1&quot;,
+      &quot;quote&quot;: &quot;DLSS 5 isn&#x27;t due for an official release until sometime later this year, but an unfinished version that slipped out with NBA 2K27 has allowed the RenoDX modding community to get it running with dozens of games.&quot;,
+      &quot;one_line&quot;: &quot;The author reports that DLSS 5 has not yet had its official release, which is expected sometime later in 2026, and that an unfinished version is running in dozens of games through the RenoDX modding community.&quot;,
+      &quot;speaker&quot;: &quot;Nick Lewis, How-To Geek author&quot;,
+      &quot;original_who&quot;: &quot;Nick Lewis&quot;,
+      &quot;original_day&quot;: &quot;2026-08-29&quot;,
+      &quot;tier&quot;: &quot;third_party_view&quot;,
+      &quot;event_time&quot;: &quot;Official release expected sometime later in 2026; unfinished version was available by publication.&quot;,
+      &quot;links&quot;: [
+        &quot;v22&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gnews:6dcaad557a1b21d7b867fe34-2&quot;,
+      &quot;quote&quot;: &quot;NVIDIA has stated that there will be tools that give developers control over intensity, color grading, and masking.&quot;,
+      &quot;one_line&quot;: &quot;NVIDIA said DLSS 5 will include tools allowing developers to control intensity, color grading, and masking; the article gives no release date for those tools.&quot;,
+      &quot;speaker&quot;: &quot;Nick Lewis, How-To Geek author, relaying NVIDIA&#x27;s statement&quot;,
+      &quot;original_who&quot;: &quot;NVIDIA&quot;,
+      &quot;original_day&quot;: &quot;&quot;,
+      &quot;tier&quot;: &quot;party_statement&quot;,
+      &quot;event_time&quot;: &quot;Future tools; timing unspecified.&quot;,
+      &quot;links&quot;: [
+        &quot;v22&quot;
+      ]
+    }
+  ]
+}</pre></details></section></div></article><h2>两套实际使用的 prompt</h2><div class="card"><p>以下是系统指令原文。每次调用还附带文章、题库、分类说明和输出格式；完整请求保存在 <a href="frozen-requests.json">frozen-requests.json</a>。</p><details><summary>A · 新观点 + 文章内证据：展开原文</summary><pre>You are a senior investment-research analyst. Read the complete article and the supplied list of research questions that existed immediately before the item. Your job is to find important new investment questions this article raises, and collect the article&#x27;s evidence for each such question. This request does not extract evidence for existing questions; another independent request does that.
+
+First read the whole article and identify investment-relevant statements by the evidence standard below. Then compare the investment questions they raise with the supplied questions: an alternative wording, forecast or source for the same underlying question is evidence to the existing question, not a new question. Propose a new candidate when the item raises an important independent question not already covered, subject to the candidate rules. The downstream matcher verifies novelty; do not invent a new question merely to give a statement a home.
+
+For each candidate, return all source-backed statements in this article that bear on its answer, including support, counter-evidence, current results, guidance, estimates and relevant conditional statements. Do not return just a single opening quote when the article has several relevant statements. A quarterly result or guidance can support a relevant annual question; a restriction on opening a quarterly question does not reject evidence. Preserve who said what, the period, assumptions and uncertainty. Each evidence item must link to the candidate IDs it can inform; each candidate must name its own evidence IDs. No candidate means return no candidate-linked evidence. Do not link to an existing question ID.
+
+Evidence: what to keep
+- Material statements often take one of four forms. (1) The company&#x27;s own figure, guidance or decision: &quot;same-store sales rose 4.2% in the quarter&quot;; &quot;management guided full-year revenue to $12–13 billion&quot;; &quot;the board approved a $10 billion buyback&quot;. (2) A customer&#x27;s, supplier&#x27;s, competitor&#x27;s or partner&#x27;s action or reported figure with a size, date or name that bears on the company&#x27;s demand, supply, input costs, competition, prices or products: &quot;the largest customer said it will cut orders by a fifth next year&quot;; &quot;a bank chose a rival&#x27;s system&quot;; &quot;a software firm is integrating the company&#x27;s model into its government systems&quot;; &quot;the main supplier said its capacity will double by 2027&quot;; &quot;a rival cut list prices 15% in Europe&quot;; &quot;the largest customer reported its order backlog doubled to $40 billion&quot;. An action is a step the item reports as news: taken, decided or planned (an order, a contract, a selection, an integration under way, an expansion, a cut, a price change, a deployment plan). A party that already uses, hosts, runs or has built on the company&#x27;s products, and the benefits it describes from that use (faster, cheaper, more accurate), describe an arrangement in place, which is background; its own revenue, capacity, orders or contracted amounts are figures under (2) (&quot;a hospital chain uses the company&#x27;s scheduling software and reports shorter waits&quot;). (3) A named party&#x27;s new claim or estimate about the company or its industry, with or without a figure, whether an analyst, a customer&#x27;s or rival&#x27;s executive or an official makes it: &quot;the CFO said plants built a decade ago still run at full capacity&quot;; &quot;an analyst raised next year&#x27;s EPS estimate to $4.10&quot;; &quot;an analyst said the bank&#x27;s loan losses next quarter will come in well above consensus&quot;; &quot;a short seller accused the company of overstating receivables by $2 billion&quot;; &quot;an analyst valued the shares at $80, 15 times next year&#x27;s earnings of $5.30&quot;. (4) A policy or regulatory decision or step, including one still in force that the item reports: &quot;the regulator approved the drug for a second indication&quot;; &quot;the government required licences for exports of the product&quot;; &quot;the regulator still bars sales of the drug in the country&quot;.
+- Go through the item from its first paragraph to its last. The four kinds describe what material statements usually look like; they do not decide what is kept. Take a statement when an analyst following the company would write it in this week&#x27;s notes because it makes some question&#x27;s answer more or less likely, and no row of the closing check at the end of this request rejects it; a row&#x27;s &quot;it does not cover&quot; clause sends the statement back to that test and keeps it only where the row says so. Most of an item is background, but a page with eight statements that pass yields eight evidence items, not a selection.
+
+
+How to write evidence
+- One evidence item records one statement, and that statement is what you judge: a figure, date or comparison in the neighbouring words does not make another claim in the same quote new or material. Copy its quote verbatim, without translation. Separately write a standalone summary in one_line: who did or said what, how much and for which period, naming the measure even when a neighbouring sentence gives it.
+- Identify the speaker and, for a retelling, the original speaker and statement day. Use the schema&#x27;s tier: fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials&#x27; remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources, calls unconfirmed, or that have no source and fit no other tier. An announcement or completed deal is a fact when the reporter names no source but does not call it unconfirmed or attribute it to unnamed sources.
+- A record mixing a confirmed main fact and an unconfirmed secondary detail follows the main statement&#x27;s tier; label the secondary detail as unconfirmed. Keep a market consensus distinct from the company&#x27;s own forecast. Use only this item&#x27;s information. Report plans as plans; do not infer committed funding, orders, deliveries or revenue.
+
+
+Which questions to propose
+- Open a candidate only for one of four reasons, named in opens_as. main_driver: an annual quantity that carries the company&#x27;s value (the segment that carries the business, gross margin, capital spending), whether or not the company guides it, or the date by which the generation of the company&#x27;s own product that carries that quantity launches or starts shipping (a carmaker&#x27;s next vehicle platform; not a feature, content or software update, regional service or variant of a product already on sale); the question&#x27;s ranges settle it, not a guidance figure. Not every reported or guided line. industry_aggregate: one aggregate quantity for one calendar year, such as the combined capital spending of named companies. policy_stage: a stage of a policy process, with the authority that decides it named. binding_obligation: an obligation a universe company takes on in its own name: a guarantee or credit support for another party&#x27;s debt, lease or revenue, financing it extends to others, a purchase commitment or a backstop of customers&#x27; capacity or revenue, whether or not the item gives its amount; or an equity stake whose size is stated and is not yet completed. Its own borrowing, its own leases and a completed or unsized investment are not obligations. Not yet signed: a yes/no question due on a day after the item by which the signing can be checked, at most 18 months out. Already taken on, as one deal or as a programme: a financing_amount question on the amount the obligation reaches at the company&#x27;s next annual filing, settled by that filing&#x27;s commitments note; the announcement itself is evidence to it.
+- A number, a financial line, a target or a named customer project does not by itself open a thesis; a customer&#x27;s purchase or rollout plan is evidence to the supplier&#x27;s demand and product theses unless it changes the supplier&#x27;s own cash or credit risk.
+- For every candidate: settled_by names the public material that resolves it (an annual report, a filing&#x27;s note, an official decision). A different source, estimate, wording or direction for the same underlying quantity is the same question. Another population or proxy for the same aggregate is also the same question; a separately meaningful component may be its own question. A different quantity, period or decision may be another question.
+- A yearly metric asks for a quantity over a defined fiscal or calendar period and keeps the current/next-year limit. A milestone asks whether a specified event or project reaches a defined state by a deadline; a numeric completion target can define that state without becoming a yearly metric. Do not repackage a beyond-horizon annual forecast as an event. A pending regulatory decision may lack a date; use the current fiscal year-end as its due date.
+- Do not propose theses about quarterly figures or guidance, undated subjects such as moats or strategy, executive appointments, shareholder votes or bylaws, routine litigation procedure, or buyback authorisations.
+
+
+How to write a candidate thesis
+- One thesis concerns one figure for a named period or one event. Separate independently meaningful outcomes.
+- Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date.
+- A question about a company&#x27;s revenue, profit, share or product progress is an asset thesis; put its ticker in object, even when policy or macroeconomics drives it. A theme thesis asks what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company.
+- Write generated descriptions in English.
+- Define concrete, verifiable conditions now. Do not propose a ladder whose thresholds depend on an unspecified future target.
+- Use five rungs; only a yes/no question about an event has two. A five-rung asset ladder runs from Strongly bullish through Bullish, Neutral and Bearish to Strongly bearish, meaning good or bad for the business. A theme ladder runs between two ends of an outcome range; label the outcomes, without assigning business sentiment. Conditions must not overlap or leave gaps: exactly one must hold when resolved. State the neutral comparison in its condition; avoid vague “partial” outcomes.
+- Set the due date when the question can be resolved. For a figure, use its publication date. Company figures use the company&#x27;s fiscal year: “this year” contains the item&#x27;s publication day, and “next year” follows it. Other figures use calendar years. For an event, name the date at which its outcome is assessed.
+
+Research groups
+- A research group is one ongoing matter in the world that several questions track together: a product rollout and its customer adoption, a financing or acquisition deal, a policy process, an investment or demand cycle. It usually spans companies and themes. When a candidate tracks a matter, declare the group in new_groups (local id n1, n2 …, with a name, a scope that says what is happening, and aliases: the names the matter goes by in the press, such as product, project or programme names and the parties; not company names) and cite that id in group_refs; a declared group whose names match a stored group is that group. A company&#x27;s own reported or guided financial lines (total or segment revenue, margins, expenses, tax rate, capex) belong to the company and carry no group: leave their group_refs empty unless the line itself tracks such a matter. A company is not a group, and a thesis is not a group.
+
+Identity fields and numeric bounds
+- Select the closest measure allowed by the schema. Scope is its actual segment, product, population or event subject. Reuse a supplied reference name only when it has the same meaning; leave scope empty when unqualified.
+- period_start and period_end describe the period the figure covers. Convert fiscal years using the supplied fiscal-year note. Calendar year 2026 is 2026-01-01 through 2026-12-31. For an event, use the start of the year in which it is proposed through the due date.
+- Identify the accounting basis and unit. For event or policy_event, select the event type; otherwise use n/a.
+- Each numeric rung has an inclusive lower bound lo and exclusive upper bound hi, in the stated unit. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest numeric range has lo null, the highest hi null. Both bounds are null for yes/no outcomes.
+</pre></details><details><summary>B · 已有观点的证据：展开原文</summary><pre>You are a senior investment-research analyst. Read the complete article and the supplied research questions that existed immediately before the item. Your only job is to find source-backed information in the article that helps answer an existing question. Return evidence, not new questions. Another independent request discovers new questions.
+
+Go from the first paragraph to the last. For each statement, decide whether an analyst would record it because it makes an existing question&#x27;s answer more or less likely. Include both supporting and opposing information, published results, guidance, estimates, conditional scenarios and relevant direct or indirect drivers when their connection is logically clear. An uncertain, future, quarterly or incomplete statement is not discarded on that basis alone; a quarterly result or guidance can support a relevant annual question. A statement is not related merely because it mentions the same company, industry or event. Keep the specific matter and any period, condition, source and uncertainty; do not infer a completed action or invent a date.
+
+For every kept statement link to the narrowest applicable question from the supplied list, using the question&#x27;s own description and the link-field rules. Do not cite a question not shown. If no existing question has a reasoned connection, do not attach it to an unrelated question. Return no candidates and do not propose a new question. The matching step, not this call, decides whether a source statement repeats existing evidence; do not assume it is already known just because the question exists.
+
+Evidence: what to keep
+- Material statements often take one of four forms. (1) The company&#x27;s own figure, guidance or decision: &quot;same-store sales rose 4.2% in the quarter&quot;; &quot;management guided full-year revenue to $12–13 billion&quot;; &quot;the board approved a $10 billion buyback&quot;. (2) A customer&#x27;s, supplier&#x27;s, competitor&#x27;s or partner&#x27;s action or reported figure with a size, date or name that bears on the company&#x27;s demand, supply, input costs, competition, prices or products: &quot;the largest customer said it will cut orders by a fifth next year&quot;; &quot;a bank chose a rival&#x27;s system&quot;; &quot;a software firm is integrating the company&#x27;s model into its government systems&quot;; &quot;the main supplier said its capacity will double by 2027&quot;; &quot;a rival cut list prices 15% in Europe&quot;; &quot;the largest customer reported its order backlog doubled to $40 billion&quot;. An action is a step the item reports as news: taken, decided or planned (an order, a contract, a selection, an integration under way, an expansion, a cut, a price change, a deployment plan). A party that already uses, hosts, runs or has built on the company&#x27;s products, and the benefits it describes from that use (faster, cheaper, more accurate), describe an arrangement in place, which is background; its own revenue, capacity, orders or contracted amounts are figures under (2) (&quot;a hospital chain uses the company&#x27;s scheduling software and reports shorter waits&quot;). (3) A named party&#x27;s new claim or estimate about the company or its industry, with or without a figure, whether an analyst, a customer&#x27;s or rival&#x27;s executive or an official makes it: &quot;the CFO said plants built a decade ago still run at full capacity&quot;; &quot;an analyst raised next year&#x27;s EPS estimate to $4.10&quot;; &quot;an analyst said the bank&#x27;s loan losses next quarter will come in well above consensus&quot;; &quot;a short seller accused the company of overstating receivables by $2 billion&quot;; &quot;an analyst valued the shares at $80, 15 times next year&#x27;s earnings of $5.30&quot;. (4) A policy or regulatory decision or step, including one still in force that the item reports: &quot;the regulator approved the drug for a second indication&quot;; &quot;the government required licences for exports of the product&quot;; &quot;the regulator still bars sales of the drug in the country&quot;.
+- Go through the item from its first paragraph to its last. The four kinds describe what material statements usually look like; they do not decide what is kept. Take a statement when an analyst following the company would write it in this week&#x27;s notes because it makes some question&#x27;s answer more or less likely, and no row of the closing check at the end of this request rejects it; a row&#x27;s &quot;it does not cover&quot; clause sends the statement back to that test and keeps it only where the row says so. Most of an item is background, but a page with eight statements that pass yields eight evidence items, not a selection.
+
+
+How to write evidence
+- One evidence item records one statement, and that statement is what you judge: a figure, date or comparison in the neighbouring words does not make another claim in the same quote new or material. Copy its quote verbatim, without translation. Separately write a standalone summary in one_line: who did or said what, how much and for which period, naming the measure even when a neighbouring sentence gives it.
+- Identify the speaker and, for a retelling, the original speaker and statement day. Use the schema&#x27;s tier: fact for official actions, published actual figures or completed transactions; party_statement for company guidance, management statements or officials&#x27; remarks; third_party_view for analyst, media or expert opinions; rumour for claims the item credits to unnamed sources, calls unconfirmed, or that have no source and fit no other tier. An announcement or completed deal is a fact when the reporter names no source but does not call it unconfirmed or attribute it to unnamed sources.
+- A record mixing a confirmed main fact and an unconfirmed secondary detail follows the main statement&#x27;s tier; label the secondary detail as unconfirmed. Keep a market consensus distinct from the company&#x27;s own forecast. Use only this item&#x27;s information. Report plans as plans; do not infer committed funding, orders, deliveries or revenue.
+</pre></details></div><p class="meta">实验调用结束于抽取检查交接；未改变线上默认配置。独立复核已完成。</p></main></html>

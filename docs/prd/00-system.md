@@ -1,5 +1,7 @@
 # System overview
 
+> **2026-11-05: all open questions per item.** Extraction must read every question open in the latest committed research library before each item, including earlier same-day writes. The two experimental split calls for that item share the snapshot. This supersedes both the day-start snapshot and the earlier subject-filtered selection; the existing production default has not yet been updated or accepted.
+
 > Status: foundation frozen; pull mode and closing at the due day decided and built (D54, D356). Universe, classification, Config, dispatch, extraction and human-review intake froze on October 18, 2026; the library and matching labels on October 20; the full review completed October 22. D149 adds extraction-time grouping; D165 integrates it into the default pipeline. Corrected to D63, D198, D202, D204, D169, D190, D251, D260, D264 on 2026-11-05 (D367). English edition: October 25, 2026 (D163).
 > Design page: `docs/system-design.html` → New → Open system PRD. Recorded decisions take precedence over this document.
 
@@ -34,7 +36,7 @@ Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
 | Research universe | Extraction | All themes for candidate selection in block 3 |
 | Config | Extraction, library, coverage-start reading | Model settings version; library search result count |
 | Coverage-start reading | Library | Once at coverage start, each open question's starting figure from the company's latest earnings report, linked to every question that read it (D363, D364) |
-| Library | Extraction | The theses of the item's subjects and every theme thesis open at the start of the item's day, each with its takes line, in block 5 (D251, D264); no list of stored groups |
+| Library | Extraction | Every open question committed immediately before this item, including earlier same-day writes, with its takes line; both experimental split calls share the snapshot. |
 | Library | Matching labels | Comparison records for human labels and future smaller-model training |
 | Dispatch, extraction, library | Human review | Unresolved items, proposed themes and repeated failures |
 
@@ -53,7 +55,7 @@ Upstream → Dispatch → Extraction → Thesis library ↔ Matching labels
 2. A thesis is a judgement; evidence records who said what in which item. Only incoming information creates evidence. Theses cannot prove each other.
 3. Retain sources for every thesis, evidence item and information-triggered change, including the location in the original.
 4. The stream is driven by incoming information, not the calendar. No input means no stream work; pull mode owns time.
-5. Dispatch sequence determines order. Read earlier sequences plus the item's own writes (extraction reads the theses open at the start of the item's day, D251), with results equivalent to serial processing. Append knowledge without rewriting history. Store a late older statement as one more piece with its actual date, never as revising a newer one (D202); accept newly learned matters with their actual dates.
+5. Dispatch sequence determines order. Extraction reads the latest committed questions from earlier sequences immediately before each item (D375 on main); both experimental split calls share that state. Processing must produce the same result as sequence order, including when an earlier item opens a new question. Append knowledge without rewriting history. Store a late older statement as one more piece with its actual date, never as revising a newer one (D202); accept newly learned matters with their actual dates.
 6. The research universe alone chooses subjects and categories. Upstream supplies only that scope; process every supplied item.
 7. At matching time, open one thesis per subject and focus, with separate current/next-year numeric periods; manual reopening is excluded. D155 governs the POC's bounded code-owned identity. Search finds comparisons, not final identity. Resolve an evidence item's thesis before searching within it.
 8. Fix questions and ladders in advance, and freeze the state when due. Rungs are verifiable outcomes. Append records and retain closed theses; the writer retires no evidence (D202).

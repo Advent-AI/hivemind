@@ -1,6 +1,6 @@
 // The New design's extraction module, the views database and closing at the due day (decisions D26-D45, D54, D356). Extraction reads
-// every item whole, by its category, as a senior hedge fund analyst, with the views of the item's objects and every theme
-// view open at the start of the item's day and their takes lines (prompt part 5; D251, D264), and hands over two things
+// every item whole, by its category, as a senior hedge fund analyst, with every open question
+// views open immediately before the item and their takes lines (prompt part 5; D264, D375 on main), and hands over two things
 // with their sources: evidence filed under the narrowest of those views it bears on or under a candidate view, and
 // candidate views with extraction-owned subject memberships (D149). A view is a question with a ladder and a due date;
 // Jev, with the collision judge, matches each candidate to views found by search (the same view, its next period, or
@@ -22,7 +22,7 @@
     { part: "What this category is and how to read it", content: "The category definition and reading method; for example, attribute opinions and estimates to their author rather than treating them as completed facts.", source: "Owned by classification; not redefined here" },
     { part: "Subjects", content: "The item's related subjects plus every theme in the research universe. Select an existing theme for a theme candidate when applicable; otherwise describe the new issue clearly.", source: "Item metadata; themes from the research universe" },
     { part: "What to extract from this category", content: "One row per category in the table below.", source: "Extraction module" },
-    { part: "Open theses at the start of the day", content: "The theses of the item's subjects and every theme thesis open at the start of the item's day, the same list for every item of that day, each with a code-written takes line saying what its file holds. No states, evidence, dependency links or list of stored research groups; a candidate declares its group by name and scope.", source: "Thesis library, read once per day (D251, D264)" },
+    { part: "Open theses before the item", content: "Every open question committed before this item, including earlier same-day writes, each with its takes line. Both experimental split calls receive the same per-item snapshot. No states, evidence, dependency links or list of stored research groups.", source: "Thesis library, read per item" },
   ];
 
   // D149 requires extraction-owned membership; D147/D148 remain isolated implementations and measurements.
@@ -75,7 +75,7 @@
       { answer: "2 How to read this category", label: "Media reporting", note: "From classification: opinion and analysis belong to T8; registered publication series use their category; remaining media material belongs here." },
       { answer: "3 Subjects", label: "Subjects of this report", note: "Filled by code, such as NVDA and AMD, plus all universe themes" },
       { answer: "4 What to extract", label: "What happened, when and who was involved; attribution and original sources", note: "Official confirmation is fact; unnamed-source claims are rumours" },
-      { answer: "5 Open theses at the start of the day", label: "Every NVDA and AMD thesis and every theme thesis open at the start of the report's day", note: "Filled by code once per day, each thesis with its takes line: for example NVDA FY2027 China revenue (“takes: revenue figures, guidance, estimates and revisions for NVIDIA China, this question's period …”) and the chip-export-licensing theme thesis. No states, evidence, dependency links or list of stored research groups." },
+      { answer: "5 Open theses before the item", label: "Every open question committed before this report, including earlier same-day topics", note: "Both experimental split calls share this snapshot; each question has its takes line. No states, evidence, dependency links or list of stored research groups." },
     ],
   };
 
@@ -90,7 +90,7 @@
 
   // Extraction, step by step: it only reads; matching and writing happen in the views database.
   const EXTRACT_STEPS = [
-    { code: '1', name: "Build the prompt", who: "Code", does: "Use the category's content in the shared template. The library supplies block 5 once per day: the item's subjects' theses and every theme thesis open at the start of the item's day, each with its takes line (D251, D264); no dependency links and no list of stored groups." },
+    { code: '1', name: "Build the prompt", who: "Code", does: "Use the category's content in the shared template. Read every open question immediately before this item, including earlier same-day writes. Both experimental split calls use this same per-item snapshot; no dependency links or list of stored groups." },
     { code: '2', name: "Read", who: "Model", does: "Read the whole item. Return evidence, each piece filed under the narrowest block-5 thesis it bears on and the answer's candidates it supports (D207, D264), and candidates for important uncovered questions with their initiating evidence. Personal memos follow their special rule. Decide each candidate's group association and return references under the library contract. Retain sources." },
     { code: '3', name: "Check sources and group references", who: "Code", does: "Check that the quote or cell exists in the item and that cited numbers appear there. Evidence must link to block-5 theses or current candidates. Reject source mismatches with reasons. Validate association references under the library's complete handoff contract." },
     { code: '4', name: "Hand off to the library", who: "Code", does: "Hand off evidence, candidates, associations and necessary group definitions with the sequence number. Matching decides identity; writing preserves membership." },
@@ -146,7 +146,7 @@
         ],
       },
       {
-        answer: "NVIDIA statement, July 14, 2025", label: "Block 5 shows #1 and #2, open at the start of the day, with their takes lines", question: "One evidence item, no candidate",
+        answer: "NVIDIA statement, July 14, 2025", label: "Block 5 shows #1 and #2, open immediately before the item, with their takes lines", question: "One evidence item, no candidate",
         children: [
           { answer: "Evidence", label: "Link to #1", note: "Party statement: NVIDIA says the US government assured it that H20 export licences to China will be granted (July 14, 2025)", act: true },
         ],
@@ -451,7 +451,7 @@
   const ORDER_RULES = [
     "Only incoming information creates evidence. Theses send notifications, not evidence, so they cannot prove themselves.",
     "One queue writes each thesis: the theme's queue for theme theses; the company, cryptocurrency or commodity queue for asset theses. Within an item, write themes before assets. Rejudgement order follows dependencies under the round rule. Other queues send requests, such as dependency changes or replacement links, to the owning queue with the item's sequence number.",
-    "Order by sequence, never the computer clock. An item reads only records from earlier sequences plus its own writes, except that extraction reads the theses open at the start of the item's day (D251). The result must match serial processing. If concurrent work changes anything it read, including search lists, before commit, redo the affected work.",
+    "Order by sequence, never the computer clock. Before each item, extraction reads the latest committed questions from earlier sequences, including earlier same-day writes (D375 on main). The two experimental split calls share that snapshot. Processing must be equivalent to sequence order: if an earlier item changes the snapshot, including by opening a question, redo any later work that used the stale snapshot.",
     "A day's items form one round: each item's evidence links, thesis creation, succession and dependencies are written in sequence order, and after the day's last item the round rejudges in dependency order (D63). Dependants read conclusions freshly judged in that round. Judge each thesis once. A widely depended-on thesis such as the Fed rate triggers each dependant once only if it declares its conclusion changed; otherwise propagation stops.",
     "Append-only records: questions, ladders and due dates are immutable. Matching, rejudgement, succession, closure, reopening and labels append records with sequence numbers.",
     "The timeline only appends, never rewrites past knowledge. A statement older than one already stored on the same matter is stored and linked as one more piece with its true date, and no revision is recorded (D202); previously unknown information counts normally with its true date.",
@@ -583,7 +583,7 @@
       container.innerHTML = `
         <div class="drill">
           <h2 class="drill__title">Extraction: read each category into evidence and candidates</h2>
-          <p class="drill__intro">Give the model the entire item and its category prompt, alongside the theses open at the start of its day with their takes lines, to read as a senior hedge-fund analyst. Return evidence, each piece filed under the narrowest open thesis it bears on or the answer's candidates, and candidates for important uncovered questions with their initiating evidence. Personal memos follow their prompt rule. Each candidate carries a group association under the contract below. Retain sources. The library owns matching and writing.</p>
+          <p class="drill__intro">Give the models the entire item and the latest committed questions immediately before it, including earlier same-day writes. The experimental A and B calls share this snapshot: one finds new questions with article evidence, the other finds evidence for existing questions. The existing production design uses one call. Retain sources. The library owns matching and writing. D375 on main is decided; implementation and acceptance are pending.</p>
           <p class="drill__status"><span class="pill pill--strong">First version frozen · 2026-10-18</span>Decided: whole-item reading, one prompt per category with a shared structure, model-judged theses and objective evidence, source references, read-only extraction, evidence separate from complete candidates. Category prompt wording still needs validation.</p>
           <h3 class="drill__heading drill__heading--spaced">Determine group associations during extraction</h3>
           <ul class="drill__rules">${listItems(EXTRACT_RELATIONS, escapeHtml)}</ul>

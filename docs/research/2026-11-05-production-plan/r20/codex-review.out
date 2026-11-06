@@ -1,0 +1,23 @@
+**第 5 轮仍有严重问题：测试可能把正常波动当成改进，也可能让错误信息的总量明显增加后仍然通过。** 我同意结果的主要解读和建议方向，但目前不同意把这套测试作为下一步提交给 Alex。
+
+例如，现有版本的六次结果即使刚好分成两组三次、平均数完全一样，也不能证明再发三次不会因正常波动高出 3%。现在的自检只能保证它指定的那一次自身比较不会被叫作改进。
+
+第 4 轮各项意见：
+
+1. **“新披露的事实”措辞：已解决。** [第 165 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:165)明确保留旧的、已知的背景排除规则，同时说新披露的事实不能仅因安排已存在就被排除，仍须按标准判断。
+
+2. **测试的抽样、覆盖和自身波动：部分解决。**
+
+   - **互相矛盾的错误信息界线：已解决。** [第 186 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:186)现在只有一条界线，不再同时规定“可以超过”和“不能超过”。
+   - **六次现有版本如何检验条件：部分解决。** [第 184 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:184)和[第 190 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:190)的算术成立：把 C4–C6 当作新版时，其与 C1–C3 的差不可能**大于**自己的绝对差，所以条件 1 必然不通过；条件 2 的上限至少是 C1–C3 的均值加两组的绝对差，所以必然通过。条件 3 则用这两组盲读结果决定是否放宽界线。
+     
+     但这只检验了六次结果的一种分组，不能排除其他正常波动被判成提升。先前完整窗口的六次现有版本结果就说明了风险：一种分组三次的均值相差 **4**，另一种分法相差约 **9.3**；若只用前者估计波动，后者会超过当时 237 条有用事实的 3%（约 **7.1**）。这是旧窗口的示例，不是这次新测试的预测。应在发送前固定如何用六次结果的所有三对三分组估计误判风险，并写明风险过高或数据不足时如何停止判断。
+   - **不足 20 条的比例和空样本：已解决。** [第 180 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:180)规定不足 20 条就全部阅读并比较比例；没有样本则该条件未受检，不能算通过。
+   - **11 篇文章的措辞：已解决。** [第 176 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:176)现在说的是标准答案没有列出有用事实，新增加的内容仍按标准判断。
+
+3. **把损失归因于第一句话：已解决。** [第 156 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:156)把它称为最强线索，并明确说尚未量出它解释了多少损失；试验只证明整个指令块会影响答案。
+
+**另一个仍需修正的问题**在[第 179 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:179)和[第 188 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:188)：新增内容的盲读只限制“值得保留的比例”，没有限制不值得保留内容的**总量**。例如，旧版新增 20 条，其中 4 条不该留；新版新增 200 条，其中 40 条不该留。两边值得保留的比例同为 80%，这一条件仍会通过，尽管不该留的内容增加了十倍；如果这些内容没有列在标准答案里，第 2 条也抓不到。应把新增内容的数量和盲读中不该保留的比例一起用于判断，事先写清可接受的增加及样本不足时如何处理，而不是只报告总数。
+
+本轮为只读审查，未修改文件或发送模型请求。
+

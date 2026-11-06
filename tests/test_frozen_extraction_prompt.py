@@ -42,12 +42,14 @@ def test_the_code_written_parts_of_the_frozen_request_are_unchanged():
 
 
 def test_the_replay_default_runs_the_frozen_configuration():
-    """D366: the replay default is poc-v116 with the settings accepted on 2026-11-05: the frozen poc-v108 plus the coverage-start reading and nothing else."""
+    """The new replay default does not change the historical frozen configuration."""
     source = open(os.path.join(ROOT, 'scripts', 'replay.py'), encoding='utf-8').read()
-    assert "default=os.path.join(ROOT, 'poc', 'config', 'poc-v116.json')" in source
+    assert "default=os.path.join(ROOT, 'poc', 'config', 'poc-v117.json')" in source
     assert config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v116.json')).checksum == ACCEPTED_CHECKSUM
     default, frozen = (json.load(open(os.path.join(ROOT, 'poc', 'config', name))) for name in ('poc-v116.json', 'poc-v108.json'))
     without = lambda settings, *keys: {k: v for k, v in settings.items() if k not in ('version', '_note') + keys}
     assert without(default, 'baseline') == without(frozen) and default['baseline']['prompt_version'] == 'baseline-v3'
+    new_default = json.load(open(os.path.join(ROOT, 'poc', 'config', 'poc-v117.json')))
+    assert without(new_default) == without(frozen)
     settings = frozen['extraction']
     assert {s['prompt_version'].split('-')[1] for s in settings.values()} == {'v74i'} and {s['reasoning_effort'] for s in settings.values()} == {'low'}

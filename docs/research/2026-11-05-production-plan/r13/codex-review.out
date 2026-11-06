@@ -1,0 +1,15 @@
+**第七版解决了文件版本比较，但阅读材料仍有一项严重问题：一篇文章可能被配上另一篇文章的回答。**
+
+| 第六轮问题 | 本轮结论 | 依据 |
+|---|---|---|
+| 回答格式检查 | **已解决** | [preflight_split.py 第 44 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:44)对重建请求的回答运行生产格式检查；[第 153 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:153)拒绝没有检查对象的情况。 |
+| 评分材料与运行时不一致 | **已解决** | [bench_measure.py 第 131 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:131)核对当前评分文件；[第 147 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:147)比较所有运行固定过的同一文件。我验证了两种排列下的不同版本都被拒绝，一致版本通过。 |
+| 新运行复用旧回答 | **已解决** | [bench_run.py 第 148 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:148)禁止在线导入存档；[第 158 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:158)拒绝没有运行记录的旧存档，续跑也核对模式和文件。 |
+| 遗漏的阅读材料 | **部分解决** | [bench_traces.py 第 50 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:50)标记已对应到文章的空回答，[第 54 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:54)逐段检查 A 和 B。但记录准备的回答仍可能对应错文章，见下方。 |
+
+**严重：记录准备的回答仅凭引用文字对应文章。** [bench_traces.py 第 47 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:47)只要在请求中找到该文章 A 回答的前几个引用，就把那次记录准备归给该文章。请求本身包含文章正文，[split.py 第 351 行](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/split.py:351)；因此另一篇文章只要包含相同引文，也可能被配上。
+
+我用内存例子验证：文章 A 缺少自己的记录准备回答，而文章 B 的请求包含相同引文；阅读材料把 B 的回答配给了 A，且没有标记 `UNREAD`。这会让读者误判事实在哪里丢失。检查现有的 73 篇试运行文章时，21 次记录准备中**没有发现**这种错配；这不证明后续运行不会发生。需要按请求身份或其他能确认文章归属的依据对应回答，无法确认时标记未读。
+
+11 个设计文件的哈希均通过核对；本轮没有付费调用，也没有修改文件。
+

@@ -157,6 +157,21 @@ def test_an_unknown_statement_day_is_stored_unknown_not_as_the_publication_day(t
     assert 'original source NVIDIA ; from later 2026-08-27' in line      # the statement day is blank; the outlet's day stays
 
 
+def test_revision_stores_statement_day_separately_from_ordering_day(tmp_path):
+    """D203: the publication day may order a revision; it is not the statement day."""
+    conn = ledger(tmp_path, old_tier='party_statement')
+    write_replace(conn, piece('party_statement', 'NVIDIA', ''), '2026-08-27')
+    assert tuple(conn.execute('select old_evidence_id, new_evidence_id, said_day from revisions').fetchone()) == ('e1', 'e2', '')
+    assert store.evidence(conn, 'e2')['original_day'] == ''
+    assert {p['evidence_id'] for p in store.evidence_in_force(conn, 'v1')} == {'e1', 'e2'}
+
+    second = tmp_path / 'dated'
+    second.mkdir()
+    known = ledger(second, old_tier='party_statement')
+    write_replace(known, piece('party_statement', 'NVIDIA', '2026-08-26'), '2026-08-27')
+    assert known.execute('select said_day from revisions').fetchone()[0] == '2026-08-26'
+
+
 def test_a_wrong_repeat_label_loses_no_content_and_the_judge_sees_both_with_the_label(tmp_path):
     """D204, repeats census #11: a Yahoo summary carrying the compute/networking split ($60bn/$15bn) was judged a repeat of a
     "hyperscalers ~50%" estimate and its text was discarded. Now the record is stored, linked, related; the judge reads both and the

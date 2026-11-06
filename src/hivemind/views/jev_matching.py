@@ -22,6 +22,15 @@ COLLISION_RELATIONS = ['same_question', 'same_question_other_period', 'distinct_
 COLLISION_SCHEMA = {'type': 'object', 'additionalProperties': False, 'required': ['relations'],
                     'properties': {'relations': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['thesis_id', 'relation', 'why'],
                                    'properties': {'thesis_id': {'type': 'string'}, 'relation': {'type': 'string', 'enum': COLLISION_RELATIONS}, 'why': {'type': 'string'}}}}}}
+# collision-v4 defines each relation beside its field: a later deadline for an open one-off event is the same question; another
+# measurement period or a recurring event's later occurrence is the other-period relation (D248 item 2). Earlier prompts keep the
+# schema above unchanged, so their requests stay byte for byte as recorded.
+RELATION_DEFINITION_PROMPTS = ('collision-v4', 'collision-v5')     # the prompts written for the relation definitions below
+COLLISION_SCHEMA_V4 = copy.deepcopy(COLLISION_SCHEMA)
+COLLISION_SCHEMA_V4['properties']['relations']['items']['properties']['relation']['description'] = (
+    'Choose exactly one: same_question = one outcome settles both, including a later deadline for an open one-off event and a coarser '
+    'or finer reading of the same outcome on the same date; same_question_other_period = the same quantity in a different measurement period, or a later '
+    'occurrence of a recurring event; distinct_question_same_matter = separately tracked outcomes in the same matter; different = unrelated matters.')
 RELATIONS = {"same_quantity_or_event": "both ask about the same defined quantity or the same event: alternative wordings, or two estimates or figures of that one quantity",
              "same_quantity_other_period": "the same defined quantity or event series for another period, such as the next fiscal or calendar year",
              "part_of": "one asks about a strict component or subset of the other, in either direction; not identical",
@@ -209,12 +218,27 @@ def collision_peers(conn, c, listed):
     return peers
 
 
+UNKEYED_REVIEW_RELATIONS = ('same_quantity_or_event', 'part_of', 'same_quantity_other_period')
+
+
+def unkeyed_collision_peers(conn, listed, answers, closest=''):
+    """The open questions an unkeyed candidate may duplicate: the one its proposer named as closest, then every listed question whose
+    Jev relation is the same quantity or event, a part, or the same quantity for another period, at any probability. Jev reads wording
+    (D190): a 0.49 part or a later deadline it calls another period would otherwise open a duplicate unseen; the judge decides."""
+    peers = [closest] if closest and closest in listed and store.is_open(conn, closest) else []
+    ranked = sorted(((answers[f'rel__{v}']['probabilities'][answers[f'rel__{v}']['choice']], v) for v in listed
+                     if answers[f'rel__{v}']['choice'] in UNKEYED_REVIEW_RELATIONS and store.is_open(conn, v)), reverse=True)
+    peers.extend(v for _, v in ranked if v not in peers)
+    return peers
+
+
 def ask_collision_judge(archive, cfg, conn, state, peers, llm_transport):
     """One generative call: the candidate's state and the peers' thesis texts; returns {thesis_id: relation}."""
     with open(config.prompt_path(cfg.collision.prompt_version + '.txt'), encoding='utf-8') as handle:
         system = handle.read()
     user = state + '\n\nTHESES:\n' + '\n'.join(f'--- {v}\n{thesis_text(conn, v)}' for v in peers) + '\n\nFor each thesis id, state the relation.'
-    answer = model.call(archive, cfg, cfg.collision, system, user, COLLISION_SCHEMA, 'collision', 'match', transport=llm_transport)
+    schema = COLLISION_SCHEMA_V4 if cfg.collision.prompt_version in RELATION_DEFINITION_PROMPTS else COLLISION_SCHEMA
+    answer = model.call(archive, cfg, cfg.collision, system, user, schema, 'collision', 'match', transport=llm_transport)
     return answer, {r['thesis_id']: r['relation'] for r in answer.data['relations'] if r['thesis_id'] in peers}
 
 
@@ -319,10 +343,15 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
             successor_of = succession_target(conn, c, listed)
             if successor_of:
                 outcome, target = ('merge' if event_home(conn, successor_of, store.view_key(conn, successor_of), c) else 'succession'), successor_of
-        peers = collision_peers(conn, c, listed) if getattr(cfg, 'collision', None) else []
+        unkeyed = not c.get('measure')
+        peers = (unkeyed_collision_peers(conn, listed, answers, c.get('closest_existing', '')) if unkeyed else collision_peers(conn, c, listed)) if getattr(cfg, 'collision', None) else []
         judged = ''
         if peers:
             answer, verdicts = ask_collision_judge(archive, cfg, conn, candidate_state(c, evidence), peers, llm_transport)
+            if unkeyed:
+                ids = [entry['thesis_id'] for entry in answer.data['relations']]
+                if len(ids) != len(peers) or set(ids) != set(peers):
+                    raise ValueError('collision judge must answer each shown question exactly once')
             total.cost_usd += answer.cost_usd
             total.input_tokens += answer.input_tokens
             total.output_tokens += answer.output_tokens
@@ -331,9 +360,16 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
             shas.append(answer.request_sha256)
             total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
             judged = '; collision judge: ' + ', '.join(f'{v}: {verdicts.get(v, "(no answer)")}' for v in peers)
-            if target in peers and verdicts.get(target) not in ('same_question', 'same_question_other_period'):
+            if unkeyed:
+                # Without a typed key a different period cannot be made a successor by code. Keep it as a new question.
+                outcome, target = 'new', ''
+                for v in peers:
+                    if verdicts[v] == 'same_question':
+                        outcome, target = 'merge', v
+                        break
+            elif target in peers and verdicts.get(target) not in ('same_question', 'same_question_other_period'):
                 outcome, target = 'new', ''                      # Jev's merge or succession on a peer the judge keeps apart
-            if outcome == 'new':
+            if not unkeyed and outcome == 'new':
                 for v in peers:
                     key = store.view_key(conn, v)
                     if verdicts.get(v) == 'same_question' and not identity.conflicts(key, c, merging=False):

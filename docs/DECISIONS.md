@@ -57,9 +57,8 @@ Conflicts the readers found that a later decision or a reading of the decisions 
   that day; after, the next business day).
 - **No input store** (D7): the materials stay in the team's database; the system keeps a processing record of each item and version
   processed; testing streams a test database through the same path.
-- **Order and one writer** (D31): dispatch numbers items in arrival order; each question has one writer; an item reads only the state
-  left by smaller numbers, except that extraction reads the open questions of the start of the item's day (D251); the result equals
-  one-at-a-time processing.
+- **Order and one writer** (D31, D375 on main): dispatch numbers items in arrival order; each question has one writer. Before each item,
+  extraction reads the latest committed questions from smaller sequences, including earlier same-day writes. The split calls share that snapshot.
 - **Daily judging** (D63): the day's items are extracted, matched and written in order; after the last item one round judges every open
   question whose reading changed that day, dependencies first, each once; then pull mode closes the questions due that day (D356).
 - **Thesis-first** (D24 as kept by D28): data paths are designed from what a question needs; no number warehouse.
@@ -73,6 +72,26 @@ Conflicts the readers found that a later decision or a reading of the decisions 
 - **The POC** (D62): it follows the frozen design in a simpler form, its simplifications listed in `docs/poc/pipeline-plan.md`; the model
   decides how many questions open (no cap; code checks the shape only); the corpus is whole and original; a small test comes before any
   full run.
+
+## Latest decision: remove the separate earnings-report import (D370)
+
+Alex removed the separate coverage-start earnings-report reading and report background added to news extraction. He retained extraction's lookup of the existing research library. An earnings release itself can still enter as an ordinary source item (D28). D363–D366's separate report-import requirement is superseded; their historical evidence and frozen materials remain historical. The small real-news comparison tested appended extraction context, not the distinct coverage-start mechanism. The implementation status is recorded in `CURRENT_STATE.md`.
+
+## Latest decision: current and future financial evidence (D371)
+
+Alex: “收入和财务这边对于当下，未来应该都是需要track 的，你应该要修改”. Financial information on present performance and future expectations is to be tracked for relevant investment questions. A quarterly period is not a reason to exclude supporting evidence from an annual question; this does not by itself require a separate question for every financial line. The research model judges relevance; no company-specific rule is introduced. The old frozen ruler and its historical scores remain unchanged. Implementation and evaluation status are in `CURRENT_STATE.md`.
+
+## Latest decision: future evidence scoring (D372)
+
+Alex: “我们金标的打分只要量化好有帮助/没帮助就好，至于是核心还是辅助我们不用特别分开因为这样造成不必要的ambiguity,这是之后量测的准则你记录好”. For future measurement, score whether evidence is helpful or not helpful; do not separately score core and supporting. Use the existing gold as-is: combine core and supporting as helpful, count not-kept as unhelpful, and leave optional cases neutral. The unit remains one research matter per article. Source tier, factual accuracy and attribution remain separate; golden-v5 and earlier scores remain unchanged. The separate question-gold scope conflict remains open.
+
+## Latest decision: continue scoring on the existing gold (D373)
+
+Alex removed the gold-inconsistency stop and asked to score the new split prompts on a few cases first, reusing existing old results where comparable. Keep frozen gold unchanged; record and disclose the three disputed question entries with any relevant score rather than stopping. D372 remains the evidence counting rule. This does not resolve the disputed entries or authorize production deployment.
+
+## Latest decision: read the current library for each item (D375 on main)
+
+Alex confirmed that each article must use the latest committed question library, including topics opened earlier that day. The new-viewpoint and existing-evidence calls for the same article share that per-item snapshot. This supersedes the once-daily snapshot in D251. The production implementation and acceptance are pending; historical runs and the frozen gold remain unchanged.
 
 ## 2. Research universe (PRD 01)
 
@@ -112,10 +131,10 @@ Conflicts the readers found that a later decision or a reading of the decisions 
 
 ## 6. Extraction (PRD 05 and the extraction standard)
 
-- **One module, one call per item** (D25, D27, D33, D199): every item of a tracked category is read whole by its category's template, a
+- **Existing production design: one module, one call per item** (D25, D27, D33, D199): every item of a tracked category is read whole by its category's template, a
   senior hedge-fund analyst's prompt; tables without tags are read by the model with no separate parsing code (D23); the program owns
   the output shape and checks every quote against the source; extraction never changes the library. One call per item; repeated calls measure stability and never vote or combine into one answer (D193, D338).
-- **What it hands over** (D42, D209, D264): evidence, each piece with its source, filed under the questions open at the start of its day
+- **What it hands over** (D42, D209, D264, D375 on main): evidence, each piece with its source, filed under the questions open immediately before the item
   (shown with their takes lines) or under the same answer's candidates; candidate questions for important matters no open question
   covers, each with the evidence that raised it; a statement neither takes is dropped as "no home", and evaluation reads the drops.
   Alex's own memo is read as candidate questions, not evidence (D59, D60).
@@ -131,11 +150,10 @@ Conflicts the readers found that a later decision or a reading of the decisions 
   that carries the company's value; a binding obligation not yet signed opens a yes/no question due within 18 months, one already taken
   on an amount question at the company's next annual filing (never for its own borrowing); a deal, product or project opens one only when
   its scale can change revenue, profit, cash or credit risk; event and policy candidates are exempt from the next-year check.
-- **The day's snapshot** (D251): every item of a day sees the same open-question list, that of the start of the day; the archive key
-  carries the snapshot; a day in flight never re-sends an item because the ledger moved.
+- **The item's snapshot** (D375 on main, superseding D251; updated 2026-11-05): each item reads every open question committed before that item, regardless of its subject labels. The experimental A and B split calls use the same snapshot and may run in parallel; an earlier same-day write is visible to later items. Dispatch sequence establishes the boundary. The old production replay remains on its earlier selection until changed and verified.
 - **The request** (D237, D249, D252): a general hedge-fund brain, its rules and examples reading the same for any company and naming no
   covered company or test article; a closing check at the end of the same request reads the evidence list back by the standard's test and
-  its not-kept rows; noise is taught by general paired examples; a version is accepted on core and supporting recall first, then noise.
+  its not-kept rows; noise is taught by general paired examples; a future version scores whether evidence is helpful, without requiring separate core/supporting scores (D372).
 - **Quotes** (D236, D266 *(Claude: the thresholds)*): a quote a word or two off the source (function words, pronouns, the company's
   generic name or own name, anchored at one end) is stored as the exact source passage.
 - **Statement fields** (D203 *(Claude)*, D218): a statement's original day is an ISO day or unknown, never filled with the publication
@@ -254,6 +272,8 @@ Conflicts the readers found that a later decision or a reading of the decisions 
   which refuses a run without `--seed`.
 
 ## 11. The ruler and measurement (AGENTS §7)
+
+- **Evidence capture going forward** (D369, D372): score future evidence as helpful or not helpful, without requiring separate core versus supporting scores. The MXC example is retained as helpful evidence; a model may judge a clear logical indirect connection. Use the same frozen gold for these combined counts; its files and historical scores remain unchanged.
 
 - **One ruler** (D241, D243, D242): the signed extraction standard page `docs/prd/05-extraction-standard.html` is the one standard for
   extraction and its PRD; while standards diverge, prompt work and sends stop until the standard is settled with Alex.
@@ -568,7 +588,7 @@ Every decision number, its date, its title as recorded, its status today and the
 | D240 | 2026-10-29 | A named party's action without an amount is kept; a reject rule never removes what the standard keeps | in force | §11 The ruler and measurement |
 | D241 | 2026-10-29 | One unified definition of the ledger's types, question opening and evidence levels, with a traced golden se… | in force (amended by D243, D261) | §11 The ruler and measurement |
 | D242 | 2026-10-29 | The standard becomes a web page, the extraction step's PRD; AGENTS.md and the README are cleaned and carry… | in force (amended by D243) | §11 The ruler and measurement |
-| D243 | 2026-10-29 | The extraction standard is signed: proposal 5 stricter, the other eleven at their leans; lean cautious, cat… | in force (amended by D248, D250, D261) | §11 The ruler and measurement |
+| D243 | 2026-10-29 | The extraction standard is signed: proposal 5 stricter, the other eleven at their leans; lean cautious, cat… | in force (amended by D248, D250, D261, D369) | §11 The ruler and measurement |
 | D244 | 2026-10-29 | Claude sets the dev/test split; scores are leads and Claude reads the traces every time; first the role-v29… | in force (amended by D261) | §11 The ruler and measurement |
 | D245 | 2026-10-30 | role-v42 (`poc-v58`) is the extraction request; its must-not questions on small release dates are the next… | superseded by D246 | Extraction |
 | D246 | 2026-10-30 | role-v51 (`poc-v67`) is the extraction request | superseded by D247 | Extraction |
@@ -576,7 +596,7 @@ Every decision number, its date, its title as recorded, its status today and the
 | D248 | 2026-10-30 | What counts as one question and one piece of evidence: seven boundaries, chosen one by one | in force (amended by D257, D258, D368) | §6 Extraction |
 | D249 | 2026-10-30 | A test the model applies to each statement is a check at the end of the same request; role-v63 (`poc-v79`)… | in force (amended by D265, D274) | §6 Extraction |
 | D250 | 2026-10-31 | Four evidence boundaries and the counting unit settled; the ruler is fixed before any further measurement (… | in force (amended by D261) | §11 The ruler and measurement |
-| D251 | 2026-10-31 | The extraction request may read the open questions as a daily snapshot (architecture under test) | in force (amended by D264) | §1 System |
+| D251 | 2026-10-31 | The extraction request may read the open questions as a daily snapshot (architecture under test) | superseded by D375 on main | §1 System |
 | D252 | 2026-10-31 | The extraction prompt teaches what noise looks like, with general paired counter-examples; useful theses an… | in force | §6 Extraction |
 | D253 | 2026-10-31 | D208's first step is built: seed questions for a covered company, written before the run, as homes for evid… | in force (amended by D368) | §7 Thesis library |
 | D254 | 2026-11-01 | Placement: a question's code-written 'takes' line is the one rule for its file; D207's "company-wide figure… | in force (amended by D259, D264, D268, D273, D274) | §6 Extraction |
@@ -589,7 +609,7 @@ Every decision number, its date, its title as recorded, its status today and the
 | D261 | 2026-11-02 | A ruler or gold that is built and reviewed is never changed again | in force | §11 The ruler and measurement |
 | D262 | 2026-11-02 | The judgement ruler (D3) and its gold are fixed: the gold is reader B's answers; frozen at sha256 636c056d1… | in force | §11 The ruler and measurement |
 | D263 | 2026-11-02 | The judge is written to the frozen gold's own reasoning (judging-v7, poc-v91); a gap to the gold is closed… | in force (amended by D354, D359) | §7 Thesis library |
-| D264 | 2026-11-02 | The extraction reads the day's open questions with their takes lines and files the statements itself (extra… | in force (amended by D265, D274, D359) | §6 Extraction |
+| D264 | 2026-11-02 | The extraction reads the day's open questions with their takes lines and files the statements itself (extra… | in force (amended by D265, D274, D359, D375 on main) | §6 Extraction |
 | D265 | 2026-11-02 | Extraction v72 / poc-v92 is the version: the default configuration, the base every later change builds on,… | in force (amended by D267, D272, D274, D359, D366, D364) | §6 Extraction |
 | D266 | 2026-11-02 | Three quick fixes on the v72 base, each proved on stored data in minutes, put together as poc-v94 and run o… | in force | §6 Extraction |
 | D267 | 2026-11-02 | poc-v94 is the default; no further three-draw runs for now; the extraction's remaining failures are read fr… | superseded by D272 | Extraction |
@@ -694,3 +714,8 @@ Every decision number, its date, its title as recorded, its status today and the
 | D366 | 2026-11-05 | `poc-v116` is the replay default; the branch is committed and opened for review | in force | §10 Current phase: filing that links facts the way an analyst does |
 | D367 | 2026-11-05 | Decisions and working rules consolidated: a register of what is in force, the log kept whole; README, AGENTS and the state page cleaned | in force | [this page, opening](#consolidation) |
 | D368 | 2026-11-05 | Alex's answers to the seven items left open by the consolidation | in force | §1, §6, §7, §8, §10, §11 |
+| D369 | 2026-11-05 UTC | Capture core and supporting evidence without a strict boundary; retain the MXC case | in force | §11 The ruler and measurement |
+| D370 | 2026-11-05 | Remove the separate earnings-report import | in force | §6 Extraction |
+| D371 | 2026-11-05 | Track present and forward-looking financial evidence | in force | §6 Extraction |
+| D372 | 2026-11-05 | Future evidence scoring uses helpful / not helpful, not separate core and supporting | in force (count existing gold without rewriting it) | §11 The ruler and measurement |
+| D375 (main) | 2026-11-05 | Read the latest committed research library before each item | in force; implementation and acceptance pending | §1 System and §6 Extraction |

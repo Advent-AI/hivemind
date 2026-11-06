@@ -72,6 +72,8 @@ def first_value(condition):
 def ladder_direction(rungs):
     """+1 when the quantities rise from the first rung to the last, -1 when they fall, None when undecidable. The rungs'
     numeric bounds decide when both ends carry them; the prose is read only for a ladder without bounds."""
+    if not rungs:
+        return None
     first, last = rungs[0], rungs[-1]
     if any(r.get('lo') is not None or r.get('hi') is not None for r in rungs):
         if first.get('hi') is not None and last.get('lo') is not None and float(first['hi']) <= float(last['lo']):

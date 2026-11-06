@@ -1,0 +1,70 @@
+--- docs/research/2026-11-05-seven-day-request/parent-runtime-1207.txt	2026-11-05 11:31:33
++++ docs/research/2026-11-05-seven-day-request/split_seven_day_poc.py	2026-11-05 11:30:12
+@@ -55,19 +55,26 @@
+  b_schema['properties']['evidence']['items']['properties']['links']['description']=prior.b_arm.NEW
+  return setting,{'a':(a_system,a_user,simple.schema(),'new_question'),'b':(b_system,b_user,b_schema,'extraction')}
+ 
+-def meta_schema():
++def meta_schema(candidate_count=None,evidence_count=None):
+  def obj(props):return {'type':'object','additionalProperties':False,'properties':props,'required':list(props)}
+  s={'type':'string'}
+  rung=obj({'label':s,'condition':s,'lo':{'anyOf':[{'type':'number'},{'type':'null'}]},'hi':{'anyOf':[{'type':'number'},{'type':'null'}]}})
+- return obj({'candidates':{'type':'array','items':obj({'id':s,'object':s,'kind':{'type':'string','enum':['asset','theme']},'year':s,'due_day':s,'date_basis':{'type':'string','enum':['source_stated','analyst_check','unknown']},'date_provenance':s,'rungs':{'type':'array','items':rung}})},
+-             'evidence':{'type':'array','items':obj({'id':s,'speaker':s,'original_who':s,'original_day':s,'tier':{'type':'string','enum':['fact','party_statement','third_party_view','rumour','unknown']},'event_time':s})}})
++ candidate={'object':s,'kind':{'type':'string','enum':['asset','theme']},'year':s,'due_day':s,'date_basis':{'type':'string','enum':['source_stated','analyst_check','unknown']},'date_provenance':s,'rungs':{'type':'array','items':rung}}
++ evidence={'speaker':s,'original_who':s,'original_day':s,'tier':{'type':'string','enum':['fact','party_statement','third_party_view','rumour','unknown']},'event_time':s}
++ if candidate_count is None and evidence_count is None:
++  return obj({'candidates':{'type':'array','items':obj(dict(id=s,**candidate))},'evidence':{'type':'array','items':obj(dict(id=s,**evidence))}})
++ if candidate_count is None or evidence_count is None or candidate_count<1 or evidence_count<1:raise ValueError('metadata requires candidates and evidence')
++ out=obj({'candidates':obj({'c'+str(i):{'$ref':'#/$defs/candidate'} for i in range(1,candidate_count+1)}),
++          'evidence':obj({'e'+str(i):{'$ref':'#/$defs/evidence'} for i in range(1,evidence_count+1)})})
++ out['$defs']={'candidate':obj(candidate),'evidence':obj(evidence)}
++ return out
+ 
+ def metadata_request(item,answer):
+  positions=[];idx=0
+  for ci,q in enumerate(answer['questions'],1):
+   for e in q['evidence']:
+    idx+=1;positions.append({'id':'e'+str(idx),'original_speaker':e['original_speaker'],'quote':e['quote'],'summary':e['what_it_shows']})
+- system=('For the supplied A answer, identify the subject, evidence attribution, and any optional research details supported by the source or A answer. Copy the supplied IDs, one result per candidate and evidence. '
++ system=('For the A answer, identify subject, attribution and optional details supported by the source or A answer. Describe every supplied ID; do not judge relevance or omit evidence. '
+          'object is the subject ticker or known research theme if the question is about that subject; kind is asset or theme. '
+          'year is the question period when stated, otherwise empty. due_day is an exact ISO day only when a specific date is stated in the source or A’s explicit check description; otherwise empty. '
+          'date_basis says source_stated, analyst_check, or unknown; date_provenance copies the exact words supporting the date, or is empty. Do not turn an approximate month into an invented day. '
+@@ -77,7 +84,7 @@
+          'for author analysis third_party_view, for an unconfirmed claim rumour; use unknown if attribution cannot be established. original_day is the ISO day when the original party said it, '
+          'or empty when unknown. Do not invent dates or speakers. No dates, ladders or missing details are required to open a question.')
+  user='[Article]\n'+item['text'][:extraction.MAX_TEXT_CHARS]+'\n\n[Questions]\n'+json.dumps([{'id':'c'+str(i),'question':q['question'],'why_it_matters':q['why_it_matters'],'how_and_when_to_check':q['how_and_when_to_check']} for i,q in enumerate(answer['questions'],1)],ensure_ascii=False)+'\n\n[Evidence]\n'+json.dumps(positions,ensure_ascii=False)
+- return system,user,meta_schema(),'record_preparation'
++ return system,user,meta_schema(len(answer['questions']),len(positions)),'record_preparation'
+ 
+ def source_quote(quote, text):
+  """Return an original passage using the existing source-quote contract."""
+@@ -136,7 +143,15 @@
+ 
+ def build_handover(item,shown,uni,a,b,meta):
+  questions=a['questions'];cs=meta['candidates'];es=meta['evidence'];flat=[(i,e) for i,q in enumerate(questions,1) for e in q['evidence']]
+- if [x['id'] for x in cs]!=['c'+str(i) for i in range(1,len(questions)+1)] or [x['id'] for x in es]!=['e'+str(i) for i in range(1,len(flat)+1)]:raise ValueError('metadata positions differ from A')
++ def ordered(values,prefix,count):
++  expected=[prefix+str(i) for i in range(1,count+1)]
++  if isinstance(values,list):
++   ids=[x['id'] for x in values]
++   if len(set(ids))!=len(ids):raise ValueError('duplicate metadata id')
++   values={x['id']:{k:v for k,v in x.items() if k!='id'} for x in values}
++  if not isinstance(values,dict) or set(values)!=set(expected):raise ValueError('metadata ids differ from A')
++  return [dict(values[key],id=key) for key in expected]
++ cs=ordered(cs,'c',len(questions));es=ordered(es,'e',len(flat))
+  candidates=[];evidence=[];dropped=[];bycandidate={i:[] for i in range(1,len(questions)+1)}
+  for j,(ci,e) in enumerate(flat,1):
+   exact=source_quote(e['quote'],item['text'][:extraction.MAX_TEXT_CHARS])
+@@ -286,7 +301,9 @@
+ def _run(out,expected,resume=False):
+  manifest=out/'manifest.json'
+  saved_manifest=read(manifest)
+- if digest(manifest.read_bytes())!=expected or saved_manifest!=select_manifest(saved_manifest['pilot_id']):raise ValueError('frozen input changed')
++ current_manifest=select_manifest(saved_manifest['pilot_id'])
++ if 'forked_from' in saved_manifest:current_manifest['forked_from']=saved_manifest['forked_from']
++ if digest(manifest.read_bytes())!=expected or saved_manifest!=current_manifest:raise ValueError('frozen input changed')
+  exists=[(out/p).exists() for p in ('views.sqlite','run-status.json')]
+  if resume:
+   if not all(exists):raise ValueError('cannot resume without both ledger and status')

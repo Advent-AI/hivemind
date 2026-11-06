@@ -1,0 +1,16 @@
+**第 6 轮仍有严重问题：两项都只算部分解决；我同意结果解读和修改方向，但暂不同意把这套测试作为下一步提交给 Alex。**
+
+例如，现有版本的正常波动若达到 5%，测试要求新版提升超过 5% 才算通过；它因此不能确认一个 3% 的提升。同时，新增错误信息的上限仍可能被自检放宽。
+
+1. **用六次结果估计波动：部分解决。** [第 188–191 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:188)的分组算术正确：六次分成两组三次，共有 10 种不重复分法；取两组均值差的最大绝对值，也确实覆盖了这六次结果的所有分法。
+
+   但 [第 191 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:191)的解释不成立：即使最大差距未超过 6%，只要它超过 3%，条件 1 就要求提升超过这个更大的差距，无法确认 3% 的提升。此外，六次结果的最大差距只是对波动的有限估计，不能证明将来的误判风险已受控。**应写清这条线能证明什么、不能证明什么，并在事先确定的误判风险过高或数据不足时停止判断。**
+
+2. **限制新增错误信息的总量：部分解决。** [第 194–198 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:194)现在把新增总量乘以盲读中不应保留的比例，得到每次新增错误信息的估计数量，并与原版比较；这补上了上一轮缺少的数量计算。
+
+   但 [第 199–200 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:199)又说自检不通过时放宽条件 3 的界线，和“不超过原版”的界线冲突。例如原版估计每次有 4 条不应保留的新增内容，自检组有 10 条；若界线放宽到 10，新版有 10 条也可能通过。**应明确自检失败时如何停止判断，或明确一条允许超过原版的界线；不能同时声称不超过原版。**
+
+另有一处影响两项比较：[第 177–184 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:177)的新旧 B 请求是在测试当天重发，但原版生产系统用的是之前保存的结果。模型表现可能随日期变化，因此 [第 192–198 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/results/results-reading.md:192)不能据此可靠地判断新版是否比**测试当天的生产系统**更嘈杂。**应在同一天对相同文章重跑生产对照，再按相同方式比较。**
+
+我同意文档对结果的主要解读：当前拆分版本不应推广；修改证据请求有依据，但尚不能断言是哪一句造成了损失。建议方向也合理。上述测试条件修清后，才适合把这一个建议和它的测试交给 Alex。
+

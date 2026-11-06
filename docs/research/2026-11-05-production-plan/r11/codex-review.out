@@ -1,0 +1,20 @@
+**还不能开始付费运行：有两项严重问题，以及一处阅读材料缺口。**
+
+例如，一次离线检查可以先导入旧回答；之后同一个目录可以作为在线运行续跑，代码会继续使用那些旧回答。这样得到的结果无法证明两组都重新发送过请求。
+
+| 第四轮问题 | 状态 | 本轮依据 |
+|---|---|---|
+| 回答格式检查 | **已解决** | [preflight_split.py 第 53 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:53)对每份重放回答执行生产格式检查；[第 146 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:146)和[第 153 行](/Users/lchingen/hivemind-no-preseed-evidence-review/scripts/preflight_split.py:153)在有错误或没有检查对象时拒绝。我重新运行了只读检查：167 份检查、0 份拒绝，73 份交接全部一致。历史请求的发送字节顺序仍无法证明，设计已在[第 88 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:88)如实说明。 |
+| 评分材料与运行时不一致 | **部分解决** | [bench_measure.py 第 134 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:134)已比较评分文件和金标；[第 140 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:140)已比较部分共同文件。缺失记录和共同提示词仍有漏洞，见下方。 |
+| 新运行复用旧回答 | **部分解决** | [bench_run.py 第 148 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:148)已禁止在线直接使用 `--archive-from`。但离线运行之后仍可切到在线续跑，见下方。 |
+| 遗漏的阅读材料 | **部分解决** | [bench_traces.py 第 48 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:48)会标记完全缺失的 A 或 B；[第 80 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:80)已附完整写入记录及其关联。每一段的缺失回答仍未可靠标记，见下方。 |
+
+剩余问题：
+
+1. **严重：评分仍能放过无法核对来源的运行，也漏查共同提示词。** [bench_measure.py 第 131 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:131)遇到没有记录的运行只列为未检查，随后继续评分；这与[设计第 57 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/benchmark-design.md:57)要求每次运行都核对不一致。[第 137 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_measure.py:137)又排除了所有提示词，但两组实际共同固定了六个提示词文件，包括判断提示词。**修复：**本次比较缺少记录时拒绝评分；比较各运行共同使用的提示词，仅允许各组专用文件按设计不同。
+
+2. **严重：离线旧回答可以通过续跑进入在线运行。** [bench_run.py 第 160 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_run.py:160)续跑时核对文件和配置，却不核对首次运行是否离线。先用离线模式导入存档，再对同一目录不带 `--offline` 续跑，已有回答仍会被读取。**修复：**固定首次运行的离线或在线模式，拒绝跨模式续跑；评分也拒绝把离线检查当作付费运行。
+
+3. **阅读材料缺口：有记录但没有回答，或文章某一段缺失，仍可能没有“未读”标记。** [bench_traces.py 第 38 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:38)会把没有回答的调用记为 `null`，而[第 49 行](/Users/lchingen/hivemind-no-preseed-evidence-review/docs/research/2026-11-06-architecture-benchmark/bench_traces.py:49)只检查阶段名称是否存在。我用内存中的例子核对：B 有调用但回答为空时，输出为 `answer: null`，没有缺失标记。此外，[split.py 第 701 行](/Users/lchingen/hivemind-no-preseed-evidence-review/src/hivemind/split.py:701)显示长文章逐段调用 A、B；目前只按整个文章检查阶段，无法指出某一段缺失。**修复：**按文章的每个预期段和阶段核对有效回答，空回答和缺失段都明确标为未读。
+
+`benchmark-design.sha256` 中 **11 个文件全部核对通过**。本轮没有付费调用，也没有修改文件。
