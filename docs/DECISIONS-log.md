@@ -3986,3 +3986,30 @@ the backup). The writer fix it names was not carried: `main` reads cited ids as 
      quotes kept in their own language. What is said to him keeps the plain-language rule (AGENTS, Authority and scope).
 - Recorded in the same change: `docs/DECISIONS.md` (the open items cleared into their sections), AGENTS §11, the README, PRD 10, the
   correction record and `docs/CURRENT_STATE.md` (the builds of items 1, 2 and 4 are the next tasks, in an order given there).
+
+## D378 · 2026-11-06 · The split extraction is sealed as a failed experiment; its useful lessons become production experiments (PRD 11)
+
+Alex, 2026-11-06, after the split's benchmark and one screened revision: "我觉得你把拆分版学到的东西，有用的给cherry pick 出来，做一个PRD我们来给到生产版来实验；你现在封存拆分版并且清理赶紧并标注失败的实验吧".
+Earlier the same day, on the benchmark's result: "所以拆分版成本更高，效果也没有更好" and "好，按1试一次".
+
+- Decided: the split extraction (one call for new questions, one for evidence on existing questions, then record preparation) is a failed
+  experiment and is sealed. It is not promoted, not merged, and its configurations are not run again.
+- The record: branch `fix/no-preseed-evidence-review` of the worktree `hivemind-no-preseed-evidence-review`, tag
+  `split-extraction-failed-sealed-2026-11-06`, seal note `docs/research/SEALED-FAILED-split-extraction-2026-11-06.md` there. The plan's decisions
+  adopted for the split on 2026-11-05 (recorded there "to number at merge") lapse with it.
+- Evidence:
+  - Window benchmark against poc-v108, three draws each: helpful matters 156, 156, 159 against 166, 170, 162, so the stop line fired; judgement 44
+    against 47; cost about 15% higher; more questions worth opening (25 against 6) and more not worth opening (17 against 6).
+  - The screened revision (keep-then-file evidence call) reached production's helpful level (92.0 against 94.0) and kept more of what the
+    standard rejects than production (22–23 against 17.3 a send, after a blind reader checked every not-kept match).
+  - Reviewed with Codex in rounds r7–r25 of `docs/research/2026-11-05-production-plan/review-log.md`, in that worktree.
+- Done: `docs/prd/11-production-experiments-from-split.md`, which records:
+  - E1, helpful statements dropped as no home, diagnosed first;
+  - E2, the analyst review with relation definitions for duplicate questions;
+  - E3, ladder code checks with D186;
+  - E4, the judge's theme-as-dependency refusals;
+  - E5, D203's revision day;
+  - E6, the measurement kit;
+  - the ideas measured and not worth an experiment, and the lessons for any prompt change.
+  Each experiment is a new production version only Alex opens (D359).
+

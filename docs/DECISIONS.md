@@ -694,3 +694,4 @@ Every decision number, its date, its title as recorded, its status today and the
 | D366 | 2026-11-05 | `poc-v116` is the replay default; the branch is committed and opened for review | in force | §10 Current phase: filing that links facts the way an analyst does |
 | D367 | 2026-11-05 | Decisions and working rules consolidated: a register of what is in force, the log kept whole; README, AGENTS and the state page cleaned | in force | [this page, opening](#consolidation) |
 | D368 | 2026-11-05 | Alex's answers to the seven items left open by the consolidation | in force | §1, §6, §7, §8, §10, §11 |
+| D378 | 2026-11-06 | The split extraction is sealed as a failed experiment; its useful lessons become production experiments (PRD 11) | in force; experiments open only on Alex's word | §6 Extraction |

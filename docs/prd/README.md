@@ -17,6 +17,7 @@ Each module has one Markdown specification. Select a module on `docs/system-desi
 | 08-pull-mode.md | Pull mode | Decided and built (D54, D356) |
 | 09-review-pool.md | Human review pool | First version frozen; intake defined, output deferred |
 | 10-filing-phase.md | Current phase: filing that links facts the way an analyst does (in English since D368) | In progress since 2026-11-04; read before every step |
+| 11-production-experiments-from-split.md | Production experiments drawn from the failed split extraction: what to try on production, the evidence for each, and what not to repeat | Proposed 2026-11-06 (D378); each experiment opens only on Alex's word |
 
 ## Maintenance rules
 

@@ -1,5 +1,7 @@
 # Current state
 
+**Split extraction sealed as a failed experiment (D378, 2026-11-06):** the split (a new-question call, an evidence call and record preparation) was benchmarked against the frozen poc-v108 and failed. Its stop line fired: helpful matters 156, 156, 159 against 166, 170, 162, with about 15% higher cost. One screened revision kept more noise than production. It is sealed in the worktree `hivemind-no-preseed-evidence-review` (tag `split-extraction-failed-sealed-2026-11-06`), and nothing of it is in main. What it taught is written as proposed production experiments in `docs/prd/11-production-experiments-from-split.md`: E1 no-home helpful drops, E2 duplicate questions, E3 ladder checks with D186, E4 judge refusals, E5 D203's revision day, E6 the measurement kit. Each opens only on Alex's word.
+
 As of November 5, 2026; decisions through D368. [Decisions](DECISIONS.md) holds what is decided now; the [design page](system-design.html) and the [module PRDs](prd/README.md) hold what the code must do; the [README](../README.md) holds startup, build and run instructions.
 
 ## What runs
