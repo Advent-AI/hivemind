@@ -114,13 +114,10 @@ def build_request(setting, system, user, schema, schema_name, provider):
         'response_format': {'type': 'json_schema', 'json_schema': {'name': schema_name, 'strict': True, 'schema': schema}},
     }
     if provider == 'openai':
-        # gpt-6-luna is a reasoning model: it refuses any temperature but the default, so the setting's temperature
-        # is recorded in Config but not sent; reasoning_effort is what steers it.
         request['max_completion_tokens'] = setting.max_output_tokens
         if setting.reasoning_effort:
             request['reasoning_effort'] = setting.reasoning_effort
     else:
-        request['temperature'] = setting.temperature
         request['max_tokens'] = setting.max_output_tokens
     return request
 

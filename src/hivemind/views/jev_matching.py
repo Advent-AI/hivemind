@@ -209,6 +209,18 @@ def collision_peers(conn, c, listed):
     return peers
 
 
+def unkeyed_collision_peers(conn, listed, answers):
+    """Review every open question Jev proposes as the same question or a component match."""
+    peers = []
+    for relation in ('same_quantity_or_event', 'part_of'):
+        ranked = sorted(((answers[f'rel__{v}']['probabilities'][relation], v) for v in listed
+                         if answers[f'rel__{v}']['choice'] == relation
+                         and answers[f'rel__{v}']['probabilities'][relation] >= THRESHOLD
+                         and store.is_open(conn, v)), reverse=True)
+        peers.extend(v for _, v in ranked)
+    return peers
+
+
 def ask_collision_judge(archive, cfg, conn, state, peers, llm_transport):
     """One generative call: the candidate's state and the peers' thesis texts; returns {thesis_id: relation}."""
     with open(config.prompt_path(cfg.collision.prompt_version + '.txt'), encoding='utf-8') as handle:
@@ -319,10 +331,15 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
             successor_of = succession_target(conn, c, listed)
             if successor_of:
                 outcome, target = ('merge' if event_home(conn, successor_of, store.view_key(conn, successor_of), c) else 'succession'), successor_of
-        peers = collision_peers(conn, c, listed) if getattr(cfg, 'collision', None) else []
+        unkeyed = not c.get('measure')
+        peers = (unkeyed_collision_peers(conn, listed, answers) if unkeyed else collision_peers(conn, c, listed)) if getattr(cfg, 'collision', None) else []
         judged = ''
         if peers:
             answer, verdicts = ask_collision_judge(archive, cfg, conn, candidate_state(c, evidence), peers, llm_transport)
+            if unkeyed:
+                ids = [entry['thesis_id'] for entry in answer.data['relations']]
+                if len(ids) != len(peers) or set(ids) != set(peers):
+                    raise ValueError('collision judge must answer each shown question exactly once')
             total.cost_usd += answer.cost_usd
             total.input_tokens += answer.input_tokens
             total.output_tokens += answer.output_tokens
@@ -331,9 +348,16 @@ def decide(archive, cfg, conn, item, candidates, evidence, lists, shown_views, *
             shas.append(answer.request_sha256)
             total.request_records.append({'call_id': answer.call_id, 'request_sha256': answer.request_sha256})
             judged = '; collision judge: ' + ', '.join(f'{v}: {verdicts.get(v, "(no answer)")}' for v in peers)
-            if target in peers and verdicts.get(target) not in ('same_question', 'same_question_other_period'):
+            if unkeyed:
+                # Without a typed key a different period cannot be made a successor by code. Keep it as a new question.
+                outcome, target = 'new', ''
+                for v in peers:
+                    if verdicts[v] == 'same_question':
+                        outcome, target = 'merge', v
+                        break
+            elif target in peers and verdicts.get(target) not in ('same_question', 'same_question_other_period'):
                 outcome, target = 'new', ''                      # Jev's merge or succession on a peer the judge keeps apart
-            if outcome == 'new':
+            if not unkeyed and outcome == 'new':
                 for v in peers:
                     key = store.view_key(conn, v)
                     if verdicts.get(v) == 'same_question' and not identity.conflicts(key, c, merging=False):

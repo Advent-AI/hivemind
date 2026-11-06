@@ -41,7 +41,6 @@ class Setting:
     name: str
     model: str
     prompt_version: str
-    temperature: float
     reasoning_effort: str
     max_output_tokens: int
     engine: str = 'llm'       # matching only: 'llm' (the generative call) or 'jev' (TypeSafe Jev, views/jev_matching.py)
@@ -73,7 +72,7 @@ class Config:
         return setting
 
 
-REQUIRED = ('model', 'prompt_version', 'temperature', 'reasoning_effort', 'max_output_tokens')
+REQUIRED = ('model', 'prompt_version', 'reasoning_effort', 'max_output_tokens')
 
 
 def _setting(name, raw):
@@ -86,7 +85,7 @@ def _setting(name, raw):
     if engine not in ENGINES:
         raise ConfigError(f'setting {name}: engine {engine!r} is not one of {ENGINES}')
     return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
-                   temperature=float(raw['temperature']), reasoning_effort=str(raw['reasoning_effort']),
+                   reasoning_effort=str(raw['reasoning_effort']),
                    max_output_tokens=int(raw['max_output_tokens']), engine=engine)
 
 

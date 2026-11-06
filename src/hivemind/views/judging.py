@@ -298,7 +298,7 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
     schema = schema_for(version)
 
     def eligible(view_id):
-        return store.is_open(conn, view_id) and not store.has_judgement(conn, view_id, seq) and bool(store.evidence_in_force(conn, view_id))
+        return store.is_open(conn, view_id) and not store.has_judgement(conn, view_id, seq) and bool(store.rungs_of(conn, view_id)) and bool(store.evidence_in_force(conn, view_id))
 
     def is_theme(view_id):
         return store.view(conn, view_id)['object_kind'] == 'theme'

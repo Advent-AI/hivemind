@@ -255,7 +255,7 @@ def _write(conn, universe, seq, item, handover, checked, second_pass):
         if replacing:
             stored_id = _store_piece(conn, e, seq, item)                     # D203: the stated day is stored; new_day orders the revision only
             for target_id, _ in replacing:
-                store.revise(conn, target_id, stored_id, new_day, seq)          # D202: both pieces stay in force
+                store.revise(conn, target_id, stored_id, e['original_day'] or '', seq)  # D203: ordering day is not the statement day
                 for linked in store.views_linked_to(conn, target_id):
                     if store.link(conn, stored_id, linked, seq) and store.is_open(conn, linked):
                         changed.add(linked)

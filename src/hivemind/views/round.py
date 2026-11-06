@@ -94,14 +94,14 @@ def judge_day(conn, archive, cfg, day, seq, *, transport=None, log=print):
     return result
 
 
-def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print, extractor=None, matching_workers=1):
+def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=None, log=print, extractor=None, matching_workers=1, shown_views=None):
     result = RoundResult(item['input_id'])
     if resume_from in ('judged', 'handed_over'):       # written already; judging is the day's step
         dispatch.mark(conn, item, seq, 'handed_over', 'ok', 'resumed')
         conn.commit()
         return result
     objects = [o['value'] for o in item.get('object_identifiers') or [] if universe.has(o['value'])]
-    shown = extraction.shown_views(conn, cfg, item, objects)
+    shown = extraction.shown_views(conn, cfg, item, objects) if shown_views is None else shown_views
     # extraction (or its stored handover on resume)
     handover = None
     if resume_from and resume_from != 'extracted':
