@@ -4087,3 +4087,5 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
     duplicate-question matching prototype (`fix/matching-identity-2026-11-05`) and the 2026-11-04 judging-v8 run worktree
     (`exp/run-v109-judging-v8-2026-11-04`).
   - Kept on disk and out of Git: the 2026-11-05 handoff bundle, raw Codex transcripts and resend checkpoints (`.gitignore`, data manifest).
+- Then, on Alex's "合并commit push merge" the same day: the README gate passed on `seal/2026-11-06` and it was merged into `main` (PR #10,
+  merge commit `5e3819a`). The three experiment branches stay unmerged records.
