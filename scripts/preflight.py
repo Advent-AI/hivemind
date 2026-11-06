@@ -9,6 +9,8 @@ the cases judged, the cases refused and the reasons with examples:
   B. extraction's code checks (extraction.sift) over every stored extraction answer
   C. matching's code checks (matching.check) over every stored matching record, with the lists shown at the time
   D. every schema enum value appears verbatim in the prompt that asks for it
+  F. the judging checks (judging-v7, judging-v8) over every judgement the ledger accepted, each against what its request showed and the
+     thesis's last judgement and card before it; an answer refused at the time has no judgement and is counted as not verifiable
 
 It replays the answers of the versions the code builds (extraction v74i, judging-v7); a row of a retired version, or one whose
 configuration file is gone, is counted as not replayed and named. Usage: python3 scripts/preflight.py [--archive A] [--items I]
@@ -64,7 +66,12 @@ def part_a(archive_conn):
         if ':malformed:' in sha or not answer_json:
             reasons[f'{purpose}: not JSON'] += 1
             continue
-        for error in model.check_schema(json.loads(answer_json), SCHEMAS.get(purpose, {})):
+        stored = archive_conn.execute('select request_json from model_calls where request_sha256=?', (sha,)).fetchone()
+        try:
+            schema = json.loads(stored[0])['response_format']['json_schema']['schema']           # the shape that request asked for
+        except (TypeError, KeyError, ValueError):
+            schema = SCHEMAS.get(purpose, {})
+        for error in model.check_schema(json.loads(answer_json), schema):
             key = f'{purpose}: {normalise_reason(error)}'
             reasons[key] += 1
             examples[key].append(error[:140])
@@ -286,6 +293,58 @@ def part_e(views_paths):
     return judged
 
 
+def part_f(archive_conn, views_paths):
+    """Every accepted judgement replayed through the current judging checks, against the closed sets its stored request showed and the
+    thesis's last judgement and card before it (never the ledger's latest)."""
+    reasons, examples = collections.Counter(), collections.defaultdict(list)
+    judged = refused = retired = 0
+    accepted, missing = set(), []
+    built = {open(config.prompt_path(v + '.txt'), encoding='utf-8').read(): v for v in judging.SUPPORTED_VERSIONS}   # a request's version is its system text
+    for path in views_paths:
+        conn = sqlite3.connect(f'file:{path}?mode=ro', uri=True)
+        conn.row_factory = sqlite3.Row
+        has_cards = bool(conn.execute("select 1 from sqlite_master where type='table' and name='arguments'").fetchone())
+        for j in conn.execute('select judgement_id, view_id, seq, request_sha256 from judgements order by seq, judgement_id').fetchall():
+            accepted.add(j['request_sha256'])
+            row = archive_conn.execute('select request_json, answer_json from model_calls where request_sha256=?', (j['request_sha256'],)).fetchone()
+            if not row or not row[1]:
+                missing.append(f'{os.path.basename(os.path.dirname(path))} {j["view_id"]} seq {j["seq"]}')
+                continue
+            request_json, answer_json = row[0], row[1]
+            request = json.loads(request_json)
+            user = next(m['content'] for m in request['messages'] if m['role'] == 'user')
+            version = built.get(next((m['content'] for m in request['messages'] if m['role'] == 'system'), ''))
+            if version is None:                  # a retired judging version: not judged by the current checks
+                retired += 1
+                continue
+            card = judging.writes_card(version)
+            last = conn.execute('select judgement_id, rung, reasons, changed, seq, publication_day from judgements where view_id=? and seq<? order by judgement_id desc limit 1',
+                                (j['view_id'], j['seq'])).fetchone()
+            last = dict(last) if last else None
+            data = vocabulary.judgement_answer(json.loads(answer_json))
+            if card:
+                argument = conn.execute('select * from arguments where view_id=? and seq<? order by id desc limit 1', (j['view_id'], j['seq'])).fetchone() if has_cards else None
+                argument = dict(argument, card=json.loads(argument['card_json'])) if argument else None
+                errors = judging.check_card_answer(conn, j['view_id'], data, user, previous=(last, argument))
+            else:
+                errors = judging.check_answer(conn, j['view_id'], data, user, previous=(last, None))
+            judged += 1
+            if errors:
+                refused += 1
+            for error in errors:
+                key = normalise_reason(error)
+                reasons[key] += 1
+                examples[key].append(f'{os.path.basename(os.path.dirname(path))} {j["view_id"]} seq {j["seq"]}: {error[:100]}')
+    answers = [r[0] for r in archive_conn.execute("select request_sha256 from model_calls where purpose='judge'")]
+    unverifiable = sum(1 for sha in answers if sha.split(':', 1)[0] not in accepted or ':' in sha)
+    print(f'\n   judging answers in the archive {len(answers)}: accepted and replayed {judged}; of a retired judging version {retired}; '
+          f'refused at the time or never committed, not verifiable {unverifiable}')
+    tally('F. judging checks over every accepted judgement (each against its own request and the state before it)', judged, refused, reasons, examples)
+    if missing:                          # a check whose input is incomplete has not judged the ledger (AGENTS §4)
+        raise ValueError(f'{len(missing)} accepted judgements have no answer in the archive: ' + ', '.join(missing[:5]))
+    return judged
+
+
 def main():
     parser = argparse.ArgumentParser()
     frozen_draw = os.path.join(ROOT, 'poc', 'data', 'e2e-r9-frozen-v108-2026-11-03', 'd1')
@@ -301,7 +360,7 @@ def main():
     uni = universe.load(args.universe)
     print('preflight over', args.archive, 'and', len(views_paths), 'views databases:', ', '.join(os.path.basename(os.path.dirname(p)) for p in views_paths))
     part_a(archive_conn)
-    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, views_paths, uni), part_d()]
+    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, views_paths, uni), part_d(), part_f(archive_conn, views_paths)]
     part_e(views_paths)          # informational for unkeyed ledgers; judged counts are reported per ledger
     if min(counts) == 0:
         print('\nUNEXERCISED: a check judged no case')

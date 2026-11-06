@@ -36,6 +36,9 @@ TABLES = {
     'thesis_group_members': 'id integer primary key autoincrement, group_id text, view_id text, seq integer, input_id text, basis text',
     # D166 (2026-11-01): the names a later declaration gives a stored group, appended once each; a group's aliases are its creation's plus these
     'thesis_group_aliases': 'id integer primary key autoincrement, group_id text, alias text, seq integer, input_id text',
+    # D201 research argument (judging-v8, docs/research/2026-11-04-argument-record/design.md): one card version per judgement that wrote one,
+    # written in the same transaction as that judgement and never edited
+    'arguments': 'id integer primary key autoincrement, view_id text, judgement_id integer, seq integer, card_json text, prompt_version text',
 }
 
 INDEXES = [
@@ -43,6 +46,7 @@ INDEXES = [
     'create index if not exists judgements_view on judgements(view_id, judgement_id)',
     # 06-views step 7: a view is judged once per round (one item = one sequence number)
     'create unique index if not exists judgements_once_per_round on judgements(view_id, seq)',
+    'create unique index if not exists arguments_once_per_round on arguments(view_id, seq)',
     'create index if not exists links_view on evidence_links(view_id)',
     'create index if not exists links_evidence on evidence_links(evidence_id)',
     'create index if not exists sources_evidence on evidence_sources(evidence_id)',
@@ -150,6 +154,8 @@ def ensure_writable_columns(conn):
     for field in ('reference', 'implied_outcome'):
         if field not in judgement_columns:
             conn.execute(f'alter table judgements add column {field} text')        # D260: judgements written before the stance fields read as null
+    if 'arrival_use_json' not in judgement_columns:
+        conn.execute('alter table judgements add column arrival_use_json text')     # judging-v8: which new pieces the card took up; earlier judgements read as null
 
 
 def view_key(conn, view_id):
@@ -383,6 +389,26 @@ def revision_of(conn, evidence_id):
         return None
     row = conn.execute('select old_evidence_id from revisions where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
     return row['old_evidence_id'] if row else None
+
+
+def latest_argument(conn, view_id):
+    """The thesis's latest argument card ({'id', 'judgement_id', 'seq', 'card', 'prompt_version'}), or None: never written, or a ledger
+    from before the table (read-only openers do not create it)."""
+    if not conn.execute("select 1 from sqlite_master where type='table' and name='arguments'").fetchone():
+        return None
+    row = conn.execute('select * from arguments where view_id=? order by id desc limit 1', (view_id,)).fetchone()
+    return dict(row, card=json.loads(row['card_json'])) if row else None
+
+
+def claim_numbers_used(conn, view_id):
+    """Every claim number any card of this thesis has carried (k1 → 1): a new claim takes the next number, a removed one is never reused."""
+    if not conn.execute("select 1 from sqlite_master where type='table' and name='arguments'").fetchone():
+        return set()
+    used = set()
+    for (card_json,) in conn.execute('select card_json from arguments where view_id=?', (view_id,)):
+        card = json.loads(card_json)
+        used.update(int(c['id'][1:]) for side in ('for', 'against') for c in card.get(side, []))
+    return used
 
 
 def recent_judgements(conn, view_id, n):
