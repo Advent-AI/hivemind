@@ -1,0 +1,8 @@
+Council B on probe 6 (read-only). Read `clean-arch/step1-unfiled-2026-11-08/LOG.md` §§22-23, the c2 arm (`arms/c2-*`), the answers `poc/data/clean-step1-unfiled-2026-11-08/probe-r6-merged/records.json` (print with `print_answers.py <file> <case>`), and `probe-r6/diagnose.json`.
+
+Challenge:
+(a) Is each "met" in the §23 table real? Check margins, cash, EPS, targets, figure-only theses against the raw answers.
+(b) Is carrying c2 forward right, given the d2-6 must-not thesis (3/3 vs 1/3)?
+(c) The next class: small-step theses (supplier d2-8 3/3 in all arms; Palantir d2-6; quantum d1-113). Proposed c3 = c2 plus K6b's own scale test added to the closing check's thesis sentence: "For each new thesis ... drop the thesis ... if it rests on a single investment, partnership, integration, deployment, supplier step or product feature whose own scale, as the item shows it, cannot change the company's revenue, profit, cash or credit risk; link its evidence to an open thesis or leave it unfiled." Source: K6b §3's scale sentence; Alex's supplier ruling; the model's own account. Does it risk dropping theses the gold requires (must_open: credit-support obligation, Kyber NVL144 shipping, hyperscaler capex, China H200 permission)? Which probe cases guard that, and is the 16-case set enough, or must the dev forward run be the guard?
+(d) Plan: c3 motivating cases one draw (d2-8, d2-6, d1-113, d1-22, empty-108, empty-62, empty-85, d1-38), then 16x3 against the same control, then the dev forward run over the 115 gold articles (Step 1 whole bench, frozen scorer + trace reading), then the test set once. Anything missing or wrongly ordered?
+Under 500 words; end with AGREE / AGREE WITH CHANGES (list) / DISAGREE.

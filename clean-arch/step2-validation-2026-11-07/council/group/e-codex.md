@@ -1,0 +1,9 @@
+**Stop after reporting the failed line; do not offer “accept” as though the test passed.** The review supports a minimum of 3 clear wrong merges, with 15 additional placements the third reader called imperfect.
+
+1. **The 3/104 count is a review outcome, not a settled error rate.** The third reader marked all 15 overlaps unacceptable, yet the scoring excludes them from clear wrong merges. Its instructions also assumed that a reader would not be misled by an overlap. Some involve meaningful differences: orders versus sales, and expected revenue versus committed off-take. Your two additional disagreements should remain visible, with the passages and reasons, rather than being silently set aside. Report **3 wrong, 15 overlap, 1 acceptable after dispute**, alongside the initial 85 accepted by both.
+
+2. **Line 1:** 112/113 meets the numerical threshold for *known counterparts present in a candidate group*. Only 107 have a known counterpart as the original Jev actually saw. Neither number measures all real repeats.
+
+   **Line 3:** 28 versus 27.5 supports the line on these fixed questions and readers, not general equivalence. Report each dossier and question too. Zero recorded double counting is limited to what the questions and graders checked; the wrong-group questions did not demonstrate that readers would notice a misleading group unaided.
+
+3. **Yes, stop.** Alex asked to finish these steps and stop; the failed acceptance and disagreement should go to him as the result. A future investigation of bundled records would address only part of the observed problem: the different-figures merge and disputed overlaps also need explanation. No new fix round is authorized by this close-out.

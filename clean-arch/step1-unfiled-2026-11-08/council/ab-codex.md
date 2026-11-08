@@ -1,0 +1,11 @@
+**NOT READY:** the sentence tests what evidence happens to appear in one article, rather than what the proposed question asks.
+
+1. **It keeps narrower than D248 #6.** The clause says to drop a question **“whose evidence in this item is”** one other company’s step unless that step alone is large enough. The [standard](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:313) applies the scale test to a single deal, product or project being opened as a question. One small step may instead be evidence for a separately important, broader question. The proposed wording would suppress that question solely because the article contains only one example.
+
+2. **Yes, it can suppress a required opening.** A single customer expansion could be the first evidence for a broader customer-spending question. Likewise, an article might support a policy question through one company’s deal affected by that policy. The four registered controls cover useful categories, but they do not establish that this broader-question case is safe. The company’s own product or obligation is outside the sentence by its wording; the shared-spending and policy controls could be affected depending on how the model identifies their evidence.
+
+3. **Yes, “unless the item shows” risks treating missing scale as insufficient.** D240 protects whether the statement is kept; D248 governs whether the question opens. Those are different decisions. But neither makes an unstated amount proof that a broader question is too small. The instruction should ask what question is being opened and whether its own outcome is important, while applying D248’s scale test when the question itself is the single step.
+
+4. **Change the sentence before the probe.** Add a positive control where one small step supports a separately important broader question, with its expected answer fixed before sending. Then run the proposed motivating cases and controls, inspect the actual answers and refusals, and decide whether the larger round is warranted. The dev forward run should depend on those results, not follow automatically; complete the required preflight before paid calls.
+
+NOT READY (the clause beginning “whose evidence in this item is”).

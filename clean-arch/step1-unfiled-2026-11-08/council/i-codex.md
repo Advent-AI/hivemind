@@ -1,0 +1,9 @@
+**The filing definition is worth investigating, but this proposal cannot yet be sent as a fix.** The fallback remains an explicit decision, and Alex’s supplier ruling does not by itself overturn it.
+
+**(a) Restoring signed wording is legitimate only after checking the whole request.** The production rule applies *after* a statement has been judged worth keeping. It also chooses the narrowest question, whereas K6b says to link every question informed. Copying selected sentences without resolving that difference could create a contradiction. The four channels are a sourced starting point, not proof they fix these misses. [Production rule](../../../src/hivemind/placement.py), [K6b request](../arms/k6b-system.txt)
+
+**(b) Do not delete the fallback on this evidence.** D361 explicitly kept it despite the parking-lot finding. A supplier expansion may fail the prior test of whether it moves a question’s answer; the case does not prove the fallback itself requires keeping it. A missing revenue question also does not establish permission to remove the rule. A proposed change to that decision goes to Alex with the evidence. [Filing phase](../../../docs/prd/10-filing-phase.md), [decisions in force](../../../docs/DECISIONS.md)
+
+**(c) The probe needs stronger checks.** “Theses not up” could penalize a worthwhile question; judge each opening and link against its article and prior library. Check missed evidence, weak links, unwanted material and format failures. Six calibration items are useful only with a predeclared agreement threshold and a stop if it fails. Use a fresh, same-day control: the filing record warns that model behaviour drifted. [Filing diagnosis](../../../docs/prd/10-filing-phase.md)
+
+**Next:** audit the complete proposed request against the filing decisions and Alex’s four rulings, including the fallback and the one-versus-many link conflict. Only then decide whether a small probe can test a sourced change.

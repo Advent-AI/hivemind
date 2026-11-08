@@ -1,0 +1,9 @@
+**Do not run u1k forward yet.** It has not shown that it fixes the loss without creating other problems, and the agreed stop condition fired.
+
+For example, one reader says the company’s cash-flow figures deserve their own research question; another says discarding them is correct. The calibrated count leaves cases unresolved, so **3 versus 4 small questions does not establish “no harm.”** u1k also returned 12 unwanted spans against the predeclared limit of 11. [Probe results](../LOG.md), [calibration script](../tally_calibrated.py)
+
+**(a)** The forward run would currently be used to try a fix. The possible benefit from opening questions early is plausible, but the small probe did not establish it. The §7.3 protection applies when the fix has already worked and a later review adds a stricter rule; here the limits were declared before the probe, and the improvement is unresolved. [Working rules](../../../AGENTS.md)
+
+**(b)** Ask Alex about the underlying product choice, not a single numerical threshold. Show a small, balanced set of source articles and the questions available at the time. For each, ask separately: **Should this information be kept? If so, does it fit an existing question or warrant a new one?** Include cash flow, a forecast, and a supplier example, with the arguments for both readings. Do not suggest that keeping financial information automatically requires a separate question for every financial line. [D371](../../../docs/DECISIONS-log.md)
+
+**(c)** My recommendation is to resolve those product judgments first, then use them to define and independently review a **separately versioned D371 evaluation**. Its first test should be whether independent readers can apply the agreed decisions consistently to fresh development cases. No product-model calls are needed for the question to Alex; review time remains unestimated. Keep the current candidate and its defect recorded, and reserve the test set.

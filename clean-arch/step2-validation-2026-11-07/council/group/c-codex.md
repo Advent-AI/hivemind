@@ -1,0 +1,11 @@
+**The test supports preserving later text; it does not yet prove that grouping is as good as no merging or that wrong groups are safe.**
+
+1. On the selected detail questions, grouped readers scored **25/36**, versus **3/36** for source-only and **25/36** for no merging. That is useful evidence for keeping later text. The questions were deliberately selected for details later reports added, so they do not measure overall dossier quality. Equal scores from two readers per view are not proof of equivalence.
+
+   No double counting was recorded on **four independence questions**; that is narrower than proving none occurred. The three wrong-group questions also did not establish safety: R7 was partial in every view, and the questions direct readers to the facts being compared. The key readers disagreed on 16 of 39 questions, so disputed answers deserve particular scrutiny. The key instructions cite stored records and article context; they do not establish that both readers read every full article.
+
+   One reporting correction: the frozen detail falsifier is a gap of **more than one question averaged across readers**. The reported 0.5-point financing gap is the *sum* across two readers, or 0.25 on that scale.
+
+2. **Size does not defeat grouping’s purpose**, but compression is not demonstrated. Grouped competition is about 25% larger than no merging; roadmap is about 5% larger. Grouping might help readers see retellings together and distinguish article counts from independent claims. This test did not directly measure whether that structure helps with unaided review, navigation or counting distinct claims. Characters are not reading time.
+
+3. **Investigate wrong groups first.** Read the 3 clear and 6 arguable cases against their source passages and stored comparisons, including whether the 15-item test convention changes what the reader sees. Then test whether readers encounter and recognize the differences without a question pointing them out. The 14 missed repeats matter next, but an incorrect group can actively connect different claims. The several-match product rule remains Alex’s decision.

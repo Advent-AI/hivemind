@@ -4089,3 +4089,82 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   - Kept on disk and out of Git: the 2026-11-05 handoff bundle, raw Codex transcripts and resend checkpoints (`.gitignore`, data manifest).
 - Then, on Alex's "合并commit push merge" the same day: the README gate passed on `seal/2026-11-06` and it was merged into `main` (PR #10,
   merge commit `5e3819a`). The three experiment branches stay unmerged records.
+
+## D380 · 2026-11-08 · Clean Step 1 runs on K6b with DeepSeek Flash; a format failure is retried once
+
+- Alex: "确认 K6b + DeepSeek，把剩下的收尾做完 step 1 and 2, run council loop and we stop here first without going further". On the format
+  question he chose the recommended option: an answer that is not JSON or not the schema is sent once more unchanged; if it fails again
+  the item is marked failed and the run continues; any other failure stops the run. Record: `clean-arch/takeover-2026-11-07/LOG.md` §16.
+- On 2026-11-08 he extended the rule to a cut answer (output limit reached), choosing "当格式问题：重发一次": a cut answer is retried
+  once like a format failure. Record: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §39.
+
+## D381 · 2026-11-08 · Clean Step 2: a repeat joins only the group it is most like; three acceptance lines
+
+- Alex, on a record that repeats several groups: "只放进最像的那组". On the lines he chose "三条线": search at least 90%; clear wrong merges
+  at most 2%; grouped dossiers keep no fewer later details than no merging. Grouping option A ("A 继续"): each repeat keeps its own text
+  and source in the group. Record: `clean-arch/step2-validation-2026-11-07/LOG.md` §§9–12; `clean-arch/PRD.md` §§5–6.
+
+## D382 · 2026-11-08 · Financial figures are conditions, not theses; a thesis is a view with a reason
+
+- Alex: "我觉得财务类型不应该是thesis，而更多的是条件。观点应该是独特的view，而不是喊出来的数字，除非有理由 - 这个理由恰恰才是观点". On the
+  recommendation to keep a useful company figure no view takes as a condition of the company, he replied "好". Record:
+  `clean-arch/step1-unfiled-2026-11-08/LOG.md` §§16–17.
+
+## D383 · 2026-11-08 · D209 amended again: a material statement no thesis takes is kept unlinked and linked later
+
+- Alex chose "先存着，有观点再挂": a statement the model judges useful but no thesis takes yet is kept in the company's record, linked when
+  a related thesis opens; what the closing check rejects is still dropped, including the cash flow he ruled out. Amends D209 beyond D382.
+  Record: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §27.
+
+## D384 · 2026-11-08 · Clean Step 1 opens only the big matters, by the signed standard as the frozen gold applies it
+
+- Alex chose "按金标：只开大事": a thesis opens only for the standard's reasons (an obligation the company takes on, its main product's
+  next node, a policy step, a checkable shared quantity); another company's single project, partnership or product line is evidence.
+  The reader-based small/fragment line gives way to must_open covered and must_not not opened. Class A (main-driver quantity) stays
+  out under D382. Record: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §36.
+
+## D385 · 2026-11-08 · Target prices and valuation conclusions are not kept
+
+- Alex, 2026-11-08: "留 EPS 预测，丢目标价" (LOG §11), then, asked whether it overrides the signed standard's "孤零零的目标价可选；带推导的
+  条件估值仍是辅助" (D243 #4), chose "目标价和估值结论都不留": a target price or valuation conclusion anyone draws is not kept; the
+  estimates it rests on are kept on their own. The frozen standard page and golden-v5 are not edited (D261, D262); the two valuation
+  entries golden-v5 marks supporting are disclosed as a known conflict with every score (D373). Record: LOG §39.
+
+## D386 · 2026-11-08 · Acceptance on fresh articles read by readers against the source
+
+- Alex chose "新文章 + 读者对照原文判": the golden-v5 test set was used across five configurations on 2026-11-08 and is no longer a clean
+  held-out set. After the final configuration is frozen (a complete review of the request first), acceptance runs on NVDA articles no
+  run has used, judged by readers who did not write the change, against the source; dev is repeated for stability. No new gold is
+  built. Record: LOG §39.
+- The wrongly opened thesis line for this acceptance is Alex's answer of 2026-11-08 (AskUserQuestion): "50 篇里最多 2 个" — at
+  most 2 wrongly opened theses in 50 fresh articles. The protocol is `clean-arch/step1-unfiled-2026-11-08/ACCEPTANCE-PROTOCOL.md`.
+
+## D387 · 2026-11-09 · Clean Step 1 adopts c8; the PRD carries its system prompt, closing check and schema
+
+- Alex chose "采用 c8 (Recommended)": c8 becomes the clean Step 1 configuration, frozen. It runs on DeepSeek Flash at high effort with
+  a 64,000-token output cap; a format failure or a cut answer is resent once (D380).
+- It was accepted on 50 fresh, unused articles (2026-09-05 to 09-07, one draw), with every line met under the agreed definitions:
+  - helpful 132/139;
+  - wrongly opened theses 1/10;
+  - search 141/143;
+  - clear wrong merges 1/57;
+  - detail retention 22 = 22.
+
+  On dev ×3: helpful 214, 211 and 212 of 234. Record: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §§40–44 and
+  `ACCEPTANCE-PROTOCOL.md`.
+- **What was done:**
+  - PRD §12 carries c8's system prompt, its closing check and its schema;
+  - a run with no candidate files reads all three from the PRD, and the closing check ends the user message;
+  - any later change is a new version measured against c8.
+- On link clutter (about one link in five weak), Alex chose "先花几分钱查原因 (Recommended)": the model's own account comes first,
+  then the council, before any design.
+- **Limits of the acceptance**, stated with its numbers:
+  - the fresh set is one draw over a holiday weekend with no NVIDIA posts;
+  - search is 141/145 for the whole system, and one 11-article story supplies 55 pairs;
+  - revisions are barely exercised;
+  - detail retention is a storage comparison;
+  - the link figures come from a blind recheck of the 34 disputed links only.
+
+  Record: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §47.
+  The link recheck covered the 34 disputed links and 10 accepted links as controls (all useful); the other 49 fresh links were not
+  rechecked.

@@ -1,0 +1,7 @@
+**The test missed its proposed line; the cause is not yet proven.** Seven of the ten misses were returned without thesis links and then dropped. For example, the $96.2bn revenue result was extracted but did not reach a thesis.
+
+1. A thin library is a plausible contributor, not an established explanation for all seven. Check each item against the theses actually open at that point and what the request told the model to do. The Dell thesis opened the next day, but that alone does not prove it would have accepted the earlier evidence. A real new entity could face a similar problem; this run does not establish how often.
+
+   Report **8 not-kept spans versus production’s 4** alongside 32 versus 20 helpful matters. Both comparisons are one draw. The 42 matters are not necessarily independent, so a binomial standard deviation is not a reliable uncertainty estimate. The reduced threshold was predeclared but not separately confirmed by Alex; the test articles also had prior exposure.
+
+2. **Hold any claim that K6b has passed acceptance or is production-ready.** Alex confirmed the configuration to finish testing; the test then missed the proposed line. The PRD can accurately record his choice, the result and its limitations without presenting adoption as validated. Stop there and report the census to him.

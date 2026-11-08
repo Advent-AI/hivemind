@@ -1,0 +1,11 @@
+**I would not send u1 as written.** It may turn every financial figure into a new question, even when that figure does not carry the business or merit a separate bet.
+
+**(a) Wording.** D371 supports tracking present and forward-looking financial information, and the standard recognizes cash and credit risk. But neither makes every cash measure a big matter. U1 says results “are evidence for the question of the quantity” and to “open that one question” if absent; that removes the analyst’s relevance and opening judgment. A minor expense line at a bank or a drug maker exposes the same problem. [U1](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/arms/u1-system.txt:95), [D371](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4006)
+
+Preserve the ban on a **question about one quarter**, while distinguishing it from a worthwhile broader question supported by that quarter. Require the existing opening tests to decide whether the broader question merits tracking. “Cash generation” can be relevant evidence; treating it automatically as a separately trackable quantity is not established by the cited standard. [Standard](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:308)
+
+**(b) Empty state.** Legitimate as a labelled stress test, but it necessarily offers no existing question to link to and therefore favours opening over filing. Keep the stored-state comparison primary. Include empty-state controls where the right answer is **no new question**, and do not claim this reconstructs an actual new company’s full history.
+
+**(c) Isolation and guards.** The four proposed comparisons isolate u1 and u3 and their interaction. Add a financial but **non-key line** and a genuinely important financial measure already covered by an existing question; these test unnecessary opening and duplication. Include supplier-capacity article 8 with the relevant question already open, and inspect its actual before-state before labelling it a link miss.
+
+U3 requires a question even when none is sensible. Allow an explicit “none” and test that it does not manufacture a rationale. Verify the actual transmitted schema order: the property appears before `links`, but the required list places it after `links`. [U3 schema](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/arms/u3-schema.json:71)

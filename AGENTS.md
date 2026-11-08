@@ -284,7 +284,8 @@ Verify at the point the change touches, at the sharpest level that shows it work
 - **A score is a lead; the traces are the measurement.** Every measurement has a score, and every time you read the traces yourself: the
   raw answer beside the article for every missed helpful entry, and a sample of the extras and of the hits; historical gold keeps its original labels. The scorer
   hard-codes no rule of the standard: it reads the gold file it is given, prints the gold's and the standard's sha256, and refuses a gold
-  made for another version; scores are compared only on the same gold. Alex, 2026-10-29 (D244): "我觉得这是最容易出错的问题；你非常容易写死，我们在改的过程中如果drift你会一直用久的标准来衡量，这边需要有打分，但是“一定”要你自己下去看trace这是必须，记起来".
+  made for another version; scores are compared only on the same gold. Do not write a new scorer to judge a probe: read the traces yourself (Alex, 2026-11-08:
+  "不要写评分器这个之前就出问题过，你自己读trace 来分析"). Alex, 2026-10-29 (D244): "我觉得这是最容易出错的问题；你非常容易写死，我们在改的过程中如果drift你会一直用久的标准来衡量，这边需要有打分，但是“一定”要你自己下去看trace这是必须，记起来".
 - **The ruler counts only what it was built to count.** Before a quality claim, a reader who did not write the change also reads the
   fields the product stores (original day, original speaker, tier, the summary's hedges) and what the next step does with the record
   (Alex, 2026-10-30: "现在到底质量怎么样你深度的解析不要只是看尺子").
@@ -327,6 +328,10 @@ Verify at the point the change touches, at the sharpest level that shows it work
   hypotheses through $0 checks and probes of a few cents on stored cases without asking. A registered test, an end-to-end run, or
   anything that departs from the agreed plan starts on his word; a result that contradicts the hypothesis stops the line and goes to him
   (D355: "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估").
+- **Council before every change is sent.** A prompt, schema, code or criterion change, including one found by reading a probe, is a new
+  arm. It goes to an independent Codex read and a challenge round before its first send, and its result goes to a challenge round
+  before the next change. Reading the traces and the model's own account locates a fix; it does not review it (Alex, 2026-11-08:
+  "你这些改动有我你有好好的跑council 再下手").
 - **Small first, then one run.** A hypothesis is first validated the simplest way, on a few stored cases and a few cents, and shown to
   work at a high level before any full analysis or stability test is built (Alex, 2026-11-04: "don't overspend resources on wasting time.
   We need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we dive into do the full

@@ -550,7 +550,7 @@ Every decision number, its date, its title as recorded, its status today and the
 | D206 | 2026-10-28 | Every open theme thesis is shown to every item's extraction (extraction v19, `poc-v35`) | superseded by D211, D264 | Extraction |
 | D207 | 2026-10-28 | Statements are filed by a separate placement call under the one-home rule; an unfiled statement is kept (ex… | in force (amended by D209, D254, D259, D264, D265, D360, D364) | §6 Extraction |
 | D208 | 2026-10-28 | The thesis tree: root quantities, a seeded driver layer per company, shared macro themes with declared chan… | in force (amended by D209, D253, D273, D368) | §7 Thesis library |
-| D209 | 2026-10-28 | A statement no open question takes is dropped at extraction; evaluation reads the dropped record, not a sid… | in force (amended by D264) | §6 Extraction |
+| D209 | 2026-10-28 | A statement no open question takes is dropped at extraction; evaluation reads the dropped record, not a sid… | in force (amended by D264; for the clean path by D382, D383) | §6 Extraction |
 | D210 | 2026-10-28 | A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`) | in force (amended by D236, D238, D239) | §6 Extraction |
 | D211 | 2026-10-28 | The extraction request shows no thesis and no group: one sample per item, filing at the turn (role-v22, `po… | superseded by D251, D264 | Extraction |
 | D212 | 2026-10-28 | Measure retained content from source through final writing before another quality change | record | Ruler and measurement |
@@ -584,7 +584,7 @@ Every decision number, its date, its title as recorded, its status today and the
 | D240 | 2026-10-29 | A named party's action without an amount is kept; a reject rule never removes what the standard keeps | in force | §11 The ruler and measurement |
 | D241 | 2026-10-29 | One unified definition of the ledger's types, question opening and evidence levels, with a traced golden se… | in force (amended by D243, D261) | §11 The ruler and measurement |
 | D242 | 2026-10-29 | The standard becomes a web page, the extraction step's PRD; AGENTS.md and the README are cleaned and carry… | in force (amended by D243) | §11 The ruler and measurement |
-| D243 | 2026-10-29 | The extraction standard is signed: proposal 5 stricter, the other eleven at their leans; lean cautious, cat… | in force (amended by D248, D250, D261, D369) | §11 The ruler and measurement |
+| D243 | 2026-10-29 | The extraction standard is signed: proposal 5 stricter, the other eleven at their leans; lean cautious, cat… | in force (amended by D248, D250, D261, D369; #4 overridden for the system by D385, frozen files unchanged) | §11 The ruler and measurement |
 | D244 | 2026-10-29 | Claude sets the dev/test split; scores are leads and Claude reads the traces every time; first the role-v29… | in force (amended by D261) | §11 The ruler and measurement |
 | D245 | 2026-10-30 | role-v42 (`poc-v58`) is the extraction request; its must-not questions on small release dates are the next… | superseded by D246 | Extraction |
 | D246 | 2026-10-30 | role-v51 (`poc-v67`) is the extraction request | superseded by D247 | Extraction |
@@ -721,3 +721,11 @@ Every decision number, its date, its title as recorded, its status today and the
 | D377 | 2026-11-05 | Remove the question-catalog 150 KB rejection | in force; changed and tested in main | §1 System |
 | D378 | 2026-11-06 | The split extraction is sealed as a failed experiment; its useful lessons become production experiments (PRD 11) | in force; experiments open only on Alex's word | §6 Extraction |
 | D379 | 2026-11-06 | The current version is sealed; Alex re-plans the system design | in force | [CURRENT_STATE](CURRENT_STATE.md) |
+| D380 | 2026-11-08 | Clean Step 1 runs on K6b with DeepSeek Flash; a format failure, a cut answer included, is retried once | in force | clean-arch PRD §12 |
+| D381 | 2026-11-08 | Clean Step 2: a repeat joins only the group it is most like; three acceptance lines; repeats keep their own text | in force | clean-arch PRD §§5–6 |
+| D382 | 2026-11-08 | Financial figures are conditions, not theses; a thesis is a view with a reason | in force | clean-arch PRD §12 |
+| D383 | 2026-11-08 | D209 amended again: a material statement no thesis takes is kept unlinked and linked later | in force; amends D209 | clean-arch PRD §§5, 12 |
+| D384 | 2026-11-08 | Clean Step 1 opens only the big matters, by the signed standard as the frozen gold applies it | in force | clean-arch PRD §12 |
+| D385 | 2026-11-08 | Target prices and valuation conclusions are not kept; the conflict with D243 #4 is disclosed, the frozen files unchanged | in force | clean-arch PRD §12 |
+| D386 | 2026-11-08 | Acceptance on fresh articles read by readers against the source; golden-v5 test no longer held out | in force | clean-arch PRD §12 |
+| D387 | 2026-11-09 | Clean Step 1 adopts c8; the PRD carries its system prompt, closing check and schema | in force | clean-arch PRD §12 |
