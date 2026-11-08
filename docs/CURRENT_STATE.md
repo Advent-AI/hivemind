@@ -122,23 +122,16 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The next D388 change: a required company-impact field** (2026-11-09). D388: a material unsigned obligation keeps its own signing question beside an
-open total of the same kind. c8 folds the Ohio guarantee into the aggregate in 3 of 3 dev draws.
+**D388 in clean Step 1: c11 probed and stopped; Alex's choice next** (2026-11-09). D388: a material unsigned obligation keeps its own
+signing question beside an open total of the same kind. c8 folds the Ohio guarantee into the aggregate in 3 of 3 dev draws.
 
-Two arms have been probed and stopped:
-- c9 (round log §§48–50);
-- the c10 read-back (§51). c10a opens Ohio's signing question in 3 of 3 draws, but it also opens signing questions for $2–3bn stakes
-  that a blind reader judges small. The model's own account shows why: it sizes the deal against the open total of its kind, never
-  against the company's revenue, profit, cash or credit risk.
+Arms c9, c10 and c11 have been probed and stopped (round log §§48–52). c11 adds a required company-impact field. It opens Ohio's signing
+question in 3 of 3 draws with the unknown amount kept, and no longer opens the $2.5–3bn stake. Two predeclared falsifiers still fire:
+- a $2bn stake opens because my read-back said "can change" where the standard says "large enough to change";
+- dev-1's aggregate is recast.
 
-Alex chose to continue (2026-11-09; his words are in round log §51). The change: when the model opens a signing question, a required field must say
-what the obligation could change in the company's revenue, cash or credit risk, or that the amount is unknown. c8 stays in force. The order:
-1. design;
-2. council;
-3. whole-request audit;
-4. preflight;
-5. a send of a few cents on the same 32 cases plus Ohio ×3, with arms in separate blind packets;
-6. a comparison with c8 on new, unused articles, only on his word.
+Side effects on unrelated questions appear only in arms with the added paragraph (one draw each; fresh-22's HBM thesis is lost in 3 of 3
+such draws). c8 stays in force. The next step goes to Alex.
 
 c8 stays in force. Link clutter is paused.
 

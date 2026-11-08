@@ -1,0 +1,3 @@
+**BLOCKER:** The wording asks the model to judge against the company’s size **as the article states it**, but Ohio’s article gives no clear measure of the company’s size or the guarantee amount. Saying those are unknown does not tell the model how to apply the required judgment, and could cause it to skip Ohio.
+
+Allow a qualitative judgment from the available context when those amounts are unknown. Keep the instruction that the project’s cost is not the guarantee amount, and check that the answer preserves both unknowns.

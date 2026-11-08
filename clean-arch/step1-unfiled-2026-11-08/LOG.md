@@ -2016,3 +2016,48 @@ open it (0 of 2) is not explained.
 he chose "继续，逼它跟公司比 (Recommended)". When the model opens a signing question, it must write what the obligation could change
 in the company's revenue, cash or credit risk, or say the amount is unknown. The order: design, council, audit, a probe of about
 $0.60 on the same cases.
+
+## 52. Arm c11 (a required company-impact field) probed and stopped (2026-11-09)
+
+**Design and review** (`council/bu-claude.md`; `bv`–`cf-codex.md`). c11 is c10a plus a required `company_impact` on each new thesis,
+null unless the thesis is an obligation, with the read-back keyed to it. Four rounds of review fixed:
+- an open signing question is only linked;
+- figures the item does not give are never written;
+- a qualitative judgment is allowed when amounts are unknown;
+- the project cost is never the obligation's amount.
+
+Both reviewers then cleared it. A synthetic answer passed every check. Stored answers cannot be replayed, since they lack the field.
+
+**Results** (`probe-r15-c11`, `probe-r15-c11-ohio`; one draw per case, three for Ohio; $0.57). Blind reading of c11's theses alone
+(`council/cg-*`, 7 of 7 judged):
+- **Ohio:** 3/3, each linked to clean-1 and the new question. Each `company_impact` says the guarantee amount is not given and $500bn is
+  the asset's cost. Pass.
+- **fresh-47:** no thesis (c10a opened one). **fresh-9:** an amount question on the agreed guarantee, judged open. fresh-8 kept.
+  Links per item 0.66 against c8's 0.64. No empty answers.
+- **fresh-50 opens, judged small. Falsifier fires.**
+- **dev-1 is recast as a signing question on the announced programme, judged off-topic. Falsifier fires.** c8 opens the amount question
+  in 4 of 4 draws.
+- **fresh-12** opens the EU programme again, judged off-topic (c10a 1/1, c11 1/1; c8 0/2, c10b 0/1).
+- **fresh-22** loses c8's HBM-shipments thesis (c8 2/2 open; c10a, c10b and c11 all lose it). A blind reader judged that thesis open
+  in §51.
+- **Council B** (`ci-codex.md`): stop.
+
+**The model's own account** (`probe-r15-c11/thesis-account.json`, four questions, $0.018):
+- **fresh-50** quotes the read-back. It calls the deal "small alone, but part of a customer-financing pattern affecting cash deployment
+  and credit exposure". My read-back says "when it shows the obligation **can change** the company's own revenue, profit, cash or
+  credit risk"; the standard says "large enough to change" (c8 §3; D248 boundary 6). I dropped "large enough", which widened the
+  standard, and four review rounds missed it. The field did its job: the comparison is now with the company.
+- **dev-1** quotes §3 binding_obligation, not the read-back. It says the case "is thin, and the thesis could just as well be dropped".
+  My hypothesis that the read-back's "Otherwise" branch caused it is not supported, and is withdrawn. Without a total open, that
+  branch only repeats §3's ordinary rule.
+- **fresh-22** cites the duplicate rule: it took clean-6 (DRAM prices) as covering HBM shipments.
+- **fresh-12** cites §3 policy_stage. It says "on reflection (a) likely should have won — this is probably evidence, not a thesis".
+
+**What it says:**
+- The field fixes the yardstick. One gate word, mine, let a deal the model itself called small through.
+- Three side effects appear only in arms with the added last paragraph: dev-1, fresh-12 and fresh-22's HBM. The accounts cite
+  other rules, not the paragraph. Each comes from one draw per arm, except HBM, lost in 3 of 3 such draws.
+- Whether the added paragraph shifts unrelated judgments, or this is noise, is not established.
+
+**Alex's answer.** To "restore the standard's words and probe again, or stop", he replied "run council to review deeply". Before any
+next arm, a deep council reviews the whole D388 line (§§48–52).
