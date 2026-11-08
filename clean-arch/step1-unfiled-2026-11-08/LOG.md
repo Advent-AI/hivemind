@@ -2061,3 +2061,70 @@ Both reviewers then cleared it. A synthetic answer passed every check. Stored an
 
 **Alex's answer.** To "restore the standard's words and probe again, or stop", he replied "run council to review deeply". Before any
 next arm, a deep council reviews the whole D388 line (§§48–52).
+
+## 53. Deep council on the D388 line (c9–c11), on Alex's word "run council to review deeply" (2026-11-09)
+
+**How.** My reflection was written first (`council/ck-claude.md`). Two independent members then read the whole record cold, each blind
+to the other and to my reflection:
+- a fresh Codex session (`cl-handoff.md` → `cm-codex.md`);
+- a Claude reader (same brief).
+
+A challenge round put the Claude reader's verified findings to Codex (`cn-challenge.md` → `co-codex.md`). I checked those findings
+against the files before sending them.
+
+**Findings I verified:**
+- **c8 is stable against itself:** the probe's c8 matches the stored c8 thesis count on 31 of 32 cases.
+- **Every edited arm moves 4–5 cases it did not target:**
+  - c9: fresh-14, 24, 45, 47;
+  - c10a: fresh-12, 22, 24, 47, 50;
+  - c10b: fresh-14, 22, 24, 50;
+  - c11: fresh-12, 22, 24, 50.
+
+  This is AGENTS §7.3's sign that the call is doing several jobs. One draw per case cannot give a rate.
+- **c8 varies on dev-1.** d1 asks the amount by an 18-month date, d2 and d3 by the next annual report, and the probe's c8 asks "how much
+  … and will signed commitments grow large enough". My "4 of 4 amount" (§52) overstated.
+- **The `company_impact` field shows the reasoning but does not bind the decision.** fresh-8 writes that the outlay is "small … modest"
+  against the market value and opens, which is right there, on the closing event. fresh-50 writes "modest" and opens. My "the field
+  fixes the yardstick" (§52) overstated.
+- **The readers' "small" verdicts on fresh-50 compare with clean-7's $25bn total,** the yardstick I blamed the model for. fresh-47's
+  verdict compared with revenue.
+- **My `thesis_account.py` question is leading:** it asks every case about "signed" and "scale", and never asks the control. The next
+  account uses only the fixed AGENTS §1 question, asked of the treatment and the control.
+
+**Convergence.** All three members agree:
+- stop the same-call line;
+- keep c8;
+- run a free routing census;
+- put the choice of a separate, focused call to Alex.
+
+Codex withdrew its first recommendation, a paired probe of c11 with restored wording, after the 4-of-31 finding.
+
+**The focused call:**
+- c8's request stays byte-identical.
+- Code picks, by identity only, each kept statement linked to an open (or newly opened) binding_obligation thesis.
+- A short call gets the statement, that thesis, §3 binding_obligation and D388 verbatim, and returns only whether a signing question
+  opens.
+- It departs from Alex's 2026-10-30 instruction to keep a per-statement check "写在同一个提示词里面" (AGENTS §6), so it is his decision.
+- Open issues (`co-codex.md`):
+  - it reaches only statements c8 kept and linked to an obligation thesis;
+  - it must see an existing signing question, so it does not duplicate it;
+  - Ohio's routing shows reachability, not a right answer.
+
+**Routing census ($0; c8's four stored runs, 395 answers):**
+- 174 statements would be routed, in 72 articles (0.44 per article).
+- Ohio is routed in 6 of 6 c8 draws: three stored, three probe controls. Each links it to clean-1, a binding_obligation thesis.
+- The Nscale ~$2bn statement is routed too (linked to clean-7), so the focused call must still make the scale judgment.
+- **Misses.** I read the unrouted kept statements that mention obligation words in dev-d1 (20) and the fresh run (17). None is a
+  material unsigned obligation of NVIDIA beside an open total; they are completed or unsized investments, third-party matters and
+  gains. That is my reading of two runs, a lead and not a count.
+
+**Process rules the council named** (for the next arm, whichever it is):
+- every new sentence is printed beside the standard's sentence, with a word-by-word diff, before review;
+- a claim about an untargeted case shows c8's own spread over at least 3 draws;
+- the reader brief states the standard's yardstick (revenue, profit, cash or credit risk), and a verdict on another yardstick is
+  unjudged;
+- once a second arm moves an untargeted class, the next arm changes where the rule lives, or the line stops.
+
+**Alex's answer.** To "test a separate, focused call (c8 unchanged), or stop with Ohio as a known defect", he chose "试一个单独小步骤
+(Recommended)". The question stated that this departs from his "写在同一个提示词里面". It authorizes a test, not adoption. The order:
+design, council, whole-request audit, $0 checks, then a probe of about $0.20 with 3 draws on the same cases.

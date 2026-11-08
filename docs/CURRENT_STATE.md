@@ -131,7 +131,9 @@ question in 3 of 3 draws with the unknown amount kept, and no longer opens the $
 - dev-1's aggregate is recast.
 
 Side effects on unrelated questions appear only in arms with the added paragraph (one draw each; fresh-22's HBM thesis is lost in 3 of 3
-such draws). c8 stays in force. The next step goes to Alex.
+such draws). A deep council (round log §53) found every edited arm moves 4–5 untargeted cases while c8 agrees with itself on 31 of 32, and
+agreed to stop the same-call line. c8 stays in force. Alex chose to test a separate, focused call for this one judgment (c8 unchanged; 174 statements in 72 of 395 articles would be
+routed, Ohio in 6 of 6). The order: design, council, whole-request audit, $0 checks, a probe of about $0.20 with 3 draws on the same cases.
 
 c8 stays in force. Link clutter is paused.
 
