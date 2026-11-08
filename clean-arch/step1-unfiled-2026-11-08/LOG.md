@@ -2128,3 +2128,65 @@ Codex withdrew its first recommendation, a paired probe of c11 with restored wor
 **Alex's answer.** To "test a separate, focused call (c8 unchanged), or stop with Ohio as a known defect", he chose "试一个单独小步骤
 (Recommended)". The question stated that this departs from his "写在同一个提示词里面". It authorizes a test, not adoption. The order:
 design, council, whole-request audit, $0 checks, then a probe of about $0.20 with 3 draws on the same cases.
+
+## 54. The focused call for D388 probed and stopped (2026-11-09)
+
+**Design and review** (`council/cp-claude.md`; `cq`–`cw-codex.md`; files in `focused/`).
+- c8 is unchanged. Code routes, by identity only, each statement c8 kept and linked to a binding_obligation thesis. One call per article
+  decides, per statement, whether a signing thesis opens.
+- The system text quotes §3 and D388 word for word, and code checked each quoted block against its source.
+- The closing check writes signed_status, company_impact, large_enough, separate_bet, settleable and already_asked_by, then opens.
+- The code contract enforces opens exactly when every condition holds, and refuses missing, repeated or empty items.
+- Three review rounds fixed:
+  - statements about one deal share a thesis;
+  - an "unclear" status, which never opens;
+  - no forecast exclusion;
+  - the 18-month cap;
+  - "not yet signed" read from the item's own description;
+  - the settleable condition;
+  - raw answers kept on failure;
+  - skipped articles reported;
+  - one recorded transport retry.
+
+  Both reviewers then cleared it.
+- **The bytecode trap again.** A $0 check first passed a malformed answer because Python ran a stale `__pycache__`. Cleared, it
+  refused correctly. Every later run used PYTHONDONTWRITEBYTECODE.
+
+**Results** (`probe-r16-focused`; 44 calls over 24 routed articles; 0 transport or contract errors; $0.32 at published rates against
+a $0.21 estimate, output averaging 5.1k tokens):
+- **Ohio:** 9 of 9 draws open the signing question, over three c8 answers × 3. Each impact keeps the guarantee amount unknown and calls
+  $500bn the asset cost. Blind: open.
+- **No openings, in all 15 draws:** fresh-50 ($2bn), fresh-9 (agreed), fresh-7 (undertaken), dev-1 (programme), fresh-8 (no
+  duplicate).
+- **The 13 other routed articles:** 0 openings in one draw each.
+- **fresh-47 ($2.5–3bn stake): opens in 3 of 3.** Blind, with the company's own size stated as the yardstick: small, compared with the
+  article's $96.2bn quarterly revenue. **Falsifier fires.**
+- **fresh-22 (MoUs for platforms raising more than $500bn from third parties): opens in 2 of 3.** Blind: not an obligation of NVIDIA.
+  **Falsifier fires.**
+- One reader judged all of these. They are not independent judgments.
+
+**The model's account** (the fixed AGENTS §1 question; `probe-r16-focused/account.json`):
+- fresh-47: "$2.5–$3 billion — material and unsigned", with no comparison.
+- fresh-22: "the $500 billion-plus platform scale means any Nvidia guarantee would be material". It infers a guarantee the article does
+  not state, and uses the platform's size, which the closing check says is not the obligation's amount.
+- Control fresh-50: "$2 billion is immaterial to Nvidia".
+
+**Council B** (`cz-codex.md`; AGREE WITH CHANGES):
+- The stop is right. These are two separate failures.
+- fresh-47's cause is not shown to be a missing anchor. The request asks for company_impact but does not require large_enough to
+  follow from it.
+- fresh-22 is a factual inference error stacked on a size error.
+- A percentage anchor would change the standard and needs Alex. Deriving one from these NVIDIA cases would be case-fitting, and the
+  evidence does not yet show one is needed.
+
+**What it says:**
+- The separate step reaches the target reliably without moving c8.
+- It is right on 22 of the 24 routed articles.
+- Its two remaining errors are a size judgment not tied to the written impact, and an obligation inferred beyond the article.
+
+**Alex's answer.** He chose "再修一轮小步骤 (Recommended)" over setting a scale threshold or stopping. Only the two causes the council
+named are fixed, with no new standard:
+- large_enough must follow from the written company impact;
+- an obligation the article does not say the company itself takes on is not its obligation.
+
+If the $2.5–3bn stake still opens, the remaining question is the scale threshold itself, which goes to him.

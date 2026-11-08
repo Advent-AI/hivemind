@@ -1,0 +1,6 @@
+**NOT READY.** The revision fixes several earlier findings, but two instructions can still force the wrong result.
+
+- **The Ohio example can be excluded.** The article says NVIDIA is negotiating the guarantee; it does not explicitly say it has not signed. The [closing instruction](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/focused/closing.txt:2) requires the item to *say* it is unsigned, and “unclear” cannot open a question. That can exclude the very example [D388](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4172) says should have one.
+- **A question can be forced open without a way to settle it.** The quoted standard requires public material to settle the question on a date. The closing instruction says to open whenever its four listed conditions hold, but those conditions omit that requirement. The [code check](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/focused/focused_probe.py:66) enforces the same incomplete test.
+
+The revision resolves the earlier forecast exclusion and permits an unknown signing status. Its change to group opening statements removes the earlier conflict for statements that each qualify to open.

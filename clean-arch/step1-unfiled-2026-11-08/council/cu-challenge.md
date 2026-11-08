@@ -1,0 +1,1 @@
+Second revision for your blockers (see "Second revision" at the end of `council/cp-claude.md`; files `focused/closing.txt`, `focused/schema.json`, `focused/focused_probe.py`). Under 120 words: SEND / READY, or the blocker.

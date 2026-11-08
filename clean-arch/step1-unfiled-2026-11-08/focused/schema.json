@@ -1,0 +1,107 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "decisions",
+  "new_signing_theses"
+ ],
+ "properties": {
+  "decisions": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "statement",
+     "signed_status",
+     "company_impact",
+     "large_enough",
+     "separate_bet",
+     "settleable",
+     "already_asked_by",
+     "opens"
+    ],
+    "properties": {
+     "statement": {
+      "type": "string",
+      "description": "The local_id of the statement."
+     },
+     "signed_status": {
+      "type": "string",
+      "enum": [
+       "not_yet_signed",
+       "undertaken",
+       "unclear",
+       "not_an_obligation"
+      ]
+     },
+     "company_impact": {
+      "type": "string"
+     },
+     "large_enough": {
+      "type": "boolean"
+     },
+     "separate_bet": {
+      "type": "boolean"
+     },
+     "settleable": {
+      "type": "boolean"
+     },
+     "already_asked_by": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "description": "Exact ID of a shown thesis that already asks whether this obligation is signed; otherwise null."
+     },
+     "opens": {
+      "type": "boolean"
+     }
+    }
+   }
+  },
+  "new_signing_theses": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "local_id",
+     "description",
+     "outcome",
+     "period",
+     "settled_by",
+     "statements"
+    ],
+    "properties": {
+     "local_id": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string",
+      "description": "Will the company sign the obligation by the check date?"
+     },
+     "outcome": {
+      "type": "string"
+     },
+     "period": {
+      "type": "string",
+      "description": "A check date within 18 months of the item: the date the item supports when it gives one within that time, otherwise the date 18 months out at most, with how it was set."
+     },
+     "settled_by": {
+      "type": "string",
+      "description": "The public material that will settle it on a date (a filing, an announcement)."
+     },
+     "statements": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "The local_ids of the statements about this obligation.",
+      "minItems": 1
+     }
+    }
+   }
+  }
+ }
+}
