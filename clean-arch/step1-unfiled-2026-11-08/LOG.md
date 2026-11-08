@@ -1859,3 +1859,41 @@ embedding cache, so the accepted results are unchanged. The verified-passage mar
 
 **Status.** Diagnosis complete. A fix is a new version of the adopted c8, which only Alex opens. It goes to him as one
 recommendation and one test.
+
+## 49. Arm c9 (the "covers" split) probed and stopped (2026-11-09)
+
+**Alex's word:** "做，按评审流程 (Recommended)".
+
+**Before the send:**
+- The design and controls, with predeclared falsifiers (`council/bd-claude.md`, `cases-c9.json`, 32 cases).
+- The design council asked for changes (`bd-codex.md`), and the blind whole-request audit returned NOT READY (`be-codex.md`). Both
+  objected to my total-against-instance sentence as wider than D248. It was rewritten to D248 boundary 1's own two layers, and the
+  indirect-signal wording was widened. Both reviewers then cleared it (`bf-`, `bg-`, `bh-codex.md`).
+- Preflight: 395 stored answers judged under the c9 schema, 0 refusals.
+- The c8 control rebuilds all 32 stored requests byte for byte.
+- A synthetic answer passes every check.
+- Tokens: an estimate of +212, against +204 measured.
+
+**Results** (`probe-r13-c9`, `probe-r13-c9-ohio`; one draw per case, three for Ohio; $1.12 at published rates):
+- **Ohio:** c9 opens the signing thesis in 1 of 3 draws, c8 in 0 of 3. **The falsifier fires.**
+- **New theses under c9:**
+  - fresh-24 "Will the FOMC raise the federal funds target…", plainly off-topic;
+  - fresh-47, an NVIDIA investment of $2.5–3 billion, likely small;
+  - fresh-14, memory supply in 2027;
+  - dev-1 reworded the aggregate as "have signed".
+- **Gained:** c9 drops the CMX NAND thesis on fresh-45.
+- **Links per item rose from 0.65 to 0.80, and unlinked items fell from 67 to 51,** the opposite direction from the clutter goal.
+
+**Council B** (`bi-codex.md`): stop c9 and keep c8. Lessons, narrowed by the council:
+- linking rose, but the cause (the indirect-signal sentence or another edit) and whether the extra links are clutter are not
+  established, since most cases had one draw;
+- this wording did not reliably fix Ohio, which does not prove that wording cannot;
+- the FOMC thesis is one observed bad opening, not proof that every opening rule risks it;
+- the new theses, and the removed CMX thesis, still need a source-by-source judgment before they are called regressions.
+
+The council's message to Alex: c9 failed its agreed test; keep c8, and investigate the failed answers before choosing a next change.
+No further send is recommended.
+
+**My own process note.** The stop worked as designed: the line stopped on predeclared falsifiers, at $1.12, before any full run. The
+growth that protected indirect evidence likely traded against the clutter goal. The two classes may need different levers rather
+than one split.

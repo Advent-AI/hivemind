@@ -122,19 +122,17 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**For Alex's word: one clarification of "covers" in clean Step 1.** The request uses "covers" for two tests: whether a statement is
-evidence for a thesis (link), and whether a thesis already asks this question (open). The Ohio fold and link clutter both trace to it
-(round log §§46, 48). A new version of c8 would separate the two tests using the standard's own wording. Before any send, it would
-pass a whole-request audit and the council.
+**For Alex's word.** Arm c9 tried one clarification of "covers" for both the Ohio fold and link clutter. It failed its predeclared
+test (round log §49):
+- Ohio opened in 1 of 3 draws;
+- links per item rose;
+- one off-topic thesis appeared.
 
-The first test would cost cents: re-send stored requests for the Ohio article and for named controls. The controls are:
-- small unsigned obligations;
-- signed components already in a total;
-- duplicate wordings;
-- independent large unsigned obligations;
-- the link-clutter cases.
+c8 stays in force. The council recommends reading the failed answers source by source before choosing the next change:
+- the new theses;
+- the extra links;
+- why Ohio still folds in 2 of 3 draws.
 
-A blind reader then judges the answers against the source. c8 stays in force until a version is shown to be better on new, unused
-articles.
+The two classes may need different levers. No further send is authorized.
 
-The production pipeline's earlier task list (D368) was withdrawn by the seal (D379). No paid run is authorized by this update.
+The production pipeline's earlier task list (D368) was withdrawn by the seal (D379).
