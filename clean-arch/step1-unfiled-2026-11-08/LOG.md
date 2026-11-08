@@ -1944,3 +1944,75 @@ linking in both directions; it did not reduce clutter.
 
 **Alex's answer (D388).** To the exact question, "单独开 (Recommended)": a material unsigned obligation keeps its own signing
 question beside an open total of its kind. Next is a structural lever, designed and reviewed by the council before any send.
+
+## 51. Arms c10a and c10b (the D388 read-back) probed and stopped (2026-11-09)
+
+**Alex's word:** D388, "单独开 (Recommended)", with the next step stated as a structural lever reviewed by the council before a small
+probe.
+
+**Design and review.** The design is in `council/bk-claude.md`, with predeclared falsifiers. Both arms start from c8:
+- c10a adds a read-back as the closing check's last sentence;
+- c10b adds the same read-back plus a required evidence field `unsigned_obligation`.
+
+The design council and the blind whole-request audit needed three rounds (`bk`–`bp-codex.md`). They fixed:
+- precedence over the "cannot move apart" and "another estimate, source or wording" checks;
+- the override narrowed to the total of its kind;
+- conditional links;
+- `why_a_separate_bet` aligned with the override;
+- the field's scope.
+
+Both reviewers then cleared both arms. $0 checks: c10a preflight judged 395 stored answers with 0 refusals; synthetic answers passed;
+c10b refuses an answer without the field.
+
+**Results** (`probe-r14-c10`, `probe-r14-c10-ohio`; one draw per case, three for Ohio; c8 control from `probe-r13-c9`; $1.04):
+- **Ohio:** c8 0/3; c10a 3/3, each linked to the new signing question and to clean-1; c10b 2/3. c10b's third draw returned an empty
+  answer after 22,253 output tokens, which loses the whole article (1 of 135 probe sends; c8's 86 empty answers of 395 are all
+  articles with nothing kept).
+- **Blind reading.** Two fresh readers saw every thesis of every arm on nine cases, mixed and unlabelled, with the article, against
+  c8 §3 and D388 verbatim (`build_thesis_reading.py`, `council/bq-*`; 33 of 33 judged). New against c8:
+  - c10a: fresh-47 (a $2.5–3bn investment) small; fresh-50 (a ~$2bn investment) small; fresh-12 (the EU gigafactory programme)
+    off-topic; fresh-24 (the FOMC decision) open;
+  - c10b: fresh-50 small; fresh-9 wrong fact (it asks whether a guarantee the article says was agreed will be signed); fresh-14
+    (memory prices in 2027) open; fresh-24 open.
+- **Packet error (mine).** Mixing arms in one list made the same matter from different arms read as "fragment" of the first. Those
+  were read at the matter level; the next blind packet separates arms.
+- **Links per item:** c8 0.64, c10a 0.67, c10b 0.69, within the 10% line. dev-1 was not recast, and fresh-8 kept its thesis.
+  fresh-32 under c10a was lost to a DNS failure and not re-sent.
+- **The falsifier "a new thesis a blind reader judges wrong" fires in both arms. The line stops, and c8 stays** (council B,
+  `br-codex.md`, agreed).
+
+**FOMC correction.** In §49 I called c9's FOMC thesis "plainly off-topic". The blind reader judges the same matter open under §3, which
+names "an interest rate" as a shared quantity. That was my call, not a reader's, and it is withdrawn as a regression. Why c8 does not
+open it (0 of 2) is not explained.
+
+**The model's own account** (`thesis_account.py`, `council/bs-asks.json`, `probe-r14-c10/thesis-account.json`; six questions, $0.025):
+- **The small stakes.**
+  - In fresh-47 c10a, fresh-50 c10a and fresh-50 c10b, the model quotes the read-back. It sizes the deal against clean-7's $25bn
+    total and the $12.9bn Hugging Face deal in the open list, and never against revenue, profit, cash or credit.
+  - The control that opened nothing (fresh-47 c10b) also judged the stake large against the $25bn. It held back only because the
+    report was single-sourced and hedged. The scale test failed in 4 of 4 answers.
+  - The signed standard's test is the company's own revenue, profit, cash or credit risk (D248 boundary 6), and c8 §3 carries it.
+- **fresh-9 c10b** read "agreed to provide guarantees" as unsigned, for want of "definitive signed guarantee documents".
+- **fresh-12 c10a** cites §3 policy_stage directly and calls that thesis its weakest. It does not cite the read-back.
+- **Census of c8's own stored runs** (395 answers). The obligation theses opened are totals, plus Hugging Face at $12.9bn, which
+  readers judged open; no small stake was opened. When a total is open, c8's duplicate check masks the scale test. The read-back's
+  override removes the mask.
+
+**Council on the next change** (`bt-codex.md`, AGREE WITH CHANGES):
+- The accounts support the scale diagnosis. They are retrospective and do not prove how the original decision was made.
+- Making the company-impact test explicit in the read-back is still a sentence-level instruction. Comparisons with the total or
+  another deal may stay as context; that ban is not D248's words.
+- Ohio's guarantee amount is unknown (its $500bn is the asset's cost), so the check must allow a judgment from context without
+  presenting that cost as the exposure. "Agreed" does not always settle whether an obligation is undertaken.
+
+**Process note.**
+- The predeclared controls caught the scale failure at $1.04, before any full run.
+- The reviews checked the rule's text, not which yardstick the model would size against. I did not anticipate that framing the case
+  "beside an open total" would make that total the yardstick.
+- Alex's instruction for this step was a structural lever and no further one-sentence fix. So the next change, a sentence or a
+  required field, goes to him.
+
+**Alex's answer.** To the question "continue by making the model compare with the company, or stop and keep Ohio as a known defect",
+he chose "继续，逼它跟公司比 (Recommended)". When the model opens a signing question, it must write what the obligation could change
+in the company's revenue, cash or credit risk, or say the amount is unknown. The order: design, council, audit, a probe of about
+$0.60 on the same cases.

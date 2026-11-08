@@ -1,0 +1,9 @@
+**Stop both versions.** Each opened a question the blind reader judged wrong, which meets the agreed stopping condition. Ohio is encouraging for c10a, but three draws do not establish reliability. The c10b empty answer and c10a’s unanswered fresh-32 also leave real losses or gaps to investigate.
+
+1. **Mechanism:** The answers support a *hypothesis*, not yet a cause. In fresh-47 and fresh-50, c10a cites the signing-versus-total distinction without explaining scale. That shows the written reason omitted the comparison; it does not prove the model skipped it internally or that the closing sentence caused the decision. The model’s own account and comparison with the full request are still needed. The fresh-9 signed-as-unsigned error and fresh-12 off-topic question have separate mechanisms that a scale field would not necessarily fix.
+
+2. **Proposed field:** It may make the missing judgment visible, but a required numerical comparison for **every** new question is wider than c8’s “small matters” rule. A product milestone, policy decision, or first question may matter without an available amount or open total. It could force invented numbers or wrongly suppress valid questions. Even for obligations, size relative to revenue or a total alone does not establish investment importance. The Ohio article’s $500 billion is the potential **asset cost**, not the guarantee amount; a comparison must not treat it as the exposure. [Blind verdict](</Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/council/bq-codex-A.md:11>).
+
+3. **Falsification:** Beyond the proposed two small investments and Ohio, the test must catch a valid question lost when no comparison figure exists, an unsupported or misleading comparison, and a bad opening despite a completed comparison. Read changed questions against their sources. Diagnose the empty answer and wrong signed status before assuming this lever addresses the failures.
+
+**AGREE WITH CHANGES**
