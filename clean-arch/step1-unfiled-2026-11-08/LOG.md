@@ -1818,3 +1818,44 @@ embedding cache, so the accepted results are unchanged. The verified-passage mar
   which is recorded as an open item for its own measurement.
 - **Documents:** the older next-task sentences are marked superseded; the link check is described as a design goal; the recheck
   scope reads "34 disputed + 10 controls; 49 not rechecked".
+
+## 48. Commit; the Ohio-guarantee miss diagnosed; one mechanism under two classes (2026-11-09)
+
+**Commit.** Alex chose "现在提交 (Recommended)". The check-in is `cc2fdf2` on `clean-arch` (not pushed). For the next step he chose
+"先查俄亥俄担保为什么没开出来" over the link check.
+
+**Class.**
+- In the dev gold, 1 of 28 must_open entries is an unsigned specific obligation (C, yes/no): the Ohio lease guarantee for OpenAI,
+  article 4.
+- It is missed in 3 of 3 c8 dev draws. The test gold has none. It is q23 of the frozen judgement gold.
+- The other dev misses are different: 2026 capex opened as 2027 in two draws, and DRAM in one draw.
+
+**Mechanism** (traced in all three draws; the model's account, $0.011,
+`poc/data/clean-step1-c8-dev-d1-2026-11-09/ohio-account.json`):
+- Article 1 opens "how much credit support will NVIDIA have extended to AI cloud partners". Article 4's Ohio item is extracted and
+  linked there, and no thesis is proposed.
+- The model quotes three instructions: "if an open thesis covers the statement, link it", "another estimate, source or wording of
+  what an open thesis tracks", and "if the two cannot move apart…".
+- It calls the two "the same quantity" and treats "unsigned" and "amount undisclosed" as reasons against a separate thesis.
+- The request does carry the unsigned-obligation yes/no form (c8-system line 98, with the retailer example).
+
+**Council** (`council/bc-claude.md`, `bc-codex.md`): AGREE WITH CHANGES.
+- **The deeper cause is the word "covers".** The request uses it for two different tests: whether a statement is evidence for a
+  thesis, which decides a link, and whether a thesis already asks this question, which decides opening.
+- **The same clause sits under link clutter (§46).** There the model links because a thesis "covers" the subject; here it does not
+  open because an aggregate thesis "covers" the event. One structural clarification may serve both classes.
+- **D248 records that the Ohio exception was not separately put to Alex.** It governs through D384 ("按金标"). The gold's $500
+  billion is the asset's build cost, not the guarantee amount.
+- **The proposed bank example is too close to the case,** and too absolute: answers moving apart does not alone make a separate
+  bet.
+- **A test needs named controls before any send:**
+  - small unsigned obligations;
+  - signed components already in a total;
+  - duplicate wordings;
+  - independent large unsigned obligations in other industries;
+  - a blind reader against the source.
+
+  Three draws are a first probe, not proof.
+
+**Status.** Diagnosis complete. A fix is a new version of the adopted c8, which only Alex opens. It goes to him as one
+recommendation and one test.

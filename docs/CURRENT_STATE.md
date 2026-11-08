@@ -27,7 +27,8 @@
   system can judge an investment view.
 - **Open defects, by product impact** (reflection council, `council/av-codex.md`):
   1. **The Ohio-guarantee yes/no question is never covered** in the three dev draws; a broader credit-support amount thesis opens
-     instead.
+     instead. Diagnosed (round log §48): the model folds the unsigned guarantee into the open aggregate thesis because the request
+     uses "covers" both for "is evidence for" and for "already asks this question". The same clause sits under link clutter.
   2. **A revenue-share thesis was opened** (Vera Rubin's share of data-center revenue), the class-A boundary of D382.
   3. **Link clutter.** A blind recheck of the 34 disputed fresh links found 19 weak and 2 wrong; 10 accepted links mixed in as controls were all useful; the other 49 links were not rechecked.
      The model's own account names topic or theme overlap and inference chains, and c8's closing check never reads back a link. This is
@@ -121,21 +122,19 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**A protected link check for clean Step 1** (Alex approved it on 2026-11-09, "through the council process"; his words are in the round log §47).
-- **Design goal (nothing yet shows a check can do this):** drop links that only share a thesis's subject, while keeping:
-  - the evidence that founds a thesis;
-  - contrary facts;
-  - indirect signals the article states.
-- **The order:**
-  1. the protections are written as cases;
-  2. a whole-request audit against the standard;
-  3. the council;
-  4. a send of a few cents on the motivating cases;
-  5. a comparison with c8 on a new set of unused articles.
+**For Alex's word: one clarification of "covers" in clean Step 1.** The request uses "covers" for two tests: whether a statement is
+evidence for a thesis (link), and whether a thesis already asks this question (open). The Ohio fold and link clutter both trace to it
+(round log §§46, 48). A new version of c8 would separate the two tests using the standard's own wording. Before any send, it would
+pass a whole-request audit and the council.
 
-  c8 stays in force until a new version is shown to be better.
+The first test would cost cents: re-send stored requests for the Ohio article and for named controls. The controls are:
+- small unsigned obligations;
+- signed components already in a total;
+- duplicate wordings;
+- independent large unsigned obligations;
+- the link-clutter cases.
 
-The reflection council ranked the Ohio-guarantee coverage miss above link clutter for product impact and suggested a source-backed
-trace of it. That ranking goes to Alex with this report.
+A blind reader then judges the answers against the source. c8 stays in force until a version is shown to be better on new, unused
+articles.
 
 The production pipeline's earlier task list (D368) was withdrawn by the seal (D379). No paid run is authorized by this update.
