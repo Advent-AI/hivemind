@@ -729,3 +729,4 @@ Every decision number, its date, its title as recorded, its status today and the
 | D385 | 2026-11-08 | Target prices and valuation conclusions are not kept; the conflict with D243 #4 is disclosed, the frozen files unchanged | in force | clean-arch PRD §12 |
 | D386 | 2026-11-08 | Acceptance on fresh articles read by readers against the source; golden-v5 test no longer held out | in force | clean-arch PRD §12 |
 | D387 | 2026-11-09 | Clean Step 1 adopts c8; the PRD carries its system prompt, closing check and schema | in force | clean-arch PRD §12 |
+| D388 | 2026-11-09 | A material unsigned obligation gets its own signing question beside an open total of its kind (confirms D248 boundary 1's exception) | in force | clean-arch PRD §12 |

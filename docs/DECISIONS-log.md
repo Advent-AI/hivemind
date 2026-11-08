@@ -4168,3 +4168,16 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   Record: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §47.
   The link recheck covered the 34 disputed links and 10 accepted links as controls (all useful); the other 49 fresh links were not
   rechecked.
+
+## D388 · 2026-11-09 · A material unsigned obligation gets its own signing question beside an open total of its kind
+
+- Asked: "一笔重大的、还没签的承诺（比如为 OpenAI 俄亥俄数据中心租约做担保），要不要在已有的'担保总额'问题之外，单独开一个'会不会签'的问题？"
+  Alex chose "单独开 (Recommended)".
+- **Decided.** A material unsigned obligation that merits a separate investment judgment keeps its own yes/no question on whether
+  it is signed by the check date, beside an open question on the total of the same kind. This confirms D248 boundary 1's exception,
+  which had not been put to him. A small unsigned obligation, or a deal already signed under a plan tracked by amount, stays evidence
+  for the total.
+- **Why it matters now.** The c8 dev draws fold the Ohio guarantee into the aggregate in 3 of 3, and q23 of the frozen judgement gold
+  asks it. Arm c9 showed that a sentence-level rule flips by send (round log §§48–50).
+- **Next.** A structural lever, designed and reviewed by the council before any send. c8 stays in force until a version is shown to
+  be better on new, unused articles.

@@ -1897,3 +1897,50 @@ No further send is recommended.
 **My own process note.** The stop worked as designed: the line stopped on predeclared falsifiers, at $1.12, before any full run. The
 growth that protected indirect evidence likely traded against the clutter goal. The two classes may need different levers rather
 than one split.
+
+## 50. The failed c9 answers read against the source ($0; Alex: "先把失败的回答对照原文看清")
+
+**Theses** (each new or removed thesis read with its `why_a_separate_bet` and its article):
+- **c9's sentence "an event and a number are different questions" is applied where it does not belong:**
+  - fresh-24 opens "Will the FOMC raise the federal funds target…". Its stated reason is "the FOMC decision is a single dated policy
+    event that can resolve either way while hyperscaler capex…";
+  - fresh-47 opens the completion of a $2.5–3 billion investment, judging a deal small for the company as meeting the scale test;
+  - dev-1 recasts the aggregate (the gold's amount question) as "Will NVIDIA have signed credit-support commitments … large enough".
+- **On Ohio the same sentence is not applied.** In the two c9 draws that fold, the relevance reads "exactly the kind of credit
+  support the thesis measures". One abstract clause is over-applied in three places and under-applied where it was aimed: a coin
+  flip per send (AGENTS §6).
+- **Not regressions:**
+  - fresh-14, memory still supply-constrained in 2027, is the same kind of question as the dev gold's must_open "change in DRAM
+    contract prices in calendar 2027";
+  - fresh-45 losing the CMX NAND thesis is an improvement.
+
+**Links** (four blind analyst readers over all 229 links of both arms, mixed and unlabelled, grouped by article; 229 of 229 judged):
+
+| Arm | Useful | Weak | Wrong | Total |
+|---|---|---|---|---|
+| c8 | 79 | 24 | 0 | 103 |
+| c9 | 93 | 32 | 1 | 126 |
+
+c9 adds 14 useful, 8 weak and 1 wrong link. The weak share does not fall (23% against 25%). The "informs" definition widened
+linking in both directions; it did not reduce clutter.
+
+**What this says about the next step:**
+- **Link clutter:** a definition does not separate useful from weak links. The weak links do not mislead, and the earlier recheck
+  found 2% wrong. I see no cheap lever that is worth its risk now.
+- **Ohio:** a sentence-level rule flips by send. Whether the system should open it at all rests on a boundary D248 records as never
+  put to Alex. It governs only through D384 ("按金标"), and it matters to Step 4, because q23 of the frozen judgement gold asks it.
+  The boundary is a product question for Alex before any further arm.
+
+**Council B on this reading** (`council/bj-codex.md`): AGREE, with tighter limits.
+- Pausing link work is reasonable. That the "informs" definition caused the extra links remains a hypothesis, and the totals do not
+  say which links were gained or lost.
+- Only the FOMC answer cites the event-versus-number sentence; the other openings show c9's behaviour, not that sentence as the
+  cause.
+- The question to Alex is about a **material** unsigned obligation that merits a separate investment judgment, not every unsigned
+  obligation. The recommendation is yes, because the standard and the gold call for it; q23 shows the consequence but is not the only
+  reason.
+- If Alex says no, his decision is recorded and the conflict with the frozen gold disclosed. D373 does not change the gold.
+- A structural lever is an option to investigate, not an established solution.
+
+**Alex's answer (D388).** To the exact question, "单独开 (Recommended)": a material unsigned obligation keeps its own signing
+question beside an open total of its kind. Next is a structural lever, designed and reviewed by the council before any send.

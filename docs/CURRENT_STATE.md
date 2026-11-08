@@ -122,17 +122,18 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**For Alex's word.** Arm c9 tried one clarification of "covers" for both the Ohio fold and link clutter. It failed its predeclared
-test (round log §49):
-- Ohio opened in 1 of 3 draws;
-- links per item rose;
-- one off-topic thesis appeared.
+**Design a structural lever for D388 in clean Step 1** (Alex, 2026-11-09). D388: a material unsigned obligation keeps its own
+signing question beside an open total of the same kind. c8 folds the Ohio guarantee into the aggregate in 3 of 3 dev draws. Arm c9
+showed that a sentence-level rule flips by send (round log §§48–50).
 
-c8 stays in force. The council recommends reading the failed answers source by source before choosing the next change:
-- the new theses;
-- the extra links;
-- why Ohio still folds in 2 of 3 draws.
+The order:
+1. a design, with the decision it takes from the model and its controls named in advance;
+2. the council;
+3. a whole-request audit;
+4. preflight;
+5. a send of a few cents on the Ohio case and the controls;
+6. a comparison with c8 on new, unused articles.
 
-The two classes may need different levers. No further send is authorized.
+c8 stays in force. Link clutter is paused.
 
 The production pipeline's earlier task list (D368) was withdrawn by the seal (D379).
