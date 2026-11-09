@@ -2487,3 +2487,37 @@ Stage 0's adapter and control harness are built and council-read first.
 
 **Launched:** three clean draws (`run_clean_draw.sh 1..3`) and three control draws (`control_v108.py live ... --cap 3`), same day,
 detached.
+
+**Control arm finished (2026-11-09).** Frozen scorer, gold v1 `636c056d…`, window end 2026-07-14:
+
+| control draw | agreements | cost (from the run's log) | notes |
+|---|---|---|---|
+| d1 | 17 of 18 judged | $0.73 | opened the Ohio question itself and agreed on q23; q17 agreed |
+| d2 | stopped on 2026-07-07 | $0.17 | frozen judge's refusal "v17: v8 is not a dependency of v17", twice; replaced by d4 |
+| d3 | 15 | $0.67 | q10 judged for the first time in any v108 draw: DISAGREE (62–65 against 65–69) |
+| d4 | 16 | $0.64 | q16 agreed |
+
+Today's three completed control draws (17, 15, 16) sit at or above the stored v108 draws (15, 15, 16, 15, 16, 15).
+
+**Clean arm stops.** All three clean Step 1 runs stopped once on a cut network reply (`IncompleteRead`):
+- d3 after 40 articles;
+- d1 after 50;
+- d2 after 54.
+
+The clean transport makes one attempt per call by design. Each draw is continued as a segment within the draw's limits (`continue_clean_draw.py`; d1 and d3 segment 2 carry a fresh limit copy, disclosed in `stage2-frozen.md`).
+
+**Clean Steps 1–3 finished.** All three draws were continued once after a network cut.
+
+| draw | groups | new / repeat / revision | later links | q23 candidate |
+|---|---|---|---|---|
+| clean d1 | 347 | 333 / 229 / 14 | 2 | none |
+| clean d2 | 351 | 344 / 225 / 7 | 0 | clean-1 (article 8) |
+| clean d3 | 350 | 342 / 231 / 8 | 0 | none |
+
+**q23 identity reading (fresh Codex reader, `council/fp-codex.md`).** Clean d2's clean-1 asks: "Will NVIDIA sign a financial guarantee
+or capacity backstop for OpenAI's lease of a large data center in Ohio, large enough to change its credit risk, by the check date?"
+Its check date is 2027-12-31; q23's due day is 2027-06-30.
+- The reader's verdict is **SAME**: one bet.
+- The reader notes three things that could move the answers apart: the "capacity backstop" alternative, the "large enough to change
+  credit risk" condition, and the later deadline. These are watched when the judge's reasons are read.
+- Clean d2 was judged with `--q23 clean-1`.

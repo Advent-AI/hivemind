@@ -1,0 +1,3 @@
+**SAME.** Both ask whether NVIDIA will take on a significant obligation for OpenAI’s Ohio lease—the same investment bet.
+
+The answers could differ: B includes a **capacity backstop**, which may not be a guarantee, and requires it to be **large enough to change credit risk**. The deadlines could also produce different answers. Those differences warrant care when judging the outcome, but do not by themselves make this a separate bet.
