@@ -184,3 +184,63 @@ def test_a_continued_trace_reads_as_one_draw(tmp_path, constructed):
     assert joined == whole and joined[2] == []
     only_first = adapter.trace_articles(first)
     assert len(only_first[0]) == 40 and only_first[2] == [41]
+
+
+
+@pytest.fixture
+def unseeded(tmp_path):
+    """The stored dev-d1 draw as it is: an unseeded c8 run whose theses are clean-1..clean-8, with its library stamped."""
+    folder = tmp_path / 'step2'
+    folder.mkdir()
+    (folder / 'library.json').write_text((DRAW / 'step2/library.json').read_text())
+    stamp(folder)
+    return folder
+
+
+DEV_D1_MAPPING = {'clean-2': 'v7', 'clean-3': 'v8', 'clean-4': 'v13', 'clean-5': 'v18'}   # MATCHING-v2.md, the dev-d1 row
+
+
+def test_an_unseeded_run_feeds_only_its_matched_theses_to_the_ruler_views(tmp_path, unseeded):
+    # D395: matched clean theses feed the ruler question's view; every other clean thesis's links are dropped; the scorer reads it
+    result = adapter.replay(DRAW / 'trace.sqlite', unseeded, tmp_path / 'out', transport=fake_judge, mapping=DEV_D1_MAPPING)
+    conn = sqlite3.connect(tmp_path / 'out/views.sqlite')
+    linked_views = {v for (v,) in conn.execute('select distinct view_id from evidence_links')}
+    assert linked_views and linked_views <= set(DEV_D1_MAPPING.values())
+    assert {v for (v,) in conn.execute('select distinct view_id from judgements')} <= set(DEV_D1_MAPPING.values())
+    assert result.counts['links through a matched clean thesis'] > 0 and result.counts['links to other clean-opened theses dropped'] > 0
+    scored = subprocess.run([sys.executable, str(ROOT / 'docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py'), str(tmp_path / 'out')],
+                            capture_output=True, text=True)
+    assert scored.returncode == 0, scored.stderr
+    assert conn.execute("select count(*) from views where view_id='v23'").fetchone()[0] == 1   # all 23 ruler views exist (MATCHING-v2 §4)
+
+
+def test_a_thesis_matched_to_two_ruler_questions_feeds_both(tmp_path, unseeded):
+    adapter.replay(DRAW / 'trace.sqlite', unseeded, tmp_path / 'out', transport=fake_judge, mapping={'clean-4': ['v4', 'v13']})
+    conn = sqlite3.connect(tmp_path / 'out/views.sqlite')
+    v4 = {e for (e,) in conn.execute("select evidence_id from evidence_links where view_id='v4'")}
+    v13 = {e for (e,) in conn.execute("select evidence_id from evidence_links where view_id='v13'")}
+    assert v4 and v4 == v13
+
+
+def test_a_mapping_to_q23_creates_the_ruler_question_the_scorer_finds(tmp_path, unseeded):
+    adapter.replay(DRAW / 'trace.sqlite', unseeded, tmp_path / 'out', transport=fake_judge, mapping={'clean-1': 'v23'})
+    conn = sqlite3.connect(tmp_path / 'out/views.sqlite')
+    question, = conn.execute("select question from views where view_id='v23'").fetchone()
+    assert question == "Will NVIDIA sign a guarantee of OpenAI's Ohio data-center lease by 2027-06-30?"
+    assert [r for (r,) in conn.execute("select label from rungs where view_id='v23' order by position")] == ['Yes', 'No']
+    assert conn.execute("select count(*) from evidence_links where view_id='v23'").fetchone()[0] > 0
+
+
+def test_a_mapping_naming_an_unopened_thesis_or_a_non_ruler_view_is_refused(tmp_path, unseeded):
+    with pytest.raises(SystemExit, match='not a thesis this run opened'):
+        adapter.replay(DRAW / 'trace.sqlite', unseeded, tmp_path / 'a', transport=fake_judge, mapping={'clean-99': 'v7'})
+    with pytest.raises(SystemExit, match='not a ruler question view'):
+        adapter.replay(DRAW / 'trace.sqlite', unseeded, tmp_path / 'b', transport=fake_judge, mapping={'clean-2': 'clean-2'})
+
+
+def test_an_unseeded_draw_with_no_match_is_still_judged_in_mapping_mode(tmp_path, unseeded):
+    # MATCHING-v2: an empty set of matches is a valid outcome; every clean link is dropped and all 23 ruler views exist
+    result = adapter.replay(DRAW / 'trace.sqlite', unseeded, tmp_path / 'out', transport=fake_judge, mapping={})
+    conn = sqlite3.connect(tmp_path / 'out/views.sqlite')
+    assert conn.execute('select count(*) from evidence_links').fetchone()[0] == 0 and result.counts['judgements'] == 0
+    assert conn.execute("select count(*) from views where view_id='v23'").fetchone()[0] == 1

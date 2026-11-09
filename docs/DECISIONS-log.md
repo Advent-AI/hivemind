@@ -4291,3 +4291,19 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
     by independent readers.
   - It is an addition to the measurement, never an edit of the frozen ruler. Its rules and predictions are frozen before any paid
     draw, and the paid draw waits for Alex's word.
+
+## D395 · 2026-11-10 · Run the unseeded clean measurement, three draws, graded on the seven must-open questions
+
+- **Asked**, with `clean-arch/unseeded-2026-11-10/MATCHING-v2.md` frozen: "要不要花钱正式测“新系统自己开题”（只按产品该开的 7 道题打分）？"
+  - Options:
+    - three clean draws only, about $7–8, compared with the seeded Stage 2 as a different-day exploratory comparison (recommended);
+    - with a same-day seeded control, about $14–16;
+    - stop.
+  - Alex: "跑，只跑新系统三份".
+- **Decided:**
+  - Three unseeded clean draws (c8 from an empty library) on v108's 243 items.
+  - Each run's opened questions are matched to the ruler questions by the frozen rule, through an independent reading, before any
+    judging.
+  - The matched questions are judged by the frozen judge through the adapter and scored by the frozen scorer. The graded subset is q04,
+    q05, q08, q09, q13, q18 and q23; every other question is reported.
+  - The adapter extension and the launcher get tests and a council read before the send.

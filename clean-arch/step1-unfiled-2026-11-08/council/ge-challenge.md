@@ -1,0 +1,1 @@
+Fixed: adapter.py live takes --unseeded, which enters mapping mode with an empty mapping (all 23 ruler views, every clean link dropped); --map entries imply it. A new test (mapping={}) checks no links, no judgements and the ruler q23 present. 15 tests pass; hashes refreshed. Read-only, under 80 words: SEND or BLOCKER?

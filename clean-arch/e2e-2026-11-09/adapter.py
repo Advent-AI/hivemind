@@ -29,7 +29,7 @@ party); original_who = original party; original_day = statement date.
 
 Usage:
 - `adapter.py candidates <trace> <step2 folder>` lists clean-opened theses that match the scorer's q23 rule.
-- `adapter.py live <trace> <step2 folder> <output folder> [--q23 <clean thesis id>] [--cap 3]`"""
+- `adapter.py live <trace> <step2 folder> <output folder> [--q23 <clean thesis id>] [--unseeded] [--map clean-N=vK ...] [--cap 3]`"""
 import argparse, collections, hashlib, importlib.util, json, re, sqlite3, sys
 from pathlib import Path
 
@@ -43,8 +43,10 @@ import budget  # noqa: E402
 
 SEEDS = ROOT / 'poc/seeds/nvda-2026-07-01-v2.json'
 CONFIG = ROOT / 'poc/config/poc-v108.json'
-OUTPUT_ROOT = ROOT / 'poc/data/clean-e2e-2026-11-09'
+OUTPUT_ROOTS = (ROOT / 'poc/data/clean-e2e-2026-11-09', ROOT / 'poc/data/clean-unseeded-2026-11-10')
 SEED_IDS = {q['view_id'] for q in json.loads(SEEDS.read_text())['questions']}
+RULER_QUESTIONS = ROOT / 'docs/research/2026-11-01-e2e-loop/judgement-gold/questions-v1.json'
+Q23_VIEW = 'v23'   # the ruler's Ohio-guarantee question, created only when a mapping names it
 SHOWN_EVIDENCE = re.compile(r'^- (e\d+) \[', re.M)
 JUDGED_VIEW = re.compile(r'^Thesis (\S+) \(', re.M)   # judging._lines_english's first line names the view judged
 DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
@@ -126,7 +128,13 @@ def quote_of(record):
 
 
 class Adapter:
-    def __init__(self, views_path, archive_path, *, transport=None, cap_usd=3.0, q23=None, created_at='2026-07-01T00:00:00Z'):
+    def __init__(self, views_path, archive_path, *, transport=None, cap_usd=3.0, q23=None, mapping=None, created_at='2026-07-01T00:00:00Z'):
+        """mapping (unseeded runs, D395): {clean thesis id: [ruler view ids]}. A clean thesis matched to ruler questions by the frozen rule
+        (unseeded-2026-11-10/MATCHING-v2.md) feeds its links to each matched question's view, which carries the ruler's text and ladder;
+        every other clean thesis's links are dropped and counted. In mapping mode all 23 ruler views exist from seq 0 (the ruler's q23
+        included). q23 (seeded runs) and mapping are exclusive."""
+        if q23 is not None and mapping:
+            raise SystemExit('q23 is for seeded runs and mapping for unseeded runs; not both')
         self.conn = store.open_db(views_path)
         self.archive = model.Archive(archive_path)
         self.cfg = config.load(CONFIG)
@@ -134,11 +142,25 @@ class Adapter:
         self.budget = budget.Budget(cap_usd, attempt=transport)
         self.q23 = q23
         self.views = set(SEED_IDS)
+        self.mapping = {clean_id: ([views] if isinstance(views, str) else list(views)) for clean_id, views in (mapping or {}).items()}
         seeding.seed_views(self.conn, SEEDS, created_at)
         self.evidence_of = {}            # clean record id -> evidence id
         self.counts = collections.Counter()
+        if mapping is not None:
+            self.create_ruler_q23(created_at)
         self.next_number = 1
         self.sent = []                   # one entry per judge request: day, seq, view, evidence shown
+
+    def create_ruler_q23(self, created_at):
+        """The ruler's q23 as a view from the start, with its own text and ladder (questions-v1.json), as the seeds are."""
+        questions = json.loads(RULER_QUESTIONS.read_text())
+        q23 = next(q for q in (questions['questions'] if isinstance(questions, dict) else questions) if q['id'] == 'q23')
+        store.create_view(self.conn, view_id=Q23_VIEW, object_id='NVDA', object_kind='company', kind=q23['kind'], looks_at=q23['question'],
+                          question=q23['question'], due_day=q23['due_day'], year=q23['due_day'][:4],
+                          rungs=[{'label': r['label'], 'condition': r['condition'], 'lo': None, 'hi': None} for r in q23['rungs']],
+                          seq=0, input_id='ruler:questions-v1.json', created_at=created_at)
+        self.views.add(Q23_VIEW)
+        self.counts['ruler q23 view created'] += 1
 
     def open_q23(self, thesis, k, input_id, day):
         due = DATE.search(thesis.get('period') or '')
@@ -171,6 +193,11 @@ class Adapter:
     def _link(self, evidence_id, thesis_id, k, changed):
         if evidence_id is None:
             self.counts['links lost with a dropped record'] += 1
+            return
+        if thesis_id in self.mapping:
+            for view_id in self.mapping[thesis_id]:
+                self.counts['links through a matched clean thesis'] += 1
+                self._link(evidence_id, view_id, k, changed)
             return
         if thesis_id not in self.views:
             self.counts['links to other clean-opened theses dropped'] += 1
@@ -249,15 +276,22 @@ class Adapter:
         return judged
 
 
-def replay(trace_path, step2_folder, output_folder, *, transport=None, cap_usd=3.0, q23=None):
+def replay(trace_path, step2_folder, output_folder, *, transport=None, cap_usd=3.0, q23=None, mapping=None):
     output = Path(output_folder).resolve()
-    if transport is None and OUTPUT_ROOT.resolve() not in output.parents:
-        raise SystemExit(f'a live replay writes only under {OUTPUT_ROOT}')
+    if transport is None and not any(root.resolve() in output.parents for root in OUTPUT_ROOTS):
+        raise SystemExit(f'a live replay writes only under {OUTPUT_ROOTS}')
     output.mkdir(parents=True, exist_ok=False)
     by_article, library = load_draw(trace_path, step2_folder)
     days_of, opened, failed = trace_articles(trace_path)
     if q23 is not None and q23 not in {t['id'] for t in q23_candidates(opened)}:
         raise SystemExit(f'{q23} is not a clean-opened thesis matching the scorer rule')
+    opened_ids = {thesis_id for theses in opened.values() for thesis_id in theses}
+    for clean_id, views in (mapping or {}).items():
+        if clean_id not in opened_ids:
+            raise SystemExit(f'{clean_id} is not a thesis this run opened')
+        for view_id in ([views] if isinstance(views, str) else views):
+            if view_id not in SEED_IDS | {Q23_VIEW}:
+                raise SystemExit(f'{view_id} is not a ruler question view')
     revisions_by_record = collections.defaultdict(list)
     for group in library['groups'].values():
         for revision in group['revises']:
@@ -270,7 +304,7 @@ def replay(trace_path, step2_folder, output_folder, *, transport=None, cap_usd=3
         days.setdefault(days_of[k], []).append(k)
     if list(days) != sorted(days):
         raise SystemExit('the Step 1 articles are not in day order')
-    adapter = Adapter(output / 'views.sqlite', output / 'archive.sqlite', transport=transport, cap_usd=cap_usd, q23=q23)
+    adapter = Adapter(output / 'views.sqlite', output / 'archive.sqlite', transport=transport, cap_usd=cap_usd, q23=q23, mapping=mapping)
     adapter.counts['articles not completed by Step 1'] = len(failed)
     for day, articles in days.items():
         changed = set()
@@ -293,11 +327,18 @@ if __name__ == '__main__':
     parser.add_argument('mode', choices=['candidates', 'live'])
     parser.add_argument('trace'); parser.add_argument('step2'); parser.add_argument('output', nargs='?')
     parser.add_argument('--q23'); parser.add_argument('--cap', type=float, default=3.0)
+    parser.add_argument('--unseeded', action='store_true', help='mapping mode even when no thesis matched (an empty mapping)')
+    parser.add_argument('--map', action='append', default=[], help='clean-N=vK[,vJ]: an unseeded run\'s matched thesis (D395); repeatable')
     args = parser.parse_args()
+    mapping = {}
+    for entry in args.map:   # clean-N=vK, or clean-N=vK,vJ for a thesis matched to two ruler questions; a repeated key adds views
+        clean_id, views = entry.split('=', 1)
+        mapping.setdefault(clean_id, []).extend(v for v in views.split(',') if v)
+    mapping = mapping if (args.map or args.unseeded) else None
     if args.mode == 'candidates':
         print(json.dumps(q23_candidates(trace_articles(args.trace)[1]), indent=1, ensure_ascii=False))
     else:
         if not args.output:
             parser.error('live needs an output folder')
-        result = replay(args.trace, args.step2, args.output, cap_usd=args.cap, q23=args.q23)
+        result = replay(args.trace, args.step2, args.output, cap_usd=args.cap, q23=args.q23, mapping=mapping)
         print(json.dumps(result.counts, indent=1))

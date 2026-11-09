@@ -6,7 +6,7 @@ settings, the same pinned c8 request, and the draw's limits less what earlier se
 trace segment and the library, lists the q23 candidates, and writes 'steps 1-3 done' and 'stamped'. Refuses while any process of the
 draw runs, when the last segment did not stop on a network cut (a refusal or a spent limit is not continued), or when the completed articles are not a prefix of the manifest.
 
-Usage: continue_clean_draw.py <draw number>"""
+Usage: continue_clean_draw.py <draw number | run folder>"""
 import json, sqlite3, subprocess, sys
 from pathlib import Path
 
@@ -35,20 +35,21 @@ echo "stamped" >> "$SEGMENT/run.log"
 '''
 
 
-def segments(draw):
-    first = DATA / f'stage2-clean-d{draw}'
+def segments(first):
     found = [first]
     k = 2
-    while (DATA / f'stage2-clean-d{draw}-segment-{k}').exists():
-        found.append(DATA / f'stage2-clean-d{draw}-segment-{k}')
+    while Path(f'{first}-segment-{k}').exists():
+        found.append(Path(f'{first}-segment-{k}'))
         k += 1
-    return found, DATA / f'stage2-clean-d{draw}-segment-{k}'
+    return found, Path(f'{first}-segment-{k}')
 
 
-def main(draw):
-    if subprocess.run(['pgrep', '-f', f'stage2-clean-d{draw}[/ -]'], capture_output=True).stdout.strip():
-        raise SystemExit(f'a process of clean draw {draw} is still running')
-    parts, target = segments(draw)
+def main(draw_or_folder):
+    """A draw number names the Stage 2 draw stage2-clean-d<N>; a path names any run folder (the unseeded draws of D395)."""
+    first = DATA / f'stage2-clean-d{draw_or_folder}' if str(draw_or_folder).isdigit() else Path(draw_or_folder).resolve()
+    if subprocess.run(['pgrep', '-f', f'{first}[/ -]'], capture_output=True).stdout.strip():
+        raise SystemExit(f'a process of {first} is still running')
+    parts, target = segments(first)
     statuses = [json.loads((part / 'run.log').read_text().splitlines()[0]) for part in parts]
     last_status = statuses[-1]
     error = str(last_status.get('error') or '')
@@ -86,4 +87,4 @@ def main(draw):
 
 
 if __name__ == '__main__':
-    main(int(sys.argv[1]))
+    main(sys.argv[1])
