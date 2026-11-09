@@ -2225,3 +2225,42 @@ $400bn expected annual revenue, and about $218bn expected annual non-GAAP net in
 **Alex's answer (D389).** He chose "一年利润的 5% (Recommended)". The fixed input is NVIDIA's FY2026 net income of $120.067bn, as the
 corpus states it ("Full-year FY2026 net income was $120.067 billion", gnews:595a83074fb8af0237f822ce, 2026-09-06). NVIDIA's own FY2026
 annual report is not in the corpus window. 5% is about $6.0bn.
+
+## 56. Focused call, round 3 (D389: 5% of annual profit) probed and stopped on one case (2026-11-09)
+
+**Change** (`focused/`; diff against r17 in `council/dg-diff.txt`; reviews `dh`–`dl-codex.md`, READY after one fix):
+- D389's sentences go in the system text.
+- The company's FY2026 net income of $120.067bn and "about $6.0bn" for 5% are fixed input. The source is NVIDIA's own Q4 FY2026
+  release, 8-K exhibit 99.1, filed 2026-02-26, which precedes every test article. The earlier corpus-article source was replaced
+  after the reviewers raised look-ahead.
+- large_enough is true at about 5% or more with a stated amount, false when clearly below, and the qualitative conclusion when no
+  amount is stated.
+
+**Results** (`probe-r18-focused`; 44 calls; 0 errors; $0.31):
+- **Ohio:** 9 of 9.
+- **The two stakes no longer open:** fresh-47 0/3 ("$2.5 billion to $3 billion, below 5% of its $120.067 billion annual profit (about
+  $6.0 billion)") and fresh-50 0/3.
+- **No openings:** fresh-22, fresh-9, fresh-7, dev-1 and fresh-8 all 0.
+- **dev-20 opens once in one draw:** "Will NVIDIA sign a credit-support agreement with an AI cloud partner under its revenue-sharing
+  and credit-support model by the check date?" It opened in r17 too. Blind (`council/dm-codex-E.md`): already_signed in both rounds;
+  the same article reports Sharon AI's six-year agreement under the model. **Falsifier fires.**
+- **The other 12 routed articles:** 0 openings.
+
+**Council B** (`do-codex.md`): the stop is right. The programme-versus-deal confusion is supported, but trace the choice before fixing.
+My first fix, "a plan already put in place is undertaken", risks marking Ohio's individual unsigned guarantee as undertaken.
+
+**The model's account** (fixed question; `probe-r18-focused/account.json`):
+- On e1, the programme announcement: it quotes D388 and reads the programme as "NVIDIA's announced but unsigned model".
+- On e2, Sharon AI's agreement: it calls it Sharon AI's own commitment, "not an obligation NVIDIA takes on in its own name".
+
+So the model treats the programme itself as one unsigned obligation. The standard already answers this. D248 boundary 1 reads
+"同一个计划的几种说法（担保、融资承诺、信用支持……），最后核对的是同一个数，是一题": a programme's wordings are one question, its total,
+here clean-1. D388 keeps a separate signing question only for one obligation beside that total, such as Ohio's named lease
+guarantee.
+
+**Alex's answer.** He chose "再修这一处就重跑 (Recommended)":
+- the signing question is only for one named deal; a programme or plan of many deals is tracked by the existing total (D248 boundary
+  1);
+- no change to the size line;
+- review, then a re-run of about $0.35;
+- if everything is right, a side-by-side comparison with c8 on new articles, on his word.

@@ -1,0 +1,3 @@
+**SEND / READY.** The revised wording resolves both blockers. The $6.0bn comparison is supplied, “clearly below” preserves “about 5%,” and Ohio remains a qualitative judgment.
+
+[NVIDIA’s February 25 results release](https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2026) confirms FY2026 net income of $120.067bn, available before the July 1 Ohio article. Five percent is approximately $6.0bn.

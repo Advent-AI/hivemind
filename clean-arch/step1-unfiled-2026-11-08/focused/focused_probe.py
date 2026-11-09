@@ -18,6 +18,10 @@ SETTING = config.Setting('clean-step1', 'deepseek-flash', 'clean-step1', 'high',
 SYSTEM = (HERE / 'system.txt').read_text(encoding='utf-8')
 CLOSING = (HERE / 'closing.txt').read_text(encoding='utf-8')
 SCHEMA = json.loads((HERE / 'schema.json').read_text(encoding='utf-8'))
+COMPANY = {'name': 'NVIDIA', 'most_recent_annual_profit': 'net income of $120.067 billion for fiscal year 2026 (ended January 2026)',
+           'five_percent_of_that_profit': 'about $6.0 billion',
+           'source': "NVIDIA's fourth-quarter fiscal 2026 results release, 8-K exhibit 99.1, filed 2026-02-26 "
+                     '(corpus item edgar:NVDA:0001045810-26-000019:q4fy26pr.htm)'}
 
 
 def stored_case(trace, sequence):
@@ -51,7 +55,8 @@ def build(payload, answer, routed):
               + [{'id': t['local_id'], 'description': t['description'], 'new_in_this_item': True} for t in answer['new_theses']])
     statements = [{'local_id': item['local_id'], 'summary': item['summary'], 'source_passages': item['source_passages'],
                    'linked_to': targets} for item, targets in routed]
-    body = {'source_item': {key: source.get(key) for key in ('title', 'published_at', 'text')}, 'theses': theses, 'statements': statements}
+    body = {'company': COMPANY, 'source_item': {key: source.get(key) for key in ('title', 'published_at', 'text')}, 'theses': theses,
+            'statements': statements}
     return json.dumps(body, ensure_ascii=False) + '\n\n' + CLOSING, {t['id'] for t in theses}
 
 
