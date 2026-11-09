@@ -4234,3 +4234,23 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
 - **Not yet decided.** How the next end-to-end measurement is done. Alex asked for a full council after reading the traces, the history
   of lessons and the state, before the next step is chosen. Using the 22 historical seed questions as an isolated fixture (against
   D370's retirement of them as a starting library) is part of that question.
+
+## D392 · 2026-11-09 · A seeded end-to-end diagnostic of the clean system, all three stages approved
+
+- Asked, with the plan in `clean-arch/step1-unfiled-2026-11-08/council/en-claude.md` (round log §60):
+  1. "可以把 22 道历史题放进一个隔离的测量库当考卷吗？（只为这次测量，不进产品；你之前定过产品不预设这些题）" Alex: "可以，只用于测量 (Recommended)".
+  2. "对照组用一个单独的小工具，当天重跑老系统（不改现有代码，发出前先证明请求和老系统一字不差），可以吗？" Alex: "可以 (Recommended)".
+  3. "按三段做？" Alex: "三段一起批准".
+- **Decided:**
+  - **The fixture.** The 22 historical seed questions may be used as an isolated fixture for this measurement only. D370 stands for the
+    product: no seeded starting library.
+  - **The control.** Production v108 is re-sent the same day by a separate harness calling `hivemind.replay.run`. `scripts/replay.py`
+    is not edited. Outgoing request bytes are proven against the 11-03 archive before any send.
+  - **Stages.** Stage 0 ($0: the adapter, the control harness, checks and a council read), Stage 1 (cents: the delivery probe) and
+    Stage 2 (about $11: three paired draws on v108's 243 items) are all approved. If Stage 1 meets its frozen line, Stage 2 runs without
+    asking again. If it does not, the line stops and goes to Alex.
+- **Labels every result carries:**
+  - conditional on the supplied questions;
+  - it says nothing about whether the clean system opens them;
+  - the articles tuned c8;
+  - the calibrated threshold is exploratory.

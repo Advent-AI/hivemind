@@ -122,7 +122,7 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The clean system's first end-to-end measurement: the plan is ready for Alex's three decisions** (round log §60;
+**The clean system's first end-to-end measurement: approved (D392); Stage 0 in progress** (round log §60;
 `clean-arch/step1-unfiled-2026-11-08/council/en-claude.md`).
 
 It is a seeded diagnostic: the 22 ruler questions as an isolated fixture, clean Steps 1–3 against production v108 re-sent the same day,
@@ -131,7 +131,4 @@ both on v108's 243 items, judged by the frozen judge and scored by the frozen sc
 - **Stage 1 (cents):** the delivery probe.
 - **Stage 2 (about $11):** three paired draws, with an inconclusive band.
 
-Alex decides:
-1. the seeds as a fixture (D370, D382);
-2. the same-day control harness;
-3. the staged spend.
+Alex approved all three stages (D392). Stage 2 runs if Stage 1 meets its frozen line; otherwise the line stops and goes to him.
