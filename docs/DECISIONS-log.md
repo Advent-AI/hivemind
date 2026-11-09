@@ -4273,3 +4273,21 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   - The model's own account quotes c8's "a cash-rich company's cash balance or cash flow usually changes none of these when the item
     ties it to nothing". That is wider than Alex's 2026-11-08 ruling, which was given where no open thesis the figure informs existed.
   - The candidate c12 changes three sentences. It is probed against c8 before any registered test.
+
+## D394 · 2026-11-10 · Capital spending (q12) is a known gap; the unseeded measurement starts
+
+- **Asked**, after arms c12 and c13 failed their frozen line on q12 (round log §§64–65): "“现金花在哪里”连着两次修改都没修好（模型会算但想不起来用）。接下来怎么走？"
+  - Options:
+    - leave the question and measure opening (recommended);
+    - name standard finance definitions in the prompt, noting the risk of teaching the test's answer;
+    - keep cash figures unlinked, against the 2026-11-08 ruling;
+    - stop.
+  - Alex: "放下这题，去测自己开题".
+- **Decided:**
+  - q12 is recorded as a known gap. The reference fact is not written, because the model does not recall that operating cash flow less
+    free cash flow is capital spending unless pointed at it.
+  - c12 and c13 are not adopted; c8 stays.
+  - The unseeded measurement that D393 deferred starts with its $0 stage: question-matching rules, tested on stored opened questions
+    by independent readers.
+  - It is an addition to the measurement, never an edit of the frozen ruler. Its rules and predictions are frozen before any paid
+    draw, and the paid draw waits for Alex's word.

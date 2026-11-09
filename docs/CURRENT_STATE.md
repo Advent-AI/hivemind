@@ -122,16 +122,14 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The clean system's first end-to-end measurement (D392) is measured; awaiting Alex on the next step** (round log §63).
+**The unseeded measurement of the clean system (D394): its $0 question-matching stage is under way** (`clean-arch/unseeded-2026-11-10/`).
 
-- **Stage 2 result:** clean 18, 18, 17 against production v108 17, 15, 16 on the frozen judgement ruler (+5 over three draws). The
-  frozen rule reads INCONCLUSIVE because capital spending (q12) is 0 of 3: the operating cash flow fact is never stored, and v12 is
-  never judged in either arm.
-- **Where the gains come from:** a read-only audit traces them to delivery. The operating-margin fact reaches q10, and Broadcom's
-  figures reach q16, in every clean draw, and mostly not in production.
-- **Proposed next step (Alex's decision):** a separately reviewed unseeded measurement. The product starts empty (D370). Its
-  question-matching rules are first tested at $0 on stored opened questions, as an addition, never an edit of the frozen ruler.
-- **Stops:** all disclosed in `clean-arch/e2e-2026-11-09/stage2-frozen.md`. One control draw and one clean judging attempt stopped on
-  the frozen judge's refusal (v17 naming v8). All three clean Step 1 runs were continued after a network cut.
+- **Stage 2 of D392:** clean 18, 18, 17 against v108 17, 15, 16 on the frozen judgement ruler. The frozen rule reads INCONCLUSIVE on q12
+  (round log §63).
+- **q12 (capital spending) is a known gap (D394).** Arms c12 and c13 failed: the model does not recall that operating cash flow less
+  free cash flow is capital spending unless pointed at it (round log §§64–65). c8 stays.
+- **Now:** two independent readers map the 28 questions that three stored unseeded c8 dev runs opened by themselves to the 23 ruler
+  questions, under the D248 identity rule. Their agreement and adjudication define the matching rules.
+- **Then:** the rules and predictions are frozen. The paid unseeded draws wait for Alex's word.
 
 No long job is running.
