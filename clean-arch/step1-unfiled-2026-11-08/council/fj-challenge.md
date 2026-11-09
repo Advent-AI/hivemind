@@ -1,0 +1,1 @@
+Fixed: send_jev now charges three times the UTF-8 byte length of jev.transport's body (json.dumps(sort_keys=True, ensure_ascii=False).encode('utf-8')). Tests 14 passed; prove re-ran: passed, 1018 matched, 0 differing. Re-read budget.py send_jev (read-only, under 100 words). SEND or BLOCKER?

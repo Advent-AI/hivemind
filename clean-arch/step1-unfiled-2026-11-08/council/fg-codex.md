@@ -1,0 +1,11 @@
+**BLOCKER: the control can spend past `--cap`.** The byte proof is strong for the stored replay, but it does not guarantee a live draw stays within its budget.
+
+1. **Proof.** Given the reported successful run, today’s code reconstructs the archived requests and matches the bodies reconstructed by commit `a907eba`, using a newly seeded ledger and the stored answers. The archive did not retain the original model request byte order, so the original bytes depend on the recorded commit and deterministic reconstruction. The proof does not establish live answers, subsequent requests shaped by those answers, headers, or transport retries. The byte comparison groups requests by canonical hash; its count is of distinct hashes, not necessarily individual sends. See [proof comparison](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/control_v108.py:470).
+
+2. **Live scope and cap.** The CLI fixes v108, the seed, NVDA and the window, and checks each day’s extracted inputs before running that day. The programmatic `inputs` argument is broader: the proof digest omits settings such as `seed_created_at`, so it does not bind every possible override. The cap is passed through, but [replay checks it](/Users/lchingen/hivemind/src/hivemind/replay.py:112) **after** work completes; parallel calls can already be in flight, and end-of-day judging has no subsequent cap check. It is not a hard spending limit.
+
+3. **Writes and credentials.** Run artifacts are placed in the chosen folder. Python may also write `__pycache__` outside it unless bytecode writing is disabled; the reference subprocess disables it, but the main process does not. During `prove`, both credential readers are replaced with refusals.
+
+4. **Tests.** The passing tests support the individual checks; they do not test a live cap or prove that the full byte comparison catches a changed serialization. The sibling-proof test constructs a marker directly, rather than producing it through `prove`. I did not independently rerun the tests or mutants in this read-only review.
+
+**BLOCKER**
