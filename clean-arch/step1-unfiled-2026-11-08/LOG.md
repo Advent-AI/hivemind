@@ -2617,3 +2617,30 @@ Prompt tokens averaged 9,656 for c8 and 9,693 for c12.
 
 **Mistake (mine):** I designed the first arm from the account's quote of the clause, without asking whether the model could make the
 connection at all. One cheap capability question on the stored answers would have pointed to placement before the send.
+
+## 65. q12, arm c13 (a closing-check derivation step): also fails line 1; the model does not recall the identity unprompted (2026-11-09)
+
+**The change.** Alex chose "加在最后复查里再试一次". c13 is c8 plus the scope fix, plus one closing-check step: go back over the company's own
+figures not returned or returned unlinked, check whether an open thesis asks about a figure that follows from them by a standard
+definition and whether it makes that answer more or less likely, and if so return the statement linked there.
+- It was revised after a blind audit (`council/fw-audit-c13.md`).
+- Councils `fv` and `fx` (SEND).
+- The probe (`poc/data/clean-q12-2026-11-09/probe-c13/`) is 42 calls, $0.57, 0 errors. The control is today's c8 arm from the c12
+  probe.
+
+**Lines:**
+- **1. FAIL:** case A, cash-flow sentence written 0 of 3, the same as c8.
+- **2. Pass:** case B, c13 keeps neither cash sentence in any draw; c8 kept both, unlinked, in 1 of 3.
+- **3 and 4:** not judged, since line 1 failed.
+
+**Traced** (`account-c13.json`): in 3 of 3 the model says it carried out the new step.
+- It reviewed operating cash flow, free cash flow, the cash balance, buybacks and dividends, and found that "none follows by standard
+  definition into a figure an open thesis asks about".
+- One draw derived total revenue from the data-center share instead.
+- When the two cash figures are pointed at (`capability-c12.json`), 3 of 3 name v12 and derive Q1 capex.
+
+**The mechanism:** the model holds the identity "free cash flow = operating cash flow − capital expenditures" but does not recall it from
+a generic instruction or a generic example. Placement (c13) and wording (c12) both leave this one recall step undone.
+
+**Process:** two arms on one mechanism have failed (AGENTS §7.3). Under D355 the line stops and goes to Alex, with the options the
+council reviews.

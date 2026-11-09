@@ -5,7 +5,7 @@ c12 arm is the same stored request with only the system text and the closing che
 same way. Every answer goes through the runner's checks. A gold fact counts as written when a kept item quotes its passage
 (stage1_probe.quotes_gold) and as delivered to the theses that item links.
 
-Usage: q12_probe.py <cases.json> <output folder> [--draws 3] [--send]
+Usage: q12_probe.py <cases.json> <output folder> [--draws 3] [--arm c12] [--no-control] [--send]
 cases.json: [{"case": "...", "trace": "<path, or segments joined with '+'>", "input_id": "...", "gold": ["i131", ...]}]"""
 import argparse, concurrent.futures, json, sqlite3, sys
 from pathlib import Path
@@ -37,9 +37,9 @@ def stored_row(trace, input_id):
     raise SystemExit(f'{input_id} has no completed row in {trace}')
 
 
-def build_jobs(cases, draws):
+def build_jobs(cases, draws, candidate_arm='c12', with_control=True):
     c8_system, c8_closing, c8_schema = arm_texts('c8')
-    c12_system, c12_closing, c12_schema = arm_texts('c12')
+    c12_system, c12_closing, c12_schema = arm_texts(candidate_arm)
     jobs = []
     for case in cases:
         request_text, raw, before = stored_row(case['trace'], case['input_id'])
@@ -61,8 +61,9 @@ def build_jobs(cases, draws):
         candidate_sent = deepseek_json_mode(candidate, sent.get('reasoning_effort'))
         item = {'text': payload['source_item']['text']}
         for draw in range(1, draws + 1):
-            jobs.append((case, 'c8', draw, sent, item, payload['open_theses'], c8_schema))
-            jobs.append((case, 'c12', draw, candidate_sent, item, payload['open_theses'], c12_schema))
+            if with_control:
+                jobs.append((case, 'c8', draw, sent, item, payload['open_theses'], c8_schema))
+            jobs.append((case, candidate_arm, draw, candidate_sent, item, payload['open_theses'], c12_schema))
     return jobs
 
 
@@ -70,9 +71,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('cases'); parser.add_argument('output')
     parser.add_argument('--draws', type=int, default=3, choices=[1, 2, 3]); parser.add_argument('--send', action='store_true')
+    parser.add_argument('--arm', default='c12', help='the candidate arm, arms/<arm>-*')
+    parser.add_argument('--no-control', action='store_true', help='send only the candidate; the same-day c8 control is an earlier probe')
     args = parser.parse_args()
     cases = json.loads(Path(args.cases).read_text())
-    jobs = build_jobs(cases, args.draws)
+    jobs = build_jobs(cases, args.draws, args.arm, not args.no_control)
     price_in, price_out = model.PRICES['deepseek-flash']
     chars = sum(len(json.dumps(j[3])) for j in jobs)
     print(f'{len(jobs)} requests over {len(cases)} cases; about {chars // 4} input tokens; about '
