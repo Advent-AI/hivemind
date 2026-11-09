@@ -122,13 +122,20 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The clean system's first end-to-end measurement (D392): Stage 1 sent and failed its frozen line on q12, by design; awaiting Alex** (round log §61) (round log §60;
-`clean-arch/step1-unfiled-2026-11-08/council/en-claude.md`).
+**The clean system's first end-to-end measurement (D392): Stage 2 is running** (round log §62; plan
+`clean-arch/step1-unfiled-2026-11-08/council/en-claude.md`; frozen rule `clean-arch/e2e-2026-11-09/stage2-frozen.md`).
 
 It is a seeded diagnostic: the 22 ruler questions as an isolated fixture, clean Steps 1–3 against production v108 re-sent the same day,
 both on v108's 243 items, judged by the frozen judge and scored by the frozen scorer.
-- **Stage 0 ($0):** the adapter and the control harness, with leakage and byte checks, reviewed by the council.
-- **Stage 1 (cents):** the delivery probe.
-- **Stage 2 (about $11):** three paired draws, with an inconclusive band.
+- **Stage 0 ($0):** done.
+  - The adapter, the v108 control harness and a shared hard spending limit were built and cleared by the council (clean arm and
+    control both SEND).
+  - The control's byte proof matched all 1018 of the 11-03 archive's requests as sent.
+- **Stage 1 (cents):** sent. It failed its frozen line on q12, by design. Alex chose to run Stage 2 regardless.
+- **Stage 2 (about $11):** three clean draws and three control draws, launched 2026-11-09, detached.
+  - Folders: `poc/data/clean-e2e-2026-11-09/stage2-clean-d1..d3` and `stage2-control-d1..d3`.
+  - After each clean draw's Steps 1–3, any Ohio candidate is read for equivalence with q23.
+  - Then `adapter.py live` judges each clean draw.
+  - Both arms are scored, and every disagreement is read.
 
-Alex approved all three stages (D392). Stage 2 runs if Stage 1 meets its frozen line; otherwise the line stops and goes to him.
+Long jobs running: the six Stage 2 launchers above (no package or prompt edits until they finish).

@@ -12,7 +12,7 @@ cd "$REPOSITORY_ROOT"
 test -e "$RUN_FOLDER" && { echo "run folder exists: $RUN_FOLDER" >&2; exit 2 }
 test -f "$HOME/.config/hivemind/credentials.json" || { echo "credentials file missing" >&2; exit 2 }
 (cd "$HERE" && shasum -a 256 -c stage2-frozen.sha256 >/dev/null) || { echo "a frozen Stage 2 file changed" >&2; exit 2 }
-PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider clean-arch/step1/test_runner.py -k adopted_c8 >/dev/null || { echo "the PRD request is not c8" >&2; exit 2 }
+PYTHONPATH="$REPOSITORY_ROOT/src" PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider clean-arch/step1/test_runner.py -k adopted_c8 >/dev/null || { echo "the PRD request is not c8" >&2; exit 2 }
 mkdir -p "$RUN_FOLDER"
 cp "$HERE"/stage2-manifest.json "$RUN_FOLDER"/manifest.json
 cp "$HERE"/stage2-initial.json "$RUN_FOLDER"/initial.json

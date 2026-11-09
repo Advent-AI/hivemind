@@ -30,6 +30,9 @@ splits.
 Stage 1 showed q12 cannot be delivered under the current cash-flow ruling, so "better" is expected to be out of reach. Alex chose to
 run regardless ("照样跑正式对比").
 
+**The rule is applied by `stage2_decide.py`**, written and frozen before any result. It reads the frozen scorer's outcomes; a dry run on
+the two stored sets of v108 draws (r9 against the r10 control, the same configuration) reads INCONCLUSIVE (+0, +1, no collapse).
+
 **Reported for every run:**
 - every question and draw for both arms, and the judge's reasons for every disagreement;
 - the adapter's counts and losses (records dropped without a verified passage, quotes over 400 characters, links to clean-opened

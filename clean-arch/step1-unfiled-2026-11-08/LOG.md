@@ -2435,3 +2435,55 @@ Under D392, the line stops and goes to Alex.
 **Alex's answer.** "照样跑正式对比 (Recommended)": Stage 2 runs with its frozen line unchanged. Its "better" requires both q10 and q12,
 so it will most likely read inconclusive or worse. It still gives the first whole-window picture of the clean system's judgements.
 Stage 0's adapter and control harness are built and council-read first.
+
+
+## 62. Stage 0 of D392 built and cleared; Stage 2 launched (2026-11-09)
+
+**Built (all in `clean-arch/e2e-2026-11-09/`, commit b7e6f3b):**
+- **`adapter.py`.** It replays a clean draw into a seeded view store in v108's dispatch order and judges it daily with the frozen
+  judging-v7.
+  - Records come in Step 1 order with verified passages.
+  - Repeats become same-claim relations; revisions run from the revised group's original to the record that brought them, and the new
+    piece inherits the old one's links.
+  - Later links are written at the article that made them.
+  - Checks:
+    - nothing in the database is past the day;
+    - every request shows exactly production's selection, in order;
+    - the library's record copies match the trace;
+    - the library carries a hash stamp written right after Step 2.
+  - Tests: 8, with mutants caught for the revision direction, late links, the cap and the copy check.
+- **`control_v108.py`** (built by a subagent; its report was checked by re-running the tests and the proof).
+  - It re-sends poc-v108 on a seeded ledger through `hivemind.replay.run`, without editing replay.py.
+  - The $0 proof matched all 1018 requests of the 11-03 archive (243 extraction, 218 judgement, 12 collision, 545 Jev) in canonical form
+    and as sent. The bytes as sent were checked by replaying commit a907eba's code over the same answers.
+  - A guard checks each day's inputs against the reference manifests.
+- **`budget.py`** is a hard spending limit shared by both arms.
+  - Each attempt is sent alone under production's retry rule and reserves its worst case under a lock: the body's UTF-8 bytes as input,
+    plus the output cap.
+  - Each attempt is charged its token cost, or its full reserve when it gives no answer or no usable usage.
+  - A Jev call is always charged three attempts.
+  - Through the limit, the whole reference window counted $1.47 against a $3 cap (actual $0.70).
+- **`calibrate.py`.** The six stored v108 draws give the frozen thresholds (exploratory): +3 with all questions, +4 without q09, q12 and
+  q23.
+- **`run_clean_draw.sh`** pins the c8 Step 1 invocation.
+
+**Council (Codex):**
+- Clean arm, rounds fa–ff, then fk after the limit moved into budget.py. The blockers, each fixed:
+  - revisions read backwards;
+  - record order lost;
+  - the library check by ids only;
+  - the cap released between locks, retries uncounted, and the stamp not covering the library.
+- Control, rounds fg–fj. The blockers, each fixed:
+  - production's cap is checked only after the fact;
+  - an answer without usage was charged nothing;
+  - Jev was priced by characters, not bytes.
+- Both ended SEND.
+
+**My mistakes:**
+- The launcher's c8 check ran without `src` on the import path. All three clean launches refused before writing anything. Fixed and
+  relaunched; the refused logs are kept as `stage2-clean-d*.launcher-refused-1.log`.
+- The control's log line says "transport reference archive" in live mode, because it tests only whether a transport was passed. It is a
+  label only: live sends through budget.Budget around the production transports. It will be fixed after the runs.
+
+**Launched:** three clean draws (`run_clean_draw.sh 1..3`) and three control draws (`control_v108.py live ... --cap 3`), same day,
+detached.
