@@ -4200,3 +4200,20 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   - open: Hugging Face at $12.9bn.
 - **Scope.** It applies to the focused D388 step under test. It enters the clean-arch PRD only if that step is adopted. The frozen
   extraction standard and gold are unchanged (AGENTS §7.1).
+
+## D390 · 2026-11-09 · A plan counts as undertaken once a deal under it is reported signed
+
+- Asked: "一个合作计划，什么时候算'已经启动'（只跟踪总额，不再问'会不会签'）？" The options were: started once a deal under it is
+  signed (recommended); started only when the company announces the whole plan in effect; or stop. Alex chose "已有交易签了就算启动
+  (Recommended)", whose stated terms were:
+  - "文章报道计划下已经有交易签了，就把整个计划当作已经启动，只用'总额'问题跟踪";
+  - "单笔还没签的大交易（如俄亥俄）照样单独问";
+  - "代价：'试点签了、大计划未定'这种罕见情况会被当成已启动".
+- **Decided.** Under D388, a programme or plan as a whole counts as undertaken once the item reports a deal signed under it. It is then
+  tracked by its amount, the total of its kind, and gets no signing question of its own. Each single deal within it keeps its own
+  status, so a material unsigned deal under such a plan still gets its own signing question.
+- **Why.** In the focused D388 call, dev-20 turned NVIDIA's announced credit-support model into a signing question in 2 of 3 rounds,
+  although the same article reports Sharon AI's signed agreement under it; a blind reader judged it already signed. Three fix drafts
+  were blocked because the standard ("已经承担（一笔或一个计划）：金额") does not say when a whole plan is undertaken (round log §57).
+- **Scope.** It applies to the focused D388 step under test and enters the clean-arch PRD only if that step is adopted. The frozen
+  standard and gold are unchanged.

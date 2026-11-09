@@ -136,8 +136,9 @@ agreed to stop the same-call line. c8 stays in force. Alex chose to test a separ
 in 9 of 9 draws and is right on 22 of 24 routed articles. Two predeclared falsifiers fire: a $2.5–3bn stake opens (3 of 3), and an
 obligation is inferred from a third-party funding target (2 of 3). Round 2 fixed the inference, but the size test flips with
 wording (§55). Alex set the line at about 5% of annual profit (D389). Round 3 (§56) is right on Ohio (9 of 9) and on every
-predeclared case. One wrong opening remains: dev-20 turns a programme announcement into a signing question (2 of 3 rounds). c8 stays
-in force. Alex's choice next.
+predeclared case. One wrong opening remains: dev-20 turns a programme announcement into a signing question (2 of 3 rounds). Three
+fix drafts were blocked, because the standard does not say when a programme counts as undertaken (§57). c8 stays in force. Alex's
+ruling on that boundary is next.
 
 c8 stays in force. Link clutter is paused.
 

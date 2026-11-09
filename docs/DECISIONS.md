@@ -731,3 +731,4 @@ Every decision number, its date, its title as recorded, its status today and the
 | D387 | 2026-11-09 | Clean Step 1 adopts c8; the PRD carries its system prompt, closing check and schema | in force | clean-arch PRD §12 |
 | D388 | 2026-11-09 | A material unsigned obligation gets its own signing question beside an open total of its kind (confirms D248 boundary 1's exception) | in force | clean-arch PRD §12 |
 | D389 | 2026-11-09 | Under D388, an unsigned obligation is large enough for its own signing question at about 5% of the company's most recent annual profit; an unstated amount is judged qualitatively | in force (focused step under test) | round log §55; clean-arch PRD on adoption |
+| D390 | 2026-11-09 | Under D388, a plan counts as undertaken (tracked by its total, no signing question) once a deal under it is reported signed; each single deal keeps its own status | in force (focused step under test) | round log §57; clean-arch PRD on adoption |

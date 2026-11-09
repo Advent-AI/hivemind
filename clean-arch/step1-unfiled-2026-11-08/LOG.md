@@ -2264,3 +2264,25 @@ guarantee.
 - no change to the size line;
 - review, then a re-run of about $0.35;
 - if everything is right, a side-by-side comparison with c8 on new articles, on his word.
+
+## 57. The programme-versus-deal fix: three drafts blocked; the boundary goes to Alex (2026-11-09)
+
+Three drafts of the dev-20 fix went to both reviewers, and each was blocked (`dq`–`dy-codex.md`):
+1. **"A signing question is for one deal with a named counterparty or asset; a programme is one question, its total."** Blocked: the
+   naming requirement has no source, and the blanket programme exclusion is wider than D248(1), which joins questions only when they
+   resolve to the same number.
+2. **"A programme statement whose deals are checked against the number an open total tracks is another wording of that total."**
+   Blocked: D248 compares questions, not what a programme's deals feed. An unsigned material plan can merit its own signing question.
+3. **"A plan is undertaken once the item reports a deal signed under it; each single deal keeps its own status."** Blocked: neither the
+   standard ("已经承担（一笔或一个计划）：金额") nor D388 says when a whole plan becomes undertaken. A pilot deal can be signed while the
+   programme stays unsigned.
+
+All three drafts protected Ohio.
+
+**What it says.** The standard does not define when a programme counts as undertaken, and so is tracked by its total, rather than as an
+unsigned plan that gets a signing question. Each draft invented that line. Under AGENTS §2 ("a design whose core contract is still
+open is a question, not something to build") and D259, the boundary goes to Alex. No send was made, and r18 stays the last measured
+version.
+
+**Alex's answer (D390).** He chose "已有交易签了就算启动 (Recommended)": a plan counts as undertaken once a deal under it is reported
+signed, and each single deal keeps its own status.
