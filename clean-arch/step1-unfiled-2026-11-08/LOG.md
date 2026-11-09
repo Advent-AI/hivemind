@@ -2644,3 +2644,41 @@ a generic instruction or a generic example. Placement (c13) and wording (c12) bo
 
 **Process:** two arms on one mechanism have failed (AGENTS §7.3). Under D355 the line stops and goes to Alex, with the options the
 council reviews.
+
+## 66. The unseeded measurement (D394, D395): matching rule frozen, three draws launched (2026-11-10)
+
+**Alex's decisions:**
+- **D394:** "放下这题，去测自己开题". q12 is a known gap; c12 and c13 are not adopted.
+- **D395:** "跑，只跑新系统三份".
+
+**$0 stage** (`clean-arch/unseeded-2026-11-10/`):
+- **The readers.** Two blind readers (Codex and Claude) mapped the 28 questions opened by the three stored unseeded c8 dev runs to the 23
+  judgement-ruler questions. They agreed on SAME or not for 24 of 28. A third reader decided the 4 disagreements, all SAME, against
+  D248's boundaries and R2-e and R2-f.
+- **A correction from the council.** dev-d1 clean-1 is NOT SAME: an amount at another date, where boundary 2 applies to events.
+- **What the dev runs open.** Each run opens SAME matches for 4–5 ruler questions: q07, q08 and q18 always; q13 in d1 and d2; q09 in d2
+  and d3; q05 in d3.
+- **The judgement ruler only partly fits the product.** The frozen field `covers_must_open` is non-empty for 7 questions only (q04, q05,
+  q08, q09, q13, q18, q23). The company-figure questions (q01, q02, q03, q10, q11, q12, q19, q20, q22) are out of opening under D370 and
+  Alex's 2026-11-08 "我觉得财务类型不应该是thesis…".
+- **Opening is already measured on the frozen question gold:** must_open covered 25, 24 and 27 of 28 (§44).
+- **The frozen plan** (`MATCHING-v2.md`, after councils fz, ga and gb):
+  - the graded subset is the 7;
+  - the other 16 are reported question by question;
+  - outcomes and stops are defined;
+  - the observed gap against the seeded Stage 2 is a different-day, exploratory comparison, predicted at 4–5 of 7 per draw against
+    about 6.3.
+
+**Build** (councils gc–ge, SEND):
+- adapter mapping mode: matched clean theses feed ruler views; all 23 ruler views exist from seq 0; one thesis may feed several views;
+  `--unseeded` covers an empty mapping. 15 tests pass, and a mutant that ignores the mapping is caught.
+- `run_unseeded_draw.sh`: c8 pinned, Stage 2's manifest, settings and limits, an empty library.
+- `continue_clean_draw.py` now takes a run folder.
+
+**Launched:** three unseeded draws (`poc/data/clean-unseeded-2026-11-10/draw-d1..d3`), detached.
+
+**After Steps 1–3:**
+1. `extract_opened.py` lists each draw's opened theses.
+2. Two blind readers map them under MATCHING-v2, and a third reader decides any disagreement.
+3. `adapter.py live --unseeded --map …` judges.
+4. The frozen scorer scores; the subset and every other question are reported.

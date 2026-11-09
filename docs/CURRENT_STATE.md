@@ -122,14 +122,14 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The unseeded measurement of the clean system (D394): its $0 question-matching stage is under way** (`clean-arch/unseeded-2026-11-10/`).
+**The unseeded measurement of the clean system (D395): three draws are running** (round log §66; `clean-arch/unseeded-2026-11-10/MATCHING-v2.md`).
 
-- **Stage 2 of D392:** clean 18, 18, 17 against v108 17, 15, 16 on the frozen judgement ruler. The frozen rule reads INCONCLUSIVE on q12
-  (round log §63).
-- **q12 (capital spending) is a known gap (D394).** Arms c12 and c13 failed: the model does not recall that operating cash flow less
-  free cash flow is capital spending unless pointed at it (round log §§64–65). c8 stays.
-- **Now:** two independent readers map the 28 questions that three stored unseeded c8 dev runs opened by themselves to the 23 ruler
-  questions, under the D248 identity rule. Their agreement and adjudication define the matching rules.
-- **Then:** the rules and predictions are frozen. The paid unseeded draws wait for Alex's word.
+- **The judgement ruler only partly fits the product.** It covers the product's must-open questions in only 7 of its 23 (q04, q05,
+  q08, q09, q13, q18, q23); its company-figure questions are out of opening (D370; Alex, 2026-11-08). Those 7 are the graded subset,
+  and every other question is reported.
+- **Predicted:** 4–5 of 7 per draw, against about 6.3 for the seeded Stage 2. This is a different-day, exploratory comparison.
+- **After Steps 1–3:** each draw's opened questions are matched by two blind readers plus an adjudicator under the frozen rule, then
+  judged through the adapter's mapping mode and scored.
+- **Known gap (D394):** capital spending (q12). Stage 2 of D392: clean 18, 18, 17 against v108 17, 15, 16 (inconclusive on q12).
 
-No long job is running.
+Long jobs running: the three unseeded launchers (`poc/data/clean-unseeded-2026-11-10/draw-d1..d3`; no package or prompt edits until they finish).
