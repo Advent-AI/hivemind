@@ -74,3 +74,8 @@ Clean draw 3's Step 1 stopped after 40 completed articles: "TransportError: Inco
   $44.95 of reservations (disclosed).
 - The clean transport makes one attempt per call by design (`clean-arch/step1/live.py`), so a cut reply stops the run where
   production's transport would retry. This is noted for the report as an infrastructure difference, not a judgement difference.
+- Clean draw 3's first judging stopped on 2026-07-05 after 62 judgements, on the same refusal as control draw 2 ("v17: v8 is not a
+  dependency of v17"). Per the rule above, it is redone from its start in `stage2-clean-d3/judged-2`; the stopped attempt is kept.
+- Census of this class in today's finished archives: every run has 3–10 judge answers refused by the frozen check, nearly all on v17
+  naming v8 and/or v2 as dependencies. A run stops when both attempts of one judgement are refused. It is the frozen judge's, shared by
+  both arms.

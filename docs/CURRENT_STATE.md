@@ -122,20 +122,16 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The clean system's first end-to-end measurement (D392): Stage 2 is running** (round log §62; plan
-`clean-arch/step1-unfiled-2026-11-08/council/en-claude.md`; frozen rule `clean-arch/e2e-2026-11-09/stage2-frozen.md`).
+**The clean system's first end-to-end measurement (D392) is measured; awaiting Alex on the next step** (round log §63).
 
-It is a seeded diagnostic: the 22 ruler questions as an isolated fixture, clean Steps 1–3 against production v108 re-sent the same day,
-both on v108's 243 items, judged by the frozen judge and scored by the frozen scorer.
-- **Stage 0 ($0):** done.
-  - The adapter, the v108 control harness and a shared hard spending limit were built and cleared by the council (clean arm and
-    control both SEND).
-  - The control's byte proof matched all 1018 of the 11-03 archive's requests as sent.
-- **Stage 1 (cents):** sent. It failed its frozen line on q12, by design. Alex chose to run Stage 2 regardless.
-- **Stage 2 (about $11):** three clean draws and three control draws, launched 2026-11-09, detached.
-  - Folders: `poc/data/clean-e2e-2026-11-09/stage2-clean-d1..d3` and `stage2-control-d1..d3`.
-  - After each clean draw's Steps 1–3, any Ohio candidate is read for equivalence with q23.
-  - Then `adapter.py live` judges each clean draw.
-  - Both arms are scored, and every disagreement is read.
+- **Stage 2 result:** clean 18, 18, 17 against production v108 17, 15, 16 on the frozen judgement ruler (+5 over three draws). The
+  frozen rule reads INCONCLUSIVE because capital spending (q12) is 0 of 3: the operating cash flow fact is never stored, and v12 is
+  never judged in either arm.
+- **Where the gains come from:** a read-only audit traces them to delivery. The operating-margin fact reaches q10, and Broadcom's
+  figures reach q16, in every clean draw, and mostly not in production.
+- **Proposed next step (Alex's decision):** a separately reviewed unseeded measurement. The product starts empty (D370). Its
+  question-matching rules are first tested at $0 on stored opened questions, as an addition, never an edit of the frozen ruler.
+- **Stops:** all disclosed in `clean-arch/e2e-2026-11-09/stage2-frozen.md`. One control draw and one clean judging attempt stopped on
+  the frozen judge's refusal (v17 naming v8). All three clean Step 1 runs were continued after a network cut.
 
-Long jobs running: the six Stage 2 launchers above (no package or prompt edits until they finish).
+No long job is running.

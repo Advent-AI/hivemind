@@ -1,0 +1,13 @@
+**Verdict: inconclusive.** The clean system delivered useful facts for q10 and q16 more consistently, but this result does not establish that it is better overall. Under the frozen rule, q12’s 0/3 prevents a “better” verdict.
+
+1. **Attribution.** Your +5 decomposition is correct. For q10, all three clean answers explicitly use the roughly 66% figure; control d1 never judged the question, and d3 and d4 stayed at 62–65%. For q16, all three clean answers use Broadcom’s figures; control d1 and d3 do not cite them, while d4 cites them and agrees with the gold. That is strong evidence of improved delivery, consistent with Stage 1. It is **not proof that delivery alone caused all five gains**: the judge could respond differently to the same evidence. Also, 66% is a reported margin used as a proxy for a future non-GAAP margin, not the requested forecast itself. [Judgement reasons](</Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/stage2-reasons.txt>)
+
+   The q17 and q22 explanations are plausible boundary effects, but three draws do not prove sampling is their only cause.
+
+2. **Measurement artefacts and limits.** The adapter was reviewed and checked, but it changes how clean records reach the judge. Across clean draws it dropped 1, 1 and 2 records without verified passages; the judge’s 400-character cut affected 138, 126 and 123 quotes; and links to other clean-opened questions were dropped 30, 13 and 23 times. Their effect on these answers is not established.
+
+   q23’s mapped clean question has a later deadline and broader wording than the gold question, so its agreement is not secure. Excluding q23 leaves the difference at +5. All three clean runs continued after network cuts; the control replaced a stopped draw, and clean d3 restarted judging after refusal. These were disclosed under rules written before clean results, but completed-draw selection and different recovery paths limit the comparison.
+
+3. **What Alex can take from it.** Given supplied questions, on articles used to tune c8, the clean path shows a promising delivery signal and no observed collapse. It does not demonstrate that the product opens the right questions, works on unseen articles, or is ready to replace production. The threshold was exploratory.
+
+4. **One next step:** perform a read-only audit of the adapter’s effect on q10 and q16 before proposing another run. **Test:** trace every relevant fact from each stored article through both arms to the exact judge request, including truncated text and dropped links; report what reached each question and what was lost. This can strengthen or weaken the delivery attribution without changing c8, the judge or the ruler.

@@ -10,7 +10,7 @@ sys.path.insert(0, str(HERE))
 from calibrate import NOISE, collapse, outcomes, total  # noqa: E402
 
 DATA = ROOT / 'poc/data/clean-e2e-2026-11-09'
-CLEAN = [DATA / f'stage2-clean-d{d}/judged' for d in (1, 2, 3)]
+CLEAN = [DATA / 'stage2-clean-d1/judged', DATA / 'stage2-clean-d2/judged', DATA / 'stage2-clean-d3/judged-2']   # d3's first judging stopped on a refused judgement and was redone (stage2-frozen.md, addendum)
 CONTROL = [DATA / f'stage2-control-d{d}' for d in (1, 3, 4)]   # draw 2 stopped on a refused judgement and was replaced (stage2-frozen.md, addendum)
 
 

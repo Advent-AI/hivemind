@@ -2521,3 +2521,54 @@ Its check date is 2027-12-31; q23's due day is 2027-06-30.
 - The reader notes three things that could move the answers apart: the "capacity backstop" alternative, the "large enough to change
   credit risk" condition, and the later deadline. These are watched when the judge's reasons are read.
 - Clean d2 was judged with `--q23 clean-1`.
+
+## 63. Stage 2 of D392 measured: clean +5 over production, INCONCLUSIVE under the frozen rule (2026-11-09)
+
+**Result** (frozen scorer, gold v1 `636c056d…`, window end 2026-07-14; `clean-arch/e2e-2026-11-09/stage2-result.txt`):
+
+| | draw totals | sum | without q09, q12, q23 |
+|---|---|---|---|
+| clean (d1, d2, d3 judging redo) | 18, 18, 17 | 53 | 17, 16, 16 |
+| control v108 (d1, d3, d4) | 17, 15, 16 | 48 | 15, 14, 15 |
+
+- The difference is +5 with all questions and +5 without the noise questions, so both thresholds (+3 and +4) are met, and there is no
+  collapse.
+- q12 is 0 of 3 in the clean arm, so the frozen rule reads **INCONCLUSIVE**, as Stage 1 predicted.
+
+**Per question, regressions first:**
+- **q22:** clean 2/3, control 3/3. One clean judge weighted the 32%-growth view ($517bn) over the 41%-growth and $555bn consensus. Both
+  arms held the same items, so this is judge sampling.
+- **q23:** 1/3 each. Clean d2's own Ohio question was read as SAME by an independent reader, with caveats on deadline and wording.
+  Control d1 opened its own.
+- **q17:** clean 2/3, control 1/3, at the 1% boundary.
+- **q16:** clean 3/3, control 1/3.
+- **q10:** clean 3/3, control 0/3.
+
+**Delivery audit** (read-only; `stage2-delivery-audit.txt`):
+- **q10:** the "roughly 66% operating margin" fact is stored, linked to v10 and shown in 9 of 9 judge requests in every clean draw. It
+  is never stored in any control draw. It is a reported margin used as a proxy for the forecast.
+- **q16:** Broadcom's $10.8bn Q2 and $16bn Q3 AI figures are linked to v16 and shown in every clean draw. Control d1 and d3 stored them
+  but linked them elsewhere and disagreed. Control d4 linked them and agreed. Delivery and outcome match in all six draws.
+- **q12:** the needed operating cash flow figure is never stored in either arm. Free cash flow is stored once in each clean draw,
+  unlinked. v12 is never judged in either arm.
+- **Total revenue (PRD 10 §2, the parking lot):** it holds 13–15% of seed links in clean against 21–26% in control. This is encouraging,
+  but not a relevance measure.
+
+**Cost from tokens at published rates:**
+- clean Step 1: $1.79 per draw;
+- clean judging: $0.48, $0.52 and $0.51, plus $0.09 for the stopped attempt;
+- control: $0.73, $0.67 and $0.64, plus $0.23 for the stopped draw 2.
+- Stage 2 total is about $9.2, plus small Step 2 embedding and Jev costs.
+
+**Council B** (`fq`, `fr`):
+- The verdict is inconclusive, and the attribution of q10 and q16 to delivery holds; it does not prove every gain.
+- The wording to use is "delivered the key facts", not "solved the questions".
+- The next step is a decision for Alex: open a separately reviewed **unseeded measurement**, since the product starts empty (D370) and
+  this diagnostic was seeded.
+  - Its question-matching rules are tested first, at $0, on stored opened questions with independent readers, covering near matches,
+    split, broader and missing questions.
+  - The rules and the predictions are frozen before any paid draw.
+  - It is an addition, never an edit of the frozen ruler; the scorer as it stands refuses non-seed runs.
+
+**Labels:** conditional on the supplied questions; says nothing about opening; c8 was tuned on the 115 dev articles of these 243; the
+threshold is exploratory.
