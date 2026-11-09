@@ -122,17 +122,16 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**Plan the clean system's end-to-end measurement, after a full read and a council** (D391). Step 1 is closed on c8. Alex asked that
-the next step be decided only after reading the traces, the lessons and the state in full, and discussing them with the council.
-- Step 1 is closed on c8 (D387). The open defects are listed above. The focused D388 call is a tested candidate, not adopted (§§54–58;
-  D389 and D390 apply to it only).
-- The proposed first end-to-end test:
-  1. an isolated measurement library holding the 22 historical seed questions as a fixture, which needs Alex's word given D370;
-  2. clean Steps 1–3 over 2026-07-01 to 07-14;
-  3. an adapter to the view store;
-  4. the frozen judging as a measuring harness;
-  5. the unchanged judgement scorer, compared with production v108 (15, 15 and 16 agreements).
+**The clean system's first end-to-end measurement: the plan is ready for Alex's three decisions** (round log §60;
+`clean-arch/step1-unfiled-2026-11-08/council/en-claude.md`).
 
-  It reports unanswered questions and q23 apart, and is labelled conditional on the supplied questions.
-- $0 checks come first: stored c8 records through the adapter, a synthetic judging answer through the checks, and the scorer accepting
-  the database. Then one draw, then three.
+It is a seeded diagnostic: the 22 ruler questions as an isolated fixture, clean Steps 1–3 against production v108 re-sent the same day,
+both on v108's 243 items, judged by the frozen judge and scored by the frozen scorer.
+- **Stage 0 ($0):** the adapter and the control harness, with leakage and byte checks, reviewed by the council.
+- **Stage 1 (cents):** the delivery probe.
+- **Stage 2 (about $11):** three paired draws, with an inconclusive band.
+
+Alex decides:
+1. the seeds as a fixture (D370, D382);
+2. the same-day control harness;
+3. the staged spend.

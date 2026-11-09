@@ -2352,3 +2352,36 @@ A challenge round put the Claude reader's verified plan to Codex (`eh-challenge.
   case at a time (D388 → D389 → D390). Codex rejected the Claude reader's rule ("no arm unless it names a ruler question a trace shows it
   would flip") as too narrow. Agreed instead: every proposed change states its expected effect on the reader or the final judgement,
   and is tested there where possible; a fix that keeps moving its error to neighbouring cases stops being tuned on that set.
+
+## 60. The end-to-end measurement plan, after a full read and a council (2026-11-09)
+
+**What was read.** Following Alex's D391 instruction ("需要你完整的读完trace 和所有历史的learning 和我们的状态"), four read-only
+digests covered:
+- the lessons and their governing rules;
+- production's end-to-end traces: v108 15, 15, 16; v116 18, 18, 18; q10 and q12 starved because the facts never arrive; q16 decided
+  by whether Broadcom's figures link; q17 on the gold's boundary; q23 folded into v9;
+- the clean path's gaps to a judge: no ladders or due dates, links without timing, multi-passage records, repeat groups;
+- the judging and scorer contract.
+
+I verified the decision-critical lines: the scorer's seed refusal, replay's refusal of seeded ledgers, and the judging entry points.
+
+**The plan** (`council/ej-claude.md` → `em-claude.md` → `en-claude.md`, v4 plus qualifications) is a seeded diagnostic.
+- **The question:** given the 22 ruler questions as an isolated fixture, does clean Steps 1–3 deliver to the frozen judge the facts that
+  change answers, against production re-sent the same day on the same 243 items?
+- **Stage 0 ($0):**
+  - a dispatch-order adapter with leakage checks and a mutant;
+  - a control harness with outgoing-byte proof;
+  - a decision rule calibrated, exploratorily, on the six stored v108 draws;
+  - council review of the new code.
+- **Stage 1 (cents):** a delivery probe, testing whether c8 with the seeds links q10's and q12's facts without losing the company-figure
+  links.
+- **Stage 2 (about $11):** three paired draws, with an inconclusive band and with and without the reader-noise questions.
+
+**Reviews.** Codex went NOT READY → NOT READY → READY WITH CHANGES (`el`, `ep`, `er-codex.md`). The Claude reader went READY WITH CHANGES.
+The Claude reader found the largest bias: the clean dev list has 115 items against v108's 243, and the second week is 17 against 145. It
+also found the D382 conflict: most seeds are financial-figure questions that c8 would not open itself.
+
+**For Alex:**
+1. The seeds as an isolated fixture (D370, D382).
+2. The same-day control through a separate harness.
+3. The staged spend.
