@@ -1,0 +1,7 @@
+**Stop and take the failed result to Alex.** The proposed closing check is a plausible next hypothesis, but the evidence does not yet prove why the first pass missed the sentence.
+
+The model omitted the cash-flow figures in all three answers, then identified their connection to the capital-spending question when asked directly. That supports your reading. But the follow-up question also pointed the model toward the calculation, so it does not prove that placement alone caused the miss. The existing closing check only rereads **returned, unlinked** statements; it cannot recover a sentence already left out.
+
+A check over **omitted** company figures and existing questions is general in wording. It is not inherently fitted to this article, but it must still require the figure to inform the question—not link every mathematically derivable figure. Test both missed connections and irrelevant connections, including Alex’s cash example. The same 14 cases can locate problems; they cannot establish general performance.
+
+The i307 result **fails the prewritten line** and must be reported as a regression in this probe. With only three draws, 2/3 versus 1/3 does not establish a reliable difference between prompts; sampling variation remains a plausible explanation. The opposite i304 swing does not cancel the failure. Read both answers against the article before attributing a cause.

@@ -2572,3 +2572,48 @@ Its check date is 2027-12-31; q23's due day is 2027-06-30.
 
 **Labels:** conditional on the supplied questions; says nothing about opening; c8 was tuned on the 115 dev articles of these 243; the
 threshold is exploratory.
+
+## 64. q12 (capital spending), arm c12: the wording hypothesis refuted; the model can derive capex but does not in one pass (2026-11-09)
+
+**Decision:** D393, Alex's choice "先修“现金花在哪里”那题". The design is `clean-arch/q12-capex-2026-11-09/DESIGN.md`.
+
+**Diagnosis:**
+- Reader B's reference fact (Q1 operating cash flow $50.3bn and free cash flow $48.6bn) is never written in any of Stage 2's six runs.
+- The model's own account, 3 of 3, quotes c8's "a cash-rich company's cash balance or cash flow usually changes none of these when the
+  item ties it to nothing".
+- Alex's 2026-11-08 ruling ("丢掉") was given where no open thesis the figure informs existed.
+
+**Arm c12** (three sentences):
+- the CONDITION also links company figures to "any other open thesis whose figure follows from them by a standard definition", with two
+  generic examples;
+- "ties it to nothing" becomes "informs no open thesis", twice.
+
+Councils `fs` and `ft` (SEND after a blind whole-request audit, a synthetic answer and byte-checked requests).
+
+**Probe** (`poc/data/clean-q12-2026-11-09/probe-c12/`, 84 calls, $0.94, 0 errors), against the lines in `probe-frozen.md`:
+
+| line | result |
+|---|---|
+| 1. A (seeded Zacks): c12 writes the cash-flow sentence and links it to v12 in at least 2 of 3 | **FAIL**: 0 of 3, the same as c8 |
+| 2. B (Alex's library): no cash sentence linked; kept unlinked no more often than c8 | pass: c12 kept none; c8 kept both, unlinked, in 1 of 3 |
+| 3. C: no gold item lost | **FAIL** by one: i307 (the Supermicro co-founder's smuggling arrest) went from 2/3 to 1/3 on q17-china-a. i304 swung the other way, but the Beijing-refusal sentence is kept in 6 of 6 draws of both arms, so that swing is a matcher boundary artefact. The change touches company figures only, so i307 is likely sampling, but it fails the prewritten line. |
+| 4. added links, read blind | not run, because line 1 failed |
+
+Prompt tokens averaged 9,656 for c8 and 9,693 for c12.
+
+**Traced:**
+- **The fixed account question, asked of each c12 answer on A:** 3 of 3 cite the changed clause, "when it informs no open thesis", and
+  say "No open thesis takes it".
+- **A direct question on the same answers:** does any open thesis ask about a figure that follows from these two by a standard
+  definition? 3 of 3 answer "v12", deriving Q1 capex of about $1.7bn as operating cash flow less free cash flow.
+- The model has the derivation and does not apply it in the reading pass. This is AGENTS §6's one-pass pattern. The follow-up pointed
+  at the calculation, so it does not prove placement alone.
+- The closing check reads back only statements returned with empty links. A sentence never returned is never read back.
+
+**Council** (`fu`): stop and take it to Alex, as D355 requires.
+- A closing check over the company's own figures that were left out is general in wording.
+- It must still require that the figure inform the thesis, not merely that a figure can be derived.
+- It must be tested on missed and irrelevant connections, Alex's cash example included.
+
+**Mistake (mine):** I designed the first arm from the account's quote of the clause, without asking whether the model could make the
+connection at all. One cheap capability question on the stored answers would have pointed to placement before the send.

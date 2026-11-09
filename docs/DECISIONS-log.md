@@ -4254,3 +4254,22 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   - it says nothing about whether the clean system opens them;
   - the articles tuned c8;
   - the calibrated threshold is exploratory.
+
+## D393 · 2026-11-09 · After Stage 2 of D392, fix capital spending (q12) first; c8 may change for it
+
+- **Asked**, after the Stage 2 result (clean 18, 18, 17 against v108 17, 15, 16; inconclusive on q12): "这次说明了“题目给定时，新系统送
+  证据更准”。但真实产品是从零开始自己开题的，这一点这次没测到。下一步做什么？"
+  - Options:
+    - test opening, unseeded (recommended);
+    - fix the capital-spending question, noting that "这要改新系统读文章那一步，而那一步现在是冻结的，所以要你另外批准";
+    - stop.
+  - Alex: "先修“现金花在哪里”那题".
+- **Decided:**
+  - The next work is q12, NVIDIA's FY2027 capital spending.
+  - c8 may change for it, as a new version measured against c8. The option he chose stated the change to the frozen step.
+  - The unseeded measurement waits.
+- **Done:** diagnosis in `clean-arch/q12-capex-2026-11-09/DESIGN.md`.
+  - Reader B's reference fact (Q1 operating cash flow $50.3bn and free cash flow $48.6bn) is never written.
+  - The model's own account quotes c8's "a cash-rich company's cash balance or cash flow usually changes none of these when the item
+    ties it to nothing". That is wider than Alex's 2026-11-08 ruling, which was given where no open thesis the figure informs existed.
+  - The candidate c12 changes three sentences. It is probed against c8 before any registered test.
