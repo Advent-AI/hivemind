@@ -2682,3 +2682,45 @@ council reviews.
 2. Two blind readers map them under MATCHING-v2, and a third reader decides any disagreement.
 3. `adapter.py live --unseeded --map …` judges.
 4. The frozen scorer scores; the subset and every other question are reported.
+
+## 67. The unseeded measurement's result (D395): graded subset 4.0 against 6.33; every miss is a question not opened in the ruler's shape (2026-11-10)
+
+**Runs:**
+- Three unseeded c8 draws on v108's 243 items, from an empty library. d3 was continued once after a network cut.
+- Matching: two blind readers per draw, plus a third reader on 7 SAME disagreements, all decided SAME. In every disagreement Codex
+  read extra detail as separate scope. `adjudication-runs.md`.
+- Judging: the frozen judge through the adapter's mapping mode; scored by the frozen scorer (`result.txt`).
+
+**Result** (graded subset q04, q05, q08, q09, q13, q18 and q23):
+
+| | d1 | d2 | d3 | mean |
+|---|---|---|---|---|
+| unseeded | 5 | 3 | 4 | 4.00 |
+| seeded (Stage 2) | 6 | 7 | 6 | 6.33 |
+
+- The observed gap is 2.33 per draw, exploratory: a different day, three draws. The prediction was 4–5 per draw.
+- All questions: unseeded 6, 5 and 5 against seeded 18, 18 and 17. Most of that is the company-figure questions, which the product does
+  not open (D370; Alex, 2026-11-08).
+- **Of the questions judged in the unseeded draws, 16 of 16 agree:** 7 distinct questions, 10 of the answers yes/no. They were judged on
+  the ruler's wording and ladder, and for q23 on the ruler's deadline (June 2027 against the opened December 2027). This does not test
+  the product's own questions and rungs.
+- **One reasoning flaw read in the answers:** d3's q09 reasoning states $22.3bn while listing components of $4.88bn and about $21.1bn.
+  Agreement with a range does not establish sound arithmetic.
+
+**The nine subset misses, each a question not opened as SAME:**
+- **q04 and q13, 3 misses.** Each draw opens one hyperscaler-capex question, for one year (d1 and d3: 2027; d2: 2026). Alex's D38 ("one
+  view per year (this year and next)") makes them two questions, so the second year is a genuine opening miss.
+- **q05, 3 misses.** Memory is opened each time, but as a broader price question (d1) or as HBM capacity (d2 and d3), not the 2027
+  against 2026 contract-price change.
+- **q09, 1 miss.** d2 opened credit support at a 2027-12-31 check date, not SAME by the frozen limit.
+- **q23, 2 misses.** The Ohio signing question was opened in 1 of 3.
+
+**Cost from tokens:** Step 1 about $1.8 per draw; judging $0.10, $0.09 and $0.10.
+
+**Council B** (`gf`):
+- The miss counts and matchings hold.
+- "The judge gets it right when opened" is narrower than first drafted, because the reference wording was supplied. D248 is not in
+  conflict with the year split; D38 settles it.
+- The next product test is whether the system's own questions get useful, well-supported answers. Prompts are not tuned on these cases.
+
+**My mistake:** I first called the year split a tension between D248 and the ruler, without reading D38.

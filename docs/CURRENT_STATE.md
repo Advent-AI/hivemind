@@ -122,14 +122,14 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The unseeded measurement of the clean system (D395): three draws are running** (round log §66; `clean-arch/unseeded-2026-11-10/MATCHING-v2.md`).
+**The unseeded measurement (D395) is measured; awaiting Alex on the next step** (round log §67; `clean-arch/unseeded-2026-11-10/result.txt`).
 
-- **The judgement ruler only partly fits the product.** It covers the product's must-open questions in only 7 of its 23 (q04, q05,
-  q08, q09, q13, q18, q23); its company-figure questions are out of opening (D370; Alex, 2026-11-08). Those 7 are the graded subset,
-  and every other question is reported.
-- **Predicted:** 4–5 of 7 per draw, against about 6.3 for the seeded Stage 2. This is a different-day, exploratory comparison.
-- **After Steps 1–3:** each draw's opened questions are matched by two blind readers plus an adjudicator under the frozen rule, then
-  judged through the adapter's mapping mode and scored.
-- **Known gap (D394):** capital spending (q12). Stage 2 of D392: clean 18, 18, 17 against v108 17, 15, 16 (inconclusive on q12).
+- **The graded subset** (the 7 ruler questions the product must open): unseeded 5, 3, 4 (mean 4.0) against seeded 6, 7, 6 (mean
+  6.33). Exploratory: a different day, three draws.
+- **The misses.** All 9 are questions not opened in the ruler's shape: the second year of hyperscaler capex (D38: one question per
+  year), the memory-price question opened as a broader or other measure, one credit-support check date, and Ohio opened in 1 of 3.
+- **The answers.** Every question judged agrees (16 of 16), but on the ruler's wording and ladder. The product's own questions and
+  rungs are not yet tested; the clean system has no judging step of its own (Step 4 not built).
+- **Known gap (D394):** capital spending (q12).
 
-Long jobs running: the three unseeded launchers (`poc/data/clean-unseeded-2026-11-10/draw-d1..d3`; no package or prompt edits until they finish).
+No long job is running.
