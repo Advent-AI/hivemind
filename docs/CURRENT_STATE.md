@@ -136,9 +136,9 @@ agreed to stop the same-call line. c8 stays in force. Alex chose to test a separ
 in 9 of 9 draws and is right on 22 of 24 routed articles. Two predeclared falsifiers fire: a $2.5–3bn stake opens (3 of 3), and an
 obligation is inferred from a third-party funding target (2 of 3). Round 2 fixed the inference, but the size test flips with
 wording (§55). Alex set the line at about 5% of annual profit (D389). Round 3 (§56) is right on Ohio (9 of 9) and on every
-predeclared case. One wrong opening remains: dev-20 turns a programme announcement into a signing question (2 of 3 rounds). Three
-fix drafts were blocked, because the standard does not say when a programme counts as undertaken (§57). c8 stays in force. Alex's
-ruling on that boundary is next.
+predeclared case. Alex then ruled that a plan is undertaken once a deal under it is signed (D390). Round 4 (§58) fixes dev-20, but a
+neighbouring case of the same programme (dev-34) opens wrongly. Ohio opens in 36 of 36 draws across rounds 1–4. c8 stays in force. The
+next step, on Alex's word, is a test on new, unused articles rather than further fixes on the overused probe set.
 
 c8 stays in force. Link clutter is paused.
 

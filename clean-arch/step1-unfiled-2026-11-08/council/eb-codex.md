@@ -1,0 +1,3 @@
+**SEND / READY.** The system text carries D390’s decided sentences, with punctuation adjusted. The status check applies the same boundary: one signed deal makes the plan count as undertaken, while each individual deal keeps its own status.
+
+Ohio remains eligible as an unsigned individual deal, subject to the other opening checks. D390’s accepted treatment of a signed pilot under an undecided plan is also reflected.

@@ -2286,3 +2286,30 @@ version.
 
 **Alex's answer (D390).** He chose "已有交易签了就算启动 (Recommended)": a plan counts as undertaken once a deal under it is reported
 signed, and each single deal keeps its own status.
+
+## 58. Focused call, round 4 (D390) probed and stopped on one case (2026-11-09)
+
+**Change.** D390's sentences go in the system text, and signed_status says a plan is undertaken once a deal under it is reported
+signed, while each single deal keeps its own status (diff `council/dz-diff.txt`; both reviewers READY, `eb`/`ec-codex.md`).
+
+**Results** (`probe-r19-focused`; 44 calls; 0 errors; $0.34):
+- **Ohio:** 9 of 9. Across the four rounds, Ohio opens in 36 of 36 draws, each keeping the guarantee amount unknown.
+- **dev-20: fixed.** The programme and Sharon AI's deal are both undertaken, and no question opens.
+- **No openings:** fresh-47, fresh-50, fresh-22, fresh-9, fresh-7, dev-1 and fresh-8 all 0.
+- **dev-34 opens once in one draw:** "Will NVIDIA sign a binding AI Compute Partnership backstop/floor-utilization agreement with Firmus
+  Technologies …". The model marks Firmus not_yet_signed and judges the size qualitatively, since no amount is stated. Blind
+  (`council/ed-codex-F.md`): already_signed; the article names Firmus as one of the programme's first two adopters. **Falsifier
+  fires.**
+
+**The pattern across rounds 2–4.** Each round, one single-draw article about the same credit-support programme opens a wrong signing
+question:
+- r17 and r18: dev-20, the programme itself;
+- r19: dev-34, a named adopter.
+
+Each fix closes the case in view, and a neighbouring case of the same programme appears. Each is a status misread on a deal with no
+stated amount, where the qualitative path Ohio needs is open.
+
+The 32 cases have now tuned six arms and four focused rounds. Further fixes fitted to them risk overfitting the probe set (AGENTS §2,
+§7.1: "Tune on dev; score test once"). The step's real question is now its net effect on new, unused articles.
+
+**Alex's answer.** "你跑一下council 深度的思考一下吧；感觉现在一直在修一些mknor的原地打转，你是不是要思考下现在具体还差什么high priority big impact 的需要做？还是要收尾step-". The D388 fixes stop here. A deep council on priorities follows.
