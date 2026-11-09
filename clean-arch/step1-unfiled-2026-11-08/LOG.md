@@ -2724,3 +2724,19 @@ council reviews.
 - The next product test is whether the system's own questions get useful, well-supported answers. Prompts are not tuned on these cases.
 
 **My mistake:** I first called the year split a tension between D248 and the ruler, without reading D38.
+
+## 68. Step 4 design (D396) written; council A: NOT READY; session handed off (2026-11-10)
+
+**Alex:** "设计新系统自己的“判断”环节". The design is `clean-arch/step4-2026-11-10/DESIGN.md`.
+- A separate ladder call opens each thesis, reusing production's frozen ladder text and checks.
+- Production's frozen judge then runs as in the Stage 2 adapter.
+- The first test is two reader families plus an adjudicator, on the three stored unseeded draws, for about $1.
+
+**Council A** (`council/gg-codex.md`): NOT READY. Option B is the best candidate. The blocking items:
+1. the exact ladder request and the writer mapping;
+2. the design tables completed (duplicates, restated or unknown periods, past due dates, failures, dependencies, themes), and the
+   claims about `check_ladder` and `check_bounds` corrected;
+3. a reader test that cannot pass empty, with definitions and denominators;
+4. Alex's word to open the new ladder prompt and build.
+
+**Alex asked to stop and hand off.** See `clean-arch/HANDOFF-2026-11-10.md`.

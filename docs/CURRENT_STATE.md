@@ -122,14 +122,17 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The unseeded measurement (D395) is measured; awaiting Alex on the next step** (round log §67; `clean-arch/unseeded-2026-11-10/result.txt`).
+**Clean Step 4 design (D396): written, council A NOT READY; handed off** (`clean-arch/HANDOFF-2026-11-10.md`; round log §68).
 
-- **The graded subset** (the 7 ruler questions the product must open): unseeded 5, 3, 4 (mean 4.0) against seeded 6, 7, 6 (mean
-  6.33). Exploratory: a different day, three draws.
-- **The misses.** All 9 are questions not opened in the ruler's shape: the second year of hyperscaler capex (D38: one question per
-  year), the memory-price question opened as a broader or other measure, one credit-support check date, and Ohio opened in 1 of 3.
-- **The answers.** Every question judged agrees (16 of 16), but on the ruler's wording and ladder. The product's own questions and
-  rungs are not yet tested; the clean system has no judging step of its own (Step 4 not built).
+- **The next task:** clear the four blocking items in `clean-arch/step1-unfiled-2026-11-08/council/gg-codex.md`:
+  1. the exact ladder request and the writer mapping;
+  2. complete design tables (duplicates, restated or unknown periods, past due dates, failures, dependencies, themes), with the claims
+     about the ladder checks corrected;
+  3. a reader test that cannot pass empty;
+  4. then Alex's word to open the ladder prompt and build.
+- **The unseeded measurement (D395):** graded subset 4.0 against 6.33 seeded. Every miss is a question not opened in the ruler's shape.
+  Judged answers 16 of 16, on the ruler's wording.
+- **Stage 2 of D392:** clean 18, 18, 17 against v108 17, 15, 16, inconclusive on q12.
 - **Known gap (D394):** capital spending (q12).
 
 No long job is running.

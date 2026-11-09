@@ -4307,3 +4307,18 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   - The matched questions are judged by the frozen judge through the adapter and scored by the frozen scorer. The graded subset is q04,
     q05, q08, q09, q13, q18 and q23; every other question is reported.
   - The adapter extension and the launcher get tests and a council read before the send.
+
+## D396 · 2026-11-10 · Design the clean system's own judging step (Step 4)
+
+- **Asked**, after the unseeded measurement (round log §67): "新系统只要开出题，证据就够判对；差距在“有些题没按标准形状开出来”，而它自己的题自己怎么答还没测。下一步做什么？"
+  - Options:
+    - design the clean system's own judging step, with readers checking its answers to its own questions against the sources
+      (recommended);
+    - improve opening, at the risk of tuning to these cases;
+    - stop.
+  - Alex: "设计新系统自己的“判断”环节".
+- **Decided:**
+  - The next work is a design for clean Step 4: giving the clean system's own questions their ladders and judgements.
+  - Its first test is independent readers checking, against the sources, whether the system's answers to its own questions are
+    well supported.
+  - The design is written and council-reviewed before any code or paid send. A build and any paid run wait for Alex's word.
