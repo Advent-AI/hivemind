@@ -40,7 +40,7 @@
   - the 2026-11-07 takeover (K5 → K6b; [takeover log](../clean-arch/takeover-2026-11-07/LOG.md));
   - the 2026-11-08 close-out (K6b test 32/42; Step 2 first lines; [Step 2 log](../clean-arch/step2-validation-2026-11-07/LOG.md) §12);
   - the unfiled fix round and the c1–c7 arms (round log §§1–39).
-- **No run is live. Nothing is committed;** a check-in of the branch is being prepared.
+- **No run is live.** The branch is committed through the D388 line (round log §§48–59).
 
 **Clean Step 1 source investigation (2026-11-07):** A [source-loss census](../clean-arch/STEP1-SOURCE-LOSS-CENSUS.md) traces two separate losses in the historical cleaner and records reproducible corpus observations. Offline candidate comparisons expose both recovered content and source-identity or contamination risks. A subsequent [full-page diagnostic](../clean-arch/STEP1-FULL-PAGE-RESULTS.md) completed 102 calls on 17 selected articles and independent source-backed review. It exposes examples of both missing or misattributed source text and model errors that persist despite the right text being present. A Codex–Claude council is reviewing the results and earlier attempts; no source-cleaning candidate is adopted, and the source corpus and production defaults are unchanged.
 
@@ -122,24 +122,16 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**D388 in clean Step 1: c11 probed and stopped; Alex's choice next** (2026-11-09). D388: a material unsigned obligation keeps its own
-signing question beside an open total of the same kind. c8 folds the Ohio guarantee into the aggregate in 3 of 3 dev draws.
+**Close Step 1 on c8 and measure the clean system end to end, awaiting Alex's word** (deep council, round log §59).
+- Step 1 is closed on c8 (D387). The open defects are listed above. The focused D388 call is a tested candidate, not adopted (§§54–58;
+  D389 and D390 apply to it only).
+- The proposed first end-to-end test:
+  1. an isolated measurement library holding the 22 historical seed questions as a fixture, which needs Alex's word given D370;
+  2. clean Steps 1–3 over 2026-07-01 to 07-14;
+  3. an adapter to the view store;
+  4. the frozen judging as a measuring harness;
+  5. the unchanged judgement scorer, compared with production v108 (15, 15 and 16 agreements).
 
-Arms c9, c10 and c11 have been probed and stopped (round log §§48–52). c11 adds a required company-impact field. It opens Ohio's signing
-question in 3 of 3 draws with the unknown amount kept, and no longer opens the $2.5–3bn stake. Two predeclared falsifiers still fire:
-- a $2bn stake opens because my read-back said "can change" where the standard says "large enough to change";
-- dev-1's aggregate is recast.
-
-Side effects on unrelated questions appear only in arms with the added paragraph (one draw each; fresh-22's HBM thesis is lost in 3 of 3
-such draws). A deep council (round log §53) found every edited arm moves 4–5 untargeted cases while c8 agrees with itself on 31 of 32, and
-agreed to stop the same-call line. c8 stays in force. Alex chose to test a separate, focused call for this one judgment, with c8 unchanged (round log §54). It opens Ohio's signing question
-in 9 of 9 draws and is right on 22 of 24 routed articles. Two predeclared falsifiers fire: a $2.5–3bn stake opens (3 of 3), and an
-obligation is inferred from a third-party funding target (2 of 3). Round 2 fixed the inference, but the size test flips with
-wording (§55). Alex set the line at about 5% of annual profit (D389). Round 3 (§56) is right on Ohio (9 of 9) and on every
-predeclared case. Alex then ruled that a plan is undertaken once a deal under it is signed (D390). Round 4 (§58) fixes dev-20, but a
-neighbouring case of the same programme (dev-34) opens wrongly. Ohio opens in 36 of 36 draws across rounds 1–4. c8 stays in force. The
-next step, on Alex's word, is a test on new, unused articles rather than further fixes on the overused probe set.
-
-c8 stays in force. Link clutter is paused.
-
-The production pipeline's earlier task list (D368) was withdrawn by the seal (D379).
+  It reports unanswered questions and q23 apart, and is labelled conditional on the supplied questions.
+- $0 checks come first: stored c8 records through the adapter, a synthetic judging answer through the checks, and the scorer accepting
+  the database. Then one draw, then three.

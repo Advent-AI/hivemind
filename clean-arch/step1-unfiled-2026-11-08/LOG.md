@@ -2313,3 +2313,42 @@ The 32 cases have now tuned six arms and four focused rounds. Further fixes fitt
 §7.1: "Tune on dev; score test once"). The step's real question is now its net effect on new, unused articles.
 
 **Alex's answer.** "你跑一下council 深度的思考一下吧；感觉现在一直在修一些mknor的原地打转，你是不是要思考下现在具体还差什么high priority big impact 的需要做？还是要收尾step-". The D388 fixes stop here. A deep council on priorities follows.
+
+## 59. Deep council on priorities: close Step 1, measure end to end (2026-11-09)
+
+**How.** My reflection came first (`council/ee-claude.md`). Two independent members then read the project cold, blind to it and to each
+other:
+- a fresh Codex session (`ef-handoff.md` → `eg-codex.md`);
+- a Claude reader (same brief).
+
+A challenge round put the Claude reader's verified plan to Codex (`eh-challenge.md` → `ei-codex.md`).
+
+**Converged:**
+- **Close Step 1 on c8,** as an accepted component and not as proof the system is ready.
+  - Frozen: the c8 request, schema, model settings and retry (D380, D387), and the committed Step 2 and Step 3 code.
+  - Recorded as open:
+    - q23 (Ohio): the focused call was tested and is not adopted. It opened Ohio 36 of 36, but each round opened one wrong
+      neighbouring case. D389 and D390 apply to it only.
+    - the revenue-share thesis;
+    - link clutter, about 20% weak and 2% wrong;
+    - unverified passages, 3 of 188, with Jev's input unmarked;
+    - lidar, 1 of 3 dev draws;
+    - the acceptance's limits: one draw, a holiday weekend.
+- **The highest-impact gap is end to end.** Step 4 is not built on the clean path, so nothing shows the clean system's evidence reaches
+  a judgement. The phase goal is the final judgement on the frozen judgement ruler (docs/prd/10-filing-phase.md §1; AGENTS §7.2).
+  Production v108 agrees on 15, 15 and 16 questions (`judgement-gold/score-r9-frozen-v108-d{1,2,3}.txt`); q10 and q12 are never judged,
+  and q23 is absent. For the clean path, the bigger risk is starved questions, not Ohio.
+- **The minimal path, verified.** `score_judgement.py` refuses a run whose v1–v22 are not the seed questions, and the clean runs start
+  empty. So the first test is an isolated measurement library holding the 22 historical questions as a fixture:
+  1. c8 Steps 1–3 over 07-01 to 07-14;
+  2. an adapter from the clean library to the view store;
+  3. the frozen judging as a measuring harness, not the clean Step 4 design;
+  4. the unchanged scorer.
+
+  It is labelled a test of evidence delivery and judgment, conditional on those questions being supplied. Unanswered questions and q23
+  are reported apart.
+- **D370 boundary.** D370 retired the 22 presets as an active starting library. Using them as a test fixture needs Alex's word.
+- **The circle, and a rule.** Fixes were judged by Step 1's own counts on an overused probe set, and boundaries became small rules one
+  case at a time (D388 → D389 → D390). Codex rejected the Claude reader's rule ("no arm unless it names a ruler question a trace shows it
+  would flip") as too narrow. Agreed instead: every proposed change states its expected effect on the reader or the final judgement,
+  and is tested there where possible; a fix that keeps moving its error to neighbouring cases stops being tuned on that set.
