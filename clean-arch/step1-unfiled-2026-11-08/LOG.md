@@ -2190,3 +2190,38 @@ named are fixed, with no new standard:
 - an obligation the article does not say the company itself takes on is not its obligation.
 
 If the $2.5–3bn stake still opens, the remaining question is the scale threshold itself, which goes to him.
+
+## 55. Focused call, round 2 (two named causes fixed) probed and stopped (2026-11-09)
+
+**Change** (`focused/closing.txt`; diff against r16 in `council/da-diff.txt`; reviews `db`–`df-codex.md`, both READY after one fix):
+- large_enough is "the conclusion your company_impact reaches", with a qualitative judgment allowed when the amount is unknown;
+- not_an_obligation covers "when nothing in the item says the company itself would take it on".
+
+**Results** (`probe-r17-focused`; the same 44 calls; 0 errors; $0.32):
+- **Ohio:** 9 of 9 again, with the unknown amount kept.
+- **fresh-22: 0 of 3.** Fixed; each answer calls it not an obligation of NVIDIA.
+- **fresh-9, fresh-7, dev-1, fresh-8:** 0 openings.
+- **fresh-47: still 3 of 3.** It now reasons explicitly: "against Nvidia's stated … revenue of about $96.2 billion, the amount is large
+  enough to change its cash or credit risk".
+- **fresh-50: 3 of 3, against 0 of 3 in r16.** "The item gives no measure of Nvidia's own size … the $2 billion sized commitment is
+  treated qualitatively as large enough".
+- **dev-20:** 1 of 1 opens a signing question on the announced programme, the same shape as dev-1's recast.
+
+**What it says.** The same $2bn deal flips from 0 of 3 to 3 of 3 between two wordings, and the $2.5–3bn deal opens in all six draws even
+when it is compared with the stated revenue. The size test has no anchor the model applies consistently. That is the stop condition
+stated in Alex's choice: "如果 25–30 亿那笔还开，就说明问题就是'多大算大'没有尺寸，那时停下来请你定". The fresh-22 fix holds.
+
+**The known cases, by size,** with their verdicts and NVIDIA's scale as the articles state it: about $96.2bn quarterly revenue, about
+$400bn expected annual revenue, and about $218bn expected annual non-GAAP net income.
+
+| Case | Amount | Verdict | Share of annual net income | Share of annual revenue |
+|---|---|---|---|---|
+| Nscale stake | about $2bn | small (blind readers) | about 0.9% | about 0.5% |
+| Thinking Machines stake | $2.5–3bn | small (blind, against revenue) | about 1.4% | about 0.75% |
+| Intel stake | $5bn | small (reader majority, earlier round) | about 2.3% | about 1.25% |
+| Hugging Face acquisition | $12.9bn | open (blind) | about 5.9% | about 3.2% |
+| Ohio lease guarantee | not stated; asset up to $500bn | open (blind) | — | — |
+
+**Alex's answer (D389).** He chose "一年利润的 5% (Recommended)". The fixed input is NVIDIA's FY2026 net income of $120.067bn, as the
+corpus states it ("Full-year FY2026 net income was $120.067 billion", gnews:595a83074fb8af0237f822ce, 2026-09-06). NVIDIA's own FY2026
+annual report is not in the corpus window. 5% is about $6.0bn.

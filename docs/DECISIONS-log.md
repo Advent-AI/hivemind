@@ -4181,3 +4181,22 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   asks it. Arm c9 showed that a sentence-level rule flips by send (round log §§48–50).
 - **Next.** A structural lever, designed and reviewed by the council before any send. c8 stays in force until a version is shown to
   be better on new, unused articles.
+
+## D389 · 2026-11-09 · An unsigned obligation is large enough for its own signing question at about 5% of the company's annual profit
+
+- Asked: "“多大算大”用什么尺寸？" The options were 5% of a year's profit (recommended), 1% of annual revenue, or no threshold and stop.
+  Alex chose "一年利润的 5% (Recommended)", whose stated terms were:
+  - "单笔未签承诺约达到公司一年利润的 5% 才单独开'会不会签'（亏损公司另议）";
+  - "金额不知道的，比如俄亥俄，仍按文章描述定性判断";
+  - "公司最近一年利润作为固定资料交给小步骤".
+- **Decided.** Under D388, a single unsigned obligation is large enough for its own signing question when its stated amount is about 5%
+  or more of the company's most recent annual profit. An obligation whose amount is not stated is judged qualitatively from what the
+  item states. The company's most recent annual profit is supplied to the step as fixed input, with its source. A loss-making company
+  is not covered and is decided when one arises.
+- **Why.** In the focused D388 call, the same $2bn stake opened in 0 of 3 draws under one wording and 3 of 3 under another, and a
+  $2.5–3bn stake opened in 6 of 6, even when compared with stated revenue (round log §§54–55). The standard's "large enough to change"
+  (D248 boundary 6) had no anchor the model applied consistently. The 5% line agrees with every known verdict:
+  - small: about $2bn, $2.5–3bn, Intel's $5bn;
+  - open: Hugging Face at $12.9bn.
+- **Scope.** It applies to the focused D388 step under test. It enters the clean-arch PRD only if that step is adopted. The frozen
+  extraction standard and gold are unchanged (AGENTS §7.1).
