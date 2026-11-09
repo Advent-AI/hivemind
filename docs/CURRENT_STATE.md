@@ -122,7 +122,8 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**Close Step 1 on c8 and measure the clean system end to end, awaiting Alex's word** (deep council, round log §59).
+**Plan the clean system's end-to-end measurement, after a full read and a council** (D391). Step 1 is closed on c8. Alex asked that
+the next step be decided only after reading the traces, the lessons and the state in full, and discussing them with the council.
 - Step 1 is closed on c8 (D387). The open defects are listed above. The focused D388 call is a tested candidate, not adopted (§§54–58;
   D389 and D390 apply to it only).
 - The proposed first end-to-end test:

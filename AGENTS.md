@@ -319,6 +319,10 @@ Verify at the point the change touches, at the sharpest level that shows it work
   class; trace it to the sentence that causes it; change one thing aimed at that class; run the whole bench (a prompt change alters every
   request) against the previous version; read every regression to its raw answer. The pages that showed the failure locate its
   mechanism; only the whole bench (every set, every draw) accepts the change.
+- **Name the effect on the judgement first.** Every proposed change states the effect it is expected to have on a reader or on the final
+  judgement, and is tested there where possible; a step's own counts do not decide it alone. A fix that keeps moving its error to
+  neighbouring cases stops being tuned on that set (Alex, 2026-11-09: "感觉现在一直在修一些mknor的原地打转，你是不是要思考下现在具体还差什么high priority big impact 的需要做？";
+  he approved this rule the same day, D391).
 - **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Totals and acceptance come from at least
   three samples beside a fresh control; a bar the control fails against itself judges nothing. A direct-read pass
   (one send per article, every answer read beside its source; D238) locates mechanisms; its counts are one draw and are labelled so.

@@ -4217,3 +4217,20 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   were blocked because the standard ("已经承担（一笔或一个计划）：金额") does not say when a whole plan is undertaken (round log §57).
 - **Scope.** It applies to the focused D388 step under test and enters the clean-arch PRD only if that step is adopted. The frozen
   standard and gold are unchanged.
+
+## D391 · 2026-11-09 · Close clean Step 1 on c8; state each change's effect on the judgement first
+
+- Alex: "感觉现在一直在修一些mknor的原地打转，你是不是要思考下现在具体还差什么high priority big impact 的需要做？还是要收尾step-".
+  After the priorities council (round log §59), to "第 1 步收尾，并开始整条链的测量？" he answered "收尾，你先完整的和council
+  讨论下你要怎么做下一步的收尾测量等，需要你完整的读完trace 和所有历史的learning 和我们的状态再决定下一步". To the proposed working
+  rule he answered "写进去 (Recommended)".
+- **Decided:**
+  - **Clean Step 1 is closed on c8 (D387).** The focused D388 call is a tested candidate, not adopted. It opened Ohio in 36 of 36
+    draws, but each round opened one wrong neighbouring case (§§54–58); D389 and D390 apply to it only. The open defects are listed in
+    `docs/CURRENT_STATE.md`.
+  - **New rule (AGENTS §7.3, "Name the effect on the judgement first").** Every proposed change states its expected effect on a reader
+    or on the final judgement, and is tested there where possible. A fix that keeps moving its error to neighbouring cases stops being
+    tuned on that set.
+- **Not yet decided.** How the next end-to-end measurement is done. Alex asked for a full council after reading the traces, the history
+  of lessons and the state, before the next step is chosen. Using the 22 historical seed questions as an isolated fixture (against
+  D370's retirement of them as a starting library) is part of that question.
