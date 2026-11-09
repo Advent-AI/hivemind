@@ -65,23 +65,28 @@ def _step1_records():
 
 def trace_articles(trace_path):
     """Per completed article, by manifest position: its publication day, and the theses it opened ({id: thesis}); the positions of
-    articles that did not complete."""
-    conn = sqlite3.connect(f'file:{trace_path}?mode=ro', uri=True)
-    try:
-        position = {iid: n for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
-        rows = conn.execute('select input_id, request, before_state, after_state, status from trace order by sequence').fetchall()
-    finally:
-        conn.close()
-    days, opened, failed = {}, {}, []
-    for input_id, request, before, after, status in rows:
-        k = position[input_id]
-        if status != 'complete':
-            failed.append(k)
-            continue
-        days[k] = json.JSONDecoder().raw_decode(json.loads(request)['messages'][1]['content'])[0]['source_item']['publication_date']
-        before_ids = {t['id'] for t in json.loads(before)}
-        opened[k] = {t['id']: t for t in json.loads(after) if t['id'] not in before_ids}
-    return days, opened, failed
+    articles no segment completed. `trace_path` may join continuation segments with '+' (as run_forward.step1_records reads them): an
+    article is numbered by its position in the first segment's manifest, and an article a later segment completed is not failed."""
+    days, opened, failed = {}, {}, set()
+    position = None
+    for part in str(trace_path).split('+'):
+        conn = sqlite3.connect(f'file:{part}?mode=ro', uri=True)
+        try:
+            if position is None:
+                position = {iid: n for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
+            rows = conn.execute('select input_id, request, before_state, after_state, status from trace order by sequence').fetchall()
+        finally:
+            conn.close()
+        for input_id, request, before, after, status in rows:
+            k = position[input_id]
+            if status != 'complete':
+                failed.add(k)
+                continue
+            failed.discard(k)
+            days[k] = json.JSONDecoder().raw_decode(json.loads(request)['messages'][1]['content'])[0]['source_item']['publication_date']
+            before_ids = {t['id'] for t in json.loads(before)}
+            opened[k] = {t['id']: t for t in json.loads(after) if t['id'] not in before_ids}
+    return days, opened, sorted(failed - set(days))
 
 
 def q23_candidates(opened):
@@ -94,7 +99,8 @@ def load_draw(trace_path, step2_folder):
     articles, _, _ = _step1_records()(str(trace_path))
     library = json.loads((Path(step2_folder) / 'library.json').read_text())
     stamp = Path(step2_folder) / 'inputs.sha256'
-    expected = [hashlib.sha256(Path(trace_path).read_bytes()).hexdigest(), hashlib.sha256((Path(step2_folder) / 'library.json').read_bytes()).hexdigest()]
+    expected = [hashlib.sha256(Path(part).read_bytes()).hexdigest() for part in str(trace_path).split('+')]
+    expected.append(hashlib.sha256((Path(step2_folder) / 'library.json').read_bytes()).hexdigest())
     if not stamp.exists() or [line.split()[0] for line in stamp.read_text().splitlines()] != expected:
         raise SystemExit(f'{stamp} does not name this trace and this library as the launcher stamped them after Step 2')
     records = {r['id']: r for article in articles for r in article}

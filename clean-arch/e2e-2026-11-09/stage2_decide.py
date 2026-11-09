@@ -11,7 +11,7 @@ from calibrate import NOISE, collapse, outcomes, total  # noqa: E402
 
 DATA = ROOT / 'poc/data/clean-e2e-2026-11-09'
 CLEAN = [DATA / f'stage2-clean-d{d}/judged' for d in (1, 2, 3)]
-CONTROL = [DATA / f'stage2-control-d{d}' for d in (1, 2, 3)]
+CONTROL = [DATA / f'stage2-control-d{d}' for d in (1, 3, 4)]   # draw 2 stopped on a refused judgement and was replaced (stage2-frozen.md, addendum)
 
 
 def verdict(clean, control):

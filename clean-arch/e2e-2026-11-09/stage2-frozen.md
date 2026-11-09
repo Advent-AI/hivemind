@@ -44,3 +44,33 @@ the two stored sets of v108 draws (r9 against the r10 control, the same configur
 - says nothing about whether the clean system opens them;
 - the articles tuned c8;
 - the threshold is exploratory.
+
+**Addendum, 2026-11-09, written before any clean result: a draw that production itself stops.**
+
+Control draw 2 stopped on 2026-07-07: "judgement refused twice: v17: v8 is not a dependency of v17". This is the frozen judge's own check,
+and it stops a production run, which leaves the day resumable.
+- Production recovers by resuming the day, which re-samples the refused judgement (`docs/research/2026-10-27-nvda-3m/plan.md`,
+  mechanism A). The control harness has no resume, so the draw is replaced by a fresh draw in a new folder (`stage2-control-d4`).
+- The same rule holds for the clean arm: if `adapter.py live` stops on a refused judgement, that draw's judging is redone from its start
+  in a new folder, with fresh samples.
+- Every stopped draw is kept and reported beside the replacement, with its stop. The verdict uses the three completed draws of each arm.
+
+**Addendum, 2026-11-09, written before any clean result: a clean Step 1 stopped by the network.**
+
+Clean draw 3's Step 1 stopped after 40 completed articles: "TransportError: IncompleteRead" at `gnews:a8fab49de53d125314a6688a`.
+- It is continued as an established segment (round log §30): `stage2-clean-d3-segment-2` holds the remaining 203 items in manifest
+  order, starting from the theses after article 40, with the same pinned c8 request, settings and limits (`continuation.json`).
+- Steps 2–3 read both segments as one draw ('first+segment', `run_forward.step1_records`). The adapter reads the same joined trace and
+  numbers articles by the first manifest; a test checks that a split trace reads exactly like the unbroken one.
+- The stopped call is re-sent, as the failure left no answer. The draw is reported as continued.
+- `continue.sh` was launched before the adapter read segments, so `stamp_after.sh` writes the stamp (both segments and the library)
+  and the q23 candidates as soon as Steps 2–3 end.
+- **Every stopped draw or segment is reported with its stop and its cost beside the result**, because a verdict on completed draws
+  could hide a difference in how often each arm stops.
+- Clean draw 1 stopped the same way after 50 articles (`IncompleteRead`). It is continued by `continue_clean_draw.py`, which generalises
+  the d3 handling: any number of segments; only a network cut is continued; each new segment's limits are the draw's limits less what
+  earlier segments reserved and called.
+- d1 and d3 segment 2 were created with a fresh copy of the limits before that fix. Those two draws are bounded by at most $46.16 and
+  $44.95 of reservations (disclosed).
+- The clean transport makes one attempt per call by design (`clean-arch/step1/live.py`), so a cut reply stops the run where
+  production's transport would retry. This is noted for the report as an infrastructure difference, not a judgement difference.

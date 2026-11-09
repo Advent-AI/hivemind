@@ -163,3 +163,24 @@ def test_an_answer_without_usable_usage_is_charged_its_full_reserve():
     request = {'model': 'gpt-6-luna', 'max_completion_tokens': 16000, 'messages': [{'role': 'user', 'content': 'x' * 1000}]}
     limit.send('openai', request)
     assert limit.spent_usd == pytest.approx(adapter.budget.worst_cost(request))
+
+
+def test_a_continued_trace_reads_as_one_draw(tmp_path, constructed):
+    # a run stopped after article 40 and continued as a segment from that state reads exactly as the unbroken run
+    # (run_forward.step1_records' '+' convention): the same days and opened theses, and no article left failed
+    import sqlite3 as sq
+    first, segment = tmp_path / 'first.sqlite', tmp_path / 'segment.sqlite'
+    for target, keep in ((first, 'sequence <= 41'), (segment, 'sequence > 40')):
+        source = sq.connect(DRAW / 'trace.sqlite')
+        source.execute(f"vacuum into '{target}'")
+        source.close()
+        copy = sq.connect(target)
+        copy.execute(f'delete from trace where not ({keep})')
+        copy.execute("update trace set status='failed' where sequence=41 and ? like '%first.sqlite'", (str(target),))
+        copy.commit()
+        copy.close()
+    whole = adapter.trace_articles(DRAW / 'trace.sqlite')
+    joined = adapter.trace_articles(f'{first}+{segment}')
+    assert joined == whole and joined[2] == []
+    only_first = adapter.trace_articles(first)
+    assert len(only_first[0]) == 40 and only_first[2] == [41]
