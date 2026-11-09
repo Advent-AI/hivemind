@@ -122,7 +122,7 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**The clean system's first end-to-end measurement: approved (D392); Stage 0 in progress** (round log §60;
+**The clean system's first end-to-end measurement (D392): Stage 1 sent and failed its frozen line on q12, by design; awaiting Alex** (round log §61) (round log §60;
 `clean-arch/step1-unfiled-2026-11-08/council/en-claude.md`).
 
 It is a seeded diagnostic: the 22 ruler questions as an isolated fixture, clean Steps 1–3 against production v108 re-sent the same day,

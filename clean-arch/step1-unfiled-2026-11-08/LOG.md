@@ -2385,3 +2385,53 @@ also found the D382 conflict: most seeds are financial-figure questions that c8 
 1. The seeds as an isolated fixture (D370, D382).
 2. The same-day control through a separate harness.
 3. The staged spend.
+
+## 61. Stage 1 of D392 (the delivery probe) sent: it fails its frozen line on q12, by design (2026-11-09)
+
+**Before the send** (`clean-arch/e2e-2026-11-09/`):
+- `stage1_probe.py`, `stage1_cases.json` and `stage1-frozen.md`, frozen with sha256.
+- Four code-review rounds (`council/es`–`ez`) fixed: the whole-request byte check (`live.deepseek_json_mode`); a stricter matcher with
+  blind adjudication; per-question gold items; refusals counted as misses; a stated worst-case cost; a condition 4 that a failed control
+  cannot pass.
+- The stored answers wrote all 26 gold items.
+
+**Results** (`poc/data/clean-e2e-2026-11-09/stage1-probe`; 52 calls; 0 errors; $0.75). 72 matched pairs were adjudicated blind
+(`stage1-adjudication-verdicts.md`; 42 confirmed). Delivery to each seed, counting seeded draws out of 3:
+
+| Question | Draws |
+|---|---|
+| v10, the 66% operating margin | 3 |
+| v12 | 0, both cases |
+| v16, Broadcom | 3 and 3 |
+| v17 | 2 and 3 |
+| v1, v3, v11 and v22 | each delivered in 3 for some case |
+| the Ohio statement | linked to v9 (no signing thesis; c8 unchanged) |
+
+**Verdict under the frozen line: STAGE 1 FAILS.** Condition 2 (q12) and condition 4 (written facts not lost) fail.
+
+**The failures read against the source:**
+- **q12 fails by design.** The gold's reasoning is operating cash flow $50.3bn minus free cash flow $48.6bn, giving about capex (i131).
+  - c8 does not link that sentence to v12, since it would have to reason a step.
+  - Once unlinked, c8's closing read-back drops it under Alex's cash-flow ruling ("a cash-rich company's balance or cash flow that the
+    item ties to nothing usually cannot"). Today's same-day control did not write it either.
+  - The other q12 gold item (i145, the Valar nuclear-AI exploration) is written in every draw and linked to nothing. That is a remote
+    link, reasonably left.
+- **Condition 4 is partly a measurement error.** i304 ("Beijing refused to allow Chinese companies to buy these AI processors") is the
+  exact gold sentence, but the reader rejected it because the passage "does not identify the processors as H200". The gold passage does
+  not either. Counted correctly, i304 is written in 3 of 3.
+- **Condition 4's remaining losses:**
+  - i131 (above);
+  - i006 (the $3.5bn May-filing guarantees), written by the control (1 of 1) and seeded d3, but missing in seeded d1 and d2. One control
+    draw cannot separate an effect from noise.
+
+**What it says for the product question:**
+- With the questions present, c8 delivers what production missed: the 66% margin for q10, which v108 never wrote, and Broadcom's
+  figures for q16, which v108 linked elsewhere.
+- It keeps production's figure questions.
+- q12 cannot be delivered under the current cash-flow ruling plus literal linking.
+
+Under D392, the line stops and goes to Alex.
+
+**Alex's answer.** "照样跑正式对比 (Recommended)": Stage 2 runs with its frozen line unchanged. Its "better" requires both q10 and q12,
+so it will most likely read inconclusive or worse. It still gives the first whole-window picture of the clean system's judgements.
+Stage 0's adapter and control harness are built and council-read first.
