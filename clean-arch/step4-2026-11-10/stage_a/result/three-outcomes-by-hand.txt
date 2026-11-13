@@ -1,0 +1,87 @@
+Each "->" line places an outcome by reading the rung texts, taking the facts in it as known. Whether a fact is known on
+the day is not settled here: the judge forecasts the rung from the evidence it has (judging-v7: "Only fact can establish
+that a rung's outcome already holds"). What code guarantees is narrower: whatever is true, exactly one rung holds.
+==============================================================================================================
+acc/clean-2 | schema: fits | checks: accepted
+  NVDA (asset), due 2028-03-05 | Will Nvidia complete its announced acquisition of Hugging Face by 2028-03-05, as reported in Nvidia's Form 8-K, Form 10-Q or Form 10-K?
+    rung 1 Yes: Nvidia has completed the acquisition of Hugging Face on or before 2028-03-05.
+    rung 2 Ruled out: A termination of the acquisition announced by Nvidia or Hugging Face after 2026-09-05, or a regulator's block of it after that day, stands on 2028-03-05. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-09-05, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2028-03-05, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2028-03-05.
+  not judged: ['whether the deal closes on restructured terms or at another price']
+    -> completed at a revised price (the first run split completion by its terms, with no line between them): rung 1 Yes
+    -> terminated by announcement, or blocked: rung 2 Ruled out
+    -> the agreement expires and both parties confirm they will not go on (a way the condition does not name: code's sentence takes it): rung 2 Ruled out
+    -> not completed, and nothing has ended it: rung 3 Still open
+==============================================================================================================
+u1/clean-12 | schema: fits | checks: accepted
+  NVDA (asset), due 2027-01-31 | Will France's competition authority publish the conclusion of its antitrust investigation into Nvidia's cloud-AI and GPU-market practices by 2027-01-31?
+    rung 1 Yes: On or before 2027-01-31 the authority has published its decision or conclusion in the investigation.
+    rung 2 Ruled out: After 2026-07-09 the authority has closed or dropped the investigation without publishing a decision or conclusion, and that stands on 2027-01-31. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-07-09, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2027-01-31, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2027-01-31.
+  not judged: ['any remedies or fines imposed']
+    -> a conclusion that neither finds nor clears the conduct and imposes nothing (no rung in the first run): rung 1 Yes
+    -> a remedy accepted with no finding of an infringement (no rung in the first run): rung 1 Yes
+    -> the case dropped with no published conclusion: rung 2 Ruled out
+    -> no decision and no closing by the day: rung 3 Still open
+==============================================================================================================
+u2/clean-3 | schema: fits | checks: accepted
+  chip-export-controls (theme), due 2027-01-31 | Will Chinese authorities permit NVIDIA to sell H200 AI chips in mainland China by 2027-01-31, as shown by an official Chinese announcement or by NVIDIA disclosing H200 sales or shipments into mainland China?
+    rung 1 Yes: On or before 2027-01-31 an official Chinese announcement has permitted H200 sales in mainland China, or NVIDIA has disclosed H200 sales or shipments into mainland China.
+    rung 2 Ruled out: An official Chinese decision not to permit H200 sales in mainland China, announced after 2026-07-02, stands on 2027-01-31. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-07-02, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2027-01-31, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2027-01-31.
+  not judged: ['conditions or quantity limits attached to a permission', "NVIDIA's China share remaining at zero"]
+    -> a permission with conditions, and sales disclosed (two states at once in the first run): rung 1 Yes
+    -> a new official decision not to permit: rung 2 Ruled out
+    -> no decision either way: the block as it stood on the article's day goes on (the first run divided this by whether a review was pending, which nobody outside can know): rung 3 Still open
+==============================================================================================================
+u3/clean-12 | schema: fits | checks: accepted
+  chip-export-controls (theme), due 2027-01-31 | Will the US Commerce Department adopt a binding restriction, a licensing rule or any other, on advanced AI-chip shipments to third countries beyond its May 2026 guidance by 2027-01-31, as shown by a Federal Register rule or a formal export-control action?
+    rung 1 Yes: On or before 2027-01-31 the Commerce Department has adopted a binding restriction, a licensing rule or any other, on advanced AI-chip shipments to third countries beyond its May 2026 guidance.
+    rung 2 Ruled out: An announcement by the Commerce Department, made after 2026-07-14, that it will adopt no such restriction stands on 2027-01-31. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-07-14, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2027-01-31, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2027-01-31.
+  not judged: ["the resulting constraint on Nvidia's sales to those markets", 'how far the restriction goes: a licensing rule or another, and which countries it covers']
+    -> a licensing rule and another restriction both adopted (two states at once in the first run): rung 1 Yes
+    -> every proposal formally withdrawn, none adopted (a way the condition does not name: code's sentence takes it): rung 2 Ruled out
+    -> one proposal pending while another has been rejected (two states at once in the first run): rung 3 Still open
+==============================================================================================================
+u3/clean-5 | schema: fits | checks: accepted
+  NVDA (asset), due 2027-01-31 | Will Nvidia make H200 sales to customers in China by 2027-01-31, as shown by Nvidia's disclosures or by official Chinese statements published on or before that day?
+    rung 1 Yes: On or before 2027-01-31 Nvidia has made H200 sales to customers in China, as shown by Nvidia's disclosures or by official Chinese statements published on or before that day.
+    rung 2 Ruled out: A formal Chinese prohibition on purchases of H200 chips by Chinese customers, imposed after 2026-07-02, stands on 2027-01-31. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-07-02, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2027-01-31, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2027-01-31.
+  not judged: ['Beijing permitting purchases where no sale has yet been made', 'the US clearance of H200 exports in December 2025']
+    -> sales shown by a disclosure: rung 1 Yes
+    -> no sale, and a formal prohibition, with a review of it pending (no rung in the first run): rung 2 Ruled out
+    -> no sale, a permission announced (taken as sales in one send of the first run): rung 3 Still open
+==============================================================================================================
+u1/clean-3 | schema: fits | checks: accepted
+  NVDA (asset), due 2026-12-31 | Will NVIDIA's Vera Rubin platform begin first shipments by 2026-12-31?
+    rung 1 Yes: First shipments of Vera Rubin have taken place on or before 2026-12-31.
+    rung 2 Ruled out: An announcement by NVIDIA, made after 2026-07-02, that first shipments will not begin until after 2026-12-31 stands on that day. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-07-02, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2026-12-31, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2026-12-31.
+  not judged: []
+    -> no shipment, and NVIDIA has announced a delay into 2027: rung 2 Ruled out
+    -> no shipment, and no announcement: rung 3 Still open
+==============================================================================================================
+u1/clean-11 | schema: fits | checks: accepted
+  chip-export-controls (theme), due 2027-01-31 | Will Chinese authorities approve imports of Nvidia H200 chips by Chinese firms by 2027-01-31, as shown by official Chinese government decisions or announcements?
+    rung 1 Yes: On or before 2027-01-31 Chinese authorities have officially approved imports of H200 chips by at least one Chinese firm.
+    rung 2 Ruled out: An official Chinese refusal of the requests to import H200 chips, or a prohibition of the imports, issued after 2026-07-08, stands on 2027-01-31 with no firm approved. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-07-08, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2027-01-31, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2027-01-31.
+  not judged: ['how many chips are approved, such as a total below 200,000', 'which firms are approved', "Nvidia's resulting H200 revenue in China"]
+    -> a limited approval for some firms: rung 1 Yes
+    -> every request refused, none approved: rung 2 Ruled out
+    -> every request withdrawn by the firms, none approved (a way the condition does not name: code's sentence takes it): rung 2 Ruled out
+    -> requests still undecided, none approved: rung 3 Still open
+==============================================================================================================
+u3/clean-9 | schema: fits | checks: accepted
+  NVDA (asset), due 2027-01-31 | Will France's competition authority publish the conclusion of its investigation into Nvidia's cloud-AI and GPU practices by 2027-01-31, as shown by its published decision or conclusion statement?
+    rung 1 Yes: On or before 2027-01-31 the authority has published its decision or conclusion in the investigation.
+    rung 2 Ruled out: After 2026-07-09 the authority has closed or dropped the investigation without publishing a decision or conclusion, and that stands on 2027-01-31. This rung holds when that, or any other decision against the event of rung 1 as a whole taken after 2026-07-09, or a formal abandonment or withdrawal of it as a whole after that day, stands on 2027-01-31, and only when rung 1 does not.
+    rung 3 Still open: Neither rung 1 nor rung 2 holds on 2027-01-31.
+  not judged: ['the date of the decision', 'what the conclusion finds, and any fine or remedy it imposes']
+    -> a remedy with no finding of an infringement (no rung in the first run): rung 1 Yes
+    -> a published conclusion with no fine and no remedy, whatever it finds: rung 1 Yes
+    -> the case dropped with no published conclusion: rung 2 Ruled out
+    -> no decision and no closing by the day: rung 3 Still open
+8 answers written by hand; refused by the schema or a check: 0

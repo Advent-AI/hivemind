@@ -1,0 +1,37 @@
+[
+ {
+  "arm": "object",
+  "case": "u3/clean-5",
+  "pass": 1,
+  "question": "One question about your answer. Its object is the theme chip-export-controls, and its question asks whether the company's own sales take place. (1) Which words of the request led you to that object? Quote them. (2) The request also says a question about the company's revenue or product progress is about the company \"even when policy or macroeconomics drives it\". How did you weigh the two? (3) What does the topic's outcome name as the thing tracked: the government's decision, or the company's sales? Answer in at most 150 words.",
+  "reply": "1. I relied on: “A government's or regulator's decision to permit, restrict or ban a class of products or trade is such a question, also when the product is the company's own.”\n\n2. I gave that rule too much weight. The topic mentions Beijing’s permission, but the rule about company revenue and product progress applies when the tracked outcome is the company’s own sales, even if policy drives them.\n\n3. The outcome names “Whether H200 sales to Chinese customers take place” as the tracked thing, with Beijing keeping Nvidia locked out as the contrast. So it tracks company sales, not the government’s decision. The object should be NVDA."
+ },
+ {
+  "arm": "object",
+  "case": "u3/clean-5",
+  "pass": 3,
+  "question": "One question about your answer. Its object is the theme chip-export-controls, and its question asks whether the company's own sales take place. (1) Which words of the request led you to that object? Quote them. (2) The request also says a question about the company's revenue or product progress is about the company \"even when policy or macroeconomics drives it\". How did you weigh the two? (3) What does the topic's outcome name as the thing tracked: the government's decision, or the company's sales? Answer in at most 150 words.",
+  "reply": "1. I relied on: “A government's or regulator's decision to permit, restrict or ban a class of products or trade is such a question, also when the product is the company's own.”\n\n2. I treated Beijing’s licensing decision as the tracked event. But the general company rule applies when the tracked thing is the company’s sales or revenue; the government-decision exception applies when the tracked thing is the government’s decision. I applied that exception too broadly.\n\n3. The topic’s outcome names whether “H200 sales to Chinese customers take place” (or China data-center revenue returns above zero), versus Nvidia remaining locked out. The government’s decision is relevant evidence or a condition, not the named outcome. The object should therefore be NVDA, not the chip-export-controls theme."
+ },
+ {
+  "arm": "typed",
+  "case": "u2/clean-9",
+  "pass": 1,
+  "question": "One question about your answer. Its ruled_out names the authority and the decision \"After July 9, 2026, France's competition authority formally decides to continue the investigation beyond January 31, 2027, without concluding it by that date.\" (1) Under the request, is an investigation that is still going on the day the event ruled out, or the event still awaited? Quote the words you rely on. (2) What led you to write this decision? (3) What else, if anything, could rule the event out before the due day? Answer in at most 150 words.",
+  "reply": "1. No. The request says the event still awaited when the due day arrives “is no one's decision,” and “is never written there.” A decision to continue the investigation beyond the deadline leaves the conclusion still awaited; it does not rule it out.\n\n2. I mistakenly treated a formal decision to continue past the deadline as a decision against the event, rather than as the event not having happened by the due day.\n\n3. Nothing else in the item or topic identifies a decision that could rule out the event as a whole before the due day. Formal closure is itself one of the named conclusions, so it counts as happened. The ruled_out field should therefore be null."
+ },
+ {
+  "arm": "typed",
+  "case": "u2/clean-9",
+  "pass": 2,
+  "question": "One question about your answer. Its event.ruled_out is null. (1) Before the due day, could the authority formally abandon or withdraw the investigation without issuing the decision or conclusion your question asks about? (2) If it did, which of your outcomes would hold on the due day, and why? (3) Which words of the request led you to null? Answer in at most 150 words.",
+  "reply": "(1) Yes. The authority could formally abandon or withdraw the investigation without issuing the formal concluding decision the question asks about.\n\n(2) **Ruled_out** would hold: the question’s happened condition requires a formal decision concluding the investigation, while formal abandonment or withdrawal without that decision rules that event out.\n\n(3) The request says ruled_out is null only when no one can rule the event out before the due day, and specifically allows the responsible authority’s formal abandonment or withdrawal as the decision. I should not have set it to null."
+ },
+ {
+  "arm": "typed",
+  "case": "u3/clean-9",
+  "pass": 1,
+  "question": "One question about your answer. Its event.ruled_out is null. (1) Before the due day, could the authority formally abandon or withdraw the investigation without issuing the decision or conclusion your question asks about? (2) If it did, which of your outcomes would hold on the due day, and why? (3) Which words of the request led you to null? Answer in at most 150 words.",
+  "reply": "1. Yes. The Autorité de la concurrence could formally abandon or withdraw its investigation before the due day without publishing the conclusion asked about.\n\n2. The **ruled_out** outcome would hold if the authority formally decided to abandon the investigation. That is an affirmative decision against the investigation reaching the asked-about conclusion, not merely the due day passing without one.\n\n3. I treated the absence of a published conclusion as the only alternative, but the request explicitly says **ruled_out** is null only when no one’s decision can rule out the event, and that formal abandonment or withdrawal can do so. My null was incorrect."
+ }
+]

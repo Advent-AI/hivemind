@@ -1,0 +1,56 @@
+**Not ready.** The revised packets make controls harder to spot, but the reading can still produce a misleading result: two planted answers remain open to reasonable disagreement, and the count does not enforce every condition the design requires.
+
+For example, trial judgement **53** lowers NVIDIA’s 2027 spending projection because it is unconfirmed. That is a flawed reason under the form. But the evidence also describes the projection as something that *could* reach $1 trillion, leaving room for a careful reader to say the evidence does not settle which spending band is most likely.
+
+## 1. The first review’s findings
+
+| Finding | Status | Evidence |
+|---|---|---|
+| Controls were the conspicuous lone item from another question. | **Partly closed.** | Every packet now has a run and a single; 31 singles are ordinary stored judgements and nine are controls. The single’s position is shuffled. But a reader can still identify the **class of single items** and give that class extra attention. The key is needed to distinguish a control from an ordinary single. Seven packets contain two singles in effect because the run is only one judgement. [Plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/BASELINE.md:23), [builder](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/build_baseline.py:150) |
+| Plants 5 and 6 were ambiguous. | **Partly closed.** | Plant 5 now includes reports of fall and third-quarter shipments, making Yes much better supported than in the old trial. Plant 6 now also includes a separate Morgan Stanley forecast. Both still require a judgment about uncertain forecasts; **INSUFFICIENT is defensible**, particularly for 6. [Plants](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/build_baseline.py:42) |
+| Plant 3 had the “has since” tell. | **Closed for that tell.** | Trial **43** no longer claims the already-known Google guidance is new. It still plainly adds Google’s total spending guidance to a group figure that already includes Google. [Plant 3](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/build_baseline.py:30) |
+| The count printed shares for incomplete or void readings. | **Partly closed.** | Missing rows, missing third-reader rulings, missed plants, excessive disagreement, fewer than 30 decided answers and no decided last answer now stop share printing. But elapsed time is not checked, and malformed or incomplete content within otherwise valid-looking rows can still pass. [Count](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:39), [stop paths](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:101) |
+| Design conditions were missing. | **Partly closed.** | The plan now includes the 30-decided and last-answer conditions, and the count implements them. The design also says a pass taking over twice its estimate is **NOT MEASURED**; the plan and count do not say how that applies to this baseline or record elapsed time. The plan now gives both requested shares and three treatments of unresolved answers. [Design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1503), [plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/BASELINE.md:53) |
+
+D426 opens preparation and this baseline; it does not say Stage A passed or authorize a paid Stage B send. The plan says both correctly. [D426](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4721)
+
+## 2. The six planted answers
+
+These numbers are from the **current trial**, not the earlier review. The form judges the rung from the request alone, in a fixed order. [Reader form](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-b-reader-brief.md:43)
+
+| Plant | Trial judgement | My reading |
+|---|---:|---|
+| 1 | **91** | **Plainly UNSUPPORTED, rung 5.** Its stated outcome is at least $1 trillion, but the displayed rung 3 ends below $900 billion. The unchanged wording and `changed: false` also conflict with the displayed change from the previous rung 5. That is an additional tell. |
+| 2 | **24** | **Plainly UNSUPPORTED, rung 1 / Yes.** It predicts first shipments in Q3 or fall 2026, before the deadline, while displaying No. The unchanged wording and `changed: false` also conflict with the previous Yes. That is an additional tell. |
+| 3 | **43** | **UNSUPPORTED, rung 3** is the clear reading. The $650 billion is the four-company plan; adding Google’s $190 billion total capital-spending guidance treats it as a separate increment. The previous conclusion explicitly notes the different scope. The old “has since” tell is gone. |
+| 4 | **23** | **UNSUPPORTED, rung 5** is the clear reading. The claimed $150 billion deferral by Microsoft and Meta is absent from the request. Without it, the stated projection is above $1 trillion; the $130 billion of delayed projects is not attributed to those companies’ 2027 spending. |
+| 5 | **44** | **UNSUPPORTED, rung 1 / Yes is my reading**, but I would not use it as an unquestionable control yet. Evidence **e105** says systems are in full production and will ship in fall; **e131** gives a Q3 schedule. Those are substantially stronger than “could ship.” Still, the request also contains reported delays, so a careful reader could decide the evidence does not make either outcome sufficiently preferable and return **INSUFFICIENT**. The reason “not established” alone cannot justify No. |
+| 6 | **53** | **UNSUPPORTED, rung 5 is a reasonable reading**, but **INSUFFICIENT is defensible**. The 15% reduction solely for lack of confirmation conflicts with the rules. Yet **e87** says “could reach” $1 trillion, while **e134/e207** report a forecast above it; **e456** is about broader AI infrastructure. The exact boundary remains a forecast rather than a certain consequence of the request. |
+
+For **44**, the rewritten previous conclusion says dependency **v2** is unjudged, matching the dependency block. The request also has three themes, including two marked updated; the rewrite does not directly contradict their displayed conclusions, but the planted answer does not discuss them. The closing instruction is unchanged. For **53**, v2 is likewise unjudged, no theme block is shown, and the closing instruction is unchanged. The previous-conclusion prose for both is newly written and resembles the planted answer unusually closely; that is a possible stylistic clue, although it is not an explicit control label. [Builder](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/build_baseline.py:42)
+
+Plants 1 and 2 are deliberately obvious in their **substantive error**, which the plan acknowledges. Their extra `changed` contradictions are avoidable clues. The count treats any UNSUPPORTED verdict as a catch, even if the reader supplies the wrong preferred rung; that limits what a catch demonstrates. [Plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/BASELINE.md:40), [count](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:103)
+
+## 3. Packet shape and removed context
+
+The key does not expose controls to readers, and a single judgement is no longer sufficient to identify one: most singles are ordinary judgements. But the reader can still see which item is the single whenever the accompanying run has multiple entries. The design requires planted answers that readers cannot tell apart; this layout masks **which** singles are controls, while exposing the smaller population in which they sit. [Design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1460)
+
+Removing 31 stored judgements from their sequences also changes reading conditions. A run may start with a request that summarizes a prior conclusion without showing the prior answer, and a single is read alone. The form explicitly requires the verdict from the current request alone, and the request includes the prior conclusion, so the missing earlier answer is **not automatically missing evidence for that verdict**. But continuity can help a reader notice inconsistency or interpret the previous conclusion; the baseline mixes readings with and without that opportunity. This is a limitation for both stored answers and controls, not proof that any particular verdict will change. [Form](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-b-reader-brief.md:5), [layout](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/build_baseline.py:63)
+
+## 4. The count
+
+For a complete reading with valid rows and the intended key, the main calculations match the plan: it counts decided SUPPORTED and UNSUPPORTED verdicts, excludes INSUFFICIENT from the denominator, and prints all three treatments of unresolved verdicts for both main shares. It separates repeats from stored judgements. [Count](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:74)
+
+It refuses shares on the listed incomplete, stopped and void conditions **that it can observe**, but there are still gaps:
+
+- **Time:** no elapsed time is supplied or checked, so the design’s over-twice-estimate condition cannot stop a result. The baseline-specific interpretation of that condition needs to be stated first. [Design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1503)
+- **Incomplete row content:** the count validates the verdict and several categorical fields, but does not require the `why` sentence or validate `E`; a third-reader ruling needs only a valid verdict. A ruling with no reason, or an unsupported ruling without its required preferred rung, can therefore enter the result. [First-row checks](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:39), [third-reader checks](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:66)
+- **Wrong preferred rung:** any integer—including `0`, an out-of-range value, or Python’s `true`—satisfies the first-reader check for an UNSUPPORTED answer. Plant catches are counted on verdict alone. [Count](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:47)
+- **Population integrity:** the key supplied to the count defines what is complete. The count does not independently require 159 stored judgements, six plants, three repeats or 16 last judgements, so a truncated or wrong key can make an incomplete population look complete. It also does not reject extra judgement numbers in answer files. [Count](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/baseline_count.py:57)
+
+## 5. New serious concern
+
+The revised controls test the readers on **six errors but no known sound answer**. Catching all six does not show that a reader avoids calling sound forecasts wrong; the plan acknowledges this limitation. Together with only three repeats and a population of 16 correlated questions, the result should be presented as a bounded baseline reading, not a measurement of reader accuracy. [Plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/BASELINE.md:79)
+
+**Not ready — first replace or independently establish unambiguous controls for 5 and 6; then resolve the visible single-item class and avoidable tells, and make the count enforce the applicable time, row-content and population-completeness conditions.**
+

@@ -1,0 +1,1 @@
+Read `/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/dryrun13/reader-brief-2.md` and follow it exactly. It is your whole task. You are read-only and cannot write files: return your answer as your final message, exactly 23 lines, one JSON object per line, in scenario order, and nothing else.

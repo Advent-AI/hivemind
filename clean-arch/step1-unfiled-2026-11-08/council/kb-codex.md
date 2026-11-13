@@ -1,0 +1,1 @@
+Ready to put to Alex, provided the proposal also says that if the second answer fails the code checks, the design would keep the first answer; that fallback is part of what he is being asked to consider.

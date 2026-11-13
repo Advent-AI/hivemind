@@ -1,6 +1,6 @@
 # Current state
 
-**Clean Steps 1–3, current (2026-11-09).** Record: [round log](../clean-arch/step1-unfiled-2026-11-08/LOG.md) §§16–47.
+**Clean Steps 1–3, current (2026-11-11).** Records: Step 1, [round log](../clean-arch/step1-unfiled-2026-11-08/LOG.md) §§16–47; Step 2, [Step 2 log](../clean-arch/step2-validation-2026-11-07/LOG.md) §§12–19.
 - **Step 1 configuration: c8, adopted by Alex (D387).** It runs DeepSeek Flash at high effort, with a 64,000-token output cap; a
   format failure or a cut answer is resent once (D380). It carries Alex's decisions D382–D385:
   - figures are conditions;
@@ -23,8 +23,36 @@
   Dev ×3 on the frozen golden-v5 (a lead): helpful 214, 211 and 212 of 234; search 98.9–100%; clear wrong merges about 1%. Step 1
   cost for the fresh set plus dev ×3: $4.20 at published rates.
 - **Steps 2 and 3** are built in isolation (`clean-arch/step2`, `clean-arch/step3`): search, comparison, grouping and later linking.
-  They are not integrated with production storage. **Step 4 (judging) is not built** on the clean path, so nothing yet shows the clean
-  system can judge an investment view.
+  They are not integrated with production storage. **Step 4 (judging) has not passed** on the clean path: its ladder step is built and
+  measured (four Stage A runs, lines missed by 1 to 3 answers; D426), so nothing yet shows the clean system can judge an investment
+  view on its own questions.
+- **Step 2 is closed and frozen (Alex, D427, 2026-11-11;** [Step 2 log](../clean-arch/step2-validation-2026-11-07/LOG.md) §§14–19**).** It goes
+  to production only with the whole clean path, after Step 4 meets its lines; `tests/test_frozen_clean_step2.py` guards its files. Its three lines were met at the acceptance above (one draw; "later version"
+  relations barely exercised), and no miss of the seeded end-to-end test (clean 18, 18, 17 against production 17, 15, 16) has
+  been traced to it (the two single-draw misses were diagnosed on 2026-11-11, below: neither traces to Step 2). What happened since the close-out of 2026-11-08:
+  - A change to Jev's wording for "later version" relations failed its line (42 calls, 2026-11-09) and tuning stopped.
+  - One wrong relation was traced to the judge: it put NVIDIA's answer to the Kyber report under the FY2027 revenue question;
+    sent both ways, the conclusion did not differ ([result](../clean-arch/step2-edge-effect-2026-11-10/RESULT.md)).
+  - Alex stopped work on that relation (D423) and asked for a fix to the rule that gives a "later version" the older record's
+    questions. Measured on the three saved draws ([round log](../clean-arch/step2-revision-links-2026-11-10/LOG.md)), removing the
+    rule was withdrawn: of the 24 links it wrote, two blind reader families call 19 context and 3 evidence, and one of the 3 is a
+    company's answer that would otherwise be missing beside four reports (with it rung 2, 2, 2; without it 2, 3, 2). **The rule
+    stays (D424).**
+  - **Open, recorded:** Jev's "later version" relation (9 of 30 join different statements in draw 1); the context links it carries
+    (19 of 24); wrong groups (at the line on one draw; the unprompted reading test never run); the "Unverified quote" mark not
+    shown to Jev (3 of 188); not decided, whether a company's answer must sit under every question its report is filed under.
+  - **Reopens when** Step 4 yields judged views on the clean path and a miss, or something a reader of a thesis sees, traces to
+    one of these. The round's measurement kit (replay of a saved draw, exact simulation of a writer rule, blind packets with
+    controls, a judgement sent both ways) is kept in the two folders above.
+- **The clean system's untraced end-to-end misses, diagnosed (2026-11-11;** [round log](../clean-arch/e2e-misses-2026-11-11/LOG.md)**).**
+  The China share question in draw 3 and the FY2028 revenue question in draw 2 (seeded test, D392). Both estimates sit on a rung
+  line. China: the same window-end request, re-sent, gives the miss twice and the right answer once (the judge's own variation at the
+  1% line); no H200 price is in any request. FY2028: draw 2's window-end request gives the miss 3 of 3 and draw 3's the right answer 3
+  of 3; draw 2's lacks records draw 3's holds (a "41% in calendar 2027" figure Step 1 filed under FY2027 only, "$1 trillion of
+  Blackwell and Rubin visibility", five infrastructure-demand records), not isolated which matters; FY2028 is the question whose filed
+  statements differ most between draws (47% shared, median 74%). Neither traces to Step 2. Refuted on the way: that a refused answer
+  re-asked caused the China miss. Observed defect of the frozen judge: it names the export-controls theme as a dependency of the China
+  question, 42 of 65 refusals in six draws, and the re-ask changed the rung 8 times (PRD 11, E4). No change proposed; 18 sends, $0.043.
 - **Open defects, by product impact** (reflection council, `council/av-codex.md`):
   1. **The Ohio-guarantee yes/no question is never covered** in the three dev draws; a broader credit-support amount thesis opens
      instead. Diagnosed (round log §48): the model folds the unsigned guarantee into the open aggregate thesis because the request
@@ -122,16 +150,179 @@ Upstream supply and the human review pool's output remain deferred.
 
 ## One next task
 
-**Clean Step 4 design (D396): written, council A NOT READY; handed off** (`clean-arch/HANDOFF-2026-11-10.md`; round log §68).
+**Clean Step 4 (D396–D430):** the ladder step was measured four times and has not passed Alex's lines; it is frozen as it ran
+in the fourth measurement (D426). The frozen judge's baseline on the ruler's ladders is read (3% unsupported, all in figure
+questions). Stage B (the judge on the ladder step's own questions) is built; one more review, then three draws under a $2 cap
+(D429). After it: the diagnosis of how Step 1 cuts a matter into theses (D432); the end-to-end gate is against production as
+it now runs, with no preset questions (D431). Where the whole clean path stands, read by the council:
+[progress](../clean-arch/step4-2026-11-10/PROGRESS-2026-11-12.md), [consensus](../clean-arch/step1-unfiled-2026-11-08/council/kr-consensus.md).
 
-- **The next task:** clear the four blocking items in `clean-arch/step1-unfiled-2026-11-08/council/gg-codex.md`:
-  1. the exact ladder request and the writer mapping;
-  2. complete design tables (duplicates, restated or unknown periods, past due dates, failures, dependencies, themes), with the claims
-     about the ladder checks corrected;
-  3. a reader test that cannot pass empty;
-  4. then Alex's word to open the ladder prompt and build.
+- **What Step 4 is:** the first thing built and tested is the **ladder step alone**: the call that turns a thesis Step 1 opened
+  into one judged question with its answer ladder and due day, or declines. The frozen judge follows only when the ladder step
+  meets its lines (Stage B, which needs Alex's word).
+- **Alex's decisions in force (2026-11-10):** one judged question a thesis, the other parts shown as not judged (D397); the step
+  carries D186 in full (D398); the request may teach how to build an event's five states (D399); Stage A is read against his six
+  fixed lines with no paid control arm (D400); build and send Stage A capped at $3, a missed line stops and goes to him (D401);
+  an event's due day is a stated date or the period's last day (D403); a theme's state is never named with a company label
+  (D404); a reference's words are the article's own, else the answer is sent back once (D405); the build uses the request as
+  first sent, and code refuses and sends back the faults of writing (D407).
+- **How the build was reached:** twenty single reviews and five rounds by angle did not reach zero findings (15, 9, 15, 11, 11);
+  four small sends ($0.105) then showed that sentence changes to the request corrected the writing and lowered the declining of
+  topics with no main thing (`clean-arch/step4-2026-11-10/probe-2026-11-10/READING-claude.md`).
+- **The build** (`clean-arch/step4-2026-11-10/ladder/`, `stage_a/`): the step, its model caller, the Stage A runner with one
+  spending limit and an on-disk ledger, the accounting, the readers' packets and the collection of readings; 109 tests, with a
+  mutant for each check (40, 11 and 16, all caught).
+- **Stage A, sent 2026-11-10** (44 stored theses, three sends each; $0.17 of the $3): 111 ladders, 17 declined, 4 refused twice
+  by code. Two reader families and a third reader on the 73 marks where they differ:
+
+  | line | as ruled | whoever reads |
+  |---|---|---|
+  | 1. no ladder asks another question | missed, 11 of 111 | 0 failed by both families |
+  | 2. no ladder leaves a part unlisted | missed, 4 | 0 failed by both |
+  | 3. no outcome with no rung or two | missed, 16 | missed, 7 failed by both |
+  | 4. no refusal without a justified reason | missed, 2 of 17 | missed, 1 failed by both |
+  | 5. 35 of 44 theses right in two of three sends, 28 by a ladder | missed, 21 and 16 | 36 and 30 if every differing mark held |
+  | 6. the three sends agree | missed: the favourable end differs in 2 of 8 theses, the due day in 11 of 32 | by code |
+
+  The two families read the form at different strictness (47 against 84 of 111 ladders sound) and the third reader is of the
+  stricter one, so the count as ruled is the strict reading. The 25 ladders both families fault are the firm set: five states
+  for the company in 10 of 17, yes/no in 2 of 24, figures in 12 of 67.
+- **The classes** (result page): an event's five states (gaps, overlaps, labels, the object); a Yes that needs a confirmation
+  the No does not; a reported amount carried as the market's expectation, and an expected range the field cannot hold; a
+  figure's due day estimated anew in each send; the direction of a commitment's amount; a company's quarterly figure laddered; a
+  group named and not listed, which the families read differently.
+- **Stage A does not compare the step with production** (D400). The reference reading of 36 production ladders, other
+  questions, held every firm mark on 19 and on 25 by two readers.
+
+- **Open defects of the ladder step:**
+  - it misses its lines in both measurements; the event answers are changed (D409) and their class is smaller, not closed; a
+    figure's due day, the reference (D411), a company's quarterly figure and the direction of a commitment's amount are not
+    yet changed;
+  - the readers' two families differ at every level (first readers 60 against 90 of 114 ladders sound; third readers agree on
+    21 of 70 points), so a line's verdict can turn on the reader;
+  - check 6 sets a footnote marker aside, one thing more than D405's record names: reported to Alex, not confirmed;
+  - the check on pointing at the item misses "at the item date" (one instance in 111 ladders); mark Q owns the rule;
+  - the design lost its block on the outcomes of a send, the lines and the accounting at version 29 and had it put back at
+    version 31; the fourth and fifth review rounds read the design without it.
+- **Alex decided on the result (2026-11-10):** stay at this step, change the event answers first, check at no cost and have it
+  reviewed, then run the same Stage A once more within the $3; the other classes one at a time; no Stage B (D408). An event is
+  answered in at most three outcomes, it happened, it is ruled out, or neither, the last written by code (D409, superseding
+  D399). A group named and not listed is not a fault of a question (D410). An amount already reported may be a figure's
+  baseline when named as that, built after the event answers (D411).
+- **Done since, at no cost** (design version 32, §5.2.1): the request, the schema, the checks and the view writer answer an event
+  in three outcomes; eight stored theses whose first answers had a gap are answered by hand and pass every check, each former
+  gap in one rung; the form carries D410 and the event rules; a differing mark goes to two third readers, one of each family,
+  and an unresolved point is counted both ways.
+- **Reviewed, probed and sent again (2026-11-10).** Three council rounds on the change did not say "ready"; what they found was
+  closed by one structural rule (code writes the scope of a ruling out: new, whole and standing) and read by two families on
+  stated facts (20 of 20 alike, then 21 of 23). A small send (26 theses, $0.03) showed the model writing the new shape; a
+  decline check beside a fresh control showed 8 against 9 of 15. The second Stage A was sent on my reading that the council's
+  two conditions were met, not on its clearance ($0.15; 114 ladders, 16 declined, 2 refused twice).
+- **Alex's instruction (D412):** every round is reflected on in the council to a recorded consensus, then the next test goes
+  straight ahead on the PRD and its numbers, with every trace read by Claude itself.
+- **The reflection council's consensus (round log §69, `council/ja-*`, `jb-*`):** no change to the request, the checks or the
+  form until the second result is read in full and reported; then one next step (if the event class is not closed, report
+  it, and fix at this step only where the cause is found and no decided rule changes; if it is closed and the lines are still
+  missed on due day or direction, diagnose the figure's due day over its whole class first); the next stage is not asked for
+  in advance. Alex decides: any change to what the product does; an important part of a thesis that three outcomes cannot
+  carry; whether an event undone counts as happened; the footnote marker; the next stage.
+- **Second Stage A, read (2026-11-10;** [result](../clean-arch/step4-2026-11-10/stage_a/result-2/RESULT.md)**).** The six lines are
+  still missed. Regression: the due day is the same across sends in 18 of 34 theses, against 21 of 32. On what both first
+  readers fail, against the first run: R on 4 ladders (7), N on 0 refusals of 16 (1 of 17), 37 theses right and 32 by a ladder
+  (36 and 30), event ladders with a fault 8 of 43 (13 of 44), theses whose three sends differ in shape 1 (7). On the two third
+  readers' agreed rulings: Q fails on 2 ladders, L on 1, R on 5; 34 theses right and 29 by a ladder, against the 35 and 28 asked.
+  The favourable end still differs in the same two theses. The two third readers, one of each family, agree on 21 of 70 points,
+  so every line is reported under both countings, and how many ladders are sound cannot be said from readers alone.
+- **The council's consensus on what follows (round log §69, `council/jc-*`):** the event class is smaller and not closed, so
+  it is diagnosed in full first, at no cost (the model's own ruled-out sentence not bound to a decision after the article; a
+  question and an answer with different periods; a 2027 question judged in 2028; the object of a regulator's decision); then
+  the figure's due day over its whole class, with D411's reference checked on its own; the changes and a plan go to an
+  independent review; a third Stage A needs Alex's word. Reading disagreements a document settles are settled; the few that
+  need a decision go to Alex.
+- **Done since, at no cost (round log §69, council `jd`):** the event class counted on the second run (a ruled-out sentence with
+  "after": R held by both readers on 27 of 31; without: failed or disputed on 9 of 11); one clause of code's sentence changed
+  so that the scope governs the model's own sentence; proved on six real answers shown with the sentence as it was and as it
+  is (`dryrun14/`): both reader families place an earlier decision in "ruled out" 6 of 6 before and in "still open" 6 of 6
+  after, 36 of 36 placements alike and as fixed beforehand. The proof is of six sets of stated facts, not of the judge, and
+  the event class is not called fixed (a question and an answer with different periods; a missing ruled-out rung; the object
+  of a regulator's decision). A figure's due day counted on both runs and a candidate rule replayed
+  (`stage_a/due_day_rule_replay.py`): agreement 18 to 32 of 34, with three figures set months late; no rule is recommended yet.
+- **D411's reference, built, reviewed and probed (design §5.2.2; round log §69, councils `je`, `jf`):** the reference carries its
+  kind (expected, or last reported for a figure) and a range by its two ends; the judge's middle rung says "the amount last
+  reported" for a reported amount. Two council rounds corrected it before any send (a range is spanned end to end by the
+  middle range; "the same quantity" is defined against a part, a ceiling and another quantity). A small send on 18 theses
+  ($0.016, one draw) filled the field as written beforehand in all seven reference cases, kept the declines for no main thing,
+  and sent back no first answer for its quotation (the second run: 68 of 132), which is not claimed until a full run shows it.
+- **After the reference change: what else moves, and line 6** (round log §69; councils `jg` to `jj`;
+  `clean-arch/step4-2026-11-10/probe-direction-2026-11-10/RESULT.md`). Read by hand, the small send also showed three company
+  figures called "higher is good" and two events with a worse ruling out. A three-arm probe registered before its send (the
+  request as the second run sent it; the working request; the working request with `unclear` allowed for a company figure's
+  favourable end; 96 first answers, $0.074) found no signal that the reference change caused either: the old request sent in
+  the same run shows both. It also showed the quotation refused in 15 of 34 first answers of the old request against 5 of 35.
+  Line 6's two halves were counted at no cost: the favourable end differs within a thesis on two obligation theses in both
+  full runs, and the model's own account says the texts do not settle it; two independent readers of the texts alone find
+  "lower" settled in none of seven obligation theses, where the working request says "lower" in 19 of 21 answers. Letting the
+  model answer `unclear` moved the wobble to two other theses (not shown to work by the registered test). The due day is the
+  same in 18 of 34 theses and would be in 32 of 34 with a day set by code from the year.
+- **Alex's choices (D413, D414, D415; 2026-11-10):** where the texts do not settle it, an amount the company owes or
+  guarantees is registered with the lower end favourable; code sets the due day of a year's figure whose day would be an
+  estimate (the fiscal year-end plus 60 days; a calendar year-end plus 90); the third Stage A is sent without asking again
+  once each change is proved small and reviewed, and a change that does not pass stops and goes to him. Both rules are built
+  (design §5.2.4). D414 replayed at no cost on the second run's stored ladders: one due day in 31 of the 33 theses still
+  whole (18 of 34 as sent), the new refusal firing only on the three theses that are not a year's figure.
+- **The third Stage A (2026-11-10; `clean-arch/step4-2026-11-10/stage_a/result-3/RESULT.md`):** sent under D415 after two
+  small sends proved D413 and D414 (a sentence first added to the request with D414 was refuted by the first small send and
+  removed; `probe-d413-d414-2026-11-10/RESULT.md`). 132 sends, 108 ladders, 24 declined, none refused twice; $0.11. **Line 6
+  is met on both halves** (the favourable end the same in 9 of 9 company-figure theses; one due day in 34 of 35). Lines 4
+  and 5 are met on the two readings that favour the answer (37 theses right, 29 by a ladder) and missed on the strict one.
+  **Lines 1 to 3 are missed on every reading**, by 1, 1 and 3 ladders that both first readers fail (a survey question re-cut
+  to a calendar year; a part not listed; three events that write the wait as the ruling out). The two third readers agree on
+  21 of 70 points. Spent under D401's $3: $0.755.
+- **Alex's answers after the third Stage A (D416 to D419; 2026-11-10):** the six lines stay; the ruling out of an event is
+  tried as a typed answer (who decides, what they decide) and proved small first; a rolling twelve months with no
+  publication day is declined; a government's permission or ban on a class of products belongs to the theme; the fourth
+  Stage A is sent without asking again once each change is proved small and reviewed. The largest thing both readers fail
+  was diagnosed first: a wait written as the ruling out, 7 of 140 stored event answers read in full, six on product-deadline
+  theses (`stage_a/result-3/wait-as-ruling-out-hand-read.md`).
+- **After the third Stage A: four rules of Alex's, each tested alone, then the fourth Stage A (D416 to D421; design §5.2.5;
+  `clean-arch/step4-2026-11-10/stage_a/result-4/RESULT.md`).** D417 (a rolling twelve months with no publication day
+  declined), D420 (an authority's proceeding always has a ruling out), D418 narrowed (a tracked government decision is the
+  theme's) and D416 (an event's ruling out as who decides and what they decide) each passed a small send of its own; the
+  typed ruling out failed its first trial and passed its second, after D420. The fourth Stage A: 132 sends, 104 ladders, 27
+  declined, 1 refused twice; $0.11. **Lines 2 and 6 are met under every reading** (the favourable end the same in 9 of 9;
+  one due day in 33 of 33 theses whose three sends are ladders). Line 5 is met on the two readings that favour the answer
+  (40 right, 31 by a ladder) and missed on the strict one (34 and 25). **Lines 1, 3 and 4 are missed**, by 1, 2 and 3
+  answers on the third readers' agreed rulings (0, 1 and 2 on what both first readers fail): a Kyber question that both
+  branches of its thesis answer Yes; a question and a Yes condition on different periods; a "restructuring" counted as a
+  ruling out; three declines for "two figures, none the main one" that no earlier run had. The third readers agree on 29
+  of 53 points. Spent under D401's $3: $1.136.
+- **The second-look test (D422; `clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/RESULT.md`): it did not pass.**
+  76 answers of the fourth Stage A, each sent back once with one instruction that names no fault ($0.12); one blind
+  reading round of 102 items. Of the 18 answers with an agreed fault, 6 mended (9 needed); of the 30 unfaulted, 3 counted
+  against it (the page fails at 3). It mends what one rule and one field show (the three wrong refusals, a ceiling as a
+  reference, a missing unit); it removed two correct references, turned a correct refusal into a ladder and traded one
+  fault for another twice. The round also re-read the fourth run's answers: 14 of its 18 agreed faults are agreed again;
+  the two third readers rule alike on 22 of 54 points. Spent under D401's $3: about $1.25.
+- **Alex's answers (D425, D426):** the second look is not adopted; the ladder step is not tuned further on the 44 theses and
+  no fifth Stage A is sent. **Stage A has not passed** (lines 1, 3 and 4 missed by 1 to 3 answers of 131). By his word the
+  preparation of Stage B opens on the step as it ran in the fourth Stage A; no paid Stage B send without his word again.
+- **The Stage B baseline reading (`clean-arch/step4-2026-11-10/stage_b/RESULT.md`):** the frozen judge on the ruler's
+  hand-written ladders, 159 stored judgements read by Codex and Claude Opus 5.5 after seven reviews of the plan: 4 of 151
+  decided judgements UNSUPPORTED (3%), all in figure questions (4 of 52, 8%; yes/no 0 of 99), 7 INSUFFICIENT, 16 of 16
+  questions end the window SUPPORTED. Every fault is in three figure questions before a sized amount is in view. Controls:
+  6 of 6 planted caught by both families. The lines' chance behaviour is measured (`line_chance.py`). Council B consensus
+  (`km`, `kn`): put Stage B's lines and the paid send to Alex.
+- **The next task:** Alex's word on Stage B's lines, its reading shape and the paid send; the adapter's mode that runs the
+  frozen judge over the ladder step's questions (design §5) is built (`stage_b/ladder_adapter.py`, D429). Stage A has
+  not passed (D426). Reported and not confirmed: a footnote marker set aside in a quotation; an event undone counts as
+  happened; a ruling out is new, whole and standing; the middle range spans a stated range.
+- **Open defects recorded by this review:** the frozen judge retried 10, 16 and 18 judgements in the seeded clean draws, 38 of 51
+  reasons a theme cited as a dependency (PRD 11, E4), and its stored path holds the 2026-07-05 fault above (frozen; findings for
+  Alex); the same matter takes different shapes between draws (Kyber due end-2027 in one draw and end-2028 in another); under D397
+  the second bet of a topic that holds two has no answer; five-state event ladders failed by hand three times before a construction now in the request
+  produced ones that pass a reader; in Stage A the model's own are faulted by both reader families in 10 of 17 for the company.
 - **The unseeded measurement (D395):** graded subset 4.0 against 6.33 seeded. Every miss is a question not opened in the ruler's shape.
-  Judged answers 16 of 16, on the ruler's wording.
+  Judged answers 16 of 16, on the ruler's wording and ladder; the system's own questions have never met a judge.
 - **Stage 2 of D392:** clean 18, 18, 17 against v108 17, 15, 16, inconclusive on q12.
 - **Known gap (D394):** capital spending (q12).
 

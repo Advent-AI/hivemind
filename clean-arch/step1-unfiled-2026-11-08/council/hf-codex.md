@@ -1,0 +1,15 @@
+**NOT READY — the requested v23 is not present at the specified path.** The file available for review identifies itself as **v22**, and it still contains the defects reported in `he`. I cannot certify v23 or complete the requested fixture-by-fixture and sentence-by-sentence review against a version I cannot see.
+
+For example, the available design says every permitted 15-significant-digit number passes its check. `999999999999999000` meets that request, but the specified conversion writes `999999999999998976` and refuses it.
+
+The following are verified against the files currently on disk:
+
+1. **Three sends can reuse one answer.** [DESIGN.md:566](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:566) asks for three sends but does not specify separate archives or a cache bypass. [model.py:250](/Users/lchingen/hivemind/src/hivemind/model.py:250) returns a cached answer for an identical request. A complete fix must specify how each send obtains a fresh answer, identifies its archive, and detects a cache hit.
+
+2. **The number contract remains inconsistent.** [DESIGN.md:295](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:295) defines the conversion and [line 298](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:298) makes the disproved claim above. The request now applies the same stated limit to reference values, but the design still specifies the round-trip refusal for bounds and does not fully specify reference comparison and storage. The fix must align both values’ permitted inputs, checks and storage, with boundary examples.
+
+3. **Malformed or schema-invalid answers lack a Stage A outcome.** [DESIGN.md:344](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:344) defines retries for check refusals, while [model.py:258](/Users/lchingen/hivemind/src/hivemind/model.py:258) can raise `SchemaError` before those checks. The design must specify first and second failures, archive records, retry, denominator and report; it must also handle the archive’s [200,000-character truncation](/Users/lchingen/hivemind/src/hivemind/model.py:276) when rereading exact numbers.
+
+4. **A range assessment can disappear from the report.** The [form](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:57) correctly restricts `n/a` to non-figures, but the [row-validity rule](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:647) does not enforce that restriction for G. The fix must enforce applicability and define its reported denominator, including an empty assessed population.
+
+The specified [design file](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1) says “v22,” and its status says “Version 22.” Please make v23 available at the requested path or provide its location; the remaining requested review needs that version.

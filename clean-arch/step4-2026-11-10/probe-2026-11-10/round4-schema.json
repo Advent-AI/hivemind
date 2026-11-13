@@ -1,0 +1,346 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "named",
+  "main",
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "named": {
+   "type": "array",
+   "description": "Every figure or event the topic's outcome names, one entry each, in the outcome's order. A condition or a comparison attached to one of them is not an entry.",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "thing",
+     "kind"
+    ],
+    "properties": {
+     "thing": {
+      "type": "string",
+      "pattern": "\\S"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "figure",
+       "event"
+      ]
+     }
+    }
+   }
+  },
+  "main": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "The entry of named that is the main thing the topic tracks, copied from its thing. Null when named is empty, or holds several and none of them is the main one; then no_ladder gives the reason and ladder is null."
+  },
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: main is null (the topic has no main figure or event); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "yes_no",
+      "company_states",
+      "theme_states",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it. It stands on its own for a reader who never sees this item."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "yes_no": {
+       "description": "For an event that happens or not by the due day; else null. Exactly one of yes_no, company_states, theme_states and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "yes",
+          "no"
+         ],
+         "properties": {
+          "yes": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the answer is Yes: the event has happened by the due day."
+          },
+          "no": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the answer is No."
+          }
+         }
+        }
+       ]
+      },
+      "company_states": {
+       "description": "For the company's event that can end in more than two states: exactly five states; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "label",
+           "condition"
+          ],
+          "properties": {
+           "label": {
+            "type": "string",
+            "enum": [
+             "Strongly bullish",
+             "Bullish",
+             "Neutral",
+             "Bearish",
+             "Strongly bearish"
+            ],
+            "description": "Each label used once, meaning good or bad for the business."
+           },
+           "condition": {
+            "type": "string",
+            "pattern": "\\S"
+           }
+          }
+         }
+        }
+       ]
+      },
+      "theme_states": {
+       "description": "For a theme's event that can end in more than two states: exactly five states; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "name",
+           "condition"
+          ],
+          "properties": {
+           "name": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "A short name of the state itself; each name different. Never Strongly bullish, Bullish, Neutral, Bearish or Strongly bearish: those are a company's labels."
+           },
+           "condition": {
+            "type": "string",
+            "pattern": "\\S"
+           }
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "value"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "One unbroken passage copied from the item exactly, stating what the market expects: a consensus, the company's guidance, the stated plan or deadline. Not reworded, not reordered, not the topic's wording."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states for it, in the figure's unit. Null when the item gives the expectation in words alone, and for an event's reference that is not a number. Never a number the item does not state."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}

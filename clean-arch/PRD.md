@@ -1,6 +1,6 @@
 # Hivemind architecture: the hedge fund research brain
 
-**Status: working draft.** This document defines the architecture being developed from Alex's diagram and the discussion around it. It is a design, not a claim that the system has been built or that its quality has been proven.
+**Status: working draft.** This document defines the architecture being developed from Alex's diagram and the discussion around it. It is a design, not a claim that the system has been built or that its quality has been proven. Decided parts: Step 1 runs the adopted request c8 (section 12; D387, D391); Step 2 and Step 3's grouping library are frozen (section 5; D427). Step 4 has not passed. Nothing here is joined to production storage; the clean path goes to production as a whole, after Step 4 meets its lines.
 
 ## 1. What the system does
 
@@ -136,13 +136,13 @@ An open thesis may accumulate many evidence records. Step 1 needs to understand 
 
 The proposed design places semantic search over the evidence library. It uses the thesis and incoming evidence to find top-N related evidence across the current entity, including evidence linked to other theses. The thesis is search context, not a restriction to evidence already linked to that thesis. This also applies when the proposed thesis is new. For example, “raised its revenue outlook” and “expects higher sales” can be related despite different wording. Alex chose this entity-wide scope on 2026-11-06.
 
-Search returns **candidates**, not a final decision. Alex discussed a starting point of top 10; the implementation and quality requirements need to be measured.
+Search returns **candidates**, not a final decision. As built and frozen (`step2/compare.py`; D381, D427): one query per association (the thesis question, then the incoming summary and passages), plus one query of the record's own text when it has no association or lists the company's figures; each query ranks the original record of every stored group by cosine similarity of `text-embedding-3-small` embeddings and keeps the top 10; the union is compared. Figures never enter a search or comparison text. Measured: the earlier version of a repeat was among the candidates for 112 of 113 known pairs in the first forward run and 141 of 143 at the acceptance on fresh articles (D386). Speed and cost under production load are not measured.
 
 A match outside the returned set will not be considered by the comparison. Search quality therefore matters independently from the model's ability to compare the records it receives.
 
 ### Compare with Jev
 
-**2026-11-08 (candidate, [round log](step1-unfiled-2026-11-08/LOG.md) §§24, 31–35):**
+**As built and frozen (2026-11-08, accepted D381, frozen D427; [round log](step1-unfiled-2026-11-08/LOG.md) §§24, 31–35):**
 - Comparison reads the full passages; the 600-character cut is removed.
 - An unlinked record also searches by its own text.
 - `figures` never enter a search or comparison text.
@@ -150,7 +150,11 @@ A match outside the returned set will not be considered by the comparison. Searc
   an official's denial of a report is a revision.
 - When a thesis opens, every stored unlinked group from earlier articles is judged against it in batches of ten (a yes/no question; the
   company's overall results inform only a revenue or earnings thesis). Each judged pair is recorded once.
-- On c6's records: search 97.9%, wrong merges 1.9% (2 of 104), both lines met; line 3 not re-measured.
+- On c6's records: search 97.9%, wrong merges 1.9% (2 of 104), both lines met; line 3 not re-measured. At the acceptance on 50 fresh
+  articles (D386, one draw): search 141 of 143, clear wrong merges 1 of 57 plus 2 overlaps.
+- Known weakness, recorded and not tuned (D423): "later version" relations. In one saved end-to-end draw, two source readers found 9
+  of 30 such relations join two different statements, most of them NVIDIA's answer to a report linked to a neighbouring statement of
+  the same story; a wording change failed its line (Step 2 log §14).
 
 Jev compares the new evidence with the returned evidence. The intended outcomes are:
 
@@ -173,7 +177,9 @@ The result “new evidence” is the outcome of the comparison performed; it is 
 
 The first measurement against these lines is in the [Step 2 log](step2-validation-2026-11-07/LOG.md) §12; the isolated modules are `step2/compare.py` and `step3/library.py`.
 
-The diagram's intended sequence is: use `{thesis, incoming evidence}` to search the evidence library; pass the returned candidates and incoming evidence to Jev; pass the comparison result and the proposed association to Step 3. For a new thesis, search the same entity-wide evidence library. A concrete working draft of the Jev comparison request appears in [section 13](#13-step-2-prompt-jev-working-draft).
+**Frozen (D427, Alex, 2026-11-11: "好jev 收尾冻结").** Step 2 and Step 3's grouping library stay as accepted and measured (Step 2 log §§12–18); `tests/test_frozen_clean_step2.py` fails the suite when one of their files moves. They go to production only with the whole clean path, after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each), with these three lines checked on that run. A change is a new version that only Alex opens. Five open defects are carried with the freeze (Step 2 log §17).
+
+The diagram's intended sequence is: use `{thesis, incoming evidence}` to search the evidence library; pass the returned candidates and incoming evidence to Jev; pass the comparison result and the proposed association to Step 3. For a new thesis, search the same entity-wide evidence library. The frozen Jev request appears in [section 13](#13-step-2-prompt-jev-request-frozen).
 
 ## 6. Step 3: save evidence and links
 
@@ -184,9 +190,9 @@ Step 3 takes the proposals from Step 1 and the comparison outcomes from Step 2 a
 | New thesis with supporting evidence | The new thesis and its evidence link; save new evidence or reuse a matching record according to Step 2. |
 | New evidence for an existing thesis | The evidence and its link to the thesis. |
 | Repeat | Place the incoming record in the existing evidence record's group: add its source and any missing link to the relevant thesis, and keep the incoming record's own text and fields inside the group. Do not rewrite the existing record, and do not create a separate evidence record for the same statement. |
-| Revision | The new evidence and its source, linked to the earlier statement as a revision. |
+| Revision | The new evidence and its source, linked to the earlier statement as a revision. In the judge's ledger the new record also takes the earlier record's thesis links (D202's rule, kept on the clean path by D424; written by the D392 adapter until Step 3 is joined to production storage). |
 
-A revision does not erase the earlier statement. On 2026-11-06, Alex chose to keep one evidence record for a repeat and add the new source and any missing thesis link. On 2026-11-08 the Step 2 validation showed that keeping only the earlier text discards details a later report adds, such as a guidance condition; Alex then chose to keep each repeat's own text and source inside the stored record's group, without rewriting the original ("A 继续；跑council loop 开始做"; [Step 2 log](step2-validation-2026-11-07/LOG.md) §7). How a judgement reads a group is being tested. Multiple articles reporting the same statement do not automatically establish independent original sources. The current production writer stores separate repeat records, so this is a change for the clean path and needs implementation and verification; the existing historical records remain available. Step 3 ends when the chosen thesis, evidence and relationships are saved. How they are physically stored and written is a separate implementation decision.
+A revision does not erase the earlier statement. On 2026-11-06, Alex chose to keep one evidence record for a repeat and add the new source and any missing thesis link. On 2026-11-08 the Step 2 validation showed that keeping only the earlier text discards details a later report adds, such as a guidance condition; Alex then chose to keep each repeat's own text and source inside the stored record's group, without rewriting the original ("A 继续；跑council loop 开始做"; [Step 2 log](step2-validation-2026-11-07/LOG.md) §7). In the judge's ledger each member of a group is its own evidence record, related to the original as the same claim (D204), and the judge reads each copy with that note; a second or later copy of a statement already in the same request is 31% to 34% of what the judge is shown in the saved clean draws (26% to 31% in production's), and how a judgement weighs copies is not tested further (Step 2 log §17). Multiple articles reporting the same statement do not automatically establish independent original sources. The current production writer stores separate repeat records, so this is a change for the clean path and needs implementation and verification; the existing historical records remain available. Step 3 ends when the chosen thesis, evidence and relationships are saved. How they are physically stored and written is a separate implementation decision.
 
 ## 7. Step 4: judge the thesis
 
@@ -195,6 +201,8 @@ Judgement is separate from processing and saving an article. It assesses what th
 For the capital-spending example, saving the revised forecast records **what the company said**. Judgement later considers **what that means for the investment question**. The saved evidence and its relationships must be available to that work.
 
 This discussion has not yet defined the judgement's input selection, output, timing or decision method. Those are open design questions, not implicit requirements of the earlier steps.
+
+**2026-11-12 (built; the ladder step measured four times and frozen without passing its lines, D426; Stage B built, D429):** originally written 2026-11-10 (D396–D398): the [Step 4 design](step4-2026-11-10/DESIGN.md) proposes a ladder step, which writes one judged question, its answer ladder and its due day when a thesis opens, followed by production's frozen judge. Alex decided two of its rules: a topic that asks more than one thing gets one judged question, the other parts shown as not judged (D397); the ladder step carries D186, with ranges against the reference and the favourable end registered (D398). The build waits for his word.
 
 ## 8. Evaluate Step 1
 
@@ -511,10 +519,10 @@ If search misses the 12% statement or Jev chooses the wrong relationship, the sa
 
 1. **Thesis lookup:** Step 1 is to receive all relevant company tags and all open theses in scope for those tags. How tags are supplied and how this input performs in practice still need verification; cross-entity discovery and linkage are separate future work in section 16.
 2. **New thesis identity:** How should the Step 1 prompt define duplicate theses, and how accurately does the model apply that definition without a separate thesis-routing stage?
-3. **Search:** How should semantic search be built, how many candidates should it return, and how will its recall, speed and cost be measured?
-4. **Evidence comparison:** How should Jev handle conflicting candidates, uncertainty, attribution, dates and evidence linked to multiple theses?
-5. **Saving:** What are the exact record, link and write contracts for theses, evidence, sources and relationships?
-6. **Evaluation:** Which articles and review coverage should the first forward run use? Review its traces and state first, then decide what quality is sufficient to proceed. Step 2 review remains to be designed.
+3. **Search:** built and measured for recall (section 5; frozen, D427). Open: its speed and cost under production load.
+4. **Evidence comparison:** settled for conflicting candidates (a repeat joins the group it is most like, D381) and frozen (D427). Open, recorded: the accuracy of "later version" relations (D423) and whether readers are misled by a wrong group when not prompted (Step 2 log §17).
+5. **Saving:** What are the exact record, link and write contracts for theses, evidence, sources and relationships when Steps 2 and 3 are joined to production storage? Today only the D392 measurement adapter writes the clean library into the judge's ledger; its revision rule is decided (section 6, D424).
+6. **Evaluation:** Which articles and review coverage should the first forward run use? Review its traces and state first, then decide what quality is sufficient to proceed. Step 2 was reviewed against its three lines and accepted (D381; acceptance on fresh articles, D386).
 7. **Judgement:** What evidence does Step 4 use, when does it run, and what does it produce?
 8. **Integration:** What exactly does Hummingbird deliver, and how does a new item see the appropriate library state?
 
@@ -1166,61 +1174,49 @@ As historical context, two saved responses and their input articles were read in
 
 The assembled clean request and partial forward-run answers now exist in the local trace. This review is not the measured failure-class audit required for an existing measured prompt. The exact thesis-opening boundary, storage mapping for evidence tier and source provenance, handling of ambiguous thesis identity, and compatibility with the existing ledger are still open. The partial run and source contamination do not establish that the draft works end to end.
 
-## 13. Step 2 prompt: Jev working draft
+## 13. Step 2 prompt: Jev request (frozen)
 
-**Purpose:** let a reader inspect the proposed comparison instructions after semantic search has selected candidate evidence. This is a draft for the clean architecture, not the current Jev request or a validated Jev API payload. Response format, score handling, uncertainty and multi-candidate resolution remain open.
-
-**Existing interface:** Jev uses a typed `choice` question and returns a choice with probabilities, not a generated explanation. The current evidence criteria are `same_statement`, `supersedes` and `different`, asked for each selected evidence candidate. `cannot_tell` exists in the current **thesis** relation criteria, not in the evidence criteria. The prose below describes the intended comparison; it still needs to be translated into and tested as an actual Jev request. How to use probabilities and resolve several candidates remains open. [Jev evidence criteria](../src/hivemind/views/jev_matching.py) and [transport](../src/hivemind/jev.py).
-
-**Repeat decision:** `same_statement` is the comparison needed for Alex's chosen repeat behavior. The application must retain which existing evidence candidate produced that result so Step 3 can reuse it, add the incoming source and create any missing thesis link. A similar topic or number alone is not enough to establish a repeat. This is a clean-design requirement, not a claim that the current writer already does it.
+**Status:** accepted with Step 2 (D381) and frozen (D427). The text below is the request `clean-arch/step2/compare.py` sends, copied from it; the code is the owner and `tests/test_frozen_clean_step2.py` fails the suite when it moves. Model: `jev-1.14.0` through the repository's Jev transport (`jev.ask`), answers archived per run. Jev answers a typed `choice` question with probabilities, not a written explanation; there is no `cannot_tell` choice for evidence.
 
 ### What Jev receives
 
-- The thesis the incoming evidence is proposed for.
-- The incoming evidence, including its available source, speaker and stated time.
-- A candidate prior evidence record returned from the entity-wide search, with its available context; it may be linked to another thesis.
-- The comparison instructions and the three relationship descriptions below. The diagram specifies the outcomes; how comparisons are batched is not yet decided.
-
-### Proposed comparison instruction
+One request per incoming record. The **state** is the incoming record; there is **one question per candidate** the search returned, each naming one stored group's original record. Each record is written as one line:
 
 ```text
-Compare the incoming evidence with the candidate existing evidence for the entity.
-Use the supplied statements and their available source, speaker and time.
-
-Determine which relationship best describes the two statements:
-
-REPEAT: The incoming statement presents the same claim again, including a
-retelling or another source reporting that claim.
-
-REVISION: The incoming statement is a later account that changes the same
-earlier statement, such as a revised forecast or an updated statement by its
-source. Merely being later or about the same subject is not enough.
-
-DIFFERENT: The statements describe different facts, claims or periods rather
-than a repeat or revision of the same claim. Distinct original claimants can
-make separate claims; a different reporting source may simply retell one.
-
-Consider the wording, figures, speaker, original source, what each statement
-refers to, and when it was stated. Similar wording or the same figure alone
-does not prove the statements are the same. Do not infer missing details.
-Identify the relationship and the existing evidence being compared. If the
-supplied information does not establish a relationship, express uncertainty.
+<INCOMING PIECE | STORED PIECE> [<tier>; <reporting speaker>; original source <original party>, stated <statement date or unknown>] <summary> | quote: <the passages, joined>
 ```
 
-### Input to be inserted at runtime
+### The question
 
 ```text
-[Thesis]
-<thesis identity and description>
-
-[Incoming evidence]
-<statement and available source, speaker and time>
-
-[Existing evidence]
-<one search result and its available source, speaker and time>
+How does the INCOMING PIECE relate to the STORED PIECE below? Use only the supplied text. STORED PIECE:
+<the stored piece line>
 ```
 
-Jev's pairwise `DIFFERENT` outcome is not proof that no other record in the library matches. Search selection, N, confidence thresholds, the representation and handling of uncertainty, and the rule for combining multiple comparisons are open; this draft does not specify a forced choice when the information is insufficient.
+Choices:
+
+- `same_statement`: the INCOMING PIECE reports the STORED PIECE's main statement: a retelling, another outlet carrying it, the same number in text or a table, or the same speaker repeating it; wording, precision and extra detail may differ. If the stored piece carries several statements and the incoming piece reports only a secondary one, this is not it.
+- `supersedes`: a later version of the stored piece's main statement, changed: the same speaker revises that guidance, forecast or event-progress statement, an official confirms or denies that reported claim, or the original source revises it; another statement on the same topic is not this.
+- `different`: a different fact, figure or matter, a figure for another period or quantity, or only a secondary statement of the stored piece, even if on the same topic.
+
+### How the answers become the outcome
+
+- Any `same_statement`: the record is a repeat of the candidate with the highest `same_statement` probability, ties going to the earliest group (Alex, 2026-11-08). A `supersedes` answer on another candidate becomes a revision link.
+- No `same_statement` but one or more `supersedes`: the record is a revision of those groups.
+- Otherwise it is new evidence. A pairwise `different` is not proof that nothing else in the library matches.
+- A request that fails is retried once; a second failure is reported and nothing is saved for that record.
+
+### The later link when a thesis opens
+
+When a thesis opens, the stored groups that arrived unlinked from earlier articles are judged against it in batches of ten: the state is `THESIS: <thesis question>`, one yes/no (`noul`) question per stored group, accepted at Jev's threshold of 0.5:
+
+```text
+Does the STORED PIECE below inform the THESIS stated above? Use only the supplied text; a shared company, product family or word is not enough, and the company's overall results, guidance and estimates inform a thesis about its revenue or earnings path, not one about a competitor, a supplier or a policy unless they speak to it. STORED PIECE:
+<the stored piece line>
+```
+
+- `true`: the STORED PIECE bears on the THESIS's own matter (the parties, products, policy or quantity the THESIS names) and makes its answer more or less likely, as evidence filed under it would.
+- `false`: the STORED PIECE concerns another matter, or is a company-wide result or event that does not speak to the THESIS's own matter, or would not change its answer.
 
 ## 14. Existing components to reference during the rebuild
 
@@ -1277,7 +1273,7 @@ These files are the existing frozen reference, not an approved evaluation set fo
 | `{thesis, evidence}` handoff | [Extraction handover](../src/hivemind/extraction.py), [item orchestration](../src/hivemind/views/round.py) | Existing extraction returns evidence, candidates and links. The clean architecture's exact handoff contract is still open. |
 | Evidence database | [Ledger store](../src/hivemind/views/store.py), [evidence writer](../src/hivemind/views/writing.py) | Evidence, sources and thesis links already exist in the same ledger. Verify the new writes and existing reader behavior on a copy before choosing how to reuse the writer. |
 | Semantic search over evidence | [Current evidence ranking](../src/hivemind/views/matching.py), [existing semantic search](../src/hivemind/search.py) | The current evidence candidate ranking uses word overlap. The semantic index in `search.py` indexes **theses**, not evidence. It is a reference for a search implementation, not the evidence search required by this diagram. |
-| Step 2: Jev | [Jev transport and request](../src/hivemind/jev.py), [evidence comparison](../src/hivemind/views/jev_matching.py) | The existing path asks Jev to compare incoming and selected existing evidence. Its candidate selection, response and decision logic must be checked against the new search and section 13. |
+| Step 2: Jev | [Jev transport and request](../src/hivemind/jev.py), [evidence comparison](../src/hivemind/views/jev_matching.py) | The clean path uses the same transport with its own criteria and outcome rule (section 13, `clean-arch/step2/compare.py`, frozen D427); production's criteria and threshold stay in `jev_matching.py`. |
 | Step 2 evaluation | [Evidence decision reference](../poc/eval/gold/evidence-decisions-seed-2026-10-25.json), [evidence decision scorer](../scripts/score_evidence_gold.py) | Existing cases and a scorer cover evidence outcomes and targets for an earlier setup. Their applicability to semantic retrieval and the clean architecture has not been established. |
 | Repeat, revision and new outcomes | [Evidence comparison](../src/hivemind/views/jev_matching.py), [evidence writer](../src/hivemind/views/writing.py) | Existing code records these relationships. The clean design must specify the outcome and uncertainty contract before reuse is accepted. |
 | Step 3: save and link | [Writer](../src/hivemind/views/writing.py), [store](../src/hivemind/views/store.py), [item orchestration](../src/hivemind/views/round.py) | Existing code writes theses, evidence, source links and relationships. Its current input contract includes old matching decisions and must not be assumed to accept the new handoff directly. |
@@ -1500,4 +1496,4 @@ The pending choices include whether Step 4 needs outcome ranges and what quality
 
 In the Claude-review revisions, the system-prompt draft grew from 7,579 to 10,469 characters. The added text supplied the signed standard's previously missing not-kept boundaries, their exceptions, the related-period distinction, the list-and-link handoff and the supplied-entity boundary. The subsequent clarification of Alex's new-thesis minimum increased that draft to 10,753 characters. The approved evidence tier and time fields brought the prior draft to 12,397 characters. The topic, evidence audit and multi-passage changes increased the system prompt from 12,397 to 13,419 characters and from 2,498 to 2,696 tokens using the local o200k_base tokenizer. The added wording states the agreed topic rule, the signed evidence boundaries and how to return multiple source passages; no model quality result is claimed. The earlier prompt bytes were not archived for a token-count comparison; no token-cost or model-quality improvement is claimed. The assembled-request review is recorded in the Step 1 audit. The provider accepted the exploratory multi-passage requests; output quality remains under review and has not been formally accepted.
 
-Additional checked boundaries: the current `service.evidence_record` and bundle evidence responses read legacy `replacements`, while `store.evidence_in_force` reads `same_claims` and `revisions`; this is a reader-contract gap, not proof about every UI. The snapshot has zero `replacements` rows. Jev's current evidence question uses the three criteria in section 13; its `cannot_tell` criterion belongs to thesis comparison. The current repository's `docs/check.py` invokes the clean-architecture renderer check; whether that coupling should remain is a maintenance choice, not an extraction-quality finding.
+Additional checked boundaries: the current `service.evidence_record` and bundle evidence responses read legacy `replacements`, while `store.evidence_in_force` reads `same_claims` and `revisions`; this is a reader-contract gap, not proof about every UI. The snapshot has zero `replacements` rows. Production's Jev evidence question uses the same three choice names as section 13 with its own wording (`jev_matching.PIECES`); its `cannot_tell` criterion belongs to thesis comparison. The current repository's `docs/check.py` invokes the clean-architecture renderer check; whether that coupling should remain is a maintenance choice, not an extraction-quality finding.

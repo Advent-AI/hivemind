@@ -1,0 +1,11 @@
+**Not ready to put to Alex:** the result can be reported now, but the proposed second-look test needs a defined comparison and pass condition before it is a decision he can assess.
+
+1. The line counts match [RESULT.md](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/result-4/RESULT.md): lines 1, 3 and 4 miss even when unresolved disagreements favour the answer; line 5 misses under the strict reading. Line 6’s due-day result is **33 of 33 theses whose three sends are ladders**, not all 44. One send was refused twice by code and is separate from the 27 model declines.
+
+2. The four intended behaviours appear in this run on the named cases. That does not establish that each change caused its observed result or had no other effects. The new lidar-theme filing and the $105 billion ceiling used as a reference should also be shown to Alex: both first readers mark them wrong, though they are outside the three missed lines.
+
+3. Five of the six *answers* behind the agreed line failures are on four theses whose outcomes name multiple things or periods. That association is visible in the cases; it does not establish that Step 1’s wording caused the failures. For example, the two readers and the model’s later account say the total is identifiable in `acc/clean-9`, despite the additional AI-chip portion. Show the examples without attributing the defect upstream.
+
+4. A second look is a **candidate test**, not an established remedy. The accounts show that, when prompted afterwards, the model can state a different judgment; they do not recover its original reasoning or show that an unguided review will reliably correct it. AGENTS §6 specifies the closing check in the same call, so a separate call requires Alex’s decision as proposed.
+
+Before recommending that test, specify how the approximately 15 faulty and 30 control answers are chosen, including declines and disputed faults; keep their labels hidden from the reviewing model; state in advance what improvement and what damage to previously sound answers would count as a pass or failure; and have an independent reader judge the corrected answers against the unchanged form. Show Alex the added call, cost and latency, and that this selected-case test would not itself prove the six lines pass on a fresh run. D401 still governs the failed measurement and Stage B remains his decision.

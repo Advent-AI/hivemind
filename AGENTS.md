@@ -16,6 +16,8 @@ reason, never as rules.
   version and refuses a configuration that names one (D359); an older version is read from its stored runs.
   `tests/test_frozen_extraction_prompt.py`, `tests/test_frozen_questions_and_judgement.py` and `tests/test_baseline.py` fail the suite
   when a piece moves.
+- **Clean Step 2 is frozen** (D427): on the clean path, the search, the Jev comparison and Step 3's grouping library change only as a
+  new version Alex opens; `tests/test_frozen_clean_step2.py` fails the suite when one of their files moves.
 - **The current phase** is `docs/prd/10-filing-phase.md`: read it in full and do its §0 checklist before any step of the phase (Alex,
   2026-11-04: "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit").
 - `docs/CURRENT_STATE.md`: the status, the open defects, the one next task and any worktree that runs a long job (§9).
@@ -336,6 +338,10 @@ Verify at the point the change touches, at the sharpest level that shows it work
   arm. It goes to an independent Codex read and a challenge round before its first send, and its result goes to a challenge round
   before the next change. Reading the traces and the model's own account locates a fix; it does not review it (Alex, 2026-11-08:
   "你这些改动有我你有好好的跑council 再下手").
+  Every round's reasoning and decisions are reflected on in the council until there is a consensus; the decision is recorded, and
+  the next test goes straight ahead, held to the PRD and its quantified goals, with every trace read by you yourself and not only
+  by readers (Alex, 2026-11-10: "你应该跑council loop 来reflect 你每一轮的思路还有决策，需要你打成共识，记录决策，向前直行测试。不要drift,我们有PRD和量化目标，
+  你自己作为llm 下去看所有trace").
 - **Small first, then one run.** A hypothesis is first validated the simplest way, on a few stored cases and a few cents, and shown to
   work at a high level before any full analysis or stability test is built (Alex, 2026-11-04: "don't overspend resources on wasting time.
   We need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we dive into do the full

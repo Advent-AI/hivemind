@@ -1,0 +1,561 @@
+[
+ {
+  "about": "Check fixtures for the ladder step's code, and worked examples for engineers. Each answer passes the schema and checks 1 to 8. An event is answered in at most three outcomes (D409), the last written by code. `written` is a projection of what the step writes for it, not the whole record: the view's object, kind, year and due day, and each rung's position, label, condition and, for a figure, its bounds. The complete rows (every column of `views`, `rungs` and `clean_ladders`, the outcome record included) are DESIGN.md §5.4's, and the build tests them on these answers. They are NOT offered as sound ladders: whether a ladder is right is a reader's judgement, tested by the planted-fault dry runs; where a fixture has a `note`, it records what readers found in it. This file is never sent to the model; the request is candidate-system.txt, the payload followed by candidate-closing.txt, and the schema. The fixtures use stored theses of the covered company on purpose; the request itself names no company."
+ },
+ {
+  "shape": "an event about the company with nothing that can rule it out before the due day: two rungs",
+  "thesis": [
+   "u1",
+   "clean-3"
+  ],
+  "article_day": "2026-07-02",
+  "answer": {
+   "no_ladder": null,
+   "ladder": {
+    "question": "Will NVIDIA's Vera Rubin platform have begun first shipments by 2026-12-31?",
+    "object": "NVDA",
+    "not_judged": [],
+    "event": {
+     "happened": "First shipments of Vera Rubin took place on or before 2026-12-31.",
+     "ruled_out": null
+    },
+    "figure": null,
+    "reference": null,
+    "due_day": "2026-12-31",
+    "due_day_basis": "period_end"
+   }
+  },
+  "written": {
+   "view_id": "v3",
+   "object_id": "NVDA",
+   "object_kind": "company",
+   "kind": "asset",
+   "year": "2026",
+   "due_day": "2026-12-31",
+   "rungs": [
+    {
+     "position": 1,
+     "label": "Yes",
+     "condition": "First shipments of Vera Rubin took place on or before 2026-12-31."
+    },
+    {
+     "position": 2,
+     "label": "No",
+     "condition": "Rung 1 does not hold on 2026-12-31."
+    }
+   ]
+  },
+  "note": "The article says shipments \"could begin later this year\"; the sixth dry run's stricter reader did not take that as a market expectation or a plan, so reference is null.",
+  "reading": "Both readers held every mark on this answer in the seventh reading (dryrun7/)."
+ },
+ {
+  "shape": "an event about the company on a binding obligation, with a part of the wording left out and listed: two rungs",
+  "thesis": [
+   "u1",
+   "clean-2"
+  ],
+  "article_day": "2026-07-01",
+  "answer": {
+   "no_ladder": null,
+   "ladder": {
+    "question": "Will NVIDIA sign a guarantee or backstop for OpenAI's lease of the Ohio data center by 2027-12-31?",
+    "object": "NVDA",
+    "not_judged": [
+     {
+      "part": "the amount of the guarantee",
+      "why": "no amount exists until a guarantee is signed; the outcome tracks the signing"
+     },
+     {
+      "part": "whether the guarantee is large enough to change NVIDIA's credit risk",
+      "why": "a condition on the size of an obligation not yet signed; it cannot be checked before the signing"
+     }
+    ],
+    "event": {
+     "happened": "NVIDIA signed a guarantee or backstop for OpenAI's lease of the Ohio data center on or before 2027-12-31.",
+     "ruled_out": null
+    },
+    "figure": null,
+    "reference": null,
+    "due_day": "2027-12-31",
+    "due_day_basis": "stated"
+   }
+  },
+  "written": {
+   "view_id": "v2",
+   "object_id": "NVDA",
+   "object_kind": "company",
+   "kind": "asset",
+   "year": "2027",
+   "due_day": "2027-12-31",
+   "rungs": [
+    {
+     "position": 1,
+     "label": "Yes",
+     "condition": "NVIDIA signed a guarantee or backstop for OpenAI's lease of the Ohio data center on or before 2027-12-31."
+    },
+    {
+     "position": 2,
+     "label": "No",
+     "condition": "Rung 1 does not hold on 2027-12-31."
+    }
+   ]
+  },
+  "note": "In the dry run this example quoted the talks as its reference; the stricter reader marked that as not an expectation, plan or deadline, so the reference is null here.",
+  "reading": "Both readers held every mark on this answer in the seventh reading (dryrun7/)."
+ },
+ {
+  "shape": "an event about the company in three outcomes (D409)",
+  "thesis": [
+   "u2",
+   "clean-9"
+  ],
+  "article_day": "2026-07-09",
+  "answer": {
+   "no_ladder": null,
+   "ladder": {
+    "question": "Will France's competition authority impose a fine or a remedy on NVIDIA in its antitrust investigation by 2027-01-31?",
+    "object": "NVDA",
+    "not_judged": [
+     {
+      "part": "whether the authority finds an infringement",
+      "why": "a finding with neither a fine nor a remedy is a finer difference inside the closing of the investigation; the outcome tracks what is imposed"
+     }
+    ],
+    "event": {
+     "happened": "The authority has imposed a fine, a remedy or both on NVIDIA in the investigation, on or before 2027-01-31.",
+     "ruled_out": {
+      "by_whom": "The French competition authority",
+      "decision": "The French competition authority formally abandons or withdraws the investigation without publishing a decision or conclusion."
+     }
+    },
+    "figure": null,
+    "reference": null,
+    "due_day": "2027-01-31",
+    "due_day_basis": "period_end"
+   }
+  },
+  "written": {
+   "view_id": "v9",
+   "object_id": "NVDA",
+   "object_kind": "company",
+   "kind": "asset",
+   "year": "2027",
+   "due_day": "2027-01-31",
+   "rungs": [
+    {
+     "position": 1,
+     "label": "Yes",
+     "condition": "The authority has imposed a fine, a remedy or both on NVIDIA in the investigation, on or before 2027-01-31."
+    },
+    {
+     "position": 2,
+     "label": "Ruled out",
+     "condition": "The French competition authority formally abandons or withdraws the investigation without publishing a decision or conclusion. This rung holds when that, or any other decision against the event of rung 1 as a whole, or a formal abandonment or withdrawal of it as a whole, was made after 2026-07-09 and stands on 2027-01-31, and only when rung 1 does not."
+    },
+    {
+     "position": 3,
+     "label": "Still open",
+     "condition": "Neither rung 1 nor rung 2 holds on 2027-01-31."
+    }
+   ]
+  },
+  "note": "Three outcomes (D409): a fine or a remedy imposed; the investigation closed with neither; neither by the due day. Before D409 this fixture held five states built by the request's construction. A check fixture, not offered as a sound ladder."
+ },
+ {
+  "shape": "an event under a theme in three outcomes (D409)",
+  "thesis": [
+   "u3",
+   "clean-12"
+  ],
+  "article_day": "2026-07-14",
+  "answer": {
+   "no_ladder": null,
+   "ladder": {
+    "question": "Will a binding US restriction, a licensing rule or any other, on advanced AI-chip shipments to third countries be in force on 2027-01-31?",
+    "object": "chip-export-controls",
+    "not_judged": [
+     {
+      "part": "the resulting constraint on Nvidia's sales to those markets",
+      "why": "the outcome tracks the rule; the effect on sales is read from later results"
+     },
+     {
+      "part": "how far the restriction goes, which countries it covers",
+      "why": "a finer difference inside the restriction being in force"
+     }
+    ],
+    "event": {
+     "happened": "A binding US restriction, a licensing rule or any other, on advanced AI-chip shipments to third countries is in force on 2027-01-31.",
+     "ruled_out": {
+      "by_whom": "The US Commerce Department or its Bureau of Industry and Security",
+      "decision": "The Commerce Department or the Bureau of Industry and Security formally withdraws or closes its consideration of such a restriction."
+     }
+    },
+    "figure": null,
+    "reference": null,
+    "due_day": "2027-01-31",
+    "due_day_basis": "period_end"
+   }
+  },
+  "written": {
+   "view_id": "v12",
+   "object_id": "chip-export-controls",
+   "object_kind": "theme",
+   "kind": "theme",
+   "year": "2027",
+   "due_day": "2027-01-31",
+   "rungs": [
+    {
+     "position": 1,
+     "label": "Yes",
+     "condition": "A binding US restriction, a licensing rule or any other, on advanced AI-chip shipments to third countries is in force on 2027-01-31."
+    },
+    {
+     "position": 2,
+     "label": "Ruled out",
+     "condition": "The Commerce Department or the Bureau of Industry and Security formally withdraws or closes its consideration of such a restriction. This rung holds when that, or any other decision against the event of rung 1 as a whole, or a formal abandonment or withdrawal of it as a whole, was made after 2026-07-14 and stands on 2027-01-31, and only when rung 1 does not."
+    },
+    {
+     "position": 3,
+     "label": "Still open",
+     "condition": "Neither rung 1 nor rung 2 holds on 2027-01-31."
+    }
+   ]
+  },
+  "note": "Three outcomes (D409). Before D409 this fixture held five states, which both readers failed in the seventh and eighth readings on different marks. A check fixture, not offered as a sound ladder."
+ },
+ {
+  "shape": "a company's figure with no stated expectation",
+  "thesis": [
+   "u1",
+   "clean-7"
+  ],
+  "article_day": "2026-07-06",
+  "answer": {
+   "no_ladder": null,
+   "ladder": {
+    "question": "What amount of supply and purchase commitments will NVIDIA report outstanding at its FY2027 year-end, in the commitments note of its annual report, against the $119 billion cited in July 2026?",
+    "object": "NVDA",
+    "not_judged": [],
+    "event": null,
+    "figure": {
+     "unit": "USD",
+     "year": "FY2027",
+     "ranges": [
+      {
+       "lo": null,
+       "hi": 80000000000.0
+      },
+      {
+       "lo": 80000000000.0,
+       "hi": 110000000000.0
+      },
+      {
+       "lo": 110000000000.0,
+       "hi": 140000000000.0
+      },
+      {
+       "lo": 140000000000.0,
+       "hi": 180000000000.0
+      },
+      {
+       "lo": 180000000000.0,
+       "hi": null
+      }
+     ],
+     "favourable_end": "lower",
+     "favourable_why": "A lower figure leaves less cash committed if AI demand disappoints, the risk the item raises."
+    },
+    "reference": null,
+    "due_day": "2027-02-28",
+    "due_day_basis": "expected_publication"
+   }
+  },
+  "written": {
+   "view_id": "v7",
+   "object_id": "NVDA",
+   "object_kind": "company",
+   "kind": "asset",
+   "year": "FY2027",
+   "due_day": "2027-04-01",
+   "rungs": [
+    {
+     "position": 1,
+     "label": "Strongly bullish",
+     "condition": "below 80,000,000,000 USD",
+     "lo": null,
+     "hi": 80000000000.0
+    },
+    {
+     "position": 2,
+     "label": "Bullish",
+     "condition": "from 80,000,000,000 USD to below 110,000,000,000 USD",
+     "lo": 80000000000.0,
+     "hi": 110000000000.0
+    },
+    {
+     "position": 3,
+     "label": "Neutral",
+     "condition": "from 110,000,000,000 USD to below 140,000,000,000 USD (no reference figure when the question opened)",
+     "lo": 110000000000.0,
+     "hi": 140000000000.0
+    },
+    {
+     "position": 4,
+     "label": "Bearish",
+     "condition": "from 140,000,000,000 USD to below 180,000,000,000 USD",
+     "lo": 140000000000.0,
+     "hi": 180000000000.0
+    },
+    {
+     "position": 5,
+     "label": "Strongly bearish",
+     "condition": "180,000,000,000 USD or more",
+     "lo": 180000000000.0,
+     "hi": null
+    }
+   ]
+  },
+  "reading": "Both readers held every mark on this answer in the seventh reading (dryrun7/)."
+ },
+ {
+  "shape": "a theme's figure with a stated expectation",
+  "thesis": [
+   "u1",
+   "clean-4"
+  ],
+  "article_day": "2026-07-04",
+  "answer": {
+   "no_ladder": null,
+   "ladder": {
+    "question": "What will the combined data-center capital expenditure of the big four AI hyperscalers be in calendar 2027, as their full-year results report it?",
+    "object": "ai-capex",
+    "not_judged": [],
+    "event": null,
+    "figure": {
+     "unit": "USD",
+     "year": "2027",
+     "ranges": [
+      {
+       "lo": null,
+       "hi": 700000000000.0
+      },
+      {
+       "lo": 700000000000.0,
+       "hi": 900000000000.0
+      },
+      {
+       "lo": 900000000000.0,
+       "hi": 1100000000000.0
+      },
+      {
+       "lo": 1100000000000.0,
+       "hi": 1300000000000.0
+      },
+      {
+       "lo": 1300000000000.0,
+       "hi": null
+      }
+     ],
+     "favourable_end": "n/a",
+     "favourable_why": ""
+    },
+    "reference": {
+     "words": "Next year, Nvidia projects that this figure could reach $1 trillion.",
+     "kind": "expected",
+     "value": 1000000000000,
+     "value_to": null
+    },
+    "due_day": "2028-02-15",
+    "due_day_basis": "expected_publication"
+   }
+  },
+  "written": {
+   "view_id": "v4",
+   "object_id": "ai-capex",
+   "object_kind": "theme",
+   "kind": "theme",
+   "year": "2027",
+   "due_day": "2028-03-30",
+   "rungs": [
+    {
+     "position": 1,
+     "label": "below 700,000,000,000 USD",
+     "condition": "below 700,000,000,000 USD",
+     "lo": null,
+     "hi": 700000000000.0
+    },
+    {
+     "position": 2,
+     "label": "from 700,000,000,000 USD to below 900,000,000,000 USD",
+     "condition": "from 700,000,000,000 USD to below 900,000,000,000 USD",
+     "lo": 700000000000.0,
+     "hi": 900000000000.0
+    },
+    {
+     "position": 3,
+     "label": "from 900,000,000,000 USD to below 1,100,000,000,000 USD",
+     "condition": "from 900,000,000,000 USD to below 1,100,000,000,000 USD (the reference when the question opened: \"Next year, Nvidia projects that this figure could reach $1 trillion.\")",
+     "lo": 900000000000.0,
+     "hi": 1100000000000.0
+    },
+    {
+     "position": 4,
+     "label": "from 1,100,000,000,000 USD to below 1,300,000,000,000 USD",
+     "condition": "from 1,100,000,000,000 USD to below 1,300,000,000,000 USD",
+     "lo": 1100000000000.0,
+     "hi": 1300000000000.0
+    },
+    {
+     "position": 5,
+     "label": "1,300,000,000,000 USD or more",
+     "condition": "1,300,000,000,000 USD or more",
+     "lo": 1300000000000.0,
+     "hi": null
+    }
+   ]
+  },
+  "reading": "Both readers held every mark on this answer in the seventh reading (dryrun7/)."
+ },
+ {
+  "shape": "no judged question: the outcome names two things and neither is the main one",
+  "thesis": [
+   "u2",
+   "clean-10"
+  ],
+  "article_day": "2026-07-10",
+  "answer": {
+   "no_ladder": "The topic's outcome names two things, new HBM capacity and whether record memory prices persist, and neither is the main one.",
+   "ladder": null
+  },
+  "written": {
+   "view": null,
+   "clean_ladders": {
+    "thesis_id": "clean-10",
+    "view_id": null,
+    "status": "no ladder",
+    "reason": "The topic's outcome names two things, new HBM capacity and whether record memory prices persist, and neither is the main one."
+   }
+  },
+  "reading": "Both readers held every mark on this answer in the seventh reading (dryrun7/)."
+ },
+ {
+  "shape": "a company's figure where the higher end is favourable (a made-up thesis; it shows the order of positions)",
+  "thesis": [
+   "made-up",
+   "clean-99"
+  ],
+  "article_day": "2026-07-06",
+  "thesis_text": null,
+  "answer": {
+   "no_ladder": null,
+   "ladder": {
+    "question": "What same-store sales growth will the retailer report for its fiscal 2027?",
+    "object": "RTLR",
+    "not_judged": [],
+    "event": null,
+    "figure": {
+     "unit": "percent",
+     "year": "FY2027",
+     "ranges": [
+      {
+       "lo": 5.0,
+       "hi": 6.5
+      },
+      {
+       "lo": null,
+       "hi": 2.0
+      },
+      {
+       "lo": 6.5,
+       "hi": null
+      },
+      {
+       "lo": 3.5,
+       "hi": 5.0
+      },
+      {
+       "lo": 2.0,
+       "hi": 3.5
+      }
+     ],
+     "favourable_end": "higher",
+     "favourable_why": "Faster same-store growth lifts revenue and margin on a fixed store base."
+    },
+    "reference": {
+     "words": "management guided same-store sales growth to about 4%",
+     "kind": "expected",
+     "value": 4.0,
+     "value_to": null
+    },
+    "due_day": "2027-03-15",
+    "due_day_basis": "expected_publication"
+   }
+  },
+  "written": {
+   "view_id": "v99",
+   "object_id": "RTLR",
+   "object_kind": "company",
+   "kind": "asset",
+   "year": "FY2027",
+   "due_day": "2027-04-01",
+   "rungs": [
+    {
+     "position": 1,
+     "label": "Strongly bullish",
+     "condition": "6.5 percent or more",
+     "lo": 6.5,
+     "hi": null
+    },
+    {
+     "position": 2,
+     "label": "Bullish",
+     "condition": "from 5 percent to below 6.5 percent",
+     "lo": 5.0,
+     "hi": 6.5
+    },
+    {
+     "position": 3,
+     "label": "Neutral",
+     "condition": "from 3.5 percent to below 5 percent (the reference when the question opened: \"management guided same-store sales growth to about 4%\")",
+     "lo": 3.5,
+     "hi": 5.0
+    },
+    {
+     "position": 4,
+     "label": "Bearish",
+     "condition": "from 2 percent to below 3.5 percent",
+     "lo": 2.0,
+     "hi": 3.5
+    },
+    {
+     "position": 5,
+     "label": "Strongly bearish",
+     "condition": "below 2 percent",
+     "lo": null,
+     "hi": 2.0
+    }
+   ]
+  },
+  "note": "The answer lists its ranges out of order; code sorts them. Position 1 is always Strongly bullish: with the higher end favourable it holds the highest range, with the lower end favourable the lowest. Whole bounds are written as integers (5, 2), the others in plain decimal notation with no exponent and no trailing zeros (6.5, 3.5). The fixture runs with a test research list whose one company is the made-up ticker RTLR; the reference's words are in the fixture's article.",
+  "fixture_input": {
+   "company": "RTLR",
+   "fiscal_year_note": "RTLR's fiscal year ends in January: this year is FY2027, next year is FY2028.",
+   "themes": [],
+   "thesis": {
+    "id": "clean-99",
+    "description": "What same-store sales growth will the retailer report for its fiscal 2027?",
+    "outcome": "The retailer's fiscal 2027 same-store sales growth.",
+    "period": "Fiscal 2027, at the annual results in March 2027.",
+    "opens_as": "product_node",
+    "settled_by": "The retailer's fiscal 2027 annual results."
+   },
+   "item": {
+    "publication_date": "2026-07-06",
+    "publisher": "(written for this fixture)",
+    "title": "Retailer lifts outlook after strong spring",
+    "text": "The retailer raised its outlook on Monday after a strong spring season. For fiscal 2027, management guided same-store sales growth to about 4%, up from 3% before. Analysts said traffic gains were broad-based."
+   }
+  },
+  "reading": "Both readers held every mark on this answer in the seventh reading (dryrun7/)."
+ }
+]

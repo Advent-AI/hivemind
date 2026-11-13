@@ -4322,3 +4322,495 @@ Alex, 2026-11-06, after the E1 diagnosis: "好的我觉得你先clean up封存�
   - Its first test is independent readers checking, against the sources, whether the system's answers to its own questions are
     well supported.
   - The design is written and council-reviewed before any code or paid send. A build and any paid run wait for Alex's word.
+
+## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+
+- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  - Options:
+    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+    - split into two questions, each judged, as D38 says;
+    - do not judge such a topic until Step 1 opens it as one thing.
+  - Alex: "只判主要那件 (Recommended)".
+- **Decided:**
+  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+    its wording is listed and shown beside the answer as not judged.
+  - A thesis with no main part gets no judged question, with the reason recorded.
+  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+    test: readers mark each part left out as a bet an analyst would hold or not.
+- **Scope:** the clean path's ladder step only. D38 stands for production.
+
+## D398 · 2026-11-10 · The clean ladder step carries D186: ranges against the reference, the favourable end registered, labels by code
+
+- **Asked**, with the census of production's own ladders (one request, the same in three draws, gave three different ladders, one
+  with its direction reversed): "你 10 月 26 日定过、11 月 5 日说“我们要做”的那条规矩还没实现：答案分段要对着市场预期或公司指引写成“高于／接近／低于”，并且每道题登记“数字越高对公司是好还是坏”。新做的“定档”这一步要不要直接带上它？"
+  - Options:
+    - both halves here (recommended). The option stated its costs: 7 to 9 of 18 number questions have no reference figure in their
+      opening article, so their ranges are the model's estimate and are marked "no reference"; a direction can still be registered
+      wrong, which the first test measures;
+    - the direction half only;
+    - not here: write ladders as production does, and leave D186 to a later version.
+  - Alex: "两半都带上 (Recommended)".
+- **Decided:**
+  - The clean ladder step builds D186 in full. The model states the reference the opening article gives and, for a company's figure,
+    which end is good for the business, with one sentence why. Code orders and labels the rungs from that end, writes each range's
+    text from its bounds, and checks that a stated reference value lies in the middle range.
+  - The reference is what D260 lists: a consensus, the company's guidance, the stated plan or deadline. This is wider than D186's
+    word "guidance"; the question put to him said "市场预期或公司指引".
+  - A number question whose opening article states no reference still gets a ladder, marked "no reference".
+- **Scope:** the clean path's ladder step. D368 item 1 still holds for the next production extraction version.
+
+## D399 · 2026-11-10 · The ladder request may teach how to build an event's five states
+
+- **Asked**, after three hand-written five-state ladders had each shown a gap or an overlap and three built by a construction had
+  passed two readers (round log §69): "事件题如果不止“是/否”两种结果（例如监管调查的结局），你定的老规矩是分五种状态。我手写三次都有遗漏或重叠；后来在给模型的请求里加了一个通用做法（先分出互斥的几种结果，如“通过／未决／否决”，再把其中一两种按“是或否”的性质一分为二，并附一个并购审查的例子），按它写的 3 个才通过两位读者。但这个做法没有你定过的任何规矩做依据，按规定要你批准才能写进提示词。怎么办？"
+  - Options: put the construction in the prompt (recommended); judge events as yes/no only in this version; keep the bare "five
+    states" with no construction.
+  - Alex: "把这个做法写进提示词 (Recommended)".
+- **Decided:** the clean ladder step's request carries the construction (outcomes that exclude one another, one or two of them
+  divided by a property that holds or does not) with a general example. D38's five states for an event stand. Stage A reports the
+  one-rung-holds mark on this shape apart; if the model does not apply it, whether events become yes/no only returns to him.
+
+## D400 · 2026-11-10 · Stage A is read against absolute lines, with no paid control arm
+
+- **Asked:** "第一段测试只测新做的“定档”这一步：44 道题各发 3 次，约 2–3 美元。我建议不再花钱重跑“老系统写法”当对照组（连续三轮评审都卡在两种写法没法公平地比），参照改用老系统存档里已写出的 36 个分档。代价：这一段只能说明新做法达没达到你定的线，不能证明它比老系统好；项目规则原本要求验收要有当场重跑的对照，所以这个例外要你点头。通过线我提议：四条硬线一个都不能有（问错题、漏列未判部分、分档有重叠或遗漏、无正当理由拒判）；44 道里至少 35 道在 3 次中至少 2 次做对，其中至少 28 道是真写出了分档；同一道题 3 次的“好坏方向”必须一致、到期日至少九成一致。你的意见？"
+  - Options: agree, no control, the lines as proposed (recommended); no control with a stricter line (40 of 44); a paid control arm.
+  - Alex: "同意：不设对照，线按提议 (Recommended)".
+- **Decided:**
+  - Stage A of the clean ladder step sends the candidate only. This is an exception, by his word, to AGENTS §7.3's "beside a fresh
+    control", for this first measurement of a step production does not have as its own call.
+  - Its lines are his: no ladder that asks another question, leaves a part unlisted, or has an outcome with no rung or two; no
+    refusal without a justified reason; at least 35 of the 44 theses right in at least two of three sends, at least 28 of them by a
+    written ladder; the favourable end the same in all three sends for every company figure and the due day the same for at least
+    nine in ten theses.
+  - Every report of Stage A says that it does not compare the step with production; the $0 reading of the 36 ladders production
+    wrote is printed beside it as a reference.
+
+## D401 · 2026-11-10 · Once a review finds nothing serious, build the ladder step and run Stage A without asking again
+
+- **Asked:** "等你回答上面两问后，我会再改设计稿并再送评审。一旦有一轮评审挑不出严重问题，是否可以不再问你，直接动手做“定档”这一步并跑第一段测试（花费上限 3 美元）？第二段（把分档接到老判断程序上每天判断）不在这次范围内，到时另行请示。"
+  - Options: yes, build and run after the review clears (recommended); ask again after the review; stop at the design.
+  - Alex: "可以，评审放行后直接做 (Recommended)".
+- **Decided:** when a fresh reviewer finds nothing serious in the design of the ladder step and Stage A, the ladder step is built
+  (code, tests, mutants, the pre-send checks, the request audit) and Stage A is sent, with a spending cap of $3. A line missed stops
+  the work and goes to him. Stage B (the frozen judge on the system's own ladders) is not covered and needs his word again.
+
+## D402 · 2026-11-10 · Before more review or the build: send the ladder request once on six stored theses, for a few cents
+
+- **Asked:** "“定档”这一步的设计，我请独立评审读了五轮（每轮 4 到 7 位，各读一块）：挑出的问题数是 15、9、15、11、11 条。每条都是真的，但都是边角（例如“模型答案里若有一个非法字符，存档会报错”），没有一条改变这一步的做法，而且不收敛到零。评审看不出的是：模型拿到这份提示词实际会怎么答。下一步你想怎么走？"
+  - Options: a small send first (recommended): a few cents, six stored theses, the answers read one by one, then decide between
+    building and changing the request; build now under D401, with the reviews' corner cases as the build's tests and a review of
+    the code; go on reviewing until a round finds nothing.
+  - Alex: "先小额试发 (Recommended)".
+- **Decided:** the ladder step's request, as design version 30 holds it, is sent once on six stored theses chosen to cover its answer
+  shapes (a yes/no event, a topic that asks several things, a company's figure, a theme's figure with a reference, an event with
+  more than two states, a topic that should be declined). The answers are read by hand beside their articles and reported to
+  him. No review round and no build starts before that report; what follows it is his to choose. D401's conditions for the
+  build and Stage A are unchanged.
+- **Scope:** a probe of a few cents (AGENTS §7.3, "Small first, then one run"). It measures nothing: six answers, one draw.
+
+## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+
+- **Asked:** "事件类问题（比如“监管机构会不会批准这笔收购”）的到期日怎么定？我现在的设计只允许取两种日子：文章或题目里写明的日期，或题目所说期间的最后一天；模型不能自己估一个日子。这比老系统的说法更严（老系统只说“写明这件事在哪一天评定”）。你同意吗？"
+  - Options: keep it narrower (recommended): the day comes from the period Step 1 set, the same thesis gets the same day on every
+    send, and a reader can check it; the cost is that an event with no date in the article and no period in the thesis is
+    declined. Or production's wider sentence: the model judges when the matter will be settled and sets a day; more flexible, and
+    three sends of one thesis may set three days.
+  - Alex: "保持更严 (Recommended)".
+- **Decided:** on the clean path's ladder step, an event's due day is the date the thesis or the article gives, or the last day of
+  the period the thesis names (the company's current fiscal year-end for a pending regulatory decision with no date, as v74i line
+  16 has it). The model chooses no other day; an event that gives neither is declined as "nothing in the topic can be checked on
+  a date". This is narrower than v74i line 26 by his decision.
+- **Scope:** the clean path's ladder step. Production's frozen sentence is unchanged.
+
+## D404 · 2026-11-10 · After the probe: change the request for its three classes, send the same six again, then build
+
+- **Asked:** "试发读完了：提示词主干管用，但有三类问题（1. 引用文章原话时会改词或抄错来源；2. 问题里写“本文提到的……”，离开文章就看不懂；3. 世界大事类的题被贴了看涨看跌标签，程序检查拦不住）。下一步怎么走？"
+  - Options: change and send once more (recommended): "我针对这三类问题改提示词（各一句）和一条程序检查，先花 2 美分问模型“你当时是依据哪句话这么做的”来定位原因，然后把同样 6 道题再发一次（约 1 美分）看是否改好。改好了就按原授权动手写程序。"; build at once, with the three classes changed in the request and the check, and see in Stage A whether they are fixed; stop and let him read the answers.
+  - Alex: "改完再试发一次 (Recommended)".
+- **Decided:** (1) the model is asked, on the stored conversations of the probe, which instruction led it to each fault (about two
+  cents); (2) the request gets one change for each of the three classes, and the check on a theme's state names refuses the
+  company's labels; (3) the same six theses are sent once more (about one cent) and read as the first six were; (4) when the three
+  classes are gone from those answers, the ladder step is built and Stage A sent on D401's terms (capped at $3; a missed line
+  stops and goes to him; Stage B needs his word), with no further round of design review before the build. If they are not gone,
+  the result goes to him before anything else (D355).
+- **Scope:** the clean path's ladder step. The reviews' open corner cases become tests of the build.
+
+## D405 · 2026-11-10 · A reference's words must be the article's own, in one unbroken passage; otherwise the answer is sent back once
+
+- **Asked:** "模型引用文章时挪了词（意思没变，但不是一字不差），程序该怎么处理？这决定系统的行为，所以问你。"
+  - Options: strict (recommended): the quote must be an unbroken passage of the article; otherwise the model is told what is
+    wrong and writes again once; wrong twice, no question is written; no quote with a word left out is ever taken for the
+    article's; the cost is more second requests. Or lenient: production's repair rule finds the article's sentence for a quote
+    with moved or dropped small words and writes that, with no second request; fewer second requests, and now and then a
+    dropped key word such as "not" is put back while the ladder was built on the reading without it.
+  - Alex: "严格：打回重写 (Recommended)".
+- **Decided:** check 6 of the clean ladder step stays as designed: the reference's words are accepted when they occur in the
+  article exactly, or when production's repair returns a passage in which they occur whole once spacing, letter case and the
+  forms of quote marks and dashes are set aside; anything else is refused and the request sent once more with the reason; a
+  second refusal ends as "no ladder: refused".
+- **Scope:** the clean path's ladder step.
+
+## D406 · 2026-11-10 · The two rules that kept slipping go into the answer's shape; then a probe that counts; then the build
+
+- **Asked:** "提示词改了三句后：“引用一字不差”和“问题能独立看懂”两类改住了；但“世界大事类不贴涨跌标签”时好时坏，而且原本每次都能正确拒绝的那道“两件事都不是主线”的题，变成 4 次里只拒绝 2 次。我不想再一句一句改了。下一步怎么走？"
+  - Options: change the answer's shape and then count (recommended): "把两条老是滑走的规定做进答案的格子里：第一栏先列“提到了哪几件事、哪件是主线”；世界大事类和公司类用两种格子。然后 8 道题各发 3 次（约 3 美分），看比例而不是看单次。稳了再写程序。"; keep the shape and let the checks send answers back, building at once; go back to the first request; stop and read the answers himself.
+  - Alex: "改答案格式再数比例 (Recommended)".
+- **Decided:** (1) the answer's first required fields list every figure or event the topic's outcome names and say which is the
+  main one, or none; an answer with no main one is a refusal; (2) a company's states and a theme's states are two answer shapes,
+  the company's carrying the five labels and the theme's a name; (3) the request so changed is sent on eight stored theses,
+  three times each (the six of the probe and two more that both census readers found to have no main thing), about three
+  cents, and read as counts; (4) when the counts are steady the ladder step is built on D401's terms, as D404 says.
+- **Scope:** the clean path's ladder step. What "steady" means is fixed in the round log before the send, as a proposal of mine,
+  and reported against.
+
+## D407 · 2026-11-10 · One last probe of the ladder request, then the build, whichever way it comes out
+
+- **Asked:** "对照试发显示：“没有主线就拒绝出题”这件事，最初那版提示词 10 次里 10 次做对，我改完的第四版只有 9 次里 5 次。我的改动修好了写法（引用、标签），却弄坏了判断。写法上的毛病程序能查出来并打回重写，判断只能靠提示词。下一步怎么走？"
+  - Options: one last send and then build (recommended): "新组合：最初那版 + 已验证不伤拒绝的两句（引用照抄、问题能独立看懂）+ 两种格子，不要“先列主线”那一栏。8 题各 3 次并带对照，约 3 美分。达线就用它写程序；不达线就退回最初那版、写法毛病全交给程序打回。无论结果都不再试发，直接写程序。"; go back to the first request now and let the checks send answers back; split the step into two calls; stop and read the answers himself.
+  - Alex: "最后试一次，然后动手 (Recommended)".
+- **Decided:** one more send: the request as first sent, plus the exact-copy sentence and the stand-alone sentence, plus separate
+  answer shapes for a company's and a theme's states; without the fields `named` and `main` of D406 and without the additions to
+  the closing check. Eight stored theses, three sends each, beside the first request as control. The line, as put to him: the
+  three theses with no main thing declined in at least 8 of 9 sends, and the five others answered with a ladder in 15 of 15.
+  Met: the build uses this request. Missed: the build uses the first request unchanged, and the three faults of writing (a
+  reference that is not the article's words, a theme's state with a company label, "this item" in a question) are refused by
+  code and sent back once. Either way no further probe: the ladder step is built and Stage A sent on D401's terms.
+- **Supersedes:** D406's first point (the fields `named` and `main`): measured, they lower the refusals (5 of 9 against 10 of 10).
+- **Scope:** the clean path's ladder step.
+
+## D408 · 2026-11-10 · Stage A missed its lines: stay at the ladder step, fix the event answers first, validate at no cost, then run the same Stage A once more
+
+- **Asked:** "“定档”这一步的第一段测试没过线（六条线里三条不管谁读都没过）。下一步怎么走？我的建议：留在这一步，先只修最大的一类毛病（事件题的结局写法：17 份五状态里两家读者都认定 10 份有毛病），新写法先用存档里的题目免费验证并请独立评审，过了再把同一个测试原样重跑一次（约 0.2 美元）。到期日、参考数字等其他几类，之后一类一类来。"
+  - Options: fix the event answers first and measure again (recommended): "留在这一步。先免费验证新写法，通过后原样重跑第一段测试一次，约 0.2 美元，上限仍按 3 美元算。第二段（接到判断程序上）仍不开始。"; fix several classes at once and measure again; stop and reassess the whole approach.
+  - Alex: "先修事件题再重测 (Recommended)".
+- **The result behind it** (`clean-arch/step4-2026-11-10/stage_a/result/RESULT.md`): as the third reader ruled, every one of the
+  six lines of D400 is missed (Q 11 of 111 ladders, L 4, R 16, N 2 of 17 refusals; 21 of 44 theses right, 16 by a ladder; the
+  favourable end differs in 2 of 8 theses and the due day in 11 of 32). Failed by both reader families: R on 7 ladders, N on 1
+  refusal; line 6 is counted by code. Lines 1, 2 and 5 depend on the reader family.
+- **Decided:**
+  - The work stays at the ladder step. One class is changed: how an event is answered (D409). The new answer is first checked
+    at no cost on stored theses and read by an independent reviewer; when that passes, the same Stage A (the 44 theses, three
+    sends each) is run once more, about $0.2, within the $3 of D401.
+  - The other classes (a figure's due day, the reference, a company's quarterly figure, the direction of a commitment's amount)
+    follow one at a time, each after the one before it is measured.
+  - Stage B is not started.
+- **Scope:** the clean path's ladder step.
+
+## D409 · 2026-11-10 · An event is answered in three outcomes: it happened, it is ruled out, or neither by the due day
+
+- **Asked:** "事件类的题（比如“监管会不会批准”“调查会不会罚款”），答案要分几种结局？现在让模型自己写五种状态，这是最容易出漏洞的地方：两家读者都认定的 7 个漏洞里，6 个出在第四、第五种状态的细分上。"
+  - Options: three outcomes (recommended): "发生了 / 明确落空（被否决、被放弃）/ 到期还没结果。第三种由程序写成“前两种都不是”，所以不会有遗漏。保住了“否决”和“还在等”的区别；更细的区别（如“附条件批准”）列为“不判”。这是我的建议，写法还要先免费验证。"; yes or no only (the simplest; "rejected" and "still waiting" become one No, which the council held loses a difference an analyst cares about); several outcomes where they are needed, the number not fixed (the council's recommendation; a new structure, one more round of design).
+  - Alex: "分三种 (Recommended)".
+- **Decided:** on the clean ladder step an event's answer has at most three outcomes: the event has happened by the due day; the
+  event is ruled out (decided against, abandoned); neither. The third is written by code as "neither of the two holds", so no
+  outcome is without a rung. A finer difference (an approval with conditions against one without) is listed as not judged
+  (D397). The wording of the request, the schema and the checks are designed, checked at no cost and reviewed before any send
+  (D408).
+- **Supersedes:** D399 (the request teaches how to build an event's five states) and, with it, the five states of an event in
+  the clean ladder step; D404's rule on naming a theme's five states has nothing left to apply to.
+- **Evidence put to him:** five states for the company are faulted by both reader families in 10 of 17 ladders, yes/no in 2 of
+  24; of the seven gaps both found, six sit in the division beyond three outcomes and one in a Yes that needs a confirmation
+  its No does not. The council's dissent (several outcomes where needed) was put to him as the third option.
+- **Scope:** the clean path's ladder step.
+
+## D410 · 2026-11-10 · A group named in a judged question and not listed member by member is not a fault of the question
+
+- **Asked:** "题目里写“四大云厂商”（the big four hyperscalers）但没有列出是哪四家，算不算“问题没说清楚”？严的读者判不合格，松的读者和我认为这是通用叫法。按裁决“问错题”的 11 份里有 8 份是这一类，所以需要你定一个读法，下次两家读者才能按同一把尺子评。"
+  - Options: not a fault (recommended): "行业里通用的叫法可以直接用，不要求列出成员。按这个读法，这 8 份不再算“问错题”。"; a fault, the members must be listed.
+  - Alex: "不算问题 (Recommended)".
+- **Decided:** in reading a judged question (mark Q of the Stage A form), a group named as the trade names it ("the big four AI
+  hyperscalers", "the top five hyperscalers") is a name the question gives; a question is not failed for not listing the
+  group's members. The form says so before the next reading.
+- **Not decided by this:** the other boundary cases the two reader families read differently (round log §69, council `iv`).
+- **Scope:** the Stage A reading form of the clean ladder step.
+
+## D411 · 2026-11-10 · An amount already reported may be the baseline of a ladder, labelled as that and never as the market's expectation
+
+- **Asked:** "文章只给了“已经公布的数字”（例如英伟达现有采购承诺 1190 亿美元），没有说市场预期明年是多少。这个已公布的数字能不能用来当分档的比较基准？现在模型把它填进了“市场预期”一栏，两家读者都判这是错的。"
+  - Options: usable when labelled (recommended): "可以拿来当基准，但明确标成“最近一次已公布的数字”，不再叫“市场预期”；文章给的是区间（如 50%–60%）时也允许填区间。这需要改答案格式，我会放在事件题之后单独做、单独验证。"; not usable (a reference only when the article states an expectation).
+  - Alex: "能用，但要标明 (Recommended)".
+- **Decided:** the reference of a figure may be the amount last reported, when the article states no expectation; it is then
+  named as the last reported amount, to the judge and to readers, and never as what the market expects. A reference the
+  article states as a range is carried as a range. This changes the answer's shape; it is built and measured after the event
+  answers (D408), on its own.
+- **Scope:** the clean path's ladder step.
+
+## D412 · 2026-11-10 · Every round is reflected on in the council to a recorded consensus, then the next test goes straight ahead; every trace is read by Claude itself
+
+- **Alex's words** (set as the session's goal while the second Stage A of the clean ladder step was being sent): "你应该跑council loop 来reflect 你每一轮的思路还有决策，需要你打成共识，记录决策，向前直行测试。不要drift,我们有PRD和量化目标，你自己作为llm 下去看所有trace。现在重新的总结我们的目标，做到哪里了，我们再改么，离生产还有多远".
+- **Decided:** after each round of work (a probe, a measurement, a change of design), Claude writes its own reflection, has the
+  council read the record cold and challenge it, and reaches a consensus or writes down what remains disputed; the consensus is
+  recorded; the next test then goes ahead, held to the PRD and its quantified goals, with no further rounds of review for their
+  own sake. Claude reads every trace itself and does not rest on readers' marks alone. When asked where the work stands, the
+  answer gives the goal, what is done, whether things are still being changed, and the distance to production.
+- **Done on the day:** written into AGENTS §7.3 at the council rule, in his words; a reflection council on the whole Step 4
+  record (`clean-arch/step1-unfiled-2026-11-08/council/ja-*`, `jb-*`) reached a consensus recorded in the round log §69; all
+  132 answers of the second Stage A read by Claude before any reader's row.
+- **Scope:** how the work is run, every module.
+
+## D413 · 2026-11-10 · Where the texts do not settle it, an amount the company owes or guarantees is registered with the lower end favourable
+
+- **Asked:** "同一道题“英伟达对供应商的采购承诺（最近公布 2790 亿美元）到年报时是多少”，系统有时把“4000 亿以上”标成最看多，有时把“2000 亿以下”标成最看多。原因是文章两头都说得通（多＝锁住紧缺内存；多＝付款义务更重），提示词没给取舍规则。这类“公司欠的或担保的金额”题，好坏方向怎么定？"
+  - Options: a tie rule (recommended): "只在题目和文章都没说哪头好时生效；题目自己说了“多是好事”的照题目。和模型现在 21 次里 19 次的答法一致，预计三次不再打架，先花约 3 美分验证。代价：像提前锁定紧缺供应这种“多可能是好事”的情况，标签会偏保守；评审对这一点有保留。"; as now (the test still fails under line 6 and the work stays at this step); no bullish or bearish label for such figures (six readers of production hold "position 1 is Strongly bullish" for a company ladder, so it is outside this phase).
+  - Alex: "没表态时记越低越好 (Recommended)".
+- **Decided:** for a company's figure that is an amount the company owes, guarantees or has committed to pay, the favourable end
+  is "lower" when neither the topic nor the item settles which end is good for the business. A topic whose own words say that
+  more of it is good keeps "higher". The rule is a tie rule in the request: the decision stays the model's, and every other
+  company figure is asked as before. The cost he was shown: where more may be good (scarce supply locked in early) the label
+  leans cautious; the council holds a reservation on this point (round log §69, "Consensus of this round").
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/probe-direction-2026-11-10/RESULT.md`;
+  `clean-arch/step4-2026-11-10/stage_a/result-2/direction-by-thesis.txt`, `direction-accounts.json`.
+- **Scope:** the clean path's ladder step. D186 stands.
+
+## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+- **Asked:** "同一道“年报里的数字”题，模型三次估的到期日常差几天（比如 2 月 24 日和 2 月 28 日），34 道题里只有 18 道三次一致，你定的线是九成。年度数字题的到期日由谁定？"
+  - Options: code sets it (recommended): "公司财年结束后 60 天（美国大公司年报的法定期限）、行业日历年结束后 90 天（约定值）。回放结果 34 道里 32 道一致。代价：公司年报类的题比模型估的日子晚约一个月结案；行业数据偶尔可能比 90 天更晚；不是整年的数字（滚动 12 个月的调查、季度数）不能套这条规则，要先单独处理。"; as now (the test still fails under line 6 and the work stays at this step).
+  - Alex: "由程序统一定 (Recommended)".
+- **Decided:** for a figure that covers one year and whose due day the model would estimate, code sets the day: the company's
+  fiscal year-end plus 60 days for a company's figure, the calendar year-end plus 90 days for a theme's figure. A day the topic
+  or the item states is kept. A figure that is not a year's (a survey's rolling twelve months, a quarter) is not given a day by
+  this rule and is dealt with first, on its own. The costs he was shown: a company's annual figure closes about a month after
+  the day the model expects it; an industry figure may come later than 90 days.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-2/due-day-rule-60-90.txt`.
+- **Scope:** the clean path's ladder step.
+
+## D415 · 2026-11-10 · The third Stage A is sent without asking again once each change is proved small and reviewed; a failure stops and goes to Alex
+
+- **Asked:** "上面两项按你的选择做好、并各自小额验证通过之后，第三次正式测试（同样 44 道题各发三次，约 0.15 美元，在你批的 3 美元上限内；目前累计花了约 0.48 美元）怎么发？"
+  - Options: send once the checks pass (recommended): "每项改动先单独小额验证并过评审；任何一项没通过就停下来找你，不发正式测试。发完照旧：我自己读完全部答案，两类读者再读，六条线按宽、严两种读法一起报。"; ask again before the send.
+  - Alex: "验证通过就直接发 (Recommended)".
+- **Decided:** the changes of D413 and D414, with the two already in hand (the scope of a ruling out; D411's reference), are
+  each proved on stored cases with a small send and reviewed in the council; when all pass, the third Stage A (the same 44
+  theses, three sends each, within D401's $3) is sent without asking again. A change that does not pass stops the line and
+  goes to him, and no Stage A is sent. The result is read as before: every answer by Claude, then the two reader families,
+  the six lines under both readings. Stage B still needs his word.
+- **Scope:** the clean path's ladder step.
+
+## D416 · 2026-11-10 · The lines stay; the ruling out of an event as a typed answer is proved small before anything else
+
+- **Asked:** "第三次正式测试里，两类读者都判错的最大一类是：把“到期还没发生”写成“明确落空”（例如“2026年12月31日已过，Vera Rubin 还没出货”被当成明确落空）。140 份已存事件题答案里共 7 份。我的建议是把“明确落空”从一句自由写的话改成两格必填：“谁作出决定”和“决定是什么”。在已存答案上对照，7 份错的里 6 份没地方填，但第 7 份（“当局决定继续调查”）挡不住；模型会不会老实填，只有真发才知道。这一步怎么走？"
+  - Options: prove the change small first (recommended): "线保持不变。在 6 道“产品能否按期出货”的题上，新旧两种格式同时各发三遍（约 4 美分），不通过的条件事先写死，我自己逐份读。这只是候选改法，不是已证明的修法；通过了再谈第四次正式测试。"; stop here and change nothing.
+  - Alex: "先小额验证这个改法 (Recommended)".
+- **Decided:** Alex's six lines stay as they are. The ruling out of an event is tried as a typed answer (who decides; what they
+  decide) in place of one free sentence: the six product-deadline theses, the present shape and the typed one sent in the same
+  minutes, three sends each, what does not pass written before the send, every answer read by Claude. It is a candidate, said
+  so to him: it has no place for six of the seven stored faults, does not exclude the seventh, and only a send shows whether
+  the model fills it rightly.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-3/RESULT.md`, `wait-as-ruling-out-hand-read.md`, `wait-accounts.json`.
+- **Scope:** the clean path's ladder step. It amends the shape D409 gave an event's answer, if it passes.
+
+## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+
+- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+  - Alex: "确认：这类题不出题 (Recommended)".
+- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+- **Scope:** the clean path's ladder step; mark N of the readers' form.
+
+## D418 · 2026-11-10 · A government's permission or ban on a class of product belongs to the theme, not to the company
+
+- **Asked:** "“中国政府是否放行英伟达 H200 芯片在华销售”这类题，系统大多归在“英伟达”名下，有时归在行业主题“芯片出口管制”名下，同一道题三次归属还会不一致。第三次测试里归在公司名下的 5 份，两类读者都判为归错了，认为应归行业主题。区别是：归行业主题的题会给每家相关公司的判断都看到，归公司的只给这一家看。归哪边？"
+  - Options: the theme "chip-export-controls" (recommended): "两类读者意见一致。我需要在提示词里加一条归属规则（政府对某类产品的放行或禁令归行业主题），并先小额验证不带坏别的题，比如法国对英伟达本身的反垄断调查仍归公司。"; the company (the readers' form would then be changed to that reading).
+  - Alex: "归行业主题“芯片出口管制” (Recommended)".
+- **Decided:** a question about a government's or regulator's permission, restriction or ban on a class of products or trade
+  belongs to the theme that covers it, also when the product is the company's own. A proceeding against the company itself (an
+  investigation of its conduct, a fine) stays the company's. A rule in the request, proved small before any measurement, with
+  the French investigation as the case that must not move.
+- **Scope:** the clean path's ladder step; mark O of the readers' form.
+
+## D419 · 2026-11-10 · The fourth Stage A is sent without asking again once each change is proved small and reviewed
+
+- **Asked:** "上面你选的改动，各自小额验证通过并过评审之后，第四次正式测试（同样 44 道题各三次，约 0.11 美元；目前累计约 0.76 美元，上限 3 美元）怎么发？再测一次也不能保证一份错都没有，读者松紧不一的问题也还在。"
+  - Options: send once the checks pass (recommended): "和上次一样：每项改动先单独小额验证并过评审，任何一项没通过就停下来找你，不发正式测试。"; ask again before the send.
+  - Alex: "验证通过就直接发 (Recommended)".
+- **Decided:** as D415, for the changes of D416, D417 and D418: each is proved small and reviewed in the council; when all pass
+  the fourth Stage A (the same 44 theses, three sends each, within D401's $3) is sent without asking again; a change that does
+  not pass stops the line and goes to him. He was told that a further run cannot be promised to have no fault and that the
+  reader families still part. Stage B still needs his word.
+- **Scope:** the clean path's ladder step.
+
+## D420 · 2026-11-10 · A proceeding that formally ends without the conclusion the question asks for is ruled out; the question stays
+
+- **Asked:** "题目问的是“法国竞争管理局会不会在 2027 年 1 月 31 日前公布对英伟达反垄断调查的结论”。到期前可能有三种情况：① 公布结案决定（哪怕不处罚），算“发生了”；③ 调查还在继续，算“还在等”。这两点没有争议。有争议的是 ②：当局正式宣布放弃或撤回调查，但没有公布题目问的那种结论。模型每次写法不一样，读者也各执一词。② 算什么？"
+  - Options: it is ruled out (recommended): "题目保持原样，问的仍是“有没有公布结论”。这类题固定有三种结果：公布了／当局正式放弃且没有结论／还在查。这也是目前多数已存答案的写法，且符合现有规则“判题目点名追踪的那件事”。不写“明确落空”的答案将算错。"; ask instead whether the investigation is over (two outcomes; it tracks another event than the conclusion the thesis names).
+  - Alex: "② 算“明确落空” (Recommended)".
+- **Decided:** for a proceeding an authority conducts and whose asked-for event is its published decision or conclusion: a
+  published closing decision, with or without a penalty, is the event happened; the authority formally abandoning or
+  withdrawing the proceeding without that decision or conclusion is the event ruled out; the proceeding still going on the due
+  day is the wait. Such an event always has a ruling out, and an answer that names none, or that writes the authority's
+  decision to go on as the ruling out, is at fault. The judged question stays the one the thesis's outcome names.
+- **Scope:** the clean path's ladder step; mark R of the readers' form.
+
+## D421 · 2026-11-10 · Each further change is tested alone; all passing, the fourth Stage A is sent without asking again
+
+- **Asked:** "接下来怎么走？我建议每项改动单独测，不再捆在一起：(a) 把你上一题的定义写进提示词，在三道法国调查题上单独测；(b) 把归属规则收窄成“题目追踪的是政府决定本身才归行业主题，追踪公司自己销售的仍归公司”，单独测；(c) 在 (a) 之后把“分两格填”再单独测一次，停止条件不变。调查题不出题那条直接并入。三项合计约 10 美分；第四次正式测试约 11 美分；目前累计 0.90 美元，上限 3 美元。"
+  - Options: test the three apart and send the fourth Stage A when all pass (recommended): "(a)(b)(c) 各自小额验证并过评审。全部通过就直接发第四次正式测试；任何一项没通过就停下来找你。"; drop the typed shape and do (a) and (b) only; test the three and ask before the fourth Stage A; stop here.
+  - Alex: "三项分别测，全过就直接发第四次 (Recommended)".
+- **Decided:** D417 goes into the working request. Then, each beside the working request and on its own: (a) D420's rule in the
+  request, on the three French theses; (b) D418's sentence narrowed (the theme when the tracked outcome is the government's
+  decision; the company when it is the company's own sales under it); (c) after (a), the typed ruling out once more, the same
+  stop condition as before. Each is reviewed in the council. When all three pass, the fourth Stage A (the same 44 theses,
+  three sends each, within D401's $3) is sent without asking again; one that does not pass stops the line and goes to him.
+  Stage B still needs his word. This replaces D419's terms for these changes.
+- **Scope:** the clean path's ladder step.
+
+## D422 · 2026-11-10 · A second look by the model at its own answer is tested small, as a candidate; adoption is Alex's after the result
+
+- **Asked:** "第四次正式测试仍有 3 条线各差 1 到 3 份。剩下的错都是同一种：模型懂规则，一遍写下来偶尔滑过去，事后问它它能自己指出来。我的建议是先做一个小额测试：让模型对自己的答案“再看一遍”（多发一次请求，只说“请对照规则逐条检查，没错就原样返回，有错就改正”，不提示哪里有错）。用第四次测试的 66 份已存答案（18 份读者公认有错、18 份有争议、30 份没人挑出错），约 7 美分。这和你定过的“复核要写在同一个提示词末尾”不一样，所以必须由你定。下一步怎么走？"
+  - Options: the small test of a second look (recommended): "只是候选做法，不是已证明的修法。通过条件事先写死：18 份公认有错的至少改好 9 份，且 30 份没错的最多改坏 1 份；第二遍的答案若过不了程序检查就沿用第一遍。改过的答案由两类读者盲读。通过也只说明“值得带着它再正式测一次”，不等于六条线过了。若采用，每道新题多一次请求，约多花 0.1 美分和 10 到 20 秒。做完我把结果报给你，再由你定是否采用。"; go on class by class (the unjustified declines first); open Stage B on the step as it stands (his to waive his lines); stop.
+  - Alex: "先做“再看一遍”的小额测试 (Recommended)".
+- **Decided:** the test designed in `clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/DESIGN.md` is run: 66 stored
+  answers of the fourth Stage A (18 with a fault the readers agree on, 18 with a disputed one only, 30 that no reader
+  faults), each sent back once with one instruction that names no fault; the changed answers read blind by the two reader
+  families; passing means at least 9 of the 18 mended and at most 1 of the 30 damaged. A second answer that code refuses
+  leaves the first in place. The result goes to him, and whether the step takes a second look is decided by him then: this
+  decision opens the test and nothing more. It is a departure, for this test, from AGENTS §6's check at the end of the same
+  prompt, which stays in the request.
+- **Scope:** the clean path's ladder step.
+
+## D423 · 2026-11-10 · Work on Jev's revision relation stops; "a later version does not take the older record's questions" is accepted as a direction and, once measured, withdrawn by its author; the rule stays, pending Alex
+
+- **Asked** (after the traced case of the Step 2 log §15): "建议停止在 Jev 的“更新关系”上投入。它作为已知缺陷留在清单上 … Step 2 和 Jev 都不改。" and
+  "有一件事等你定，不急。… B 被判为 A 的更新版后，要不要让 B 自动挂到 A 的所有问题下面？ 不自动挂（我的建议）：这次带进去的 5 条里，2 条错、1 条说不清、
+  2 条有用。 保持自动挂。"
+  - Alex: "okay take your suggestion what is the fix and how to measure get your council skill ready to propose".
+- **Decided by those words:** no further work on Jev's revision relation now; the defect stays open with its counts. The direction
+  "not automatically" is accepted, and the council loop is to propose the fix and its measurement before anything is built.
+- **What the council round found** (`clean-arch/step2-revision-links-2026-11-10/LOG.md`): on the three saved draws the rule wrote 24
+  links (5 of 700, 11 of 725, 8 of 730). Two blind reader families: 19 context by both, 3 evidence by both, 2 split. Nothing a
+  program can read separates the two kinds. One context link judged both ways: rung 2 in six of six. One evidence link judged both
+  ways (NVIDIA's answer beside four reports under FY2028 revenue): rung 2, 2, 2 with it and 2, 3, 2 without, not decided by the rule
+  fixed beforehand. The suggestion rested on draw 1 alone and is withdrawn by its author; Codex agrees that the rule is not changed
+  now and does not agree that the present rule is shown to be better.
+- **Not decided, put to Alex:** to keep the writer's rule as it is (recommended), or to stay with "not automatically" knowing the
+  loss case; and, whenever he wants it, the product rule that a company's answer to a report is filed under every question the
+  report is filed under.
+- **Done:** no code of the writer, no PRD rule and no test changed. The measurement kit of the round is kept (the exact simulation
+  of a rule on the saved draws, the blind packets with controls, the single-link replay and the judge probe by case). Spent: $0.0109.
+- **Scope:** the clean path's writer between the library and the judge (`clean-arch/e2e-2026-11-09/adapter.py`); production is untouched.
+
+## D424 · 2026-11-10 · The writer keeps giving a "later version" the older record's questions; the fix is closed without a change
+
+- **Asked** (the proposal of D423's council round): "规则保持不变（我的建议），还是仍然改成不自动挂？改的话，上面第 3 次运行那种回应会从问题下消失。你回复前代码不动。"
+  and, as not urgent, "“公司对一条报道的回应，必须出现在这条报道所在的每个问题下”，要不要定成产品规则？"
+  - Alex: "好根据你的建议，下一步".
+- **Decided:** the rule stays as it is on the clean path (`clean-arch/e2e-2026-11-09/adapter.py`, the carrying of links on a revision;
+  D202's rule). No code, PRD rule or test changes. The links it carries that two reader families call context (19 of 24 in the
+  three saved draws, all one story there) are a recorded defect: shown and cited, not shown to move a conclusion in the one case
+  traced.
+- **Not decided:** whether a company's answer to a report must sit under every question the report is filed under. He gave no
+  answer to that question; it stays open and nothing is built for it.
+- **Scope:** the clean path's writer between the library and the judge.
+
+## D425 · 2026-11-10 · The second look is not adopted
+
+- **Asked:** "“再看一遍”（模型写完答案后，多发一次请求让它自己对照规则检查）的小额测试没通过：18 份公认有错的答案只改好 6 份（通过要 9 份），30 份没人挑出错的有 3 份算改坏（3 份即失败），还把两份本来正确的引用删掉了。要不要采用它？"
+  - Options: not adopted (recommended): "按事先写死的标准它没通过，我和评审一致。这一步保持第四次正式测试时的样子，不加这次复查。"; adopt it and run a formal test with it (about $0.3, an estimate); a second look kept to refusals alone ("评审认为这是看了结果才挑出来的子集，不足以作为下一步").
+  - Alex: "不采用 (Recommended)".
+- **Decided:** the ladder step takes no second look. The step stays as it ran in the fourth Stage A: one call, the check at
+  the end of the same prompt (AGENTS §6), code's refusal and one resend. The test and its result stay as a record
+  (`clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/RESULT.md`); D422's departure from AGENTS §6 ends with it.
+- **Scope:** the clean path's ladder step.
+
+## D426 · 2026-11-10 · The ladder step is not tuned further on the 44 theses; the preparation of Stage B opens on the step as it ran in the fourth Stage A, its $0 baseline reading first
+
+- **Asked:** "给新论点写题目和答案分档的这一步，正式测了四次，6 条线里仍有 3 条在 131 份答案中各差 1 到 3 份（问错题、“明确落空”写太宽、不该拒绝却拒绝）；每一轮修好目标后都会冒出一类新的小错。按你定的规则，没过线就要停下来问你。下一步怎么走？"
+  - Options: prepare the second stage first (recommended): "不再修这一步，带着已知的这几处错往下走，去量它对最终判断的影响。先只做不花钱的一步：读者盲读已存的 159 条旧判断，建立老判断程序的基准；结果报给你，任何付费测试前再问你。这不等于第一段过线了。"; go on mending the step class by class and send a fifth Stage A; go back to the gaps upstream (question opening without seeds, capital spending) first; stop here.
+  - Alex: "先做第二段的准备 (Recommended)".
+- **Decided:**
+  - The ladder step is not changed further on the 44 stored theses, and no fifth Stage A is sent. Stage A's result stands as
+    measured: lines 2 and 6 met, line 5 met on two of three readings, lines 1, 3 and 4 missed by 1, 2 and 3 answers of 131 on
+    the third readers' agreed rulings (0, 1 and 2 on what both first readers fail). **Stage A has not passed**; every report
+    of what follows says so, with the known faults (`stage_a/result-4/RESULT.md`).
+  - By his word, and as an exception to D401's "a line missed stops the work" and to the design's "only when Stage A meets
+    its lines", the preparation of Stage B opens on the step as it ran in the fourth Stage A. What it covers: the review of
+    Stage B's forms, lines and coverage rule, and the $0 baseline reading of the 159 stored judgements the frozen judge made
+    in the three unseeded replays, with planted cases (design §8). Its result is reported to him.
+  - No paid Stage B send without his word again; the lines of Stage B are put to him before it (D401, design §8).
+- **Scope:** the clean path's Step 4 (the ladder step and the frozen judge on its ladders).
+
+## D427 · 2026-11-11 · Clean Step 2 is closed and frozen; it goes to production only with the whole clean path
+
+- **Asked** (on "那你jev这边可以收尾上production 了吗"): "还不能上 production。… A（我建议）：等整套新系统一起上。Step 4 过线后，跑一次“新系统对现生产”的端到端比较（冻结的尺子，各 3 次），
+  同一次运行里顺带核对 Step 2 的三条线。过了再整体上线。在那之前 Jev 不再动。 B：现在只把新 Step 2 移植进现有生产。… 我建议 A：Jev 收尾、冻结，不单独上线；先把精力放在 Step 4。"
+  - Alex: "饿、好jev 收尾冻结".
+- **Decided:** option A. The clean path's Step 2 is closed and frozen as accepted (D381) and measured (Step 2 log §§12–18): the
+  search over the entity's evidence, the Jev comparison and its request text, the rule that a repeat joins the group it is most like,
+  the forward runner, and Step 3's grouping library. It is not moved into production on its own. It goes to production with the whole
+  clean path, after Step 4 meets its lines, through an end-to-end comparison of the clean path against production on the frozen
+  ruler (three draws each), with Step 2's three lines checked on that run. A change to it is a new version that only Alex opens.
+- **Done:** `tests/test_frozen_clean_step2.py` holds the sha256 of `clean-arch/step2/compare.py`, `run_forward.py`, their tests,
+  `clean-arch/step3/library.py` and its test, and fails the suite when one moves (positive control: a one-byte flip; a scratch copy with
+  `library.py` changed fails it). Their own tests pass at the frozen state (13 and 20). The writer between the library and the judge
+  (`clean-arch/e2e-2026-11-09/adapter.py`) is measurement code that Step 4's design extends, so it is not frozen here; its
+  revision-link rule (D424) stays pinned by `test_adapter.py`.
+- **Open defects carried with the freeze:** the five of the Step 2 log §17.
+- **Scope:** the clean path's Step 2 and Step 3 library; production's matching is untouched.
+
+## D428 · 2026-11-11 · Stage B's lines compare figure and yes/no questions apart with the baseline
+
+- **Asked:** "第二段（让老判断程序每天去判新系统自己出的题）怎么算通过？基准里老程序在人工写的题上：数字题站不住 8%，是非题 0%，16 道题最后一天全部站得住。"
+  - Options: compare figure and yes/no questions apart (recommended): "数字题站不住的比例不超过基准再加 5 个百分点（约 13%–14%）；是非题不超过 5%；三轮共约 30 道题里，最后一天站不住的不超过 3 道，“证据不足”的另外列出。不看总体比例，因为总体会随题型比例变化。代价：判断程序没变差时，数字题这条也有 6%–17% 的机会被误判不过。"; apart with 10 points; the design's original lines (overall 8%, last at least 90%).
+  - Alex: "数字题和是非题分开比 (Recommended)".
+- **Decided:** Stage B passes when, over its three draws, (1) the share of decided figure-question judgements that are
+  UNSUPPORTED is at most 5 points above the baseline's (4 of 52 with the unresolved left out, 7.7%; 5 of 53 counted
+  against, 9.4%: so at most 12.7% to 14.4% on the same three readings); (2) the share of decided yes/no judgements that are
+  UNSUPPORTED is at most 5%; (3) of the judged theses whose last judgement in the window is decided, at most 3 in 30 (scaled
+  to the number judged) are UNSUPPORTED, with the INSUFFICIENT last judgements reported beside. No overall line. The
+  design's other lines (no draw incomplete after one redo; nine in ten laddered theses judged at least once; the control
+  theses) and its NOT MEASURED conditions stand. Baseline: `clean-arch/step4-2026-11-10/stage_b/RESULT.md`; the lines'
+  chance behaviour: `stage_b/result/line-chance.txt`.
+- **Scope:** the clean path's Step 4, Stage B.
+
+## D429 · 2026-11-11 · The adapter's ladder mode is built; once a review finds nothing serious, Stage B is sent without asking again
+
+- **Asked:** "第二段要付费：判断程序每天判新系统的题，三轮约 1 美元（估计），上限 2 美元；还要两类读者读 200–360 条判断。开跑前得先给连接程序补一个模式（不花钱，写完测试并送评审）。下一步怎么走？"
+  - Options: build it and run once the review clears (recommended): "补程序、测试、送评审；评审挑不出严重问题就直接发三轮付费测试，不再问你。每条判断单独读，和基准的读法一样，两者才能直接比。读完把结果报给你。第一段没过线这一点会写在每份报告里。"; build, then ask again; build and read by question packet; stop.
+  - Alex: "补好程序，评审放行就直接跑 (Recommended)".
+- **Decided:** the adapter's mode in which the ladder step writes the views during the replay (design §5, "the new mode") is
+  built with tests and mutants at no model cost, and reviewed by fresh reviewers until a round finds nothing serious; then
+  Stage B's three draws are sent without asking again, capped at $2 in all, on the ladder step as it ran in the fourth
+  Stage A. Its judgements are read each alone, as the baseline's were, by the same two reader families with the same form,
+  planted controls and count, and the result goes to him. A result that contradicts the plan stops the line (D355). Every
+  report says Stage A has not passed.
+- **Scope:** the clean path's Step 4, Stage B.
+
+## D430 · 2026-11-12 · A figure control's due day counts as the ruler's when both mark the same publication
+
+- **Asked:** "第二段的“对照题”怎么算合格？数字题的到期日现在由程序定为财年结束后 60 天，和标准题目写的日期不同，但都指同一份年报。按字面“到期日必须相同”，16 个里最多 8 个合格、很可能只剩 7 个，第二段会因对照不足直接判不能通过。"
+  - Options: the same publication counts as the same day (recommended): "数字题：只要两个到期日指的是同一时期数字的同一份公布，就算相同；事件题的截止日必须完全相同。最多 13 个合格。按字面的读法也会在旁边列出。"; the literal reading (at most 8, likely too few, Stage B cannot pass whatever it judges); drop the control line.
+  - Alex: "指同一份年报就算相同 (Recommended)".
+- **Decided:** for Stage B's line 3 (design §8), a control thesis whose judged question is a figure is eligible on the due day
+  when its due day and the ruler question's both mark the publication of the same period's figure (the ladder step's due day
+  of a year's figure is set by code, D414); an event's deadline must equal the ruler's. The literal reading is counted beside.
+  Fixed before the send and before any Stage B result exists.
+- **Scope:** the clean path's Step 4, Stage B, line 3.
+
+## D431 · 2026-11-12 · The clean path is compared end to end with production as it now runs, with no preset questions on either side
+
+- **Asked:** "整条新线路要和谁比，才算“比线上好”（你定的上线门槛 D427）？新系统不开公司财务指标题；线上版本自 11 月 5 日起也不再预设题目。"
+  - Options: current production (recommended): "双方都不预设题目，条件相同；用冻结的标准、同一天、各跑三轮。“可评分的 7 道题”的结果单独列出。"; the seeded version with 22 preset questions ("新系统每轮天然少约 11 道公司财务指标题，几乎不可能赢"); the seven graded questions only.
+  - Alex: "和现在的线上版本比 (Recommended)".
+- **Decided:** D427's end-to-end comparison is the clean path against production as it now runs (no preset questions, D370),
+  on the frozen ruler, the same day, three draws each; the seven graded questions (D395) are reported beside. The seeded
+  comparison (D392) remains a diagnostic, not the gate. Raised by the council's read of where the path stands
+  (`clean-arch/step1-unfiled-2026-11-08/council/kr-consensus.md`).
+- **Scope:** the clean path's end-to-end acceptance (D427).
+
+## D432 · 2026-11-12 · After Stage B, the next phase is how Step 1 cuts a matter into theses
+
+- **Asked:** "第二段测完之后，先做哪件大事？两位评审都认为最大的差距在第 1 步“把一件事切成题”的方式。"
+  - Options: diagnose how Step 1 cuts theses first (recommended): "逐篇对照自己开题时漏掉的 9 道标准题、8 个没出题的论点和第一段剩下的错，找出共同原因；再提一个改法，作为第 1 步的新版本，在没用过的新文章上测。开工前会把诊断结果和改法报给你。"; mend the ladder step's remaining faults (would lift D426's freeze); capital spending (q12) first.
+  - Alex: "先查清第 1 步怎么切题 (Recommended)".
+- **Decided:** once Stage B is read, the next work is a source-by-source diagnosis of how Step 1 cuts a matter into theses (one
+  quantity, one period, one question a year, D38): the nine graded questions the unseeded draws did not open, the eight theses
+  with no ladder, and the remaining Stage A faults. The diagnosis and one proposed change, as a new Step 1 version to be
+  measured on fresh articles, go to Alex before any build. c8 stays until then (D391).
+- **Scope:** the clean path's Step 1 and its effect on Step 4.
+

@@ -1,0 +1,31 @@
+1. **The registered outcome is correctly reported as “does not pass,” with one qualification about what the count means.** [compare.py](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/compare.py) counts a send once when it has more than one kind of damage, as [REGISTERED.md](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/REGISTERED.md) requires. The post-first-reader change therefore makes the implementation faithful to the page: `u3/clean-2` send 2 is one send that both changed from a refusal to a ladder and received a reference fault, not two damaged sends.
+
+   I checked the six requested pairs against `second-looks.jsonl` and [compare.txt](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/result/compare.txt):
+
+   - `acc/clean-2` send 3 removes “restructures” from the ruling out; the new reading finds the omitted-part fault. It is a trade, not a clean repair.
+   - `u1/clean-3` send 1 removes the stated shipping expectation; both readers fault the missing reference.
+   - `u2/clean-7` send 3 changes only the theme. The new reading’s named fault on the untouched question disappears; counting that as a repair by the second look is unsupported. The theme change itself may be an improvement, but the new round does not agree that the original theme was wrong.
+   - `u2/clean-9` send 2 leaves the reference null in both copies; the new reference fault is a reading difference, not damage attributable to the edit.
+   - `u3/clean-2` send 2 changes a refusal into a ladder and leaves the stated starting ratio out of the reference. It is one damaged send under two criteria.
+   - `u3/clean-11` send 1 changes an unjustified refusal into a spending ladder and lists capacity separately; the new reading supports that repair.
+
+   Keep the registered **6 mended and 3 damaged** as the result, with the field-by-field **5 and 2** beside it, labelled the author’s interpretation. Both fail one row. The script identifies faults by mark, however, and collapses all named faults into `W`; it cannot itself establish that the *same substantive fault* disappeared. That is why the paired field reading matters.
+
+2. **The generic second look did not pass the registered test.** The first row is intermediate, not a failure on its own: 6 is between 5 and 9. The second row fails at three damaged sends. The paired reading reduces that to two attributable sends, which is intermediate, while reducing the repair row to five, which fails. I agree with the correction for `u2/clean-9` and with counting `u3/clean-2` only once. The two `u1/clean-3` reference removals are real damage in the held group, although they do not enter the 30-answer control threshold. `acc/clean-2` shows why removing one bad condition is not sufficient if another required part is then lost.
+
+3. [reader-repeat.txt](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/result/reader-repeat.txt) supports **14 of 18** answers receiving an agreed fault again, with **13** agreeing again on the recorded mark. `W` is a broad category, so “same mark” does not always mean the same named fault. The two new agreed faults among 30 previously unmarked answers are an observation from this selected, stratified sample; neither reading is proven correct merely by being later.
+
+   It **does not show** that a zero-fault line for Q, L, R or N can fail when the step has no fault of that kind. The two clean-to-faulted cases are outside-form `W` findings. It shows reader variation that needs measuring for each line, not a measured false-positive rate for those four lines or for 131 answers.
+
+4. I support asking Alex to open **Stage B preparation**, including the no-cost baseline reading, while explicitly asking what happens to the missed Stage A gate. That is a recommendation to measure the downstream cost of the remaining ladder faults, not evidence that the gate has passed. [D400 and D401](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4376) make the lines and the opening of Stage B his decisions. The record does not establish that this is the highest-impact next step: Stage B will measure the judge on these ladders, while unseeded question opening remains below its target and the capital-spending gap remains unclosed. The existing Stage B outline estimates **$0.30 per draw**, not a completed measurement, and its forms and lines still need review and Alex’s approval. [Stage B outline](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1427)
+
+   A refusals-only second look is a post-result subgroup: three bad refusals improved, but a correct refusal became a ladder and another was rejected by code. It is not justified as the next test from this draw. Kyber is also not assigned to Step 1 on this evidence: the ladder step turned “in 2027 or delayed to 2028” into “by the end of 2028,” which cannot distinguish those outcomes. Whether the original thesis should be split is a separate product question; the observed ladder error belongs to this step.
+
+5. Alex needs the following in the report:
+
+   - The goal is a system that opens useful questions and judges incoming evidence against its own questions; Stage A measures only the ladder step and does **not** show it beats production.
+   - Four runs still miss his zero-fault lines. The second-look test failed its registered criteria and is not adopted; it also harmed two previously accepted references outside the 30-answer control group.
+   - The reader families remain divided. Their repeat reading shows disagreement, but does not prove the zero-fault lines are unattainable.
+   - Stage B is unmeasured; question opening, the spending gap, the real search/save path, integration and final acceptance remain. Production replacement is therefore still distant and cannot be given a credible date from these results.
+
+**Consensus:** ask Alex to permit Stage B preparation on the fourth-run step despite its missed Stage A lines; the one test is the planned no-cost blind reading of the 159 stored judgements, with its reader controls and results reported before any paid Stage B run.

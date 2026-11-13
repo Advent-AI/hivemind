@@ -1,0 +1,270 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "additionalProperties": false,
+     "properties": {
+      "due_day": {
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+       "type": "string"
+      },
+      "due_day_basis": {
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date).",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "type": "string"
+      },
+      "figure": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "additionalProperties": false,
+         "properties": {
+          "favourable_end": {
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused).",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "type": "string"
+          },
+          "favourable_why": {
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty.",
+           "type": "string"
+          },
+          "ranges": {
+           "items": {
+            "additionalProperties": false,
+            "properties": {
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             },
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             }
+            },
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "type": "object"
+           },
+           "type": "array"
+          },
+          "unit": {
+           "description": "other when the unit is none of the listed; the question then names it.",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "type": "string"
+          },
+          "year": {
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form.",
+           "pattern": "^(FY)?\\d{4}$",
+           "type": "string"
+          }
+         },
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "type": "object"
+        }
+       ],
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null."
+      },
+      "not_judged": {
+       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
+       "items": {
+        "additionalProperties": false,
+        "properties": {
+         "part": {
+          "pattern": "\\S",
+          "type": "string"
+         },
+         "why": {
+          "pattern": "\\S",
+          "type": "string"
+         }
+        },
+        "required": [
+         "part",
+         "why"
+        ],
+        "type": "object"
+       },
+       "type": "array"
+      },
+      "object": {
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder.",
+       "pattern": "\\S",
+       "type": "string"
+      },
+      "question": {
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it.",
+       "pattern": "\\S",
+       "type": "string"
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "additionalProperties": false,
+         "properties": {
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states for it, in the figure's unit. Null when the item gives the expectation in words alone, and for an event's reference that is not a number. Never a number the item does not state."
+          },
+          "words": {
+           "description": "The item's own words stating what the market expects: a consensus, the company's guidance, the stated plan or deadline.",
+           "pattern": "\\S",
+           "type": "string"
+          }
+         },
+         "required": [
+          "words",
+          "value"
+         ],
+         "type": "object"
+        }
+       ]
+      },
+      "states": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "items": {
+          "additionalProperties": false,
+          "properties": {
+           "condition": {
+            "pattern": "\\S",
+            "type": "string"
+           },
+           "label": {
+            "description": "For a company: one of Strongly bullish, Bullish, Neutral, Bearish, Strongly bearish, each used once, meaning good or bad for the business. For a theme: a short name of the state.",
+            "pattern": "\\S",
+            "type": "string"
+           }
+          },
+          "required": [
+           "label",
+           "condition"
+          ],
+          "type": "object"
+         },
+         "type": "array"
+        }
+       ],
+       "description": "For one event that can end in more than two states: exactly five, one state each; else null."
+      },
+      "yes_no": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "additionalProperties": false,
+         "properties": {
+          "no": {
+           "description": "The condition under which the answer is No.",
+           "pattern": "\\S",
+           "type": "string"
+          },
+          "yes": {
+           "description": "The condition under which the answer is Yes: the event has happened by the due day.",
+           "pattern": "\\S",
+           "type": "string"
+          }
+         },
+         "required": [
+          "yes",
+          "no"
+         ],
+         "type": "object"
+        }
+       ],
+       "description": "For an event that happens or not by the due day; else null. Exactly one of yes_no, states and figure is not null (checked by code)."
+      }
+     },
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "yes_no",
+      "states",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "type": "object"
+    }
+   ]
+  },
+  "no_ladder": {
+   "anyOf": [
+    {
+     "pattern": "\\S",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  }
+ },
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "type": "object"
+}
