@@ -177,13 +177,13 @@ def test_the_scorer_scores_what_the_writer_builds_and_keeps_an_empty_draw(tmp_pa
     recorded['cards']['new-1']['Q1']['answer'] = 'no answer'
     (tmp_path / 'readings.json').write_text(json.dumps(recorded))
     try:
-        score_comparison.score(tmp_path, tmp_path)
+        score_comparison.score_readings(tmp_path, tmp_path)
     except SystemExit as e:
         assert 'differs from the readings its writer builds' in str(e)
     else:
         raise AssertionError('an edited readings.json was scored')
     mark_cards.readings(tmp_path, tmp_path)                                  # control: the unedited record passes this check
     try:
-        score_comparison.score(tmp_path, tmp_path)
+        score_comparison.score_readings(tmp_path, tmp_path)
     except SystemExit as e:
         assert 'differs from the readings its writer builds' not in str(e)

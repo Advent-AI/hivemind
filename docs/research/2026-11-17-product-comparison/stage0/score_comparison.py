@@ -530,10 +530,20 @@ def verdict(readings):
     return dict(report, verdict='no practical winner')
 
 
-def score(mapping_out, folder):
-    """The scorer's entry: the readings are built here by their one writer (`mark_cards.build_readings`) from the named mapping output
-    and marks folder, and what is built is scored, so an edited intermediate is never scored. The readings.json record beside the marks
-    must equal what is built."""
+def score(run_root, mapping_out, folder):
+    """The scorer's entry. Every derived file of the reading chain is first rebuilt from the primary data (`rebuild.differences`); a
+    stored derived file that differs is refused. Then the readings are built by their one writer and scored."""
+    import mapping
+    import rebuild
+    differ = rebuild.differences(run_root, mapping_out, folder, mapping.KEY_FOLDER)
+    if differ:
+        raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
+    return score_readings(mapping_out, folder)
+
+
+def score_readings(mapping_out, folder):
+    """The readings built here by their one writer (`mark_cards.build_readings`) from the mapping output and the marks folder, and
+    what is built is scored. The readings.json record beside the marks must equal what is built."""
     import mark_cards
     built = mark_cards.build_readings(mapping_out, folder)
     recorded = Path(folder) / 'readings.json'
@@ -543,4 +553,4 @@ def score(mapping_out, folder):
 
 
 if __name__ == '__main__':
-    print(json.dumps(score(sys.argv[1], sys.argv[2]), indent=1, ensure_ascii=False, default=str))
+    print(json.dumps(score(sys.argv[1], sys.argv[2], sys.argv[3]), indent=1, ensure_ascii=False, default=str))

@@ -144,7 +144,12 @@ def check(run_root):
     return {'eligible': not problems, 'problems': problems, 'first launch': first.isoformat() if first else None, 'draws': draws}
 
 
+def write(result, path):
+    """The eligibility file's one writer: the mapping records this file's sha256, so its bytes are part of the chain."""
+    Path(path).write_text(json.dumps(result, indent=1) + '\n')
+
+
 if __name__ == '__main__':
     result = check(sys.argv[1])
-    Path(sys.argv[2]).write_text(json.dumps(result, indent=1) + '\n')
+    write(result, sys.argv[2])
     print('ELIGIBLE' if result['eligible'] else 'NOT ELIGIBLE: ' + '; '.join(result['problems']))

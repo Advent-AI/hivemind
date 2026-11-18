@@ -1,0 +1,714 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 19, confirmation only (read-only, $0)
+
+Round 18 (`tools-review-codex-18.md`) showed that a well-formed but edited readings file could flip a verdict. The structural rule is now
+in place (`git log -1`, D675's last entry):
+- `score_comparison.score(mapping out, marks folder)` builds the readings with their one writer, `mark_cards.build_readings`, from the
+  named inputs, and scores what it built;
+- it refuses a `readings.json` that differs from what it built;
+- the command line and the chain dry run use this entry;
+- the deck key now also decides each card's answered flag and opening day;
+- every draw keeps a card map, empty when the draw opened no question.
+
+Check, citing file and line:
+1. Through the command-line entry, can any change to a file other than the readers' own marks (rounds 0–2), the mapping output's
+   readers' answers, or the frozen inputs change a verdict or a printed value? Give the change.
+2. Does a writer fixture with an empty draw now reach `too small`?
+3. Is any value or verdict changed for well-formed readings?
+
+End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 200 words. Report only a case of kind 1, 2 or 3.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll trace what the command line trusts, then replay the empty-draw case and compare well-formed reports in memory.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^def |KEY'"\\b|"'^MATTERS'"\\b' score_comparison.py mark_cards.py mapping.py
+nl -ba ../../../DECISIONS-log.md | tail -35
+nl -ba chain-dry-run.txt" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+mapping.py:35:MATTERS = HERE / 'census' / 'matters.json'
+mapping.py:93:def matters_text():
+mapping.py:98:def library_text(lib):
+mapping.py:106:def store_paths(run_root, draw):
+mapping.py:127:def neutral_ids(lib):
+mapping.py:132:def answer_problem(rows, keys, ids):
+mapping.py:157:def key_path(out):
+mapping.py:162:def export(run_root, out, eligibility_path, diagnostic=False):
+mapping.py:200:def read(out):
+mapping.py:229:def marks(out, label, family):
+mapping.py:246:def disagreements(out):
+mapping.py:259:def opening_article(input_id):
+mapping.py:268:def third(out):
+mapping.py:298:def result(out):
+mark_cards.py:33:KEY = mapping_tool.KEY_FOLDER / 'deck-key.json'
+mark_cards.py:83:def libraries(mapping_out):
+mark_cards.py:88:def guardrail_sample(lib):
+mark_cards.py:96:def plant(card_text, entry):
+mark_cards.py:110:def confirmed_by_reader(card_text, supported):
+mark_cards.py:119:def record_confirmations(confirmations):
+mark_cards.py:121:    KEY.parent.mkdir(parents=True, exist_ok=True)
+mark_cards.py:122:    with open(KEY.parent / 'control-confirmations.jsonl', 'a') as handle:
+mark_cards.py:126:def deck(mapping_out, folder):
+mark_cards.py:127:    if KEY.exists():
+mark_cards.py:128:        raise SystemExit(f'refused: {KEY} exists; a deck never overwrites a key')
+mark_cards.py:191:    KEY.parent.mkdir(parents=True, exist_ok=True)
+mark_cards.py:192:    KEY.write_text(json.dumps(key, indent=1) + '\n')
+mark_cards.py:193:    print(f'{len(full)} cards: {len(cards)} product, {len(controls)} controls; key in {KEY}')
+mark_cards.py:196:def normalised(row):
+mark_cards.py:201:def valid(row, answered):
+mark_cards.py:207:def run_marks(folder, label, prompts):
+mark_cards.py:210:    key = json.loads(KEY.read_text())
+mark_cards.py:236:def mark(folder):
+mark_cards.py:242:def current(folder, cid, family, upto):
+mark_cards.py:251:def settled_marks(folder, cid, upto):
+mark_cards.py:264:def debate(folder, round_number):
+mark_cards.py:280:def final(folder, cid):
+mark_cards.py:289:def matter_first_days():
+mark_cards.py:300:def build_readings(mapping_out, folder):
+mark_cards.py:307:    key = json.loads(KEY.read_text())
+mark_cards.py:335:                      'deck_key_path': str(KEY), 'deck_key_sha256': hashlib.sha256(KEY.read_bytes()).hexdigest()}}
+mark_cards.py:339:def readings(mapping_out, folder):
+score_comparison.py:33:MATTERS = Path(__file__).resolve().parent / 'census' / 'matters.json'
+score_comparison.py:40:def resolve(mark, kind, favoured):
+score_comparison.py:52:def is_split(mark):
+score_comparison.py:56:def system_of(draw):
+score_comparison.py:60:def served_by(readings, counting):
+score_comparison.py:83:def guardrails(readings, counting):
+score_comparison.py:119:def company_figure_subgroup(readings, per_counting):
+score_comparison.py:125:def mark_counts(readings, per_counting):
+score_comparison.py:138:def split_resolutions(readings, per_counting):
+score_comparison.py:161:def beside(readings, per_counting):
+score_comparison.py:174:def validate_readings(readings):
+score_comparison.py:279:def verify_inputs(readings):
+score_comparison.py:289:def compare_inputs(readings):
+score_comparison.py:319:def sign_test(a, b):
+score_comparison.py:331:D428_KEY = 'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'
+score_comparison.py:332:DAYS_KEY = 'days from first article to opening (confirmed coverage only; split covers not counted)'
+score_comparison.py:335:def d428_limits(readings, per_counting):
+score_comparison.py:353:def sign_tests(readings, per_counting):
+score_comparison.py:357:def floors(readings, per_counting):
+score_comparison.py:363:                 (D428_KEY, d428_limits), ('sign test (illustrative)', sign_tests), ('floors (proposed)', floors),
+score_comparison.py:364:                 (DAYS_KEY, lambda readings, per_counting: days_to_opening(readings)))
+score_comparison.py:367:def printed_beside(readings, per_counting):
+score_comparison.py:373:def printed_items_tolerant(readings, per_counting):
+score_comparison.py:387:def floors_per_draw(readings, system, fav):
+score_comparison.py:420:def insufficient_count(readings, system, fav):
+score_comparison.py:433:def trivia_count(readings, system, fav):
+score_comparison.py:448:def days_to_opening(readings):
+score_comparison.py:467:def verdict(readings):
+score_comparison.py:533:def score(mapping_out, folder):
+  9923	    - A mapped matter must be on the frozen list, and its questions must be a list.
+  9924	    - Each control must be a list.
+  9925	  - **Now:** 95 tests, 56 mutants, all as predicted. The chain dry-run log has been refreshed under the new check.
+  9926	- **Round 16 (Codex, `tools-review-codex-16.md`):** three more shapes got through the entry check:
+  9927	  - a null first-day map, a null mapping entry, or a list used as a question id;
+  9928	  - a split of two identical marks, which turned a lead into no winner in memory;
+  9929	  - `company_figure: 1`.
+  9930	
+  9931	  This was the sixth round in a row with findings from one mechanism, so I stopped patching cases (AGENTS §1). The structural rule:
+  9932	  `validate_readings` now walks the whole readings file top down, as one closed contract, and checks each container's type before
+  9933	  reading it. Its docstring lists every shape, which is exactly what `mark_cards.readings` writes:
+  9934	  - a split is two different marks;
+  9935	  - flags are JSON booleans;
+  9936	  - a mapping entry is exactly `{question, covers: true or "split"}`, naming a carded question;
+  9937	  - the six draws are checked here (folded in from `verdict`);
+  9938	  - the inputs are seven text fields.
+  9939	
+  9940	  It runs before `verify_inputs`, so neither can crash on a malformed file.
+  9941	
+  9942	  Results: 95 tests; 59 mutants, all as predicted (three stale ones repointed); the chain dry run passes the check.
+  9943	- **Round 17 (Codex, `tools-review-codex-17.md`).** The contract allowed two things it should not have:
+  9944	  - a missing first-day map, or a card missing `opened`, which silently dropped opening delays;
+  9945	  - a named input path that is a directory, which crashed.
+  9946	
+  9947	  Fixed:
+  9948	  - The contract now requires the full first-day map, keyed exactly by the listed matters, and every card's nullable `opened`. This is
+  9949	    what `mark_cards.readings` always writes, and the chain dry run passes.
+  9950	  - `verify_inputs` turns any failure to read a named file as its writer wrote it into a refusal.
+  9951	
+  9952	  Now at 96 tests and 62 mutants, all as predicted.
+  9953	- **Round 18 (Codex, `tools-review-codex-18.md`):** a well-formed but edited readings file could flip a verdict. Codex turned one answered card into "no answer" and the verdict went from loss to lead. Changed opening and first-article days were also accepted. Separately, a draw that opened no question was refused instead of scored as too small, because the writer left out its card map.
+  9954	  - **Structural rule, one owner:** the scorer no longer scores a readings file it is handed. `score_comparison.score(mapping out, marks folder)` builds the readings with their one writer, `mark_cards.build_readings`, from the named inputs, scores what it built, and refuses a `readings.json` that differs. The command line uses this entry, and so does the chain dry run.
+  9955	  - **The deck key now decides two more card fields:** each card's answered flag and its opening day. Every draw keeps a card map, empty when the draw opened no question.
+  9956	  - **Results:** 99 tests; 66 mutants, all as predicted; the chain dry run reaches its verdict through the new entry.
+  9957	  - **Updated:** the step-4 command in CURRENT_STATE.
+     1	VERDICT too small ['new-1: (4, 4) distinct bets', 'new-2: (4, 4) distinct bets', 'new-3: (4, 4) distinct bets', 'old-1: (2, 2) distinct bets', 'old-2: (2, 2) distinct bets', 'old-3: (2, 2) distinct bets']
+     2	sessions {'read': 12, 'third': 12, 'mark': 62, 'debate': 20, 'other': 0}
+     3	D400 code check not measured
+
+exec
+/opt/homebrew/bin/zsh -lc "git --no-pager log -1 --format='%h %s'
+git --no-pager show --no-ext-diff --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0/score_comparison.py docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py docs/research/2026-11-17-product-comparison/stage0/mark_cards.py docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py" in /Users/lchingen/hivemind
+ succeeded in 2742ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-f2Gd1fzt' (errno=Operation not permitted)
+2026-11-18 13:40:16.707 xcodebuild[53788:60158269]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:40:16.885 xcodebuild[53788:60158268] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-yVA8GY9I' (errno=Operation not permitted)
+2026-11-18 13:40:17.243 xcodebuild[53790:60158297]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:40:17.368 xcodebuild[53790:60158296] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+1f756eca Scorer builds the readings with their one writer and scores what it built; key decides answered and opened; empty draws kept (D675, Codex round 18)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-p06PB9RP' (errno=Operation not permitted)
+2026-11-18 13:40:18.141 xcodebuild[53794:60158325]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:40:18.255 xcodebuild[53794:60158323] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-YedwAO4r' (errno=Operation not permitted)
+2026-11-18 13:40:18.589 xcodebuild[53796:60158359]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:40:18.707 xcodebuild[53796:60158358] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 1f756ecaf175e48f41d0d3c3664b962e91be2792
+Author: Alex Lee <alex@adventai.io>
+
+    Scorer builds the readings with their one writer and scores what it built; key decides answered and opened; empty draws kept (D675, Codex round 18)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py b/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
+index c23d4591..1055f026 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
+@@ -105,9 +105,8 @@ mark_cards.mark(deck)
+ mark_cards.debate(deck, 1)
+ mark_cards.debate(deck, 2)
+ mark_cards.readings(out, deck)
+-readings = json.loads((deck / 'readings.json').read_text())
+ try:
+-    verdict = score_comparison.verdict(readings)
++    verdict = score_comparison.score(out, deck)
+     print('VERDICT', verdict['verdict'], verdict.get('why'))
+     print('beside keys', list(verdict.get('beside', {}).keys()))
+     print(json.dumps({k: verdict.get(k) for k in ('N', 'margin')}, default=str))
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py b/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py
+index 9edcfcfc..f897acee 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py
+@@ -297,7 +297,9 @@ def matter_first_days():
+     return {m['matter']: day_of[min(m['articles'])] for m in json.loads(mapping_tool.MATTERS.read_text())['matters']}
+ 
+ 
+-def readings(mapping_out, folder):
++def build_readings(mapping_out, folder):
++    """The readings the scorer takes, built from the mapping output and the marks folder (the one writer of their shape;
++    `score_comparison.score` builds them again and scores what is built). Every mapped draw has a card map, empty when it opened no question."""
+     folder = Path(folder)
+     for n in (0, 1, 2):
+         if not (folder / f'round-{n}.done').exists():
+@@ -306,7 +308,8 @@ def readings(mapping_out, folder):
+     matters = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(mapping_tool.MATTERS.read_text())['matters']]
+     mapped_text = (Path(mapping_out) / 'mapping.json').read_bytes()
+     mapped = json.loads(mapped_text)
+-    cards, plants, supported, repeats = {}, [], [], []
++    cards = {draw: {} for draw in mapped['mapping']}
++    plants, supported, repeats = [], [], []
+     by_question = {}
+     for cid, k in sorted(key.items()):
+         f = final(folder, cid)
+@@ -330,7 +333,13 @@ def readings(mapping_out, folder):
+                       'mapping_path': str((Path(mapping_out) / 'mapping.json').resolve()), 'mapping_sha256': hashlib.sha256(mapped_text).hexdigest(),
+                       'eligibility_path': str((Path(mapping_out) / 'eligibility.json').resolve()), 'eligibility_sha256': mapped['eligibility_sha256'],
+                       'deck_key_path': str(KEY), 'deck_key_sha256': hashlib.sha256(KEY.read_bytes()).hexdigest()}}
+-    (folder / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
++    return out
++
++
++def readings(mapping_out, folder):
++    """Writes the readings record (readings.json) beside the marks."""
++    out = build_readings(mapping_out, folder)
++    (Path(folder) / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
+     print('readings.json written')
+ 
+ 
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index 9b18009d..afde293f 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -301,13 +301,16 @@ def compare_inputs(readings):
+         raise SystemExit('refused: the readings\' mapping differs from the mapping file')
+     if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
+         raise SystemExit('refused: the mapping was not made from a passing eligibility check')
+-    keyed = {}
++    keyed = {draw: {} for draw in DRAWS}                       # a draw that opened no question has no product card
+     for k in key.values():
+         if k['role'] == 'product':
+-            keyed.setdefault(k['draw'], {})[k['question']] = {f: k[f] for f in ('guardrail', 'covering', 'type')}
+-    held = {draw: {q: {f: card[f] for f in ('guardrail', 'covering', 'type')} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
++            keyed[k['draw']][k['question']] = {'guardrail': k['guardrail'], 'covering': k['covering'], 'type': k['type'],
++                                               'opened': k.get('opened'), 'answered': k['answered']}
++    held = {draw: {q: {'guardrail': card['guardrail'], 'covering': card['covering'], 'type': card['type'], 'opened': card['opened'],
++                       'answered': card['answer'] != 'no answer'} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+     if keyed != held:
+-        raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
++        raise SystemExit('refused: the readings\' cards, or their guardrail, covering, type, opening day or answered flag, are not the deck '
++                         'key\'s product cards')
+ 
+ 
+ D428_LATEST = Fraction(3, 30)                                    # D428: at most 3 in 30 decided latest answers unsupported, scaled
+@@ -527,5 +530,17 @@ def verdict(readings):
+     return dict(report, verdict='no practical winner')
+ 
+ 
++def score(mapping_out, folder):
++    """The scorer's entry: the readings are built here by their one writer (`mark_cards.build_readings`) from the named mapping output
++    and marks folder, and what is built is scored, so an edited intermediate is never scored. The readings.json record beside the marks
++    must equal what is built."""
++    import mark_cards
++    built = mark_cards.build_readings(mapping_out, folder)
++    recorded = Path(folder) / 'readings.json'
++    if not recorded.exists() or json.loads(recorded.read_text()) != json.loads(json.dumps(built)):
++        raise SystemExit('refused: readings.json is missing or differs from the readings its writer builds from the named inputs')
++    return verdict(built)
++
++
+ if __name__ == '__main__':
+-    print(json.dumps(verdict(json.loads(open(sys.argv[1]).read())), indent=1, ensure_ascii=False, default=str))
++    print(json.dumps(score(sys.argv[1], sys.argv[2]), indent=1, ensure_ascii=False, default=str))
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+index 0968f1cb..b7ff11eb 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+@@ -50,7 +50,8 @@ def seal(r):
+     sc.MATTERS = folder / 'matters.json'
+     eligibility_sha = hashlib.sha256((folder / 'eligibility.json').read_bytes()).hexdigest()
+     (folder / 'mapping.json').write_text(json.dumps({'mapping': r['mapping'], 'distinct': r['distinct'], 'eligibility_sha256': eligibility_sha}))
+-    key = {f'C{n}': {'draw': d, 'question': q, 'role': 'product', **{f: r['cards'][d][q][f] for f in ('guardrail', 'covering', 'type')}}
++    key = {f'C{n}': {'draw': d, 'question': q, 'role': 'product', **{f: r['cards'][d][q].get(f) for f in ('guardrail', 'covering', 'type', 'opened')},
++                     'answered': r['cards'][d][q]['answer'] != 'no answer'}
+            for n, (d, q) in enumerate((d, q) for d in r['cards'] for q in r['cards'][d])}
+     (folder / 'deck-key.json').write_text(json.dumps(key))
+     sha = lambda name: hashlib.sha256((folder / name).read_bytes()).hexdigest()
+@@ -205,6 +206,28 @@ def test_a_split_cover_on_a_sampled_card_resolves_per_counting():
+     assert sc.guardrails(r, '2')['figure']['new']['bad'] == 1          # counting 2: it does not cover, so it is in the shares
+ 
+ 
++def test_an_answer_or_opening_day_that_differs_from_the_deck_key_is_refused():
++    """The deck key decides whether a card was answered and when its question opened; readings that say otherwise are refused (D675,
++    Codex round 18: an answered card turned into "no answer" flipped a loss into a lead)."""
++    for change in (lambda c: c.update(answer='no answer'), lambda c: c.update(opened='2026-09-10')):
++        r = seal(base(n=20, new_served=5, old_served=1))
++        change(r['cards']['new-1']['new-1-g-figure-0'])
++        try:
++            sc.verdict(r)
++        except SystemExit as e:
++            assert 'deck key' in str(e)
++        else:
++            raise AssertionError('readings that differ from the deck key were scored')
++
++
++def test_a_draw_that_opened_no_question_is_scored_not_refused():
++    """A completed draw with no questions has an empty card map and is scored (too small), not refused (verdict-rule.json; Codex round 18)."""
++    r = base(n=20, new_served=5, old_served=1)
++    r['cards']['new-1'], r['mapping']['new-1'] = {}, {}
++    r['distinct']['new-1'] = {'ids': 0, 'duplicates_both': 0, 'duplicates_split': 0}
++    assert verdict(r)['verdict'] == 'too small'
++
++
+ def test_readings_not_made_from_their_named_inputs_are_refused():
+     """No verdict on other matters than the frozen list's, or on a mapping that is not the mapping file's (D671, D675)."""
+     r = seal(base(n=20, new_served=5, old_served=1))
+@@ -244,7 +267,7 @@ def test_card_marks_that_differ_from_the_deck_key_are_refused():
+     try:
+         sc.verdict(r)
+     except SystemExit as e:
+-        assert 'guardrail, covering or type' in str(e)
++        assert "deck key's product cards" in str(e)
+     else:
+         raise AssertionError('a guardrail flag changed after the deck was scored')
+ 
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'deck key|mapping\\.json|rounds? 0|readings\\.json|key.*(frozen|freeze)|frozen.*key|blind.*key' ../RUN-PLAN-v12.md card-spec.md verdict-rule.json ../../../DECISIONS-log.md | tail -38" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba score_comparison.py | sed -n '289,315p;476,491p;530,550p'
+nl -ba mark_cards.py | sed -n '126,133p;185,193p;289,346p'
+nl -ba mapping.py | sed -n '228,244p;298,329p'
+nl -ba chain_dry_run.py | sed -n '101,118p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+verdict-rule.json:10: "covers": "both families mark the question opened, or narrower with both saying it carries the main outcome; broader and missed do not cover; mapping blind (each draw library under a random X/Y label, key outside the repository); a disagreement goes to two third readers, one per family; a remaining split is resolved per counting (covers > does not cover)",
+../../../DECISIONS-log.md:2634:- Decided, three parts measured one at a time on the frozen gold (three draws each, 8 threads, $0.04–0.05 an arm) and on the first week's 255 in-call pieces: (1) `placement.py`: one call per item with the title line, the statements and the open questions, each with a code-written 'takes' line (key, event type, research-group names; aggregates admit other populations); the sift keeps statements without a link (`keep_unlinked`); the placer's links replace the extraction's, candidate links survive; a statement filed nowhere is stored in `unplaced_statements` with the handover. (2) The rule is the placement prompt: `placement-narrow-v1` — one home, the narrowest question; company-wide figure questions take only their own figures, guidance and management statements. (3) D42's "evidence is linked at extraction" becomes: the extraction's links are its first opinion; placement decides. Gated on the prompt version (`PLACEMENT_FROM = 20`); `cfg.placement` is required from v20.
+../../../DECISIONS-log.md:2719:- Alex: “我们明明有 golden set 和 hedge fund analyst 的准则，你这边应该按照这个标准来”; “评量方式都不定，你怎么去跑修正”; “你自己作为模型要下 LLM as a judge 要亲自看”. Original frozen gold stays intact. Its analyst standard, source-first judgement and explicit uncertainty govern; code checks identities, coverage and counts, not economic significance by keyword.
+../../../DECISIONS-log.md:2802:D225 final measurement: [the paired experiment](research/2026-10-29-paired-prompt-model/results.md) completed all60 responses. Final source readings, including independent blind review and the root’s adjudication, give complete core meaning 12/12→11/12 for Haiku and 10/12→9/12 for Luna; all12 explicit exclusion observations comply. Haiku mean latency10.02s versus Luna14.25s. Do not infer whole-system accuracy or general model superiority from five known development sources. The counterexample paragraph is not adopted: no stable semantic gain was shown. Six Haiku NVIDIA role-boundary concerns remain uncertain, not established fabrication. All six emitted signed-obligation proposals miss D210’s required obligation-amount measure; six nulls are not comprehension failures. The rewritten experimental prompt omitted D210’s amount/commitments-note language, retaining only next-annual-filing timing; this mismatch is identified, not causally isolated in this experiment. Preserve the initial and intermediate readings; final-readings.json/final-measurements.json are authoritative. No production change, default switch, further paid arm or full-pipeline run.
+../../../DECISIONS-log.md:2818:D227 completion and user clarification: The24 calls finished; [source readings](research/2026-10-29-claim-use/scope-repair/source-readings.json) preserve all answers. Customer-demand use on Cloud is0/3 fresh controls versus3/3 revised purposes, supporting the narrow scope diagnosis. This does not establish overall analyst ability or justify adoption. Two valuation answers marked reject still explicitly permit illustrative scenario use; labels alone do not establish loss. The root records remaining meaning defects separately. No further paid calls follow.
+../../../DECISIONS-log.md:2991:- Decided: when (and only when) the architecture is adopted after the measurement in design.md, the open-question list an extraction request shows is a snapshot frozen once per day; every article of that day sees the same list; the archive key is (item, snapshot hash); a day in flight never re-sends an item because the ledger moved. This narrows D211 ("the request depends on the item alone") to "depends on the item and the day's snapshot". Not decided: whether other companies' questions are shown, whether the one-home rule (D207) moves into the extraction prompt, what happens to a failed candidate's evidence; the measurement's predictions P1–P6 are frozen in design.md (sha256 in `predictions.sha256`).
+../../../DECISIONS-log.md:2995:- Alex, after the noise ruler was verified by two blind readers (130 of 165 kept gold-rejected entries confirmed noise) and four role versions showed noise and recall falling together on one line: "you can probably start to add in some false positives on what in general should be considered as noise … we don't want to throw away the useful things in discovering key thesis. I think that is a very important metric. On top of that, it is whatever noise reduction that we can do … the hedge fund analyst has no idea in the prompts of what specifically constitute noise. And that's where I think in the prompt you should educate it … do not let this cause like regression to the extraction of useful theses … try not to make it like NVIDIA specific … a management statement that this is super bullish or whatever doesn't constitute as good evidence. It needs to be more evidence-based".
+../../../DECISIONS-log.md:5224:  stored 4 of 9 against 1 of 9). No frozen regression fired; memory moved toward the key (13 against 7; D441's shape 6 against 2, unexercised).
+../../../DECISIONS-log.md:5250:  about the key (D373), without changing the frozen key. (3) The one in-scope candidate measurement, prepared at $0 first: the clean ladder
+../../../DECISIONS-log.md:5299:- **Boundary check** (`clean-arch/e2e-comparison-2026-11-13/ladder-refusal/`): a truly blind reader (`blind-verdicts.md`, key `blind-key.json`) agrees with
+../../../DECISIONS-log.md:5490:- **Asked** (after D483): whether to add a separate "can an analyst use this" acceptance beside the frozen key (both systems on new articles;
+../../../DECISIONS-log.md:8264:- **The build ($0, a scratch version beside the frozen step, D426):** the typed case, the split, the period key, the readers' refusals
+../../../DECISIONS-log.md:9210:- **Asked** (D592's open choice, in plain words): the control line needs 8 of 15 control questions comparable with the frozen answer key (reader B,
+../../../DECISIONS-log.md:9215:  2. change two frozen steps and deliver three missing facts to fit the old key (at most 8, unproven);
+../../../DECISIONS-log.md:9703:    check or with a changed store. Readings carry the fingerprints of the matter list, the mapping, the eligibility check and the deck key.
+../../../DECISIONS-log.md:9737:    - the deck key's product cards must be the readings' cards.
+../../../DECISIONS-log.md:9759:    - the scorer takes each card's guardrail, covering and type marks from the verified deck key, and refuses readings that differ.
+../../../DECISIONS-log.md:9824:    - v6's key counted a later report's tier, stated day, period and speaker, and the frozen `group_text` drops those fields;
+../../../DECISIONS-log.md:9954:  - **Structural rule, one owner:** the scorer no longer scores a readings file it is handed. `score_comparison.score(mapping out, marks folder)` builds the readings with their one writer, `mark_cards.build_readings`, from the named inputs, scores what it built, and refuses a `readings.json` that differs. The command line uses this entry, and so does the chain dry run.
+../../../DECISIONS-log.md:9955:  - **The deck key now decides two more card fields:** each card's answered flag and its opening day. Every draw keeps a card map, empty when the draw opened no question.
+
+ succeeded in 0ms:
+   289	def compare_inputs(readings):
+   290	    inputs = readings['inputs']
+   291	    def read(kind):
+   292	        path = Path(inputs.get(f'{kind}_path') or '/nonexistent')
+   293	        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != inputs.get(f'{kind}_sha256'):
+   294	            raise SystemExit(f'refused: the {kind} file the readings name is missing or differs from its fingerprint')
+   295	        return json.loads(path.read_text())
+   296	    frozen = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(MATTERS.read_text())['matters']]
+   297	    if readings['matters'] != frozen or inputs.get('matters_sha256') != hashlib.sha256(MATTERS.read_bytes()).hexdigest():
+   298	        raise SystemExit('refused: the readings were not made on the frozen matter list')
+   299	    mapped, eligibility, key = read('mapping'), read('eligibility'), read('deck_key')
+   300	    if mapped['mapping'] != readings['mapping'] or mapped['distinct'] != readings['distinct']:
+   301	        raise SystemExit('refused: the readings\' mapping differs from the mapping file')
+   302	    if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
+   303	        raise SystemExit('refused: the mapping was not made from a passing eligibility check')
+   304	    keyed = {draw: {} for draw in DRAWS}                       # a draw that opened no question has no product card
+   305	    for k in key.values():
+   306	        if k['role'] == 'product':
+   307	            keyed[k['draw']][k['question']] = {'guardrail': k['guardrail'], 'covering': k['covering'], 'type': k['type'],
+   308	                                               'opened': k.get('opened'), 'answered': k['answered']}
+   309	    held = {draw: {q: {'guardrail': card['guardrail'], 'covering': card['covering'], 'type': card['type'], 'opened': card['opened'],
+   310	                       'answered': card['answer'] != 'no answer'} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+   311	    if keyed != held:
+   312	        raise SystemExit('refused: the readings\' cards, or their guardrail, covering, type, opening day or answered flag, are not the deck '
+   313	                         'key\'s product cards')
+   314	
+   315	
+   476	    if any(not rejected(m) for m in controls['plants']):
+   477	        invalid.append('a planted wrong answer without an explicit rejection')
+   478	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   479	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   480	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   481	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   482	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   483	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   484	    small = []
+   485	    if not invalid:                                            # the size check runs only when the controls hold
+   486	        if n < 20:
+   487	            small.append(f'N = {n} < 20')
+   488	        for draw, d in readings['distinct'].items():
+   489	            both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   490	            if min(both_ways) < 30:
+   491	                small.append(f'{draw}: {both_ways} distinct bets')
+   530	    return dict(report, verdict='no practical winner')
+   531	
+   532	
+   533	def score(mapping_out, folder):
+   534	    """The scorer's entry: the readings are built here by their one writer (`mark_cards.build_readings`) from the named mapping output
+   535	    and marks folder, and what is built is scored, so an edited intermediate is never scored. The readings.json record beside the marks
+   536	    must equal what is built."""
+   537	    import mark_cards
+   538	    built = mark_cards.build_readings(mapping_out, folder)
+   539	    recorded = Path(folder) / 'readings.json'
+   540	    if not recorded.exists() or json.loads(recorded.read_text()) != json.loads(json.dumps(built)):
+   541	        raise SystemExit('refused: readings.json is missing or differs from the readings its writer builds from the named inputs')
+   542	    return verdict(built)
+   543	
+   544	
+   545	if __name__ == '__main__':
+   546	    print(json.dumps(score(sys.argv[1], sys.argv[2]), indent=1, ensure_ascii=False, default=str))
+   126	def deck(mapping_out, folder):
+   127	    if KEY.exists():
+   128	        raise SystemExit(f'refused: {KEY} exists; a deck never overwrites a key')
+   129	    folder = Path(folder)
+   130	    folder.mkdir(parents=True, exist_ok=False)
+   131	    libs = libraries(mapping_out)
+   132	    mapping = json.loads((Path(mapping_out) / 'mapping.json').read_text())['mapping']
+   133	    cards, rng = [], random.Random(SEED)
+   185	    random.Random(SEED).shuffle(full)
+   186	    key = {}
+   187	    for n, c in enumerate(full, 1):
+   188	        cid = f'C{n:03d}'
+   189	        key[cid] = {k: c[k] for k in ('draw', 'question', 'role', 'guardrail', 'covering', 'type', 'answered', 'opened')}
+   190	        (folder / f'{cid}.txt').write_text(c['text'])
+   191	    KEY.parent.mkdir(parents=True, exist_ok=True)
+   192	    KEY.write_text(json.dumps(key, indent=1) + '\n')
+   193	    print(f'{len(full)} cards: {len(cards)} product, {len(controls)} controls; key in {KEY}')
+   289	def matter_first_days():
+   290	    """Each frozen matter's earliest article day: the census numbered the kept articles 1.. by (day, published_at, id) from its source
+   291	    database (`census_readers.build`), so a matter's earliest article is its lowest number."""
+   292	    kept = json.loads(census_readers.KEPT.read_text())
+   293	    conn = build_cards.ro(census_readers.SOURCE)
+   294	    rows = sorted((tuple(conn.execute('select publication_day, coalesce(published_at, \'\') from items where input_id=?', (a,)).fetchone()) + (a,)
+   295	                   for a in kept['kept_ids']))
+   296	    day_of = {n: row[0] for n, row in enumerate(rows, 1)}
+   297	    return {m['matter']: day_of[min(m['articles'])] for m in json.loads(mapping_tool.MATTERS.read_text())['matters']}
+   298	
+   299	
+   300	def build_readings(mapping_out, folder):
+   301	    """The readings the scorer takes, built from the mapping output and the marks folder (the one writer of their shape;
+   302	    `score_comparison.score` builds them again and scores what is built). Every mapped draw has a card map, empty when it opened no question."""
+   303	    folder = Path(folder)
+   304	    for n in (0, 1, 2):
+   305	        if not (folder / f'round-{n}.done').exists():
+   306	            raise SystemExit(f'refused: round {n} is not complete')
+   307	    key = json.loads(KEY.read_text())
+   308	    matters = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(mapping_tool.MATTERS.read_text())['matters']]
+   309	    mapped_text = (Path(mapping_out) / 'mapping.json').read_bytes()
+   310	    mapped = json.loads(mapped_text)
+   311	    cards = {draw: {} for draw in mapped['mapping']}
+   312	    plants, supported, repeats = [], [], []
+   313	    by_question = {}
+   314	    for cid, k in sorted(key.items()):
+   315	        f = final(folder, cid)
+   316	        answer = f['answer'] if k['answered'] else 'no answer'
+   317	        if k['role'] == 'product':
+   318	            cards.setdefault(k['draw'], {})[k['question']] = {'worth': f['worth'], 'answer': answer, 'type': k['type'], 'guardrail': k['guardrail'],
+   319	                                                              'covering': k['covering'], 'opened': k.get('opened')}
+   320	            by_question[(k['draw'], k['question'])] = (f['worth'], answer)
+   321	        elif k['role'] == 'plant':
+   322	            plants.append(answer)
+   323	        elif k['role'] == 'supported control':
+   324	            supported.append(answer)
+   325	    for cid, k in sorted(key.items()):
+   326	        if k['role'] == 'repeat':
+   327	            f = final(folder, cid)
+   328	            answer = f['answer'] if k['answered'] else 'no answer'
+   329	            repeats.append((f['worth'], answer) == by_question[(k['draw'], k['question'])])
+   330	    out = {'matters': matters, 'matter_first_day': matter_first_days(), 'mapping': mapped['mapping'], 'distinct': mapped['distinct'], 'cards': cards,
+   331	           'controls': {'plants': plants, 'supported': supported, 'repeats_same': repeats},
+   332	           'inputs': {'matters_sha256': hashlib.sha256(mapping_tool.MATTERS.read_bytes()).hexdigest(),
+   333	                      'mapping_path': str((Path(mapping_out) / 'mapping.json').resolve()), 'mapping_sha256': hashlib.sha256(mapped_text).hexdigest(),
+   334	                      'eligibility_path': str((Path(mapping_out) / 'eligibility.json').resolve()), 'eligibility_sha256': mapped['eligibility_sha256'],
+   335	                      'deck_key_path': str(KEY), 'deck_key_sha256': hashlib.sha256(KEY.read_bytes()).hexdigest()}}
+   336	    return out
+   337	
+   338	
+   339	def readings(mapping_out, folder):
+   340	    """Writes the readings record (readings.json) beside the marks."""
+   341	    out = build_readings(mapping_out, folder)
+   342	    (Path(folder) / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
+   343	    print('readings.json written')
+   344	
+   345	
+   346	if __name__ == '__main__':
+   228	
+   229	def marks(out, label, family):
+   230	    """{matter: covering ids} and the set of duplicates (the later-opened id of every pair named), from one family's valid answer."""
+   231	    path = Path(out) / f'map-{label}-{family}.txt'
+   232	    if not path.exists():
+   233	        raise SystemExit(f'refused: {path.name} missing (a void mapping is never counted)')
+   234	    rows = json_lines(path.read_text())
+   235	    order = {e['question_id']: k for k, e in enumerate(json.loads((Path(out) / f'library-{label}.json').read_text()))}
+   236	    covering = {}
+   237	    for r in rows:
+   238	        if r.get('matter') and r.get('status') in ('opened', 'narrower'):
+   239	            if r['status'] == 'opened' or r.get('main_outcome') is True:
+   240	                for q in r.get('ids') or []:
+   241	                    covering.setdefault(r['matter'], set()).add(str(q))
+   242	    duplicates = {max(str(r['duplicate']), str(r['of']), key=order.__getitem__) for r in rows if r.get('duplicate') is not None}
+   243	    return covering, duplicates
+   244	
+   298	def result(out):
+   299	    out = Path(out)
+   300	    key = json.loads(key_path(out).read_text())
+   301	    label_of = {d: l for d, l in key.items()}
+   302	    mapping, distinct = {}, {}
+   303	    for draw, label in label_of.items():
+   304	        a, dup_a = marks(out, label, 'codex')
+   305	        b, dup_b = marks(out, label, 'claude')
+   306	        lib = json.loads((out / f'library-{label}.json').read_text())
+   307	        mapping[draw] = {}
+   308	        for matter in sorted(set(a) | set(b)):
+   309	            entries = []
+   310	            for q in sorted(a.get(matter, set()) | b.get(matter, set())):
+   311	                if q in a.get(matter, set()) and q in b.get(matter, set()):
+   312	                    covers = True
+   313	                else:
+   314	                    paths = [out / 'third' / f'{label}--{matter}--{q}--{reader}.json' for reader in FAMILIES]
+   315	                    missing = [p.name for p in paths if not p.exists()]
+   316	                    if missing:
+   317	                        raise SystemExit(f'refused: third-reader marks missing {missing}')
+   318	                    thirds = [json.loads(p.read_text())['covers'] for p in paths]
+   319	                    covers = True if thirds == [True, True] else False if thirds == [False, False] else 'split'
+   320	                entries.append({'question': q, 'covers': covers})
+   321	            if any(e['covers'] is not False for e in entries):
+   322	                mapping[draw][matter] = [e for e in entries if e['covers'] is not False]
+   323	        distinct[draw] = {'ids': len(lib), 'duplicates_both': len(dup_a & dup_b), 'duplicates_split': len(dup_a ^ dup_b)}
+   324	    text = json.dumps({'mapping': mapping, 'distinct': distinct,
+   325	                       'eligibility_sha256': hashlib.sha256((out / 'eligibility.json').read_bytes()).hexdigest()},
+   326	                      indent=1, ensure_ascii=False) + '\n'
+   327	    (out / 'mapping.json').write_text(text)
+   328	    print('mapping.json written', hashlib.sha256(text.encode()).hexdigest()[:16])
+   329	
+   101	mark_cards.deck(out, deck)
+   102	deck_key = json.loads(mark_cards.KEY.read_text())
+   103	PLANTS.update((deck / f'{cid}.txt').read_text() for cid, k in deck_key.items() if k['role'] == 'plant')
+   104	mark_cards.mark(deck)
+   105	mark_cards.debate(deck, 1)
+   106	mark_cards.debate(deck, 2)
+   107	mark_cards.readings(out, deck)
+   108	try:
+   109	    verdict = score_comparison.score(out, deck)
+   110	    print('VERDICT', verdict['verdict'], verdict.get('why'))
+   111	    print('beside keys', list(verdict.get('beside', {}).keys()))
+   112	    print(json.dumps({k: verdict.get(k) for k in ('N', 'margin')}, default=str))
+   113	except SystemExit as refusal:
+   114	    print('SCORER REFUSED', refusal)
+   115	print('sessions', calls)
+   116	result, status = d400_code_check.check(root, eligible)
+   117	print('D400 code check', status)
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import ast, contextlib, copy, io, json, subprocess, sys, types
+from pathlib import Path
+import score_comparison as score
+import test_score_comparison as tests
+import mark_cards as writer
+import mapping
+parent = types.ModuleType(\"previous_score_comparison\")
+parent.__file__ = score.__file__
+p = \"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+exec(compile(subprocess.check_output([\"git\",\"--no-pager\",\"show\",\"1f756eca"'^:"+p],text=True),p,"exec"),parent.__dict__)
+last = ast.parse(Path("score_comparison.py").read_text()).body[-1]
+cli_code = compile(ast.Module(body=[last],type_ignores=[]),"score_comparison.py","exec")
+class Mem:
+    data={}
+    def __init__(self,path): self.path=str(path)
+    def __truediv__(self,child): return Mem(self.path+"/"+child)
+    def __str__(self): return self.path
+    def resolve(self): return self
+    def exists(self): return self.path in self.data
+    def read_bytes(self): return self.data[self.path]
+    def read_text(self): return self.read_bytes().decode()
+    def write_text(self,text): self.data[self.path]=text.encode()
+def put(p,val): Mem(p).write_text(json.dumps(val))
+def get(p): return json.loads(Mem(p).read_text())
+for m in parent,score:
+    m.Path,m.MATTERS=Mem,Mem("matters")
+writer.Path=Mem
+writer.KEY=Mem("keys/deck-key.json")
+mapping.Path,mapping.MATTERS,mapping.KEY_FOLDER=Mem,Mem("matters"),Mem("keys")
+def cli():
+    ns=dict(score.__dict__,__name__="__main__")
+    sys.argv=["score_comparison.py","map","deck"]
+    with contextlib.redirect_stdout(io.StringIO()) as f:
+        exec(cli_code,ns)
+    return f.getvalue()
+def record():
+    with contextlib.redirect_stdout(io.StringIO()):
+        writer.readings("map","deck")
+def make(r):
+    put("matters",{"matters":r["matters"]})
+    put("map/eligibility.json",{"eligible":True})
+    put("keys/mapping-key.json",{d:d for d in r["cards"]})
+    writer.matter_first_days=lambda:r["matter_first_day"]
+    key={}
+    def add(k,w,a):
+        cid=f"C{len(key)+1:03d}"
+        key[cid]=k
+        for family in ("codex","claude"):
+            put(f"deck/round-0/{cid}-{family}.json",dict(worth=w,answer=a,why="fixture"))
+    for draw,cards in r["cards"].items():
+        put(f"map/library-{draw}.json",[{"question_id":q} for q in cards])
+        rows=[{"matter":m,"status":"opened","ids":[e["question"] for e in entries]} for m,entries in r["mapping"][draw].items()]
+        for family in ("claude","codex"):
+            Mem(f"map/map-{draw}-{family}.txt").write_text("'"\\n\".join(map(json.dumps,rows)))
+        for q,c in cards.items():
+            add(dict(role=\"product\",draw=draw,question=q,answered=c[\"answer\"]"'!="no answer",
+                     **{f:c[f] for f in ("opened","guardrail","covering","type")}),c["worth"],c["answer"] if c["answer"]!="no answer" else None)
+    product=next(iter(key.values()))
+    for role,marks in (("plant",r["controls"]["plants"]),("supported control",r["controls"]["supported"])):
+        for mark in marks: add(dict(product,role=role),"worth",mark)
+    for same in r["controls"]["repeats_same"]:
+        add(dict(product,role="repeat"),"worth" if same else "trivia",r["cards"][product["draw"]][product["question"]]["answer"])
+    put("keys/deck-key.json",key)
+    for n in range(3): Mem(f"deck/round-{n}.done").write_text("done")
+    with contextlib.redirect_stdout(io.StringIO()):
+        mapping.result("map")
+    record()
+def fixture(n=20,a=5,b=1,empty=False,short=False):
+    r=tests.base(n=n,new_served=a,old_served=b)
+    for d,cards in r["cards"].items():
+        want = 29 if d=="new-1" and short else 30
+        for i in range(want-len(cards)):
+            cards[f"{d}-extra-{i}"]={"worth":"worth","answer":"supported","type":"figure","guardrail":True,"covering":False,"opened":None}
+        for c in cards.values(): c["guardrail"]=True
+    r["cards"]["new-1"]["new-1-g-figure-0"]["opened"]="2026-09-09"
+    if a: r["cards"]["new-1"]["new-1-q0"]["opened"]="2026-09-09"
+    if empty: r["cards"]["new-3"],r["mapping"]["new-3"]={},{}
+    return r
+for n,a,b,invalid in ((32,10,2,False),(32,2,10,False),(32,5,4,False),(19,5,1,False),(32,5,1,True)):
+    r=fixture(n,a,b)
+    if invalid: r["controls"]["plants"][0]="supported"
+    make(r)
+    now=cli()
+    prior=json.dumps(parent.verdict(get("deck/readings.json")),indent=1,ensure_ascii=False,default=str)+"'"\\n\"
+    assert now==prior
+    print(json.loads(now)[\"verdict\"],\"CLI report matches parent byte for byte\")
+make(fixture(empty=True))
+empty=json.loads(cli())
+print(\"Empty writer draw\",get(\"deck/readings.json\")[\"cards\"][\"new-3\"],empty[\"verdict\"],empty[\"why\"])
+make(fixture(short=True))
+print(\"Original CLI\",json.loads(cli())[\"verdict\"])
+artifact=get(\"map/mapping.json\")
+assert artifact[\"distinct\"][\"new-1\"][\"ids\"]==29
+artifact[\"distinct\"][\"new-1\"][\"ids\"]=30
+put(\"map/mapping.json\",artifact)
+try: cli()
+except SystemExit as e: print(\"Unrefreshed record\",e)
+record()
+print(\"Edited derived count + regenerated record\",json.loads(cli())[\"verdict\"])
+key=get(\"keys/deck-key.json\")
+product=next(k for k in key.values() if k[\"role\"]==\"product\" and k[\"question\"]==\"new-1-q0\")
+product[\"opened\"]=\"2026-09-10\"
+put(\"keys/deck-key.json\",key)
+record()
+print(\"Edited deck key + regenerated record\",json.loads(cli())[\"beside\"][score.DAYS_KEY][\"M01\"][\"new-1\"])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 2748ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-YpivmzQU' (errno=Operation not permitted)
+2026-11-18 13:41:09.267 xcodebuild[53925:60159830]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:41:09.379 xcodebuild[53925:60159829] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-NGOpCXJl' (errno=Operation not permitted)
+2026-11-18 13:41:09.706 xcodebuild[53927:60159845]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:41:09.817 xcodebuild[53927:60159844] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-MkwzEIl5' (errno=Operation not permitted)
+2026-11-18 13:41:10.642 xcodebuild[53932:60159936]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:41:10.758 xcodebuild[53932:60159935] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-qfdNx16P' (errno=Operation not permitted)
+2026-11-18 13:41:11.100 xcodebuild[53934:60159952]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:41:11.214 xcodebuild[53934:60159951] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+practical lead CLI report matches parent byte for byte
+practical loss CLI report matches parent byte for byte
+no practical winner CLI report matches parent byte for byte
+too small CLI report matches parent byte for byte
+invalid CLI report matches parent byte for byte
+Empty writer draw {} too small ['new-3: (0, 0) distinct bets']
+Original CLI too small
+Unrefreshed record refused: readings.json is missing or differs from the readings its writer builds from the named inputs
+Edited derived count + regenerated record practical lead
+Edited deck key + regenerated record 3
+
+codex
+1. **Yes.** In memory, I changed `mapping.json`’s `distinct.new-1.ids` from 29 to 30 and regenerated `readings.json` with the normal writer. The CLI changed `too small` to `practical lead` with all reader answers unchanged. Verification checks the current mapping file, whose hash the writer has just calculated. Changing a deck key’s `opened` date and regenerating the record likewise changed the printed delay from 2 to 3 days. [Writer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:307) · [Verification](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:289) · [CLI](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533)
+2. **Yes.** The empty-draw writer fixture reached `too small` and printed `new-3: (0, 0) distinct bets`. [Empty-draw handling](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:311) · [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:488)
+3. **No change observed.** Well-formed CLI reports matched the parent byte for byte across all five verdicts. [Scoring entry](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533)
+
+NOT READY: Rebuild the mapping from reader answers and frozen libraries, and verify the deck key against a fingerprint recorded when the deck was issued.
+tokens used
+4,441,572
+1. **Yes.** In memory, I changed `mapping.json`’s `distinct.new-1.ids` from 29 to 30 and regenerated `readings.json` with the normal writer. The CLI changed `too small` to `practical lead` with all reader answers unchanged. Verification checks the current mapping file, whose hash the writer has just calculated. Changing a deck key’s `opened` date and regenerating the record likewise changed the printed delay from 2 to 3 days. [Writer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:307) · [Verification](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:289) · [CLI](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533)
+2. **Yes.** The empty-draw writer fixture reached `too small` and printed `new-3: (0, 0) distinct bets`. [Empty-draw handling](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:311) · [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:488)
+3. **No change observed.** Well-formed CLI reports matched the parent byte for byte across all five verdicts. [Scoring entry](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533)
+
+NOT READY: Rebuild the mapping from reader answers and frozen libraries, and verify the deck key against a fingerprint recorded when the deck was issued.

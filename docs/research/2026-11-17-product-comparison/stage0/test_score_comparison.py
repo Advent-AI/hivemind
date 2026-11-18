@@ -10,7 +10,14 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import pytest  # noqa: E402
 import score_comparison as sc  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def frozen_matter_list(monkeypatch):
+    """`seal` points the scorer at its test matter list; this puts the frozen list back after each test, so no test reads another's."""
+    monkeypatch.setattr(sc, 'MATTERS', sc.MATTERS)
 
 DRAWS = [f'{s}-{d}' for s in ('new', 'old') for d in (1, 2, 3)]
 
@@ -416,3 +423,27 @@ def test_malformed_readings_are_refused_before_any_verdict():
             assert 'malformed readings' in str(e)
         else:
             raise AssertionError('malformed readings were scored')
+
+
+def test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one(tmp_path):
+    """The verdict is a function of the primary data only: the chain dry run scores its unedited chain, and refuses it with an edited
+    mapping, deck key or card text (D675, Codex round 19). Run in process, so a mutant of the scorer or the rebuild is the one exercised."""
+    import chain_dry_run
+    lines = chain_dry_run.run(tmp_path / 'chain')
+    assert any(line.startswith('VERDICT too small') for line in lines), lines
+    for name in ('mapping.json', 'deck-key.json', 'C001.txt'):
+        assert f'EDIT REFUSED {name} True' in lines, lines
+
+
+def test_a_replayed_confirmation_must_be_the_one_the_deck_asks_for(tmp_path):
+    """The rebuild answers the deck's confirmations from their record, in order; a record whose next entry is another kind is refused."""
+    import rebuild
+    record = tmp_path / 'control-confirmations.jsonl'
+    record.write_text(json.dumps({'attempt': [{'role': 'plant', 'draw': 'new-1', 'question': 'Q1', 'mark': {}, 'admitted': True}]}) + '\n')
+    confirmed = rebuild.replay(record)
+    try:
+        confirmed('a card', supported=True)                                   # the deck asks for a supported control
+    except SystemExit as e:
+        assert 'do not match' in str(e)
+    else:
+        raise AssertionError('a confirmation of another kind was replayed')

@@ -9955,3 +9955,25 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - **The deck key now decides two more card fields:** each card's answered flag and its opening day. Every draw keeps a card map, empty when the draw opened no question.
   - **Results:** 99 tests; 66 mutants, all as predicted; the chain dry run reaches its verdict through the new entry.
   - **Updated:** the step-4 command in CURRENT_STATE.
+- **Round 19 (Codex, `tools-review-codex-19.md`).** Editing any derived file in the chain could still change a verdict:
+  - adding one to `distinct.ids` in `mapping.json` turned too small into a lead;
+  - moving a deck key's opening day changed the delay printed beside the verdict.
+
+  This happens because the readings record is rewritten from the edited file by its own writer, so the two agree.
+
+  **Structural rule:** the verdict is a function of the primary data only.
+  - **Primary data:** the run stores, the readers' own answers (mapping, third reader, control confirmations, card marks) and the
+    frozen inputs.
+  - **The rebuild:** before scoring, `score_comparison.score(run root, mapping out, marks folder)` rebuilds every derived file in a
+    temporary folder with the same code that wrote it (`rebuild.differences`):
+    - the eligibility check, through one writer `eligibility.write`;
+    - the libraries and the mapping key;
+    - `mapping.json`;
+    - the deck key and the card texts.
+
+    The rebuild replays the deck's reader confirmations from their record and calls no reader. The scorer refuses if any stored
+    derived file differs.
+  - **Checks:** the chain dry run now runs in process and restores what it replaces. It scores the unedited chain, and refuses an
+    edited mapping, deck key or card text, each with the readings record rewritten as Codex did.
+  - **A test leak, fixed:** `seal` had left the scorer pointing at a test matter list. An autouse fixture now restores it.
+  - **Totals:** 101 tests; 71 mutants, all as predicted.
