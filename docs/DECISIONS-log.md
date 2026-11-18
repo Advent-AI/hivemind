@@ -9670,3 +9670,108 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     - no push, deploy or publish;
     - credentials and provider caps are untouched.
 - **Every try is logged** with what it taught: `docs/research/2026-11-17-product-comparison/TRIES.md`.
+
+## D675 · 2026-11-18 · Under D672: the reading tools' review found them not ready; fixed, and the frozen rule's open readings written down (before any output)
+
+- **Found** by the council review D672 requires (Codex thread `tools-review-codex.md`; a fresh Claude reader), both "not ready", before any
+  comparison output was read. Every finding was checked against the code it cites before a change.
+- **Fixed** (`stage0/`; tests 30, in-memory mutants 16 of 16 caught with assertions, `mutants-reading-tools.txt`):
+  - the scorer refused nothing short of six draws, and compared the 10-point bar in floating point (12/30 against 9/30 came out a breach);
+  - a plant both readers rejected with different labels made the reading invalid;
+  - the new system's judge store was always the first attempt, never D449's redo; an incomplete draw was not refused;
+  - a missing third-reader mark became a split; an id a reader made up was skipped, then crashed the deck; the reader decided which of a
+    duplicate pair was the later one;
+  - the systems' raw ids differ in form (the new system's have gaps), so libraries now carry neutral ids Q1..Qn in opening order;
+  - the debate prompt did not resend the marks' definitions to closed sessions, and could read a mark of its own round; readings could
+    skip the debate;
+  - a plant could land on a one-rung ladder; the deck's shuffle seed differed from the card spec's;
+  - the card labelled the speaker as the publisher and cut quotes at their first line break (829 stored judge requests of both systems now
+    parse to their stated item counts, 248 items with line breaks kept whole, 59 speakers holding a semicolon).
+- **Readings of the frozen rule, written here before any output:**
+  - **Guardrail shares:** the random sample's cards that cover no matter, as the rule's words say ("covering cards are not in the
+    shares"). Codex read it so; the Claude reader called it open; taken as written.
+  - **The 10-point bar** is compared exactly; exactly 10 points is not a breach.
+  - **A plant** is explicitly rejected when every mark its readers left is unsupported or insufficient, split between the two or not.
+  - **Mapping readers see question texts, not the news.** The prompt's "the news supports" is dropped: a different deadline or period for
+    the same outcome is opened or narrower. Week reading A2 showed each question's opening article; six libraries of dozens of questions
+    cannot carry them, and this difference is disclosed with the result.
+- **The card form check is closed:** its second round named only the systems' own content (how many rungs a question has, how many
+  questions a library holds), which the card shows as written (D673).
+- **Round 2 (both readers "not ready" again; `tools-review-codex-2.md` and a fresh Claude reader), fixed the same day:**
+  - **Eligibility is checked by code** (`stage0/eligibility.py`): six complete draws under their own labels, launched within one hour,
+    every stored call within 72 h of the first launch (D667). It also records each store's sha256. Export refuses without a passing
+    check or with a changed store. Readings carry the fingerprints of the matter list, the mapping, the eligibility check and the deck key.
+    The scorer refuses another matter list. Neither the export nor the deck overwrites an existing key.
+  - **Mapping answers are void when:** `opened` names no id, or `narrower` lacks the main-outcome judgement. Third readers also see the
+    article the question was opened from (week reading A2's form; Codex's ask, for coverage that turns on a date or period).
+  - **Cards show each item's publisher,** taken from the item database by the item's input id (card-spec 3). 73 of 73 slice lines
+    resolve.
+  - **Debate rounds:**
+    - a field both families agreed on stays settled, and only disputed fields are debated (and named);
+    - a reason may run to at most 40 words;
+    - an empty answer written as the string "null" is null.
+  - **Plants:**
+    - a plant moves the stored rung one place;
+    - it enters the deck only when a separate closed reader confirms the moved answer is not supported, as supported controls are confirmed
+      supported first;
+    - every confirmation is kept beside the key.
+  - **More readings of the frozen rule:**
+    - a sampled card whose cover the third readers split is resolved per counting like any cover (covers > does not cover);
+    - a supported control counts as accepted only when it is marked supported, so a split is not accepted;
+    - a repeat counts as the same only when both its final marks equal the original card's, splits included;
+    - how each counting resolved every split is printed beside the verdict.
+  - **Correction of the record above:** "16 of 16 caught with assertions" was wrong.
+    - One mutant was caught by a `KeyError`, not by its assertion. Its test is fixed.
+    - The mutant runner now fails loudly when a mutant's text no longer matches the code. Two stale mutants had passed silently as
+      "caught". This was found on rerun.
+  - **Now:** 41 tests; 28 mutants and 5 controls, all as predicted, each mutant failing its own assertion
+    (`stage0/mutants-reading-tools.txt`).
+- **Round 3** (Codex in `tools-review-codex-3.md`, plus a fresh Claude reader; both "not ready"), fixed the same day:
+  - **Eligibility:** a draw must carry exactly the identity `launch_comparison.py` registers (kind, ledger, items database, manifest,
+    07-01 to 09-20, three passes; for the new system also the limits, astra-frozen and the judge to 09-20). All six live draws match.
+    The 72-hour window also counts every attempt in the draw's ledger, because a failed send leaves no archive row.
+  - **The scorer re-reads every input:**
+    - the matter rows must equal the frozen list;
+    - the mapping file must match its fingerprint and equal the readings' mapping;
+    - the eligibility file must pass and must be the one the mapping names;
+    - the deck key's product cards must be the readings' cards.
+    - Codex had shown a lead scored on 20 synthetic matters with placeholder fingerprints.
+  - **Every split matter-question pair** is reported with its resolution, including on a question that covers another matter outright.
+  - **The card:**
+    - shows its own opening day and marks its place in the library's opening order, which a `duplicate` mark needs;
+    - numbers the possible answers, as the reasons cite rungs;
+    - now carries what the answering request gave besides its evidence: the hidden-items line, the themes in force and the previous
+      answer, each rung shown by its condition and with no thesis id.
+    - Without these, readers would judge "supported" on part of what the answer was given. Stored latest requests hid pieces in 10 of
+      29 (new) and 14 of 39 (old) cases, 143 and 461 pieces.
+    - Over the 829 stored judge requests of both systems, the theme, dependency and previous-answer counts parse exactly. None of them
+      holds a dependency, so that branch is not exercised on real data.
+  - **Smaller fixes:**
+    - control confirmations are appended per deck attempt and kept on a shortfall;
+    - the export writes its key and folder only after every store passed its check.
+  - **Now:** 44 tests; 35 mutants and 5 controls, all as predicted, each mutant failing its own assertion.
+- **Card form check after the round-3 card changes** (D673; `stage0/blinding-check-codex-3.md`, `-4.md`):
+  - Round 3 named one form element: a third annotation form that the answer step appends to a rung condition. The filter is now the
+    closed set of `ladder_step.py`'s three suffixes; of 484 stored conditions, none is left annotated.
+  - Round 4 named only content: the number of rungs, the number of themes and the size of the library. The check is closed.
+- **Round 4.**
+  - **Readers' verdicts on the reading tools:** the Claude reader said "ready to read". Codex named three more points, all fixed:
+    - the scorer takes each card's guardrail, covering and type marks from the verified deck key, and refuses readings that differ.
+      Codex had flipped a loss to a lead by changing six flags in memory;
+    - the 72-hour timing needs a complete attempt log: its line count must equal the ledger's attempts plus refusals, its charges must
+      sum to the spend, and nothing may still be reserved. A missing or short log leaves the timing "not established", and the draw is
+      not eligible. On slice 2: 156 of 156 and 79 of 79;
+    - theme context on the card keeps the update marker and lists each theme's numbered possible answers. 29 of 52 stored theme reasons
+      cite another rung.
+  - **Also fixed:**
+    - the card refuses a request whose evidence count it cannot read in full;
+    - eligibility resolves the run root before it compares paths.
+  - **Totals:** 47 tests; 39 mutants and 5 controls, all as predicted. 125 answered cards are built on all 12 stored stores of both
+    systems without a refusal.
+  - **The §1.6 design moved to v2 (`DESIGN-1.6.md`) on both readers' Part B:**
+    - every store is taken from `run.json` and fingerprinted;
+    - the release status is printed beside the verdict;
+    - Step 2 line 1 uses the neutral labelling question, a generator-miss audit, and labels frozen before retrieval is read;
+    - line 3 is a paired test that varies grouping alone, against an independent detail key;
+    - D431 records its substitution and its comparability rule;
+    - every printed-beside item has its tool.

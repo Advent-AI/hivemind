@@ -20,6 +20,7 @@ def run_mapping(tmp_path, monkeypatch, codex, claude, thirds=None):
     lib = [{'question_id': q, 'question': f'question {q}', 'due': '2027-01-31', 'opened': '2026-07-0' + q[-1], 'possible_answers': ['a', 'b']}
            for q in ('v1', 'v2', 'v3')]
     (out / 'library-L1.json').write_text(json.dumps(lib))
+    (out / 'eligibility.json').write_text(json.dumps({'eligible': True}))
     (out / 'map-L1-codex.txt').write_text('\n'.join(json.dumps(r) for r in codex))
     (out / 'map-L1-claude.txt').write_text('\n'.join(json.dumps(r) for r in claude))
     for (matter, q, reader), covers in (thirds or {}).items():
@@ -55,3 +56,74 @@ def test_duplicates_count_both_and_split(tmp_path, monkeypatch):
     claude = [{'matter': 'M01', 'status': 'missed', 'ids': []}, {'duplicate': 'v2', 'of': 'v1'}]
     result = run_mapping(tmp_path, monkeypatch, codex, claude)
     assert result['distinct']['new-1'] == {'ids': 3, 'duplicates_both': 1, 'duplicates_split': 1}
+
+
+def test_a_pair_named_in_either_order_has_the_later_opened_question_as_its_duplicate(tmp_path, monkeypatch):
+    """same_question: the duplicate is the later-opened question of the pair, whichever way a reader names it (D675)."""
+    codex = [{'matter': 'M01', 'status': 'missed', 'ids': []}, {'duplicate': 'v2', 'of': 'v1'}]
+    claude = [{'matter': 'M01', 'status': 'missed', 'ids': []}, {'duplicate': 'v1', 'of': 'v2'}]
+    result = run_mapping(tmp_path, monkeypatch, codex, claude)
+    assert result['distinct']['new-1'] == {'ids': 3, 'duplicates_both': 1, 'duplicates_split': 0}
+
+
+def test_a_disagreement_without_both_third_marks_is_refused(tmp_path, monkeypatch):
+    """covers: a split needs both third readers' marks; a missing one is refused, never read as a split (D675)."""
+    codex = [{'matter': 'M01', 'status': 'opened', 'ids': ['v1']}]
+    claude = [{'matter': 'M01', 'status': 'missed', 'ids': []}]
+    try:
+        run_mapping(tmp_path, monkeypatch, codex, claude, {('M01', 'v1', 'codex'): True})
+    except SystemExit as e:
+        assert 'third-reader marks missing' in str(e)
+    else:
+        raise AssertionError('a missing third mark was counted')
+
+
+def test_an_answer_naming_an_id_outside_the_library_or_a_matter_twice_is_void():
+    """read: every matter exactly once, every id in the library, every duplicate pair two library ids; opened names an id; narrower says
+    whether it carries the main outcome (D675)."""
+    ids = {'Q1', 'Q2'}
+    good = [{'matter': 'M01', 'status': 'opened', 'ids': ['Q1']}, {'matter': 'M02', 'status': 'missed', 'ids': []}, {'duplicate': 'Q2', 'of': 'Q1'}]
+    assert mapping.answer_problem(good, ['M01', 'M02'], ids) is None
+    for rows, reason in (([dict(good[0], ids=['v9'])] + good[1:], 'not in the library'), (good + [good[1]], 'repeated'),
+                         (good[:2] + [{'duplicate': 'Q2', 'of': 'Q2'}], 'duplicate pair'),
+                         ([dict(good[0], ids=[])] + good[1:], 'names no id'),
+                         ([dict(good[0], status='narrower')] + good[1:], 'main-outcome')):
+        problem = mapping.answer_problem(rows, ['M01', 'M02'], ids)
+        assert problem is not None and reason in problem
+
+
+def test_export_gives_neutral_ids_in_opening_order_and_keeps_the_system_id():
+    """blinding: libraries carry Q1..Qn in opening order; the system's id stays as source_id for the guardrail sample (D675)."""
+    lib = mapping.neutral_ids([{'question_id': 'v1'}, {'question_id': 'v3'}, {'question_id': 'v14'}])
+    assert [(e['question_id'], e['source_id']) for e in lib] == [('Q1', 'v1'), ('Q2', 'v3'), ('Q3', 'v14')]
+
+
+def test_the_judge_store_is_the_attempt_its_record_completed_and_an_incomplete_draw_is_refused(tmp_path):
+    """plan §1.4 item 10 and D449: the store read is the completed judge attempt (a redo's folder after a redo); an incomplete draw is refused."""
+    draw = tmp_path / 'new-1'
+    (draw / 'judge').mkdir(parents=True)
+    (draw / 'run.json').write_text(json.dumps({'state': 'complete', 'components': {'judge': {'state': 'completed', 'folder': 'judge'}}}))
+    (draw / 'judge' / 'run.json').write_text(json.dumps({'new-1': {'state': 'complete', 'attempts': [
+        {'folder': 'draw-new-1', 'stopped': 'ReadTimeout'}, {'folder': 'draw-new-1-redo', 'judgements': 40, 'views': 30}]}}))
+    assert mapping.store_paths(tmp_path, 'new-1')[0] == draw / 'judge' / 'draw-new-1-redo' / 'views.sqlite'
+    (draw / 'run.json').write_text(json.dumps({'state': 'stopped', 'components': {'judge': {'state': 'completed', 'folder': 'judge'}}}))
+    try:
+        mapping.store_paths(tmp_path, 'new-1')
+    except SystemExit as e:
+        assert 'not complete' in str(e)
+    else:
+        raise AssertionError('an incomplete draw was read')
+
+
+def test_export_refuses_draws_that_are_not_eligible(tmp_path, monkeypatch):
+    """D667 and plan §1.4 item 10: no library is exported from draws the eligibility check did not pass."""
+    monkeypatch.setattr(mapping, 'KEY_FOLDER', tmp_path / 'keys')
+    (tmp_path / 'eligibility.json').write_text(json.dumps({'eligible': False, 'problems': ['launches span 2:00:00']}))
+    try:
+        mapping.export(tmp_path, tmp_path / 'out', tmp_path / 'eligibility.json')
+    except SystemExit as e:
+        assert 'not eligible' in str(e)
+    except Exception as error:
+        raise AssertionError(f'export went past the eligibility check: {error!r}')
+    else:
+        raise AssertionError('an ineligible run was exported')
