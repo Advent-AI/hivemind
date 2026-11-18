@@ -31,8 +31,8 @@ every pair either reader rejects goes to the frozen third reading (`merge-third-
 packet goes in the prompt in place of the file path. Pass: the third reader's `wrong` at most 4 of 200. Fewer than 200: not measured.
 
 Line 3, later details of content: 30 random groups (seed + 3) whose original has at least one later report. The detail key is question
-2's definition (`v2-prompt-1.md`) over each record's statement (summary, passages, original party, publication date, publisher); the
-attribution fields `group_text` drops for a later report (tier, stated day, period, speaker) are not shown to the key readers, so the key
+2's definition (`v2-prompt-1.md`) over each record's statement, counting only what the later report's summary and quotes add (its
+publisher and publication date are context for reading, never details); the attribution fields `group_text` drops for a later report (tier, stated day, period, speaker) are not shown to the key readers, so the key
 holds content only, and code counts the later reports whose attribution fields differ from their original's, printed beside. Two key
 readers, one per family, list each later report's details; a third session (family drawn per group by seed) settles every group whose
 two drafts differ. The key is frozen (`key.json` and its sha256) before any rendering is built. Each group's two renderings, the frozen
@@ -121,17 +121,20 @@ MERGE_TEXT, MERGE_THIRD_TEXT = MERGE_PROMPT.read_text(), MERGE_THIRD_PROMPT.read
 MERGE_READ = f'Read {build_merge_packets.OLD_RUN}merge-packet-1.json. '
 MERGE_THIRD_READ = f'Read {build_merge_packets.OLD_RUN}merge-third-packet.json. '
 VERDICTS = tuple(re.findall(r'^- "([a-z]+)":', MERGE_THIRD_TEXT, re.M))
+CONTENT_ONLY = (" Count only facts the later record's statement itself adds: its summary and quotes. Use its publisher and publication "
+                "date only as context for reading; never list them as details.")
 KEY_PROMPT = ('You are an independent reader for a hedge-fund research system, building an answer key. Read-only task: do not edit files or '
               'run model calls.\n\nRead PACKET. Each entry is one group of stored evidence records about NVIDIA: "earlier", the first record '
               'of a statement, and "later", the later records grouped with it, each with its summary, verbatim source passages, original '
               'party, publication date and publisher. Do not open any file.\n\n'
-              'For each LATER record, independently: ' + DETAIL_DEFINITION + '\n\nReturn only a JSON array with one object per later record, '
-              'in packet order: [{"id": "K..", "details": ["..."]}].\n')
+              'For each LATER record, independently: ' + DETAIL_DEFINITION + CONTENT_ONLY + '\n\nReturn only a JSON array with one object '
+              'per later record, in packet order: [{"id": "K..", "details": ["..."]}].\n')
 KEY_THIRD_PROMPT = ('You are the third reader settling an answer key. Read-only task: do not edit files or run model calls.\n\nRead PACKET. '
                     'Each entry is one group of stored evidence records about NVIDIA: "earlier", the first record of a statement, and "later", '
                     'the later records grouped with it, each with its summary, verbatim source passages, original party, publication date and '
                     'publisher. Under "drafts", each later record carries two independent readers\' lists of its details, A and B. Do not '
-                    'open any file.\n\nEach reader was asked, for each LATER record, to ' + DETAIL_DEFINITION + '\n\nFor every LATER record, '
+                    'open any file.\n\nEach reader was asked, for each LATER record, to ' + DETAIL_DEFINITION + CONTENT_ONLY + '\n\nFor every '
+                    'LATER record, '
                     'compare the two drafts against the records. Keep once each detail both drafts name, in either wording. Decide each '
                     'detail only one draft names from the records: keep it if it is such a fact, otherwise drop it.\n\nReturn only a JSON '
                     'array with one object per later record, in packet order: [{"id": "K..", "details": ["..."], "dropped": ["..."]}].\n')

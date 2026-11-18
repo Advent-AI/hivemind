@@ -9855,3 +9855,16 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   scratch copies, and each was caught by its own test.
 - In all: 88 stage0 tests, and the frozen-file tests green.
 - On c1, line 3's rendering prompts reach at most 29 KB, and 205 of 206 later reports differ in attribution fields (printed beside).
+- **Round 9.** Codex and a Claude reader each confirmed round 8's points against the code. Their remaining points are all fixed:
+  - **D400:** a session exhausted after its retry is final (a `.missing` marker) and is never sent again. Any missing session makes that
+    draw's reader lines 1–5 "not measured"; the collector's partial lines are not kept.
+  - **Step 2 line 3:** both key prompts say to count only facts the later statement adds; the publisher and publication date are context,
+    never details (`CONTENT_ONLY`).
+  - **D431:**
+    - a missing session is final, as in D400;
+    - the "period" a Claude reader saw empty was an output-only split-child year, never shown in a packet. It was renamed `split_year`, and a
+      test checks that both systems' packets carry the same fields.
+  - **The design:** v7's leftover sentence counting attribution fields against line 3 is deleted, and the key's and the eligibility
+    step's wording now match the code.
+  - **Counts:** D400 11 tests and 19 mutants; Step 2 16 tests and 27 mutants; D431 11 tests and 25 mutants; 98 stage0 tests in all,
+    with the frozen-file tests green.

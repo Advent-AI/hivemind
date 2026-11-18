@@ -120,8 +120,8 @@ def states(family, detail, excerpt):
 class Reader:
     """Answers each kind of closed session from its prompt alone, by fixed rules; records every (family, prompt)."""
 
-    def __init__(self, void=lambda family, prompt, attempt: False, render=states):
-        self.calls, self.void, self.render, self.attempts = [], void, render, {}
+    def __init__(self, void=lambda family, prompt, attempt: False, render=states, key_extra=None):
+        self.calls, self.void, self.render, self.attempts, self.key_extra = [], void, render, {}, key_extra or {}
 
     def __call__(self, family, prompt):
         self.calls.append((family, prompt))
@@ -140,7 +140,11 @@ class Reader:
             rows = [{'id': p['id'], 'merge_acceptable': False, 'verdict': 'wrong' if 'WRONG' in p['later']['summary'] else 'overlap',
                      'why': 'rule'} for p in packet_of(prompt)]
         elif 'building an answer key' in prompt:
-            rows = [{'id': m['id'], 'details': re.findall(r'\d+% margin', m['summary'])} for g in packet_of(prompt) for m in g['later']]
+            rows = [{'id': m['id'], 'details': re.findall(r'\d+% margin', m['summary']) + self.key_extra.get(family, [])}
+                    for g in packet_of(prompt) for m in g['later']]
+        elif 'third reader settling an answer key' in prompt:
+            rows = [{'id': m, 'details': sorted(set(d['A']) & set(d['B'])), 'dropped': sorted(set(d['A']) ^ set(d['B']))}
+                    for g in packet_of(prompt) for m, d in g['drafts'].items()]
         elif 'The excerpt:' in prompt:
             rows = [{'id': d['id'], 'stated': self.render(family, d['detail'], excerpt_of(prompt))} for d in packet_of(prompt)]
         else:
@@ -346,6 +350,19 @@ def test_line3_key_readers_see_content_only_and_attribution_differences_are_coun
         assert result[counted]['later reports that differ'] == 2
         assert result[counted]['by field'] == {'tier': 0, 'statement_date': 0, 'evidence_period': 1, 'reporting_speaker': 1}
     assert result['status'] == 'passed'
+
+
+def test_line3_key_prompts_count_only_what_the_statement_adds(tmp_path, reader):
+    """Council round 9 (Codex): the key readers and the key tie-break count only facts the later report's statement adds (its summary and
+    quotes), and use its visible publisher and publication date only as context, never as details."""
+    fake = reader(key_extra={'claude': ['published by Reuters']})        # the drafts differ, so every group goes to a tie-break session
+    result = step2_lines.line3(tmp_path, make_draw(tmp_path, *anchor_corpus(1)[:2], grouped_library(30)), tmp_path / 'out', tmp_path / 'keys')
+    keys = [p for _f, p in fake.calls if 'building an answer key' in p]
+    thirds = [p for _f, p in fake.calls if 'third reader settling an answer key' in p]
+    sentences = ("Count only facts the later record's statement itself adds: its summary and quotes.",
+                 'Use its publisher and publication date only as context for reading; never list them as details.')
+    assert keys and thirds and all(sentence in p for p in keys + thirds for sentence in sentences)
+    assert result['key details'] == 30 and result['status'] == 'passed'
 
 
 def test_line3_no_session_sees_both_renderings_of_a_group(tmp_path, reader):

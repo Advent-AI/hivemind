@@ -95,13 +95,13 @@ Inputs: new-1's Step 1 trace, its `decisions.json` and its `library.json`. The s
 - **The two renderings:**
   - "grouped": the frozen dossier, `step3/library.group_text(member_text=True)`;
   - "apart": each member as its own entry, `record_text`.
-  - Any loss the frozen renderer causes, such as a later report's tier, stated day, period or speaker, counts against it.
 - **An independent detail key, of content only** (the council's round-8 consensus, D675):
   - **A detail** is what a later report's statement adds to its group's original: "a figure, condition, party, date or qualification an
     analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
     condition"; the recorded test's "detail" category).
-  - The record's own attribution fields (tier, stated day, period, reporting speaker) are not shown to the key readers, so the key
-    holds content by construction. A party or period that changes the claim still counts when the statement's own text says it.
+  - The record's own attribution fields (tier, stated day, period, reporting speaker) are not shown to the key readers. The publisher
+    and publication date are shown as context only, and the prompts say they are never details (`CONTENT_ONLY`). A party or period
+    that changes the claim still counts when the statement's own text says it.
   - Two closed key readers, one per family, each list the details. A third session settles every detail they do not share.
   - The key is frozen before either rendering is read.
 - **Reading:**
@@ -130,8 +130,8 @@ the ruler's question, is not built (D442's precedent).
   `clean_ladders.view_id`, split children included.
 - **Step 4, matching:** MATCHING-v2's SAME rule, two blind families, and two third readers, one per family, on each disagreement, as the
   full run did (`READING-COMMITMENT.md`). A split stays unresolved. D442's rule for a ruler question's candidates applies.
-- **Step 5, eligibility:** question, period and quantity the ruler's, and due day the ruler's (D430). Decided by two blind readers with
-  a third on disagreement; the literal reading (the same due day) beside.
+- **Step 5, eligibility:** question, period and quantity the ruler's, and due day the ruler's (D430). Decided by two blind readers, with
+  two third readers, one per family, on a disagreement; a split stays unresolved. The literal reading (the same due day) is printed beside.
 - **Step 6, outcomes:** the first that applies, (i) to (ix).
   - Several SAME views: the first created is judged and the others listed.
   - A figure rung with no bound: "no comparison". A unit that differs from the ruler question's, or that cannot be established:

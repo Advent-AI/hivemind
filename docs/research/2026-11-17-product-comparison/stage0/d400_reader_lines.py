@@ -31,9 +31,11 @@ of `cases.json`, then `readers/`, `readers-answers/`, `third-reader/`, `stage-a-
 A session is void when `census_readers.run` voids it (a closed-session breach, or no answer within its 3600 s), or when the collector
 would read its answer otherwise than as a complete one (`rows_problem`, `rulings_problem`): a line it would not read, an item or point
 given twice or outside the packet, or an item without a valid row (Stage A's own rule, `accounting.row_problem`) or a point without a
-valid ruling. A void session is retried once; a still-void one writes no answer file and is reported missing, so the draw's reading is
-incomplete and its lines are not measured. There is no ask-again round (Stage A's item-by-item `-again-<k>` step): the council left it
-out, since the reader lines are printed beside the verdict only. `read` and `third` skip a session whose answer file exists.
+valid ruling. A void session is retried once; a still-void one writes no answer file and is reported missing, recorded by a marker
+beside its answer file (`<answer>.missing`, which no glob of the collector reads). Exhaustion is terminal: `read` and `third` skip a
+session whose answer file or marker exists. A draw with any session missing (reported missing, or not run yet) has every reader line
+1–5 not measured, and the collector's lines are not read for it. There is no ask-again round (Stage A's item-by-item `-again-<k>` step):
+the council left it out, since the reader lines are printed beside the verdict only.
 """
 import argparse
 import collections
@@ -337,7 +339,7 @@ def read_packets(out):
     out = Path(out)
     manifest = load_manifest(out)
     brief, themes = READER_BRIEF.read_text(), theme_list_text()
-    jobs = []
+    jobs, exhausted = [], []
     for draw, folder, key_path in draws_to_read(out, manifest):
         key = json.loads(key_path.read_text())
         outcomes = {(outcome['case'], outcome['pass']): outcome for outcome in collect_readings.outcomes_of(folder)}
@@ -348,11 +350,13 @@ def read_packets(out):
             prompt = READER_PROMPT.format(count=len(packet_sends), themes=themes, brief=brief, packet=packet_text)
             for family in FAMILIES:
                 answer_file = folder / 'readers-answers' / f'reader-{family}-packet-{number_of(packet_file)}.jsonl'
-                if not answer_file.exists():
+                if still_to_run(answer_file):
                     jobs.append((draw, folder, answer_file, family, prompt,
                                  lambda answer, family=family, packet_sends=packet_sends, key=key, outcomes=outcomes:
                                  rows_problem(answer, family, packet_sends, key, outcomes)))
-    return run_sessions(jobs)
+                elif missing_marker(answer_file).exists():
+                    exhausted.append(f'{draw} {answer_file.stem}')
+    return run_sessions(jobs, exhausted)
 
 
 def read_disputes(out):
@@ -361,7 +365,7 @@ def read_disputes(out):
     out = Path(out)
     manifest = load_manifest(out)
     brief, third_brief, themes = READER_BRIEF.read_text(), THIRD_READER_BRIEF.read_text(), theme_list_text()
-    jobs = []
+    jobs, exhausted = [], []
     for draw, folder, key_path in draws_to_read(out, manifest):
         if not (folder / 'third-reader').exists():
             disputes = run_stage_a_tool([COLLECT_READINGS, 'disputes', folder, key_path], cwd=out)
@@ -376,20 +380,34 @@ def read_disputes(out):
                                                 brief=brief, packet=packet_text)
             for family in FAMILIES:
                 answer_file = folder / 'third-reader' / f'rulings-{family}-{number_of(packet_file)}.jsonl'
-                if not answer_file.exists():
+                if still_to_run(answer_file):
                     jobs.append((draw, folder, answer_file, family, prompt,
                                  lambda answer, mark_of_point=mark_of_point: rulings_problem(answer, mark_of_point)))
-    return run_sessions(jobs)
+                elif missing_marker(answer_file).exists():
+                    exhausted.append(f'{draw} {answer_file.stem}')
+    return run_sessions(jobs, exhausted)
 
 
-def run_sessions(jobs):
+def missing_marker(answer_file):
+    """Where a session reported missing is recorded: beside its answer file, named so that no glob of the collector reads it."""
+    return answer_file.with_suffix('.missing')
+
+
+def still_to_run(answer_file):
+    """A session runs only when it has neither an answer nor a record that it was reported missing: exhaustion is terminal."""
+    return not answer_file.exists() and not missing_marker(answer_file).exists()
+
+
+def run_sessions(jobs, exhausted):
     def one(job):
         draw, folder, answer_file, family, prompt, problem_of = job
         answer, void = session(folder, answer_file.stem, family, prompt, problem_of)
         if answer is not None:
             answer_file.write_text(answer)
+        else:
+            missing_marker(answer_file).write_text(json.dumps({'void after two attempts': void}) + '\n')
         return draw, answer_file.stem, void
-    print(f'{len(jobs)} sessions to run', flush=True)
+    print(f'{len(jobs)} sessions to run; {len(exhausted)} reported missing earlier, not run again: {exhausted}', flush=True)
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=SESSIONS_AT_ONCE) as pool:
         for draw, name, void in pool.map(one, jobs):
@@ -399,17 +417,26 @@ def run_sessions(jobs):
 
 
 def missing_sessions(folder):
-    """The answer files `collect_readings.py` expects and does not find: a session reported missing, or not yet run."""
-    missing = [f'reader-{family}-packet-{number_of(packet_file)}' for packet_file in sorted((folder / 'readers').glob('packet-*.json'), key=number_of)
-               for family in FAMILIES if not (folder / 'readers-answers' / f'reader-{family}-packet-{number_of(packet_file)}.jsonl').exists()]
-    missing += [f'rulings-{family}-{number_of(packet_file)}' for packet_file in sorted((folder / 'third-reader').glob('ruling-packet-*.json'), key=number_of)
-                for family in FAMILIES if not (folder / 'third-reader' / f'rulings-{family}-{number_of(packet_file)}.jsonl').exists()]
+    """The answer files `collect_readings.py` expects and does not find, each with why: reported missing (with its last void), or not
+    run yet."""
+    expected = [folder / 'readers-answers' / f'reader-{family}-packet-{number_of(packet_file)}.jsonl'
+                for packet_file in sorted((folder / 'readers').glob('packet-*.json'), key=number_of) for family in FAMILIES]
+    expected += [folder / 'third-reader' / f'rulings-{family}-{number_of(packet_file)}.jsonl'
+                 for packet_file in sorted((folder / 'third-reader').glob('ruling-packet-*.json'), key=number_of) for family in FAMILIES]
+    missing = []
+    for answer_file in expected:
+        if answer_file.exists():
+            continue
+        marker = missing_marker(answer_file)
+        why = (f"reported missing: {json.loads(marker.read_text())['void after two attempts']}" if marker.exists() else 'not run yet')
+        missing.append(f'{answer_file.stem} ({why})')
     return missing
 
 
 def report(out):
-    """`collect_readings.py report` on every draw with a reading folder, with line 5 recomputed under D452's scaling; written to
-    `<out>/d400-reader-lines.json` and printed."""
+    """`collect_readings.py report` on every draw with a reading folder and no session missing, with line 5 recomputed under D452's
+    scaling; a draw with a session missing has lines 1–5 not measured and the no-ask-again note. Written to `<out>/d400-reader-lines.json`
+    and printed."""
     out = Path(out)
     manifest = load_manifest(out)
     result = {'eligible': manifest['eligible'], 'draws': {}}
@@ -420,18 +447,23 @@ def report(out):
             continue
         folder, key_path = to_read[draw]
         stored_path = folder / 'stage-a-report.json'
-        stored_path.unlink(missing_ok=True)                     # a failed report must not leave an earlier one to be read
+        for earlier in (stored_path, folder / 'report.txt'):    # an earlier report must not be read as this one
+            earlier.unlink(missing_ok=True)
+        missing = missing_sessions(folder)
+        if missing:                                             # none of the collector's lines is kept for this draw
+            result['draws'][draw] = {'status': 'not measured: a session is missing', 'missing sessions': missing, 'note': NO_ASK_AGAIN,
+                                     **{f'line {number}': accounting.NOT_MEASURED for number in (1, 2, 3, 4, 5)}}
+            continue
         collected = run_stage_a_tool([COLLECT_READINGS, 'report', folder, key_path], cwd=out)
         (folder / 'report.txt').write_text(collected.stdout + (f'\n[exit {collected.returncode}] {collected.stderr}' if collected.returncode else ''))
-        missing = missing_sessions(folder)
         if collected.returncode != 0:
             reason = collected.stderr.strip().splitlines()[-1] if collected.stderr.strip() else f'exit {collected.returncode}'
-            result['draws'][draw] = {'status': f'not measured: collect_readings.py report refused: {reason}', 'missing sessions': missing,
+            result['draws'][draw] = {'status': f'not measured: collect_readings.py report refused: {reason}',
                                      **{f'line {number}': accounting.NOT_MEASURED for number in (1, 2, 3, 4, 5)}}
             continue
         stored = json.loads(stored_path.read_text())
         countings = {'one counting (no rulings of two third readers)': stored} if 'lines' in stored else {label: stored[label] for label in TWO_COUNTINGS}
-        entry_out = {'status': 'read', 'missing sessions': missing,
+        entry_out = {'status': 'read',
                      'reading': {label: counting['reading'] for label, counting in countings.items()},
                      'dispute share': next(iter(countings.values()))['dispute share'],
                      'unresolved points': len(stored.get('unresolved', []))}
@@ -442,9 +474,6 @@ def report(out):
         entry_out['line 5'] = verdict_under_both([verdict for verdict, _ in line_5.values()])
         entry_out['line 5 by counting'] = {label: {'verdict': verdict, **details} for label, (verdict, details) in line_5.items()}
         result['draws'][draw] = entry_out
-    for draw_result in result['draws'].values():
-        if draw_result.get('missing sessions') and accounting.NOT_MEASURED in (draw_result[f'line {number}'] for number in (1, 2, 3, 4, 5)):
-            draw_result['note'] = NO_ASK_AGAIN
     (out / 'd400-reader-lines.json').write_text(json.dumps(result, indent=1, ensure_ascii=False) + '\n')
     print_report(result)
     return result

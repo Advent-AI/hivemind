@@ -181,11 +181,15 @@ def test_packets_read_third_report_end_to_end(tmp_path, monkeypatch):
         'verdict': 'met', 'right': 2, 'right by a ladder': 2, 'of': 2, 'minimum right': 2, 'minimum right by a ladder': 2}
 
 
-def one_draw_with_packets(tmp_path):
+def one_draw_with_packets(base):
     """new-1 with its packets built (two company figures over three passes, one packet of six items); new-2 and new-3 skipped."""
     states = {'new-1': 'completed', 'new-2': 'skipped', 'new-3': 'skipped'}
-    d400_reader_lines.build_packets(tmp_path / 'run', make_run_root(tmp_path / 'run', states), tmp_path / 'out', tmp_path / 'keys')
-    return tmp_path / 'out'
+    d400_reader_lines.build_packets(base / 'run', make_run_root(base / 'run', states), base / 'out', base / 'keys')
+    return base / 'out'
+
+
+def all_reader_lines(result):
+    return [result[f'line {number}'] for number in (1, 2, 3, 4, 5)]
 
 
 def voids_logged(out):
@@ -195,8 +199,9 @@ def voids_logged(out):
 
 def test_a_session_still_void_after_one_retry_is_reported_missing(tmp_path, monkeypatch):
     """DESIGN-1.6.md, state x event: a reader session that voids (a closed-session breach, or an answer without a valid row for every
-    item of its packet) is retried once, then reported missing; a line with a missing mark is not measured, and the report says in one
-    line that no ask-again round follows (council round 8)."""
+    item of its packet) is retried once, then reported missing. Council rounds 8 and 9: a draw with a session missing has every reader
+    line 1–5 not measured, none of the collector's results kept (its line 4 would read "no refusal occurred"), and the one-line note that
+    no ask-again round follows."""
     sessions = FakeSessions(voids={'claude': 2}, bad_answers={'codex': ['short']})
     monkeypatch.setattr(d400_reader_lines.census_readers, 'run', sessions)
     out = one_draw_with_packets(tmp_path)
@@ -205,8 +210,34 @@ def test_a_session_still_void_after_one_retry_is_reported_missing(tmp_path, monk
     assert [family for family, _ in sessions.calls].count('codex') == 2          # the answer short of a row was asked again
     assert not (out / 'new-1' / 'readers-answers' / 'reader-claude-packet-1.jsonl').exists()
     result = d400_reader_lines.report(out)['draws']['new-1']
-    assert result['missing sessions'] == ['reader-claude-packet-1'] and result['line 5'] == 'NOT MEASURED'
+    assert all_reader_lines(result) == ['NOT MEASURED'] * 5
+    assert result['missing sessions'] == ['reader-claude-packet-1 (reported missing: a tool use)']
     assert result['note'] == d400_reader_lines.NO_ASK_AGAIN
+
+
+def test_an_exhausted_session_is_not_run_again(tmp_path, monkeypatch):
+    """Council round 9: a session reported missing is terminal. Its marker sits beside where its answer would be, and a later `read`
+    or `third` sends nothing for it."""
+    out = one_draw_with_packets(tmp_path / 'readers')
+    monkeypatch.setattr(d400_reader_lines.census_readers, 'run', FakeSessions(voids={'claude': 2}))
+    d400_reader_lines.read_packets(out)
+    marker = out / 'new-1' / 'readers-answers' / 'reader-claude-packet-1.missing'
+    assert json.loads(marker.read_text()) == {'void after two attempts': 'a tool use'}
+    later = FakeSessions()
+    monkeypatch.setattr(d400_reader_lines.census_readers, 'run', later)
+    assert d400_reader_lines.read_packets(out) == [] and later.calls == []
+
+    out = one_draw_with_packets(tmp_path / 'third-readers')
+    monkeypatch.setattr(d400_reader_lines.census_readers, 'run', FakeSessions())
+    d400_reader_lines.read_packets(out)
+    monkeypatch.setattr(d400_reader_lines.census_readers, 'run', FakeSessions(voids={'claude': 2}))
+    assert [void for _, _, void in sorted(d400_reader_lines.read_disputes(out))] == ['a tool use', None]
+    assert (out / 'new-1' / 'third-reader' / 'rulings-claude-1.missing').exists()
+    later = FakeSessions()
+    monkeypatch.setattr(d400_reader_lines.census_readers, 'run', later)
+    assert d400_reader_lines.read_disputes(out) == [] and later.calls == []
+    result = d400_reader_lines.report(out)['draws']['new-1']
+    assert all_reader_lines(result) == ['NOT MEASURED'] * 5 and result['note'] == d400_reader_lines.NO_ASK_AGAIN
 
 
 def test_an_answer_the_collector_would_read_otherwise_is_void(tmp_path, monkeypatch):
@@ -254,5 +285,5 @@ def test_a_reader_timeout_is_a_void_retried_once_then_reported_missing(tmp_path,
     assert [void for _, _, void in results] == ['no answer within 3600 s', None] and launched.count('claude') == 2
     assert [void for session, void in voids_logged(out) if session == 'reader-claude-packet-1'] == ['no answer within 3600 s'] * 2
     result = d400_reader_lines.report(out)['draws']['new-1']
-    assert result['missing sessions'] == ['reader-claude-packet-1'] and result['line 5'] == 'NOT MEASURED'
-    assert result['note'] == d400_reader_lines.NO_ASK_AGAIN
+    assert result['missing sessions'] == ['reader-claude-packet-1 (reported missing: no answer within 3600 s)']
+    assert all_reader_lines(result) == ['NOT MEASURED'] * 5 and result['note'] == d400_reader_lines.NO_ASK_AGAIN

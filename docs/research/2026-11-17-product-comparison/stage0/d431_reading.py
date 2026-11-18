@@ -33,8 +33,9 @@ six draws as they stood at 07-14. It compares the answers the systems actually g
     python3 d431_reading.py result <run root> <eligibility.json> <out folder> [--diagnostic]  # the result from the stored answers only
 
 Writes `<out>/d431-0714.json` and prints it as a table. The draw-to-run key is kept outside the repository (`mapping.KEY_FOLDER`). Every
-prompt is rebuilt from the stores; a session is named by its prompt's sha256 and counts only for that prompt (a packet that changes, as
-when a missing mark is filled in later, is a new session). Stores are opened read-only
+prompt is rebuilt from the stores; a session is named by its prompt's sha256 and counts only for that prompt. A session void twice is
+recorded missing by a marker (`sessions/<name>.missing`), and that is final, as for D400's reader lines: a later `run` does not send it
+again, and the marks it would have given stay not measured. Stores are opened read-only
 (`mode=ro&immutable=1`) and must carry the fingerprints of the eligibility check (`eligibility.py`); a run that is not eligible is read
 only with `--diagnostic` (the finished draws, under their own key).
 """
@@ -215,7 +216,9 @@ def last_sequence(conn, day=DAY):
 
 
 def ladder_unit(conn, view_id):
-    """A new-system view's unit: its one `clean_ladders` row (a split child's row carries its year), and the checked answer's figure unit."""
+    """A new-system view's unit: its one `clean_ladders` row, and the checked answer's figure unit. A split child's row carries its year
+    (`period`, a column stores written before the split have not), kept as `split_year` in the output only and never shown to a reader:
+    both systems' packets carry the period the `views` table holds, its year and due day."""
     columns = {row[1] for row in conn.execute('pragma table_info(clean_ladders)')}
     if not columns:
         raise SystemExit('refused: a new-system store without clean_ladders')
@@ -225,7 +228,7 @@ def ladder_unit(conn, view_id):
     row = dict(rows[0])
     checked = json.loads(row['checked_answer']) if row.get('checked_answer') else {}
     figure = (checked.get('ladder') or {}).get('figure')
-    return {'thesis': row['thesis_id'], 'period': row.get('period') or '', 'unit': figure.get('unit') if figure else None}
+    return {'thesis': row['thesis_id'], 'split_year': row.get('period') or None, 'unit': figure.get('unit') if figure else None}
 
 
 def listed_views(conn, system, day=DAY, last_seq=None):
@@ -303,16 +306,23 @@ def session_name(phase, family, prompt):
     return f'{phase}-{family}-{sha256_text(prompt)[:12]}'
 
 
+def missing_marker(out, name):
+    """Where a session reported missing is recorded (as D400's reader lines record one): beside where its answer would be."""
+    return Path(out) / 'sessions' / f'{name}.missing'
+
+
 def session(out, name, family, prompt, problem):
-    """One closed session, reused when already answered on this very prompt; a void answer is retried once, then recorded missing."""
-    path = Path(out) / 'sessions' / f'{name}.json'
+    """One closed session, reused when already answered on this very prompt. A void answer is retried once; a session still void is
+    recorded missing by its marker, and that is final: a later run never sends it again (its marks stay not measured)."""
+    path, marker = Path(out) / 'sessions' / f'{name}.json', missing_marker(out, name)
     digest = sha256_text(prompt)
+    if marker.exists():
+        return None
     if path.exists():
         saved = json.loads(path.read_text())
         if saved['prompt_sha256'] != digest:
             raise SystemExit(f'refused: session {name} holds an answer to another prompt')
-        if saved['answer'] is not None:
-            return saved['answer']
+        return saved['answer']
     voids, answer = [], None
     for _ in (1, 2):
         answer, void = census_readers.run(family, prompt)
@@ -325,8 +335,11 @@ def session(out, name, family, prompt, problem):
     path.parent.mkdir(parents=True, exist_ok=True)
     (Path(out) / 'prompts').mkdir(exist_ok=True)
     (Path(out) / 'prompts' / f'{name}.md').write_text(prompt)
-    path.write_text(json.dumps({'name': name, 'family': family, 'prompt_sha256': digest, 'answer': answer, 'voids': voids},
-                               indent=1, ensure_ascii=False) + '\n')
+    record = {'name': name, 'family': family, 'prompt_sha256': digest, 'voids': voids}
+    if answer is None:
+        marker.write_text(json.dumps(record, indent=1, ensure_ascii=False) + '\n')
+    else:
+        path.write_text(json.dumps(dict(record, answer=answer), indent=1, ensure_ascii=False) + '\n')
     return answer
 
 
@@ -342,11 +355,14 @@ def stored_answer(out, name, prompt):
 
 
 def run_sessions(out, jobs):
-    """jobs: [(name, family, prompt, problem)], run six at a time."""
+    """jobs: [(name, family, prompt, problem)], run six at a time; a session already recorded missing is not run."""
+    earlier = {name for name, *_ in jobs if missing_marker(out, name).exists()}
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
         answers = list(pool.map(lambda job: session(out, *job), jobs))
     for (name, *_), answer in zip(jobs, answers):
-        print(f'{name}: {"answered" if answer is not None else "MISSING after two attempts"}', flush=True)
+        state = 'answered' if answer is not None else ('missing since an earlier run: not run again' if name in earlier
+                                                       else 'MISSING after two attempts')
+        print(f'{name}: {state}', flush=True)
 
 
 def rows_problem(answer, key, expected, check):
@@ -733,7 +749,7 @@ class Reading:
                                   eligibility=dict(fields, literal_due_same=literal), answer_vs_reader_b=answer,
                                   unit=view['unit'], ruler_unit=self.frozen['questions'][question]['unit'])
                     if self.draws[draw]['system'] == 'new':
-                        record.update(thesis=view['thesis'], period=view['period'])
+                        record.update(thesis=view['thesis'], split_year=view['split_year'])
                     values = [fields[f] for f in FIELDS]
                     noes = [f.split('_')[1] for f in FIELDS if fields[f] == 'no']
                     if 'not measured' in values:
@@ -759,7 +775,7 @@ class Reading:
         return {'reading': f"D431's frozen-reference reading at {DAY} (DESIGN-1.6.md §3; D442 steps 3 to 6); printed beside, not a gate",
                 'diagnostic': self.diagnostic, 'day': DAY, 'graded_subset': subset, 'sources': self.frozen['sha256'],
                 'draws': {draw: {k: v for k, v in store.items() if k != 'listed'} | {'views_listed': [
-                    {k: view.get(k) for k in ('view_id', 'created_seq', 'due_day', 'question', 'thesis', 'period', 'unit') if k in view}
+                    {k: view.get(k) for k in ('view_id', 'created_seq', 'due_day', 'question', 'thesis', 'split_year', 'unit') if k in view}
                     | {'state': view['state']} for view in store['listed']]} for draw, store in self.draws.items()},
                 'outcomes': outcomes, 'agreements': agreements, 'missing_sessions': missing}
 

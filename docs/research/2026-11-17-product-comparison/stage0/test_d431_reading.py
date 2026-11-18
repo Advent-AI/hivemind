@@ -250,6 +250,65 @@ def test_no_packet_carries_a_view_or_thesis_id(tmp_path, monkeypatch):
         assert 'v0122027' not in prompt and 'clean-12' not in prompt
 
 
+def fields_of(value):
+    """The field names of a packet entry, nested; values left out."""
+    if isinstance(value, dict):
+        return tuple(sorted((key, fields_of(item)) for key, item in value.items()))
+    if isinstance(value, list):
+        return tuple(sorted(set(fields_of(item) for item in value)))
+    return ()
+
+
+def test_both_systems_packets_have_the_same_fields(tmp_path, monkeypatch):
+    """Council round 9: readers are blind to the system, so a matching row and an eligibility item carry the same fields from either
+    system; the period shown is the one both systems' views store (year and due day), and a split child's year, which only the new
+    system's clean_ladders holds, is never shown."""
+    new = make_store(tmp_path / 'new.sqlite', 'new', [('v1', 2, Q_CAPEX26, '2027-03-31', CAPEX_RUNGS),
+                                                      ('v0122027', 4, Q_CAPEX27, '2028-03-31', CAPEX_RUNGS, {'thesis': 'clean-12', 'period': '2027'}),
+                                                      ('v3', 5, Q_CHINA, '2027-01-31', ANSWER_CHOICE)],
+                     judgements=[('v1', 6, 2), ('v0122027', 6, 2), ('v3', 6, 1)])
+    old = make_store(tmp_path / 'old.sqlite', 'old', [('v1', 2, Q_CAPEX26, '2027-03-31', CAPEX_RUNGS), ('v2', 4, Q_CAPEX27, '2028-03-31', CAPEX_RUNGS),
+                                                      ('v3', 5, Q_CHINA, '2027-01-31', YES_NO)],
+                     judgements=[('v1', 6, 2), ('v2', 6, 2), ('v3', 6, 1)])
+    prompts = []
+    read(tmp_path, monkeypatch, {'new-1': {'system': 'new', 'views': new}, 'old-1': {'system': 'old', 'views': old}},
+         {'match': {Q_CAPEX26: both('q04'), Q_CAPEX27: both('q13'), Q_CHINA: both('q08')}}, prompts)
+    rows = [row for prompt in set(prompts) if prompt.startswith('# Question identity') for row in last_packet(prompt)]
+    assert len(rows) == 6 and len({fields_of(row) for row in rows}) == 1             # three rows of each system, one shape
+    items = {}
+    for prompt in set(prompts):
+        if prompt.startswith('# Reading the control questions'):
+            for item in last_packet(prompt):
+                items.setdefault(item['ruler_question']['question'], []).append(fields_of(dict(item, control=0)))
+    assert sorted(len(shapes) for shapes in items.values()) == [2, 2, 2]              # each ruler question: one item of each system
+    assert all(len(set(shapes)) == 1 for shapes in items.values())
+
+
+def test_a_session_reported_missing_is_not_run_again(tmp_path, monkeypatch):
+    """Council round 9, as D400's reader lines do: a session void twice is recorded missing by a marker and is final; a later run sends
+    nothing again, and the marks it would have given stay not measured."""
+    path = make_store(tmp_path / 'views.sqlite', 'old', [('v1', 2, Q_RUBIN, '2026-12-31', YES_NO)], judgements=[('v1', 3, 1)])
+    stores, title = {'old-1': {'system': 'old', 'views': path}}, '# Question identity reading for a measured run (read-only)'
+    answering, calls = fake_reader({'match': {Q_RUBIN: both('q07')}}), []
+
+    def codex_matching_voids(family, prompt):
+        calls.append((family, prompt.splitlines()[0]))
+        return (None, 'a tool use') if family == 'codex' and prompt.startswith(title) else answering(family, prompt)
+
+    def every_session_answers(family, prompt):
+        calls.append((family, prompt.splitlines()[0]))
+        return answering(family, prompt)
+    monkeypatch.setattr(d431.census_readers, 'run', codex_matching_voids)
+    first = d431.read(d431.Reading(stores, tmp_path / 'out', tmp_path / 'keys' / 'd431-key.json'))
+    assert calls.count(('codex', title)) == 2 and first['outcomes']['q07']['old-1']['outcome'] == 'not measured'
+    calls.clear()
+    monkeypatch.setattr(d431.census_readers, 'run', every_session_answers)
+    second = d431.read(d431.Reading(stores, tmp_path / 'out', tmp_path / 'keys' / 'd431-key.json'))
+    assert calls == []                                                               # nothing sent: the missing one is final
+    assert second['outcomes']['q07']['old-1']['outcome'] == 'not measured'
+    assert [name for name in second['missing_sessions'] if name.startswith('match-r1-codex-')]
+
+
 def test_the_command_reads_the_stores_the_run_records_name_and_refuses_a_changed_one(tmp_path, monkeypatch):
     """DESIGN-1.6.md §0: each store is the one its run record names (the judge's completed attempt) and must carry the eligibility
     check's fingerprint; a store changed since is refused, and a run that is not eligible is read only as a diagnostic."""
