@@ -9892,3 +9892,9 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - The size check no longer runs once the controls make a reading invalid.
   - On an invalid or too-small verdict, each diagnostic that fails is flagged and the others are kept.
   - Each has its mutant; one is caught by the crash it guards against (`TypeError`, traceback read).
+- **Round 13 (Codex, `tools-review-codex-13.md`)** found a third gap of the same kind: a malformed worth mark lost the sign test along with
+  the floors.
+  - Rounds 11 to 13 drew findings from one mechanism, so instead of a third patch one structural rule was made (AGENTS §1): every printed
+    item is computed on its own (`PRINTED_ITEMS`). On an invalid or too-small verdict, an item that fails is flagged by name and the others
+    are kept (`printed_items_tolerant`).
+  - Tests and mutants were updated: 94 tests; every mutant is caught by its assertion or by the crash it guards against.

@@ -116,22 +116,26 @@ def guardrails(readings, counting):
     return result
 
 
-def beside(readings, per_counting):
-    """What the rule prints beside the verdict (verdict-rule.json `printed_beside`, `guardrails.beside`)."""
+def company_figure_subgroup(readings, per_counting):
     figure = {m['matter'] for m in readings['matters'] if m['company_figure']}
-    out = {'company-figure subgroup': {c: {'N': len(figure), 'a': len((set(v['served_new']) - set(v['served_old'])) & figure),
-                                            'b': len((set(v['served_old']) - set(v['served_new'])) & figure)} for c, v in per_counting.items()}}
+    return {c: {'N': len(figure), 'a': len((set(v['served_new']) - set(v['served_old'])) & figure),
+                'b': len((set(v['served_old']) - set(v['served_new'])) & figure)} for c, v in per_counting.items()}
+
+
+def mark_counts(readings, per_counting):
     counts = {}
     for draw, cards in readings['cards'].items():
-        system = system_of(draw)
-        c = counts.setdefault(system, {'insufficient': 0, 'no answer': 0, 'split worth': 0, 'split answer': 0, 'cards': 0})
+        c = counts.setdefault(system_of(draw), {'insufficient': 0, 'no answer': 0, 'split worth': 0, 'split answer': 0, 'cards': 0})
         for card in cards.values():
             c['cards'] += 1
             c['insufficient'] += card['answer'] == 'insufficient'
             c['no answer'] += card['answer'] == 'no answer'
             c['split worth'] += is_split(card['worth'])
             c['split answer'] += is_split(card['answer'])
-    out['marks'] = counts
+    return counts
+
+
+def split_resolutions(readings, per_counting):
     resolutions = {}
     for c in per_counting:
         favoured = 'new' if c == '1' else 'old'
@@ -151,8 +155,13 @@ def beside(readings, per_counting):
                         key = f"{system_of(draw)} cover split resolved to {'covers' if fav else 'does not cover'}"
                         tally[key] = tally.get(key, 0) + 1
         resolutions[c] = tally
-    out['split resolutions'] = resolutions
-    return out
+    return resolutions
+
+
+def beside(readings, per_counting):
+    """What the rule prints beside the verdict (verdict-rule.json `printed_beside`, `guardrails.beside`)."""
+    return {'company-figure subgroup': company_figure_subgroup(readings, per_counting), 'marks': mark_counts(readings, per_counting),
+            'split resolutions': split_resolutions(readings, per_counting)}
 
 
 def verify_inputs(readings):
@@ -196,36 +205,17 @@ def sign_test(a, b):
     return {'discordant': n, 'p': min(1.0, 2 * tail), 'share': round(phat, 3), 'wilson95': [round(centre - half, 3), round(centre + half, 3)]}
 
 
-def printed_beside(readings, per_counting, tolerant=False):
-    """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
-    the days from a matter's first article to its opening. None of them enters the verdict. With `tolerant` (an invalid or too-small
-    verdict), a part that cannot be computed is flagged and the other parts are kept."""
-    if tolerant:
-        out = {}
-        for part in (lambda: printed_beside_counts(readings, per_counting),
-                     lambda: {'days from first article to opening (confirmed coverage only; split covers not counted)': days_to_opening(readings)}):
-            try:
-                out.update(part())
-            except Exception as error:
-                out.setdefault('not computed', []).append(f'{type(error).__name__}: {error}')
-        return out
-    out = printed_beside_counts(readings, per_counting)
-    out['days from first article to opening (confirmed coverage only; split covers not counted)'] = days_to_opening(readings)
-    return out
+D428_KEY = 'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'
+DAYS_KEY = 'days from first article to opening (confirmed coverage only; split covers not counted)'
 
 
-def printed_beside_counts(readings, per_counting):
-    """D428's limits, the sign test and the floors."""
-    out = {'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)': {}, 'sign test (illustrative)': {},
-           'floors (proposed)': {}}
+def d428_limits(readings, per_counting):
+    out = {}
     for c, v in per_counting.items():
-        a, b = v['a'], v['b']
-        out['sign test (illustrative)'][c] = sign_test(a, b)
         fav_system = 'new' if c == '1' else 'old'
-        limits, floors = {}, {}
+        limits = {}
         for system in SYSTEMS:
-            g = {k: v['guardrails'][k][system] for k in ('figure', 'yes/no', 'worth')}
-            fig, yn = g['figure'], g['yes/no']
+            fig, yn = v['guardrails']['figure'][system], v['guardrails']['yes/no'][system]
             latest_bad, latest_decided = fig['bad'] + yn['bad'], fig['decided'] + yn['decided']
             limits[system] = {
                 'figure unsupported': f"{fig['bad']}/{fig['decided']} against 12.7%-14.4%" if fig['decided'] else 'none decided',
@@ -233,10 +223,39 @@ def printed_beside_counts(readings, per_counting):
                 'latest answers unsupported': f"{latest_bad}/{latest_decided} against {float(D428_LATEST * latest_decided):.1f} (3 in 30 scaled)"
                                               if latest_decided else 'none decided',
                 'latest answers insufficient (beside)': insufficient_count(readings, system, system == fav_system)}
-            floors[system] = floors_per_draw(readings, system, system == fav_system)
-        out['D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'][c] = limits
-        out['floors (proposed)'][c] = floors
+        out[c] = limits
     return out
+
+
+def sign_tests(readings, per_counting):
+    return {c: sign_test(v['a'], v['b']) for c, v in per_counting.items()}
+
+
+def floors(readings, per_counting):
+    return {c: {system: floors_per_draw(readings, system, system == ('new' if c == '1' else 'old')) for system in SYSTEMS}
+            for c in per_counting}
+
+
+PRINTED_ITEMS = (('company-figure subgroup', company_figure_subgroup), ('marks', mark_counts), ('split resolutions', split_resolutions),
+                 (D428_KEY, d428_limits), ('sign test (illustrative)', sign_tests), ('floors (proposed)', floors),
+                 (DAYS_KEY, lambda readings, per_counting: days_to_opening(readings)))
+
+
+def printed_beside(readings, per_counting):
+    """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
+    the days from a matter's first article to its opening. None of them enters the verdict."""
+    return {name: compute(readings, per_counting) for name, compute in PRINTED_ITEMS[3:]}
+
+
+def printed_items_tolerant(readings, per_counting):
+    """Every printed item on its own (one item, one computation): the items that can be computed, and a flag naming each that cannot."""
+    shown, flags = {}, []
+    for name, compute in PRINTED_ITEMS:
+        try:
+            shown[name] = compute(readings, per_counting)
+        except Exception as error:
+            flags.append(f'{name}: {type(error).__name__}: {error}')
+    return shown, flags
 
 
 FLOORS = {'covered': Fraction(80, 100), 'trivial or duplicate': Fraction(20, 100), 'supported': Fraction(90, 100)}
@@ -368,16 +387,9 @@ def verdict(readings):
         try:
             per_counting = countings()
             report.update(margin=margin, countings=per_counting)
-            shown = {}
-            for part in (lambda: beside(readings, per_counting), lambda: printed_beside(readings, per_counting, tolerant=True)):
-                try:
-                    shown.update(part())
-                except Exception as error:
-                    flags.append(f'{type(error).__name__}: {error}')
-            flags += shown.pop('not computed', [])
-            report['beside'] = shown
+            report['beside'], flags = printed_items_tolerant(readings, per_counting)
         except Exception as error:
-            flags.append(f'{type(error).__name__}: {error}')
+            flags.append(f'countings: {type(error).__name__}: {error}')
         if flags:
             report['diagnostics not computed'] = '; '.join(flags)
         return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)

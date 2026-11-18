@@ -315,6 +315,11 @@ def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_smal
     out = verdict(r)
     assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
     assert out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']     # the other diagnostics are kept
+    r2 = base(n=19, new_served=5, old_served=1)
+    r2['cards']['new-1']['new-1-g-figure-0'].update(worth={'split': ['not a mark', 'also not']}, covering=True)
+    # a sampled covering card: outside the guardrail shares, inside the floors, so only the floors fail on it
+    out2 = verdict(r2)
+    assert 'sign test (illustrative)' in out2.get('beside', {}) and 'floors (proposed)' in out2['diagnostics not computed']
     r['controls']['repeats_same'] = [False, False, True]
     r['distinct']['new-1']['ids'] = 'not a count'                                       # the size check is skipped once invalid
     out = verdict(r)
