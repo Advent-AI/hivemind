@@ -293,3 +293,14 @@ def test_the_floors_count_every_random_sample_card_covering_or_not():
     card.update(worth='trivia', covering=True)
     out = verdict(r)
     assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['trivial or duplicate'] == {'count': '1/10', 'met': True}
+
+
+def test_an_invalid_or_too_small_reading_still_prints_what_the_rule_prints_beside():
+    """printed_beside: the quantities accompany every verdict, as diagnostics when the reading is invalid or too small (D675)."""
+    r = base(n=19, new_served=5, old_served=1)
+    out = verdict(r)
+    assert out['verdict'] == 'too small' and out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']
+    r = base(n=20, new_served=5, old_served=1)
+    r['controls']['repeats_same'] = [False, False, True]
+    out = verdict(r)
+    assert out['verdict'] == 'invalid' and 'sign test (illustrative)' in out['beside']

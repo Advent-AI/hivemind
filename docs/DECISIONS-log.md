@@ -9873,3 +9873,11 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - The Claude reader of round 9 had confirmed all of round 8's points, and asked only for the bookkeeping, wording and D431 points that
     are now fixed.
   - With the reading tools passed in round 5, every instrument D672 requires is built and council-reviewed before any output is read.
+- **The reading chain, run end to end on the slice at $0** (`stage0/chain_dry_run.py`; output in `chain-dry-run.txt`):
+  - **The setup:** scratch copies of slice 2 relabelled as the six draws, keys in a scratch folder, and a fake reader.
+  - **The chain:** export → read → third → result → deck → mark → debate 1 and 2 → readings → `score_comparison.verdict`, which
+    re-reads every input file, then the D400 code check.
+  - **Integration:** every step joined the next, and the scorer's input verification passed on real artifacts.
+  - **The outcome:** "too small", as the rule orders (4 and 2 distinct bets).
+  - **One gap it showed, fixed:** an invalid or too-small reading returned before the rule's printed-beside quantities were computed.
+    They are now computed first and printed with every verdict, as diagnostics; the verdict order is unchanged (a test was added).
