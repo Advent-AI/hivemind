@@ -8,7 +8,7 @@
 4. the old system wrote a day line for every day and no failed or unprocessed item;
 5. each draw processed exactly the manifest's items up to the until day, in order;
 6. a day's state (the views and each view's latest judgement on or before a given day) can be read back from each store, every
-   judgement's day known.
+   judgement's day known (a day-end judgement carries `day:<date>`; `days_completed` maps each day to its last sequence).
 Prints PASS or FAIL per check; exit status 1 on any FAIL.
 """
 import datetime
@@ -72,8 +72,8 @@ def main(root, until_day):
 
     new_order = [r[0] for r in trace.execute('select input_id from trace order by sequence')]
     old_store = ro(root / 's-old' / runs['s-old']['components']['prod']['folder'] / 'views.sqlite')
-    seen, old_order = set(), []
-    for (input_id,) in old_store.execute('select input_id from processing_steps where sequence_no > 0 order by sequence_no, id'):
+    seen, old_order = set(), []          # the items the old system extracted (copies it merged into their originals are not extracted)
+    for (input_id,) in old_store.execute("select input_id from processing_steps where step = 'extracted' order by sequence_no, id"):
         if input_id not in seen:
             seen.add(input_id)
             old_order.append(input_id)
@@ -89,8 +89,10 @@ def main(root, until_day):
         views = [v for v in store.execute('select view_id, created_from_input from views') if (day_of(v['created_from_input']) or '9999') <= state_day]
         unknown = 0
         latest = {}
+        completed = {r['seq']: r['day'] for r in store.execute('select day, seq from days_completed')}
         for j in store.execute('select view_id, seq, input_id from judgements order by seq'):
-            day = day_of(j['input_id']) if j['input_id'] else None
+            source = j['input_id'] or ''
+            day = source[4:] if source.startswith('day:') else (day_of(source) if source else completed.get(j['seq']))
             if day is None:
                 unknown += 1
                 continue
