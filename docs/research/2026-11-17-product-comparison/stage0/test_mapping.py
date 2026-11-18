@@ -127,3 +127,13 @@ def test_export_refuses_draws_that_are_not_eligible(tmp_path, monkeypatch):
         raise AssertionError(f'export went past the eligibility check: {error!r}')
     else:
         raise AssertionError('an ineligible run was exported')
+
+
+def test_a_diagnostic_export_takes_only_finished_draws_under_its_own_key(tmp_path, monkeypatch):
+    """Plan §1.4 item 10: what finished is read as a diagnostic, never as the release reading (D675)."""
+    monkeypatch.setattr(mapping, 'KEY_FOLDER', tmp_path / 'keys')
+    eligibility = {'eligible': False, 'problems': ['old-2 stopped'], 'draws': {d: {'stores': {}} for d in mapping.DRAWS}}
+    (tmp_path / 'eligibility.json').write_text(json.dumps(eligibility))
+    mapping.export(tmp_path, tmp_path / 'out', tmp_path / 'eligibility.json', diagnostic=True)
+    assert (tmp_path / 'out' / 'DIAGNOSTIC').exists() and json.loads((tmp_path / 'keys' / 'mapping-key-diagnostic.json').read_text()) == {}
+    assert not (tmp_path / 'keys' / 'mapping-key.json').exists()

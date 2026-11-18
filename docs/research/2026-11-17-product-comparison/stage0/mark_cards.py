@@ -81,7 +81,7 @@ given? Judge whether the reasons and the material justify the chosen answer over
 
 
 def libraries(mapping_out):
-    key = json.loads((mapping_tool.KEY_FOLDER / 'mapping-key.json').read_text())
+    key = json.loads(mapping_tool.key_path(mapping_out).read_text())
     return {draw: json.loads((Path(mapping_out) / f'library-{label}.json').read_text()) for draw, label in key.items()}
 
 
@@ -142,6 +142,7 @@ def deck(mapping_out, folder):
         for qid in sorted(set(covering) | guard):
             e = by_id[qid]
             cards.append({'draw': draw, 'question': qid, 'role': 'product', 'guardrail': qid in guard, 'covering': covering.get(qid, False),
+                          'opened': e.get('opened'),
                           'type': e.get('type'), 'answered': e['answer'] is not None, 'text': build_cards.card_text(e, lib)})
     controls, confirmations = [], []
     for system in ('new', 'old'):
@@ -185,7 +186,7 @@ def deck(mapping_out, folder):
     key = {}
     for n, c in enumerate(full, 1):
         cid = f'C{n:03d}'
-        key[cid] = {k: c[k] for k in ('draw', 'question', 'role', 'guardrail', 'covering', 'type', 'answered')}
+        key[cid] = {k: c[k] for k in ('draw', 'question', 'role', 'guardrail', 'covering', 'type', 'answered', 'opened')}
         (folder / f'{cid}.txt').write_text(c['text'])
     KEY.parent.mkdir(parents=True, exist_ok=True)
     KEY.write_text(json.dumps(key, indent=1) + '\n')
@@ -285,6 +286,17 @@ def final(folder, cid):
     return out
 
 
+def matter_first_days():
+    """Each frozen matter's earliest article day: the census numbered the kept articles 1.. by (day, published_at, id) from its source
+    database (`census_readers.build`), so a matter's earliest article is its lowest number."""
+    kept = json.loads(census_readers.KEPT.read_text())
+    conn = build_cards.ro(census_readers.SOURCE)
+    rows = sorted((tuple(conn.execute('select publication_day, coalesce(published_at, \'\') from items where input_id=?', (a,)).fetchone()) + (a,)
+                   for a in kept['kept_ids']))
+    day_of = {n: row[0] for n, row in enumerate(rows, 1)}
+    return {m['matter']: day_of[min(m['articles'])] for m in json.loads(mapping_tool.MATTERS.read_text())['matters']}
+
+
 def readings(mapping_out, folder):
     folder = Path(folder)
     for n in (0, 1, 2):
@@ -301,7 +313,7 @@ def readings(mapping_out, folder):
         answer = f['answer'] if k['answered'] else 'no answer'
         if k['role'] == 'product':
             cards.setdefault(k['draw'], {})[k['question']] = {'worth': f['worth'], 'answer': answer, 'type': k['type'], 'guardrail': k['guardrail'],
-                                                              'covering': k['covering']}
+                                                              'covering': k['covering'], 'opened': k.get('opened')}
             by_question[(k['draw'], k['question'])] = (f['worth'], answer)
         elif k['role'] == 'plant':
             plants.append(answer)
@@ -312,7 +324,7 @@ def readings(mapping_out, folder):
             f = final(folder, cid)
             answer = f['answer'] if k['answered'] else 'no answer'
             repeats.append((f['worth'], answer) == by_question[(k['draw'], k['question'])])
-    out = {'matters': matters, 'mapping': mapped['mapping'], 'distinct': mapped['distinct'], 'cards': cards,
+    out = {'matters': matters, 'matter_first_day': matter_first_days(), 'mapping': mapped['mapping'], 'distinct': mapped['distinct'], 'cards': cards,
            'controls': {'plants': plants, 'supported': supported, 'repeats_same': repeats},
            'inputs': {'matters_sha256': hashlib.sha256(mapping_tool.MATTERS.read_bytes()).hexdigest(),
                       'mapping_path': str((Path(mapping_out) / 'mapping.json').resolve()), 'mapping_sha256': hashlib.sha256(mapped_text).hexdigest(),

@@ -78,3 +78,13 @@ def test_an_attempt_log_that_does_not_reconcile_with_its_ledger_leaves_the_timin
     ledger.write_text(json.dumps(dict(json.loads(ledger.read_text()), attempts=2)))
     result = eligibility.check(tmp_path)
     assert not result['eligible'] and 'cannot be established' in result['problems'][0]
+
+
+def test_a_stopped_draw_leaves_the_finished_draws_fingerprinted_for_the_diagnostic(tmp_path):
+    """Plan §1.4 item 10: no release verdict without six complete draws, yet what finished is recorded for the diagnostic (D675)."""
+    make_run(tmp_path, LAUNCH, CALLS)
+    record = json.loads((tmp_path / 'old-2' / 'run.json').read_text())
+    (tmp_path / 'old-2' / 'run.json').write_text(json.dumps(dict(record, state='stopped')))
+    result = eligibility.check(tmp_path)
+    assert not result['eligible'] and any('old-2' in p for p in result['problems'])
+    assert result['draws']['old-1']['stores']['archive.sqlite']['sha256'] and result['draws']['old-2']['stores'] == {}

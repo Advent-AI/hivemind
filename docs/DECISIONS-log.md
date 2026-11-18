@@ -9775,3 +9775,46 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     - line 3 is a paired test that varies grouping alone, against an independent detail key;
     - D431 records its substitution and its comparability rule;
     - every printed-beside item has its tool.
+- **Round 5, the reading tools pass the council.** Codex confirmed its three round-4 points against the code: it changed each card mark
+  in memory and each change was refused; it checked missing and short attempt logs; and it checked 52 themes with their 18 update
+  markers. Its verdict was "ready to read". The Claude reader had said the same in round 4. The tools are committed (c3704776), before any
+  output is read.
+- **The §1.6 design, rounds 4 to 6 of its Part B** (`DESIGN-1.6.md`, now v5):
+  - **Both readers' points:**
+    - every store is taken from `run.json` and fingerprinted;
+    - release status sits beside the verdict;
+    - Step 2 line 1:
+      - neutral labelling;
+      - a whole-history scan audit whose hits are labelled like any candidate;
+      - labels frozen before retrieval is read.
+    - Step 2 line 3:
+      - the frozen `group_text` against apart rendering;
+      - a key defined by the Step 2 reference's question 2 and made by two readers plus a third;
+      - one rendering per session.
+    - D431 at 07-14 follows D442's procedure, steps 3 to 6:
+      - the views listed by sequence up to 07-14, closed ones included;
+      - the first-created match judged;
+      - D430 eligibility read;
+      - no adapter.
+    - D428's limits are labelled as a guardrail-sample comparison, with the insufficient answers beside.
+    - The floors follow their source: per draw, met in at least 2 of 3, and an insufficient answer counted without credit.
+    - D400 line 5 is scaled per D452.
+    - The days to opening name an opening before the first listed article, apart from the warm-up.
+  - **A reading recorded before any output** (both readers agreed in round 6): a hard check that is not measured cannot clear
+    release. The frozen rule says so of Step 2's lines; D400's code parts are read the same way under their own accounting's minimums.
+    The release status prints "release blocked: <check> failed" apart from "release not cleared: <check> not measured".
+  - **Small slips found while building:**
+    - the matters' recorded `first_day` is not their earliest listed article for 8 of 32. The census numbering was re-derived and checked:
+      410 of 410 days match the prompts the readers saw;
+    - the days to opening use the earliest article.
+- **The §1.6 design, round 7** (v5): both readers asked for small changes only. All are made, and the design is now v6:
+  - **The support floor:**
+    - insufficient and unresolved latest answers are counted with no credit (Codex);
+    - the trivial and supported floors are counted on every random-sample card, covering cards included, because the frozen rule keeps
+      covering cards out of the guardrail shares only (Claude).
+  - **The opening report** is labelled "confirmed coverage only".
+  - **`cases.json` is fingerprinted.**
+  - **A diagnostic export** takes only the finished draws, marked DIAGNOSTIC and under its own key. The scorer refuses it.
+  - **Step 2 line 1** counts the first 100 labelled records in draw order.
+  - **`d400_code_check`'s release order** (a miss before "not measured") has its test.
+  - **Now:** 54 tests; 43 mutants and 6 controls, all as predicted.

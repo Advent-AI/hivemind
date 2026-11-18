@@ -245,3 +245,51 @@ def test_card_marks_that_differ_from_the_deck_key_are_refused():
         assert 'guardrail, covering or type' in str(e)
     else:
         raise AssertionError('a guardrail flag changed after the deck was scored')
+
+
+def test_the_printed_beside_quantities_hold_their_definitions():
+    """DESIGN-1.6.md §0 and §4: the sign test over discordant matters, D428's limits with denominators, the floors, and a covering
+    question opened before the matter's first article printed as opened in the warm-up. None changes the verdict."""
+    r = base(n=20, new_served=5, old_served=1)
+    for d in ('new-1', 'new-2', 'new-3'):
+        r['cards'][d][f'{d}-q0']['opened'] = '2026-07-04'
+    r['matter_first_day'] = {'M01': '2026-09-08'}
+    out = verdict(r)
+    sign = out['beside']['sign test (illustrative)']['1']
+    assert sign['discordant'] == 6 and abs(sign['p'] - 0.21875) < 1e-9          # 5 against 1: two-sided exact p = 14/64
+    limits = out['beside']["D428 limits (a comparison on the guardrail sample, not Stage B's measurement)"]['1']['new']
+    assert limits['figure unsupported'] == '0/36 against 12.7%-14.4%' and limits['latest answers insufficient (beside)'] == 0
+    floors = out['beside']['floors (proposed)']['1']['new']
+    assert floors['per draw']['new-1']['covered'] == {'count': '5/20', 'met': False}
+    assert floors['per draw']['new-1']['trivial or duplicate'] == {'count': '0/24', 'met': True}
+    assert out['beside']['days from first article to opening (confirmed coverage only; split covers not counted)']['M01']['new-1'] == 'opened in the warm-up'
+    assert out['verdict'] == 'practical lead'
+
+
+def test_an_opening_inside_the_window_before_the_first_listed_article_is_not_called_warm_up():
+    """beside: 'warm-up' only before 09-07; an opening in the window before the matter's first listed article is named as such."""
+    r = base(n=20, new_served=5, old_served=1)
+    for d in ('new-1', 'new-2', 'new-3'):
+        r['cards'][d][f'{d}-q0']['opened'] = '2026-09-09'
+    r['matter_first_day'] = {'M01': '2026-09-12'}
+    assert verdict(r)['beside']['days from first article to opening (confirmed coverage only; split covers not counted)']['M01']['new-1'] == 'opened before the first listed article'
+
+
+def test_the_support_floor_gives_an_unresolved_answer_no_credit_in_either_counting():
+    """floors: insufficient and unresolved latest answers are counted and get no credit toward 90% (reflection-10, codex-1.md)."""
+    r = base(n=20, new_served=5, old_served=1, guard_cards=5)
+    r['cards']['new-1']['new-1-g-figure-0']['answer'] = {'split': ['supported', 'unsupported']}
+    out = verdict(r)
+    assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['supported'] == {'count': '9/10', 'met': True}
+    r['cards']['new-1']['new-1-g-figure-1']['answer'] = 'insufficient'
+    out = verdict(r)
+    assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['supported'] == {'count': '8/10', 'met': False}
+
+
+def test_the_floors_count_every_random_sample_card_covering_or_not():
+    """floors: trivial or duplicate and supported are over the library's random sample; covering cards leave only the guardrail shares."""
+    r = base(n=20, new_served=5, old_served=1, guard_cards=5)
+    card = r['cards']['new-1']['new-1-g-figure-0']
+    card.update(worth='trivia', covering=True)
+    out = verdict(r)
+    assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['trivial or duplicate'] == {'count': '1/10', 'met': True}

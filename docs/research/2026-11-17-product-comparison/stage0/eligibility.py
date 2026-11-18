@@ -83,6 +83,32 @@ def last_attempt(ledger_path):
     return (max(local(line['at']) for line in lines) if lines else None), len(lines), None
 
 
+SECTION_INPUTS = {'step1': ['trace.sqlite'], 'step2': ['decisions.json', 'library.json'], 'cases': ['cases.json'], 'ladder': ['send-1/outcomes.jsonl',
+                  'send-2/outcomes.jsonl', 'send-3/outcomes.jsonl']}
+
+
+def section_inputs(run_root, draw, record):
+    """The files the §1.6 tools read from a new draw (DESIGN-1.6.md §0), each in the folder its run record names (a redo's folder after a
+    redo), by path relative to the draw."""
+    out = []
+    if not draw.startswith('new'):
+        return out
+    for component, names in SECTION_INPUTS.items():
+        entry = record['components'].get(component, {})
+        if entry.get('state') == 'completed':
+            out += [f"{entry['folder']}/{name}" for name in names if (Path(run_root) / draw / entry['folder'] / name).exists()]
+    return out
+
+
+def verified(eligibility, run_root, draw, relative):
+    """A file a §1.6 tool reads, refused unless the eligibility output fingerprinted it and it is unchanged."""
+    digest = eligibility['draws'][draw].get('inputs', {}).get(relative)
+    path = Path(run_root) / draw / relative
+    if digest is None or sha256(path) != digest:
+        raise SystemExit(f'refused: {draw}/{relative} is not fingerprinted by the eligibility check, or changed since')
+    return path
+
+
 def check(run_root):
     run_root = Path(run_root).resolve()
     draws, problems = {}, []
@@ -91,7 +117,11 @@ def check(run_root):
         if record.get('identity') != expected_identity(run_root, draw):
             problems.append(f"{draw}: registered identity {record.get('identity')} is not the counted draw's {expected_identity(run_root, draw)}")
         starts = [local(a['started at']) for c in record['components'].values() for a in c.get('attempts', []) if a.get('started at')]
-        paths = mapping.store_paths(run_root, draw)                    # refuses an incomplete draw
+        try:
+            paths = mapping.store_paths(run_root, draw)                # refuses an incomplete draw
+        except SystemExit as refusal:                                 # recorded; the finished draws are still fingerprinted (diagnostic)
+            problems.append(str(refusal))
+            paths = None
         latest, databases = last_call(run_root / draw)
         attempt, attempts, unreconciled = last_attempt(run_root / 'ledgers' / f'{draw}.json')
         if unreconciled:
@@ -100,7 +130,8 @@ def check(run_root):
             latest = attempt
         draws[draw] = {'launch': min(starts).isoformat() if starts else None, 'last call': latest.isoformat() if latest else None,
                        'databases with calls': databases, 'ledger attempts': attempts,
-                       'stores': {Path(p).name: {'path': str(p), 'sha256': sha256(p)} for p in paths} if paths else {}}
+                       'stores': {Path(p).name: {'path': str(p), 'sha256': sha256(p)} for p in paths} if paths else {},
+                       'inputs': {rel: sha256(run_root / draw / rel) for rel in section_inputs(run_root, draw, record)}}
         if not starts:
             problems.append(f'{draw}: no launch recorded')
     launches = [datetime.datetime.fromisoformat(d['launch']) for d in draws.values() if d['launch']]

@@ -181,6 +181,131 @@ def verify_inputs(readings):
         raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
 
 
+D428_LATEST = Fraction(3, 30)                                    # D428: at most 3 in 30 decided latest answers unsupported, scaled
+
+
+def sign_test(a, b):
+    """Two-sided exact binomial p of a against b at one half, and the Wilson 95% interval of a / (a + b): illustrative only."""
+    n = a + b
+    if n == 0:
+        return {'discordant': 0, 'p': None, 'share': None, 'wilson95': None}
+    tail = sum(math.comb(n, k) for k in range(0, min(a, b) + 1)) / 2 ** n
+    z, phat = 1.959963984540054, a / n
+    centre = (phat + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(phat * (1 - phat) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return {'discordant': n, 'p': min(1.0, 2 * tail), 'share': round(phat, 3), 'wilson95': [round(centre - half, 3), round(centre + half, 3)]}
+
+
+def printed_beside(readings, per_counting):
+    """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
+    the days from a matter's first article to its opening. None of them enters the verdict."""
+    out = {'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)': {}, 'sign test (illustrative)': {},
+           'floors (proposed)': {}}
+    for c, v in per_counting.items():
+        a, b = v['a'], v['b']
+        out['sign test (illustrative)'][c] = sign_test(a, b)
+        fav_system = 'new' if c == '1' else 'old'
+        limits, floors = {}, {}
+        for system in SYSTEMS:
+            g = {k: v['guardrails'][k][system] for k in ('figure', 'yes/no', 'worth')}
+            fig, yn = g['figure'], g['yes/no']
+            latest_bad, latest_decided = fig['bad'] + yn['bad'], fig['decided'] + yn['decided']
+            limits[system] = {
+                'figure unsupported': f"{fig['bad']}/{fig['decided']} against 12.7%-14.4%" if fig['decided'] else 'none decided',
+                'yes/no unsupported': f"{yn['bad']}/{yn['decided']} against 5%" if yn['decided'] else 'none decided',
+                'latest answers unsupported': f"{latest_bad}/{latest_decided} against {float(D428_LATEST * latest_decided):.1f} (3 in 30 scaled)"
+                                              if latest_decided else 'none decided',
+                'latest answers insufficient (beside)': insufficient_count(readings, system, system == fav_system)}
+            floors[system] = floors_per_draw(readings, system, system == fav_system)
+        out['D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'][c] = limits
+        out['floors (proposed)'][c] = floors
+    out['days from first article to opening (confirmed coverage only; split covers not counted)'] = days_to_opening(readings)
+    return out
+
+
+FLOORS = {'covered': Fraction(80, 100), 'trivial or duplicate': Fraction(20, 100), 'supported': Fraction(90, 100)}
+
+
+def floors_per_draw(readings, system, fav):
+    """The proposed absolute floors as their source states them (reflection-10 `codex-1.md`; RUN-PLAN-v2 §1.6), per draw, met when met in
+    at least two of the system's three draws: important matters covered (a covering question, after the counting's split resolution) at
+    least 80%; trivial or duplicate questions among the random sample's decided worth marks at most 20% (covering cards included: the
+    frozen rule keeps them out of the guardrail shares, not the floors); supported latest answers among the random sample's answered cards
+    at least 90%, an insufficient or unresolved (split) answer counted and given no credit (the
+    verdict's own split resolution is unchanged). Citations and omissions are not measured."""
+    n = len(readings['matters'])
+    per_draw = {}
+    for draw in DRAWS:
+        if system_of(draw) != system:
+            continue
+        covered = sum(1 for questions in readings['mapping'][draw].values()
+                      if any(q['covers'] is True or (q['covers'] == 'split' and fav) for q in questions))
+        trivial = worth_decided = supported = answered = 0
+        for card in readings['cards'][draw].values():
+            if not card['guardrail']:                       # every random-sample card, covering or not: the floors speak of the library
+                continue
+            worth_decided += 1
+            trivial += resolve(card['worth'], 'worth', fav) in ('trivia', 'duplicate')
+            if card['answer'] != 'no answer':
+                answered += 1
+                supported += card['answer'] == 'supported'      # an unresolved (split) answer is counted without credit, as the source says
+        shares = {'covered': (covered, n), 'trivial or duplicate': (trivial, worth_decided), 'supported': (supported, answered)}
+        per_draw[draw] = {k: {'count': f'{a}/{b}', 'met': (b > 0 and (Fraction(a, b) <= FLOORS[k] if k == 'trivial or duplicate'
+                                                                      else Fraction(a, b) >= FLOORS[k]))} for k, (a, b) in shares.items()}
+    out = {'per draw': per_draw}
+    for k in FLOORS:
+        out[f'{k}: met in at least 2 of 3 draws'] = sum(d[k]['met'] for d in per_draw.values()) >= 2
+    out['wrong citations'] = out['answer-changing omissions'] = 'not measured'
+    return out
+
+
+def insufficient_count(readings, system, fav):
+    """Latest answers resolved to insufficient among the system's guardrail-share cards (outside the decided denominators)."""
+    count = 0
+    for draw, cards in readings['cards'].items():
+        if system_of(draw) != system:
+            continue
+        for card in cards.values():
+            covering = card['covering'] if card['covering'] != 'split' else fav
+            if card['guardrail'] and not covering and card['answer'] != 'no answer' and resolve(card['answer'], 'answer', fav) == 'insufficient':
+                count += 1
+    return count
+
+
+def trivia_count(readings, system, fav):
+    """Trivia marks (duplicates apart) among the decided worth marks of the system's guardrail shares' cards."""
+    trivia = decided = 0
+    for draw, cards in readings['cards'].items():
+        if system_of(draw) != system:
+            continue
+        for card in cards.values():
+            covering = card['covering'] if card['covering'] != 'split' else fav
+            if not card['guardrail'] or covering:
+                continue
+            decided += 1
+            trivia += resolve(card['worth'], 'worth', fav) == 'trivia'
+    return trivia, decided
+
+
+def days_to_opening(readings):
+    """Per draw and covered matter: days from the matter's earliest listed article to the first covering question's opening. A question
+    opened before the scored window (09-07) is 'opened in the warm-up'; one opened in the window before the matter's first listed article
+    is 'opened before the first listed article'."""
+    import datetime
+    out = {}
+    for draw, by_matter in readings['mapping'].items():
+        for matter, questions in by_matter.items():
+            opened = [readings['cards'][draw][q['question']].get('opened') for q in questions if q['covers'] is True]
+            opened = [d for d in opened if d]
+            first = readings.get('matter_first_day', {}).get(matter)
+            if not opened or not first:
+                continue
+            days = (datetime.date.fromisoformat(min(opened)) - datetime.date.fromisoformat(first)).days
+            out.setdefault(matter, {})[draw] = (days if days >= 0 else 'opened in the warm-up' if min(opened) < '2026-09-07'
+                                                else 'opened before the first listed article')
+    return out
+
+
 def verdict(readings):
     present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
     for k, draws in present.items():
@@ -223,6 +348,7 @@ def verdict(readings):
     report['margin'] = margin
     report['countings'] = per_counting
     report['beside'] = beside(readings, per_counting)
+    report['beside'].update(printed_beside(readings, per_counting))
     lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
     all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
     if lead and all_exercised_pass:

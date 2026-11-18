@@ -154,9 +154,17 @@ def answer_problem(rows, keys, ids):
     return None
 
 
-def export(run_root, out, eligibility_path):
+def key_path(out):
+    """The mapping key of an export: a diagnostic export (finished draws of a run that cannot give a release verdict) keeps its own key."""
+    return KEY_FOLDER / ('mapping-key-diagnostic.json' if (Path(out) / 'DIAGNOSTIC').exists() else 'mapping-key.json')
+
+
+def export(run_root, out, eligibility_path, diagnostic=False):
+    """Export each draw's library. Refused unless the six draws are eligible; with `diagnostic`, the finished draws of an ineligible run
+    are exported instead, marked DIAGNOSTIC, under their own key, and the scorer refuses them (their eligibility check does not pass;
+    plan §1.4 item 10)."""
     eligibility = json.loads(Path(eligibility_path).read_text())
-    if not eligibility.get('eligible'):
+    if not eligibility.get('eligible') and not diagnostic:
         raise SystemExit(f"refused: the draws are not eligible: {eligibility.get('problems')}")
     out = Path(out)
     if out.exists():
@@ -164,24 +172,29 @@ def export(run_root, out, eligibility_path):
     labels = [f'L{n}' for n in range(1, len(DRAWS) + 1)]
     random.Random(20261117).shuffle(labels)
     key = dict(zip(DRAWS, labels))
-    KEY_FOLDER.mkdir(parents=True, exist_ok=True)
-    if (KEY_FOLDER / 'mapping-key.json').exists():
-        raise SystemExit(f"refused: {KEY_FOLDER / 'mapping-key.json'} exists; an export never overwrites a key")
+    key_file = KEY_FOLDER / ('mapping-key-diagnostic.json' if diagnostic else 'mapping-key.json')
+    if key_file.exists():
+        raise SystemExit(f'refused: {key_file} exists; an export never overwrites a key')
     import eligibility as eligibility_tool
     libraries = {}
     for draw in key:
+        if diagnostic and not eligibility['draws'].get(draw, {}).get('stores'):
+            continue                                            # a draw that did not finish: nothing to export
         paths = store_paths(run_root, draw)
         for p in paths or ():
             if eligibility_tool.sha256(p) != eligibility['draws'][draw]['stores'][Path(p).name]['sha256']:
                 raise SystemExit(f'refused: {p} changed since the eligibility check')
         libraries[draw] = neutral_ids(build_cards.library(*paths, ITEMS)) if paths else []
+    key = {draw: label for draw, label in key.items() if draw in libraries}
     out.mkdir(parents=True)                                     # written only once every store passed its check
+    if diagnostic:
+        (out / 'DIAGNOSTIC').write_text('finished draws of a run that cannot give a release verdict (plan §1.4 item 10)\n')
     KEY_FOLDER.mkdir(parents=True, exist_ok=True)
-    (KEY_FOLDER / 'mapping-key.json').write_text(json.dumps(key, indent=1) + '\n')
+    key_file.write_text(json.dumps(key, indent=1) + '\n')
     (out / 'eligibility.json').write_text(Path(eligibility_path).read_text())
     for draw, label in key.items():
         (out / f'library-{label}.json').write_text(json.dumps(libraries[draw], indent=1, ensure_ascii=False) + '\n')
-    print('exported', len(key), 'libraries; key in', KEY_FOLDER / 'mapping-key.json')
+    print('exported', len(key), 'libraries; key in', key_file)
 
 
 def read(out):
@@ -284,7 +297,7 @@ def third(out):
 
 def result(out):
     out = Path(out)
-    key = json.loads((KEY_FOLDER / 'mapping-key.json').read_text())
+    key = json.loads(key_path(out).read_text())
     label_of = {d: l for d, l in key.items()}
     mapping, distinct = {}, {}
     for draw, label in label_of.items():
@@ -318,6 +331,6 @@ def result(out):
 if __name__ == '__main__':
     command = sys.argv[1]
     if command == 'export':
-        export(sys.argv[2], sys.argv[3], sys.argv[4])
+        export(sys.argv[2], sys.argv[3], sys.argv[4], diagnostic='--diagnostic' in sys.argv[5:])
     else:
         {'read': read, 'third': third, 'result': result}[command](sys.argv[2])
