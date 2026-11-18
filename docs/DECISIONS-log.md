@@ -9866,5 +9866,10 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
       test checks that both systems' packets carry the same fields.
   - **The design:** v7's leftover sentence counting attribution fields against line 3 is deleted, and the key's and the eligibility
     step's wording now match the code.
-  - **Counts:** D400 11 tests and 19 mutants; Step 2 16 tests and 27 mutants; D431 11 tests and 25 mutants; 98 stage0 tests in all,
+  - **Counts:** D400 11 tests and 19 mutants; Step 2 16 tests and 27 mutants; D431 11 tests and 25 mutants; 92 stage0 tests in all (the run's count; 98 was mis-summed by hand),
     with the frozen-file tests green.
+- **Round 10: the council's consensus is that the §1.6 tools may read the run's outputs.**
+  - Codex confirmed every round-9 fix at 547ea98e and answered "ready" (`tools-review-codex-10.md`).
+  - The Claude reader of round 9 had confirmed all of round 8's points, and asked only for the bookkeeping, wording and D431 points that
+    are now fixed.
+  - With the reading tools passed in round 5, every instrument D672 requires is built and council-reviewed before any output is read.
