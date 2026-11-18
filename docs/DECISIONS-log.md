@@ -9641,3 +9641,17 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - a day's state can be read back from the stored outputs (for D431's 07-14 reading).
 
   It has no other job. Any failure goes back to the council before the full run.
+
+## D673 · 2026-11-17 · Under D672: the card's blinding rule covers the form, not the system's own wording (before any output)
+
+- **Found** while building the cards on stored draws (`stage0/build_cards.py`). Both systems write the same store and send the same judge
+  request, but each writes its own question wording and rung conditions. For example, "below 5,000,000,000 USD" against "The reported
+  amount is less than $1 billion."
+- The frozen card spec's test, "a guess rate above chance on 20 cards fails the builder", would fail on the systems' own output. That output
+  cannot be rewritten without changing what is measured.
+- **Amended** (`stage0/card-spec.md`), before any comparison output exists:
+  - The builder removes every system-specific element of the form: the header's focus string, rung stance labels, matcher and grouping
+    notes, and evidence ids (renumbered per card).
+  - A closed reader shown 10 cards of each stored system names any element of the form that tells them apart. Each named element is
+    removed, and the test repeats until none is named.
+  - Differences of wording are disclosed with the result.

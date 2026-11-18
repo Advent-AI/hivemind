@@ -13,8 +13,14 @@ One card per question to be marked. The same form serves both systems; nothing o
 5. **The marks asked:** worth (worth / trivia / duplicate); answer (supported / unsupported / insufficient); a reason of at most 40 words.
    A question with no answer by the cutoff is carded with "no answer" and only the worth mark is asked.
 
-**Blinding:** a reader who sees one card of each system must not be able to tell them apart by the form alone. The builder is tested on
-stored draws of both systems (clean-e2e-full c1, the old system's q1) by a closed reader asked to guess the system from the form; a guess
-rate above chance on 20 cards fails the builder.
+**Blinding (amended before any output, D673):** the builder removes every system-specific field, label and formatting:
+- the request header's focus string;
+- rung stance labels (only each rung's condition is kept);
+- matcher and grouping notes;
+- evidence ids, which are renumbered per card.
+
+What the system wrote as its question and its rung conditions is its output and is shown as written. A closed reader shown 10 cards of each
+stored system (clean-e2e-full c1 and the old system's q1) lists every element of the form, not of the wording, that tells the systems
+apart. Each one named is removed and the test repeated until none is named. Differences of wording are disclosed with the result.
 
 **Order and keys:** the cards are shuffled per batch by seed 20261117; the key from card to system and draw is kept outside the repository.
