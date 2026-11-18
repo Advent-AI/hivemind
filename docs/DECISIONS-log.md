@@ -9977,3 +9977,19 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     edited mapping, deck key or card text, each with the readings record rewritten as Codex did.
   - **A test leak, fixed:** `seal` had left the scorer pointing at a test matter list. An autouse fixture now restores it.
   - **Totals:** 101 tests; 71 mutants, all as predicted.
+- **Round 20 (Codex, `tools-review-codex-20.md`).** The round-19 rebuild still read the stored files after comparing them. Codex
+  reported three problems:
+  - a file changed between the check and the scoring could still flip a verdict, and stored key order could reorder the printed reasons;
+  - fresh imports left additions to the import path;
+  - rebuild progress went to stdout, so the command line printed more than the verdict.
+
+  Fixes:
+  - `rebuild.scored` now computes the verdict on the readings built from the rebuilt snapshot, while the snapshot still exists, and never
+    reads the stored files for it. The stored derived files, including the readings record, are records only: one that differs is
+    refused.
+  - Progress goes to stderr, and the import path is restored.
+
+  Checks:
+  - The dry run edits each derived file twice: once with the record rewritten from the edit, once without. Both are refused.
+  - It shows the verdict reads only the snapshot, that stdout carries no progress, and that the import path is unchanged.
+  - 101 tests and 74 mutants, all as predicted.

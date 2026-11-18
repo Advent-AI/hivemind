@@ -1,0 +1,1467 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 20, confirmation only (read-only, $0)
+
+Round 19 (`tools-review-codex-19.md`) asked for the chain to be rebuilt from primary data. Done (`git log -1`, D675's last entry):
+- `stage0/rebuild.py` `differences` rebuilds every derived file in a temporary folder, with the code that wrote it:
+  - eligibility;
+  - libraries and mapping key;
+  - `mapping.json`;
+  - deck key and card texts.
+- The deck's reader confirmations are replayed from their record. No reader is called.
+- `score_comparison.score(run root, mapping out, marks folder)` refuses if any stored derived file differs, then scores the readings
+  built by their one writer.
+- `stage0/chain_dry_run.py` runs in process. Each edit is followed by a regenerated readings record, as you did, and the edited mapping,
+  deck key and card text are all refused.
+
+The primary data are:
+- the run stores;
+- the readers' own answer files (`map-*.txt`, `third/`, `control-confirmations.jsonl`, rounds 0–2);
+- the frozen inputs.
+
+Check, citing file and line:
+1. Is there a change to anything other than the primary data that changes a verdict or a printed value through `score`? Give it.
+2. Does the rebuild call any reader, write outside its temporary folder, or leave a module attribute changed?
+3. Is any value or verdict changed for an unedited chain?
+
+End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 200 words. Report only a case of kind 1, 2 or 3.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll trace what the rebuild reads and writes, then check whether an edited derived file can still reach scoring.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba rebuild.py
+nl -ba score_comparison.py | tail -53
+nl -ba chain_dry_run.py
+nl -ba chain-dry-run.txt
+nl -ba ../../../DECISIONS-log.md | tail -27' in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+     1	"""Rebuilds every derived file of the reading chain from its primary data, and lists the stored derived files that differ (D675, Codex
+     2	round 19). The verdict is a function of the primary data only:
+     3	- the run stores (the draws under the run root);
+     4	- the readers' own answers: the mapping readers' answers (`map-*.txt`), the third readers' marks (`third/`), the deck's control
+     5	  confirmations (`control-confirmations.jsonl`, its last attempt) and the card marks (rounds 0-2, read by `mark_cards.build_readings`);
+     6	- the frozen inputs (the matter list, the verdict rule, the census).
+     7	
+     8	Everything else is derived, and is rebuilt here in a temporary folder by the same code that wrote it:
+     9	- the eligibility check;
+    10	- the libraries and the mapping key;
+    11	- the mapping (`mapping.json`);
+    12	- the deck key and the card texts.
+    13	
+    14	The deck's reader confirmations are replayed from their record, in the order the deck asks for them. No reader is called: a call that
+    15	escapes the replay is refused. The stored files are compared by canonical JSON (sorted keys, so 1 is not true) or by bytes for card
+    16	texts."""
+    17	import json
+    18	import shutil
+    19	import tempfile
+    20	from pathlib import Path
+    21	
+    22	
+    23	def canonical(path):
+    24	    return json.dumps(json.loads(Path(path).read_text()), sort_keys=True, ensure_ascii=False)
+    25	
+    26	
+    27	def replay(record_path):
+    28	    """The deck's confirmation step, answered from the last recorded attempt in the order the deck asks."""
+    29	    lines = [line for line in Path(record_path).read_text().splitlines() if line.strip()]
+    30	    recorded = iter(json.loads(lines[-1])['attempt']) if lines else iter(())
+    31	
+    32	    def confirmed(card_text, supported):
+    33	        entry = next(recorded, None)
+    34	        role = 'supported control' if supported else 'plant'
+    35	        if entry is None or entry.get('role') != role:
+    36	            raise SystemExit('refused: the recorded control confirmations do not match the deck the inputs rebuild')
+    37	        return entry['admitted'], entry['mark']
+    38	    confirmed.remaining = lambda: sum(1 for _ in recorded)
+    39	    return confirmed
+    40	
+    41	
+    42	def differences(run_root, mapping_out, deck_folder, key_folder):
+    43	    """The derived files whose stored content differs from what the primary data rebuild (an empty list when every one matches)."""
+    44	    import census_readers
+    45	    import eligibility
+    46	    import mapping
+    47	    import mark_cards
+    48	    mapping_out, deck_folder, key_folder = Path(mapping_out), Path(deck_folder), Path(key_folder)
+    49	    saved = (mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run)
+    50	
+    51	    def no_reader(family, prompt):
+    52	        raise SystemExit('refused: a rebuild never calls a reader')
+    53	    with tempfile.TemporaryDirectory() as scratch:
+    54	        scratch = Path(scratch)
+    55	        keys, out, deck = scratch / 'keys', scratch / 'mapping-out', scratch / 'deck'
+    56	        confirmed = replay(key_folder / 'control-confirmations.jsonl')
+    57	        try:
+    58	            mapping.KEY_FOLDER = keys                               # mark_cards reads the same module's KEY_FOLDER
+    59	            mark_cards.KEY = keys / 'deck-key.json'
+    60	            census_readers.run = no_reader
+    61	            mark_cards.confirmed_by_reader = confirmed
+    62	            eligibility.write(eligibility.check(run_root), scratch / 'eligibility.json')
+    63	            mapping.export(run_root, out, scratch / 'eligibility.json')
+    64	            for answer in mapping_out.glob('map-L*-*.txt'):
+    65	                shutil.copy2(answer, out / answer.name)
+    66	            if (mapping_out / 'third').is_dir():
+    67	                shutil.copytree(mapping_out / 'third', out / 'third')
+    68	            mapping.result(out)
+    69	            mark_cards.deck(out, deck)
+    70	            if confirmed.remaining():
+    71	                raise SystemExit('refused: the recorded control confirmations hold more than the deck the inputs rebuild asks for')
+    72	        finally:
+    73	            mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run = saved
+    74	        differ = []
+    75	        json_pairs = [(out / 'eligibility.json', mapping_out / 'eligibility.json'), (out / 'mapping.json', mapping_out / 'mapping.json'),
+    76	                      (keys / 'mapping-key.json', key_folder / 'mapping-key.json'), (keys / 'deck-key.json', key_folder / 'deck-key.json')]
+    77	        json_pairs += [(p, mapping_out / p.name) for p in sorted(out.glob('library-L*.json'))]
+    78	        for rebuilt, stored in json_pairs:
+    79	            if not stored.exists() or canonical(rebuilt) != canonical(stored):
+    80	                differ.append(str(stored))
+    81	        if {p.name for p in mapping_out.glob('library-L*.json')} != {p.name for p in out.glob('library-L*.json')}:
+    82	            differ.append(f'{mapping_out}/library-L*.json (a different set of libraries)')
+    83	        rebuilt_cards = {p.name: p.read_bytes() for p in deck.glob('C*.txt')}
+    84	        stored_cards = {p.name: p.read_bytes() for p in deck_folder.glob('C*.txt')}
+    85	        differ += [str(deck_folder / name) for name in sorted(set(rebuilt_cards) | set(stored_cards))
+    86	                   if rebuilt_cards.get(name) != stored_cards.get(name)]
+    87	        return differ
+   504	    if invalid or small:
+   505	        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+   506	        flags = []
+   507	        try:
+   508	            per_counting = countings()
+   509	            report.update(margin=margin, countings=per_counting)
+   510	            report['beside'], flags = printed_items_tolerant(readings, per_counting)
+   511	        except Exception as error:
+   512	            flags.append(f'countings: {type(error).__name__}: {error}')
+   513	        if flags:
+   514	            report['diagnostics not computed'] = '; '.join(flags)
+   515	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   516	    per_counting = countings()
+   517	    shown = beside(readings, per_counting)
+   518	    shown.update(printed_beside(readings, per_counting))
+   519	    report['margin'] = margin
+   520	    report['countings'] = per_counting
+   521	    report['beside'] = shown
+   522	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   523	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   524	    if lead and all_exercised_pass:
+   525	        return dict(report, verdict='practical lead')
+   526	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   527	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   528	    if loss_count or breaches:
+   529	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   530	    return dict(report, verdict='no practical winner')
+   531	
+   532	
+   533	def score(run_root, mapping_out, folder):
+   534	    """The scorer's entry. Every derived file of the reading chain is first rebuilt from the primary data (`rebuild.differences`); a
+   535	    stored derived file that differs is refused. Then the readings are built by their one writer and scored."""
+   536	    import mapping
+   537	    import rebuild
+   538	    differ = rebuild.differences(run_root, mapping_out, folder, mapping.KEY_FOLDER)
+   539	    if differ:
+   540	        raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
+   541	    return score_readings(mapping_out, folder)
+   542	
+   543	
+   544	def score_readings(mapping_out, folder):
+   545	    """The readings built here by their one writer (`mark_cards.build_readings`) from the mapping output and the marks folder, and
+   546	    what is built is scored. The readings.json record beside the marks must equal what is built."""
+   547	    import mark_cards
+   548	    built = mark_cards.build_readings(mapping_out, folder)
+   549	    recorded = Path(folder) / 'readings.json'
+   550	    if not recorded.exists() or json.loads(recorded.read_text()) != json.loads(json.dumps(built)):
+   551	        raise SystemExit('refused: readings.json is missing or differs from the readings its writer builds from the named inputs')
+   552	    return verdict(built)
+   553	
+   554	
+   555	if __name__ == '__main__':
+   556	    print(json.dumps(score(sys.argv[1], sys.argv[2], sys.argv[3]), indent=1, ensure_ascii=False, default=str))
+     1	"""python3 chain_dry_run.py <scratch folder>
+     2	
+     3	End-to-end dry run of the comparison's reading chain on the stored slice (no model call, no real key written):
+     4	eligibility-shaped input -> mapping export/read/third/result -> deck/mark/debate/readings -> score_comparison.score (which rebuilds
+     5	every derived file first), then three edited derived files that the scorer must refuse, then the D400 code check. The six draws are
+     6	scratch copies of slice-2 (new x3, old x3) relabelled as the run's draws. `run` restores every module attribute it replaces, so the tests
+     7	call it in process."""
+     8	import json
+     9	import re
+    10	import shutil
+    11	import sys
+    12	from pathlib import Path
+    13	
+    14	STAGE0 = Path(__file__).resolve().parent
+    15	sys.path[:0] = [str(STAGE0), str(STAGE0 / 'census')]
+    16	import census_readers  # noqa: E402
+    17	import eligibility  # noqa: E402
+    18	import mapping  # noqa: E402
+    19	import mark_cards  # noqa: E402
+    20	import score_comparison  # noqa: E402
+    21	import d400_code_check  # noqa: E402
+    22	
+    23	REPOSITORY = STAGE0.parents[3]
+    24	SLICE = REPOSITORY / 'poc' / 'data' / 'comparison-2026-11-17' / 'slice-2'
+    25	
+    26	
+    27	def run(scratch):
+    28	    """The dry run's report lines."""
+    29	    scratch = Path(scratch).resolve()
+    30	    if str(scratch).startswith(str(REPOSITORY)):
+    31	        raise SystemExit('refused: the scratch folder must be outside the repository (keys are written there)')
+    32	    saved = (census_readers.run, eligibility.check, mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader)
+    33	    try:
+    34	        return chain(scratch)
+    35	    finally:
+    36	        census_readers.run, eligibility.check, mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader = saved
+    37	
+    38	
+    39	def chain(scratch):
+    40	    lines = []
+    41	    shutil.rmtree(scratch, ignore_errors=True)
+    42	    root = scratch / 'run'
+    43	    root.mkdir(parents=True)
+    44	    for draw in mapping.DRAWS:
+    45	        source = SLICE / ('s-new' if draw.startswith('new') else 's-old')
+    46	        shutil.copytree(source, root / draw, ignore=shutil.ignore_patterns('launch.lock', '*.lock'))
+    47	        record = json.loads((root / draw / 'run.json').read_text())
+    48	        record['identity']['label'] = draw
+    49	        (root / draw / 'run.json').write_text(json.dumps(record))
+    50	        if draw.startswith('new'):
+    51	            inner_path = root / draw / 'judge' / 'run.json'
+    52	            inner = json.loads(inner_path.read_text())
+    53	            inner[draw] = inner.pop('s-new')
+    54	            for attempt in inner[draw]['attempts']:
+    55	                attempt['folder'] = f'draw-{draw}'
+    56	            inner_path.write_text(json.dumps(inner))
+    57	            (root / draw / 'judge' / 'draw-s-new').rename(root / draw / 'judge' / f'draw-{draw}')
+    58	
+    59	    keys = scratch / 'keys'
+    60	    mapping.KEY_FOLDER = keys                                   # mark_cards reads the same module's KEY_FOLDER
+    61	    mark_cards.KEY = keys / 'deck-key.json'
+    62	
+    63	    eligible = {'eligible': True, 'problems': [], 'draws': {}}
+    64	    for draw in mapping.DRAWS:
+    65	        paths = mapping.store_paths(root, draw)
+    66	        record = json.loads((root / draw / 'run.json').read_text())
+    67	        eligible['draws'][draw] = {'stores': {Path(p).name: {'path': str(p), 'sha256': eligibility.sha256(p)} for p in paths},
+    68	                                   'inputs': {rel: eligibility.sha256(root / draw / rel) for rel in eligibility.section_inputs(root, draw, record)}}
+    69	    elig_path = scratch / 'eligibility.json'
+    70	    eligibility.write(eligible, elig_path)
+    71	
+    72	    plants = set()
+    73	    calls = {'read': 0, 'third': 0, 'mark': 0, 'debate': 0, 'other': 0}
+    74	
+    75	    def fake_run(family, prompt):
+    76	        if '## The matters' in prompt and '## Library' in prompt:
+    77	            calls['read'] += 1
+    78	            matters = re.findall(r'^- (M\d\d):', prompt, re.M)
+    79	            ids = re.findall(r'^- id (Q\d+) ', prompt, re.M)
+    80	            rows = []
+    81	            for k, m in enumerate(matters):
+    82	                if k == 0 and ids:
+    83	                    rows.append({'matter': m, 'status': 'opened', 'ids': [ids[0]], 'main_outcome': None, 'note': 'fake'})
+    84	                elif k == 1 and len(ids) > 1 and family == 'claude':
+    85	                    rows.append({'matter': m, 'status': 'narrower', 'ids': [ids[1]], 'main_outcome': True, 'note': 'fake'})
+    86	                else:
+    87	                    rows.append({'matter': m, 'status': 'missed', 'ids': [], 'main_outcome': None, 'note': 'fake'})
+    88	            return '\n'.join(json.dumps(r) for r in rows), None
+    89	        if 'Third reader: does this question cover' in prompt:
+    90	            calls['third'] += 1
+    91	            return json.dumps({'covers': family == 'codex', 'why': 'fake'}), None
+    92	        if '## The card' in prompt:
+    93	            debating = '## A second look' in prompt
+    94	            calls['debate' if debating else 'mark'] += 1
+    95	            if any(text in prompt for text in plants):
+    96	                return json.dumps({'worth': 'worth', 'answer': 'unsupported', 'why': 'fake: the plant is rejected'}), None
+    97	            no_answer = 'Latest answer at the cutoff: no answer' in prompt
+    98	            answer = None if no_answer else ('insufficient' if family == 'claude' and not debating and len(prompt) % 3 == 0 else 'supported')
+    99	            return json.dumps({'worth': 'worth', 'answer': answer, 'why': 'fake'}), None
+   100	        calls['other'] += 1
+   101	        return None, 'unexpected prompt'
+   102	
+   103	    census_readers.run = fake_run
+   104	    eligibility.check = lambda run_root: eligible               # the slice has no ledgers; the eligibility-shaped input stands in
+   105	    mark_cards.confirmed_by_reader = lambda text, supported: (True, {'supported': supported, 'why': 'fake'})
+   106	
+   107	    out, deck = scratch / 'mapping-out', scratch / 'deck'
+   108	    mapping.export(root, out, elig_path)
+   109	    mapping.read(out)
+   110	    mapping.third(out)
+   111	    mapping.result(out)
+   112	    mark_cards.deck(out, deck)
+   113	    deck_key = json.loads(mark_cards.KEY.read_text())
+   114	    plants.update((deck / f'{cid}.txt').read_text() for cid, k in deck_key.items() if k['role'] == 'plant')
+   115	    mark_cards.mark(deck)
+   116	    mark_cards.debate(deck, 1)
+   117	    mark_cards.debate(deck, 2)
+   118	    mark_cards.readings(out, deck)
+   119	    try:
+   120	        verdict = score_comparison.score(root, out, deck)
+   121	        lines.append(f"VERDICT {verdict['verdict']} {verdict.get('why')}")
+   122	        lines.append(f"beside keys {list(verdict.get('beside', {}).keys())}")
+   123	        lines.append(json.dumps({k: verdict.get(k) for k in ('N', 'margin')}, default=str))
+   124	    except SystemExit as refusal:
+   125	        lines.append(f'SCORER REFUSED {refusal}')
+   126	
+   127	    def edited(path, change):
+   128	        """Scores once with one derived file edited and the readings record rewritten from it by its writer (as Codex did in round 19),
+   129	        records whether the scorer refused it, and restores both."""
+   130	        original, readings_record = path.read_bytes(), (deck / 'readings.json').read_bytes()
+   131	        change(path)
+   132	        mark_cards.readings(out, deck)
+   133	        try:
+   134	            score_comparison.score(root, out, deck)
+   135	            lines.append(f'EDIT SCORED {path.name}')
+   136	        except SystemExit as refusal:
+   137	            lines.append(f"EDIT REFUSED {path.name} {'derived files differ' in str(refusal)}")
+   138	        finally:
+   139	            path.write_bytes(original)
+   140	            (deck / 'readings.json').write_bytes(readings_record)
+   141	
+   142	    def bump_distinct(path):
+   143	        data = json.loads(path.read_text())
+   144	        data['distinct']['new-1']['ids'] += 1
+   145	        path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n')
+   146	
+   147	    def move_opened(path):
+   148	        data = json.loads(path.read_text())
+   149	        cid = next(c for c, k in data.items() if k['role'] == 'product')
+   150	        data[cid]['opened'] = '2026-09-19'
+   151	        path.write_text(json.dumps(data, indent=1) + '\n')
+   152	
+   153	    edited(out / 'mapping.json', bump_distinct)                 # Codex round 19
+   154	    edited(mark_cards.KEY, move_opened)
+   155	    edited(deck / 'C001.txt', lambda p: p.write_text(p.read_text() + ' edited'))
+   156	    lines.append(f'sessions {calls}')
+   157	    result, status = d400_code_check.check(root, eligible)
+   158	    lines.append(f'D400 code check {status}')
+   159	    return lines
+   160	
+   161	
+   162	if __name__ == '__main__':
+   163	    if len(sys.argv) != 2:
+   164	        raise SystemExit('usage: python3 chain_dry_run.py <scratch folder outside the repository>')
+   165	    print('\n'.join(run(sys.argv[1])))
+     1	VERDICT too small ['new-1: (4, 4) distinct bets', 'new-2: (4, 4) distinct bets', 'new-3: (4, 4) distinct bets', 'old-1: (2, 2) distinct bets', 'old-2: (2, 2) distinct bets', 'old-3: (2, 2) distinct bets']
+     2	EDIT REFUSED mapping.json True
+     3	EDIT REFUSED deck-key.json True
+     4	EDIT REFUSED C001.txt True
+     5	sessions {'read': 12, 'third': 12, 'mark': 62, 'debate': 20, 'other': 0}
+     6	D400 code check not measured
+  9953	- **Round 18 (Codex, `tools-review-codex-18.md`):** a well-formed but edited readings file could flip a verdict. Codex turned one answered card into "no answer" and the verdict went from loss to lead. Changed opening and first-article days were also accepted. Separately, a draw that opened no question was refused instead of scored as too small, because the writer left out its card map.
+  9954	  - **Structural rule, one owner:** the scorer no longer scores a readings file it is handed. `score_comparison.score(mapping out, marks folder)` builds the readings with their one writer, `mark_cards.build_readings`, from the named inputs, scores what it built, and refuses a `readings.json` that differs. The command line uses this entry, and so does the chain dry run.
+  9955	  - **The deck key now decides two more card fields:** each card's answered flag and its opening day. Every draw keeps a card map, empty when the draw opened no question.
+  9956	  - **Results:** 99 tests; 66 mutants, all as predicted; the chain dry run reaches its verdict through the new entry.
+  9957	  - **Updated:** the step-4 command in CURRENT_STATE.
+  9958	- **Round 19 (Codex, `tools-review-codex-19.md`).** Editing any derived file in the chain could still change a verdict:
+  9959	  - adding one to `distinct.ids` in `mapping.json` turned too small into a lead;
+  9960	  - moving a deck key's opening day changed the delay printed beside the verdict.
+  9961	
+  9962	  This happens because the readings record is rewritten from the edited file by its own writer, so the two agree.
+  9963	
+  9964	  **Structural rule:** the verdict is a function of the primary data only.
+  9965	  - **Primary data:** the run stores, the readers' own answers (mapping, third reader, control confirmations, card marks) and the
+  9966	    frozen inputs.
+  9967	  - **The rebuild:** before scoring, `score_comparison.score(run root, mapping out, marks folder)` rebuilds every derived file in a
+  9968	    temporary folder with the same code that wrote it (`rebuild.differences`):
+  9969	    - the eligibility check, through one writer `eligibility.write`;
+  9970	    - the libraries and the mapping key;
+  9971	    - `mapping.json`;
+  9972	    - the deck key and the card texts.
+  9973	
+  9974	    The rebuild replays the deck's reader confirmations from their record and calls no reader. The scorer refuses if any stored
+  9975	    derived file differs.
+  9976	  - **Checks:** the chain dry run now runs in process and restores what it replaces. It scores the unedited chain, and refuses an
+  9977	    edited mapping, deck key or card text, each with the readings record rewritten as Codex did.
+  9978	  - **A test leak, fixed:** `seal` had left the scorer pointing at a test matter list. An autouse fixture now restores it.
+  9979	  - **Totals:** 101 tests; 71 mutants, all as predicted.
+
+exec
+/opt/homebrew/bin/zsh -lc "git --no-pager log -1 --format='%h %s'
+git --no-pager show --no-ext-diff --stat --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0
+git --no-pager show --no-ext-diff --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0/rebuild.py docs/research/2026-11-17-product-comparison/stage0/score_comparison.py" in /Users/lchingen/hivemind
+ succeeded in 3984ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-dW8EzVJB' (errno=Operation not permitted)
+2026-11-18 13:48:46.536 xcodebuild[56475:60181252]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:48:46.704 xcodebuild[56475:60181249] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-DAt2GmXi' (errno=Operation not permitted)
+2026-11-18 13:48:47.048 xcodebuild[56477:60181261]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:48:47.161 xcodebuild[56477:60181260] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+1aafb15e Scorer rebuilds every derived file of the reading chain from the primary data before scoring (D675, Codex round 19)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-55yrtwKK' (errno=Operation not permitted)
+2026-11-18 13:48:47.927 xcodebuild[56512:60181381]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:48:48.039 xcodebuild[56512:60181378] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-i5BX81oV' (errno=Operation not permitted)
+2026-11-18 13:48:48.363 xcodebuild[56514:60181394]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:48:48.477 xcodebuild[56514:60181393] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 1aafb15ea73a8ebc0652065c1637cab6b07c01b4
+Author: Alex Lee <alex@adventai.io>
+
+    Scorer rebuilds every derived file of the reading chain from the primary data before scoring (D675, Codex round 19)
+
+ .../stage0/chain-dry-run.txt                       |   3 +
+ .../stage0/chain_dry_run.py                        | 246 ++++++++++++---------
+ .../stage0/eligibility.py                          |   7 +-
+ .../stage0/mutants-reading-tools.txt               |  67 +++---
+ .../stage0/mutants_reading_tools.py                |  10 +
+ .../stage0/rebuild.py                              |  87 ++++++++
+ .../stage0/score_comparison.py                     |  20 +-
+ .../stage0/test_mark_cards.py                      |   4 +-
+ .../stage0/test_score_comparison.py                |  31 +++
+ 9 files changed, 337 insertions(+), 138 deletions(-)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-iYobY48G' (errno=Operation not permitted)
+2026-11-18 13:48:49.230 xcodebuild[56518:60181414]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:48:49.342 xcodebuild[56518:60181413] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-o70arUvx' (errno=Operation not permitted)
+2026-11-18 13:48:49.669 xcodebuild[56520:60181423]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:48:49.780 xcodebuild[56520:60181422] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 1aafb15ea73a8ebc0652065c1637cab6b07c01b4
+Author: Alex Lee <alex@adventai.io>
+
+    Scorer rebuilds every derived file of the reading chain from the primary data before scoring (D675, Codex round 19)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/rebuild.py b/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
+new file mode 100644
+index 00000000..290c4be7
+--- /dev/null
++++ b/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
+@@ -0,0 +1,87 @@
++"""Rebuilds every derived file of the reading chain from its primary data, and lists the stored derived files that differ (D675, Codex
++round 19). The verdict is a function of the primary data only:
++- the run stores (the draws under the run root);
++- the readers' own answers: the mapping readers' answers (`map-*.txt`), the third readers' marks (`third/`), the deck's control
++  confirmations (`control-confirmations.jsonl`, its last attempt) and the card marks (rounds 0-2, read by `mark_cards.build_readings`);
++- the frozen inputs (the matter list, the verdict rule, the census).
++
++Everything else is derived, and is rebuilt here in a temporary folder by the same code that wrote it:
++- the eligibility check;
++- the libraries and the mapping key;
++- the mapping (`mapping.json`);
++- the deck key and the card texts.
++
++The deck's reader confirmations are replayed from their record, in the order the deck asks for them. No reader is called: a call that
++escapes the replay is refused. The stored files are compared by canonical JSON (sorted keys, so 1 is not true) or by bytes for card
++texts."""
++import json
++import shutil
++import tempfile
++from pathlib import Path
++
++
++def canonical(path):
++    return json.dumps(json.loads(Path(path).read_text()), sort_keys=True, ensure_ascii=False)
++
++
++def replay(record_path):
++    """The deck's confirmation step, answered from the last recorded attempt in the order the deck asks."""
++    lines = [line for line in Path(record_path).read_text().splitlines() if line.strip()]
++    recorded = iter(json.loads(lines[-1])['attempt']) if lines else iter(())
++
++    def confirmed(card_text, supported):
++        entry = next(recorded, None)
++        role = 'supported control' if supported else 'plant'
++        if entry is None or entry.get('role') != role:
++            raise SystemExit('refused: the recorded control confirmations do not match the deck the inputs rebuild')
++        return entry['admitted'], entry['mark']
++    confirmed.remaining = lambda: sum(1 for _ in recorded)
++    return confirmed
++
++
++def differences(run_root, mapping_out, deck_folder, key_folder):
++    """The derived files whose stored content differs from what the primary data rebuild (an empty list when every one matches)."""
++    import census_readers
++    import eligibility
++    import mapping
++    import mark_cards
++    mapping_out, deck_folder, key_folder = Path(mapping_out), Path(deck_folder), Path(key_folder)
++    saved = (mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run)
++
++    def no_reader(family, prompt):
++        raise SystemExit('refused: a rebuild never calls a reader')
++    with tempfile.TemporaryDirectory() as scratch:
++        scratch = Path(scratch)
++        keys, out, deck = scratch / 'keys', scratch / 'mapping-out', scratch / 'deck'
++        confirmed = replay(key_folder / 'control-confirmations.jsonl')
++        try:
++            mapping.KEY_FOLDER = keys                               # mark_cards reads the same module's KEY_FOLDER
++            mark_cards.KEY = keys / 'deck-key.json'
++            census_readers.run = no_reader
++            mark_cards.confirmed_by_reader = confirmed
++            eligibility.write(eligibility.check(run_root), scratch / 'eligibility.json')
++            mapping.export(run_root, out, scratch / 'eligibility.json')
++            for answer in mapping_out.glob('map-L*-*.txt'):
++                shutil.copy2(answer, out / answer.name)
++            if (mapping_out / 'third').is_dir():
++                shutil.copytree(mapping_out / 'third', out / 'third')
++            mapping.result(out)
++            mark_cards.deck(out, deck)
++            if confirmed.remaining():
++                raise SystemExit('refused: the recorded control confirmations hold more than the deck the inputs rebuild asks for')
++        finally:
++            mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run = saved
++        differ = []
++        json_pairs = [(out / 'eligibility.json', mapping_out / 'eligibility.json'), (out / 'mapping.json', mapping_out / 'mapping.json'),
++                      (keys / 'mapping-key.json', key_folder / 'mapping-key.json'), (keys / 'deck-key.json', key_folder / 'deck-key.json')]
++        json_pairs += [(p, mapping_out / p.name) for p in sorted(out.glob('library-L*.json'))]
++        for rebuilt, stored in json_pairs:
++            if not stored.exists() or canonical(rebuilt) != canonical(stored):
++                differ.append(str(stored))
++        if {p.name for p in mapping_out.glob('library-L*.json')} != {p.name for p in out.glob('library-L*.json')}:
++            differ.append(f'{mapping_out}/library-L*.json (a different set of libraries)')
++        rebuilt_cards = {p.name: p.read_bytes() for p in deck.glob('C*.txt')}
++        stored_cards = {p.name: p.read_bytes() for p in deck_folder.glob('C*.txt')}
++        differ += [str(deck_folder / name) for name in sorted(set(rebuilt_cards) | set(stored_cards))
++                   if rebuilt_cards.get(name) != stored_cards.get(name)]
++        return differ
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index afde293f..8d88d4f1 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -530,10 +530,20 @@ def verdict(readings):
+     return dict(report, verdict='no practical winner')
+ 
+ 
+-def score(mapping_out, folder):
+-    """The scorer's entry: the readings are built here by their one writer (`mark_cards.build_readings`) from the named mapping output
+-    and marks folder, and what is built is scored, so an edited intermediate is never scored. The readings.json record beside the marks
+-    must equal what is built."""
++def score(run_root, mapping_out, folder):
++    """The scorer's entry. Every derived file of the reading chain is first rebuilt from the primary data (`rebuild.differences`); a
++    stored derived file that differs is refused. Then the readings are built by their one writer and scored."""
++    import mapping
++    import rebuild
++    differ = rebuild.differences(run_root, mapping_out, folder, mapping.KEY_FOLDER)
++    if differ:
++        raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
++    return score_readings(mapping_out, folder)
++
++
++def score_readings(mapping_out, folder):
++    """The readings built here by their one writer (`mark_cards.build_readings`) from the mapping output and the marks folder, and
++    what is built is scored. The readings.json record beside the marks must equal what is built."""
+     import mark_cards
+     built = mark_cards.build_readings(mapping_out, folder)
+     recorded = Path(folder) / 'readings.json'
+@@ -543,4 +553,4 @@ def score(mapping_out, folder):
+ 
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(score(sys.argv[1], sys.argv[2]), indent=1, ensure_ascii=False, default=str))
++    print(json.dumps(score(sys.argv[1], sys.argv[2], sys.argv[3]), indent=1, ensure_ascii=False, default=str))
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'rebuild|chain_dry_run' test_score_comparison.py test_mark_cards.py mutants_reading_tools.py
+nl -ba score_comparison.py | sed -n '464,507p;533,556p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba mapping.py | sed -n '15,45p;126,132p;156,198p;298,330p'
+nl -ba eligibility.py | sed -n '14,47p;64,112p;120,165p'
+nl -ba mark_cards.py | sed -n '19,35p;80,108p;110,194p;242,262p;300,342p'
+nl -ba build_cards.py | sed -n '13,28p;132,173p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+mutants_reading_tools.py:166:    ('the scorer skips the rebuild', 'score_comparison', [("    differ = rebuild.differences(run_root, mapping_out, folder, mapping.KEY_FOLDER)", "    differ = []")],
+mutants_reading_tools.py:167:     'test_score_comparison.py', ['test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one']),
+mutants_reading_tools.py:168:    ('the rebuild skips the mapping', 'rebuild', [("(out / 'mapping.json', mapping_out / 'mapping.json'),\n", "\n")],
+mutants_reading_tools.py:169:     'test_score_comparison.py', ['test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one']),
+mutants_reading_tools.py:170:    ('the rebuild skips the deck key', 'rebuild', [(", (keys / 'deck-key.json', key_folder / 'deck-key.json')]", "]")],
+mutants_reading_tools.py:171:     'test_score_comparison.py', ['test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one']),
+mutants_reading_tools.py:172:    ('the rebuild skips the cards', 'rebuild', [("        stored_cards = {p.name: p.read_bytes() for p in deck_folder.glob('C*.txt')}", "        stored_cards = rebuilt_cards")],
+mutants_reading_tools.py:173:     'test_score_comparison.py', ['test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one']),
+mutants_reading_tools.py:174:    ('a replay ignores the kind asked for', 'rebuild', [("        if entry is None or entry.get('role') != role:", "        if entry is None:")],
+test_score_comparison.py:428:def test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one(tmp_path):
+test_score_comparison.py:430:    mapping, deck key or card text (D675, Codex round 19). Run in process, so a mutant of the scorer or the rebuild is the one exercised."""
+test_score_comparison.py:431:    import chain_dry_run
+test_score_comparison.py:432:    lines = chain_dry_run.run(tmp_path / 'chain')
+test_score_comparison.py:439:    """The rebuild answers the deck's confirmations from their record, in order; a record whose next entry is another kind is refused."""
+test_score_comparison.py:440:    import rebuild
+test_score_comparison.py:443:    confirmed = rebuild.replay(record)
+   464	    return out
+   465	
+   466	
+   467	def verdict(readings):
+   468	    validate_readings(readings)
+   469	    verify_inputs(readings)
+   470	    n = len(readings['matters'])
+   471	    controls = readings['controls']
+   472	    report = {'N': n}
+   473	    invalid = []
+   474	    def rejected(m):
+   475	        return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+   476	    if any(not rejected(m) for m in controls['plants']):
+   477	        invalid.append('a planted wrong answer without an explicit rejection')
+   478	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   479	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   480	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   481	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   482	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   483	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   484	    small = []
+   485	    if not invalid:                                            # the size check runs only when the controls hold
+   486	        if n < 20:
+   487	            small.append(f'N = {n} < 20')
+   488	        for draw, d in readings['distinct'].items():
+   489	            both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   490	            if min(both_ways) < 30:
+   491	                small.append(f'{draw}: {both_ways} distinct bets')
+   492	    margin = max(3, math.ceil(0.15 * n))
+   493	
+   494	    def countings():
+   495	        per_counting = {}
+   496	        for counting in ('1', '2'):
+   497	            served = served_by(readings, counting)
+   498	            a = len(served['new'] - served['old'])
+   499	            b = len(served['old'] - served['new'])
+   500	            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   501	                                      'guardrails': guardrails(readings, counting)}
+   502	        return per_counting
+   503	
+   504	    if invalid or small:
+   505	        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+   506	        flags = []
+   507	        try:
+   533	def score(run_root, mapping_out, folder):
+   534	    """The scorer's entry. Every derived file of the reading chain is first rebuilt from the primary data (`rebuild.differences`); a
+   535	    stored derived file that differs is refused. Then the readings are built by their one writer and scored."""
+   536	    import mapping
+   537	    import rebuild
+   538	    differ = rebuild.differences(run_root, mapping_out, folder, mapping.KEY_FOLDER)
+   539	    if differ:
+   540	        raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
+   541	    return score_readings(mapping_out, folder)
+   542	
+   543	
+   544	def score_readings(mapping_out, folder):
+   545	    """The readings built here by their one writer (`mark_cards.build_readings`) from the mapping output and the marks folder, and
+   546	    what is built is scored. The readings.json record beside the marks must equal what is built."""
+   547	    import mark_cards
+   548	    built = mark_cards.build_readings(mapping_out, folder)
+   549	    recorded = Path(folder) / 'readings.json'
+   550	    if not recorded.exists() or json.loads(recorded.read_text()) != json.loads(json.dumps(built)):
+   551	        raise SystemExit('refused: readings.json is missing or differs from the readings its writer builds from the named inputs')
+   552	    return verdict(built)
+   553	
+   554	
+   555	if __name__ == '__main__':
+   556	    print(json.dumps(score(sys.argv[1], sys.argv[2], sys.argv[3]), indent=1, ensure_ascii=False, default=str))
+
+ succeeded in 0ms:
+    15	system's id is kept as `source_id` beside it, and the guardrail sample draws from the system's ids as the frozen rule says (D675).
+    16	An answer naming an id the library does not hold, or a matter twice, or `opened` with no id, or `narrower` without a main-outcome judgement,
+    17	is void; a disagreement without both third readers' marks is refused. Third readers also see the article the question was opened from
+    18	(week reading A2's form), for coverage that turns on a date or period. Export refuses without a passing `eligibility.py` output whose store
+    19	fingerprints match the stores it reads.
+    20	"""
+    21	import concurrent.futures
+    22	import hashlib
+    23	import json
+    24	import random
+    25	import sys
+    26	from pathlib import Path
+    27	
+    28	HERE = Path(__file__).resolve().parent
+    29	sys.path[:0] = [str(HERE), str(HERE / 'census')]
+    30	import build_cards  # noqa: E402
+    31	import census_readers  # noqa: E402
+    32	from census_merge import json_lines  # noqa: E402
+    33	
+    34	FAMILIES = census_readers.FAMILIES
+    35	MATTERS = HERE / 'census' / 'matters.json'
+    36	ITEMS = Path('/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/items-comparison.sqlite')
+    37	KEY_FOLDER = Path.home() / '.hivemind-keys' / 'comparison-2026-11-17'
+    38	DRAWS = ['new-1', 'new-2', 'new-3', 'old-1', 'old-2', 'old-3']
+    39	
+    40	READ = """# Blind reader: which of these big matters does this library hold a question on? (read-only)
+    41	
+    42	You are a senior hedge-fund analyst covering NVIDIA. Below are the big matters readers listed from the news of 2026-09-07 to 09-20, each with
+    43	an example question, and the library of one research system as it stood on 2026-09-20: every question it held, open or closed, with its id,
+    44	due day and possible answers. Systems write their questions in different styles; ignore style.
+    45	
+   126	
+   127	def neutral_ids(lib):
+   128	    """Q1..Qn in the library's opening order; the system's id kept as `source_id`."""
+   129	    return [dict(e, question_id=f'Q{n}', source_id=e['question_id']) for n, e in enumerate(lib, 1)]
+   130	
+   131	
+   132	def answer_problem(rows, keys, ids):
+   156	
+   157	def key_path(out):
+   158	    """The mapping key of an export: a diagnostic export (finished draws of a run that cannot give a release verdict) keeps its own key."""
+   159	    return KEY_FOLDER / ('mapping-key-diagnostic.json' if (Path(out) / 'DIAGNOSTIC').exists() else 'mapping-key.json')
+   160	
+   161	
+   162	def export(run_root, out, eligibility_path, diagnostic=False):
+   163	    """Export each draw's library. Refused unless the six draws are eligible; with `diagnostic`, the finished draws of an ineligible run
+   164	    are exported instead, marked DIAGNOSTIC, under their own key, and the scorer refuses them (their eligibility check does not pass;
+   165	    plan §1.4 item 10)."""
+   166	    eligibility = json.loads(Path(eligibility_path).read_text())
+   167	    if not eligibility.get('eligible') and not diagnostic:
+   168	        raise SystemExit(f"refused: the draws are not eligible: {eligibility.get('problems')}")
+   169	    out = Path(out)
+   170	    if out.exists():
+   171	        raise SystemExit(f'refused: {out} exists')
+   172	    labels = [f'L{n}' for n in range(1, len(DRAWS) + 1)]
+   173	    random.Random(20261117).shuffle(labels)
+   174	    key = dict(zip(DRAWS, labels))
+   175	    key_file = KEY_FOLDER / ('mapping-key-diagnostic.json' if diagnostic else 'mapping-key.json')
+   176	    if key_file.exists():
+   177	        raise SystemExit(f'refused: {key_file} exists; an export never overwrites a key')
+   178	    import eligibility as eligibility_tool
+   179	    libraries = {}
+   180	    for draw in key:
+   181	        if diagnostic and not eligibility['draws'].get(draw, {}).get('stores'):
+   182	            continue                                            # a draw that did not finish: nothing to export
+   183	        paths = store_paths(run_root, draw)
+   184	        for p in paths or ():
+   185	            if eligibility_tool.sha256(p) != eligibility['draws'][draw]['stores'][Path(p).name]['sha256']:
+   186	                raise SystemExit(f'refused: {p} changed since the eligibility check')
+   187	        libraries[draw] = neutral_ids(build_cards.library(*paths, ITEMS)) if paths else []
+   188	    key = {draw: label for draw, label in key.items() if draw in libraries}
+   189	    out.mkdir(parents=True)                                     # written only once every store passed its check
+   190	    if diagnostic:
+   191	        (out / 'DIAGNOSTIC').write_text('finished draws of a run that cannot give a release verdict (plan §1.4 item 10)\n')
+   192	    KEY_FOLDER.mkdir(parents=True, exist_ok=True)
+   193	    key_file.write_text(json.dumps(key, indent=1) + '\n')
+   194	    (out / 'eligibility.json').write_text(Path(eligibility_path).read_text())
+   195	    for draw, label in key.items():
+   196	        (out / f'library-{label}.json').write_text(json.dumps(libraries[draw], indent=1, ensure_ascii=False) + '\n')
+   197	    print('exported', len(key), 'libraries; key in', key_file)
+   198	
+   298	def result(out):
+   299	    out = Path(out)
+   300	    key = json.loads(key_path(out).read_text())
+   301	    label_of = {d: l for d, l in key.items()}
+   302	    mapping, distinct = {}, {}
+   303	    for draw, label in label_of.items():
+   304	        a, dup_a = marks(out, label, 'codex')
+   305	        b, dup_b = marks(out, label, 'claude')
+   306	        lib = json.loads((out / f'library-{label}.json').read_text())
+   307	        mapping[draw] = {}
+   308	        for matter in sorted(set(a) | set(b)):
+   309	            entries = []
+   310	            for q in sorted(a.get(matter, set()) | b.get(matter, set())):
+   311	                if q in a.get(matter, set()) and q in b.get(matter, set()):
+   312	                    covers = True
+   313	                else:
+   314	                    paths = [out / 'third' / f'{label}--{matter}--{q}--{reader}.json' for reader in FAMILIES]
+   315	                    missing = [p.name for p in paths if not p.exists()]
+   316	                    if missing:
+   317	                        raise SystemExit(f'refused: third-reader marks missing {missing}')
+   318	                    thirds = [json.loads(p.read_text())['covers'] for p in paths]
+   319	                    covers = True if thirds == [True, True] else False if thirds == [False, False] else 'split'
+   320	                entries.append({'question': q, 'covers': covers})
+   321	            if any(e['covers'] is not False for e in entries):
+   322	                mapping[draw][matter] = [e for e in entries if e['covers'] is not False]
+   323	        distinct[draw] = {'ids': len(lib), 'duplicates_both': len(dup_a & dup_b), 'duplicates_split': len(dup_a ^ dup_b)}
+   324	    text = json.dumps({'mapping': mapping, 'distinct': distinct,
+   325	                       'eligibility_sha256': hashlib.sha256((out / 'eligibility.json').read_bytes()).hexdigest()},
+   326	                      indent=1, ensure_ascii=False) + '\n'
+   327	    (out / 'mapping.json').write_text(text)
+   328	    print('mapping.json written', hashlib.sha256(text.encode()).hexdigest()[:16])
+   329	
+   330	
+    14	"""
+    15	import datetime
+    16	import hashlib
+    17	import json
+    18	import sqlite3
+    19	import sys
+    20	from pathlib import Path
+    21	
+    22	sys.path.insert(0, str(Path(__file__).resolve().parent))
+    23	import mapping  # noqa: E402
+    24	
+    25	DATA = Path('/Users/lchingen/hivemind/poc/data/comparison-2026-11-17')
+    26	LAUNCH_WINDOW = datetime.timedelta(hours=1)
+    27	SEND_WINDOW = datetime.timedelta(hours=72)
+    28	
+    29	
+    30	def local(stamp):
+    31	    """A naive local time from either stored form: '2026-11-17T22:05:13-0800' (launcher) or '2026-11-17T22:06:16' (archives)."""
+    32	    try:
+    33	        return datetime.datetime.strptime(stamp, '%Y-%m-%dT%H:%M:%S%z').astimezone().replace(tzinfo=None)
+    34	    except ValueError:
+    35	        return datetime.datetime.strptime(stamp[:19], '%Y-%m-%dT%H:%M:%S')
+    36	
+    37	
+    38	def sha256(path):
+    39	    digest = hashlib.sha256()
+    40	    with open(path, 'rb') as handle:
+    41	        for block in iter(lambda: handle.read(1 << 20), b''):
+    42	            digest.update(block)
+    43	    return digest.hexdigest()
+    44	
+    45	
+    46	def last_call(draw_folder):
+    47	    """The latest model call stored in any database under the draw's folder, and how many databases hold calls."""
+    64	    if draw.startswith('new'):
+    65	        options.update(limits=str(DATA / 'comparison-limits.json'), ladder_variant='astra-frozen', judge_end_day='2026-09-20')
+    66	    return {'kind': 'clean' if draw.startswith('new') else 'prod', 'label': draw, 'ledger': str(Path(run_root) / 'ledgers' / f'{draw}.json'),
+    67	            'options': options}
+    68	
+    69	
+    70	def last_attempt(ledger_path):
+    71	    """The latest attempt the ledger's log records (failed sends and refusals included), how many lines it holds, and why the log cannot
+    72	    establish the timing, or None: the log must exist and reconcile with the ledger (one line per settled attempt and per refusal, the
+    73	    settled charges summing to the spend, nothing still reserved), since the ledger writes its log line after its own state."""
+    74	    path = Path(str(ledger_path).replace('.json', '.attempts.jsonl'))
+    75	    if not path.exists():
+    76	        return None, 0, f'{path.name} missing'
+    77	    lines = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    78	    ledger = json.loads(Path(ledger_path).read_text())
+    79	    charged = sum(line.get('charged', 0) for line in lines)
+    80	    if len(lines) != ledger['attempts'] + ledger['refused'] or abs(charged - ledger['spent']) > 1e-6 or ledger['reserved'] > 1e-9:
+    81	        return None, len(lines), (f"{path.name} holds {len(lines)} lines and ${charged:.6f} against the ledger's {ledger['attempts']} attempts, "
+    82	                                  f"{ledger['refused']} refusals, ${ledger['spent']:.6f} spent and ${ledger['reserved']:.6f} reserved")
+    83	    return (max(local(line['at']) for line in lines) if lines else None), len(lines), None
+    84	
+    85	
+    86	SECTION_INPUTS = {'step1': ['trace.sqlite'], 'step2': ['decisions.json', 'library.json'], 'cases': ['cases.json'], 'ladder': ['send-1/outcomes.jsonl',
+    87	                  'send-2/outcomes.jsonl', 'send-3/outcomes.jsonl']}
+    88	
+    89	
+    90	def section_inputs(run_root, draw, record):
+    91	    """The files the §1.6 tools read from a new draw (DESIGN-1.6.md §0), each in the folder its run record names (a redo's folder after a
+    92	    redo), by path relative to the draw."""
+    93	    out = []
+    94	    if not draw.startswith('new'):
+    95	        return out
+    96	    for component, names in SECTION_INPUTS.items():
+    97	        entry = record['components'].get(component, {})
+    98	        if entry.get('state') == 'completed':
+    99	            out += [f"{entry['folder']}/{name}" for name in names if (Path(run_root) / draw / entry['folder'] / name).exists()]
+   100	    return out
+   101	
+   102	
+   103	def verified(eligibility, run_root, draw, relative):
+   104	    """A file a §1.6 tool reads, refused unless the eligibility output fingerprinted it and it is unchanged."""
+   105	    digest = eligibility['draws'][draw].get('inputs', {}).get(relative)
+   106	    path = Path(run_root) / draw / relative
+   107	    if digest is None or sha256(path) != digest:
+   108	        raise SystemExit(f'refused: {draw}/{relative} is not fingerprinted by the eligibility check, or changed since')
+   109	    return path
+   110	
+   111	
+   112	def check(run_root):
+   120	        try:
+   121	            paths = mapping.store_paths(run_root, draw)                # refuses an incomplete draw
+   122	        except SystemExit as refusal:                                 # recorded; the finished draws are still fingerprinted (diagnostic)
+   123	            problems.append(str(refusal))
+   124	            paths = None
+   125	        latest, databases = last_call(run_root / draw)
+   126	        attempt, attempts, unreconciled = last_attempt(run_root / 'ledgers' / f'{draw}.json')
+   127	        if unreconciled:
+   128	            problems.append(f'{draw}: the timing cannot be established: {unreconciled}')
+   129	        if attempt and (latest is None or attempt > latest):
+   130	            latest = attempt
+   131	        draws[draw] = {'launch': min(starts).isoformat() if starts else None, 'last call': latest.isoformat() if latest else None,
+   132	                       'databases with calls': databases, 'ledger attempts': attempts,
+   133	                       'stores': {Path(p).name: {'path': str(p), 'sha256': sha256(p)} for p in paths} if paths else {},
+   134	                       'inputs': {rel: sha256(run_root / draw / rel) for rel in section_inputs(run_root, draw, record)}}
+   135	        if not starts:
+   136	            problems.append(f'{draw}: no launch recorded')
+   137	    launches = [datetime.datetime.fromisoformat(d['launch']) for d in draws.values() if d['launch']]
+   138	    if launches and max(launches) - min(launches) > LAUNCH_WINDOW:
+   139	        problems.append(f'launches span {max(launches) - min(launches)}, more than one hour')
+   140	    first = min(launches) if launches else None
+   141	    for draw, d in draws.items():
+   142	        if first and d['last call'] and datetime.datetime.fromisoformat(d['last call']) > first + SEND_WINDOW:
+   143	            problems.append(f"{draw}: a call at {d['last call']}, more than 72 h after the first launch {first.isoformat()}")
+   144	    return {'eligible': not problems, 'problems': problems, 'first launch': first.isoformat() if first else None, 'draws': draws}
+   145	
+   146	
+   147	def write(result, path):
+   148	    """The eligibility file's one writer: the mapping records this file's sha256, so its bytes are part of the chain."""
+   149	    Path(path).write_text(json.dumps(result, indent=1) + '\n')
+   150	
+   151	
+   152	if __name__ == '__main__':
+   153	    result = check(sys.argv[1])
+   154	    write(result, sys.argv[2])
+   155	    print('ELIGIBLE' if result['eligible'] else 'NOT ELIGIBLE: ' + '; '.join(result['problems']))
+    19	import json
+    20	import random
+    21	import sys
+    22	from pathlib import Path
+    23	
+    24	HERE = Path(__file__).resolve().parent
+    25	sys.path[:0] = [str(HERE), str(HERE / 'census')]
+    26	import build_cards  # noqa: E402
+    27	import census_readers  # noqa: E402
+    28	from census_merge import json_lines  # noqa: E402
+    29	import mapping as mapping_tool  # noqa: E402
+    30	
+    31	FAMILIES = census_readers.FAMILIES
+    32	SEED = 20261117
+    33	KEY = mapping_tool.KEY_FOLDER / 'deck-key.json'
+    34	WORTH = ('worth', 'trivia', 'duplicate')
+    35	ANSWER = ('supported', 'unsupported', 'insufficient')
+    80	"""
+    81	
+    82	
+    83	def libraries(mapping_out):
+    84	    key = json.loads(mapping_tool.key_path(mapping_out).read_text())
+    85	    return {draw: json.loads((Path(mapping_out) / f'library-{label}.json').read_text()) for draw, label in key.items()}
+    86	
+    87	
+    88	def guardrail_sample(lib):
+    89	    """The neutral ids of the guardrail sample: the system's own ids sorted as strings, random.Random(20261117).sample(ids, 35), or all of
+    90	    them when fewer (verdict-rule.json `guardrails.sample`)."""
+    91	    neutral = {e['source_id']: e['question_id'] for e in lib}
+    92	    ids = sorted(neutral)
+    93	    return {neutral[i] for i in (ids if len(ids) <= 35 else random.Random(SEED).sample(ids, 35))}
+    94	
+    95	
+    96	def plant(card_text, entry):
+    97	    """The card with its latest answer moved one rung from the stored rung (the next rung, or the previous at the end), or None when no
+    98	    adjacent rung differs."""
+    99	    answers = entry['possible_answers']
+   100	    k = entry.get('answer_index')
+   101	    if k is None or not 0 <= k < len(answers) or answers[k] != entry['answer']:
+   102	        return None
+   103	    moved = answers[k + 1] if k + 1 < len(answers) else (answers[k - 1] if k > 0 else None)
+   104	    if moved is None or moved == entry['answer']:
+   105	        return None
+   106	    planted = card_text.replace(f"Latest answer at the cutoff: {entry['answer']}", f'Latest answer at the cutoff: {moved}', 1)
+   107	    return planted if planted != card_text else None
+   108	
+   110	def confirmed_by_reader(card_text, supported):
+   111	    """A separate closed reader's confirmation that the card's latest answer is (or is not) supported; None when the reader gave no mark."""
+   112	    answer, void = census_readers.run('claude', CONFIRM.format(card=card_text))
+   113	    rows = json_lines(answer) if answer else []
+   114	    if void or not rows or not isinstance(rows[-1].get('supported'), bool):
+   115	        return None, rows[-1] if rows else None
+   116	    return rows[-1]['supported'] is supported, rows[-1]
+   117	
+   118	
+   119	def record_confirmations(confirmations):
+   120	    """Every control confirmation of this deck attempt, appended beside the key (an earlier attempt's are kept)."""
+   121	    KEY.parent.mkdir(parents=True, exist_ok=True)
+   122	    with open(KEY.parent / 'control-confirmations.jsonl', 'a') as handle:
+   123	        handle.write(json.dumps({'attempt': confirmations}, ensure_ascii=False) + '\n')
+   124	
+   125	
+   126	def deck(mapping_out, folder):
+   127	    if KEY.exists():
+   128	        raise SystemExit(f'refused: {KEY} exists; a deck never overwrites a key')
+   129	    folder = Path(folder)
+   130	    folder.mkdir(parents=True, exist_ok=False)
+   131	    libs = libraries(mapping_out)
+   132	    mapping = json.loads((Path(mapping_out) / 'mapping.json').read_text())['mapping']
+   133	    cards, rng = [], random.Random(SEED)
+   134	    for draw in sorted(libs):
+   135	        lib = libs[draw]
+   136	        by_id = {e['question_id']: e for e in lib}
+   137	        covering = {}
+   138	        for qs in mapping.get(draw, {}).values():
+   139	            for q in qs:
+   140	                covering[q['question']] = True if (q['covers'] is True or covering.get(q['question']) is True) else 'split'
+   141	        guard = guardrail_sample(lib)
+   142	        for qid in sorted(set(covering) | guard):
+   143	            e = by_id[qid]
+   144	            cards.append({'draw': draw, 'question': qid, 'role': 'product', 'guardrail': qid in guard, 'covering': covering.get(qid, False),
+   145	                          'opened': e.get('opened'),
+   146	                          'type': e.get('type'), 'answered': e['answer'] is not None, 'text': build_cards.card_text(e, lib)})
+   147	    controls, confirmations = [], []
+   148	    for system in ('new', 'old'):
+   149	        pool = []
+   150	        for c in cards:
+   151	            if c['draw'].startswith(system) and c['answered']:
+   152	                planted = plant(c['text'], {e['question_id']: e for e in libs[c['draw']]}[c['question']])
+   153	                if planted is not None:
+   154	                    pool.append(dict(c, role='plant', text=planted))
+   155	        random.Random(SEED + 1).shuffle(pool)
+   156	        admitted = []
+   157	        for c in pool:
+   158	            if len(admitted) == 3:
+   159	                break
+   160	            ok, mark = confirmed_by_reader(c['text'], supported=False)
+   161	            confirmations.append({'role': 'plant', 'draw': c['draw'], 'question': c['question'], 'mark': mark, 'admitted': bool(ok)})
+   162	            if ok:
+   163	                admitted.append(c)
+   164	        if len(admitted) < 3:
+   165	            record_confirmations(confirmations)
+   166	            raise SystemExit(f'{system}: only {len(admitted)} plants confirmed not supported of {len(pool)} candidates')
+   167	        controls += admitted
+   168	    candidates = random.Random(SEED + 2).sample([c for c in cards if c['answered']], min(12, sum(c['answered'] for c in cards)))
+   169	    confirmed = []
+   170	    for c in candidates:
+   171	        if len(confirmed) == 4:
+   172	            break
+   173	        ok, mark = confirmed_by_reader(c['text'], supported=True)
+   174	        confirmations.append({'role': 'supported control', 'draw': c['draw'], 'question': c['question'], 'mark': mark, 'admitted': bool(ok)})
+   175	        if ok:
+   176	            confirmed.append(dict(c, role='supported control'))
+   177	
+   178	    record_confirmations(confirmations)
+   179	    if len(confirmed) < 4:
+   180	        raise SystemExit(f'only {len(confirmed)} supported controls confirmed of {len(candidates)} candidates')
+   181	    controls += confirmed
+   182	    for c in random.Random(SEED + 3).sample(cards, 3):
+   183	        controls.append(dict(c, role='repeat'))
+   184	    full = cards + controls
+   185	    random.Random(SEED).shuffle(full)
+   186	    key = {}
+   187	    for n, c in enumerate(full, 1):
+   188	        cid = f'C{n:03d}'
+   189	        key[cid] = {k: c[k] for k in ('draw', 'question', 'role', 'guardrail', 'covering', 'type', 'answered', 'opened')}
+   190	        (folder / f'{cid}.txt').write_text(c['text'])
+   191	    KEY.parent.mkdir(parents=True, exist_ok=True)
+   192	    KEY.write_text(json.dumps(key, indent=1) + '\n')
+   193	    print(f'{len(full)} cards: {len(cards)} product, {len(controls)} controls; key in {KEY}')
+   194	
+   242	def current(folder, cid, family, upto):
+   243	    """The family's latest mark on the card from rounds 0..upto (a debate round never reads its own round)."""
+   244	    for n in range(upto, -1, -1):
+   245	        p = Path(folder) / f'round-{n}' / f'{cid}-{family}.json'
+   246	        if p.exists():
+   247	            return json.loads(p.read_text())
+   248	    return None
+   249	
+   250	
+   251	def settled_marks(folder, cid, upto):
+   252	    """The fields both families agreed on in some round 0..upto (settled at the first such round), and each family's latest mark."""
+   253	    out, a, b = {}, None, None
+   254	    for n in range(upto + 1):
+   255	        a, b = current(folder, cid, 'codex', n), current(folder, cid, 'claude', n)
+   256	        if a is None or b is None:
+   257	            raise SystemExit(f'{cid}: a family has no valid mark by round {n}')
+   258	        for field in ('worth', 'answer'):
+   259	            if field not in out and a.get(field) == b.get(field):
+   260	                out[field] = a.get(field)
+   261	    return out, a, b
+   262	
+   300	def build_readings(mapping_out, folder):
+   301	    """The readings the scorer takes, built from the mapping output and the marks folder (the one writer of their shape;
+   302	    `score_comparison.score` builds them again and scores what is built). Every mapped draw has a card map, empty when it opened no question."""
+   303	    folder = Path(folder)
+   304	    for n in (0, 1, 2):
+   305	        if not (folder / f'round-{n}.done').exists():
+   306	            raise SystemExit(f'refused: round {n} is not complete')
+   307	    key = json.loads(KEY.read_text())
+   308	    matters = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(mapping_tool.MATTERS.read_text())['matters']]
+   309	    mapped_text = (Path(mapping_out) / 'mapping.json').read_bytes()
+   310	    mapped = json.loads(mapped_text)
+   311	    cards = {draw: {} for draw in mapped['mapping']}
+   312	    plants, supported, repeats = [], [], []
+   313	    by_question = {}
+   314	    for cid, k in sorted(key.items()):
+   315	        f = final(folder, cid)
+   316	        answer = f['answer'] if k['answered'] else 'no answer'
+   317	        if k['role'] == 'product':
+   318	            cards.setdefault(k['draw'], {})[k['question']] = {'worth': f['worth'], 'answer': answer, 'type': k['type'], 'guardrail': k['guardrail'],
+   319	                                                              'covering': k['covering'], 'opened': k.get('opened')}
+   320	            by_question[(k['draw'], k['question'])] = (f['worth'], answer)
+   321	        elif k['role'] == 'plant':
+   322	            plants.append(answer)
+   323	        elif k['role'] == 'supported control':
+   324	            supported.append(answer)
+   325	    for cid, k in sorted(key.items()):
+   326	        if k['role'] == 'repeat':
+   327	            f = final(folder, cid)
+   328	            answer = f['answer'] if k['answered'] else 'no answer'
+   329	            repeats.append((f['worth'], answer) == by_question[(k['draw'], k['question'])])
+   330	    out = {'matters': matters, 'matter_first_day': matter_first_days(), 'mapping': mapped['mapping'], 'distinct': mapped['distinct'], 'cards': cards,
+   331	           'controls': {'plants': plants, 'supported': supported, 'repeats_same': repeats},
+   332	           'inputs': {'matters_sha256': hashlib.sha256(mapping_tool.MATTERS.read_bytes()).hexdigest(),
+   333	                      'mapping_path': str((Path(mapping_out) / 'mapping.json').resolve()), 'mapping_sha256': hashlib.sha256(mapped_text).hexdigest(),
+   334	                      'eligibility_path': str((Path(mapping_out) / 'eligibility.json').resolve()), 'eligibility_sha256': mapped['eligibility_sha256'],
+   335	                      'deck_key_path': str(KEY), 'deck_key_sha256': hashlib.sha256(KEY.read_bytes()).hexdigest()}}
+   336	    return out
+   337	
+   338	
+   339	def readings(mapping_out, folder):
+   340	    """Writes the readings record (readings.json) beside the marks."""
+   341	    out = build_readings(mapping_out, folder)
+   342	    (Path(folder) / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
+    13	import sqlite3
+    14	import sys
+    15	from pathlib import Path
+    16	
+    17	RUNG = re.compile(r'rung (\d+) ([^:]*): ')
+    18	# D673 form check: the three suffixes the answer step appends to a rung condition (ladder_step.py, `middle_text_suffix`), a closed set
+    19	ANNOTATION = re.compile(r'\s*\((?:no reference figure when the question opened|the (?:amount last reported|reference) when the question opened: ".*")\)$', re.S)
+    20	ITEM = re.compile(r'^- e\d+ \[([^;\]]*); (.*?); original source (.*?); from (\S+) (\S+)\] ', re.S)   # a speaker may hold ';'
+    21	NOTE = re.compile(r'\n    (?:It replaces |Opinion, not verified: )')
+    22	
+    23	
+    24	def ro(path):
+    25	    conn = sqlite3.connect(f'file:{path}?mode=ro&immutable=1', uri=True)
+    26	    conn.row_factory = sqlite3.Row
+    27	    return conn
+    28	
+   132	    return out
+   133	
+   134	
+   135	def card_text(entry, lib):
+   136	    lines = [f"Question: {entry['question']}", f"Opened: {entry['opened']}", f"Due: {entry['due']}", 'Possible answers (numbered as the reasons cite them):']
+   137	    lines += [f'{k}. {c}' for k, c in enumerate(entry['possible_answers'], 1)]
+   138	    if entry['answer'] is None:
+   139	        lines += ['', 'Latest answer at the cutoff: no answer']
+   140	    else:
+   141	        lines += ['', f"Latest answer at the cutoff: {entry['answer']}", f"Reason given: {entry['reasons']}", '',
+   142	                  f"Material that answer was given ({len(entry['material'])} items, by day):"]
+   143	        for k, item in enumerate(sorted(entry['material'], key=lambda m: m['day']), 1):
+   144	            lines.append(f"{k}. ({item['tier']}; publisher {item['publisher']}; speaker {item['speaker']}; original source {item['original']}; "
+   145	                         f"published {item['day']}) {item['summary']}")
+   146	            if item['quote']:
+   147	                lines.append(f"   Quote: {item['quote']}")
+   148	        ctx = entry.get('context') or {}
+   149	        if ctx.get('hidden'):
+   150	            lines.append(f"Not shown to the answer: {ctx['hidden']} more items in force, read in earlier answers; the previous answer carries them.")
+   151	        if ctx.get('depends_on'):
+   152	            lines += ['', 'Answers of the questions it depends on, as the answer was given them:']
+   153	            for d in ctx['depends_on']:
+   154	                lines.append(f"- ({d['flag']}; {d['direction']}) {d['question']}: answered {d['answer'] or 'not yet'}; reason: {d['reasons']}"
+   155	                             if d['answer'] else f"- {d['question']} ({d['flag']})")
+   156	        if ctx.get('themes'):
+   157	            lines += ['', 'Themes in force, as the answer was given them:']
+   158	            for t in ctx['themes']:
+   159	                lines.append(f"- {t['question']} (due {t['due']}): answered {t['rung']}. {t['answer']} on {t['judged']}"
+   160	                             + ('; updated since this question was last answered' if t['updated'] else '') + f"; reason: {t['reasons']}")
+   161	                lines.append('  Its possible answers: ' + ' '.join(f'{k}. {c}' for k, c in enumerate(t['possible_answers'], 1)))
+   162	        previous = ctx.get('previous')
+   163	        lines += ['', f"Previous answer, given for comparison: {previous['rung']}. {previous['answer']}; reason: {previous['reasons']}" if previous
+   164	                  else 'Previous answer: none (this was the first answer).']
+   165	    lines += ['', "The library's questions in opening order (this card's question marked):"]
+   166	    lines += [f"- opened {e['opened']}: {e['question']}" + ('   <- this question' if e['question_id'] == entry['question_id'] else '') for e in lib]
+   167	    return '\n'.join(lines)
+   168	
+   169	
+   170	def main(views_path, archive_path, items_path, out_path):
+   171	    lib = library(views_path, archive_path, items_path)
+   172	    cards = [{'question_id': e['question_id'], 'answered': e['answer'] is not None, 'text': card_text(e, lib)} for e in lib]
+   173	    Path(out_path).write_text(json.dumps({'library': lib, 'cards': cards}, indent=1, ensure_ascii=False) + '\n')
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba eligibility.py | sed -n '46,63p;144,166p'
+nl -ba mark_cards.py | sed -n '18,33p'
+nl -ba census/census_readers.py | sed -n '16,36p'
+nl -ba test_score_comparison.py | sed -n '425,447p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+    46	def last_call(draw_folder):
+    47	    """The latest model call stored in any database under the draw's folder, and how many databases hold calls."""
+    48	    latest, databases = None, 0
+    49	    for path in sorted(Path(draw_folder).rglob('*.sqlite')):
+    50	        conn = sqlite3.connect(f'file:{path}?mode=ro&immutable=1', uri=True)
+    51	        if not conn.execute("select 1 from sqlite_master where type='table' and name='model_calls'").fetchone():
+    52	            continue
+    53	        databases += 1
+    54	        stamp = conn.execute('select max(created_at) from model_calls').fetchone()[0]
+    55	        if stamp and (latest is None or local(stamp) > latest):
+    56	            latest = local(stamp)
+    57	    return latest, databases
+    58	
+    59	
+    60	def expected_identity(run_root, draw):
+    61	    """The identity launch_comparison.py registers for a counted draw (plan §2; D667)."""
+    62	    options = {'until_day': '2026-09-20', 'passes': 3, 'from_day': '2026-07-01', 'manifest': str(DATA / 'manifest-2026-07-01-09-20.json'),
+    63	               'items': str(DATA / 'items-comparison.sqlite')}
+   144	    return {'eligible': not problems, 'problems': problems, 'first launch': first.isoformat() if first else None, 'draws': draws}
+   145	
+   146	
+   147	def write(result, path):
+   148	    """The eligibility file's one writer: the mapping records this file's sha256, so its bytes are part of the chain."""
+   149	    Path(path).write_text(json.dumps(result, indent=1) + '\n')
+   150	
+   151	
+   152	if __name__ == '__main__':
+   153	    result = check(sys.argv[1])
+   154	    write(result, sys.argv[2])
+   155	    print('ELIGIBLE' if result['eligible'] else 'NOT ELIGIBLE: ' + '; '.join(result['problems']))
+    18	import hashlib
+    19	import json
+    20	import random
+    21	import sys
+    22	from pathlib import Path
+    23	
+    24	HERE = Path(__file__).resolve().parent
+    25	sys.path[:0] = [str(HERE), str(HERE / 'census')]
+    26	import build_cards  # noqa: E402
+    27	import census_readers  # noqa: E402
+    28	from census_merge import json_lines  # noqa: E402
+    29	import mapping as mapping_tool  # noqa: E402
+    30	
+    31	FAMILIES = census_readers.FAMILIES
+    32	SEED = 20261117
+    33	KEY = mapping_tool.KEY_FOLDER / 'deck-key.json'
+    16	import json
+    17	import re
+    18	import sqlite3
+    19	import subprocess
+    20	import sys
+    21	import tempfile
+    22	import threading
+    23	from pathlib import Path
+    24	
+    25	HERE = Path(__file__).resolve().parent
+    26	ROOT = Path('/Users/lchingen/hivemind')
+    27	SOURCE = ROOT / 'poc/data/items-nvda-2026-07-01-10-27.sqlite'
+    28	KEPT = HERE.parent / 'kept-articles.json'
+    29	STANDARD = ROOT / 'docs/prd/05-extraction-standard.html'
+    30	FAMILIES = ('codex', 'claude')
+    31	CODEX = ['codex', 'exec', '--skip-git-repo-check', '--ephemeral', '--json', '-s', 'read-only', '-m', 'gpt-6.1-terra',
+    32	         '-c', 'model_reasoning_effort=high', '-c', 'features.memories=false', '-c', 'memories.use_memories=false',
+    33	         '-c', 'memories.generate_memories=false']
+    34	CLAUDE = ['claude', '-p', '--output-format', 'stream-json', '--verbose', '--no-session-persistence', '--setting-sources', '',
+    35	          '--strict-mcp-config', '--tools', '', '--disable-slash-commands', '--model', 'claude-opus-5-5']
+    36	WEEK_SIZES = {'2026-09-07': 5, '2026-09-14': 6}             # batches per week: about 35 and about 40 articles each
+   425	            raise AssertionError('malformed readings were scored')
+   426	
+   427	
+   428	def test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one(tmp_path):
+   429	    """The verdict is a function of the primary data only: the chain dry run scores its unedited chain, and refuses it with an edited
+   430	    mapping, deck key or card text (D675, Codex round 19). Run in process, so a mutant of the scorer or the rebuild is the one exercised."""
+   431	    import chain_dry_run
+   432	    lines = chain_dry_run.run(tmp_path / 'chain')
+   433	    assert any(line.startswith('VERDICT too small') for line in lines), lines
+   434	    for name in ('mapping.json', 'deck-key.json', 'C001.txt'):
+   435	        assert f'EDIT REFUSED {name} True' in lines, lines
+   436	
+   437	
+   438	def test_a_replayed_confirmation_must_be_the_one_the_deck_asks_for(tmp_path):
+   439	    """The rebuild answers the deck's confirmations from their record, in order; a record whose next entry is another kind is refused."""
+   440	    import rebuild
+   441	    record = tmp_path / 'control-confirmations.jsonl'
+   442	    record.write_text(json.dumps({'attempt': [{'role': 'plant', 'draw': 'new-1', 'question': 'Q1', 'mark': {}, 'admitted': True}]}) + '\n')
+   443	    confirmed = rebuild.replay(record)
+   444	    try:
+   445	        confirmed('a card', supported=True)                                   # the deck asks for a supported control
+   446	    except SystemExit as e:
+   447	        assert 'do not match' in str(e)
+
+exec
+/opt/homebrew/bin/zsh -lc "PYTHONPATH=census python3 -B -c '
+import contextlib, sys
+import rebuild
+previous=sys.path.copy()
+rebuild.tempfile.TemporaryDirectory=lambda:contextlib.nullcontext(\"/synthetic\")
+def stop(path):
+    raise SystemExit(\"stop before any producer writes\")
+rebuild.replay=stop
+try:
+    rebuild.differences(\"/synthetic/run\",\"/synthetic/mapping\",\"/synthetic/deck\",\"/synthetic/keys\")
+except SystemExit:
+    print(\"Fresh module import changes sys.path:\",sys.path "'!= previous)
+    print("Additional sys.path entries:", len(sys.path)-len(previous))
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import contextlib, fnmatch, fnmatch as patterns, hashlib, io, json, posixpath, subprocess, types
+import score_comparison as score
+import rebuild, mapping, mark_cards as writer, eligibility, census_readers, build_cards
+parent = types.ModuleType(\"previous_score_comparison\")
+parent.__file__ = score.__file__
+p = \"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+exec(compile(subprocess.check_output([\"git\",\"--no-pager\",\"show\",\"1aafb15e"'^:"+p],text=True),p,"exec"),parent.__dict__)
+class Mem:
+    files={}
+    dirs=set()
+    writes=[]
+    def __init__(self,path): self.path=posixpath.normpath(str(path))
+    def __truediv__(self,child): return Mem(self.path+"/"+child)
+    def __str__(self): return self.path
+    def __lt__(self,other): return self.path<other.path
+    @property
+    def name(self): return posixpath.basename(self.path)
+    @property
+    def parent(self): return Mem(posixpath.dirname(self.path))
+    def resolve(self): return self
+    def exists(self): return self.path in self.files or self.path in self.dirs
+    def is_dir(self): return self.path in self.dirs
+    def mkdir(self,parents=False,exist_ok=False):
+        if self.is_dir() and not exist_ok: raise FileExistsError(self.path)
+        self.dirs.add(self.path); self.writes.append(self.path)
+    def read_bytes(self): return self.files[self.path]
+    def read_text(self): return self.read_bytes().decode()
+    def write_text(self,text):
+        self.files[self.path]=text.encode(); self.writes.append(self.path)
+    def glob(self,pattern):
+        return [Mem(p) for p in self.files if posixpath.dirname(p)==self.path and fnmatch.fnmatch(posixpath.basename(p),pattern)]
+def put(p,v): Mem(p).write_text(json.dumps(v))
+def get(p): return json.loads(Mem(p).read_text())
+def no_calls(*args): raise AssertionError("reader called")
+def copy2(src,dst): dst.write_text(src.read_text())
+def copytree(src,dst):
+    dst.mkdir()
+    for p in list(Mem.files):
+        if p.startswith(str(src)+"/"): (dst / p[len(str(src))+1:]).write_text(Mem(p).read_text())
+@contextlib.contextmanager
+def scratch():
+    Mem("/scratch").mkdir()
+    try: yield "/scratch"
+    finally:
+        for p in list(Mem.files):
+            if p.startswith("/scratch/"): del Mem.files[p]
+        Mem.dirs={p for p in Mem.dirs if not (p=="/scratch" or p.startswith("/scratch/"))}
+@contextlib.contextmanager
+def mem_open(path,mode):
+    assert mode=="a"
+    buffer=io.StringIO()
+    try: yield buffer
+    finally:
+        f=Mem(path)
+        f.write_text((f.read_text() if f.exists() else "")+buffer.getvalue())
+for m in (score,parent,mapping,writer,eligibility,rebuild): m.Path=Mem
+score.MATTERS=parent.MATTERS=mapping.MATTERS=Mem("/original/matters.json")
+writer.open=mem_open
+rebuild.tempfile=types.SimpleNamespace(TemporaryDirectory=scratch)
+rebuild.shutil=types.SimpleNamespace(copy2=copy2,copytree=copytree)
+mapping.KEY_FOLDER=Mem("/original/keys")
+writer.KEY=mapping.KEY_FOLDER/"deck-key.json"
+census_readers.run=no_calls
+def make(n=20,shorts=("new-1",),new=5,old=1,invalid=False):
+    Mem.files.clear(); Mem.dirs.clear(); Mem.writes.clear()
+    matters=[{"matter":f"M{i:02d}","company_figure":False} for i in range(1,n+1)]
+    put(score.MATTERS,{"matters":matters})
+    writer.matter_first_days=lambda:{m["matter"]:"2026-09-07" for m in matters}
+    lib={}
+    for d in mapping.DRAWS:
+        count=29 if d in shorts else 30
+        lib[d]=[dict(question_id=f"v{i}",question=f"Question {i}",opened="2026-09-09",due="2026-09-20",
+                     type="figure" if i<=15 else "yes/no",answer="Yes",answer_index=0,possible_answers=["Yes","No"],
+                     reasons="Evidence",material=[]) for i in range(1,count+1)]
+    mapping.store_paths=lambda root,d:(Mem(f"/primary/{d}/views.sqlite"),Mem(f"/primary/{d}/archive.sqlite"))
+    build_cards.library=lambda views,archive,items:lib[views.parent.name]
+    eligibility.sha256=lambda file:hashlib.sha256(str(file).encode()).hexdigest()
+    eligible={"eligible":True,"problems":[],"draws":{d:{"stores":{p.name:{"sha256":eligibility.sha256(p)} for p in mapping.store_paths("/primary",d)}} for d in mapping.DRAWS}}
+    eligibility.check=lambda root:eligible
+    writer.confirmed_by_reader=lambda text,supported:(True,{"supported":supported,"why":"fixture"})
+    eligibility.write(eligible,Mem("/original/eligibility.json"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        mapping.export("/primary","/original/map","/original/eligibility.json")
+        key=get(mapping.KEY_FOLDER/"mapping-key.json")
+        for d,label in key.items():
+            a,b=(1,new) if d.startswith("new") else (new+1,new+old)
+            rows=[{"matter":f"M{i:02d}","status":"opened","ids":[f"Q{i}"]} for i in range(a,b+1)]
+            for family in ("codex","claude"):
+                Mem(f"/original/map/map-{label}-{family}.txt").write_text("'"\\n\".join(map(json.dumps,rows)))
+        mapping.result(\"/original/map\")
+        writer.deck(\"/original/map\",\"/original/deck\")
+        key=get(writer.KEY)
+        for cid,k in key.items():
+            answer=\"unsupported\" if k[\"role\"]==\"plant\" and not invalid else \"supported\"
+            for f in (\"codex\",\"claude\"):
+                put(f\"/original/deck/round-0/{cid}-{f}.json\",{\"worth\":\"worth\",\"answer\":answer})
+        for n in range(3): Mem(f\"/original/deck/round-{n}.done\").write_text(\"done\")
+        writer.readings(\"/original/map\",\"/original/deck\")
+    writer.confirmed_by_reader=no_calls
+def read_score():
+    with contextlib.redirect_stdout(io.StringIO()) as out:
+        result=score.score(\"/primary\",\"/original/map\",\"/original/deck\")
+    return result,out.getvalue()
+make()
+attrs=(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+Mem.writes.clear()
+original,noise=read_score()
+assert original[\"verdict\"]==\"too small\"
+assert all(p.startswith(\"/scratch\") for p in Mem.writes)
+assert attrs==(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+print(\"Normally\",original[\"verdict\"], \"explicit writes confined and patched attributes restored\")
+print(\"Unedited scorer stdout before returning:\",repr(noise))
+good_diff=rebuild.differences
+def bump():
+    f=\"/original/map/mapping.json\"
+    mapped=get(f)
+    mapped[\"distinct\"][\"new-1\"][\"ids\"]=30
+    put(f,mapped)
+    writer.readings(\"/original/map\",\"/original/deck\")
+def after_comparison(*args):
+    differ=good_diff(*args)
+    assert differ==[]
+    bump()
+    return differ
+rebuild.differences=after_comparison
+raced,_=read_score()
+print(\"Derived replacement after comparison\",raced[\"verdict\"])
+rebuild.differences=good_diff
+try: read_score()
+except SystemExit as e: print(\"Same edit before comparison:\",e)
+make(shorts=(\"new-1\",\"old-3\"))
+before,_=read_score()
+f=\"/original/map/mapping.json\"
+mapped=get(f)
+mapped[\"distinct\"]=dict(reversed(list(mapped[\"distinct\"].items())))
+put(f,mapped)
+with contextlib.redirect_stdout(io.StringIO()): writer.readings(\"/original/map\",\"/original/deck\")
+after,_=read_score()
+print(\"Stable reordered mapping reasons\",before[\"why\"],\"->\",after[\"why\"])
+for n,shorts,a,b,invalid in ((32,(),10,2,False),(32,(),2,10,False),(32,(),5,4,False),(19,(),5,1,False),(32,(),5,1,True)):
+    make(n,shorts,a,b,invalid)
+    new,_=read_score()
+    old=parent.score(\"/original/map\",\"/original/deck\")
+    assert json.dumps(new,default=str)==json.dumps(old,default=str)
+    print(new[\"verdict\"],\"report values match parent\")
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 1390ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-EjIXRRJY' (errno=Operation not permitted)
+2026-11-18 13:50:08.216 xcodebuild[56727:60183621]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:50:08.342 xcodebuild[56727:60183619] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-DEXIiZe1' (errno=Operation not permitted)
+2026-11-18 13:50:08.697 xcodebuild[56732:60183640]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:50:08.821 xcodebuild[56732:60183638] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Fresh module import changes sys.path: True
+Additional sys.path entries: 6
+
+ succeeded in 3054ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-z2mfGuU0' (errno=Operation not permitted)
+2026-11-18 13:50:08.216 xcodebuild[56728:60183622]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:50:08.342 xcodebuild[56728:60183620] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-TPzsPc1S' (errno=Operation not permitted)
+2026-11-18 13:50:08.697 xcodebuild[56731:60183639]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:50:08.821 xcodebuild[56731:60183637] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-svNr6Tdu' (errno=Operation not permitted)
+2026-11-18 13:50:09.659 xcodebuild[56739:60183709]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:50:09.780 xcodebuild[56739:60183708] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-E6wK6VLR' (errno=Operation not permitted)
+2026-11-18 13:50:10.112 xcodebuild[56741:60183720]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:50:10.229 xcodebuild[56741:60183719] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Normally too small explicit writes confined and patched attributes restored
+Unedited scorer stdout before returning: 'exported 6 libraries; key in /scratch/keys/mapping-key.json\nmapping.json written 2c9ec2217ece6ab5\n192 cards: 179 product, 13 controls; key in /scratch/keys/deck-key.json\n'
+Derived replacement after comparison practical lead
+Same edit before comparison: refused: these derived files differ from what the primary data rebuild: /original/map/mapping.json
+Stable reordered mapping reasons ['new-1: (29, 29) distinct bets', 'old-3: (29, 29) distinct bets'] -> ['old-3: (29, 29) distinct bets', 'new-1: (29, 29) distinct bets']
+practical lead report values match parent
+practical loss report values match parent
+no practical winner report values match parent
+too small report values match parent
+invalid report values match parent
+
+codex
+1. **Yes.** In memory, I let the rebuild accept the original files, then changed `mapping.json`’s `distinct.new-1.ids` from 29 to 30 and regenerated `readings.json` before scoring reopened them. The verdict changed from `too small` to `practical lead`. Even without concurrent edits, reordering `distinct` keys changes the printed reason order. [Comparison](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:78) · [Scoring](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533)
+2. The rebuild calls no reader, confines explicit file writes to scratch, and restores all four overrides. Fresh imports still leave additions to `sys.path`. [Rebuild](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:44) · [Import](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:24)
+3. Unedited fixture reports matched the parent across all five verdicts. The rebuild now prints progress before the CLI JSON, so stdout is no longer a standalone JSON document. [Producer output](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mapping.py:197) · [CLI](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:555)
+
+NOT READY: Score from the rebuilt snapshot, restore import-path changes, and send rebuild progress to stderr.
+tokens used
+4,475,836
+1. **Yes.** In memory, I let the rebuild accept the original files, then changed `mapping.json`’s `distinct.new-1.ids` from 29 to 30 and regenerated `readings.json` before scoring reopened them. The verdict changed from `too small` to `practical lead`. Even without concurrent edits, reordering `distinct` keys changes the printed reason order. [Comparison](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:78) · [Scoring](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533)
+2. The rebuild calls no reader, confines explicit file writes to scratch, and restores all four overrides. Fresh imports still leave additions to `sys.path`. [Rebuild](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:44) · [Import](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:24)
+3. Unedited fixture reports matched the parent across all five verdicts. The rebuild now prints progress before the CLI JSON, so stdout is no longer a standalone JSON document. [Producer output](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mapping.py:197) · [CLI](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:555)
+
+NOT READY: Score from the rebuilt snapshot, restore import-path changes, and send rebuild progress to stderr.

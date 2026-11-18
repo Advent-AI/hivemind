@@ -125,19 +125,24 @@ def chain(scratch):
         lines.append(f'SCORER REFUSED {refusal}')
 
     def edited(path, change):
-        """Scores once with one derived file edited and the readings record rewritten from it by its writer (as Codex did in round 19),
-        records whether the scorer refused it, and restores both."""
+        """Scores with one derived file edited, twice: with the readings record rewritten from it by its writer (as Codex did in round
+        19), and with the record left as it was (so only the file's own comparison can see the edit). Records whether the scorer refused
+        each, and restores both files."""
         original, readings_record = path.read_bytes(), (deck / 'readings.json').read_bytes()
-        change(path)
-        mark_cards.readings(out, deck)
-        try:
-            score_comparison.score(root, out, deck)
-            lines.append(f'EDIT SCORED {path.name}')
-        except SystemExit as refusal:
-            lines.append(f"EDIT REFUSED {path.name} {'derived files differ' in str(refusal)}")
-        finally:
-            path.write_bytes(original)
-            (deck / 'readings.json').write_bytes(readings_record)
+        refused = []
+        for rewrite_record in (True, False):
+            change(path)
+            if rewrite_record:
+                mark_cards.readings(out, deck)
+            try:
+                score_comparison.score(root, out, deck)
+                refused.append('scored')
+            except SystemExit as refusal:
+                refused.append(str('derived files differ' in str(refusal)))
+            finally:
+                path.write_bytes(original)
+                (deck / 'readings.json').write_bytes(readings_record)
+        lines.append(f"EDIT {'REFUSED' if 'scored' not in refused else 'SCORED'} {path.name} {' '.join(refused)}")
 
     def bump_distinct(path):
         data = json.loads(path.read_text())
@@ -153,6 +158,26 @@ def chain(scratch):
     edited(out / 'mapping.json', bump_distinct)                 # Codex round 19
     edited(mark_cards.KEY, move_opened)
     edited(deck / 'C001.txt', lambda p: p.write_text(p.read_text() + ' edited'))
+    record, original = deck / 'readings.json', (deck / 'readings.json').read_bytes()
+    data = json.loads(original)
+    data['distinct']['new-1']['ids'] += 1                      # the record alone, not rewritten by its writer
+    record.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n')
+    try:
+        score_comparison.score(root, out, deck)
+        lines.append('EDIT SCORED readings.json')
+    except SystemExit as refusal:
+        lines.append(f"EDIT REFUSED readings.json {'derived files differ' in str(refusal)}")
+    finally:
+        record.write_bytes(original)
+    import contextlib
+    import io
+    import rebuild
+    path_before, printed = list(sys.path), io.StringIO()
+    with contextlib.redirect_stdout(printed):
+        scored_from = rebuild.scored(root, out, deck, mapping.KEY_FOLDER, lambda readings: readings['inputs']['mapping_path'])
+    lines.append(f'SCORED FROM SNAPSHOT {not scored_from.startswith(str(out))}')   # the verdict reads the rebuilt files, never the stored
+    lines.append(f'REBUILD STDOUT EMPTY {printed.getvalue() == ""}')                # progress goes to stderr; stdout carries only the verdict
+    lines.append(f'IMPORT PATH RESTORED {sys.path == path_before}')
     lines.append(f'sessions {calls}')
     result, status = d400_code_check.check(root, eligible)
     lines.append(f'D400 code check {status}')

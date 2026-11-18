@@ -154,10 +154,8 @@ def test_the_deck_holds_six_plants_four_supported_controls_three_repeats_and_nev
         raise AssertionError('a second deck overwrote the key')
 
 
-def test_the_scorer_scores_what_the_writer_builds_and_keeps_an_empty_draw(tmp_path, monkeypatch):
-    """One writer of the readings: a draw that opened no question keeps an empty card map, and `score_comparison.score` refuses a
-    readings.json that differs from what the writer builds from the named inputs (D675, Codex round 18)."""
-    import score_comparison
+def test_the_writer_keeps_an_empty_draw(tmp_path, monkeypatch):
+    """A draw that opened no question keeps an empty card map in the readings (D675, Codex round 18)."""
     monkeypatch.setattr(mark_cards, 'KEY', tmp_path / 'deck-key.json')
     monkeypatch.setattr(mark_cards.mapping_tool, 'MATTERS', tmp_path / 'matters.json')
     monkeypatch.setattr(mark_cards, 'matter_first_days', lambda: {'M01': '2026-09-07'})
@@ -170,20 +168,4 @@ def test_the_scorer_scores_what_the_writer_builds_and_keeps_an_empty_draw(tmp_pa
         (tmp_path / 'round-0' / f'C001-{family}.json').write_text(json.dumps({'worth': 'worth', 'answer': 'supported'}))
     for n in (0, 1, 2):
         (tmp_path / f'round-{n}.done').write_text('')
-    built = mark_cards.build_readings(tmp_path, tmp_path)
-    assert built['cards']['new-2'] == {}
-    mark_cards.readings(tmp_path, tmp_path)
-    recorded = json.loads((tmp_path / 'readings.json').read_text())
-    recorded['cards']['new-1']['Q1']['answer'] = 'no answer'
-    (tmp_path / 'readings.json').write_text(json.dumps(recorded))
-    try:
-        score_comparison.score_readings(tmp_path, tmp_path)
-    except SystemExit as e:
-        assert 'differs from the readings its writer builds' in str(e)
-    else:
-        raise AssertionError('an edited readings.json was scored')
-    mark_cards.readings(tmp_path, tmp_path)                                  # control: the unedited record passes this check
-    try:
-        score_comparison.score_readings(tmp_path, tmp_path)
-    except SystemExit as e:
-        assert 'differs from the readings its writer builds' not in str(e)
+    assert mark_cards.build_readings(tmp_path, tmp_path)['cards']['new-2'] == {}

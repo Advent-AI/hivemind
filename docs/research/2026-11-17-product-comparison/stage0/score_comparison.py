@@ -531,25 +531,11 @@ def verdict(readings):
 
 
 def score(run_root, mapping_out, folder):
-    """The scorer's entry. Every derived file of the reading chain is first rebuilt from the primary data (`rebuild.differences`); a
-    stored derived file that differs is refused. Then the readings are built by their one writer and scored."""
+    """The scorer's entry: the reading chain is rebuilt from the primary data, any stored derived file or readings record that differs
+    is refused, and the verdict is computed on the readings built from the rebuilt snapshot (`rebuild.scored`)."""
     import mapping
     import rebuild
-    differ = rebuild.differences(run_root, mapping_out, folder, mapping.KEY_FOLDER)
-    if differ:
-        raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
-    return score_readings(mapping_out, folder)
-
-
-def score_readings(mapping_out, folder):
-    """The readings built here by their one writer (`mark_cards.build_readings`) from the mapping output and the marks folder, and
-    what is built is scored. The readings.json record beside the marks must equal what is built."""
-    import mark_cards
-    built = mark_cards.build_readings(mapping_out, folder)
-    recorded = Path(folder) / 'readings.json'
-    if not recorded.exists() or json.loads(recorded.read_text()) != json.loads(json.dumps(built)):
-        raise SystemExit('refused: readings.json is missing or differs from the readings its writer builds from the named inputs')
-    return verdict(built)
+    return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
 
 
 if __name__ == '__main__':

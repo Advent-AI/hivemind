@@ -432,7 +432,10 @@ def test_the_scorer_rebuilds_every_derived_file_and_refuses_an_edited_one(tmp_pa
     lines = chain_dry_run.run(tmp_path / 'chain')
     assert any(line.startswith('VERDICT too small') for line in lines), lines
     for name in ('mapping.json', 'deck-key.json', 'C001.txt'):
-        assert f'EDIT REFUSED {name} True' in lines, lines
+        assert f'EDIT REFUSED {name} True True' in lines, lines           # with the record rewritten from the edit, and without
+    assert 'EDIT REFUSED readings.json True' in lines, lines
+    assert 'SCORED FROM SNAPSHOT True' in lines, lines                    # Codex round 20: a stored file changed after the check is never read
+    assert 'REBUILD STDOUT EMPTY True' in lines and 'IMPORT PATH RESTORED True' in lines, lines
 
 
 def test_a_replayed_confirmation_must_be_the_one_the_deck_asks_for(tmp_path):
