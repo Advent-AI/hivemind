@@ -430,33 +430,24 @@ Alex's.
 
 The council's reversible decisions on Alex's page are recorded in D606 and D607.
 
-**The one next task (D665–D671): finish stage 0 of the release comparison, at $0** (`docs/research/2026-11-17-product-comparison/RUN-PLAN-v11.md`).
-- **Done in stage 0:**
-  - the old replays were classed (all reads, D668);
-  - the exposure census was run, with the scored window 09-07..09-20 (D669, Alex);
-  - 410 of 502 articles were kept (D670);
-  - the blind matter list was frozen at **N = 32** (D671);
-  - code changes A, C, D and E were made, with tests and mutants.
-- **Left:**
-  - the filtered input and its two-launcher proof;
-  - `verdict-rule.json` and the scorer;
-  - the card builder (F);
-  - the size check and preflight;
-  - the §1.6 tools;
-  - the freeze review.
-- **Stage 0, all $0:**
-  - the exposure census and the frozen exclusions;
-  - one filtered input for both systems;
-  - the blind matter census (N < 20 goes to Alex);
-  - `verdict-rule.json` and the scorer;
-  - code changes A to F, each with a test and a mutant;
-  - the stored-data size check;
-  - preflight;
-  - the freeze review of the built artifacts.
-- **Then:**
-  - stage 1, a one-week slice of each system;
-  - stage 2, three draws each, launched together, one ledger per draw ($270 of guards, not a budget);
-  - stage 3, the council's reading and the verdict.
+**The one next task (D665–D675): read the release comparison's six draws when they finish, with the council-reviewed tools**
+(`docs/research/2026-11-17-product-comparison/RUN-PLAN-v12.md` §1.4–§1.6; `DESIGN-1.6.md` v7; D675).
+
+- **Done:**
+  - stage 0 and slice 2;
+  - the full run, six draws, launched together at 22:36 on 2026-11-17 under `poc/data/comparison-2026-11-17/run/`;
+  - every reading instrument built and passed by the council before any output was read: reading tools in round 5, the §1.6 tools in
+    round 10; 92 stage0 tests, mutants for each tool.
+- **When all six draws end, in this order:**
+  1. `eligibility.py`: six complete draws, launched within 1 h, sends within 72 h.
+  2. `mapping.py export`, then `read`, `third`, `result`.
+  3. `mark_cards.py deck`, then `mark`, `debate 1`, `debate 2`, `readings`.
+  4. `score_comparison.py`: the verdict and the printed-beside quantities.
+  5. `d400_code_check.py` and `step2_lines.py`: the hard checks and the release status.
+  6. `d400_reader_lines.py` and `d431_reading.py`: printed beside.
+  7. A council loop on the result, and a row in `TRIES.md`.
+- **If a draw stops:** no release verdict; a diagnostic export (plan §1.4 item 10).
+- **If the verdict is not a practical lead:** the council-loop skill on the traces, and the next try from another angle (D674).
 - **Monitored** in `RUN-LOG.md`. Out-of-scope findings go to `FINDINGS.md`.
 - **Held** (D662): answer-choice changes, model trials, and live-store, planner and integration work. D658 waits (D664).
 - **Open:** D661 (past Codex readers ran with memories on); D656's listing omission; the 589 uncommitted paths (his call).
