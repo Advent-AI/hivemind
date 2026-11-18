@@ -9999,3 +9999,7 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     confirmation record) left six entries on it.
   - **Fix:** both `score` and `rebuild.scored` now save the path before their first import and restore it on every exit.
   - **The dry run now also checks a failed setup.** Results: 101 tests and 75 mutants, all as predicted.
+- **Round 22 (Codex, `tools-review-codex-22.md`): READY.**
+  - The import path is restored on every exit.
+  - Every check confirmed in round 21 still holds: the verdict is computed only on the rebuilt snapshot, an edited record is refused, and rebuild progress stays off stdout.
+  - The scorer and the rebuild are closed for this run. They next run on the full run's outputs, in the CURRENT_STATE order.

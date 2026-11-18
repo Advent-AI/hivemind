@@ -40,3 +40,9 @@ One dated row per event and check, with numbers. Newest last.
 | 01:20 | old-1, old-2 complete | old-1 $9.83, old-2 $8.60, no stop; old-3 near the end; the new draws still in Step 1 (about $2.8 each) | run/ |
 | 01:21 | old-3 complete | $8.83, no stop; the three old draws total $27.26 against $25 guards each (not a budget); the new draws are in Step 1 | run/ |
 | 13:11 | reading chain dry run end to end on the slice ($0, fake reader) | every step joins; verdict 'too small' as ordered; gap fixed: printed-beside quantities now computed for invalid and too-small verdicts too | stage0/chain_dry_run.py |
+
+- 2026-11-18 13:59: The scorer and the chain rebuild were hardened through Codex rounds 11–22. Round 22 returned READY.
+  - The verdict is computed only on a snapshot rebuilt from the primary data.
+  - Any derived file that differs from the rebuild is refused.
+  - Coverage: 101 stage0 tests; 75 mutants, all as predicted; the chain dry run passes (D675).
+  - The run is unchanged: old-1..3 finished; new-1..3 are in Step 1, at $16.2–17.0 each at 13:39.
