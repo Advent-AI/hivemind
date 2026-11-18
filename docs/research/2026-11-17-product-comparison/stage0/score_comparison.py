@@ -533,9 +533,13 @@ def verdict(readings):
 def score(run_root, mapping_out, folder):
     """The scorer's entry: the reading chain is rebuilt from the primary data, any stored derived file or readings record that differs
     is refused, and the verdict is computed on the readings built from the rebuilt snapshot (`rebuild.scored`)."""
-    import mapping
-    import rebuild
-    return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
+    saved_path = list(sys.path)                               # restored on every exit, before the first import
+    try:
+        import mapping
+        import rebuild
+        return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
+    finally:
+        sys.path[:] = saved_path
 
 
 if __name__ == '__main__':

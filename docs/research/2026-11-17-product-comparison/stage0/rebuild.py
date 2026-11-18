@@ -52,11 +52,17 @@ def scored(run_root, mapping_out, deck_folder, key_folder, score):
     differs, and returns `score(readings)` on the readings built from the rebuilt snapshot, never on the stored files, while the snapshot
     still exists. Progress printed by the rebuilding code goes to stderr; module attributes and the import path are restored."""
     saved_path = list(sys.path)
+    try:
+        return scored_in(run_root, Path(mapping_out), Path(deck_folder), Path(key_folder), score)
+    finally:
+        sys.path[:] = saved_path                                # restored on every exit, a failure during setup included
+
+
+def scored_in(run_root, mapping_out, deck_folder, key_folder, score):
     import census_readers
     import eligibility
     import mapping
     import mark_cards
-    mapping_out, deck_folder, key_folder = Path(mapping_out), Path(deck_folder), Path(key_folder)
     saved = (mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run)
 
     def no_reader(family, prompt):
@@ -64,8 +70,8 @@ def scored(run_root, mapping_out, deck_folder, key_folder, score):
     with tempfile.TemporaryDirectory() as scratch:
         scratch = Path(scratch)
         keys, out, deck = scratch / 'keys', scratch / 'mapping-out', scratch / 'deck'
-        confirmed = replay(key_folder / 'control-confirmations.jsonl')
         try:
+            confirmed = replay(key_folder / 'control-confirmations.jsonl')
             mapping.KEY_FOLDER = keys                               # mark_cards reads the same module's KEY_FOLDER
             mark_cards.KEY = keys / 'deck-key.json'
             census_readers.run = no_reader
@@ -105,4 +111,3 @@ def scored(run_root, mapping_out, deck_folder, key_folder, score):
             return score(readings)
         finally:
             mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run = saved
-            sys.path[:] = saved_path

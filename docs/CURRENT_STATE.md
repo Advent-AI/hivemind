@@ -437,7 +437,7 @@ The council's reversible decisions on Alex's page are recorded in D606 and D607.
   - stage 0 and slice 2;
   - the full run, six draws, launched together at 22:36 on 2026-11-17 under `poc/data/comparison-2026-11-17/run/`;
   - every reading instrument built and passed by the council before any output was read: reading tools in round 5, the §1.6 tools in
-    round 10; the scorer hardened through Codex rounds 11–20 (D675); 101 stage0 tests, 74 mutants on the reading tools.
+    round 10; the scorer hardened through Codex rounds 11–21 (D675); 101 stage0 tests, 75 mutants on the reading tools.
 - **When all six draws end, in this order:**
   1. `eligibility.py`: six complete draws, launched within 1 h, sends within 72 h.
   2. `mapping.py export`, then `read`, `third`, `result`.

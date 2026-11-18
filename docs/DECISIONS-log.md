@@ -9993,3 +9993,9 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - The dry run edits each derived file twice: once with the record rewritten from the edit, once without. Both are refused.
   - It shows the verdict reads only the snapshot, that stdout carries no progress, and that the import path is unchanged.
   - 101 tests and 74 mutants, all as predicted.
+- **Round 21 (Codex, `tools-review-codex-21.md`):**
+  - **No change to a verdict or a printed value remains** from edits to stored derived files.
+  - **A gap remained in restoring the import path.** The scorer imported before saving the path, and a failure during setup (a missing
+    confirmation record) left six entries on it.
+  - **Fix:** both `score` and `rebuild.scored` now save the path before their first import and restore it on every exit.
+  - **The dry run now also checks a failed setup.** Results: 101 tests and 75 mutants, all as predicted.

@@ -178,6 +178,16 @@ def chain(scratch):
     lines.append(f'SCORED FROM SNAPSHOT {not scored_from.startswith(str(out))}')   # the verdict reads the rebuilt files, never the stored
     lines.append(f'REBUILD STDOUT EMPTY {printed.getvalue() == ""}')                # progress goes to stderr; stdout carries only the verdict
     lines.append(f'IMPORT PATH RESTORED {sys.path == path_before}')
+    confirmations = mapping.KEY_FOLDER / 'control-confirmations.jsonl'
+    kept = confirmations.read_bytes()
+    confirmations.unlink()                                      # a failure during setup (Codex round 21)
+    try:
+        score_comparison.score(root, out, deck)
+    except (SystemExit, OSError):
+        pass
+    finally:
+        confirmations.write_bytes(kept)
+    lines.append(f'IMPORT PATH RESTORED AFTER A FAILED SETUP {sys.path == path_before}')
     lines.append(f'sessions {calls}')
     result, status = d400_code_check.check(root, eligible)
     lines.append(f'D400 code check {status}')
