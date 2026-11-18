@@ -167,21 +167,21 @@ def beside(readings, per_counting):
 MARKS = {'worth': ('worth', 'trivia', 'duplicate'), 'answer': ('supported', 'unsupported', 'insufficient')}
 
 
-CARD_FIELDS = {'worth', 'answer', 'type', 'guardrail', 'covering'}
+CARD_FIELDS = {'worth', 'answer', 'type', 'guardrail', 'covering', 'opened'}
 INPUT_FIELDS = {'matters_sha256', 'mapping_path', 'mapping_sha256', 'eligibility_path', 'eligibility_sha256', 'deck_key_path', 'deck_key_sha256'}
 
 
 def validate_readings(readings):
     """Refuses readings that are not exactly what `mark_cards.readings` writes, before any verdict or diagnostic (one owner for the
     readings' shape). The whole file is walked top down, and every container's type is checked before it is read:
-    - the top level holds matters, mapping, distinct, cards, controls and inputs, and may hold matter_first_day;
+    - the top level holds exactly matters, matter_first_day, mapping, distinct, cards, controls and inputs;
     - mapping, cards and distinct each hold the six draws;
     - a matter is {matter: text, company_figure: a JSON boolean};
-    - a card holds worth, answer, type, guardrail and covering, and may hold opened. A mark is a frozen mark or a split of two different
-      ones; an answer may be "no answer"; the guardrail is a JSON boolean; covering is a JSON boolean or "split"; opened is null or a day;
+    - a card holds exactly worth, answer, type, guardrail, covering and opened. A mark is a frozen mark or a split of two different ones;
+      an answer may be "no answer"; the guardrail is a JSON boolean; covering is a JSON boolean or "split"; opened is null or a day;
     - a mapped matter is on the matter list, with a non-empty list of {question: a carded question of the draw, covers: true or "split"};
     - a draw's distinct counts are ids, duplicates_both and duplicates_split: non-negative integers, the duplicates no more than the ids;
-    - matter_first_day maps listed matters to days; a day is YYYY-MM-DD;
+    - matter_first_day maps every listed matter, and only those, to a day; a day is YYYY-MM-DD;
     - the controls are lists: plants and supported of answer marks, repeats_same of JSON booleans;
     - the inputs are the seven named paths and fingerprints, as text."""
     import datetime
@@ -214,8 +214,7 @@ def validate_readings(readings):
 
     if not isinstance(readings, dict):
         refuse(['the readings are not an object'])
-    required = {'matters', 'mapping', 'distinct', 'cards', 'controls', 'inputs'}
-    if not required <= set(readings) <= required | {'matter_first_day'}:
+    if set(readings) != {'matters', 'matter_first_day', 'mapping', 'distinct', 'cards', 'controls', 'inputs'}:
         refuse([f'top-level fields {sorted(map(str, readings))}'])
     for k in ('mapping', 'cards', 'distinct'):
         held = readings[k]
@@ -236,11 +235,11 @@ def validate_readings(readings):
             continue
         carded[draw] = set(cards)
         for q, card in cards.items():
-            if not (isinstance(card, dict) and CARD_FIELDS <= set(card) <= CARD_FIELDS | {'opened'}):
+            if not (isinstance(card, dict) and set(card) == CARD_FIELDS):
                 problems.append(f'{draw} {q}: a card without exactly its fields')
             elif not (is_mark(card['worth'], 'worth') and is_mark(card['answer'], 'answer') and card['type'] in ('figure', 'yes/no', 'other')
                       and isinstance(card['guardrail'], bool) and is_cover(card['covering'])
-                      and (card.get('opened') is None or is_day(card['opened']))):
+                      and (card['opened'] is None or is_day(card['opened']))):
                 problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
     for draw in DRAWS:
         by_matter = readings['mapping'][draw]
@@ -261,9 +260,9 @@ def validate_readings(readings):
             problems.append(f'{draw}: the distinct-bet counts are not three non-negative integers')
         elif d['duplicates_both'] + d['duplicates_split'] > d['ids']:
             problems.append(f'{draw}: more duplicates than ids')
-    days = readings.get('matter_first_day', {})
-    if not (isinstance(days, dict) and all(m in listed and is_day(v) for m, v in days.items())):
-        problems.append('matter_first_day is not a map of listed matters to days')
+    days = readings['matter_first_day']
+    if not (isinstance(days, dict) and set(days) == listed and all(is_day(v) for v in days.values())):
+        problems.append('matter_first_day does not map every listed matter, and only those, to a day')
     controls = readings['controls']
     if not (isinstance(controls, dict) and set(controls) == {'plants', 'supported', 'repeats_same'}
             and all(isinstance(v, list) for v in controls.values())
@@ -279,8 +278,16 @@ def validate_readings(readings):
 
 def verify_inputs(readings):
     """Refuses readings that were not made from the frozen matter list, the mapping file, a passing eligibility check and the deck key
-    they name: each file is read again and compared with what the readings carry."""
-    inputs = readings.get('inputs') or {}
+    they name: each file is read again and compared with what the readings carry. A named file that cannot be read or does not have the
+    shape its writer gives is a refusal too, never a crash."""
+    try:
+        compare_inputs(readings)
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+        raise SystemExit(f'refused: a file the readings name cannot be read as its writer wrote it ({type(error).__name__}: {error})')
+
+
+def compare_inputs(readings):
+    inputs = readings['inputs']
     def read(kind):
         path = Path(inputs.get(f'{kind}_path') or '/nonexistent')
         if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != inputs.get(f'{kind}_sha256'):

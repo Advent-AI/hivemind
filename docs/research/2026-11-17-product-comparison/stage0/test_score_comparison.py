@@ -28,12 +28,13 @@ def base(n=20, new_served=0, old_served=0, guard_cards=12):
             if served:
                 q = f'{d}-q{i}'
                 mapping[d][m['matter']] = [{'question': q, 'covers': True}]
-                cards[d][q] = {'worth': 'worth', 'answer': 'supported', 'type': 'figure', 'guardrail': False, 'covering': True}
+                cards[d][q] = {'worth': 'worth', 'answer': 'supported', 'type': 'figure', 'guardrail': False, 'covering': True, 'opened': None}
     for d in DRAWS:
         for t in ('figure', 'yes/no'):
             for j in range(guard_cards):
-                cards[d][f'{d}-g-{t}-{j}'] = {'worth': 'worth', 'answer': 'supported', 'type': t, 'guardrail': True, 'covering': False}
-    return {'matters': matters, 'mapping': mapping, 'cards': cards,
+                cards[d][f'{d}-g-{t}-{j}'] = {'worth': 'worth', 'answer': 'supported', 'type': t, 'guardrail': True, 'covering': False,
+                                             'opened': None}
+    return {'matters': matters, 'matter_first_day': {m['matter']: '2026-09-07' for m in matters}, 'mapping': mapping, 'cards': cards,
             'distinct': {d: {'ids': 40, 'duplicates_both': 0, 'duplicates_split': 0} for d in DRAWS},
             'controls': {'plants': ['unsupported'] * 6, 'supported': ['supported'] * 4, 'repeats_same': [True] * 3},
             'inputs': {}}
@@ -208,6 +209,7 @@ def test_readings_not_made_from_their_named_inputs_are_refused():
     """No verdict on other matters than the frozen list's, or on a mapping that is not the mapping file's (D671, D675)."""
     r = seal(base(n=20, new_served=5, old_served=1))
     r['matters'] = r['matters'][:-1] + [{'matter': 'M99', 'company_figure': False}]
+    r['matter_first_day'] = {m['matter']: '2026-09-07' for m in r['matters']}    # well formed for its own list, so the provenance check decides
     for change, reason in ((lambda x: None, 'frozen matter list'),):
         try:
             sc.verdict(r)
@@ -253,7 +255,7 @@ def test_the_printed_beside_quantities_hold_their_definitions():
     r = base(n=20, new_served=5, old_served=1)
     for d in ('new-1', 'new-2', 'new-3'):
         r['cards'][d][f'{d}-q0']['opened'] = '2026-07-04'
-    r['matter_first_day'] = {'M01': '2026-09-08'}
+    r['matter_first_day']['M01'] = '2026-09-08'
     out = verdict(r)
     sign = out['beside']['sign test (illustrative)']['1']
     assert sign['discordant'] == 6 and abs(sign['p'] - 0.21875) < 1e-9          # 5 against 1: two-sided exact p = 14/64
@@ -271,7 +273,7 @@ def test_an_opening_inside_the_window_before_the_first_listed_article_is_not_cal
     r = base(n=20, new_served=5, old_served=1)
     for d in ('new-1', 'new-2', 'new-3'):
         r['cards'][d][f'{d}-q0']['opened'] = '2026-09-09'
-    r['matter_first_day'] = {'M01': '2026-09-12'}
+    r['matter_first_day']['M01'] = '2026-09-12'
     assert verdict(r)['beside']['days from first article to opening (confirmed coverage only; split covers not counted)']['M01']['new-1'] == 'opened before the first listed article'
 
 
@@ -318,6 +320,18 @@ def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_smal
     assert 'sign test (illustrative)' in out.get('beside', {}) and out['countings']['1']['a'] == 5
 
 
+def test_an_unreadable_named_input_is_a_refusal_not_a_crash():
+    """A named input that cannot be read as its writer wrote it is refused (D675, Codex round 17)."""
+    r = seal(base(n=20, new_served=5, old_served=1))
+    r['inputs']['mapping_path'] = str(Path(r['inputs']['mapping_path']).parent)                    # a directory
+    try:
+        sc.verdict(r)
+    except SystemExit as e:
+        assert 'cannot be read' in str(e) or 'differs from its fingerprint' in str(e)
+    else:
+        raise AssertionError('an unreadable input was scored')
+
+
 def test_malformed_readings_are_refused_before_any_verdict():
     """One owner for the readings' shape: a mark, flag, count or day outside the closed set is refused with its reason (D675, Codex round 14)."""
     cases = []
@@ -359,6 +373,15 @@ def test_malformed_readings_are_refused_before_any_verdict():
     cases.append(r)
     r = base(n=19, new_served=5, old_served=1)
     r['matters'][0]['company_figure'] = 1
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    del r['matter_first_day']                                                                        # Codex round 17
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    del r['matter_first_day']['M03']
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    del r['cards']['new-1']['new-1-q0']['opened']
     cases.append(r)
     r = base(n=19, new_served=5, old_served=1)
     r['controls']['plants'] = {'unsupported': 'supported'}                # a mapping whose keys are marks: iterable, but not the list

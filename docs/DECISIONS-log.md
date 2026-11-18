@@ -9940,3 +9940,13 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   It runs before `verify_inputs`, so neither can crash on a malformed file.
 
   Results: 95 tests; 59 mutants, all as predicted (three stale ones repointed); the chain dry run passes the check.
+- **Round 17 (Codex, `tools-review-codex-17.md`).** The contract allowed two things it should not have:
+  - a missing first-day map, or a card missing `opened`, which silently dropped opening delays;
+  - a named input path that is a directory, which crashed.
+
+  Fixed:
+  - The contract now requires the full first-day map, keyed exactly by the listed matters, and every card's nullable `opened`. This is
+    what `mark_cards.readings` always writes, and the chain dry run passes.
+  - `verify_inputs` turns any failure to read a named file as its writer wrote it into a refusal.
+
+  Now at 96 tests and 62 mutants, all as predicted.

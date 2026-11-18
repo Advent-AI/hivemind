@@ -1,0 +1,716 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 17, confirmation only (read-only, $0)
+
+Rounds 11–16 all drew findings from one mechanism: a malformed readings file gets past the entry check. I stopped patching cases (AGENTS
+§1) and made one structural rule (`git log -1`, D675's last entry):
+- `validate_readings` in `stage0/score_comparison.py` walks the whole readings file top down, as one closed contract matching exactly
+  what `mark_cards.readings` writes;
+- every container's type is checked before it is read;
+- it runs first in `verdict`, before `verify_inputs`.
+
+Check, citing file and line:
+1. Is there a readings file that passes `validate_readings` and then either crashes the scorer or changes a verdict or printed value
+   against what its well-formed reading would give? Give the file.
+2. Does a readings file written by `mark_cards.readings` from a valid key and rounds still pass? See `stage0/chain-dry-run.txt`.
+3. Is any value or verdict changed for well-formed readings?
+
+End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 200 words. Report only a case of kind 1, 2 or 3.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check the new contract against the writer and test whether a malformed file can still reach scoring.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba score_comparison.py | sed -n '160,310p;438,560p'
+nl -ba chain-dry-run.txt
+nl -ba ../../../DECISIONS-log.md | tail -43
+nl -ba mark_cards.py | sed -n '289,334p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+   160	
+   161	def beside(readings, per_counting):
+   162	    """What the rule prints beside the verdict (verdict-rule.json `printed_beside`, `guardrails.beside`)."""
+   163	    return {'company-figure subgroup': company_figure_subgroup(readings, per_counting), 'marks': mark_counts(readings, per_counting),
+   164	            'split resolutions': split_resolutions(readings, per_counting)}
+   165	
+   166	
+   167	MARKS = {'worth': ('worth', 'trivia', 'duplicate'), 'answer': ('supported', 'unsupported', 'insufficient')}
+   168	
+   169	
+   170	CARD_FIELDS = {'worth', 'answer', 'type', 'guardrail', 'covering'}
+   171	INPUT_FIELDS = {'matters_sha256', 'mapping_path', 'mapping_sha256', 'eligibility_path', 'eligibility_sha256', 'deck_key_path', 'deck_key_sha256'}
+   172	
+   173	
+   174	def validate_readings(readings):
+   175	    """Refuses readings that are not exactly what `mark_cards.readings` writes, before any verdict or diagnostic (one owner for the
+   176	    readings' shape). The whole file is walked top down, and every container's type is checked before it is read:
+   177	    - the top level holds matters, mapping, distinct, cards, controls and inputs, and may hold matter_first_day;
+   178	    - mapping, cards and distinct each hold the six draws;
+   179	    - a matter is {matter: text, company_figure: a JSON boolean};
+   180	    - a card holds worth, answer, type, guardrail and covering, and may hold opened. A mark is a frozen mark or a split of two different
+   181	      ones; an answer may be "no answer"; the guardrail is a JSON boolean; covering is a JSON boolean or "split"; opened is null or a day;
+   182	    - a mapped matter is on the matter list, with a non-empty list of {question: a carded question of the draw, covers: true or "split"};
+   183	    - a draw's distinct counts are ids, duplicates_both and duplicates_split: non-negative integers, the duplicates no more than the ids;
+   184	    - matter_first_day maps listed matters to days; a day is YYYY-MM-DD;
+   185	    - the controls are lists: plants and supported of answer marks, repeats_same of JSON booleans;
+   186	    - the inputs are the seven named paths and fingerprints, as text."""
+   187	    import datetime
+   188	    import re
+   189	
+   190	    def refuse(problems):
+   191	        raise SystemExit('refused: malformed readings: ' + '; '.join(problems[:10]) + (f' (and {len(problems) - 10} more)' if len(problems) > 10 else ''))
+   192	
+   193	    def is_count(value):
+   194	        return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+   195	
+   196	    def is_day(value):
+   197	        if not (isinstance(value, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', value)):
+   198	            return False
+   199	        try:
+   200	            datetime.date.fromisoformat(value)
+   201	            return True
+   202	        except ValueError:
+   203	            return False
+   204	
+   205	    def is_mark(value, kind):
+   206	        if isinstance(value, dict):
+   207	            pair = value.get('split')
+   208	            return (set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2
+   209	                    and all(isinstance(v, str) and v in MARKS[kind] for v in pair) and pair[0] != pair[1])
+   210	        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
+   211	
+   212	    def is_cover(value):
+   213	        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
+   214	
+   215	    if not isinstance(readings, dict):
+   216	        refuse(['the readings are not an object'])
+   217	    required = {'matters', 'mapping', 'distinct', 'cards', 'controls', 'inputs'}
+   218	    if not required <= set(readings) <= required | {'matter_first_day'}:
+   219	        refuse([f'top-level fields {sorted(map(str, readings))}'])
+   220	    for k in ('mapping', 'cards', 'distinct'):
+   221	        held = readings[k]
+   222	        if not isinstance(held, dict) or set(held) != set(DRAWS):
+   223	            raise SystemExit(f'refused: readings[{k!r}] holds {sorted(map(str, held)) if isinstance(held, dict) else type(held).__name__}, '
+   224	                             f'not the six draws {list(DRAWS)}')
+   225	    matters = readings['matters']
+   226	    if not (isinstance(matters, list) and all(isinstance(m, dict) and set(m) == {'matter', 'company_figure'} and isinstance(m['matter'], str)
+   227	                                              and isinstance(m['company_figure'], bool) for m in matters)):
+   228	        refuse(['the matter list is not a list of {matter: text, company_figure: true or false}'])
+   229	    listed = {m['matter'] for m in matters}
+   230	    problems = []
+   231	    carded = {}
+   232	    for draw in DRAWS:
+   233	        cards = readings['cards'][draw]
+   234	        if not isinstance(cards, dict):
+   235	            problems.append(f'{draw}: the cards are not an object')
+   236	            continue
+   237	        carded[draw] = set(cards)
+   238	        for q, card in cards.items():
+   239	            if not (isinstance(card, dict) and CARD_FIELDS <= set(card) <= CARD_FIELDS | {'opened'}):
+   240	                problems.append(f'{draw} {q}: a card without exactly its fields')
+   241	            elif not (is_mark(card['worth'], 'worth') and is_mark(card['answer'], 'answer') and card['type'] in ('figure', 'yes/no', 'other')
+   242	                      and isinstance(card['guardrail'], bool) and is_cover(card['covering'])
+   243	                      and (card.get('opened') is None or is_day(card['opened']))):
+   244	                problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
+   245	    for draw in DRAWS:
+   246	        by_matter = readings['mapping'][draw]
+   247	        if not isinstance(by_matter, dict):
+   248	            problems.append(f'{draw}: the mapping is not an object')
+   249	            continue
+   250	        for matter, questions in by_matter.items():
+   251	            if matter not in listed or not isinstance(questions, list) or not questions:
+   252	                problems.append(f'{draw} {matter}: a mapped matter not on the list, or its questions not a non-empty list')
+   253	                continue
+   254	            for entry in questions:
+   255	                if not (isinstance(entry, dict) and set(entry) == {'question', 'covers'} and isinstance(entry['question'], str)
+   256	                        and entry['question'] in carded.get(draw, set()) and (entry['covers'] is True or entry['covers'] == 'split')):
+   257	                    problems.append(f'{draw} {matter}: a mapping entry outside the closed set or naming no carded question')
+   258	    for draw in DRAWS:
+   259	        d = readings['distinct'][draw]
+   260	        if not (isinstance(d, dict) and set(d) == {'ids', 'duplicates_both', 'duplicates_split'} and all(is_count(v) for v in d.values())):
+   261	            problems.append(f'{draw}: the distinct-bet counts are not three non-negative integers')
+   262	        elif d['duplicates_both'] + d['duplicates_split'] > d['ids']:
+   263	            problems.append(f'{draw}: more duplicates than ids')
+   264	    days = readings.get('matter_first_day', {})
+   265	    if not (isinstance(days, dict) and all(m in listed and is_day(v) for m, v in days.items())):
+   266	        problems.append('matter_first_day is not a map of listed matters to days')
+   267	    controls = readings['controls']
+   268	    if not (isinstance(controls, dict) and set(controls) == {'plants', 'supported', 'repeats_same'}
+   269	            and all(isinstance(v, list) for v in controls.values())
+   270	            and all(is_mark(m, 'answer') for m in controls['plants'] + controls['supported'])
+   271	            and all(isinstance(x, bool) for x in controls['repeats_same'])):
+   272	        problems.append('the controls are not three lists of answer marks and JSON booleans')
+   273	    inputs = readings['inputs']
+   274	    if not (isinstance(inputs, dict) and set(inputs) == INPUT_FIELDS and all(isinstance(v, str) for v in inputs.values())):
+   275	        problems.append('the inputs are not the seven named paths and fingerprints')
+   276	    if problems:
+   277	        refuse(problems)
+   278	
+   279	
+   280	def verify_inputs(readings):
+   281	    """Refuses readings that were not made from the frozen matter list, the mapping file, a passing eligibility check and the deck key
+   282	    they name: each file is read again and compared with what the readings carry."""
+   283	    inputs = readings.get('inputs') or {}
+   284	    def read(kind):
+   285	        path = Path(inputs.get(f'{kind}_path') or '/nonexistent')
+   286	        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != inputs.get(f'{kind}_sha256'):
+   287	            raise SystemExit(f'refused: the {kind} file the readings name is missing or differs from its fingerprint')
+   288	        return json.loads(path.read_text())
+   289	    frozen = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(MATTERS.read_text())['matters']]
+   290	    if readings['matters'] != frozen or inputs.get('matters_sha256') != hashlib.sha256(MATTERS.read_bytes()).hexdigest():
+   291	        raise SystemExit('refused: the readings were not made on the frozen matter list')
+   292	    mapped, eligibility, key = read('mapping'), read('eligibility'), read('deck_key')
+   293	    if mapped['mapping'] != readings['mapping'] or mapped['distinct'] != readings['distinct']:
+   294	        raise SystemExit('refused: the readings\' mapping differs from the mapping file')
+   295	    if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
+   296	        raise SystemExit('refused: the mapping was not made from a passing eligibility check')
+   297	    keyed = {}
+   298	    for k in key.values():
+   299	        if k['role'] == 'product':
+   300	            keyed.setdefault(k['draw'], {})[k['question']] = {f: k[f] for f in ('guardrail', 'covering', 'type')}
+   301	    held = {draw: {q: {f: card[f] for f in ('guardrail', 'covering', 'type')} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+   302	    if keyed != held:
+   303	        raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
+   304	
+   305	
+   306	D428_LATEST = Fraction(3, 30)                                    # D428: at most 3 in 30 decided latest answers unsupported, scaled
+   307	
+   308	
+   309	def sign_test(a, b):
+   310	    """Two-sided exact binomial p of a against b at one half, and the Wilson 95% interval of a / (a + b): illustrative only."""
+   438	def days_to_opening(readings):
+   439	    """Per draw and covered matter: days from the matter's earliest listed article to the first covering question's opening. A question
+   440	    opened before the scored window (09-07) is 'opened in the warm-up'; one opened in the window before the matter's first listed article
+   441	    is 'opened before the first listed article'."""
+   442	    import datetime
+   443	    out = {}
+   444	    for draw, by_matter in readings['mapping'].items():
+   445	        for matter, questions in by_matter.items():
+   446	            opened = [readings['cards'][draw][q['question']].get('opened') for q in questions if q['covers'] is True]
+   447	            opened = [d for d in opened if d]
+   448	            first = readings.get('matter_first_day', {}).get(matter)
+   449	            if not opened or not first:
+   450	                continue
+   451	            days = (datetime.date.fromisoformat(min(opened)) - datetime.date.fromisoformat(first)).days
+   452	            out.setdefault(matter, {})[draw] = (days if days >= 0 else 'opened in the warm-up' if min(opened) < '2026-09-07'
+   453	                                                else 'opened before the first listed article')
+   454	    return out
+   455	
+   456	
+   457	def verdict(readings):
+   458	    validate_readings(readings)
+   459	    verify_inputs(readings)
+   460	    n = len(readings['matters'])
+   461	    controls = readings['controls']
+   462	    report = {'N': n}
+   463	    invalid = []
+   464	    def rejected(m):
+   465	        return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+   466	    if any(not rejected(m) for m in controls['plants']):
+   467	        invalid.append('a planted wrong answer without an explicit rejection')
+   468	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   469	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   470	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   471	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   472	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   473	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   474	    small = []
+   475	    if not invalid:                                            # the size check runs only when the controls hold
+   476	        if n < 20:
+   477	            small.append(f'N = {n} < 20')
+   478	        for draw, d in readings['distinct'].items():
+   479	            both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   480	            if min(both_ways) < 30:
+   481	                small.append(f'{draw}: {both_ways} distinct bets')
+   482	    margin = max(3, math.ceil(0.15 * n))
+   483	
+   484	    def countings():
+   485	        per_counting = {}
+   486	        for counting in ('1', '2'):
+   487	            served = served_by(readings, counting)
+   488	            a = len(served['new'] - served['old'])
+   489	            b = len(served['old'] - served['new'])
+   490	            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   491	                                      'guardrails': guardrails(readings, counting)}
+   492	        return per_counting
+   493	
+   494	    if invalid or small:
+   495	        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+   496	        flags = []
+   497	        try:
+   498	            per_counting = countings()
+   499	            report.update(margin=margin, countings=per_counting)
+   500	            report['beside'], flags = printed_items_tolerant(readings, per_counting)
+   501	        except Exception as error:
+   502	            flags.append(f'countings: {type(error).__name__}: {error}')
+   503	        if flags:
+   504	            report['diagnostics not computed'] = '; '.join(flags)
+   505	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   506	    per_counting = countings()
+   507	    shown = beside(readings, per_counting)
+   508	    shown.update(printed_beside(readings, per_counting))
+   509	    report['margin'] = margin
+   510	    report['countings'] = per_counting
+   511	    report['beside'] = shown
+   512	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   513	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   514	    if lead and all_exercised_pass:
+   515	        return dict(report, verdict='practical lead')
+   516	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   517	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   518	    if loss_count or breaches:
+   519	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   520	    return dict(report, verdict='no practical winner')
+   521	
+   522	
+   523	if __name__ == '__main__':
+   524	    print(json.dumps(verdict(json.loads(open(sys.argv[1]).read())), indent=1, ensure_ascii=False, default=str))
+     1	VERDICT too small ['new-1: (4, 4) distinct bets', 'new-2: (4, 4) distinct bets', 'new-3: (4, 4) distinct bets', 'old-1: (2, 2) distinct bets', 'old-2: (2, 2) distinct bets', 'old-3: (2, 2) distinct bets']
+     2	sessions {'read': 12, 'third': 12, 'mark': 62, 'debate': 20, 'other': 0}
+     3	D400 code check not measured
+  9900	  - Tests and mutants were updated: 94 tests; every mutant is caught by its assertion or by the crash it guards against.
+  9901	- **Round 14 (Codex, `tools-review-codex-14.md`):**
+  9902	  - **Confirmed:** the restructuring left every value beside a lead, loss or no-winner verdict unchanged, byte for byte.
+  9903	  - **Two more malformed-input cases found:** a bad guardrail mark, and a null size count.
+  9904	  - **One structural fix at the owner, instead of a fourth patch:** `validate_readings` refuses malformed readings before any verdict or
+  9905	    diagnostic. It checks:
+  9906	    - marks are frozen marks or splits of two;
+  9907	    - covers are true, false or "split" and name a carded question;
+  9908	    - counts are non-negative integers;
+  9909	    - days are ISO dates.
+  9910	    `mark_cards.readings` writes only such values, and the chain dry run's readings pass.
+  9911	  - **Kept:** per-item diagnostics remain for any other failure, tested by forcing one item to fail.
+  9912	  - **Now:** 95 tests; the mutants are as predicted, each caught by its assertion.
+  9913	- **Round 15 (Codex, `tools-review-codex-15.md`):**
+  9914	  - **Confirmed:** our writer's output passes the entry check, and well-formed results match the parent byte for byte across all five
+  9915	    verdicts.
+  9916	  - **Two holes in the check's closed set:**
+  9917	    - a split stored as an object;
+  9918	    - `covers: 1`, which Python treats as equal to `True`.
+  9919	  - **Fixed, with a full pass of my own:** every field the scorer reads was listed (by search), and each is now held to an exact type.
+  9920	    - A split must be a list of two marks.
+  9921	    - A cover must be a JSON boolean or "split".
+  9922	    - Duplicate counts may not exceed ids.
+  9923	    - A mapped matter must be on the frozen list, and its questions must be a list.
+  9924	    - Each control must be a list.
+  9925	  - **Now:** 95 tests, 56 mutants, all as predicted. The chain dry-run log has been refreshed under the new check.
+  9926	- **Round 16 (Codex, `tools-review-codex-16.md`):** three more shapes got through the entry check:
+  9927	  - a null first-day map, a null mapping entry, or a list used as a question id;
+  9928	  - a split of two identical marks, which turned a lead into no winner in memory;
+  9929	  - `company_figure: 1`.
+  9930	
+  9931	  This was the sixth round in a row with findings from one mechanism, so I stopped patching cases (AGENTS §1). The structural rule:
+  9932	  `validate_readings` now walks the whole readings file top down, as one closed contract, and checks each container's type before
+  9933	  reading it. Its docstring lists every shape, which is exactly what `mark_cards.readings` writes:
+  9934	  - a split is two different marks;
+  9935	  - flags are JSON booleans;
+  9936	  - a mapping entry is exactly `{question, covers: true or "split"}`, naming a carded question;
+  9937	  - the six draws are checked here (folded in from `verdict`);
+  9938	  - the inputs are seven text fields.
+  9939	
+  9940	  It runs before `verify_inputs`, so neither can crash on a malformed file.
+  9941	
+  9942	  Results: 95 tests; 59 mutants, all as predicted (three stale ones repointed); the chain dry run passes the check.
+   289	def matter_first_days():
+   290	    """Each frozen matter's earliest article day: the census numbered the kept articles 1.. by (day, published_at, id) from its source
+   291	    database (`census_readers.build`), so a matter's earliest article is its lowest number."""
+   292	    kept = json.loads(census_readers.KEPT.read_text())
+   293	    conn = build_cards.ro(census_readers.SOURCE)
+   294	    rows = sorted((tuple(conn.execute('select publication_day, coalesce(published_at, \'\') from items where input_id=?', (a,)).fetchone()) + (a,)
+   295	                   for a in kept['kept_ids']))
+   296	    day_of = {n: row[0] for n, row in enumerate(rows, 1)}
+   297	    return {m['matter']: day_of[min(m['articles'])] for m in json.loads(mapping_tool.MATTERS.read_text())['matters']}
+   298	
+   299	
+   300	def readings(mapping_out, folder):
+   301	    folder = Path(folder)
+   302	    for n in (0, 1, 2):
+   303	        if not (folder / f'round-{n}.done').exists():
+   304	            raise SystemExit(f'refused: round {n} is not complete')
+   305	    key = json.loads(KEY.read_text())
+   306	    matters = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(mapping_tool.MATTERS.read_text())['matters']]
+   307	    mapped_text = (Path(mapping_out) / 'mapping.json').read_bytes()
+   308	    mapped = json.loads(mapped_text)
+   309	    cards, plants, supported, repeats = {}, [], [], []
+   310	    by_question = {}
+   311	    for cid, k in sorted(key.items()):
+   312	        f = final(folder, cid)
+   313	        answer = f['answer'] if k['answered'] else 'no answer'
+   314	        if k['role'] == 'product':
+   315	            cards.setdefault(k['draw'], {})[k['question']] = {'worth': f['worth'], 'answer': answer, 'type': k['type'], 'guardrail': k['guardrail'],
+   316	                                                              'covering': k['covering'], 'opened': k.get('opened')}
+   317	            by_question[(k['draw'], k['question'])] = (f['worth'], answer)
+   318	        elif k['role'] == 'plant':
+   319	            plants.append(answer)
+   320	        elif k['role'] == 'supported control':
+   321	            supported.append(answer)
+   322	    for cid, k in sorted(key.items()):
+   323	        if k['role'] == 'repeat':
+   324	            f = final(folder, cid)
+   325	            answer = f['answer'] if k['answered'] else 'no answer'
+   326	            repeats.append((f['worth'], answer) == by_question[(k['draw'], k['question'])])
+   327	    out = {'matters': matters, 'matter_first_day': matter_first_days(), 'mapping': mapped['mapping'], 'distinct': mapped['distinct'], 'cards': cards,
+   328	           'controls': {'plants': plants, 'supported': supported, 'repeats_same': repeats},
+   329	           'inputs': {'matters_sha256': hashlib.sha256(mapping_tool.MATTERS.read_bytes()).hexdigest(),
+   330	                      'mapping_path': str((Path(mapping_out) / 'mapping.json').resolve()), 'mapping_sha256': hashlib.sha256(mapped_text).hexdigest(),
+   331	                      'eligibility_path': str((Path(mapping_out) / 'eligibility.json').resolve()), 'eligibility_sha256': mapped['eligibility_sha256'],
+   332	                      'deck_key_path': str(KEY), 'deck_key_sha256': hashlib.sha256(KEY.read_bytes()).hexdigest()}}
+   333	    (folder / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
+   334	    print('readings.json written')
+
+exec
+/opt/homebrew/bin/zsh -lc "git --no-pager log -1 --format='%h %s'
+git --no-pager show --no-ext-diff --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0/score_comparison.py docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py" in /Users/lchingen/hivemind
+ succeeded in 2679ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-EZxC8vi6' (errno=Operation not permitted)
+2026-11-18 13:32:52.566 xcodebuild[50886:60135137]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:32:52.741 xcodebuild[50886:60135136] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-uvjaUrE1' (errno=Operation not permitted)
+2026-11-18 13:32:53.092 xcodebuild[50888:60135151]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:32:53.205 xcodebuild[50888:60135150] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+81d32da4 Scorer: one top-down contract for the whole readings file, checked before anything reads it (D675, Codex round 16)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-AWVYPPYq' (errno=Operation not permitted)
+2026-11-18 13:32:53.948 xcodebuild[50892:60135184]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:32:54.059 xcodebuild[50892:60135183] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-mEFj9qXB' (errno=Operation not permitted)
+2026-11-18 13:32:54.383 xcodebuild[50894:60135218]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:32:54.499 xcodebuild[50894:60135217] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 81d32da4be304d058541456e7be34595a53a2300
+Author: Alex Lee <alex@adventai.io>
+
+    Scorer: one top-down contract for the whole readings file, checked before anything reads it (D675, Codex round 16)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index d9bbb435..f26adaa7 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -167,55 +167,114 @@ def beside(readings, per_counting):
+ MARKS = {'worth': ('worth', 'trivia', 'duplicate'), 'answer': ('supported', 'unsupported', 'insufficient')}
+ 
+ 
++CARD_FIELDS = {'worth', 'answer', 'type', 'guardrail', 'covering'}
++INPUT_FIELDS = {'matters_sha256', 'mapping_path', 'mapping_sha256', 'eligibility_path', 'eligibility_sha256', 'deck_key_path', 'deck_key_sha256'}
++
++
+ def validate_readings(readings):
+-    """Refuses malformed readings before any verdict or diagnostic (one owner for the readings' shape): every mark a frozen mark or a
+-    split of two, every cover true, false or "split" and naming a carded question, every count a non-negative integer, every day an ISO
+-    date. `mark_cards.readings` writes only such values; anything else means the file was not made by the reading."""
++    """Refuses readings that are not exactly what `mark_cards.readings` writes, before any verdict or diagnostic (one owner for the
++    readings' shape). The whole file is walked top down, and every container's type is checked before it is read:
++    - the top level holds matters, mapping, distinct, cards, controls and inputs, and may hold matter_first_day;
++    - mapping, cards and distinct each hold the six draws;
++    - a matter is {matter: text, company_figure: a JSON boolean};
++    - a card holds worth, answer, type, guardrail and covering, and may hold opened. A mark is a frozen mark or a split of two different
++      ones; an answer may be "no answer"; the guardrail is a JSON boolean; covering is a JSON boolean or "split"; opened is null or a day;
++    - a mapped matter is on the matter list, with a non-empty list of {question: a carded question of the draw, covers: true or "split"};
++    - a draw's distinct counts are ids, duplicates_both and duplicates_split: non-negative integers, the duplicates no more than the ids;
++    - matter_first_day maps listed matters to days; a day is YYYY-MM-DD;
++    - the controls are lists: plants and supported of answer marks, repeats_same of JSON booleans;
++    - the inputs are the seven named paths and fingerprints, as text."""
+     import datetime
+-    problems = []
+-    def mark_ok(value, kind):
+-        if isinstance(value, dict):
+-            pair = value.get('split')
+-            return set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2 and all(isinstance(v, str) and v in MARKS[kind] for v in pair)
+-        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
+-    def cover_ok(value):
+-        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
+-    def day_ok(value):
++    import re
++
++    def refuse(problems):
++        raise SystemExit('refused: malformed readings: ' + '; '.join(problems[:10]) + (f' (and {len(problems) - 10} more)' if len(problems) > 10 else ''))
++
++    def is_count(value):
++        return isinstance(value, int) and not isinstance(value, bool) and value >= 0
++
++    def is_day(value):
++        if not (isinstance(value, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', value)):
++            return False
+         try:
+             datetime.date.fromisoformat(value)
+             return True
+-        except (TypeError, ValueError):
++        except ValueError:
+             return False
+-    for draw, cards in readings['cards'].items():
++
++    def is_mark(value, kind):
++        if isinstance(value, dict):
++            pair = value.get('split')
++            return (set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2
++                    and all(isinstance(v, str) and v in MARKS[kind] for v in pair) and pair[0] != pair[1])
++        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
++
++    def is_cover(value):
++        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
++
++    if not isinstance(readings, dict):
++        refuse(['the readings are not an object'])
++    required = {'matters', 'mapping', 'distinct', 'cards', 'controls', 'inputs'}
++    if not required <= set(readings) <= required | {'matter_first_day'}:
++        refuse([f'top-level fields {sorted(map(str, readings))}'])
++    for k in ('mapping', 'cards', 'distinct'):
++        held = readings[k]
++        if not isinstance(held, dict) or set(held) != set(DRAWS):
++            raise SystemExit(f'refused: readings[{k!r}] holds {sorted(map(str, held)) if isinstance(held, dict) else type(held).__name__}, '
++                             f'not the six draws {list(DRAWS)}')
++    matters = readings['matters']
++    if not (isinstance(matters, list) and all(isinstance(m, dict) and set(m) == {'matter', 'company_figure'} and isinstance(m['matter'], str)
++                                              and isinstance(m['company_figure'], bool) for m in matters)):
++        refuse(['the matter list is not a list of {matter: text, company_figure: true or false}'])
++    listed = {m['matter'] for m in matters}
++    problems = []
++    carded = {}
++    for draw in DRAWS:
++        cards = readings['cards'][draw]
++        if not isinstance(cards, dict):
++            problems.append(f'{draw}: the cards are not an object')
++            continue
++        carded[draw] = set(cards)
+         for q, card in cards.items():
+-            if not (mark_ok(card.get('worth'), 'worth') and mark_ok(card.get('answer'), 'answer') and card.get('type') in ('figure', 'yes/no', 'other')
+-                    and isinstance(card.get('guardrail'), bool) and cover_ok(card.get('covering'))
+-                    and (card.get('opened') is None or day_ok(card.get('opened')))):
++            if not (isinstance(card, dict) and CARD_FIELDS <= set(card) <= CARD_FIELDS | {'opened'}):
++                problems.append(f'{draw} {q}: a card without exactly its fields')
++            elif not (is_mark(card['worth'], 'worth') and is_mark(card['answer'], 'answer') and card['type'] in ('figure', 'yes/no', 'other')
++                      and isinstance(card['guardrail'], bool) and is_cover(card['covering'])
++                      and (card.get('opened') is None or is_day(card['opened']))):
+                 problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
+-    frozen_matters = {m['matter'] for m in readings['matters']}
+-    for draw, by_matter in readings['mapping'].items():
++    for draw in DRAWS:
++        by_matter = readings['mapping'][draw]
++        if not isinstance(by_matter, dict):
++            problems.append(f'{draw}: the mapping is not an object')
++            continue
+         for matter, questions in by_matter.items():
+-            if matter not in frozen_matters or not isinstance(questions, list):
+-                problems.append(f'{draw} {matter}: a mapped matter outside the frozen list, or its questions not a list')
++            if matter not in listed or not isinstance(questions, list) or not questions:
++                problems.append(f'{draw} {matter}: a mapped matter not on the list, or its questions not a non-empty list')
+                 continue
+             for entry in questions:
+-                if not cover_ok(entry.get('covers')) or entry.get('question') not in readings['cards'].get(draw, {}):
+-                    problems.append(f'{draw} {matter}: a cover outside the closed set or naming no carded question')
+-    for draw, d in readings['distinct'].items():
+-        if not all(isinstance(d.get(k), int) and not isinstance(d.get(k), bool) and d.get(k) >= 0 for k in ('ids', 'duplicates_both', 'duplicates_split')):
+-            problems.append(f'{draw}: a distinct-bet count that is not a non-negative integer')
++                if not (isinstance(entry, dict) and set(entry) == {'question', 'covers'} and isinstance(entry['question'], str)
++                        and entry['question'] in carded.get(draw, set()) and (entry['covers'] is True or entry['covers'] == 'split')):
++                    problems.append(f'{draw} {matter}: a mapping entry outside the closed set or naming no carded question')
++    for draw in DRAWS:
++        d = readings['distinct'][draw]
++        if not (isinstance(d, dict) and set(d) == {'ids', 'duplicates_both', 'duplicates_split'} and all(is_count(v) for v in d.values())):
++            problems.append(f'{draw}: the distinct-bet counts are not three non-negative integers')
+         elif d['duplicates_both'] + d['duplicates_split'] > d['ids']:
+             problems.append(f'{draw}: more duplicates than ids')
+-    for matter, day in (readings.get('matter_first_day') or {}).items():
+-        if not day_ok(day):
+-            problems.append(f'{matter}: a first-article day that is not an ISO date')
++    days = readings.get('matter_first_day', {})
++    if not (isinstance(days, dict) and all(m in listed and is_day(v) for m, v in days.items())):
++        problems.append('matter_first_day is not a map of listed matters to days')
+     controls = readings['controls']
+-    if not (all(isinstance(controls[k], list) for k in ('plants', 'supported', 'repeats_same'))
+-            and all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
++    if not (isinstance(controls, dict) and set(controls) == {'plants', 'supported', 'repeats_same'}
++            and all(isinstance(v, list) for v in controls.values())
++            and all(is_mark(m, 'answer') for m in controls['plants'] + controls['supported'])
+             and all(isinstance(x, bool) for x in controls['repeats_same'])):
+-        problems.append('a control mark outside the closed set')
++        problems.append('the controls are not three lists of answer marks and JSON booleans')
++    inputs = readings['inputs']
++    if not (isinstance(inputs, dict) and set(inputs) == INPUT_FIELDS and all(isinstance(v, str) for v in inputs.values())):
++        problems.append('the inputs are not the seven named paths and fingerprints')
+     if problems:
+-        raise SystemExit('refused: malformed readings: ' + '; '.join(problems[:10]) + (f' (and {len(problems) - 10} more)' if len(problems) > 10 else ''))
++        refuse(problems)
+ 
+ 
+ def verify_inputs(readings):
+@@ -396,12 +455,8 @@ def days_to_opening(readings):
+ 
+ 
+ def verdict(readings):
+-    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
+-    for k, draws in present.items():
+-        if sorted(DRAWS) != draws:
+-            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
+-    verify_inputs(readings)
+     validate_readings(readings)
++    verify_inputs(readings)
+     n = len(readings['matters'])
+     controls = readings['controls']
+     report = {'N': n}
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+index 3ecd5e87..8a156539 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+@@ -343,7 +343,22 @@ def test_malformed_readings_are_refused_before_any_verdict():
+     r['distinct']['new-1']['duplicates_both'] = r['distinct']['new-1']['ids'] + 1                    # more duplicates than ids
+     cases.append(r)
+     r = base(n=19, new_served=5, old_served=1)
+-    r['mapping']['new-1']['not a frozen matter'] = []
++    r['mapping']['new-1']['not a frozen matter'] = [{'question': 'new-1-q0', 'covers': True}]     # well formed, but not a listed matter
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['matter_first_day'] = None                                                                     # Codex round 16
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['mapping']['new-1']['M01'] = [None]
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['mapping']['new-1']['M01'][0]['question'] = ['new-1-q0']
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['cards']['new-1']['new-1-g-figure-0']['answer'] = {'split': ['supported', 'supported']}       # readers agreed: not a split
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['matters'][0]['company_figure'] = 1
+     cases.append(r)
+     r = base(n=19, new_served=5, old_served=1)
+     r['controls']['plants'] = {'unsupported': 'supported'}                # a mapping whose keys are marks: iterable, but not the list
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import copy, hashlib, json, pathlib, subprocess, types
+import score_comparison as new
+import test_score_comparison as tests
+old = types.ModuleType(\"previous_score_comparison\")
+old.__file__ = new.__file__
+p = \"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+exec(compile(subprocess.check_output([\"git\",\"--no-pager\",\"show\",\"81d32da4"'^:"+p],text=True),p,"exec"),old.__dict__)
+class MemoryPath:
+    files = {}
+    def __init__(self, name): self.name = name
+    def exists(self): return self.name in self.files or (self.name == "." and pathlib.Path(".").exists())
+    def read_bytes(self): return pathlib.Path(".").read_bytes() if self.name == "." else self.files[self.name]
+    def read_text(self): return self.read_bytes().decode()
+def put(name,data):
+    MemoryPath.files[name] = json.dumps(data).encode()
+    return hashlib.sha256(MemoryPath.files[name]).hexdigest()
+def seal(r):
+    es = put("eligibility",{"eligible":True})
+    key = {str(i):dict(role="product",draw=d,question=q,**{f:c[f] for f in ("guardrail","covering","type","opened") if f in c})
+           for i,(d,q,c) in enumerate((d,q,c) for d,cards in r["cards"].items() for q,c in cards.items())}
+    r["inputs"] = dict(matters_sha256=put("matters",{"matters":r["matters"]}),
+                       mapping_path="map",mapping_sha256=put("map",dict(mapping=r["mapping"],distinct=r["distinct"],eligibility_sha256=es)),
+                       deck_key_path="key",deck_key_sha256=put("key",key),eligibility_path="eligibility",eligibility_sha256=es)
+    return r
+for m in new,old:
+    m.Path,m.MATTERS = MemoryPath,MemoryPath("matters")
+tests.seal = seal
+tests.test_malformed_readings_are_refused_before_any_verdict()
+print("Committed malformed-input test passed in memory")
+for n,a,b,invalid in ((32,10,2,False),(32,2,10,False),(32,5,4,False),(19,5,1,False),(32,5,1,True)):
+    r = tests.base(n=n,new_served=a,old_served=b)
+    r["matter_first_day"] = {m["matter"]:"2026-09-08" for m in r["matters"]}
+    for cards in r["cards"].values():
+        for c in cards.values():
+            c["opened"]="2026-09-09"
+    if invalid:
+        r["controls"]["plants"][0]="supported"
+    seal(r)
+    prior, after = old.verdict(copy.deepcopy(r)),new.verdict(copy.deepcopy(r))
+    assert json.dumps(prior,default=str)==json.dumps(after,default=str)
+    print(after["verdict"],"serialized report matches parent")
+
+r = tests.base(new_served=5,old_served=1)
+r["matter_first_day"]={m["matter"]:"2026-09-08" for m in r["matters"]}
+for cards in r["cards"].values():
+    for c in cards.values():
+        c["opened"]="2026-09-09"
+seal(r)
+normal=new.verdict(r)
+for patch in ("drop_first_day","drop_opened","directory"):
+    changed=copy.deepcopy(r)
+    if patch=="drop_first_day":
+        del changed["matter_first_day"]
+    elif patch=="drop_opened":
+        del changed["cards"]["new-1"]["new-1-q0"]["opened"]
+    else:
+        changed["inputs"]["mapping_path"]="."
+    new.validate_readings(changed)
+    try:
+        out=new.verdict(changed)
+        print(patch,out["verdict"],"M01 shown",out["beside"][new.DAYS_KEY].get("M01"),"instead of",normal["beside"][new.DAYS_KEY]["M01"])
+    except IsADirectoryError as error:
+        print(patch,type(error).__name__,str(error))
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 2647ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-sE69B9I9' (errno=Operation not permitted)
+2026-11-18 13:33:26.235 xcodebuild[50950:60135962]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:33:26.346 xcodebuild[50950:60135960] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-MPb5MoRr' (errno=Operation not permitted)
+2026-11-18 13:33:26.662 xcodebuild[50952:60135975]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:33:26.772 xcodebuild[50952:60135974] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-UIQqXDGU' (errno=Operation not permitted)
+2026-11-18 13:33:27.525 xcodebuild[50957:60136125]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:33:27.635 xcodebuild[50957:60136124] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-Nt0Zowps' (errno=Operation not permitted)
+2026-11-18 13:33:27.994 xcodebuild[50959:60136203]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:33:28.106 xcodebuild[50959:60136202] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Committed malformed-input test passed in memory
+practical lead serialized report matches parent
+practical loss serialized report matches parent
+no practical winner serialized report matches parent
+too small serialized report matches parent
+invalid serialized report matches parent
+drop_first_day practical lead M01 shown None instead of {'new-1': 1, 'new-2': 1, 'new-3': 1}
+drop_opened practical lead M01 shown {'new-2': 1, 'new-3': 1} instead of {'new-1': 1, 'new-2': 1, 'new-3': 1}
+directory IsADirectoryError [Errno 21] Is a directory: '.'
+
+codex
+Two one-edit reproductions pass validation. Apply each JSON Patch independently to a passing `readings.json`:
+
+```json
+[{"op":"remove","path":"/matter_first_day"}]
+[{"op":"replace","path":"/inputs/mapping_path","value":"."}]
+```
+
+The first file still scores but silently drops every opening-delay value. Removing a card’s `opened` field similarly drops that card’s delay. The second file crashes with `IsADirectoryError` during verification. I reproduced all three in memory. [Field checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:217) · [Delay calculation](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:444) · [File verification](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:284)
+
+The recorded writer dry run reached `too small`. Well-formed synthetic reports matched the parent byte for byte across all five verdicts. [Dry run](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1) · [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:457)
+
+NOT READY: Require the complete first-day map and each card’s nullable `opened` field. Turn unreadable input paths into clean refusals.
+tokens used
+4,394,872
+Two one-edit reproductions pass validation. Apply each JSON Patch independently to a passing `readings.json`:
+
+```json
+[{"op":"remove","path":"/matter_first_day"}]
+[{"op":"replace","path":"/inputs/mapping_path","value":"."}]
+```
+
+The first file still scores but silently drops every opening-delay value. Removing a card’s `opened` field similarly drops that card’s delay. The second file crashes with `IsADirectoryError` during verification. I reproduced all three in memory. [Field checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:217) · [Delay calculation](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:444) · [File verification](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:284)
+
+The recorded writer dry run reached `too small`. Well-formed synthetic reports matched the parent byte for byte across all five verdicts. [Dry run](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1) · [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:457)
+
+NOT READY: Require the complete first-day map and each card’s nullable `opened` field. Turn unreadable input paths into clean refusals.
